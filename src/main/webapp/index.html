@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>n-cube</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HTML 5 GUI Editor for building NCubes">
+    <meta name="author" content="John DeRegnaucourt">
+
+    <link href="./css/jquery.layout-1.3.0.css" rel="stylesheet"/>
+    <link href="./css/jquery.ui-1.10.1.css" rel="stylesheet"/>
+    <link href="./css/jquery.gritter.css" rel="stylesheet"/>
+    <link href="./css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="./css/bootstrap-theme.min.css" rel="stylesheet"/>
+    <link href="./css/ncube-editor.css" rel="stylesheet"/>
+
+    <!-- Fav and touch icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="./ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="./ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="./ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="./ico/apple-touch-icon-57-precomposed.png">
+    <link rel="shortcut icon" href="./ico/favicon.png">
+</head>
+
+<body style>
+
+<header class="navbar navbar-custom navbar-fixed-top bs-docs-nav" role="banner">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle collapsed" type="button" data-toggle="collapse"
+                    data-target=".bs-navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="#"><img height="50" src="./img/cube-logo.png"/></a>
+        </div>
+        <nav class="navbar-collapse bs-navbar-collapse collapse" role="navigation" style="height: 1px;">
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">n-cube <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" id="newCubeMenu">New</a></li>
+                        <li><a href="#" id="dupeCubeMenu">Duplicate</a></li>
+                        <li><a href="#" id="deleteCubeMenu">Delete</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" id="showRefsToMenu">Show inbound references</a></li>
+                        <li><a href="#" id="showRefsFromMenu">Show outbound references</a></li>
+                        <li><a href="#" id="showReqScopeMenu">Show required scope</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT version</a></li>
+                        <li><a href="#" id="changeVerMenu">Change SNAPSHOT version value</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Axis <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Add</a></li>
+                        <li><a href="#">Rename</a></li>
+                        <li><a href="#">Delete</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Column <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Add</a></li>
+                        <li><a href="#">Edit</a></li>
+                        <li><a href="#">Move</a></li>
+                        <li><a href="#">Delete</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Cells <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Cut</a></li>
+                        <li><a href="#">Copy</a></li>
+                        <li><a href="#">Paste</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" id="aboutMenu">About</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<div id="west" class="ui-layout-west" style="overflow:auto">
+    <div class="panel panel-warning">
+        <div class="panel-heading">
+            <h4 class="panel-title">App<span id="appCount" class="badge pull-right"></span></h4>
+        </div>
+        <div class="panel-body">
+            <ul class="nav nav-list" id="app-list">
+            </ul>
+        </div>
+    </div>
+    <div class="panel panel-warning">
+        <div class="panel-heading">
+            <h4 class="panel-title">Status</h4>
+        </div>
+        <div class="panel-body">
+            <ul class="nav nav-list" id="status-list">
+            </ul>
+        </div>
+    </div>
+    <div class="panel panel-warning">
+        <div class="panel-heading">
+            <h4 class="panel-title">Version<span id="verCount" class="badge pull-right"></span></h4>
+        </div>
+        <div class="panel-body">
+            <ul class="nav nav-list" id="version-list">
+            </ul>
+        </div>
+    </div>
+    <div class="panel panel-warning">
+        <div class="panel-heading">
+            <h4 class="panel-title">n-cubes<span id="ncubeCount" class="badge pull-right"></span></h4>
+        </div>
+        <div class="panel-body">
+            <ul class="nav nav-list" id="ncube-list">
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div id="center" class="ui-layout-center ui-layout-pane"
+     style="position:absolute;overflow:hidden;display:block;visibility:visible;z-index:0;margin:0">
+    <ul id="tabs" class="nav nav-pills">
+        <li class="active"><a href="#ncube" data-toggle="pill">n-cube</a></li>
+        <li><a href="#details" data-toggle="pill">Details</a></li>
+        <li><a href="#tests" data-toggle="pill">Tests</a></li>
+        <li><a href="#picture" data-toggle="pill">Picture</a></li>
+    </ul>
+
+    <div id="ncubeTabContent" class="tab-content ui-layout-content" style="position:relative;padding:0">
+        <div id="ncube" class="tab-pane active">
+            <div id="ncube-content" style="overflow:visible">
+            </div>
+        </div>
+
+        <div id="details" class="tab-pane" style="overflow:hidden">
+            <form role="form" class="container">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="cube_id">ID</label>
+                        <input class="form-control" type="text" id="cube_id" readonly/>
+                    </div>
+
+                    <div class="col-md-4 col-md-offset-1">
+                        <label for="cube_app">Application</label>
+                        <input class="form-control" type="text" id="cube_app" readonly/>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-4">
+                        <label for="cube_name">Name</label>
+                        <input class="form-control" type="text" id="cube_name"/>
+                    </div>
+
+                    <div class="col-md-4 col-md-offset-1">
+                        <label class="control-label" for="cube_version">Version</label>
+                        <input class="form-control" type="text" id="cube_version" readonly/>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-4">
+                        <label class="control-label" for="cube_status">Status</label>
+                        <input class="form-control" type="text" id="cube_status" readonly/>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-4">
+                        <label class="control-label" for="cube_createDate">Create Date</label>
+                        <input class="form-control" type="text" id="cube_createDate" readonly/>
+                    </div>
+
+                    <div class="col-md-4 col-md-offset-1">
+                        <label class="control-label" for="cube_updateDate">Update Date</label>
+                        <input class="form-control" type="text" id="cube_updateDate" readonly/>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-4">
+                        <label class="control-label" for="cube_createHid">Create HID</label>
+                        <input class="form-control" type="text" id="cube_createHid" readonly/>
+                    </div>
+
+                    <div class="col-md-4 col-md-offset-1">
+                        <label class="control-label" for="cube_updateHid">Update HID</label>
+                        <input class="form-control" type="text" id="cube_updateHid" readonly/>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-4">
+                        <label class="control-label" for="cube_sysEffDate">System Eff. Date</label>
+                        <input class="form-control" type="text" id="cube_sysEffDate" readonly/>
+                    </div>
+
+                    <div class="col-md-4 col-md-offset-1">
+                        <label class="control-label" for="cube_sysEndDate">System End Date</label>
+                        <input class="form-control" type="text" id="cube_sysEndDate" readonly/>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-4">
+                        <label class="control-label" for="cube_bizEffDate">Bus. Eff. Date</label>
+                        <input class="form-control" type="text" id="cube_bizEffDate" readonly/>
+                    </div>
+
+                    <div class="col-md-4 col-md-offset-1">
+                        <label class="control-label" for="cube_bizEndDate">Bus. End Date</label>
+                        <input class="form-control" type="text" id="cube_bizEndDate" readonly/>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-4">
+                        <label class="control-label" for="cube_defValue">Default Value</label>
+                        <input class="form-control" type="text" id="cube_defValue"/>
+                    </div>
+
+                    <div class="col-md-4 col-md-offset-1">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox">Rule Mode
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-10">
+                        <label class="control-label" for="cube_notes">Notes</label>
+                        <textarea class="form-control" type="text" id="cube_notes"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="tests" class="tab-pane">
+            <p>NCube tests</p>
+
+            <div id="ncube-table"></div>
+        </div>
+    </div>
+</div>
+
+<!-- New Cube Modal -->
+<div id="newCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="newCubeLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="newCubeLabel" class="modal-title">New n-cube</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="newCubeAppName">App</label>
+
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="newCubeAppList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="newCubeAppName" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newCubeName">New n-cube Name</label>
+                        <input class="form-control" type="text" id="newCubeName" placeholder="Type name here"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="newCubeStatus">New status</label>
+                        <input class="form-control" type="text" placeholder="" id="newCubeStatus" readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label for="newCubeVersion">Version</label>
+
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="existVersionList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="newCubeVersion" type="text" class="form-control">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't save</button>
+                <button id="newCubeSave" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Cube Modal -->
+<div id="deleteCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteCubeLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="deleteCubeLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <h4>Are you sure?</h4>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
+                <button id="deleteCubeOk" class="btn btn-primary">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Duplicate Cube Modal -->
+<div id="dupeCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="dupeCubeLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="dupeCubeLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="dupeCubeAppName">App</label>
+
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="dupeCubeAppList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="dupeCubeAppName" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dupeCubeName">New n-cube Name</label>
+                        <input class="form-control" type="text" id="dupeCubeName" placeholder="Type name here"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="dupeCubeStatus">New status</label>
+                        <input class="form-control" type="text" placeholder="" id="dupeCubeStatus" value="SNAPSHOT"
+                               readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label for="dupeCubeVersion">New version</label>
+
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="dupeCubeVersionList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="dupeCubeVersion" type="text" class="form-control">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't copy</button>
+                <button id="dupeCubeCopy" class="btn btn-primary">Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 'Show References to' Modal -->
+<div id="showRefsToCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsToLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="showRefsToLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body" style="overflow: auto;height:450px">
+                <ul id="refsToCubeList" class="list-group">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="showRefsToClose" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 'Show References from' Modal -->
+<div id="showRefsFromCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsFromLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="showRefsFromLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body" style="overflow: auto;height:450px">
+                <ul id="refsFromCubeList" class="list-group">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="showRefsFromClose" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 'Show Required Scope' Modal -->
+<div id="showReqScopeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showReqScopeLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="showReqScopeLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body" style="overflow: auto;height:450px">
+                <ul id="reqScopeList" class="list-group">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="showReqScopeClose" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Release Cubes Modal -->
+<div id="releaseCubesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="releaseCubesLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="releaseCubesLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="releaseCubesAppName">App</label>
+                        <input class="form-control" type="text" placeholder="" id="releaseCubesAppName" readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label for="releaseCubesVersion">New SNAPSHOT Version</label>
+                        <input class="form-control" type="text" placeholder="" id="releaseCubesVersion"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't release</button>
+                <button id="releaseCubesOk" class="btn btn-primary">Release</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Version Modal -->
+<div id="changeVerModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="changeVerLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="changeVerLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="changeVerValue">Change to</label>
+                        <input class="form-control" type="text" placeholder="" id="changeVerValue"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't change</button>
+                <button id="changeVerOk" class="btn btn-primary">Change</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- About Modal -->
+<div id="aboutModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"
+     data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="aboutLabel" class="modal-title">About n-cube</h3>
+            </div>
+            <div class="modal-body">
+                <p>n-cube Editor version 1.0</p><br/>
+
+                <p>Author: John DeRegnaucourt</p><br/>
+
+                <p>Created: December 2012</p><br/>
+
+                <p>Copyright (c) Cedar Software LLC</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" data-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--<script src="//www.google.com/jsapi"></script>-->
+<script src="./js/jquery-1.9.1.min.js"></script>
+<script src="./js/jquery.ui-1.10.1.js"></script>
+<script src="./js/bootstrap.min.js"></script>
+<script src="./js/jquery.layout-1.3.0.js"></script>
+<script src="./js/jquery.gritter.min.js"></script>
+<script src="./js/mitDate.js"></script>
+<script src="./js/jsonUtil.js"></script>
+<script src="./js/constants.js"></script>
+<script src="./js/ncube-editor.js"></script>
+
+<script>
+    $(function () {
+        $('body').layout({ applyDefaultStyles: true });
+    })
+</script>
+
+</body>
+</html>
