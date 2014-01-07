@@ -10,6 +10,7 @@ import com.cedarsoftware.util.CaseInsensitiveSet;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -58,11 +59,6 @@ public class NCubeController extends BaseController implements INCubeController
     public String getHtml(String name, String app, String version, String status)
     {
         return nCubeService.getHtml(name, app, version, status);
-    }
-
-    public NCube loadCube(String name, String app, String version, String status)
-    {
-        return nCubeService.loadNCube(name, app, version, status);
     }
 
     public Object[] getAppNames()
@@ -231,11 +227,106 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
+    /**
+     * Change the SNAPSHOT version number of an n-cube.
+     * @return boolean true if successful, otherwise a String error message.
+     */
     public Object changeVersionValue(String app, String currVersion, String newSnapVer)
     {
         try
         {
             nCubeService.changeVersionValue(app, currVersion, newSnapVer);
+            return true;
+        }
+        catch (Exception e)
+        {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * Add axis to an existing SNAPSHOT n-cube.
+     * @return boolean true if successful, otherwise String error message.
+     */
+    public Object addAxis(String name, String app, String version, String axisName, String type, String valueType)
+    {
+        try
+        {
+            nCubeService.addAxis(name, app, version, axisName, type, valueType);
+            return true;
+        }
+        catch (Exception e)
+        {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * @return Object[] of JSON structure representing each axis or String error
+     * message.  The Axis will look like this:
+     * [ { "name":"axisName",
+     *     "type":"DISCRETE",
+     *     "valueType":"STRING",
+     *     "defaultColumn":true | false,
+     *     "preferredOrder":0 | 1,
+     *     "multiMatch": true | false
+     * }, ... ]
+     */
+    public Object getAxes(String name, String app, String version, String status)
+    {
+        try
+        {
+            List<Axis> axes = nCubeService.getAxes(name, app, version, status);
+            return axes.toArray();
+        }
+        catch (Exception e)
+        {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * @return Object of JSON structure representing the requested axis, or String
+     * error message.  The axis JSON object will look the same as it does for
+     * getAxes() API.
+     */
+    public Object getAxis(String name, String app, String version, String status, String axisName)
+    {
+        try
+        {
+            return nCubeService.getAxis(name, app, version, status, axisName);
+        }
+        catch (Exception e)
+        {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * Delete the passed in axis.
+     * @return boolean true if successful, otherwise String error message is returned.
+     */
+    public Object deleteAxis(String name, String app, String version, String axisName)
+    {
+        try
+        {
+            nCubeService.deleteAxis(name, app, version, axisName);
+            return true;
+        }
+        catch (Exception e)
+        {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * @return boolean true if successful, otherwise String error message is returned.
+     */
+    public Object updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch)
+    {
+        try
+        {
+            nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted, multiMatch);
             return true;
         }
         catch (Exception e)

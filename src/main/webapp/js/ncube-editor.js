@@ -15,6 +15,7 @@ $(function()
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = null;
     var _selectedStatus = "SNAPSHOT";
+    var _axisName;
     var _errorId = null;
 	initialize();
 
@@ -80,6 +81,15 @@ $(function()
 
         $('#changeVerMenu').click(function() { changeVersion() });
         $('#changeVerOk').click(function() { changeVersionOk() });
+
+        $('#addAxisMenu').click(function() { addAxis() });
+        $('#addAxisOk').click(function() { addAxisOk() });
+
+        $('#deleteAxisMenu').click(function() { deleteAxis() });
+        $('#deleteAxisOk').click(function() { deleteAxisOk() });
+
+        $('#updateAxisMenu').click(function() { updateAxis() });
+        $('#updateAxisOk').click(function() { updateAxisOk() });
     }
 
 	function loadNCubeListView()
@@ -226,7 +236,7 @@ $(function()
         }
 		var result = call("ncubeController.getHtml",[_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
 		var htmlContent;
-		
+
 		if (result.status === true)
 		{
 			htmlContent = result.data;
@@ -236,8 +246,12 @@ $(function()
 			htmlContent = "Unable to load " + _selectedCubeName + '. ' + result.data;
 		}
 		$("#ncube-content").html(htmlContent);
+        $('.btn-sm').click(function()
+        {
+            updateAxis($(this).html());
+        });
 	}
-	
+
 	function loadCubeDetails()
 	{
 		var cube = _cubeList[_selectedCubeName];
@@ -334,11 +348,8 @@ $(function()
 	function loadNCubes()
 	{
         _cubeList = {};
-        if (_errorId)
-        {
-            $.gritter.remove(_errorId);
-            _errorId = null;
-        }
+        clearError();
+
         if (!_selectedApp)
         {
             _selectedCubeName = null;
@@ -807,6 +818,180 @@ $(function()
             _errorId = showNote('Unable to change SNAPSHOT version to value: ' + newSnapVer + '. ' + result.data);
         }
     }
+
+    function addAxis()
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Axis cannot be added.');
+            return;
+        }
+
+        if (_selectedStatus == "RELEASE")
+        {
+            _errorId = showNote('Only a SNAPSHOT version can be modified.');
+            return;
+        }
+
+        var generalTypes= ['STRING','LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
+        var ruleTypes = ['EXPRESSION'];
+        buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE','RANGE', 'SET', 'NEAREST', 'RULE'], function(selected)
+        {
+            if ("RULE" == selected)
+            {
+                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function() { });
+                $('#addAxisValueTypeName').val('EXPRESSION');
+            }
+            else
+            {
+                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function() { });
+                $('#addAxisValueTypeName').val('STRING');
+            }
+        });
+        buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function() { });
+        $('#addAxisName').val('');
+        $('#addAxisModal').modal();
+    }
+
+    function addAxisOk()
+    {
+        $('#addAxisModal').modal('hide');
+        var axisName = $('#addAxisName').val();
+        var axisType = $('#addAxisTypeName').val();
+        var axisValueType = $('#addAxisValueTypeName').val();
+        var result = call("ncubeController.addAxis", [_selectedCubeName, _selectedApp, _selectedVersion, axisName, axisType, axisValueType]);
+        if (result.status === true && result.data === true)
+        {
+            loadCube();
+        }
+        else
+        {
+            _errorId = showNote('Unable to add axis: ' + axisName + '. ' + result.data);
+        }
+    }
+
+    function deleteAxis()
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Axis cannot be deleted.');
+            return;
+        }
+
+        if (_selectedStatus == "RELEASE")
+        {
+            _errorId = showNote('Only a SNAPSHOT version can be modified.');
+            return;
+        }
+
+        var result = call("ncubeController.getAxes", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var axes = [];
+        if (result.status === true && typeof result.data !== "string")
+        {
+            axes = result.data;
+            $.each(result.data, function(index, value)
+            {
+                axes[index] = value.name;
+            });
+        }
+        else
+        {
+            _errorId = showNote('Could not retrieve axes for ncube: ' + _selectedCubeName);
+            return;
+        }
+        buildDropDown('#deleteAxisList', '#deleteAxisName', axes, function() { });
+
+        $('#deleteAxisName').val('');
+        $('#deleteAxisModal').modal();
+    }
+
+    function deleteAxisOk()
+    {
+        $('#deleteAxisModal').modal('hide');
+        var axisName = $('#deleteAxisName').val();
+        var result = call("ncubeController.deleteAxis", [_selectedCubeName, _selectedApp, _selectedVersion, axisName]);
+        if (result.status === true && result.data === true)
+        {
+            loadCube();
+        }
+        else
+        {
+            _errorId = showNote('Unable to delete axis: ' + axisName + '. ' + result.data);
+        }
+    }
+
+
+    function updateAxis(axisName)
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Axis cannot be updated.');
+            return;
+        }
+
+        if (_selectedStatus == "RELEASE")
+        {
+            _errorId = showNote('Only a SNAPSHOT version can be modified.');
+            return;
+        }
+
+        var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
+        var axis;
+        if (result.status === true && typeof result.data !== "string")
+        {
+            axis = result.data;
+        }
+        else
+        {
+            _errorId = showNote('Could not retrieve axes for ncube: ' + _selectedCubeName);
+            return;
+        }
+
+        var forceState = axis.type.name == 'RULE';
+
+        $('#updateAxisLabel').html("Update Axis: " + axisName);
+        $('#updateAxisName').val(axisName);
+        $('#updateAxisTypeName').val(axis.type.name);
+        $('#updateAxisValueTypeName').val(axis.valueType.name);
+        $('#updateAxisDefaultCol').prop({'checked':axis.defaultCol != null});
+        if (forceState)
+        {
+            $('#updateAxisSortOrderRow').hide();
+            $('#updateAxisMultiMatchRow').hide();
+        }
+        else
+        {
+            $('#updateAxisSortOrderRow').show();
+            $('#updateAxisMultiMatchRow').show();
+            $('#updateAxisSortOrder').prop({'checked':axis.preferredOrder == 0,'disabled':false});
+            $('#updateAxisMultiMatch').prop({'checked':axis.multiMatch === true, 'disabled':false});
+        }
+        _axisName = axisName;
+        $('#updateAxisModal').modal();
+    }
+
+    function updateAxisOk()
+    {
+        $('#updateAxisModal').modal('hide');
+        var axisName = $('#updateAxisName').val();
+        var hasDefault = $('#updateAxisDefaultCol').prop('checked');
+        var sortOrder = $('#updateAxisSortOrder').prop('checked');
+        var multiMatch = $('#updateAxisMultiMatch').prop('checked');
+        var result = call("ncubeController.updateAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _axisName, axisName, hasDefault, sortOrder, multiMatch]);
+        if (result.status === true && result.data === true)
+        {
+            loadCube();
+        }
+        else
+        {
+            _errorId = showNote('Unable to update axis: ' + axisName + '. ' + result.data);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------
 
     function buildDropDown(listId, inputId, list, callback)
     {

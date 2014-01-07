@@ -1,13 +1,19 @@
 package com.cedarsoftware.service.ncube;
 
+import com.cedarsoftware.ncube.Axis;
+import com.cedarsoftware.ncube.AxisType;
+import com.cedarsoftware.ncube.AxisValueType;
+import com.cedarsoftware.ncube.Column;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.util.CaseInsensitiveSet;
+import com.cedarsoftware.util.StringUtilities;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,11 +49,6 @@ public class NCubeService
         return DataSourceUtils.getConnection(dataSource);
     }
 
-    public NCube loadNCube(String name, String app, String version, String status)
-    {
-        return NCubeManager.getInstance().loadCube(getConnection(), app, name, version, status, new Date());
-    }
-
     public Object[] getNCubes(String pattern, String app, String version, String status)
     {
         return NCubeManager.getInstance().getNCubes(getConnection(), app, version, status, pattern, new Date());
@@ -56,7 +57,19 @@ public class NCubeService
     public String getHtml(String name, String app, String version, String status)
     {
         NCube ncube = NCubeManager.getInstance().loadCube(getConnection(), app, name, version, status, new Date());
-        return ncube.toHtml();
+        return ncube.toHtml("traits", "businessDivisionCode", "bu", "month");
+    }
+
+    public Object getCube(String name, String app, String version, String status)
+    {
+        try
+        {
+            return NCubeManager.getInstance().loadCube(getConnection(), app, name, version, status, new Date());
+        }
+        catch (Exception e)
+        {
+            return e.getMessage();
+        }
     }
 
     public Object[] getAppNames()
@@ -108,5 +121,74 @@ public class NCubeService
     public void changeVersionValue(String app, String currVersion, String newSnapVer)
     {
         NCubeManager.getInstance().changeVersionValue(getConnection(), app, currVersion, newSnapVer);
+    }
+
+    public void addAxis(String name, String app, String version, String axisName, String type, String valueType)
+    {
+        if (StringUtilities.isEmpty(axisName))
+        {
+            throw new IllegalArgumentException("Axis name cannot be empty.");
+        }
+        Connection connection = getConnection();
+        NCubeManager manager = NCubeManager.getInstance();
+        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false);
+        ncube.addAxis(axis);
+        manager.updateCube(connection, app, ncube, version);
+    }
+
+    public List<Axis> getAxes(String name, String app, String version, String status)
+    {
+        NCubeManager manager = NCubeManager.getInstance();
+        NCube ncube = manager.loadCube(getConnection(), app, name, version, status, new Date());
+        return ncube.getAxes();
+    }
+
+    public Axis getAxis(String name, String app, String version, String status, String axisName)
+    {
+        NCubeManager manager = NCubeManager.getInstance();
+        NCube ncube = manager.loadCube(getConnection(), app, name, version, status, new Date());
+        return ncube.getAxis(axisName);
+    }
+
+    public void deleteAxis(String name, String app, String version, String axisName)
+    {
+        Connection connection = getConnection();
+        NCubeManager manager = NCubeManager.getInstance();
+        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        ncube.deleteAxis(axisName);
+        manager.updateCube(connection, app, ncube, version);
+    }
+
+    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch)
+    {
+        Connection connection = getConnection();
+        NCubeManager manager = NCubeManager.getInstance();
+        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+
+        // Rename axis
+        if (!origAxisName.equalsIgnoreCase(axisName))
+        {
+            ncube.renameAxis(origAxisName, axisName);
+        }
+
+        // Update default column setting (if changed)
+        Axis axis = ncube.getAxis(axisName);
+        if (axis.hasDefaultColumn() && !hasDefault)
+        {   // If it went from having default column to NOT having default column...
+            ncube.deleteColumn(axisName, null);
+        }
+        else if (!axis.hasDefaultColumn() && hasDefault)
+        {
+            ncube.addColumn(axisName, null);
+        }
+
+        // update preferred column order
+        axis.setColumnOrder(isSorted ? Axis.SORTED : Axis.DISPLAY);
+
+        // update multi-match state
+        axis.setMultiMatch(multiMatch);
+
+        manager.updateCube(connection, app, ncube, version);
     }
 }

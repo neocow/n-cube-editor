@@ -56,9 +56,8 @@
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Axis <b class="caret"></b></a>
                     <ul class="dropdown-menu">
-                        <li><a href="#">Add</a></li>
-                        <li><a href="#">Rename</a></li>
-                        <li><a href="#">Delete</a></li>
+                        <li><a href="#" id="addAxisMenu">Add Axis</a></li>
+                        <li><a href="#" id="deleteAxisMenu">Delete Axis</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
@@ -131,7 +130,7 @@
         <li class="active"><a href="#ncube" data-toggle="pill">n-cube</a></li>
         <li><a href="#details" data-toggle="pill">Details</a></li>
         <li><a href="#tests" data-toggle="pill">Tests</a></li>
-        <li><a href="#picture" data-toggle="pill">Picture</a></li>
+        <li><a href="#drillPic" data-toggle="pill">Picture</a></li>
     </ul>
 
     <div id="ncubeTabContent" class="tab-content ui-layout-content" style="position:relative;padding:0">
@@ -248,7 +247,13 @@
         <div id="tests" class="tab-pane">
             <p>NCube tests</p>
 
-            <div id="ncube-table"></div>
+            <div id="testCases"></div>
+        </div>
+
+        <div id="drillPic" class="tab-pane">
+            <p>Picture</p>
+
+            <div id="drillablePicture"></div>
         </div>
     </div>
 </div>
@@ -493,6 +498,152 @@
             <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Don't change</button>
                 <button id="changeVerOk" class="btn btn-primary">Change</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Axis Modal -->
+<div id="addAxisModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addAxisLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="addAxisLabel" class="modal-title">Add Axis</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="addAxisName">Axis name</label>
+                        <input class="form-control" type="text" placeholder="Axis name" id="addAxisName"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="addAxisTypeList">Axis type (Discrete, Range, Set, Nearest, Rule)</label>
+
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="addAxisTypeList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="addAxisTypeName" type="text" class="form-control" value="DISCRETE" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="addAxisValueTypeList">Column data type (String, Date, Integer, ...)</label>
+
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="addAxisValueTypeList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="addAxisValueTypeName" type="text" class="form-control" value="STRING" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <span class="help-block">Note: All cells will be cleared when an axis is added.</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't add</button>
+                <button id="addAxisOk" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Axis Modal -->
+<div id="deleteAxisModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteAxisLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="deleteAxisLabel" class="modal-title">Delete Axis</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="deleteAxisName">Select axis to delete</label>
+
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="deleteAxisList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="deleteAxisName" type="text" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <span class="help-block">Note: All cells will be cleared when an axis is deleted.</span>
+                        <span class="help-block">This operation cannot be undone.</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
+                <button id="deleteAxisOk" class="btn btn-primary">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Axis Modal -->
+<div id="updateAxisModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="updateAxisLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="updateAxisLabel" class="modal-title">Update Axis</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="updateAxisName">Axis</label>
+                        <input id="updateAxisName" type="text" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="updateAxisTypeName">Axis type (Discrete, Range, Set, Nearest, Rule)</label>
+                        <input id="updateAxisTypeName" type="text" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="updateAxisValueTypeName">Column data type (String, Date, Integer, ...)</label>
+                        <input id="updateAxisValueTypeName" type="text" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                                <input id="updateAxisDefaultCol" type="checkbox">Has Default Column
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox" id="updateAxisSortOrderRow">
+                            <label>
+                                <input id="updateAxisSortOrder" type="checkbox">Sorted
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox" id="updateAxisMultiMatchRow">
+                            <label>
+                                <input id="updateAxisMultiMatch" type="checkbox">Allow multi-match
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't update</button>
+                <button id="updateAxisOk" class="btn btn-primary">Update</button>
             </div>
         </div>
     </div>
