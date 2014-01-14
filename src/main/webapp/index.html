@@ -22,73 +22,47 @@
     <link rel="shortcut icon" href="./ico/favicon.png">
 </head>
 
-<body style>
+<body>
 
 <header class="navbar navbar-custom navbar-fixed-top bs-docs-nav" role="banner">
-    <div class="container">
-        <div class="navbar-header">
-            <button class="navbar-toggle collapsed" type="button" data-toggle="collapse"
-                    data-target=".bs-navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a href="#"><img height="50" src="./img/cube-logo.png"/></a>
-        </div>
-        <nav class="navbar-collapse bs-navbar-collapse collapse" role="navigation" style="height: 1px;">
-            <ul class="nav navbar-nav">
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">n-cube <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" id="newCubeMenu">New</a></li>
-                        <li><a href="#" id="dupeCubeMenu">Duplicate</a></li>
-                        <li><a href="#" id="deleteCubeMenu">Delete</a></li>
-                        <li class="divider"></li>
-                        <li><a href="#" id="showRefsToMenu">Show inbound references</a></li>
-                        <li><a href="#" id="showRefsFromMenu">Show outbound references</a></li>
-                        <li><a href="#" id="showReqScopeMenu">Show required scope</a></li>
-                        <li class="divider"></li>
-                        <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT version</a></li>
-                        <li><a href="#" id="changeVerMenu">Change SNAPSHOT version value</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Axis <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" id="addAxisMenu">Add Axis</a></li>
-                        <li><a href="#" id="deleteAxisMenu">Delete Axis</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Column <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Add</a></li>
-                        <li><a href="#">Edit</a></li>
-                        <li><a href="#">Move</a></li>
-                        <li><a href="#">Delete</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Cells <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Cut</a></li>
-                        <li><a href="#">Copy</a></li>
-                        <li><a href="#">Paste</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="#" id="aboutMenu">About</a>
-                </li>
-            </ul>
-        </nav>
+    <div class="navbar-header">
+        <button class="navbar-toggle collapsed" type="button" data-toggle="collapse"
+                data-target=".bs-navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <img height="45" src="./img/cube-logo.png"/><a class="navbar-brand" href="#">Configuration Editor</a>
     </div>
+    <nav class="navbar-collapse bs-navbar-collapse collapse" role="navigation" style="height: 1px;">
+        <ul class="nav navbar-nav">
+            <li>
+                <a href="#ncube" data-toggle="tab">n-cube</a>
+            </li>
+            <li>
+                <a href="#details" data-toggle="tab">Details</a>
+            </li>
+            <li>
+                <a href="#tests" data-toggle="tab">Tests</a>
+            </li>
+            <li>
+                <a href="#drillPic" data-toggle="tab">Picture</a>
+            </li>
+            <li>
+                <a href="#about" data-toggle="tab">About</a>
+            </li>
+        </ul>
+    </nav>
 </header>
 
 <div id="west" class="ui-layout-west" style="overflow:auto">
     <div class="panel panel-warning">
         <div class="panel-heading">
-            <h4 class="panel-title">App<span id="appCount" class="badge pull-right"></span></h4>
+            <h4 class="panel-title">
+                <button type="button" class="btn btn-warning active">App</button>
+                <span id="appCount" class="badge pull-right"></span>
+            </h4>
         </div>
         <div class="panel-body">
             <ul class="nav nav-list" id="app-list">
@@ -97,7 +71,9 @@
     </div>
     <div class="panel panel-warning">
         <div class="panel-heading">
-            <h4 class="panel-title">Status</h4>
+            <h4 class="panel-title">
+                <button type="button" class="btn btn-warning active">Status</button>
+            </h4>
         </div>
         <div class="panel-body">
             <ul class="nav nav-list" id="status-list">
@@ -106,7 +82,18 @@
     </div>
     <div class="panel panel-warning">
         <div class="panel-heading">
-            <h4 class="panel-title">Version<span id="verCount" class="badge pull-right"></span></h4>
+            <h4 class="panel-title">
+                <div class="btn-group">
+                    <button type="button" class="btn-sm btn-warning dropdown-toggle" data-toggle="dropdown">
+                        <span>Version</span><span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
+                        <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
+                    </ul>
+                </div>
+                <span id="verCount" class="badge pull-right"></span>
+            </h4>
         </div>
         <div class="panel-body">
             <ul class="nav nav-list" id="version-list">
@@ -115,7 +102,23 @@
     </div>
     <div class="panel panel-warning">
         <div class="panel-heading">
-            <h4 class="panel-title">n-cubes<span id="ncubeCount" class="badge pull-right"></span></h4>
+            <h4 class="panel-title">
+                <div class="btn-group">
+                    <button type="button" class="btn-sm btn-warning dropdown-toggle" data-toggle="dropdown">
+                        <span>n-cubes</span><span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" id="newCubeMenu">New</a></li>
+                        <li><a href="#" id="dupeCubeMenu">Duplicate</a></li>
+                        <li><a href="#" id="deleteCubeMenu">Delete</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" id="showRefsToMenu">Show inbound references</a></li>
+                        <li><a href="#" id="showRefsFromMenu">Show outbound references</a></li>
+                        <li><a href="#" id="showReqScopeMenu">Show required scope</a></li>
+                    </ul>
+                </div>
+                <span id="ncubeCount" class="badge pull-right"></span>
+            </h4>
         </div>
         <div class="panel-body">
             <ul class="nav nav-list" id="ncube-list">
@@ -125,14 +128,7 @@
 </div>
 
 <div id="center" class="ui-layout-center ui-layout-pane"
-     style="position:absolute;overflow:hidden;display:block;visibility:visible;z-index:0;margin:0">
-    <ul id="tabs" class="nav nav-pills">
-        <li class="active"><a href="#ncube" data-toggle="pill">n-cube</a></li>
-        <li><a href="#details" data-toggle="pill">Details</a></li>
-        <li><a href="#tests" data-toggle="pill">Tests</a></li>
-        <li><a href="#drillPic" data-toggle="pill">Picture</a></li>
-    </ul>
-
+     style="position:relative;overflow:hidden;display:block;z-index:0;margin:0">
     <div id="ncubeTabContent" class="tab-content ui-layout-content" style="position:relative;padding:0">
         <div id="ncube" class="tab-pane active">
             <div id="ncube-content" style="overflow:visible">
@@ -140,93 +136,94 @@
         </div>
 
         <div id="details" class="tab-pane" style="overflow:hidden">
+            <br/>
             <form role="form" class="container">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label for="cube_id">ID</label>
                         <input class="form-control" type="text" id="cube_id" readonly/>
                     </div>
 
-                    <div class="col-md-4 col-md-offset-1">
+                    <div class="col-md-5 col-md-offset-1">
                         <label for="cube_app">Application</label>
                         <input class="form-control" type="text" id="cube_app" readonly/>
                     </div>
                 </div>
 
                 <div class="row top-buffer">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label for="cube_name">Name</label>
                         <input class="form-control" type="text" id="cube_name"/>
                     </div>
 
-                    <div class="col-md-4 col-md-offset-1">
+                    <div class="col-md-5 col-md-offset-1">
                         <label class="control-label" for="cube_version">Version</label>
                         <input class="form-control" type="text" id="cube_version" readonly/>
                     </div>
                 </div>
 
                 <div class="row top-buffer">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label class="control-label" for="cube_status">Status</label>
                         <input class="form-control" type="text" id="cube_status" readonly/>
                     </div>
                 </div>
 
                 <div class="row top-buffer">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label class="control-label" for="cube_createDate">Create Date</label>
                         <input class="form-control" type="text" id="cube_createDate" readonly/>
                     </div>
 
-                    <div class="col-md-4 col-md-offset-1">
+                    <div class="col-md-5 col-md-offset-1">
                         <label class="control-label" for="cube_updateDate">Update Date</label>
                         <input class="form-control" type="text" id="cube_updateDate" readonly/>
                     </div>
                 </div>
 
                 <div class="row top-buffer">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label class="control-label" for="cube_createHid">Create HID</label>
                         <input class="form-control" type="text" id="cube_createHid" readonly/>
                     </div>
 
-                    <div class="col-md-4 col-md-offset-1">
+                    <div class="col-md-5 col-md-offset-1">
                         <label class="control-label" for="cube_updateHid">Update HID</label>
                         <input class="form-control" type="text" id="cube_updateHid" readonly/>
                     </div>
                 </div>
 
                 <div class="row top-buffer">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label class="control-label" for="cube_sysEffDate">System Eff. Date</label>
                         <input class="form-control" type="text" id="cube_sysEffDate" readonly/>
                     </div>
 
-                    <div class="col-md-4 col-md-offset-1">
+                    <div class="col-md-5 col-md-offset-1">
                         <label class="control-label" for="cube_sysEndDate">System End Date</label>
                         <input class="form-control" type="text" id="cube_sysEndDate" readonly/>
                     </div>
                 </div>
 
                 <div class="row top-buffer">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label class="control-label" for="cube_bizEffDate">Bus. Eff. Date</label>
                         <input class="form-control" type="text" id="cube_bizEffDate" readonly/>
                     </div>
 
-                    <div class="col-md-4 col-md-offset-1">
+                    <div class="col-md-5 col-md-offset-1">
                         <label class="control-label" for="cube_bizEndDate">Bus. End Date</label>
                         <input class="form-control" type="text" id="cube_bizEndDate" readonly/>
                     </div>
                 </div>
 
                 <div class="row top-buffer">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label class="control-label" for="cube_defValue">Default Value</label>
                         <input class="form-control" type="text" id="cube_defValue"/>
                     </div>
 
-                    <div class="col-md-4 col-md-offset-1">
+                    <div class="col-md-5 col-md-offset-1">
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox">Rule Mode
@@ -250,10 +247,19 @@
             <div id="testCases"></div>
         </div>
 
-        <div id="drillPic" class="tab-pane">
-            <p>Picture</p>
+        <div id="drillPic" class="tab-pane" style="height:100%;width:100%">
+            <iframe src="http://mbostock.github.io/d3/talk/20111116/pack-hierarchy.html" frameborder="0" height="100%" width="100%"></iframe>
+        </div>
 
-            <div id="drillablePicture"></div>
+        <!-- About Modal -->
+        <div id="about" class="tab-pane">
+            <p>n-cube Editor version 1.0</p>
+
+            <p>Author: John DeRegnaucourt</p>
+
+            <p>Created: December 2012</p>
+
+            <p>Copyright (c) Cedar Software LLC</p>
         </div>
     </div>
 </div>
@@ -569,17 +575,8 @@
             <div class="modal-body">
                 <form role="form">
                     <div class="form-group">
-                        <label for="deleteAxisName">Select axis to delete</label>
-
-                        <div class="input-group">
-                            <div class="input-group-btn">
-                                <button type="button" class="btn btn-default dropdown-toggle"
-                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
-                                <ul id="deleteAxisList" class="dropdown-menu">
-                                </ul>
-                            </div>
-                            <input id="deleteAxisName" type="text" class="form-control" readonly>
-                        </div>
+                        <label for="deleteAxisName">Axis to delete</label>
+                        <input id="deleteAxisName" type="text" class="form-control" readonly>
                     </div>
                     <div class="form-group">
                         <span class="help-block">Note: All cells will be cleared when an axis is deleted.</span>
@@ -649,33 +646,9 @@
     </div>
 </div>
 
-<!-- About Modal -->
-<div id="aboutModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"
-     data-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="aboutLabel" class="modal-title">About n-cube</h3>
-            </div>
-            <div class="modal-body">
-                <p>n-cube Editor version 1.0</p><br/>
-
-                <p>Author: John DeRegnaucourt</p><br/>
-
-                <p>Created: December 2012</p><br/>
-
-                <p>Copyright (c) Cedar Software LLC</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" data-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!--<script src="//www.google.com/jsapi"></script>-->
-<script src="./js/jquery-1.9.1.min.js"></script>
+<script src="./js/jquery-1.10.2.min.js"></script>
 <script src="./js/jquery.ui-1.10.1.js"></script>
 <script src="./js/bootstrap.min.js"></script>
 <script src="./js/jquery.layout-1.3.0.js"></script>

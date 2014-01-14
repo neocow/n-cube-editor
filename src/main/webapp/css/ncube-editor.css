@@ -1,13 +1,5 @@
 body {
-    padding-top: 50px; /* to make the container go all the way to the bottom of the topbar */
-}
-
-/*.container {*/
-    /*margin-left: 10px;*/
-/*}*/
-
-.nav {
-    margin-bottom: 1px;
+    padding-top: 50px; /* to make the container go all the way to the bottom of the top navbar */
 }
 
 .ncube-selected {

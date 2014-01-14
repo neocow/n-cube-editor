@@ -56,8 +56,6 @@ $(function()
 
     function addListeners()
     {
-        $('#aboutMenu').click(function() { about() });
-
         $('#newCubeMenu').click(function() { newCube() });
         $('#newCubeSave').click(function() { newCubeSave() });
 
@@ -82,10 +80,8 @@ $(function()
         $('#changeVerMenu').click(function() { changeVersion() });
         $('#changeVerOk').click(function() { changeVersionOk() });
 
-        $('#addAxisMenu').click(function() { addAxis() });
         $('#addAxisOk').click(function() { addAxisOk() });
 
-        $('#deleteAxisMenu').click(function() { deleteAxis() });
         $('#deleteAxisOk').click(function() { deleteAxisOk() });
 
         $('#updateAxisMenu').click(function() { updateAxis() });
@@ -231,7 +227,7 @@ $(function()
 	{
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
-            $("#ncube-content").html('No n-cubes to load');
+            $('#ncube-content').html('No n-cubes to load');
             return;
         }
 		var result = call("ncubeController.getHtml",[_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
@@ -240,16 +236,52 @@ $(function()
 		if (result.status === true)
 		{
 			htmlContent = result.data;
-		}
+        }
 		else
 		{
 			htmlContent = "Unable to load " + _selectedCubeName + '. ' + result.data;
 		}
-		$("#ncube-content").html(htmlContent);
-        $('.btn-sm').click(function()
+		$('#ncube-content').html(htmlContent);
+        if (result.status === true)
         {
-            updateAxis($(this).html());
-        });
+            $(".axis-menu").each(function()
+            {
+                var element = $(this);
+                var ul = $('<ul/>').prop({'class':'dropdown-menu', 'role':'menu'});
+                var li = $('<li/>');
+                var an = $('<a href=\"#\">');
+                an.html("Update Axis...");
+                an.click(function() { updateAxis(element.attr('data-id')) });
+                li.append(an);
+                ul.append(li);
+
+                li = $('<li/>');
+                an = $('<a href=\"#\">');
+                an.html("Add Axis...");
+                an.click(function() { addAxis(); });
+                li.append(an);
+                ul.append(li);
+
+                li = $('<li/>');
+                an = $('<a href=\"#\">');
+                an.html("Delete Axis...");
+                an.click(function() { deleteAxis(element.attr('data-id')) });
+                li.append(an);
+                ul.append(li);
+
+                li = $('<div/>').prop({'class':'divider'});
+                ul.append(li);
+
+                li = $('<li/>');
+                an = $('<a href=\"#\">');
+                an.html("Edit Columns...");
+                an.click(function() { editColumns(element.attr('data-id'))});
+                li.append(an);
+                ul.append(li);
+
+                element.append(ul);
+            });
+        }
 	}
 
 	function loadCubeDetails()
@@ -871,7 +903,7 @@ $(function()
         }
     }
 
-    function deleteAxis()
+    function deleteAxis(axisName)
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
@@ -886,24 +918,7 @@ $(function()
             return;
         }
 
-        var result = call("ncubeController.getAxes", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
-        var axes = [];
-        if (result.status === true && typeof result.data !== "string")
-        {
-            axes = result.data;
-            $.each(result.data, function(index, value)
-            {
-                axes[index] = value.name;
-            });
-        }
-        else
-        {
-            _errorId = showNote('Could not retrieve axes for ncube: ' + _selectedCubeName);
-            return;
-        }
-        buildDropDown('#deleteAxisList', '#deleteAxisName', axes, function() { });
-
-        $('#deleteAxisName').val('');
+        $('#deleteAxisName').val(axisName);
         $('#deleteAxisModal').modal();
     }
 
@@ -1043,11 +1058,5 @@ $(function()
             $.gritter.remove(_errorId);
             _errorId = null;
         }
-    }
-
-    function about()
-    {
-        clearError();
-        $('#aboutModal').modal();
     }
 });

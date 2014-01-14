@@ -1,7 +1,5 @@
 package com.cedarsoftware.controller;
 
-import com.cedarsoftware.ncube.NCube;
-
 /**
  * Handle NCube Editor requests.
  *  
