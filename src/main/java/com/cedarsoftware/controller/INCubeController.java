@@ -1,5 +1,7 @@
 package com.cedarsoftware.controller;
 
+import com.cedarsoftware.ncube.Axis;
+
 /**
  * Handle NCube Editor requests.
  *  
@@ -24,4 +26,7 @@ public interface INCubeController extends IBaseController
     Object getAxis(String name, String app, String version, String status, String axisName);
     Object deleteAxis(String name, String app, String version, String axisName);
     Object updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch);
+    Object updateColumnCell(String name, String app, String version, String colId, String value);
+    Object updateAxisColumns(String name, String app, String version, Axis updatedAxis);
+    Object updateCell(String name, String app, String version, Object[] colIds, String value);
 }

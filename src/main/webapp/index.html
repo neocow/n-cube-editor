@@ -127,9 +127,8 @@
     </div>
 </div>
 
-<div id="center" class="ui-layout-center ui-layout-pane"
-     style="position:relative;overflow:hidden;display:block;z-index:0;margin:0">
-    <div id="ncubeTabContent" class="tab-content ui-layout-content" style="position:relative;padding:0">
+<div id="center" class="ui-layout-center ui-layout-pane">
+    <div id="ncubeTabContent" class="tab-content ui-layout-content" style="padding:0px">
         <div id="ncube" class="tab-pane active">
             <div id="ncube-content" style="overflow:visible">
             </div>
@@ -137,6 +136,7 @@
 
         <div id="details" class="tab-pane" style="overflow:hidden">
             <br/>
+
             <form role="form" class="container">
                 <div class="row">
                     <div class="col-md-5">
@@ -248,7 +248,8 @@
         </div>
 
         <div id="drillPic" class="tab-pane" style="height:100%;width:100%">
-            <iframe src="http://mbostock.github.io/d3/talk/20111116/pack-hierarchy.html" frameborder="0" height="100%" width="100%"></iframe>
+            <iframe src="http://mbostock.github.io/d3/talk/20111116/pack-hierarchy.html" frameborder="0" height="100%"
+                    width="100%"></iframe>
         </div>
 
         <!-- About Modal -->
@@ -604,7 +605,7 @@
             <div class="modal-body">
                 <form role="form">
                     <div class="form-group">
-                        <label for="updateAxisName">Axis</label>
+                        <label for="updateAxisName">Axis name</label>
                         <input id="updateAxisName" type="text" class="form-control">
                     </div>
                     <div class="form-group">
@@ -646,8 +647,33 @@
     </div>
 </div>
 
+<!-- 'Update Columns' Modal -->
+<div id="editColumnsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editColumnsLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="editColumnsLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body" style="overflow: auto;height:450px">
+                <ul id="editColumnsList" class="list-group">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="editColSelectAll" type="button" class="btn btn-info btn-sm">Select All</button>
+                <button id="editColSelectNone" type="button" class="btn btn-info btn-sm">Select None</button>
+                <button id="editColUp" type="button" class="btn btn-info btn-sm">Up</button>
+                <button id="editColDown" type="button" class="btn btn-info btn-sm">Down</button>
+                <button id="editColAdd" type="button" class="btn btn-success btn-sm">Add</button>
+                <button id="editColDelete" type="button" class="btn btn-danger btn-sm">Delete</button>
+                <button id="editColumnsCancel" class="btn btn-default btn-sm">Dont's save</button>
+                <button id="editColumnsSave" class="btn btn-primary btn-sm">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<!--<script src="//www.google.com/jsapi"></script>-->
 <script src="./js/jquery-1.10.2.min.js"></script>
 <script src="./js/jquery.ui-1.10.1.js"></script>
 <script src="./js/bootstrap.min.js"></script>

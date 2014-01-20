@@ -28,12 +28,34 @@
 	    p:removeAbandonedTimeout="180"
 	    p:testOnBorrow="true"
 	    p:testOnReturn="false"
-	    p:testWhileIdle="false"   
+	    p:testWhileIdle="false"
 	    p:timeBetweenEvictionRunsMillis="30000"
 	    p:minEvictableIdleTimeMillis="30000"
 	    p:validationInterval="60000"
 	    p:validationQuery="/* ping */"
 	/>
+
+    <!--<bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"-->
+          <!--p:driverClassName="oracle.jdbc.driver.OracleDriver"-->
+          <!--p:url="jdbc:oracle:thin:@cvgli59.td.afg:1526:uwdeskd"-->
+          <!--p:username="ra_desktop"-->
+          <!--p:password="p0rtal"-->
+          <!--p:initialSize="5"-->
+          <!--p:minIdle="5"-->
+          <!--p:maxIdle="10"-->
+          <!--p:maxActive="100"-->
+          <!--p:maxWait="120000"-->
+          <!--p:jmxEnabled="true"-->
+          <!--p:removeAbandoned="true"-->
+          <!--p:removeAbandonedTimeout="180"-->
+          <!--p:testOnBorrow="true"-->
+          <!--p:testOnReturn="false"-->
+          <!--p:testWhileIdle="false"-->
+          <!--p:timeBetweenEvictionRunsMillis="30000"-->
+          <!--p:minEvictableIdleTimeMillis="30000"-->
+          <!--p:validationInterval="60000"-->
+          <!--p:validationQuery="/* ping */"-->
+            <!--/>-->
 
     <bean id="ncubeTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="ncubeDataSource" />

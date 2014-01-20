@@ -33,10 +33,10 @@
     </developers>
 
     <properties>
-        <version.json-io>2.4.0</version.json-io>
-        <version.java-util>1.7.1</version.java-util>
+        <version.json-io>2.4.1</version.json-io>
+        <version.java-util>1.7.4</version.java-util>
         <version.json-command-servlet>1.0.0-SNAPSHOT</version.json-command-servlet>
-        <version.ncube>2.0.2-SNAPSHOT</version.ncube>
+        <version.ncube>2.1.1-SNAPSHOT</version.ncube>
         <version.junit>4.11</version.junit>
         <version.spring>3.2.6.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>
@@ -72,48 +72,48 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-source-plugin</artifactId>-->
+                <!--<version>2.2.1</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>attach-sources</id>-->
+                        <!--<goals>-->
+                            <!--<goal>jar</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-javadoc-plugin</artifactId>-->
+                <!--<version>2.9.1</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>attach-javadocs</id>-->
+                        <!--<goals>-->
+                            <!--<goal>jar</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-gpg-plugin</artifactId>-->
+                <!--<version>1.4</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>sign-artifacts</id>-->
+                        <!--<phase>verify</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>sign</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -140,11 +140,6 @@
     </build>
 
     <dependencies>
-        <!--<dependency>-->
-            <!--<groupId>com.gaic.bue.uwd</groupId>-->
-            <!--<artifactId>core-util</artifactId>-->
-            <!--<version>${version.core.util}</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>com.cedarsoftware</groupId>
             <artifactId>n-cube</artifactId>
@@ -155,21 +150,11 @@
             <artifactId>json-command-servlet</artifactId>
             <version>${version.json-command-servlet}</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>com.gaic.bue</groupId>-->
-            <!--<artifactId>ws-consumer-identifier</artifactId>-->
-            <!--<version>${version.ws.consumer.id}</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>${version.log4j}</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.hibernate</groupId>-->
-            <!--<artifactId>hibernate-core</artifactId>-->
-            <!--<version>${version.hibernate}</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

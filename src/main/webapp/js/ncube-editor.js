@@ -1,135 +1,235 @@
 /**
  * NCube Editor
  *     IDE for building and editing NCubes
- *     
+ *
  * @author John DeRegnaucourt
  */
 
-$(function() 
+$(function ()
 {
-	var _cubeList = new Object();
+    var _cubeList = {};
     var _apps = [];
     var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
-	var _selectedCubeName = null;
+    var _selectedCubeName = null;
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = null;
     var _selectedStatus = "SNAPSHOT";
     var _axisName;
     var _errorId = null;
-	initialize();
+    var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
+    initialize();
 
-	function initialize()
-	{
+    function initialize()
+    {
         loadAppNames();
         loadVersions();
         loadNCubes();
-
         loadAppListView();
         loadStatusListView();
         loadVersionListView();
         loadNCubeListView();
-
         setListSelectedStatus(_selectedApp, '#app-list');
         setListSelectedStatus(_selectedStatus, '#status-list');
         setListSelectedStatus(_selectedVersion, '#version-list');
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
-
         loadCube();
-		
-		var west = $('#west');
-		var tabs = $('#tabs');
-		var tabDiv = $('#ncubeTabContent');
-		
-		$('body').layout(
-		{
-			center__paneSelector: "#center",
-			west__paneSelector: "#west",
-			center__onresize: function()
-			{
-		    	tabDiv.height(west.height() - tabs.height());
-			}
-		});		
-		tabDiv.height(west.height() - tabs.height());
+
+        $.fn.selectRange = function (start, end)
+        {
+            if (!end)
+            {
+                end = start;
+            }
+            return this.each(function ()
+            {
+                if (this.setSelectionRange)
+                {
+                    this.focus();
+                    this.setSelectionRange(start, end);
+                }
+                else if (this.createTextRange)
+                {
+                    var range = this.createTextRange();
+                    range.collapse(true);
+                    range.moveEnd('character', end);
+                    range.moveStart('character', start);
+                    range.select();
+                }
+            });
+        };
+        var west = $('#west');
+        var tabs = $('#tabs');
+        var tabDiv = $('#ncubeTabContent');
+        $('body').layout(
+            {
+                center__paneSelector: "#center",
+                west__paneSelector: "#west",
+                center__onresize: function ()
+                {
+                    tabDiv.height(west.height() - tabs.height());
+                }
+            });
+        tabDiv.height(west.height() - tabs.height());
         addListeners();
-	}
+    }
 
     function addListeners()
     {
-        $('#newCubeMenu').click(function() { newCube() });
-        $('#newCubeSave').click(function() { newCubeSave() });
-
-        $('#dupeCubeMenu').click(function() { dupeCube() });
-        $('#dupeCubeCopy').click(function() { dupeCubeCopy() });
-
-        $('#deleteCubeMenu').click(function() { deleteCube() });
-        $('#deleteCubeOk').click(function() { deleteCubeOk() });
-
-        $('#showRefsToMenu').click(function() { showRefsToCube() });
-        $('#showRefsToClose').click(function() { showRefsToCubeClose() });
-
-        $('#showRefsFromMenu').click(function() { showRefsFromCube() });
-        $('#showRefsFromClose').click(function() { showRefsFromCubeClose() });
-
-        $('#showReqScopeMenu').click(function() { showReqScope() });
-        $('#showReqScopeClose').click(function() { showReqScopeClose() });
-
-        $('#releaseCubesMenu').click(function() { releaseCubes() });
-        $('#releaseCubesOk').click(function() { releaseCubesOk() });
-
-        $('#changeVerMenu').click(function() { changeVersion() });
-        $('#changeVerOk').click(function() { changeVersionOk() });
-
-        $('#addAxisOk').click(function() { addAxisOk() });
-
-        $('#deleteAxisOk').click(function() { deleteAxisOk() });
-
-        $('#updateAxisMenu').click(function() { updateAxis() });
-        $('#updateAxisOk').click(function() { updateAxisOk() });
+        $('#newCubeMenu').click(function ()
+        {
+            newCube()
+        });
+        $('#newCubeSave').click(function ()
+        {
+            newCubeSave()
+        });
+        $('#dupeCubeMenu').click(function ()
+        {
+            dupeCube()
+        });
+        $('#dupeCubeCopy').click(function ()
+        {
+            dupeCubeCopy()
+        });
+        $('#deleteCubeMenu').click(function ()
+        {
+            deleteCube()
+        });
+        $('#deleteCubeOk').click(function ()
+        {
+            deleteCubeOk()
+        });
+        $('#showRefsToMenu').click(function ()
+        {
+            showRefsToCube()
+        });
+        $('#showRefsToClose').click(function ()
+        {
+            showRefsToCubeClose()
+        });
+        $('#showRefsFromMenu').click(function ()
+        {
+            showRefsFromCube()
+        });
+        $('#showRefsFromClose').click(function ()
+        {
+            showRefsFromCubeClose()
+        });
+        $('#showReqScopeMenu').click(function ()
+        {
+            showReqScope()
+        });
+        $('#showReqScopeClose').click(function ()
+        {
+            showReqScopeClose()
+        });
+        $('#releaseCubesMenu').click(function ()
+        {
+            releaseCubes()
+        });
+        $('#releaseCubesOk').click(function ()
+        {
+            releaseCubesOk()
+        });
+        $('#changeVerMenu').click(function ()
+        {
+            changeVersion()
+        });
+        $('#changeVerOk').click(function ()
+        {
+            changeVersionOk()
+        });
+        $('#addAxisOk').click(function ()
+        {
+            addAxisOk()
+        });
+        $('#deleteAxisOk').click(function ()
+        {
+            deleteAxisOk()
+        });
+        $('#updateAxisMenu').click(function ()
+        {
+            updateAxis()
+        });
+        $('#updateAxisOk').click(function ()
+        {
+            updateAxisOk()
+        });
+        $('#editColSelectAll').click(function ()
+        {
+            editColSelect(true)
+        });
+        $('#editColSelectNone').click(function ()
+        {
+            editColSelect(false)
+        });
+        $('#editColAdd').click(function ()
+        {
+            editColAdd()
+        });
+        $('#editColDelete').click(function ()
+        {
+            editColDelete()
+        });
+        $('#editColUp').click(function ()
+        {
+            editColUp()
+        });
+        $('#editColDown').click(function ()
+        {
+            editColDown()
+        });
+        $('#editColumnsCancel').click(function ()
+        {
+            editColCancel()
+        });
+        $('#editColumnsSave').click(function ()
+        {
+            editColSave()
+        });
     }
 
-	function loadNCubeListView()
-	{
+    function loadNCubeListView()
+    {
         $('#ncubeCount').html(Object.keys(_cubeList).length);
         var list = $('#ncube-list');
-		list.empty();
-		
-		$.each(_cubeList, function(key, value)
-		{
-			var li = $("<li/>");
-			var anchor = $('<a href="#"/>');
-			anchor.click(function()
-			{
-				var cubeName = anchor.text();
-				setListSelectedStatus(cubeName, '#ncube-list');
+        list.empty();
+        $.each(_cubeList, function (key, value)
+        {
+            var li = $("<li/>");
+            var anchor = $('<a href="#"/>');
+            anchor.click(function ()
+            {
+                var cubeName = anchor.text();
+                setListSelectedStatus(cubeName, '#ncube-list');
                 _selectedCubeName = cubeName;
-				loadCube(); // load spreadsheet side
-			});
-			anchor.html(key);
-			if (value.name == _selectedCubeName)
-			{
-				anchor.attr('class', 'ncube-selected');
-			}
-			else
-			{
-				anchor.attr('class', 'ncube-notselected');
-			}
-			li.append(anchor);
-	        list.append(li);
-		});
-	}
+                loadCube(); // load spreadsheet side
+            });
+            anchor.html(key);
+            if (value.name == _selectedCubeName)
+            {
+                anchor.attr('class', 'ncube-selected');
+            }
+            else
+            {
+                anchor.attr('class', 'ncube-notselected');
+            }
+            li.append(anchor);
+            list.append(li);
+        });
+    }
 
     function loadAppListView()
     {
         $('#appCount').html(_apps.length);
         var list = $('#app-list');
         list.empty();
-
-        $.each(_apps, function(index, value)
+        $.each(_apps, function (index, value)
         {
             var li = $("<li/>");
             var anchor = $('<a href="#"/>');
-            anchor.click(function()
+            anchor.click(function ()
             {
                 var appName = anchor.text();
                 setListSelectedStatus(appName, '#app-list');
@@ -159,12 +259,11 @@ $(function()
     {
         var list = $('#status-list');
         list.empty();
-
-        $.each(_statuses, function(index, value)
+        $.each(_statuses, function (index, value)
         {
             var li = $("<li/>");
             var anchor = $('<a href="#"/>');
-            anchor.click(function()
+            anchor.click(function ()
             {
                 var status = anchor.text();
                 setListSelectedStatus(status, '#status-list');
@@ -194,17 +293,15 @@ $(function()
         $('#verCount').html(_versions.length);
         var list = $('#version-list');
         list.empty();
-
-        $.each(_versions, function(index, value)
+        $.each(_versions, function (index, value)
         {
             var li = $("<li/>");
             var anchor = $('<a href="#"/>');
-            anchor.click(function()
+            anchor.click(function ()
             {
                 var version = anchor.text();
                 setListSelectedStatus(version, '#version-list');
                 _selectedVersion = version;
-
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
@@ -223,165 +320,230 @@ $(function()
         });
     }
 
-	function loadCubeHtml()
-	{
+    function loadCubeHtml()
+    {
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
             $('#ncube-content').html('No n-cubes to load');
             return;
         }
-		var result = call("ncubeController.getHtml",[_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
-		var htmlContent;
-
-		if (result.status === true)
-		{
-			htmlContent = result.data;
-        }
-		else
-		{
-			htmlContent = "Unable to load " + _selectedCubeName + '. ' + result.data;
-		}
-		$('#ncube-content').html(htmlContent);
+        var result = call("ncubeController.getHtml", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var htmlContent;
         if (result.status === true)
         {
-            $(".axis-menu").each(function()
+            htmlContent = result.data;
+        }
+        else
+        {
+            htmlContent = "Unable to load " + _selectedCubeName + '. ' + result.data;
+        }
+        $('#ncube-content').html(htmlContent);
+        if (result.status === true)
+        {
+            $(".axis-menu").each(function ()
             {
                 var element = $(this);
-                var ul = $('<ul/>').prop({'class':'dropdown-menu', 'role':'menu'});
+                var axisName = element.attr('data-id');
+                var ul = $('<ul/>').prop({'class': 'dropdown-menu', 'role': 'menu'});
                 var li = $('<li/>');
-                var an = $('<a href=\"#\">');
+                var an = $('<a href="#">');
                 an.html("Update Axis...");
-                an.click(function() { updateAxis(element.attr('data-id')) });
+                an.click(function ()
+                {
+                    updateAxis(axisName)
+                });
                 li.append(an);
                 ul.append(li);
-
                 li = $('<li/>');
-                an = $('<a href=\"#\">');
+                an = $('<a href="#">');
                 an.html("Add Axis...");
-                an.click(function() { addAxis(); });
+                an.click(function ()
+                {
+                    addAxis();
+                });
                 li.append(an);
                 ul.append(li);
-
                 li = $('<li/>');
-                an = $('<a href=\"#\">');
+                an = $('<a href="#">');
                 an.html("Delete Axis...");
-                an.click(function() { deleteAxis(element.attr('data-id')) });
+                an.click(function ()
+                {
+                    deleteAxis(axisName)
+                });
                 li.append(an);
                 ul.append(li);
-
-                li = $('<div/>').prop({'class':'divider'});
+                li = $('<div/>').prop({'class': 'divider'});
                 ul.append(li);
-
                 li = $('<li/>');
-                an = $('<a href=\"#\">');
-                an.html("Edit Columns...");
-                an.click(function() { editColumns(element.attr('data-id'))});
+                an = $('<a href="#">');
+                an.html("Edit " + axisName + " columns...");
+                an.click(function ()
+                {
+                    editColumns(axisName)
+                });
                 li.append(an);
                 ul.append(li);
-
                 element.append(ul);
             });
         }
-	}
 
-	function loadCubeDetails()
-	{
-		var cube = _cubeList[_selectedCubeName];
+        $('.ncube-col').each(function ()
+        {
+            // TODO: Default must not go into 'edit mode'
+            $(this).on("dblclick", function ()
+            {   // On double click, place into contenteditable mode
+                $(this).attr('contenteditable', 'true');
+                $(this).focus();
+            });
+            $(this).focusout(function ()
+            {   // On focusout, turn off contenteditable mode
+                var colId = $(this).attr('data-id').split('c')[1];
+                var value = cleanString($(this).html());
+                var result = call("ncubeController.updateColumnCell", [_selectedCubeName, _selectedApp, _selectedVersion, colId, value]);
+                clearError();
+                if (result.status !== true || result.data !== true)
+                {
+                    _errorId = showNote('Unable to update column value: ' + result.data);
+                }
+                else
+                {
+                    $(this).attr('contenteditable', 'false');
+                    $("[data-id='" + $(this).attr('data-id') + "']").each(function ()
+                    {
+                        $(this).html(value);
+                    });
+                }
+            });
+        });
+
+        $('.cell').each(function ()
+        {
+            $(this).on("dblclick", function ()
+            {   // On double click, place into contenteditable mode
+                $(this).attr('contenteditable', 'true');
+                $(this).focus();
+            });
+            $(this).focusout(function ()
+            {   // On focusout, turn off contenteditable mode
+                $(this).attr('contenteditable', 'false');
+                var cellId = $(this).attr('data-id').split('k')[1];
+                var ids = cellId.split(".");
+                var value = cleanString($(this).html());
+                var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, ids, value]);
+                clearError();
+                if (result.status === true && typeof result.data !== "string")
+                {
+                    $(this).html(result.data[0]);
+                }
+                else
+                {
+                    _errorId = showNote('Unable to cell value: ' + result.data);
+                    $(this).html('');
+                }
+            });
+        });
+    }
+
+    function cleanString(string)
+    {
+        var s1 = string.replace(/<br>/g, " ");
+        var s2 = s1.replace(/&lt;/g, "<");
+        var s3 = s2.replace(/&gt;/g, ">");
+        var s4 = s3.replace(/&nbsp;/g, " ");
+        var s5 = s4.replace(/&amp;/g, "&");
+        return s5;
+    }
+
+    function loadCubeDetails()
+    {
+        var cube = _cubeList[_selectedCubeName];
         if (!cube)
         {
             return;
         }
-		$('#cube_id').val(cube.id);
-		$('#cube_app').val(cube.app);
-		$('#cube_name').val(cube.name);
-		$('#cube_version').val(cube.version);
-		$('#cube_status').val(cube.status);
-		
-		var date = '';
-		if (cube.createDate != undefined)
-		{
-			date = new Date(cube.createDate.value).format('yyyy-mm-dd HH:MM:ss');
-		}
-		$('#cube_createDate').val(date);
-		
-		date = '';
-		if (cube.updateDate != undefined)
-		{
-			date = new Date(cube.updateDate.value).format('yyyy-mm-dd HH:MM:ss');			
-		}
-		$('#cube_updateDate').val(date);	
-		
-		$('#cube_createHid').val(cube.createHid);		
-		$('#cube_updateHid').val(cube.updateHid);
-		
-		var date = '';
-		if (cube.sysEffDate != undefined)
-		{
-			date = new Date(cube.sysEffDate.value).format('yyyy-mm-dd HH:MM:ss');
-		}
-		$('#cube_sysEffDate').val(date);
-		
-		date = '';
-		if (cube.sysEndDate != undefined)
-		{
-			date = new Date(cube.sysEndDate.value).format('yyyy-mm-dd HH:MM:ss');			
-		}
-		$('#cube_sysEndDate').val(date);	
-		
-		var date = '';
-		if (cube.bizEffDate != undefined)
-		{
-			date = new Date(cube.bizEffDate.value).format('yyyy-mm-dd HH:MM:ss');
-		}
-		$('#cube_bizEffDate').val(date);
-		
-		date = '';
-		if (cube.bizEndDate != undefined)
-		{
-			date = new Date(cube.bizEndDate.value).format('yyyy-mm-dd HH:MM:ss');			
-		}
-		$('#cube_bizEndDate').val(date);	
-	}
-	
-	function loadCube()
-	{
-		loadCubeHtml();
-		loadCubeDetails();
+        $('#cube_id').val(cube.id);
+        $('#cube_app').val(cube.app);
+        $('#cube_name').val(cube.name);
+        $('#cube_version').val(cube.version);
+        $('#cube_status').val(cube.status);
+        var date = '';
+        if (cube.createDate != undefined)
+        {
+            date = new Date(cube.createDate.value).format('yyyy-mm-dd HH:MM:ss');
+        }
+        $('#cube_createDate').val(date);
+        date = '';
+        if (cube.updateDate != undefined)
+        {
+            date = new Date(cube.updateDate.value).format('yyyy-mm-dd HH:MM:ss');
+        }
+        $('#cube_updateDate').val(date);
+        $('#cube_createHid').val(cube.createHid);
+        $('#cube_updateHid').val(cube.updateHid);
+        var date = '';
+        if (cube.sysEffDate != undefined)
+        {
+            date = new Date(cube.sysEffDate.value).format('yyyy-mm-dd HH:MM:ss');
+        }
+        $('#cube_sysEffDate').val(date);
+        date = '';
+        if (cube.sysEndDate != undefined)
+        {
+            date = new Date(cube.sysEndDate.value).format('yyyy-mm-dd HH:MM:ss');
+        }
+        $('#cube_sysEndDate').val(date);
+        var date = '';
+        if (cube.bizEffDate != undefined)
+        {
+            date = new Date(cube.bizEffDate.value).format('yyyy-mm-dd HH:MM:ss');
+        }
+        $('#cube_bizEffDate').val(date);
+        date = '';
+        if (cube.bizEndDate != undefined)
+        {
+            date = new Date(cube.bizEndDate.value).format('yyyy-mm-dd HH:MM:ss');
+        }
+        $('#cube_bizEndDate').val(date);
+    }
+
+    function loadCube()
+    {
+        loadCubeHtml();
+        loadCubeDetails();
         // TODO: Load Tests
         // TODO: Load D3.js pictures
-	}
-	
-	/**
-	 * Tweak the class name of the selected / non-selected items
-	 * to match what was selected.
-	 */
-	function setListSelectedStatus(itemName, listId)
-	{
-		var list = $(listId);
+    }
+
+    /**
+     * Tweak the class name of the selected / non-selected items
+     * to match what was selected.
+     */
+    function setListSelectedStatus(itemName, listId)
+    {
+        var list = $(listId);
         var items = list.find('li a');
-		$.each(items, function(index, value)
-		{
-			var anchor = $(value);
-			var text = anchor.html();
-			if (text == itemName)
-			{
-				anchor.attr('class', 'ncube-selected');
-			}
-			else
-			{
-				anchor.attr('class', 'ncube-notselected');
-			}
-		});
-	}
-	
-	/**
-	 * Load NCube List from Database
-	 */
-	function loadNCubes()
-	{
+        $.each(items, function (index, value)
+        {
+            var anchor = $(value);
+            var text = anchor.html();
+            if (text == itemName)
+            {
+                anchor.attr('class', 'ncube-selected');
+            }
+            else
+            {
+                anchor.attr('class', 'ncube-notselected');
+            }
+        });
+    }
+
+    /**
+     * Load NCube List from Database
+     */
+    function loadNCubes()
+    {
         _cubeList = {};
         clearError();
-
         if (!_selectedApp)
         {
             _selectedCubeName = null;
@@ -400,34 +562,30 @@ $(function()
             _errorId = showNote('No Status selected, cannot load n-cubes.');
             return;
         }
-
-		var result = call("ncubeController.getCubeList", ['%', _selectedApp, _selectedVersion, _selectedStatus]);
-		var first = null;
-
-		if (result.status === true)
-		{
-			$.each(result.data, function(index, value)
-			{
-				_cubeList[value.name] = value;
+        var result = call("ncubeController.getCubeList", ['%', _selectedApp, _selectedVersion, _selectedStatus]);
+        var first = null;
+        if (result.status === true)
+        {
+            $.each(result.data, function (index, value)
+            {
+                _cubeList[value.name] = value;
                 if (!first)
                 {
                     first = value.name;
                 }
-			});
-		}
+            });
+        }
         else
         {
             _errorId = showNote('Unable to load n-cubes. ' + result.data);
         }
-
         _selectedCubeName = (_cubeList && first) ? _cubeList[first].name : null;
-	}
+    }
 
     function loadVersions()
     {
         _versions = [];
         clearError();
-
         if (!_selectedApp)
         {
             _selectedVersion = null;
@@ -441,10 +599,9 @@ $(function()
             return;
         }
         var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus]);
-
         if (result.status === true)
         {
-            $.each(result.data, function(index, value)
+            $.each(result.data, function (index, value)
             {
                 _versions[index] = value;
             });
@@ -453,7 +610,6 @@ $(function()
         {
             _errorIdLoadVersions = showNote('Unable to load versions. ' + result.data);
         }
-
         _selectedVersion = (_versions) ? _versions[_versions.length - 1] : null;
     }
 
@@ -468,7 +624,7 @@ $(function()
         var result = call("ncubeController.getAppNames", []);
         if (result.status === true)
         {
-            $.each(result.data, function(index, value)
+            $.each(result.data, function (index, value)
             {
                 _apps[index] = value;
             });
@@ -477,13 +633,11 @@ $(function()
         {
             _errorId = showNote('Unable to load n-cube Apps. ' + result.data);
         }
-
         if (!_selectedApp && _apps)
         {
             _selectedApp = _apps[0];
             localStorage[SELECTED_APP] = _selectedApp;
         }
-
         if (!_apps)
         {
             _selectedApp = localStorage[SELECTED_APP] = null;
@@ -500,15 +654,19 @@ $(function()
         $('#newCubeAppName').val(_selectedApp);
         $('#newCubeStatus').val('SNAPSHOT');
         $('#newCubeVersion').val(_selectedVersion);
-        buildDropDown('#newCubeAppList', '#newCubeAppName', _apps, function(app)
+        buildDropDown('#newCubeAppList', '#newCubeAppName', _apps, function (app)
         {
             var result = call("ncubeController.getAppVersions", [app, 'SNAPSHOT']);
             if (result.status === true)
             {
-                buildDropDown('#existVersionList', '#newCubeVersion', result.data, function() { });
+                buildDropDown('#existVersionList', '#newCubeVersion', result.data, function ()
+                {
+                });
             }
         });
-        buildDropDown('#existVersionList', '#newCubeVersion', _versions, function() { });
+        buildDropDown('#existVersionList', '#newCubeVersion', _versions, function ()
+        {
+        });
         $('#newCubeModal').modal();
     }
 
@@ -518,21 +676,18 @@ $(function()
         var appName = $('#newCubeAppName').val();
         var cubeName = $('#newCubeName').val();
         var version = $('#newCubeVersion').val();
-        var result = call("ncubeController.createCube",[cubeName, appName, version]);
-
+        var result = call("ncubeController.createCube", [cubeName, appName, version]);
         if (result.status === true && result.data === true)
         {
             loadAppNames();
             _selectedApp = appName;
             loadAppListView();
             setListSelectedStatus(_selectedApp, '#app-list')
-
             var saveSelectedVersion = _selectedVersion;
             loadVersions();
             _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
             loadVersionListView();
             setListSelectedStatus(_selectedVersion, '#version-list');
-
             loadNCubes();
             loadNCubeListView();
             loadCube();
@@ -546,13 +701,11 @@ $(function()
     function deleteCube()
     {
         clearError();
-
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
             _errorId = showNote('No n-cube selected. Nothing to delete.');
             return;
         }
-
         $('#deleteCubeLabel').html('Delete \'' + _selectedCubeName + '\' (' + _selectedVersion + ', ' + _selectedStatus + ') ?');
         $('#deleteCubeModal').modal();
     }
@@ -560,19 +713,17 @@ $(function()
     function deleteCubeOk()
     {
         $('#deleteCubeModal').modal('hide');
-        var result = call("ncubeController.deleteCube",[_selectedCubeName, _selectedApp, _selectedVersion]);
+        var result = call("ncubeController.deleteCube", [_selectedCubeName, _selectedApp, _selectedVersion]);
         if (result.status === true && result.data === true)
         {
             loadAppNames();
             loadAppListView();
             setListSelectedStatus(_selectedApp, '#app-list')
-
             var saveSelectedVersion = _selectedVersion;
             loadVersions();
             _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
             loadVersionListView();
             setListSelectedStatus(_selectedVersion, '#version-list');
-
             loadNCubes();
             loadNCubeListView();
             loadCube();
@@ -586,27 +737,28 @@ $(function()
     function dupeCube()
     {
         clearError();
-
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
             _errorId = showNote('No n-cube selected. Nothing to duplicate.');
             return;
         }
-
         $('#dupeCubeAppName').val(_selectedApp);
         $('#dupeCubeVersion').val(_selectedVersion);
         $('#dupeCubeName').val(_selectedCubeName);
         $('#dupeCubeLabel').html('Duplicate \'' + _selectedCubeName + '\' (' + _selectedVersion + ', ' + _selectedStatus + ') ?');
-        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', _apps, function(app)
+        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', _apps, function (app)
         {
             var result = call("ncubeController.getAppVersions", [app, 'SNAPSHOT']);
             if (result.status === true)
             {
-                buildDropDown('#dupeCubeVersionList', '#dupeCubeVersion', result.data, function() { });
+                buildDropDown('#dupeCubeVersionList', '#dupeCubeVersion', result.data, function ()
+                {
+                });
             }
         });
-        buildDropDown('#dupeCubeVersionList', '#dupeCubeVersion', _versions, function() { });
-
+        buildDropDown('#dupeCubeVersionList', '#dupeCubeVersion', _versions, function ()
+        {
+        });
         $('#dupeCubeModal').modal();
     }
 
@@ -616,21 +768,18 @@ $(function()
         var newName = $('#dupeCubeName').val();
         var newApp = $('#dupeCubeAppName').val();
         var newVersion = $('#dupeCubeVersion').val();
-        var result = call("ncubeController.duplicateCube",[newName, _selectedCubeName, newApp, _selectedApp, newVersion, _selectedVersion, _selectedStatus]);
-
+        var result = call("ncubeController.duplicateCube", [newName, _selectedCubeName, newApp, _selectedApp, newVersion, _selectedVersion, _selectedStatus]);
         if (result.status === true && result.data === true)
         {
             loadAppNames();
             _selectedApp = newApp;
             loadAppListView();
-
             _selectedStatus = 'SNAPSHOT';
             setListSelectedStatus('SNAPSHOT', '#status-list')
             loadVersions();
             _selectedVersion = newVersion;
             loadVersionListView();
             setListSelectedStatus(_selectedVersion, '#version-list');
-
             loadNCubes();
             _selectedCubeName = newName;
             loadNCubeListView();
@@ -650,21 +799,19 @@ $(function()
             _errorId = showNote('No n-cube selected. No (inbound) references to show.');
             return;
         }
-
         $('#showRefsToLabel').html('Inbound refs to \'' + _selectedCubeName + '\' (' + _selectedVersion + ', ' + _selectedStatus + ')');
         var ul = $('#refsToCubeList');
         ul.empty();
         $('#showRefsToCubeModal').modal();
-
-        var result = call("ncubeController.getReferencesTo",[_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var result = call("ncubeController.getReferencesTo", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true && typeof result.data !== "string")
         {
-            $.each(result.data, function(index, value)
+            $.each(result.data, function (index, value)
             {
-                var li = $("<li/>").attr({'class':'list-group-item'});
+                var li = $("<li/>").attr({'class': 'list-group-item'});
                 var anchor = $('<a href="#"/>');
                 anchor.html(value);
-                anchor.click(function()
+                anchor.click(function ()
                 {
                     showRefsToCubeClose();
                     _selectedCubeName = value;
@@ -698,16 +845,15 @@ $(function()
         var ul = $('#refsFromCubeList');
         ul.empty();
         $('#showRefsFromCubeModal').modal();
-
-        var result = call("ncubeController.getReferencesFrom",[_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var result = call("ncubeController.getReferencesFrom", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true && typeof result.data !== "string")
         {
-            $.each(result.data, function(index, value)
+            $.each(result.data, function (index, value)
             {
-                var li = $("<li/>").attr({'class':'list-group-item'});
+                var li = $("<li/>").attr({'class': 'list-group-item'});
                 var anchor = $('<a href="#"/>');
                 anchor.html(value);
-                anchor.click(function()
+                anchor.click(function ()
                 {
                     showRefsFromCubeClose();
                     _selectedCubeName = value;
@@ -741,13 +887,12 @@ $(function()
         var ul = $('#reqScopeList');
         ul.empty();
         $('#showReqScopeModal').modal();
-
-        var result = call("ncubeController.getRequiredScope",[_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var result = call("ncubeController.getRequiredScope", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true && typeof result.data !== "string")
         {
-            $.each(result.data, function(index, value)
+            $.each(result.data, function (index, value)
             {
-                var li = $("<li/>").attr({'class':'list-group-item'});
+                var li = $("<li/>").attr({'class': 'list-group-item'});
                 li.html(value);
                 ul.append(li);
             });
@@ -766,19 +911,16 @@ $(function()
     function releaseCubes()
     {
         clearError();
-
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
             _errorId = showNote('No n-cube selected. No version to release.');
             return;
         }
-
         if (_selectedStatus == "RELEASE")
         {
             _errorId = showNote('Only a SNAPSHOT version can be released.');
             return;
         }
-
         $('#releaseCubesLabel').html('Release ' + _selectedApp + ' ' + _selectedVersion + ' SNAPSHOT ?');
         $('#releaseCubesAppName').val(_selectedApp);
         $('#releaseCubesModal').modal();
@@ -788,15 +930,13 @@ $(function()
     {
         $('#releaseCubesModal').modal('hide');
         var newSnapVer = $('#releaseCubesVersion').val();
-        var result = call("ncubeController.releaseCubes",[_selectedApp, _selectedVersion, newSnapVer]);
-
+        var result = call("ncubeController.releaseCubes", [_selectedApp, _selectedVersion, newSnapVer]);
         if (result.status === true && result.data === true)
         {
             var saveSelectedVersion = _selectedVersion;
             loadVersions();
             _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
             loadVersionListView();
-
             loadNCubes();
             loadNCubeListView();
             setListSelectedStatus(_selectedCubeName, '#ncube-list');
@@ -811,19 +951,16 @@ $(function()
     function changeVersion()
     {
         clearError();
-
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
             _errorId = showNote('No n-cube selected. No SNAPSHOT version can be changed.');
             return;
         }
-
         if (_selectedStatus == "RELEASE")
         {
             _errorId = showNote('Only a SNAPSHOT version can be changed.');
             return;
         }
-
         $('#changeVerLabel').html('Change ' + _selectedApp + ' ' + _selectedVersion + ' ?');
         $('#changeVerModal').modal();
     }
@@ -832,14 +969,12 @@ $(function()
     {
         $('#changeVerModal').modal('hide');
         var newSnapVer = $('#changeVerValue').val();
-        var result = call("ncubeController.changeVersionValue",[_selectedApp, _selectedVersion, newSnapVer]);
-
+        var result = call("ncubeController.changeVersionValue", [_selectedApp, _selectedVersion, newSnapVer]);
         if (result.status === true && result.data === true)
         {
             loadVersions();
             _selectedVersion = doesItemExist(newSnapVer, _versions) ? newSnapVer : _selectedVersion;
             loadVersionListView();
-
             loadNCubes();
             loadNCubeListView();
             setListSelectedStatus(_selectedCubeName, '#ncube-list');
@@ -859,29 +994,33 @@ $(function()
             _errorId = showNote('No n-cube selected. Axis cannot be added.');
             return;
         }
-
         if (_selectedStatus == "RELEASE")
         {
             _errorId = showNote('Only a SNAPSHOT version can be modified.');
             return;
         }
-
-        var generalTypes= ['STRING','LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
+        var generalTypes = ['STRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
         var ruleTypes = ['EXPRESSION'];
-        buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE','RANGE', 'SET', 'NEAREST', 'RULE'], function(selected)
+        buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected)
         {
             if ("RULE" == selected)
             {
-                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function() { });
+                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function ()
+                {
+                });
                 $('#addAxisValueTypeName').val('EXPRESSION');
             }
             else
             {
-                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function() { });
+                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function ()
+                {
+                });
                 $('#addAxisValueTypeName').val('STRING');
             }
         });
-        buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function() { });
+        buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function ()
+        {
+        });
         $('#addAxisName').val('');
         $('#addAxisModal').modal();
     }
@@ -911,13 +1050,11 @@ $(function()
             _errorId = showNote('No n-cube selected. Axis cannot be deleted.');
             return;
         }
-
         if (_selectedStatus == "RELEASE")
         {
             _errorId = showNote('Only a SNAPSHOT version can be modified.');
             return;
         }
-
         $('#deleteAxisName').val(axisName);
         $('#deleteAxisModal').modal();
     }
@@ -937,7 +1074,6 @@ $(function()
         }
     }
 
-
     function updateAxis(axisName)
     {
         clearError();
@@ -946,13 +1082,11 @@ $(function()
             _errorId = showNote('No n-cube selected. Axis cannot be updated.');
             return;
         }
-
         if (_selectedStatus == "RELEASE")
         {
             _errorId = showNote('Only a SNAPSHOT version can be modified.');
             return;
         }
-
         var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
         var axis;
         if (result.status === true && typeof result.data !== "string")
@@ -964,14 +1098,12 @@ $(function()
             _errorId = showNote('Could not retrieve axes for ncube: ' + _selectedCubeName);
             return;
         }
-
         var forceState = axis.type.name == 'RULE';
-
         $('#updateAxisLabel').html("Update Axis: " + axisName);
         $('#updateAxisName').val(axisName);
         $('#updateAxisTypeName').val(axis.type.name);
         $('#updateAxisValueTypeName').val(axis.valueType.name);
-        $('#updateAxisDefaultCol').prop({'checked':axis.defaultCol != null});
+        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null});
         if (forceState)
         {
             $('#updateAxisSortOrderRow').hide();
@@ -981,8 +1113,8 @@ $(function()
         {
             $('#updateAxisSortOrderRow').show();
             $('#updateAxisMultiMatchRow').show();
-            $('#updateAxisSortOrder').prop({'checked':axis.preferredOrder == 0,'disabled':false});
-            $('#updateAxisMultiMatch').prop({'checked':axis.multiMatch === true, 'disabled':false});
+            $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
+            $('#updateAxisMultiMatch').prop({'checked': axis.multiMatch === true, 'disabled': false});
         }
         _axisName = axisName;
         $('#updateAxisModal').modal();
@@ -1006,18 +1138,200 @@ $(function()
         }
     }
 
-    // --------------------------------------------------------------------------------------------
+    function loadColumns(axis)
+    {
+        var ul = $('#editColumnsList');
+        ul.empty();
+        ul.prop('model', axis);
+        var displayOrder = 0;
+        $.each(axis.columns["@items"], function (key, item)
+        {
+            if (!item.displayOrder || item.displayOrder < 2147483647)
+            {   // Don't add default column in
+                item.displayOrder = displayOrder++;
+                var rowDiv = $('<div/>').prop({class: "row", "model": item});
+                var div = $('<div/>').prop({class: "input-group"});
+                var span = $('<span/>').prop({class: "input-group-addon"});
+                var inputBtn = $('<input/>').prop({class: "editColCheckBox", "type": "checkbox"});
+                var inputText = $('<input/>').prop({class: "form-control", "type": "text"});
+                inputText.val(item.value);
+                span.append(inputBtn);
+                div.append(span);
+                div.append(inputText);
+                rowDiv.append(div);
+                ul.append(rowDiv);
+            }
+        });
+    }
 
+    function editColumns(axisName)
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Columns cannot be edited.');
+            return;
+        }
+        if (_selectedStatus == "RELEASE")
+        {
+            _errorId = showNote('Only a SNAPSHOT version can be modified.');
+            return;
+        }
+        var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
+        var axis;
+        if (result.status === true && typeof result.data !== "string")
+        {
+            axis = result.data;
+            if (axis.defaultCol)
+            {   // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
+                axis.columns["@items"].splice(axis.columns["@items"].length - 1, 1);
+            }
+        }
+        else
+        {
+            _errorId = showNote('Could not retrieve axes for ncube: ' + _selectedCubeName);
+            return;
+        }
+        sortColumns(axis);
+        loadColumns(axis);
+        var moveBtnAvail = axis.preferredOrder == 1;
+        if (moveBtnAvail === true)
+        {
+            $('#editColUp').show();
+            $('#editColDown').show();
+        }
+        else
+        {
+            $('#editColUp').hide();
+            $('#editColDown').hide();
+        }
+        $('#editColumnsLabel').html('Edit ' + axisName);
+        $('#editColumnsModal').modal();
+    }
+
+    function sortColumns(axis)
+    {
+        if (axis.preferredOrder == 1)
+        {
+            axis.columns['@items'].sort(function(a,b)
+            {
+                return a.displayOrder - b.displayOrder;
+            });
+        }
+    }
+
+    // Check all or uncheck all column check boxes
+    function editColSelect(state)
+    {
+        var input = $('.editColCheckBox');
+        $.each(input, function (index, btn)
+        {
+            $(this).prop('checked', state);
+        });
+    }
+
+    function editColAdd()
+    {
+        var input = $('.editColCheckBox');
+        var loc = -1;
+        $.each(input, function (index, btn)
+        {
+            if ($(this).prop('checked'))
+            {
+                loc = index;
+            }
+        });
+        var ul = $('#editColumnsList');
+        var axis = ul.prop('model');
+        var newCol = {
+            '@type': 'com.cedarsoftware.ncube.Column',
+            'value': 'newValue',
+            'id': getUniqueId()
+        };
+        if (loc == -1 || axis.preferredOrder == 0)
+        {
+            axis.columns["@items"].push(newCol);
+        }
+        else
+        {
+            axis.columns["@items"].splice(loc + 1, 0, newCol);
+        }
+        loadColumns(axis);
+    }
+
+    function editColDelete()
+    {
+        var ul = $('#editColumnsList');
+        var axis = ul.prop('model');
+        var input = $('.editColCheckBox');
+        var cols = axis.columns['@items'];
+        var colsToDelete = [];
+        $.each(input, function (index, btn)
+        {
+            if ($(this).prop('checked'))
+            {
+                colsToDelete.push(index);
+            }
+        });
+
+        // Walk through in reverse order, deleting from back to front so that
+        // the correct elements are deleted.
+        for (var i=colsToDelete.length - 1; i >= 0; i--)
+        {
+            cols.splice(colsToDelete[i], 1);
+        }
+        ul.empty();
+        loadColumns(axis);
+    }
+
+    function editColUp()
+    {
+        console.log("move up");
+    }
+
+    function editColDown()
+    {
+        console.log("move down");
+    }
+
+    function editColCancel()
+    {
+        $('#editColumnsModal').modal('hide');
+    }
+
+    function editColSave()
+    {
+        var ul = $('#editColumnsList');
+        var axis = ul.prop('model');
+        ul.find('input[type=text]').each(function(index, elem)
+        {
+            axis.columns['@items'][index].value = elem.value;
+        });
+        $('#editColumnsModal').modal('hide');
+        axis.defaultCol = null;
+        var result = call("ncubeController.updateAxisColumns", [_selectedCubeName, _selectedApp, _selectedVersion, axis]);
+
+        if (result.status === true && result.data === true)
+        {
+            loadCube();
+        }
+        else
+        {
+            _errorId = showNote('Unable to update columns for axis: ' + axisName + '. ' + result.data);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------
     function buildDropDown(listId, inputId, list, callback)
     {
         var ul = $(listId);
         ul.empty();
-        $.each(list, function(key, value)
+        $.each(list, function (key, value)
         {
             var li = $("<li/>");
             var anchor = $('<a href="#"/>');
             anchor.html(value);
-            anchor.click(function()
+            anchor.click(function ()
             {   // User clicked on a dropdown entry, copy its text to input field
                 $(inputId).val(anchor.html());
                 callback(anchor.html());
@@ -1030,7 +1344,7 @@ $(function()
     function doesItemExist(item, list)
     {
         var found = false;
-        $.each(list, function(index, value)
+        $.each(list, function (index, value)
         {
             if (item.toLowerCase() === value.toLowerCase())
             {
@@ -1058,5 +1372,29 @@ $(function()
             $.gritter.remove(_errorId);
             _errorId = null;
         }
+    }
+
+    function saveScroll()
+    {
+        var div = $('#ncubeTabContent');
+        var top = div.scrollTop();
+        console.log("saveScroll()");
+        console.log(top);
+        console.log(typeof top);
+        localStorage['top'] = top;
+    }
+
+    function loadScroll()
+    {
+        var div = $('#ncubeTabContent');
+        console.log("loadScroll()");
+        console.log(localStorage['top']);
+        console.log(typeof localStorage['top']);
+        div.scrollTop(localStorage['top']);
+    }
+
+    function getUniqueId()
+    {
+        return _colIds--;
     }
 });

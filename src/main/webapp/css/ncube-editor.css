@@ -4,7 +4,7 @@ body {
 
 .ncube-selected {
     color: white;
-    background-color: #6599FF;
+    background-color:darkorange;
     padding: 0 5px 0 5px !important;
     text-shadow: none !important;
 }
@@ -20,15 +20,19 @@ body {
 
 a.ncube-selected:hover, .a.ncube-selected:active {
     color: white;
-    background-color: #6495ED !important;
+    background-color: darkorange !important;
 }
 
 a.ncube-notselected:hover {
     background-color: #ddd !important;
 }
 
+#west {
+    background-color: #555;
+}
 #center {
-    padding: 3px !important;
+    background-color: #EEEEEE;
+    padding: 0px !important;
     overflow: hidden !important;
 }
 
