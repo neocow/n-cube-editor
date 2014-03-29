@@ -26,17 +26,47 @@ a.ncube-selected:hover, .a.ncube-selected:active {
 a.ncube-notselected:hover {
     background-color: #ddd !important;
 }
-
-#west {
-    background-color: #555;
+.panel {
+    margin-bottom: 10px;
+    overflow: hidden;
 }
-#center {
-    background-color: #EEEEEE;
-    padding: 0px !important;
+.panel-heading {
+    padding: 5px;
+}
+.panel-body {
+    padding: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    overflow: auto;
+}
+
+.json-div {
+    height: 100%;
+    width: 100%;
+    overflow: hidden !important;
+ }
+
+.json-textarea {
+    height: 100%;
+    width: 100%;
     overflow: hidden !important;
 }
 
-
+#west {
+    background-color: #555;
+    height:100%;
+    width: 100%;
+    text-align: left;
+    font-family: "arial","helvetica", sans-serif;
+    font-size: small;
+    font-weight: 500;
+    padding-bottom: 0;
+}
+#center {
+    background-color: #EEEEEE;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
 
 .navbar-custom {
     background-color: #2474b8;

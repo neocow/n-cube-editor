@@ -18,6 +18,11 @@ $(function ()
     var _axisName;
     var _errorId = null;
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
+    var _columnList = $('#editColumnsList');
+    var _editor;
+    var _activeTab = 'ncubeTab';
+    var _jsonEditorMode = 'format';
+
     initialize();
 
     function initialize()
@@ -59,23 +64,143 @@ $(function ()
             });
         };
         var west = $('#west');
-        var tabs = $('#tabs');
-        var tabDiv = $('#ncubeTabContent');
+        var appListDiv = $('#app-list-div');
+        var appListPanel = appListDiv.find('> .panel-body');
+        appListPanel.height(75);
+
+        var statListDiv = $('#status-list-div');
+        var statListPanel = statListDiv.find('> .panel-body');
+        statListPanel.height(36);
+
+        var verListDiv = $('#version-list-div');
+        var verListPanel = verListDiv.find('> .panel-body');
+        verListPanel.height(60);
+
+        var ncubeListPanel = $('#ncube-list-div').find('> .panel-body');
+        var hApp = appListDiv.height();
+        var hStat = statListDiv.height();
+        var hVer = verListDiv.height();
         $('body').layout(
             {
                 center__paneSelector: "#center",
                 west__paneSelector: "#west",
-                center__onresize: function ()
+                onresize: function()
                 {
-                    tabDiv.height(west.height() - tabs.height());
+                    ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+                    _editor.resize();
                 }
             });
-        tabDiv.height(west.height() - tabs.height());
+        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+        initJsonEditor();
         addListeners();
+    }
+
+    function initJsonEditor()
+    {
+        // create the editor
+        var container = document.getElementById('jsoneditor');
+        var options = {
+            mode: 'code',
+            change: function()
+            {
+                setDirtyStatus(true);
+            }
+        };
+        window._editor = _editor = new jsoneditor.JSONEditor(container, options);
+
+        var editCtrl = $('#jsoneditor');
+        var menu = editCtrl.find('.menu');
+        var save = $("<button/>").attr({id:'saveButton', style:'background-image:none;width:64px',title:'Save changes'});
+        save.html('Save');
+        menu.append(save);           // Add 'Save' button to toolbar
+        menu.find('a').remove();     // Get rid of 'Powered by Ace' link
+    }
+
+    function setDirtyStatus(dirty)
+    {
+        var saveButton = $('#saveButton');
+        saveButton.prop('disabled', !dirty);
+        if (dirty === true)
+        {
+            saveButton.html('Save*');
+        }
+        else
+        {
+            saveButton.html('Save');
+        }
+    }
+
+    function getDirtyStatus()
+    {
+        var saveButton = $('#saveButton');
+        return !saveButton.prop('disabled');
     }
 
     function addListeners()
     {
+        var editor = $('#jsoneditor');
+        editor.find(".format").click(function(e)
+        {
+            _jsonEditorMode = 'format';
+        });
+
+        editor.find('.compact').click(function(e)
+        {
+            _jsonEditorMode = 'compact';
+        });
+
+        var saveButton = $('#saveButton');
+        saveButton.click(function()
+        {
+            clearError();
+            var result = call("ncubeController.saveJson", [_selectedCubeName, _selectedApp, _selectedVersion, _editor.getText()]);
+            if (result === true)
+            {
+                setDirtyStatus(false);
+            }
+            else
+            {
+                _errorId = showNote('Error saving JSON n-cube: ' + result.data);
+                // TODO: do not clear dirty status on failed save?
+                setDirtyStatus(false);
+            }
+        });
+
+        $('#ncubeTab').click(function (e)
+        {
+            clearError();
+            _activeTab = 'ncubeTab';
+            loadCube();
+        });
+
+        $('#jsonTab').click(function (e)
+        {
+            clearError();
+            _activeTab = "jsonTab";
+            loadCube();
+        });
+
+        $('#detailsTab').click(function (e)
+        {
+            clearError();
+            _activeTab = "detailsTab";
+            loadCube();
+        });
+
+        $('#testTab').click(function(e)
+        {
+            clearError();
+            _activeTab = "testTab";
+            loadCube();
+        });
+
+        $('#picTab').click(function(e)
+        {
+            clearError();
+            _activeTab = "picTab";
+            loadCube();
+        });
+
         $('#newCubeMenu').click(function ()
         {
             newCube()
@@ -83,6 +208,14 @@ $(function ()
         $('#newCubeSave').click(function ()
         {
             newCubeSave()
+        });
+        $('#renameCubeMenu').click(function ()
+        {
+            renameCube();
+        });
+        $('#renameCubeOk').click(function ()
+        {
+            renameCubeOk();
         });
         $('#dupeCubeMenu').click(function ()
         {
@@ -395,8 +528,8 @@ $(function ()
                 $(this).attr('contenteditable', 'true');
                 $(this).focus();
             });
-            $(this).focusout(function ()
-            {   // On focusout, turn off contenteditable mode
+            $(this).blur(function ()
+            {   // On blur, turn off contenteditable mode
                 var colId = $(this).attr('data-id').split('c')[1];
                 var value = cleanString($(this).html());
                 var result = call("ncubeController.updateColumnCell", [_selectedCubeName, _selectedApp, _selectedVersion, colId, value]);
@@ -423,8 +556,8 @@ $(function ()
                 $(this).attr('contenteditable', 'true');
                 $(this).focus();
             });
-            $(this).focusout(function ()
-            {   // On focusout, turn off contenteditable mode
+            $(this).blur(function ()
+            {   // On blur, turn off contenteditable mode
                 $(this).attr('contenteditable', 'false');
                 var cellId = $(this).attr('data-id').split('k')[1];
                 var ids = cellId.split(".");
@@ -437,21 +570,40 @@ $(function ()
                 }
                 else
                 {
-                    _errorId = showNote('Unable to cell value: ' + result.data);
+                    _errorId = showNote('Unable to update cell value: ' + result.data);
                     $(this).html('');
                 }
             });
         });
     }
 
-    function cleanString(string)
+    function loadCubeJson()
     {
-        var s1 = string.replace(/<br>/g, " ");
-        var s2 = s1.replace(/&lt;/g, "<");
-        var s3 = s2.replace(/&gt;/g, ">");
-        var s4 = s3.replace(/&nbsp;/g, " ");
-        var s5 = s4.replace(/&amp;/g, "&");
-        return s5;
+        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        {
+            _editor.setText('No n-cube to load');
+            setDirtyStatus(false);
+            return;
+        }
+        var result = call("ncubeController.getJson", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        if (result.status === true)
+        {
+            _editor.setText(result.data);
+        }
+        else
+        {
+            _editor.setText("Unable to load " + _selectedCubeName + '. ' + result.data);
+        }
+        var editCtrl = $('#jsoneditor');
+        if (_jsonEditorMode == 'format')
+        {
+            editCtrl.find('.format').click();
+        }
+        else
+        {
+            editCtrl.find('.compact').click();
+        }
+        setDirtyStatus(false);
     }
 
     function loadCubeDetails()
@@ -508,10 +660,30 @@ $(function ()
 
     function loadCube()
     {
-        loadCubeHtml();
-        loadCubeDetails();
-        // TODO: Load Tests
-        // TODO: Load D3.js pictures
+        if (_activeTab == 'ncubeTab')
+        {
+            loadCubeHtml();
+        }
+        else if (_activeTab == 'jsonTab')
+        {
+            loadCubeJson();
+        }
+        else if (_activeTab == 'detailsTab')
+        {
+            loadCubeDetails();
+        }
+        else if (_activeTab == 'testTab')
+        {
+            // TODO: Load Tests
+        }
+        else if (_activeTab == 'picTab')
+        {
+            // TODO: Load D3.js pictures
+        }
+        else
+        {
+            console.log('Unknown tab selected: ' + _activeTab);
+        }
     }
 
     /**
@@ -731,6 +903,51 @@ $(function ()
         else
         {
             _errorId = showNote('Unable to delete n-cube: ' + _selectedCubeName + '. ' + result.data);
+        }
+    }
+
+    function renameCube()
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Nothing to rename.');
+            return;
+        }
+        $('#renameCubeAppName').val(_selectedApp);
+        $('#renameCubeVersion').val(_selectedVersion);
+        $('#renameCubeName').val(_selectedCubeName);
+        $('#renameCubeLabel').html('Rename \'' + _selectedCubeName + '\' (' + _selectedVersion + ', ' + _selectedStatus + ') ?');
+        $('#renameCubeModal').modal();
+    }
+
+    function renameCubeOk()
+    {
+        $('#renameCubeModal').modal('hide');
+        var oldName = $('#renameCubeName').val();
+        var newName = $('#renameNewCubeName').val();
+        var newApp = $('#renameCubeAppName').val();
+        var newVersion = $('#renameCubeVersion').val();
+        var result = call("ncubeController.renameCube", [oldName, newName, newApp, newVersion]);
+        if (result.status === true && result.data === true)
+        {
+            loadAppNames();
+            _selectedApp = newApp;
+            loadAppListView();
+            _selectedStatus = 'SNAPSHOT';
+            setListSelectedStatus('SNAPSHOT', '#status-list')
+            loadVersions();
+            _selectedVersion = newVersion;
+            loadVersionListView();
+            setListSelectedStatus(_selectedVersion, '#version-list');
+            loadNCubes();
+            _selectedCubeName = newName;
+            loadNCubeListView();
+            loadCube();
+        }
+        else
+        {
+            _errorId = showNote('Unable to rename n-cube: ' + _selectedCubeName + '. ' + result.data);
         }
     }
 
@@ -1005,22 +1222,16 @@ $(function ()
         {
             if ("RULE" == selected)
             {
-                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function ()
-                {
-                });
+                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function () { });
                 $('#addAxisValueTypeName').val('EXPRESSION');
             }
             else
             {
-                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function ()
-                {
-                });
+                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
                 $('#addAxisValueTypeName').val('STRING');
             }
         });
-        buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function ()
-        {
-        });
+        buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
         $('#addAxisName').val('');
         $('#addAxisModal').modal();
     }
@@ -1140,9 +1351,14 @@ $(function ()
 
     function loadColumns(axis)
     {
-        var ul = $('#editColumnsList');
-        ul.empty();
-        ul.prop('model', axis);
+        _columnList.empty();
+        var axisList = axis.columns['@items'];
+        $.each(_columnList.find('.form-control'), function(key, item)
+        {
+            axisList[key].value = item.value;
+        });
+        _columnList.empty();
+        _columnList.prop('model', axis);
         var displayOrder = 0;
         $.each(axis.columns["@items"], function (key, item)
         {
@@ -1153,13 +1369,23 @@ $(function ()
                 var div = $('<div/>').prop({class: "input-group"});
                 var span = $('<span/>').prop({class: "input-group-addon"});
                 var inputBtn = $('<input/>').prop({class: "editColCheckBox", "type": "checkbox"});
+                if (item.checked === true)
+                {
+                    inputBtn[0].checked = true;
+                }
                 var inputText = $('<input/>').prop({class: "form-control", "type": "text"});
+                inputText.blur(function()
+                {
+                    item.value = inputText.val();
+                });
+
+                // TODO: Need to format Range, Set, Nearest, Rule?
                 inputText.val(item.value);
                 span.append(inputBtn);
                 div.append(span);
                 div.append(inputText);
                 rowDiv.append(div);
-                ul.append(rowDiv);
+                _columnList.append(rowDiv);
             }
         });
     }
@@ -1182,6 +1408,10 @@ $(function ()
         if (result.status === true && typeof result.data !== "string")
         {
             axis = result.data;
+            if (!axis.columns['@items'])
+            {
+                axis.columns['@items'] = [];
+            }
             if (axis.defaultCol)
             {   // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
                 axis.columns["@items"].splice(axis.columns["@items"].length - 1, 1);
@@ -1213,7 +1443,7 @@ $(function ()
     {
         if (axis.preferredOrder == 1)
         {
-            axis.columns['@items'].sort(function(a,b)
+            axis.columns['@items'].sort(function(a, b)
             {
                 return a.displayOrder - b.displayOrder;
             });
@@ -1241,28 +1471,32 @@ $(function ()
                 loc = index;
             }
         });
-        var ul = $('#editColumnsList');
-        var axis = ul.prop('model');
+        var axis = _columnList.prop('model');
         var newCol = {
             '@type': 'com.cedarsoftware.ncube.Column',
             'value': 'newValue',
             'id': getUniqueId()
         };
+
         if (loc == -1 || axis.preferredOrder == 0)
         {
-            axis.columns["@items"].push(newCol);
+            axis.columns['@items'].push(newCol);
+            loc = input.length - 1;
         }
         else
         {
-            axis.columns["@items"].splice(loc + 1, 0, newCol);
+            axis.columns['@items'].splice(loc + 1, 0, newCol);
         }
         loadColumns(axis);
+
+        // Select newly added column name, so user can just type over it.
+        input = $('#editColumnsList').find('.form-control');
+        input[loc + 1].select();
     }
 
     function editColDelete()
     {
-        var ul = $('#editColumnsList');
-        var axis = ul.prop('model');
+        var axis = _columnList.prop('model');
         var input = $('.editColCheckBox');
         var cols = axis.columns['@items'];
         var colsToDelete = [];
@@ -1280,18 +1514,81 @@ $(function ()
         {
             cols.splice(colsToDelete[i], 1);
         }
-        ul.empty();
         loadColumns(axis);
     }
 
     function editColUp()
     {
-        console.log("move up");
+        var axis = _columnList.prop('model');
+        var cols = axis.columns['@items'];
+        var input = $('.editColCheckBox');
+
+        if (cols && cols.length > 0 && input[0].checked)
+        {   // Top one checked, cannot move any items up
+            return;
+        }
+
+        for (var i=0; i < input.length - 1; i++)
+        {
+            var tag = input[i];
+            cols[i].checked = tag.checked;
+            if (!tag.checked)
+            {
+                var nextTag = input[i + 1];
+                cols[i + 1].checked = nextTag.checked;
+                if (nextTag.checked)
+                {
+                    tag.checked = true;
+                    nextTag.checked = false;
+
+                    var temp = cols[i];
+                    cols[i] = cols[i + 1];
+                    cols[i + 1] = temp;
+
+                    cols[i].checked = true;
+                    cols[i + 1].checked = false;
+                }
+            }
+        }
+
+        loadColumns(axis);
     }
 
     function editColDown()
     {
-        console.log("move down");
+        var axis = _columnList.prop('model');
+        var cols = axis.columns['@items'];
+        var input = $('.editColCheckBox');
+
+        if (cols && cols.length > 0 && input[cols.length - 1].checked)
+        {   // Bottom one checked, cannot move any items down
+            return;
+        }
+
+        for (var i=input.length - 1; i > 0; i--)
+        {
+            var tag = input[i];
+            cols[i].checked = tag.checked;
+            if (!tag.checked)
+            {
+                var nextTag = input[i - 1];
+                cols[i - 1].checked = nextTag.checked;
+                if (nextTag.checked)
+                {
+                    tag.checked = true;
+                    nextTag.checked = false;
+
+                    var temp = cols[i];
+                    cols[i] = cols[i - 1];
+                    cols[i - 1] = temp;
+
+                    cols[i].checked = true;
+                    cols[i - 1].checked = false;
+                }
+            }
+        }
+
+        loadColumns(axis);
     }
 
     function editColCancel()
@@ -1301,9 +1598,8 @@ $(function ()
 
     function editColSave()
     {
-        var ul = $('#editColumnsList');
-        var axis = ul.prop('model');
-        ul.find('input[type=text]').each(function(index, elem)
+        var axis = _columnList.prop('model');
+        _columnList.find('input[type=text]').each(function(index, elem)
         {
             axis.columns['@items'][index].value = elem.value;
         });
@@ -1391,6 +1687,16 @@ $(function ()
         console.log(localStorage['top']);
         console.log(typeof localStorage['top']);
         div.scrollTop(localStorage['top']);
+    }
+
+    function cleanString(string)
+    {
+        var s1 = string.replace(/<br>/g, "");
+        var s2 = s1.replace(/&lt;/g, "<");
+        var s3 = s2.replace(/&gt;/g, ">");
+        var s4 = s3.replace(/&nbsp;/g, " ");
+        var s5 = s4.replace(/&amp;/g, "&");
+        return s5;
     }
 
     function getUniqueId()

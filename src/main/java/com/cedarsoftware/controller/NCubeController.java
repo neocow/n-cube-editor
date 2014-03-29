@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +48,7 @@ import java.util.regex.Pattern;
  */
 public class NCubeController extends BaseController implements INCubeController
 {
-    private static final Pattern castPattern = Pattern.compile("^(exp:|method:|temp:|b:|\\[b:|s:|\\[s:|i:|\\[i:|L:|\\[L:|f:|\\[f:|d:|\\[d:|c:|\\[c:|z:|\\[z:|g:|\\[g:|j:|\\[j:|str-url:|bin-url:|exp-url:|method-url:|temp-url:|null:|date:)(.*)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern castPattern = Pattern.compile("^(exp:|method:|temp:|b:|\\[b:|s:|\\[s:|i:|\\[i:|L:|\\[L:|f:|\\[f:|d:|\\[d:|c:|\\[c:|z:|\\[z:|bd:|\\[bd:|bi:|\\[bi:|str-url:|bin-url:|exp-url:|method-url:|temp-url:|null:|date:)(.*)", Pattern.CASE_INSENSITIVE);
     private NCubeService nCubeService;
 
     public NCubeController(NCubeService service)
@@ -73,6 +74,11 @@ public class NCubeController extends BaseController implements INCubeController
     public String getHtml(String name, String app, String version, String status)
     {
         return nCubeService.getHtml(name, app, version, status);
+    }
+
+    public String getJson(String name, String app, String version, String status)
+    {
+        return nCubeService.getJson(name, app, version, status);
     }
 
     public Object[] getAppNames()
@@ -232,9 +238,9 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            nCubeService.releaseCubes(app, version, newSnapVer);
-            return true;
-        }
+        nCubeService.releaseCubes(app, version, newSnapVer);
+        return true;
+    }
         catch (Exception e)
         {
             return e.getMessage();
@@ -249,9 +255,9 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            nCubeService.changeVersionValue(app, currVersion, newSnapVer);
-            return true;
-        }
+        nCubeService.changeVersionValue(app, currVersion, newSnapVer);
+        return true;
+    }
         catch (Exception e)
         {
             return e.getMessage();
@@ -290,7 +296,7 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            List<Axis> axes = nCubeService.getAxes(name, app, version, status);
+            List<Map> axes = nCubeService.getAxes(name, app, version, status);
             return axes.toArray();
         }
         catch (Exception e)
@@ -300,9 +306,15 @@ public class NCubeController extends BaseController implements INCubeController
     }
 
     /**
-     * @return Object of JSON structure representing the requested axis, or String
-     * error message.  The axis JSON object will look the same as it does for
-     * getAxes() API.
+     * Return the requested axis.  The returned axis has some 'massaging' applied to it before
+     * being returned.  First, it is being returned using the 'map-of-maps' format from json-io
+     * so that the column IDs can be converted from Longs to Strings, because Javascript cannot
+     * process a 64-bit long value (it stores numbers using a double, which means it can only
+     * reliably process 53-bits of a long).  Converting the longs to Strings first, allows the
+     * column ID to round-trip to the UI and back, and json-io will 'mash' the String column ID
+     * into the Long column ID (within the JsonCommandServlet) as it receives the String.  It
+     * sense the data-type mismatch (json-io does) and then attempts to convert the String to a
+     * numeric value (which succeeds).  This allows the full 64-bit id to make it round trip.
      */
     public Object getAxis(String name, String app, String version, String status, String axisName)
     {
@@ -350,7 +362,8 @@ public class NCubeController extends BaseController implements INCubeController
     }
 
     /**
-     * @return boolean true if successful, otherwise String error message is returned.
+     * Update an entire set of columns on an axis at one time.  The updatedAxis is not a real axis,
+     * but treated like an Axis-DTO where the list of columns within the axis are in display order.
      */
     public Object updateAxisColumns(String name, String app, String version, Axis updatedAxis)
     {
@@ -365,6 +378,10 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
+    /**
+     * Update column value in-place, with the passed in value.  The value will be a String that n-cube
+     * must make inferences about to convert into a DISCRETE value, RANGE, SET, etc.
+     */
     public Object updateColumnCell(String name, String app, String version, String colId, String value)
     {
         try
@@ -378,6 +395,12 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
+    /**
+     * In-place update of a cell.  Requires heavy parsing to interpret what the user's intended
+     * data type is for the cell (byte, short, int, long, float, double, boolean, character,
+     * String, Date, Object[], BigDecimal, BigInteger, string url, binary url, groovy expression,
+     * groovy method, groovy template, template url, expression url, method url, or null).
+     */
     public Object updateCell(String name, String app, String version, Object[] colIds, String value)
     {
         try
@@ -386,6 +409,30 @@ public class NCubeController extends BaseController implements INCubeController
             return new Object[]{ nCubeService.updateCell(name, app, version, colIds, parseCellValue(value)) };
         }
         catch(Exception e)
+        {
+            return e.getMessage();
+        }
+    }
+
+    public Object renameCube(String oldName, String newName, String app, String version)
+    {
+        try
+        {
+            return nCubeService.renameCube(oldName, newName, app, version);
+        }
+        catch(Exception e)
+        {
+            return e.getMessage();
+        }
+    }
+
+    public Object saveJson(String name, String app, String version, String json)
+    {
+        try
+        {
+            return nCubeService.updateCube(name, app, version, json);
+        }
+        catch (Exception e)
         {
             return e.getMessage();
         }
@@ -434,7 +481,7 @@ public class NCubeController extends BaseController implements INCubeController
                     }
                     return values;
                 }
-                catch (IOException e) { }
+                catch (IOException ignored) { }
             }
 
             if (v.startsWith("["))
@@ -470,7 +517,7 @@ public class NCubeController extends BaseController implements INCubeController
             {
                 return DateUtilities.parseDate(v);
             }
-            catch (Exception e) { }
+            catch (Exception ignored) { }
 
             return value;
         }
@@ -487,7 +534,7 @@ public class NCubeController extends BaseController implements INCubeController
         }
         else if ("temp:".equals(cmd))
         {
-            return new GroovyTemplate(arg);
+            return new GroovyTemplate(arg, true);
         }
         else if ("b:".equals(cmd))
         {
@@ -513,7 +560,7 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return bytes;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
         else if ("s:".equals(cmd))
         {
@@ -539,7 +586,7 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return shorts;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
         else if ("i:".equals(cmd))
         {
@@ -565,7 +612,7 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return ints;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
         else if ("l:".equals(cmd))
         {
@@ -591,7 +638,7 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return longs;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
         else if ("f:".equals(cmd))
         {
@@ -617,7 +664,7 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return floats;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
         else if ("d:".equals(cmd))
         {
@@ -643,13 +690,13 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return doubles;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
         else if ("c:".equals(cmd))
         {
             try
             {
-                return new Character(arg.charAt(0));
+                return arg.charAt(0);
             }
             catch (Exception e)
             {
@@ -662,13 +709,13 @@ public class NCubeController extends BaseController implements INCubeController
             {
                 return arg.toCharArray();
             }
-            catch (Exception e) { }
+            catch (Exception ignored) { }
         }
         else if ("z:".equals(cmd))
         {
             try
             {
-                return new Boolean(arg) ? Boolean.TRUE : Boolean.FALSE;
+                return Boolean.valueOf(arg) ? Boolean.TRUE : Boolean.FALSE;
             }
             catch (Exception e)
             {
@@ -688,9 +735,9 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return bools;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
-        else if ("g:".equals(cmd))
+        else if ("bd:".equals(cmd))
         {
             try
             {
@@ -701,7 +748,7 @@ public class NCubeController extends BaseController implements INCubeController
                 throw new IllegalArgumentException("Value cannot be cast to a BigDecimal: " + arg, e);
             }
         }
-        else if ("[g:".equals(cmd))
+        else if ("[bd:".equals(cmd))
         {
             try
             {
@@ -714,9 +761,9 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return bigdecs;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
-        else if ("j:".equals(cmd))
+        else if ("bi:".equals(cmd))
         {
             try
             {
@@ -727,7 +774,7 @@ public class NCubeController extends BaseController implements INCubeController
                 throw new IllegalArgumentException("Value cannot be cast to a BigInteger: " + arg, e);
             }
         }
-        else if ("[j:".equals(cmd))
+        else if ("[bi:".equals(cmd))
         {
             try
             {
@@ -740,7 +787,7 @@ public class NCubeController extends BaseController implements INCubeController
                 }
                 return bigints;
             }
-            catch (IOException e) { }
+            catch (IOException ignored) { }
         }
         else if ("str-url:".equals(cmd))
         {
@@ -770,7 +817,7 @@ public class NCubeController extends BaseController implements INCubeController
         }
         else if ("temp-url:".equals(cmd))
         {
-            GroovyTemplate template = new GroovyTemplate("");
+            GroovyTemplate template = new GroovyTemplate("", true);
             template.setUrl(arg);
             return template;
         }

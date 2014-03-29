@@ -11,6 +11,7 @@ public interface INCubeController extends IBaseController
 {
     Object[] getCubeList(String filter, String app, String version, String status);
     String getHtml(String name, String app, String version, String status);
+    String getJson(String name, String app, String version, String status);
     Object[] getAppNames();
     Object[] getAppVersions(String app, String status);
     Object createCube(String name, String app, String version);
@@ -28,5 +29,7 @@ public interface INCubeController extends IBaseController
     Object updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch);
     Object updateColumnCell(String name, String app, String version, String colId, String value);
     Object updateAxisColumns(String name, String app, String version, Axis updatedAxis);
+    Object renameCube(String oldName, String newName, String app, String version);
+    Object saveJson(String name, String app, String version, String json);
     Object updateCell(String name, String app, String version, Object[] colIds, String value);
 }

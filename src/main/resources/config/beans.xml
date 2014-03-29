@@ -13,49 +13,55 @@
         <constructor-arg ref="ncubeService"/>
 	</bean>
 
+    <!--
+    p:username="execdash"
+    p:password="puCupRaQaZe3"
+    -->
+
+
+    <!--<bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"-->
+        <!--p:driverClassName="oracle.jdbc.driver.OracleDriver"-->
+        <!--p:url="jdbc:oracle:thin:@10.50.214.14:1526:uwdeskd"-->
+        <!--p:username="ra_desktop"-->
+        <!--p:password="p0rtal"-->
+        <!--p:initialSize="5"-->
+        <!--p:minIdle="5"-->
+        <!--p:maxIdle="10"-->
+        <!--p:maxActive="100"-->
+    	<!--p:maxWait="120000"-->
+    	<!--p:jmxEnabled="true"-->
+	    <!--p:removeAbandoned="true"-->
+	    <!--p:removeAbandonedTimeout="180"-->
+	    <!--p:testOnBorrow="true"-->
+	    <!--p:testOnReturn="false"-->
+	    <!--p:testWhileIdle="false"-->
+	    <!--p:timeBetweenEvictionRunsMillis="30000"-->
+	    <!--p:minEvictableIdleTimeMillis="30000"-->
+	    <!--p:validationInterval="60000"-->
+	    <!--p:validationQuery="select 1 from dual"-->
+	<!--/>-->
+
     <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
         p:driverClassName="com.mysql.jdbc.Driver"
-        p:url="jdbc:mysql://127.0.0.1:3306/ncube"
+        p:url="jdbc:mysql://localhost:3306/ncube"
         p:username="ncube"
         p:password="ncube"
         p:initialSize="5"
         p:minIdle="5"
         p:maxIdle="10"
         p:maxActive="100"
-    	p:maxWait="120000"
-    	p:jmxEnabled="true"
-	    p:removeAbandoned="true"
-	    p:removeAbandonedTimeout="180"
-	    p:testOnBorrow="true"
-	    p:testOnReturn="false"
-	    p:testWhileIdle="false"
-	    p:timeBetweenEvictionRunsMillis="30000"
-	    p:minEvictableIdleTimeMillis="30000"
-	    p:validationInterval="60000"
-	    p:validationQuery="/* ping */"
-	/>
-
-    <!--<bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"-->
-          <!--p:driverClassName="oracle.jdbc.driver.OracleDriver"-->
-          <!--p:url="jdbc:oracle:thin:@cvgli59.td.afg:1526:uwdeskd"-->
-          <!--p:username="ra_desktop"-->
-          <!--p:password="p0rtal"-->
-          <!--p:initialSize="5"-->
-          <!--p:minIdle="5"-->
-          <!--p:maxIdle="10"-->
-          <!--p:maxActive="100"-->
-          <!--p:maxWait="120000"-->
-          <!--p:jmxEnabled="true"-->
-          <!--p:removeAbandoned="true"-->
-          <!--p:removeAbandonedTimeout="180"-->
-          <!--p:testOnBorrow="true"-->
-          <!--p:testOnReturn="false"-->
-          <!--p:testWhileIdle="false"-->
-          <!--p:timeBetweenEvictionRunsMillis="30000"-->
-          <!--p:minEvictableIdleTimeMillis="30000"-->
-          <!--p:validationInterval="60000"-->
-          <!--p:validationQuery="/* ping */"-->
-            <!--/>-->
+        p:maxWait="120000"
+        p:jmxEnabled="true"
+        p:removeAbandoned="true"
+        p:removeAbandonedTimeout="180"
+        p:testOnBorrow="true"
+        p:testOnReturn="false"
+        p:testWhileIdle="false"
+        p:timeBetweenEvictionRunsMillis="30000"
+        p:minEvictableIdleTimeMillis="30000"
+        p:validationInterval="60000"
+        p:validationQuery="/* ping */"
+      />
 
     <bean id="ncubeTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="ncubeDataSource" />
@@ -72,9 +78,13 @@
     </tx:advice>
 
     <aop:config>
-        <aop:pointcut id="ncubeServiceMethods" expression="within(com.cedarsoftware.service.ncube.*)"/>
+        <aop:pointcut id="ncubeServiceMethods" expression="execution(public * r*(..))"/>
         <aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>
     </aop:config>
+    <!--<aop:config>-->
+        <!--<aop:pointcut id="ncubeServiceMethods" expression="within(com.cedarsoftware.service.ncube.*)"/>-->
+        <!--<aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>-->
+    <!--</aop:config>-->
 
     <bean id="ncubeService" class="com.cedarsoftware.service.ncube.NCubeService">
         <property name="dataSource" ref="ncubeDataSource"/>

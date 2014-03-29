@@ -3,21 +3,22 @@ package com.cedarsoftware.service.ncube;
 import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
-import com.cedarsoftware.ncube.Column;
-import com.cedarsoftware.ncube.GroovyExpression;
-import com.cedarsoftware.ncube.GroovyMethod;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.StringUtilities;
+import com.cedarsoftware.util.io.JsonReader;
+import com.cedarsoftware.util.io.JsonWriter;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import javax.sql.DataSource;
-import java.math.BigDecimal;
+import java.io.IOException;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -55,12 +56,12 @@ public class NCubeService
 
     public Object[] getNCubes(String pattern, String app, String version, String status)
     {
-        return NCubeManager.getInstance().getNCubes(getConnection(), app, version, status, pattern, new Date());
+        return NCubeManager.getNCubes(getConnection(), app, version, status, pattern, new Date());
     }
 
     public String getHtml(String name, String app, String version, String status)
     {
-        NCube ncube = NCubeManager.getInstance().loadCube(getConnection(), app, name, version, status, new Date());
+        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not get HTML, NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -68,11 +69,21 @@ public class NCubeService
         return ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month");
     }
 
+    public String getJson(String name, String app, String version, String status)
+    {
+        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
+        if (ncube == null)
+        {
+            throw new IllegalArgumentException("Could not get HTML, NCube '" + name + "' not found for app: " + app + ", version: " + version);
+        }
+        return ncube.toFormattedJson();
+    }
+
     public Object getCube(String name, String app, String version, String status)
     {
         try
         {
-            NCube ncube = NCubeManager.getInstance().loadCube(getConnection(), app, name, version, status, new Date());
+            NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
             if (ncube == null)
             {
                 throw new IllegalArgumentException("Could not retrieve NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -87,34 +98,34 @@ public class NCubeService
 
     public Object[] getAppNames()
     {
-        return NCubeManager.getInstance().getAppNames(getConnection(), new Date());
+        return NCubeManager.getAppNames(getConnection(), new Date());
     }
 
     public Object[] getAppVersions(String app, String status)
     {
-        return NCubeManager.getInstance().getAppVersions(getConnection(), app, status, new Date());
+        return NCubeManager.getAppVersions(getConnection(), app, status, new Date());
     }
 
     public void createCube(NCube ncube, String app, String version)
     {
-        NCubeManager.getInstance().createCube(getConnection(), app, ncube, version);
+        NCubeManager.createCube(getConnection(), app, ncube, version);
     }
 
     public boolean deleteCube(String name, String app, String version)
     {
-        return NCubeManager.getInstance().deleteCube(getConnection(), app, name, version, false);
+        return NCubeManager.deleteCube(getConnection(), app, name, version, false);
     }
 
     public Set<String> getReferencedCubeNames(String name, String app, String version, String status)
     {
         Set<String> refs = new CaseInsensitiveSet<String>();
-        NCubeManager.getInstance().getReferencedCubeNames(getConnection(), app, name, version, status, new Date(), refs);
+        NCubeManager.getReferencedCubeNames(getConnection(), app, name, version, status, new Date(), refs);
         return refs;
     }
 
     public Set<String> getRequiredScope(String name, String app, String version, String status)
     {
-        NCube ncube = NCubeManager.getInstance().loadCube(getConnection(), app, name, version, status, new Date());
+        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could get required scope, NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -124,20 +135,19 @@ public class NCubeService
 
     public void duplicateCube(String newName, String name, String newApp, String app, String newVersion, String version, String status)
     {
-        NCubeManager.getInstance().duplicate(getConnection(), newName, name, newApp, app, newVersion, version, status, new Date());
+        NCubeManager.duplicate(getConnection(), newName, name, newApp, app, newVersion, version, status, new Date());
     }
 
     public void releaseCubes(String app, String version, String newSnapVer)
     {
-        NCubeManager manager = NCubeManager.getInstance();
         Connection connection = getConnection();
-        manager.releaseCubes(connection, app, version);
-        manager.createSnapshotCubes(connection, app, version, newSnapVer);
+        NCubeManager.releaseCubes(connection, app, version);
+        NCubeManager.createSnapshotCubes(connection, app, version, newSnapVer);
     }
 
     public void changeVersionValue(String app, String currVersion, String newSnapVer)
     {
-        NCubeManager.getInstance().changeVersionValue(getConnection(), app, currVersion, newSnapVer);
+        NCubeManager.changeVersionValue(getConnection(), app, currVersion, newSnapVer);
     }
 
     public void addAxis(String name, String app, String version, String axisName, String type, String valueType)
@@ -147,59 +157,102 @@ public class NCubeService
             throw new IllegalArgumentException("Axis name cannot be empty.");
         }
         Connection connection = getConnection();
-        NCubeManager manager = NCubeManager.getInstance();
-        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
 
-        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false);
+        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY);
         ncube.addAxis(axis);
-        manager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(connection, app, ncube, version);
     }
 
-    public List<Axis> getAxes(String name, String app, String version, String status)
+    /**
+     * Return the full set of Axis objects for this n-cube.  The Axes are returned in Map form with
+     * the column IDs converted to Strings (from Longs) due to the 64-bit Javascript issue.  The axes
+     * when sent back still come back in as proper Axis objects, as json-io will convert the String id
+     * to a Long when placing the value into the Axis object.
+     */
+    public List<Map> getAxes(String name, String app, String version, String status) throws IOException
     {
-        NCubeManager manager = NCubeManager.getInstance();
-        NCube ncube = manager.loadCube(getConnection(), app, name, version, status, new Date());
+        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not load axes, NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
-        return ncube.getAxes();
+        List<Axis> axes = ncube.getAxes();
+        List<Map> axesConverted = new ArrayList<Map>();
+        for (Axis axis : axes)
+        {
+            axesConverted.add(convertAxis(axis));
+        }
+        return axesConverted;
     }
 
-    public Axis getAxis(String name, String app, String version, String status, String axisName)
+    /**
+     * Convert Axis to Map of Map representation (using json-io) and modify the
+     * column ID to a String in the process.  This allows the column ID to work on
+     * clients (like Javascript) that cannot support 64-bit values.
+     */
+    Map convertAxis(Axis axis) throws IOException
     {
-        NCubeManager manager = NCubeManager.getInstance();
-        NCube ncube = manager.loadCube(getConnection(), app, name, version, status, new Date());
+        String json = JsonWriter.objectToJson(axis);
+        Map axisConverted = JsonReader.jsonToMaps(json);
+        Map cols = (Map) axisConverted.get("columns");
+        Object[] items = (Object[]) cols.get("@items");
+        if (items != null)
+        {
+            for (Object item : items)
+            {
+                Map col = (Map) item;
+                Long id = (Long) col.get("id");
+                col.put("id", id.toString());
+
+            }
+        }
+        return axisConverted;
+    }
+
+    /**
+     * Retrieve the specified axis, however, return it as a Map (JsonObject) so that it can be
+     * massaged on the way out.  This is done to allow converting of the column IDs from Long to
+     * String so that they can round-trip to a Javascript client (which cannot handle a 64-bit long).
+     */
+    public Map getAxis(String name, String app, String version, String status, String axisName) throws IOException
+    {
+        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could get axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
-        return ncube.getAxis(axisName);
+        Axis axis = ncube.getAxis(axisName);
+        return convertAxis(axis);
     }
 
+    /**
+     * Delete the specified axis.
+     */
     public void deleteAxis(String name, String app, String version, String axisName)
     {
         Connection connection = getConnection();
-        NCubeManager manager = NCubeManager.getInstance();
-        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not delete axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
 
         ncube.deleteAxis(axisName);
-        manager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(connection, app, ncube, version);
     }
 
+    /**
+     * Update the 'informational' part of the Axis (not the columns).
+     */
     public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch)
     {
         Connection connection = getConnection();
-        NCubeManager manager = NCubeManager.getInstance();
-        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update axis '" + origAxisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -228,11 +281,11 @@ public class NCubeService
         // update multi-match state
         axis.setMultiMatch(multiMatch);
 
-        manager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(connection, app, ncube, version);
     }
 
     /**
-     * Update the indicate column (by ID) with the passed in String value.  The String value
+     * Update the indicated column (by ID) with the passed in String value.  The String value
      * is parsed into DISCRETE, RANGE, SET, NEAREST, or RULE, and to the proper axis value type
      * for the axis.  This allows Strings like "[10, 25]" to be passed into a Range axis, for
      * example, and it will be added as a Range(10, 25) and will go through all the proper
@@ -241,8 +294,7 @@ public class NCubeService
     public void updateColumnCell(String name, String app, String version, String colId, String value)
     {
         Connection connection = getConnection();
-        NCubeManager manager = NCubeManager.getInstance();
-        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -264,35 +316,43 @@ public class NCubeService
             throw new IllegalArgumentException("Column ID passed in (" + colId + ") does not match any axis on NCube '" + name + "'");
         }
 
+        // TODO: Finish convertStringToColumnValue()
+        // TODO: Make sure this method is used when the inbound column values are sent from the Edit Column box.
         ncube.updateColumn(id, axis.convertStringToColumnValue(value));
-        manager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(connection, app, ncube, version);
     }
 
+    /**
+     * Update an entire set of columns at once.  This method will delete columns no longer in the passed in
+     * list, add columns that are new (have negative ids), and update columns with the same id but new value.
+     */
     public void updateAxisColumns(String name, String app, String version, Axis updatedAxis)
     {
         Connection connection = getConnection();
-        NCubeManager manager = NCubeManager.getInstance();
-        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
         Axis oldAxis = ncube.getAxis(updatedAxis.getName());
         oldAxis.updateColumns(updatedAxis);
-        manager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(connection, app, ncube, version);
     }
 
+    /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
     public Object updateCell(String name, String app, String version, Object[] colIds, Object value)
     {
         Connection connection = getConnection();
-        NCubeManager manager = NCubeManager.getInstance();
-        NCube ncube = manager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
 
-        Set<Long> ids = new HashSet();
+        Set<Long> ids = new HashSet<Long>();
         for (Object id : colIds)
         {
             try
@@ -306,7 +366,21 @@ public class NCubeService
         }
 
         ncube.setCellById(value, ids);
-        manager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(connection, app, ncube, version);
         return ncube.getCellByIdNoExecute(ids).toString();
+    }
+
+    public boolean renameCube(String oldName, String newName, String app, String version)
+    {
+        Connection connection = getConnection();
+        return NCubeManager.renameCube(connection, oldName, newName, app, version);
+    }
+
+    public Object updateCube(String name, String app, String version, String json)
+    {
+        Connection connection = getConnection();
+        NCube ncube = NCube.fromSimpleJson(json);
+        NCubeManager.updateCube(connection, app, ncube, version);
+        return true;
     }
 }
