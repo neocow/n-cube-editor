@@ -11,6 +11,7 @@ import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.StringUrlCmd;
 import com.cedarsoftware.service.ncube.NCubeService;
+import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.DateUtilities;
 import com.cedarsoftware.util.io.JsonObject;
@@ -58,44 +59,84 @@ public class NCubeController extends BaseController implements INCubeController
 
     public Object[] getCubeList(String filter, String app, String version, String status)
     {
-        Object[] list = nCubeService.getNCubes(filter, app, version, status);
-        Arrays.sort(list, new Comparator<Object>()
+        try
         {
-            public int compare(Object o1, Object o2)
+            Object[] list = nCubeService.getNCubes(filter, app, version, status);
+            Arrays.sort(list, new Comparator<Object>()
             {
-                NCubeInfoDto info1 = (NCubeInfoDto) o1;
-                NCubeInfoDto info2 = (NCubeInfoDto) o2;
-                return info1.name.compareToIgnoreCase(info2.name);
-            }
-        });
-        return list;
+                public int compare(Object o1, Object o2)
+                {
+                    NCubeInfoDto info1 = (NCubeInfoDto) o1;
+                    NCubeInfoDto info2 = (NCubeInfoDto) o2;
+                    return info1.name.compareToIgnoreCase(info2.name);
+                }
+            });
+            return list;
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
     }
 
     public String getHtml(String name, String app, String version, String status)
     {
-        return nCubeService.getHtml(name, app, version, status);
+        try
+        {
+            return nCubeService.getHtml(name, app, version, status);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
     }
 
     public String getJson(String name, String app, String version, String status)
     {
-        return nCubeService.getJson(name, app, version, status);
+        try
+        {
+            return nCubeService.getJson(name, app, version, status);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
     }
 
     public Object[] getAppNames()
     {
-        return nCubeService.getAppNames();
+        try
+        {
+            return nCubeService.getAppNames();
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
     }
 
     public Object[] getAppVersions(String app, String status)
     {
-        return nCubeService.getAppVersions(app, status);
+        try
+        {
+            return nCubeService.getAppVersions(app, status);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
     }
 
     /**
      * Create an n-cube (SNAPSHOT only).
      * @return boolean true if successful, otherwise a String error message.
      */
-    public Object createCube(String name, String app, String version)
+    public void createCube(String name, String app, String version)
     {
         try
         {
@@ -115,11 +156,10 @@ public class NCubeController extends BaseController implements INCubeController
             axis.addColumn("Dec");
             ncube.addAxis(axis);
             nCubeService.createCube(ncube, app, version);
-            return true;
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
@@ -127,19 +167,20 @@ public class NCubeController extends BaseController implements INCubeController
      * Delete an n-cube (SNAPSHOT only).
      * @return boolean true if successful, otherwise a String error message.
      */
-    public Object deleteCube(String name, String app, String version)
+    public boolean deleteCube(String name, String app, String version)
     {
         try
         {
             if (!nCubeService.deleteCube(name, app, version))
             {
-                return "Cannot delete RELEASE n-cube.";
+                markRquestFailed("Cannot delete RELEASE n-cube.");
             }
             return true;
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
+            return false;
         }
     }
 
@@ -149,7 +190,7 @@ public class NCubeController extends BaseController implements INCubeController
      * @return Object[] of String cube names that reference the named cube, otherwise a String
      * error message.
      */
-    public Object getReferencesTo(String name, String app, String version, String status)
+    public Object[] getReferencesTo(String name, String app, String version, String status)
     {
         try
         {
@@ -170,7 +211,8 @@ public class NCubeController extends BaseController implements INCubeController
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
+            return null;
         }
     }
 
@@ -179,7 +221,7 @@ public class NCubeController extends BaseController implements INCubeController
      * @return Object[] of String cube names that the passed in (named) cube references,
      * otherwise a String error message.
      */
-    public Object getReferencesFrom(String name, String app, String version, String status)
+    public Object[] getReferencesFrom(String name, String app, String version, String status)
     {
         try
         {
@@ -188,7 +230,8 @@ public class NCubeController extends BaseController implements INCubeController
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
+            return null;
         }
     }
 
@@ -197,7 +240,7 @@ public class NCubeController extends BaseController implements INCubeController
      * references).
      * @return Object[] of String names of each scope variable, otherwise a String error message.
      */
-    public Object getRequiredScope(String name, String app, String version, String status)
+    public Object[] getRequiredScope(String name, String app, String version, String status)
     {
         try
         {
@@ -206,25 +249,24 @@ public class NCubeController extends BaseController implements INCubeController
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
+            return null;
         }
     }
 
     /**
      * Duplicate the passed in cube, but change the name to newName AND the status of the new
      * n-cube will be SNAPSHOT.
-     * @return boolean true if successful, otherwise a String error message.
      */
-    public Object duplicateCube(String newName, String name, String newApp, String app, String newVersion, String version, String status)
+    public void duplicateCube(String newName, String name, String newApp, String app, String newVersion, String version, String status)
     {
         try
         {
             nCubeService.duplicateCube(newName, name, newApp, app, newVersion, version, status);
-            return true;
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
@@ -232,35 +274,33 @@ public class NCubeController extends BaseController implements INCubeController
      * Release the passed in SNAPSHOT version (update their status_cd to RELEASE), and then
      * duplicate all the n-cubes in the release, creating new ones in SNAPSHOT status with
      * the version number set to the newSnapVer.
-     * @return boolean true if successful, otherwise a String error message.
      */
-    public Object releaseCubes(String app, String version, String newSnapVer)
+    public void releaseCubes(String app, String version, String newSnapVer)
     {
         try
         {
-        nCubeService.releaseCubes(app, version, newSnapVer);
-        return true;
-    }
+            nCubeService.releaseCubes(app, version, newSnapVer);
+        }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
     /**
      * Change the SNAPSHOT version number of an n-cube.
+     *
      * @return boolean true if successful, otherwise a String error message.
      */
-    public Object changeVersionValue(String app, String currVersion, String newSnapVer)
+    public void changeVersionValue(String app, String currVersion, String newSnapVer)
     {
         try
         {
-        nCubeService.changeVersionValue(app, currVersion, newSnapVer);
-        return true;
-    }
+            nCubeService.changeVersionValue(app, currVersion, newSnapVer);
+        }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
@@ -268,16 +308,15 @@ public class NCubeController extends BaseController implements INCubeController
      * Add axis to an existing SNAPSHOT n-cube.
      * @return boolean true if successful, otherwise String error message.
      */
-    public Object addAxis(String name, String app, String version, String axisName, String type, String valueType)
+    public void addAxis(String name, String app, String version, String axisName, String type, String valueType)
     {
         try
         {
             nCubeService.addAxis(name, app, version, axisName, type, valueType);
-            return true;
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
@@ -292,7 +331,7 @@ public class NCubeController extends BaseController implements INCubeController
      *     "multiMatch": true | false
      * }, ... ]
      */
-    public Object getAxes(String name, String app, String version, String status)
+    public Object[] getAxes(String name, String app, String version, String status)
     {
         try
         {
@@ -301,7 +340,8 @@ public class NCubeController extends BaseController implements INCubeController
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
+            return null;
         }
     }
 
@@ -316,7 +356,7 @@ public class NCubeController extends BaseController implements INCubeController
      * sense the data-type mismatch (json-io does) and then attempts to convert the String to a
      * numeric value (which succeeds).  This allows the full 64-bit id to make it round trip.
      */
-    public Object getAxis(String name, String app, String version, String status, String axisName)
+    public Map getAxis(String name, String app, String version, String status, String axisName)
     {
         try
         {
@@ -324,7 +364,8 @@ public class NCubeController extends BaseController implements INCubeController
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
+            return null;
         }
     }
 
@@ -332,32 +373,27 @@ public class NCubeController extends BaseController implements INCubeController
      * Delete the passed in axis.
      * @return boolean true if successful, otherwise String error message is returned.
      */
-    public Object deleteAxis(String name, String app, String version, String axisName)
+    public void deleteAxis(String name, String app, String version, String axisName)
     {
         try
         {
             nCubeService.deleteAxis(name, app, version, axisName);
-            return true;
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
-    /**
-     * @return boolean true if successful, otherwise String error message is returned.
-     */
-    public Object updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch)
+    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch)
     {
         try
         {
             nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted, multiMatch);
-            return true;
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
@@ -365,16 +401,15 @@ public class NCubeController extends BaseController implements INCubeController
      * Update an entire set of columns on an axis at one time.  The updatedAxis is not a real axis,
      * but treated like an Axis-DTO where the list of columns within the axis are in display order.
      */
-    public Object updateAxisColumns(String name, String app, String version, Axis updatedAxis)
+    public void updateAxisColumns(String name, String app, String version, Axis updatedAxis)
     {
         try
         {
             nCubeService.updateAxisColumns(name, app, version, updatedAxis);
-            return true;
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
@@ -382,16 +417,15 @@ public class NCubeController extends BaseController implements INCubeController
      * Update column value in-place, with the passed in value.  The value will be a String that n-cube
      * must make inferences about to convert into a DISCRETE value, RANGE, SET, etc.
      */
-    public Object updateColumnCell(String name, String app, String version, String colId, String value)
+    public void updateColumnCell(String name, String app, String version, String colId, String value)
     {
         try
         {
             nCubeService.updateColumnCell(name, app, version, colId, value);
-            return true;
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
@@ -405,37 +439,70 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            // Object[] is used to distinguish between a successful return of String and the String error message
-            return new Object[]{ nCubeService.updateCell(name, app, version, colIds, parseCellValue(value)) };
+            return nCubeService.updateCell(name, app, version, colIds, parseCellValue(value));
         }
         catch(Exception e)
         {
-            return e.getMessage();
+            fail(e);
+            return null;
         }
     }
 
-    public Object renameCube(String oldName, String newName, String app, String version)
+    public void renameCube(String oldName, String newName, String app, String version)
     {
         try
         {
-            return nCubeService.renameCube(oldName, newName, app, version);
+            nCubeService.renameCube(oldName, newName, app, version);
         }
         catch(Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
     }
 
-    public Object saveJson(String name, String app, String version, String json)
+    public void saveJson(String name, String app, String version, String json)
     {
         try
         {
-            return nCubeService.updateCube(name, app, version, json);
+            nCubeService.updateCube(name, app, version, json);
         }
         catch (Exception e)
         {
-            return e.getMessage();
+            fail(e);
         }
+    }
+
+    private static void markRquestFailed(Object data)
+    {
+        JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_STATUS, false);
+        JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_FAIL_MESSAGE, data);
+    }
+
+    /**
+     * Indicate to the Ajax servlet (JsonCommandServlet) that the 'status' field should
+     * be set to 'false', and then set the 'data' field to the String of exception
+     * text.
+     * @param e Exception that occurred when calling the service.
+     */
+    private static void fail(Exception e)
+    {
+        markRquestFailed(getCauses(e));
+    }
+
+    private static String getCauses(Throwable t)
+    {
+        StringBuilder s = new StringBuilder();
+        while (t != null)
+        {
+            s.append(t.getMessage());
+            t = t.getCause();
+            if (t != null)
+            {
+                s.append("<hr/>");
+            }
+        }
+
+        return s.toString();
     }
 
     private static Object parseCellValue(final Object value)

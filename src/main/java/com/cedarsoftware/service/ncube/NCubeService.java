@@ -7,6 +7,7 @@ import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.StringUtilities;
+import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
 import org.springframework.jdbc.datasource.DataSourceUtils;
@@ -376,11 +377,76 @@ public class NCubeService
         return NCubeManager.renameCube(connection, oldName, newName, app, version);
     }
 
-    public Object updateCube(String name, String app, String version, String json)
+    /**
+     * Update / Save a single n-cube -or- create / update a batch of n-cubes, represented as a JSON
+     * array [] of n-cubes.
+     */
+    public void updateCube(String name, String app, String version, String json)
     {
+        json = json.trim();
+        List<NCube> cubes;
+        boolean checkName;
+        if (json.startsWith("["))
+        {
+            checkName = false;
+            cubes = getCubes(json);
+        }
+        else
+        {
+            checkName = true;
+            cubes = new ArrayList();
+            cubes.add(NCube.fromSimpleJson(json));
+        }
+
         Connection connection = getConnection();
-        NCube ncube = NCube.fromSimpleJson(json);
-        NCubeManager.updateCube(connection, app, ncube, version);
-        return true;
+
+        for (NCube ncube : cubes)
+        {
+            if (checkName)
+            {
+                if (!StringUtilities.equalsIgnoreCase(name, ncube.getName()))
+                {
+                    throw new IllegalArgumentException("The n-cube name cannot be different than selected n-cube.  Use Rename n-cube option from n-cube menu to rename the cube.");
+                }
+            }
+
+            NCube nc = NCubeManager.loadCube(connection, app, ncube.getName(), version, "SNAPSHOT", new Date());
+
+            if (nc != null)
+            {
+                NCubeManager.updateCube(connection, app, ncube, version);
+            }
+            else
+            {
+                NCubeManager.createCube(connection, app, ncube, version);
+            }
+        }
+    }
+
+    public static List<NCube> getCubes(String json)
+    {
+        String lastSuccessful = "";
+        try
+        {
+            JsonObject ncubes = (JsonObject) JsonReader.jsonToMaps(json);
+            Object[] cubes = ncubes.getArray();
+            List<NCube> cubeList = new ArrayList<>(cubes.length);
+
+            for (Object cube : cubes)
+            {
+                JsonObject ncube = (JsonObject) cube;
+                String json1 = JsonWriter.objectToJson(ncube);
+                NCube nCube = NCube.fromSimpleJson(json1);
+                cubeList.add(nCube);
+                lastSuccessful = nCube.getName();
+            }
+
+            return cubeList;
+        }
+        catch (Exception e)
+        {
+            String s = "Failed to load n-cubes from passed in JSON, last successful cube read: " + lastSuccessful;
+            throw new IllegalArgumentException(s, e);
+        }
     }
 }
