@@ -90,6 +90,11 @@ $(function ()
                     _editor.resize();
                 }
             });
+        $('#tests').layout(
+            {
+                center__paneSelector: "#center-test",
+                east__paneSelector: "#east"
+            });
         ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
         initJsonEditor();
         addListeners();

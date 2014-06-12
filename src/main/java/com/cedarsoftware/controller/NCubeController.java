@@ -18,6 +18,8 @@ import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -97,6 +99,8 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            InputStream in = JsonCommandServlet.servletRequest.get().getInputStream();
+            OutputStream out = JsonCommandServlet.servletResponse.get().getOutputStream();
             return nCubeService.getJson(name, app, version, status);
         }
         catch (Exception e)
@@ -593,15 +597,15 @@ public class NCubeController extends BaseController implements INCubeController
         String arg = matcher.group(2);
         if ("exp:".equals(cmd))
         {
-            return new GroovyExpression(arg);
+            return new GroovyExpression(arg, null);
         }
         else if ("method:".equals(cmd))
         {
-            return new GroovyMethod(arg);
+            return new GroovyMethod(arg, null);
         }
         else if ("temp:".equals(cmd))
         {
-            return new GroovyTemplate(arg, true);
+            return new GroovyTemplate(arg, null, true);
         }
         else if ("b:".equals(cmd))
         {
@@ -859,33 +863,28 @@ public class NCubeController extends BaseController implements INCubeController
         else if ("str-url:".equals(cmd))
         {
             // TODO: allow for cache / no cache
-            StringUrlCmd stringUrlCmd = new StringUrlCmd(true);
-            stringUrlCmd.setUrl(arg);
+            StringUrlCmd stringUrlCmd = new StringUrlCmd(arg, false);
             return stringUrlCmd;
         }
         else if ("bin-url:".equals(cmd))
         {
             // TODO: allow for cache / no cache
-            BinaryUrlCmd binaryUrlCmd = new BinaryUrlCmd(true);
-            binaryUrlCmd.setUrl(arg);
+            BinaryUrlCmd binaryUrlCmd = new BinaryUrlCmd(arg, false);
             return binaryUrlCmd;
         }
         else if ("exp-url:".equals(cmd))
         {
-            GroovyExpression exp = new GroovyExpression("");
-            exp.setUrl(arg);
+            GroovyExpression exp = new GroovyExpression(null, arg, true);
             return exp;
         }
         else if ("method-url:".equals(cmd))
         {
-            GroovyMethod method = new GroovyMethod("");
-            method.setUrl(arg);
+            GroovyMethod method = new GroovyMethod(null, arg);
             return method;
         }
         else if ("temp-url:".equals(cmd))
         {
-            GroovyTemplate template = new GroovyTemplate("", true);
-            template.setUrl(arg);
+            GroovyTemplate template = new GroovyTemplate(null, arg, true);
             return template;
         }
         else if ("date:".equals(cmd))

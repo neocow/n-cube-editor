@@ -430,7 +430,7 @@ public class NCubeService
         {
             JsonObject ncubes = (JsonObject) JsonReader.jsonToMaps(json);
             Object[] cubes = ncubes.getArray();
-            List<NCube> cubeList = new ArrayList<>(cubes.length);
+            List<NCube> cubeList = new ArrayList<NCube>(cubes.length);
 
             for (Object cube : cubes)
             {
