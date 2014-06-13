@@ -43,7 +43,7 @@
 
     <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
         p:driverClassName="com.mysql.jdbc.Driver"
-        p:url="jdbc:mysql://localhost:3306/ncube"
+        p:url="jdbc:mysql://cvgldmysql01.td.afg:3306/ncube"
         p:username="ncube"
         p:password="ncube"
         p:initialSize="5"
