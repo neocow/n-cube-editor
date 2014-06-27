@@ -59,6 +59,16 @@ public class NCubeController extends BaseController implements INCubeController
         nCubeService = service;
     }
 
+    private boolean isAllowed(String app, String version)
+    {
+        return isAllowed(app, version, "SNAPSHOT");
+    }
+
+    private static boolean isAllowed(String app, String version, String status)
+    {
+        return "UD.REF.APP".equals(app) && "0.0.1".equals(version) && "SNAPSHOT".equals(status);
+    }
+
     public Object[] getCubeList(String filter, String app, String version, String status)
     {
         try
@@ -144,6 +154,12 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
+
             NCube ncube = new NCube(name);
             Axis axis = new Axis("Month", AxisType.DISCRETE, AxisValueType.STRING, false, Axis.DISPLAY);
             axis.addColumn("Jan");
@@ -175,6 +191,12 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited");
+                return false;
+            }
+
             if (!nCubeService.deleteCube(name, app, version))
             {
                 markRquestFailed("Cannot delete RELEASE n-cube.");
@@ -266,6 +288,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(newApp, newVersion))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.duplicateCube(newName, name, newApp, app, newVersion, version, status);
         }
         catch (Exception e)
@@ -283,6 +310,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, "never"))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.releaseCubes(app, version, newSnapVer);
         }
         catch (Exception e)
@@ -300,6 +332,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, "never"))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.changeVersionValue(app, currVersion, newSnapVer);
         }
         catch (Exception e)
@@ -381,6 +418,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.deleteAxis(name, app, version, axisName);
         }
         catch (Exception e)
@@ -393,6 +435,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted, multiMatch);
         }
         catch (Exception e)
@@ -409,6 +456,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.updateAxisColumns(name, app, version, updatedAxis);
         }
         catch (Exception e)
@@ -425,6 +477,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.updateColumnCell(name, app, version, colId, value);
         }
         catch (Exception e)
@@ -443,6 +500,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return null;
+            }
             return nCubeService.updateCell(name, app, version, colIds, parseCellValue(value));
         }
         catch(Exception e)
@@ -456,6 +518,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.renameCube(oldName, newName, app, version);
         }
         catch(Exception e)
@@ -468,6 +535,11 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
             nCubeService.updateCube(name, app, version, json);
         }
         catch (Exception e)
