@@ -1670,11 +1670,14 @@ $(function ()
 
     function clearError()
     {
-        if (_errorId)
+        // Temporarily make the user close each error.
+
+/*      if (_errorId)
         {
             $.gritter.remove(_errorId);
             _errorId = null;
         }
+        */
     }
 
     function saveScroll()
