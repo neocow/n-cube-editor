@@ -90,4 +90,5 @@
         <property name="dataSource" ref="ncubeDataSource"/>
     </bean>
 
+<!-- to add cpr provider -->
 </beans>
