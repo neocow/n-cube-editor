@@ -64,9 +64,10 @@ public class NCubeController extends BaseController implements INCubeController
         return isAllowed(app, version, "SNAPSHOT");
     }
 
+    //temp condition!!
     private static boolean isAllowed(String app, String version, String status)
     {
-        return "UD.REF.APP".equals(app) && "0.0.1".equals(version) && "SNAPSHOT".equals(status);
+        return "UD.REF.APP".equals(app) && "0.0.1".equals(version) && "SNAPSHOT".equals(status) || !"UD.REF.APP".equals(app);
     }
 
     public Object[] getCubeList(String filter, String app, String version, String status)
