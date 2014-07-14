@@ -42,6 +42,7 @@
         <version.servlet>3.0.1</version.servlet>
         <version.log4j>1.2.16</version.log4j>
         <version.esapi>1.2.9</version.esapi>
+		<version.core.util>3.9.0</version.core.util>
     </properties>
 
     <pluginRepositories>
@@ -234,6 +235,11 @@
         	<!--<artifactId>commons-beanutils</artifactId>-->
         	<!--<version>${version.commons-beanutils}</version>-->
         <!--</dependency>-->
+		<dependency>
+			<groupId>com.gaic.bue.uwd</groupId>
+			<artifactId>core-util</artifactId>
+			<version>${version.core.util}</version>
+		</dependency>
 	</dependencies>
 
     <dependencyManagement>
