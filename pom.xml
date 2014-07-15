@@ -43,6 +43,7 @@
         <version.log4j>1.2.16</version.log4j>
         <version.esapi>1.2.9</version.esapi>
 		<version.core.util>3.9.0</version.core.util>
+		<version.ra.ws.client>1.10.0</version.ra.ws.client>
     </properties>
 
     <pluginRepositories>
@@ -239,6 +240,11 @@
 			<groupId>com.gaic.bue.uwd</groupId>
 			<artifactId>core-util</artifactId>
 			<version>${version.core.util}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gaic.bue.uwd</groupId>
+			<artifactId>ra-ws-clients</artifactId>
+			<version>${version.ra.ws.client}</version>
 		</dependency>
 	</dependencies>
 
