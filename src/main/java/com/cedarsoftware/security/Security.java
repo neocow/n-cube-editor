@@ -1,5 +1,8 @@
 package com.cedarsoftware.security;
 
+import com.gaic.esapi.Authentication;
+import com.gaic.esapi.Protectable;
+
 /**
  * Security interface.  All security related questions use this API.
  *
@@ -21,5 +24,13 @@ package com.cedarsoftware.security;
  */
 public interface Security
 {
-    String getUserId();
+	public Authentication getAuthentication();
+	public boolean checkPermission(Protectable protectable);
+	public String getLoggedInUserName();
+	public String getHID();
+	public String getFirstName();
+	public String getLastName();
+	public boolean hasAccess(String action, String resource, String resAttrKey, String resAttrValue);
+	public boolean hasAccess(String action, String resource);
+	public boolean hasAccess(String action, String resource, Object[] resAttrEntry);
 }
