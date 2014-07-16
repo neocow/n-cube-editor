@@ -552,32 +552,32 @@ $(function ()
             });
         });
 
-        $('.cell').each(function ()
-        {
-            $(this).on("dblclick", function ()
-            {   // On double click, place into contenteditable mode
-                $(this).attr('contenteditable', 'true');
-                $(this).focus();
-            });
-            $(this).blur(function ()
-            {   // On blur, turn off contenteditable mode
-                $(this).attr('contenteditable', 'false');
-                var cellId = $(this).attr('data-id').split('k')[1];
-                var ids = cellId.split(".");
-                var value = cleanString($(this).html());
-                var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, ids, value]);
-                clearError();
-                if (result.status === true)
-                {
-                    $(this).html(result.data);
-                }
-                else
-                {
-                    _errorId = showNote('Unable to update cell value:<hr/>' + result.data);
-                    $(this).html('');
-                }
-            });
-        });
+//        $('.cell').each(function ()
+//        {
+//            $(this).on("dblclick", function ()
+//            {   // On double click, place into contenteditable mode
+//                $(this).attr('contenteditable', 'true');
+//                $(this).focus();
+//            });
+//            $(this).blur(function ()
+//            {   // On blur, turn off contenteditable mode
+//                $(this).attr('contenteditable', 'false');
+//                var cellId = $(this).attr('data-id').split('k')[1];
+//                var ids = cellId.split(".");
+//                var value = cleanString($(this).html());
+//                var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, ids, value]);
+//                clearError();
+//                if (result.status === true)
+//                {
+//                    $(this).html(result.data);
+//                }
+//                else
+//                {
+//                    _errorId = showNote('Unable to update cell value:<hr/>' + result.data);
+//                    $(this).html('');
+//                }
+//            });
+//        });
     }
 
     function loadCubeJson()
