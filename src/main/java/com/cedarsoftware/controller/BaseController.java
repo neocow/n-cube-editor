@@ -34,7 +34,7 @@ public class BaseController implements IBaseController
 	
 	protected String getHID()
 	{
-		return security.getUserId();
+		return security.getHID();
 	}
     
     protected Security getSecurity()
