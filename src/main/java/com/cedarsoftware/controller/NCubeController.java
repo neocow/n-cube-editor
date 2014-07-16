@@ -947,7 +947,7 @@ public class NCubeController extends BaseController implements INCubeController
         }
         else if ("exp-url:".equals(cmd))
         {
-            GroovyExpression exp = new GroovyExpression(null, arg, true);
+            GroovyExpression exp = new GroovyExpression(null, arg);
             return exp;
         }
         else if ("method-url:".equals(cmd))
