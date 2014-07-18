@@ -28,7 +28,7 @@
         p:minIdle="5"
         p:maxIdle="10"
         p:maxActive="100"
-    	p:maxWait="120000"
+    	p:maxWait="30000"
     	p:jmxEnabled="true"
 	    p:removeAbandoned="true"
 	    p:removeAbandonedTimeout="180"
@@ -78,13 +78,9 @@
     </tx:advice>
 
     <aop:config>
-        <aop:pointcut id="ncubeServiceMethods" expression="execution(public * r*(..))"/>
+        <aop:pointcut id="ncubeServiceMethods" expression="within(com.cedarsoftware.service.ncube.*)"/>
         <aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>
     </aop:config>
-    <!--<aop:config>-->
-        <!--<aop:pointcut id="ncubeServiceMethods" expression="within(com.cedarsoftware.service.ncube.*)"/>-->
-        <!--<aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>-->
-    <!--</aop:config>-->
 
     <bean id="ncubeService" class="com.cedarsoftware.service.ncube.NCubeService">
         <property name="dataSource" ref="ncubeDataSource"/>
