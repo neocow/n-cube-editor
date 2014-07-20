@@ -410,9 +410,7 @@ public class NCubeService
                 }
             }
 
-            NCube nc = NCubeManager.loadCube(connection, app, ncube.getName(), version, "SNAPSHOT", new Date());
-
-            if (nc != null)
+            if (NCubeManager.doesCubeExist(connection, app, ncube.getName(), version, "SNAPSHOT", new Date()))
             {
                 NCubeManager.updateCube(connection, app, ncube, version);
             }

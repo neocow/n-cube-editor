@@ -56,12 +56,14 @@
         <listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
     </listener>
 
+    <!-- spring files -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
         <param-value>
-            WEB-INF/classes/config/beans.xml
+            classpath:config/beans.xml
         </param-value>
     </context-param>
+
     <listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
