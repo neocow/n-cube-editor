@@ -243,6 +243,11 @@ public class NCubeService
             throw new IllegalArgumentException("Could not delete axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
 
+        if (ncube.getNumDimensions() == 1)
+        {
+            throw new IllegalArgumentException("Could not delete axis '" + axisName + "' - at least one axis must exist on n-cube.");
+        }
+
         ncube.deleteAxis(axisName);
         NCubeManager.updateCube(connection, app, ncube, version);
     }
