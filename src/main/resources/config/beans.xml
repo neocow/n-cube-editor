@@ -7,7 +7,7 @@
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
   	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
   	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
-    http://www.springframework.org/schema/p http://www.springframework.org/schema/p/spring-p-3.2.xsd"
+    http://www.springframework.org/schema/p http://www.springframework.org/schema/p/spring-p-3.2.xsd">
 
 	<bean name="ncubeController" class="com.cedarsoftware.controller.NCubeController">
         <constructor-arg ref="ncubeService"/>
@@ -19,7 +19,7 @@
     -->
 
 
-    <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
+    <!--<bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
         p:driverClassName="oracle.jdbc.driver.OracleDriver"
         p:url="jdbc:oracle:thin:@10.50.214.14:1526:uwdeskd"
         p:username="ra_desktop"
@@ -41,7 +41,7 @@
 	    p:validationQuery="select 1 from dual"
 	/>
 
-    <!--<bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"-->
+    <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"-->
         <!--p:driverClassName="com.mysql.jdbc.Driver"-->
         <!--p:url="jdbc:mysql://cvgldmysql01.td.afg:3306/ncube"-->
         <!--p:username="jderegnaucourt"-->
@@ -90,6 +90,34 @@
         <property name="dataSource" ref="ncubeDataSource"/>
     </bean>
 
+    <!--
+        When using mysql as your test database, set an environment variable spring.profiles.active=mysql
+        The profiles list can be comma separated if you need more than one profile
+    -->
+
+    <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
+          p:driverClassName="oracle.jdbc.driver.OracleDriver"
+          p:url="jdbc:oracle:thin:@10.50.214.14:1526:uwdeskd"
+          p:username="ra_desktop"
+          p:password="p0rtal"
+          p:initialSize="5"
+          p:minIdle="5"
+          p:maxIdle="10"
+          p:maxActive="100"
+          p:maxWait="120000"
+          p:jmxEnabled="true"
+          p:removeAbandoned="true"
+          p:removeAbandonedTimeout="180"
+          p:testOnBorrow="true"
+          p:testOnReturn="false"
+          p:testWhileIdle="false"
+          p:timeBetweenEvictionRunsMillis="30000"
+          p:minEvictableIdleTimeMillis="30000"
+          p:validationInterval="60000"
+          p:validationQuery="select 1 from dual"
+            />
+
+
     <beans profile="mysql">
         <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
               p:driverClassName="com.mysql.jdbc.Driver"
@@ -114,29 +142,6 @@
                 />
     </beans>
 
-    <beans profile="default">
-        <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
-              p:driverClassName="oracle.jdbc.driver.OracleDriver"
-              p:url="jdbc:oracle:thin:@10.50.214.14:1526:uwdeskd"
-              p:username="ra_desktop"
-              p:password="p0rtal"
-              p:initialSize="5"
-              p:minIdle="5"
-              p:maxIdle="10"
-              p:maxActive="100"
-              p:maxWait="120000"
-              p:jmxEnabled="true"
-              p:removeAbandoned="true"
-              p:removeAbandonedTimeout="180"
-              p:testOnBorrow="true"
-              p:testOnReturn="false"
-              p:testWhileIdle="false"
-              p:timeBetweenEvictionRunsMillis="30000"
-              p:minEvictableIdleTimeMillis="30000"
-              p:validationInterval="60000"
-              p:validationQuery="select 1 from dual"
-                />
-    </beans>
-    
+
 <!-- to add cpr provider -->
 </beans>
