@@ -157,6 +157,12 @@ $(function ()
         var saveButton = $('#saveButton');
         saveButton.click(function()
         {
+            // since clearError is currently disabled.
+            if (_errorId)
+            {
+                $.gritter.remove(_errorId);
+                _errorId = null;
+            }
             clearError();
             var result = call("ncubeController.saveJson", [_selectedCubeName, _selectedApp, _selectedVersion, _editor.getText()]);
             if (result.status === true)
@@ -1290,6 +1296,46 @@ $(function ()
         {
             _errorId = showNote("Unable to delete axis '" + axisName + "':<hr/>" + result.data);
         }
+    }
+
+    function runTest(axisName) {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Axis cannot be updated.');
+            return;
+        }
+        var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
+        var axis;
+        if (result.status === true)
+        {
+            axis = result.data;
+        }
+        else
+        {
+            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr/>" + result.data);
+            return;
+        }
+        var forceState = axis.type.name == 'RULE';
+        $('#updateAxisLabel').html("Update Axis: " + axisName);
+        $('#updateAxisName').val(axisName);
+        $('#updateAxisTypeName').val(axis.type.name);
+        $('#updateAxisValueTypeName').val(axis.valueType.name);
+        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null});
+        if (forceState)
+        {
+            $('#updateAxisSortOrderRow').hide();
+            $('#updateAxisMultiMatchRow').hide();
+        }
+        else
+        {
+            $('#updateAxisSortOrderRow').show();
+            $('#updateAxisMultiMatchRow').show();
+            $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
+            $('#updateAxisMultiMatch').prop({'checked': axis.multiMatch === true, 'disabled': false});
+        }
+        _axisName = axisName;
+        $('#updateAxisModal').modal();
     }
 
     function updateAxis(axisName)
