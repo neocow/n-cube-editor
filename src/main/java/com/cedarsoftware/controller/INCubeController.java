@@ -5,7 +5,7 @@ import com.cedarsoftware.ncube.Axis;
 import java.util.Map;
 
 /**
- * Handle NCube Editor requests.
+ * Handle n-cube Editor requests.
  *  
  * @author John DeRegnaucourt
  */
