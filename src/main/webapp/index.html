@@ -266,13 +266,10 @@
             </form>
         </div>
 
-        <div id="tests" class="tab-pane">
-            <div id="center-test" class="ui-layout-center ui-layout-pane">
-                Center
-            </div>
-            <div id="east" class="ui-layout-east">
-                East
-            </div>
+        <div id="tests" class="tab-pane" style="height:100%;width:100%">
+            <div id="testView" role="form" class="ui-layout-center ui-layout-pane" ></div>
+            <button id="runCubeTest" class="close">Run Test</button>
+            <div id="testResult" ></div>
         </div>
         <div id="drillPic" class="tab-pane" style="height:100%;width:100%">
             <iframe src="http://mbostock.github.io/d3/talk/20111116/pack-hierarchy.html" frameborder="0" height="100%"

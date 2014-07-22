@@ -330,6 +330,10 @@ $(function ()
         {
             editColSave()
         });
+        $('#runCubeTest').click(function ()
+        {
+            runCubeTest()
+        });
     }
 
     function loadNCubeListView()
@@ -667,6 +671,54 @@ $(function ()
         $('#cube_bizEndDate').val(date);
     }
 
+    function loadCubeTest()
+    {
+        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        {
+            _editor.setText('No n-cube to load');
+            setDirtyStatus(false);
+            return;
+        }
+
+        var testCtrl = $('#testView');
+        var result = call("ncubeController.getRequiredScope", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var testResult = $('#testResult');
+
+        if (result.status === true)
+        {
+            testCtrl.empty();
+            $.each(result.data, function (index, value)
+            {
+//                <form role="form" class="container">
+//                    <div class="row">
+//                        <div class="col-md-5">
+//                            <label for="cube_id">ID</label>
+//                            <input class="form-control" type="text" id="cube_id" readonly/>
+//                        </div>
+//
+//                        <div class="col-md-5 col-md-offset-1">
+//                            <label for="cube_app">Application</label>
+//                            <input class="form-control" type="text" id="cube_app" readonly/>
+//                        </div>
+//                    </div>
+//                </form>
+                var outerdiv = $("<div/>").attr({'class':'row'});
+                var inneritem = $("<div/>").attr({'class':'col-md-5'});
+                var label = $("<label/>").attr({'for':value});
+                label.html(value);
+                var input = $("<input/>").attr({'class':'form-control','type':'text', 'id':value});
+                inneritem.append(label);
+                inneritem.append(input);
+                outerdiv.append(inneritem);
+                testCtrl.append(outerdiv);
+            });
+        }
+        else
+        {
+            _errorId = showNote('Error fetching required scope for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
+        }
+    }
+
     function loadCube()
     {
         if (_activeTab == 'ncubeTab')
@@ -683,7 +735,7 @@ $(function ()
         }
         else if (_activeTab == 'testTab')
         {
-            // TODO: Load Tests
+            loadCubeTest();
         }
         else if (_activeTab == 'picTab')
         {
@@ -1298,13 +1350,14 @@ $(function ()
         }
     }
 
-    function runTest(axisName) {
+    function runCubeTest(axisName) {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
             _errorId = showNote('No n-cube selected. Axis cannot be updated.');
             return;
         }
+
         var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
         var axis;
         if (result.status === true)
@@ -1668,6 +1721,10 @@ $(function ()
         {
             _errorId = showNote("Unable to update columns for axis '" + axisName + "':<hr/>" + result.data);
         }
+    }
+
+    function runTest()
+    {
     }
 
     // --------------------------------------------------------------------------------------------
