@@ -80,22 +80,18 @@ $(function ()
         var hApp = appListDiv.height();
         var hStat = statListDiv.height();
         var hVer = verListDiv.height();
-        $('body').layout(
-            {
-                center__paneSelector: "#center",
-                west__paneSelector: "#west",
-                onresize: function()
-                {
-                    ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
-                    _editor.resize();
-                }
-            });
-        $('#tests').layout(
-            {
-                center__paneSelector: "#center-test",
-                east__paneSelector: "#east"
-            });
-        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+//        $('body').layout(
+//            {
+//                center__paneSelector: "#center",
+//                west__paneSelector: "#west",
+//                onresize: function()
+//                {
+//                    ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+//                    _editor.resize();
+//                }
+//            });
+//
+//        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
         initJsonEditor();
         addListeners();
     }
@@ -1725,6 +1721,8 @@ $(function ()
 
     function runTest()
     {
+        var list = $('#testView .form-control');
+
     }
 
     // --------------------------------------------------------------------------------------------
