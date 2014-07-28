@@ -34,6 +34,13 @@
     <!-- json lint -->
     <script type="text/javascript" src="jsoneditor/lib/jsonlint/jsonlint.js"></script>
 
+    <style type="text/css">
+        #west, #center, #testLayoutCenter, #testLayoutEast, #testLayoutSouth, #testContainer {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
 </head>
 
 <body>
@@ -766,16 +773,6 @@
 
     $(function () {
 
-        secondaryLayout = $('#testContainer').layout({
-            center__paneSelector:	"#testLayoutCenter"
-            ,	south__paneSelector:	"#testLayoutSouth"
-            ,	east__paneSelector:		"#testLayoutEast"
-            ,	south__minSize:				100
-            ,	east__minSize:				100
-            ,	spacing_open:			3  // ALL panes
-            ,	spacing_closed:			3 // ALL panes
-        });
-
         // this layout could be created with NO OPTIONS - but showing some here just as a sample...
         // myLayout = $('body').layout(); -- syntax with No Options
 
@@ -809,27 +806,38 @@
 
             //	some pane animation settings
             ,	west__animatePaneSizing:	false
-            ,	west__fxSpeed_size:			"fast"	// 'fast' animation when resizing west-pane
-            ,	west__fxSpeed_open:			1000	// 1-second animation when opening west-pane
-            ,	west__fxSettings_open:		{ easing: "easeOutBounce" } // 'bounce' effect when opening
+            ,   west__fxName_open:          "none"
             ,	west__fxName_close:			"none"	// NO animation when closing west-pane
-            ,   spacing_open:         3
-            ,   spacing_closed:       3
+            ,   spacing_open:         6
+            ,   spacing_closed:       6
             ,   west__resizeable:           true
             ,   west__size:                 "auto"
             ,   west__minSize:              170
             //	enable showOverflow on west-pane so CSS popups will overlap north pane
             ,	west__showOverflowOnHover:	true
-
+            ,   center__triggerEventsOnLoad: true
             //	enable state management
             ,	stateManagement__enabled:	false // automatic cookie load & save enabled by default
-            ,   onresize: function () {
-                    secondaryLayout.resizeChildLayout();
-                    return true;
-            }
             //           ,	showDebugMessages:			true // log and/or display messages from debugging & testing code
         });
 
+
+
+        secondaryLayout = $('div#testContainer').layout({
+            closable:					true	// pane can open & close
+            ,	resizable:					true	// when open, pane can be resized
+            ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
+            ,	livePaneResizing:			true
+            ,   center__paneSelector:	"#testLayoutCenter"
+            ,	south__paneSelector:	"#testLayoutSouth"
+            ,	east__paneSelector:		"#testLayoutEast"
+            ,	south__minSize:				100
+            ,	east__minSize:				100
+            ,	east__spacing_open:			6  // ALL panes
+            ,	east__spacing_closed:			6 // ALL panes
+            ,	south__spacing_open:			6  // ALL panes
+            ,	south__spacing_closed:			6 // ALL panes
+        });
 
 
 

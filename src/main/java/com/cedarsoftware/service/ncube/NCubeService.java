@@ -452,4 +452,22 @@ public class NCubeService
             throw new IllegalArgumentException(s, e);
         }
     }
+
+    /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
+    public boolean updateTestData(String name, String app, String version, String tests)
+    {
+        Connection connection = getConnection();
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        if (ncube == null)
+        {
+            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
+        }
+
+        return NCubeManager.updateTestData(connection, app, name, version, tests);
+    }
+
+
 }
