@@ -389,7 +389,7 @@ public class NCubeService
     public void updateCube(String name, String app, String version, String json)
     {
         json = json.trim();
-        List<NCube> cubes;
+        List cubes;
         boolean checkName;
         if (json.startsWith("["))
         {
@@ -405,43 +405,66 @@ public class NCubeService
 
         Connection connection = getConnection();
 
-        for (NCube ncube : cubes)
+        for (Object object : cubes)
         {
-            if (checkName)
+            if (object instanceof NCube)
             {
-                if (!StringUtilities.equalsIgnoreCase(name, ncube.getName()))
+                NCube ncube = (NCube) object;
+                if (checkName)
                 {
-                    throw new IllegalArgumentException("The n-cube name cannot be different than selected n-cube.  Use Rename n-cube option from n-cube menu to rename the cube.");
+                    if (!StringUtilities.equalsIgnoreCase(name, ncube.getName()))
+                    {
+                        throw new IllegalArgumentException("The n-cube name cannot be different than selected n-cube.  Use Rename n-cube option from n-cube menu to rename the cube.");
+                    }
                 }
-            }
 
-            if (NCubeManager.doesCubeExist(connection, app, ncube.getName(), version, "SNAPSHOT", new Date()))
-            {
-                NCubeManager.updateCube(connection, app, ncube, version);
+                if (NCubeManager.doesCubeExist(connection, app, ncube.getName(), version, "SNAPSHOT", new Date()))
+                {
+                    NCubeManager.updateCube(connection, app, ncube, version);
+                }
+                else
+                {
+                    NCubeManager.createCube(connection, app, ncube, version);
+                }
             }
             else
             {
-                NCubeManager.createCube(connection, app, ncube, version);
+                JsonObject map = (JsonObject) object;
+                String cubeName = (String) map.get("ncube");
+                String cmd = (String) map.get("action");
+
+                if ("delete".equalsIgnoreCase(cmd))
+                {
+                    NCubeManager.deleteCube(connection, app, cubeName, version, false);
+                }
             }
         }
     }
 
-    public static List<NCube> getCubes(String json)
+    public static List getCubes(String json)
     {
         String lastSuccessful = "";
         try
         {
             JsonObject ncubes = (JsonObject) JsonReader.jsonToMaps(json);
             Object[] cubes = ncubes.getArray();
-            List<NCube> cubeList = new ArrayList<NCube>(cubes.length);
+            List cubeList = new ArrayList<>(cubes.length);
 
             for (Object cube : cubes)
             {
                 JsonObject ncube = (JsonObject) cube;
-                String json1 = JsonWriter.objectToJson(ncube);
-                NCube nCube = NCube.fromSimpleJson(json1);
-                cubeList.add(nCube);
-                lastSuccessful = nCube.getName();
+                if (ncube.containsKey("action"))
+                {
+                    cubeList.add(ncube);
+                    lastSuccessful = (String) ncube.get("ncube");
+                }
+                else
+                {
+                    String json1 = JsonWriter.objectToJson(ncube);
+                    NCube nCube = NCube.fromSimpleJson(json1);
+                    cubeList.add(nCube);
+                    lastSuccessful = nCube.getName();
+                }
             }
 
             return cubeList;
