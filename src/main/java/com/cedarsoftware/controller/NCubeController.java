@@ -18,8 +18,6 @@ import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -110,8 +108,6 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            InputStream in = JsonCommandServlet.servletRequest.get().getInputStream();
-            OutputStream out = JsonCommandServlet.servletResponse.get().getOutputStream();
             return nCubeService.getJson(name, app, version, status);
         }
         catch (Exception e)
