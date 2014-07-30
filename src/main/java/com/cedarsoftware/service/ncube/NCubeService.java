@@ -3,6 +3,7 @@ package com.cedarsoftware.service.ncube;
 import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
+import com.cedarsoftware.ncube.Column;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.util.CaseInsensitiveSet;
@@ -17,7 +18,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -457,6 +460,23 @@ public class NCubeService
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
+    public String getTestData(String name, String app, String version, String status)
+    {
+        Connection connection = getConnection();
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, status, new Date());
+        if (ncube == null)
+        {
+            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
+        }
+
+        return NCubeManager.getTestData(connection, app, name, version, new Date());
+    }
+
+
+    /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
     public boolean updateTestData(String name, String app, String version, String tests)
     {
         Connection connection = getConnection();
@@ -467,6 +487,36 @@ public class NCubeService
         }
 
         return NCubeManager.updateTestData(connection, app, name, version, tests);
+    }
+
+    /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
+    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version)
+    {
+        Connection connection = getConnection();
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        if (ncube == null)
+        {
+            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
+        }
+
+        List<Axis> axes = ncube.getAxes();
+
+        Set<Long> ids = new LinkedHashSet<Long>();
+
+        for (Axis a : axes)
+        {
+            for (Column c : a.getColumns()) {
+                ids.add(c.getId());
+            }
+        }
+
+        Map<String, Object> coords = new HashMap<String, Object>();
+
+        ncube.getColumnsAndCoordinateFromIds(ids, null, coords);
+        return coords;
     }
 
 

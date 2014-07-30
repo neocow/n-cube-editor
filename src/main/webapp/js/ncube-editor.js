@@ -669,50 +669,61 @@ $(function ()
 
     function loadCubeTest()
     {
+        secondaryLayout.resizeAll();
+
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
             _editor.setText('No n-cube to load');
             setDirtyStatus(false);
             return;
         }
-
         var testCtrl = $('#testView');
-        var result = call("ncubeController.getRequiredScope", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         var testResult = $('#testResult');
+        var testList = $('#testList');
 
-        if (result.status === true)
+        var testListResult = call("ncubeController.getTestData", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        if (testListResult.status === true)
         {
+            testList.empty();
+
+            var ol = $("<ol/>");
+            if (testListResult.data != null) {
+                $.each(testListResult.data, function (index, value) {
+                    li = $("<li/>");
+                    li.html(value);
+                    ol.append(li);
+                });
+            } else {
+            }
+            testList.append(ol);
+        }
+        else {
+            _errorId = showNote('Error fetching required scope for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
+        }
+
+        var result = call("ncubeController.getRequiredScope", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        if (result.status === true) {
             testCtrl.empty();
-            $.each(result.data, function (index, value)
-            {
-//                <form role="form" class="container">
-//                    <div class="row">
-//                        <div class="col-md-5">
-//                            <label for="cube_id">ID</label>
-//                            <input class="form-control" type="text" id="cube_id" readonly/>
-//                        </div>
-//
-//                        <div class="col-md-5 col-md-offset-1">
-//                            <label for="cube_app">Application</label>
-//                            <input class="form-control" type="text" id="cube_app" readonly/>
-//                        </div>
-//                    </div>
-//                </form>
-                var outerdiv = $("<div/>").attr({'class':'row'});
-                var inneritem = $("<div/>").attr({'class':'col-md-5'});
-                var label = $("<label/>").attr({'for':value});
+            var form = $("<form/>").attr({'class':'form-control'});
+            $.each(result.data, function (index, value) {
+                var outerdiv = $("<div/>").attr({'class': 'row'});
+                var inneritem = $("<div/>").attr({'class': 'col-md-2'});
+                var label = $("<label/>").attr({'for': value});
                 label.html(value);
-                var input = $("<input/>").attr({'class':'form-control','type':'text', 'id':value});
+                var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': value});
                 inneritem.append(label);
                 inneritem.append(input);
                 outerdiv.append(inneritem);
-                testCtrl.append(outerdiv);
+                form.append(outerdiv);
             });
+            testCtrl.append(form);
         }
         else
         {
             _errorId = showNote('Error fetching required scope for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
         }
+
+
     }
 
     function loadCube()
@@ -1354,37 +1365,6 @@ $(function ()
             return;
         }
 
-        var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
-        var axis;
-        if (result.status === true)
-        {
-            axis = result.data;
-        }
-        else
-        {
-            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr/>" + result.data);
-            return;
-        }
-        var forceState = axis.type.name == 'RULE';
-        $('#updateAxisLabel').html("Update Axis: " + axisName);
-        $('#updateAxisName').val(axisName);
-        $('#updateAxisTypeName').val(axis.type.name);
-        $('#updateAxisValueTypeName').val(axis.valueType.name);
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null});
-        if (forceState)
-        {
-            $('#updateAxisSortOrderRow').hide();
-            $('#updateAxisMultiMatchRow').hide();
-        }
-        else
-        {
-            $('#updateAxisSortOrderRow').show();
-            $('#updateAxisMultiMatchRow').show();
-            $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
-            $('#updateAxisMultiMatch').prop({'checked': axis.multiMatch === true, 'disabled': false});
-        }
-        _axisName = axisName;
-        $('#updateAxisModal').modal();
     }
 
     function updateAxis(axisName)

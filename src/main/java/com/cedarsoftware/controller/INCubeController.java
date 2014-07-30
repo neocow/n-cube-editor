@@ -34,4 +34,6 @@ public interface INCubeController extends IBaseController
     Object updateCell(String name, String app, String version, Object[] colIds, String value);
     void renameCube(String oldName, String newName, String app, String version);
     void saveJson(String name, String app, String version, String json);
+    public void getTestData(String name, String app, String version, String status);
+    public void saveTestData(String name, String app, String version, String testData);
 }

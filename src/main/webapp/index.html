@@ -280,17 +280,17 @@
         <div id="tests" class="tab-pane" style="height:100%;width:100%">
             <div id="testContainer" class="container" style="height:100%;width:100%">
                 <div id="testLayoutEast" class="ui-layout-east" title="Resize" style="overflow: hidden" aria-disabled="false">
-                    <div class="header">Test Area</div>
-                    <div id="testList" class="content">East Panel content goes here..</div>
+                    <form role="form" class="container">
+                        <div id="testList" class="form-group">East Panel content goes here..</div>
+                    </form>
                 </div>
 
-                <div id="testLayoutSouth" class="ui-layout-center" style="overflow: hidden">
+                <div id="testLayoutSouth" class="ui-layout-south" style="overflow: hidden">
                     <div class="header">(South) Test Results</div>
                     <div id="testResult" class="content">South Panel content goes here..</div>
                 </div>
                 <div id="testLayoutCenter" class="ui-layout-center">
-                    <div class="header">Main Content</div>
-                    <div id="testView" class="content">Center Panel content goes here..</div>
+                    <div id="testView" class="panel">Center Panel content goes here..</div>
                 </div>
 
             </div>
@@ -808,8 +808,8 @@
             ,	west__animatePaneSizing:	false
             ,   west__fxName_open:          "none"
             ,	west__fxName_close:			"none"	// NO animation when closing west-pane
-            ,   spacing_open:         6
-            ,   spacing_closed:       6
+            ,   spacing_open:         3
+            ,   spacing_closed:       3
             ,   west__resizeable:           true
             ,   west__size:                 "auto"
             ,   west__minSize:              170
@@ -819,6 +819,8 @@
             //	enable state management
             ,	stateManagement__enabled:	false // automatic cookie load & save enabled by default
             //           ,	showDebugMessages:			true // log and/or display messages from debugging & testing code
+            ,   center__onresize: "secondaryLayout.resizeAll"
+
         });
 
 
@@ -838,8 +840,6 @@
             ,	south__spacing_open:			6  // ALL panes
             ,	south__spacing_closed:			6 // ALL panes
         });
-
-
 
     });
 </script>

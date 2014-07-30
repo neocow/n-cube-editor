@@ -36,6 +36,7 @@
         <aop:pointcut id="ncubeServiceMethods" expression="execution(public * r*(..))"/>
         <aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>
     </aop:config>
+
     <!--<aop:config>-->
         <!--<aop:pointcut id="ncubeServiceMethods" expression="within(com.cedarsoftware.service.ncube.*)"/>-->
         <!--<aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>-->

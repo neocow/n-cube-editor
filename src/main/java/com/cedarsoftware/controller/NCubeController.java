@@ -549,6 +549,24 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
+    public void getTestData(String name, String app, String version, String status)
+    {
+        try
+        {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
+            nCubeService.getTestData(name, app, version, status);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
+
     public void saveTestData(String name, String app, String version, String testData)
     {
         try
