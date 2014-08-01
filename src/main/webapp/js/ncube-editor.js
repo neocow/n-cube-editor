@@ -77,21 +77,9 @@ $(function ()
         verListPanel.height(60);
 
         var ncubeListPanel = $('#ncube-list-div').find('> .panel-body');
-        var hApp = appListDiv.height();
-        var hStat = statListDiv.height();
-        var hVer = verListDiv.height();
-//        $('body').layout(
-//            {
-//                center__paneSelector: "#center",
-//                west__paneSelector: "#west",
-//                onresize: function()
-//                {
-//                    ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
-//                    _editor.resize();
-//                }
-//            });
-//
-//        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+
+
+
         initJsonEditor();
         addListeners();
     }
@@ -115,6 +103,7 @@ $(function ()
         save.html('Save');
         menu.append(save);           // Add 'Save' button to toolbar
         menu.find('a').remove();     // Get rid of 'Powered by Ace' link
+
     }
 
     function setDirtyStatus(dirty)
@@ -669,8 +658,6 @@ $(function ()
 
     function loadCubeTest()
     {
-        secondaryLayout.resizeAll();
-
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
             _editor.setText('No n-cube to load');
@@ -704,7 +691,6 @@ $(function ()
         var result = call("ncubeController.getRequiredScope", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true) {
             testCtrl.empty();
-            var form = $("<form/>").attr({'class':'form-control'});
             $.each(result.data, function (index, value) {
                 var outerdiv = $("<div/>").attr({'class': 'row'});
                 var inneritem = $("<div/>").attr({'class': 'col-md-2'});
@@ -714,9 +700,8 @@ $(function ()
                 inneritem.append(label);
                 inneritem.append(input);
                 outerdiv.append(inneritem);
-                form.append(outerdiv);
+                testCtrl.append(outerdiv);
             });
-            testCtrl.append(form);
         }
         else
         {
@@ -743,6 +728,7 @@ $(function ()
         else if (_activeTab == 'testTab')
         {
             loadCubeTest();
+            secondaryLayout.resizeAll();
         }
         else if (_activeTab == 'picTab')
         {
