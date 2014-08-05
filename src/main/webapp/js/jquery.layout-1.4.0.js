@@ -1134,7 +1134,7 @@ $.fn.layout = function (opts) {
 
 		// first trigger the callback set in the options
 		if (fn) {
-			try {
+//			try {
 				// convert function name (string) to function object
 				if (isStr( fn )) {
 					if (fn.match(/,/)) {
@@ -1156,12 +1156,12 @@ $.fn.layout = function (opts) {
 					else // must be a layout/container callback - pass suitable info
 						retVal = g(fn)( Instance, s, o, lName );
 				}
-			}
-			catch (ex) {
-				_log( options.errors.callbackError.replace(/EVENT/, $.trim((pane || "") +" "+ lng)), false );
-				if ($.type(ex) === "string" && string.length)
-					_log("Exception:  "+ ex, false );
-			}
+//			}
+//			catch (ex) {
+//				_log( options.errors.callbackError.replace(/EVENT/, $.trim((pane || "") +" "+ lng)), false );
+//				if ($.type(ex) === "string" && string.length)
+//					_log("Exception:  "+ ex, false );
+//			}
 		}
 
 		// trigger additional events bound directly to the pane

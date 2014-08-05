@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1008,5 +1009,31 @@ public class NCubeController extends BaseController implements INCubeController
             return null;
         }
         throw new IllegalArgumentException("Unknown cast: " + cmd);
+    }
+
+    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version)
+    {
+        try
+        {
+            return nCubeService.getColumnsAndCoordinateFromIds(name, app, version);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+        return null;
+    }
+
+    public Object getCell(String name, String app, String version, String status, HashMap map)
+    {
+        try
+        {
+            return nCubeService.getCell(name, app, version, status, map);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+        return null;
     }
 }
