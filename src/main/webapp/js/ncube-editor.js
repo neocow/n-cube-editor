@@ -175,6 +175,7 @@ $(function ()
             secondaryLayout.resizeAll();
             //console.log(e.target) // activated tab
         })
+        myLayout.resizeAll();
     }
 
     function initJsonEditor()
@@ -777,14 +778,14 @@ $(function ()
             testList.append(ol);
         }
         else {
-            var msg = 'Error fetching required scope for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
-            if (result.data != null) {
-                msg += (':<hr/>' + result.data);
+            var msg = 'Error fetching test data for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
+            if (testListResult.data != null) {
+                msg += (':<hr/>' + testListResult.data);
             }
             _errorId = showNote(msg);
         }
 
-        var result = call("ncubeController.getColumnsAndCoordinateFromIds", [_selectedCubeName, _selectedApp, _selectedVersion]);
+        var result = call("ncubeController.getColumnsAndCoordinateFromIds", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true) {
             testCtrl.empty();
 
@@ -801,22 +802,10 @@ $(function ()
                     testCtrl.append(outerdiv);
                 }
             });
-
-//            $.each(result.data, function (index, value) {
-//                var outerdiv = $("<div/>").attr({'class': 'row'});
-//                var inneritem = $("<div/>").attr({'class': 'col-md-2'});
-//                var label = $("<label/>").attr({'for': value});
-//                label.html(value);
-//                var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': value});
-//                inneritem.append(label);
-//                inneritem.append(input);
-//                outerdiv.append(inneritem);
-//                testCtrl.append(outerdiv);
-//            });
         }
         else
         {
-            _errorId = showNote('Error fetching required scope for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
+            _errorId = showNote('Error fetching test parameters for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
         }
 
 
@@ -1455,8 +1444,7 @@ $(function ()
 
     function runCubeTest() {
         clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
-        {
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
             _errorId = showNote('No n-cube selected. Axis cannot be updated.');
             return;
         }
@@ -1467,29 +1455,31 @@ $(function ()
 
         var testList = $('#testView .form-control');
 
-        $.each(testList, function(index, value)
-        {
+        $.each(testList, function (index, value) {
             newTest['' + value.id + ''] = '' + value.value + '';
         });
 
         var result = call("ncubeController.getCell", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, newTest]);
 
         var resultPane = $('#testResult');
+        resultPane.hide();
         resultPane.empty();
         resultPane.append(createTestResult(result.status, result.data));
+        resultPane.fadeIn("fast");
     }
 
     function createTestResult(success, data) {
         var panel;
 
+        var header = $('<div/>').prop({class: "panel-heading"});
         if (success) {
-            panel = $('<div/>').prop({class: "panel panel-default"});
+            panel = $('<div/>').prop({class: "panel panel-success"});
+            header.html("Success");
         } else {
             panel = $('<div/>').prop({class: "panel panel-danger"});
+            header.html("Failure");
         }
 
-        var header = $('<div/>').prop({class: "panel-heading"});
-        header.html("Success");
         var body = $('<div/>').prop({class: "panel-body"});
         var p = $('<p/>');
         p.html(data);

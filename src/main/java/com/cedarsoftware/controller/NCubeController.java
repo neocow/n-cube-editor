@@ -550,11 +550,6 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            if (!isAllowed(app, version))
-            {
-                markRquestFailed("This app and version CANNOT be edited.");
-                return;
-            }
             nCubeService.getTestData(name, app, version, status);
         }
         catch (Exception e)
@@ -1011,11 +1006,11 @@ public class NCubeController extends BaseController implements INCubeController
         throw new IllegalArgumentException("Unknown cast: " + cmd);
     }
 
-    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version)
+    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version, String status)
     {
         try
         {
-            return nCubeService.getColumnsAndCoordinateFromIds(name, app, version);
+            return nCubeService.getColumnsAndCoordinateFromIds(name, app, version, status);
         }
         catch (Exception e)
         {

@@ -48,6 +48,11 @@ public class NCubeService
 {
     private DataSource dataSource;
 
+    public NCubeService() {
+        List<String> list = new ArrayList<>();
+        list.add("http://www.cedarsoftware.com");
+        NCubeManager.addBaseResourceUrls(list, "0.0.1");
+    }
     public void setDataSource(DataSource ds)
     {
         dataSource = ds;
@@ -533,14 +538,10 @@ public class NCubeService
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
-    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version)
+    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version, String status)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, status, new Date());
 
         List<Axis> axes = ncube.getAxes();
 
