@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -545,6 +546,37 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
+    public void getTestData(String name, String app, String version, String status)
+    {
+        try
+        {
+            nCubeService.getTestData(name, app, version, status);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
+
+    public void saveTestData(String name, String app, String version, String testData)
+    {
+        try
+        {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return;
+            }
+            nCubeService.updateTestData(name, app, version, testData);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
+
     private static void markRquestFailed(Object data)
     {
         JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_STATUS, false);
@@ -972,5 +1004,31 @@ public class NCubeController extends BaseController implements INCubeController
             return null;
         }
         throw new IllegalArgumentException("Unknown cast: " + cmd);
+    }
+
+    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version, String status)
+    {
+        try
+        {
+            return nCubeService.getColumnsAndCoordinateFromIds(name, app, version, status);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+        return null;
+    }
+
+    public Object getCell(String name, String app, String version, String status, HashMap map)
+    {
+        try
+        {
+            return nCubeService.getCell(name, app, version, status, map);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+        return null;
     }
 }

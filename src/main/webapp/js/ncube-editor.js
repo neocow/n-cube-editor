@@ -77,27 +77,105 @@ $(function ()
         verListPanel.height(60);
 
         var ncubeListPanel = $('#ncube-list-div').find('> .panel-body');
+
         var hApp = appListDiv.height();
         var hStat = statListDiv.height();
         var hVer = verListDiv.height();
-        $('body').layout(
-            {
-                center__paneSelector: "#center",
-                west__paneSelector: "#west",
-                onresize: function()
-                {
-                    ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
-                    _editor.resize();
-                }
-            });
-        $('#tests').layout(
-            {
-                center__paneSelector: "#center-test",
-                east__paneSelector: "#east"
-            });
-        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+
         initJsonEditor();
         addListeners();
+
+        var myLayout;
+        var secondaryLayout;
+
+        //            ,   center__paneSelector:	"#testLayoutCenter"
+        //            ,	south__paneSelector:	"#testLayoutSouth"
+        //            ,	east__paneSelector:		"#testLayoutEast"
+        secondaryLayout = $('div#tests').layout({
+            name: "secondaryLayout"
+            ,   closable:					true	// pane can open & close
+            ,	resizable:					true	// when open, pane can be resized
+            ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
+            ,	livePaneResizing:			true
+            ,	south__minSize:				100
+            ,	east__minSize:				100
+            ,	spacing_open:			5  // ALL panes
+            ,	spacing_closed:			5 // ALL panes
+            //            ,	south__spacing_open:			5  // ALL panes
+            //,	south__spacing_closed:			5 // ALL panes
+        });
+
+
+        myLayout = $('body').layout({
+            name:   "BodyLayout"
+            //	reference only - these options are NOT required because 'true' is the default
+            ,   closable:					true	// pane can open & close
+            ,	resizable:					true	// when open, pane can be resized
+            ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
+            ,	livePaneResizing:			true
+
+            //	some resizing/toggling settings
+//            ,	north__slidable:			false	// OVERRIDE the pane-default of 'slidable=true'
+//            ,	north__togglerLength_closed: '100%'	// toggle-button is full-width of resizer-bar
+//            ,	north__spacing_closed:		20		// big resizer-bar when open (zero height)
+//            ,	south__resizable:			false	// OVERRIDE the pane-default of 'resizable=true'
+//            ,	south__spacing_open:		0		// no resizer-bar when open (zero height)
+//            ,	south__spacing_closed:		20		// big resizer-bar when open (zero height)
+
+            //	some pane-size settings
+            //,	west__minSize:				100
+//            ,	east__size:					300
+//            ,	east__minSize:				200
+//            ,	east__maxSize:				.5 // 50% of layout width
+            // ,   center__paneSelector: "#center"
+            // ,   west__paneSelector: "#west"
+
+            //	some pane animation settings
+            ,	west__animatePaneSizing:	false
+            ,   west__fxName_open:          "none"
+            ,	west__fxName_close:			"none"	// NO animation when closing west-pane
+            ,   spacing_open:         4
+            ,   spacing_closed:       4
+            ,   west__resizeable:           true
+            ,   west__size:                 "auto"
+            ,   west__minSize:              170
+            //	enable showOverflow on west-pane so CSS popups will overlap north pane
+            ,	west__showOverflowOnHover:	true
+            ,   center__triggerEventsOnLoad: true
+            //	enable state management
+            ,	stateManagement__enabled:	false // automatic cookie load & save enabled by default
+            //           ,	showDebugMessages:			true // log and/or display messages from debugging & testing code
+            //,  west__onresize:		"secondaryLayout.resizeAll" // resize ALL visible layouts nested inside
+            ,  west__onresize: function()
+            {
+                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+                secondaryLayout.resizeAll();
+//                _editor.resize();
+            }
+
+        });
+
+        // after creating the tabs, resize the tabs-wrapper layout...
+        // we can access this layout as a 'child' property of the outer-center pane
+        //myLayout.center.pane.resizeAll();
+
+        // init ALL the tab-layouts - all use the same options
+        // layout-initialization will _complete_ the first time each layout becomes 'visible'
+        //$("#tab1").layout( tabLayoutOptions );
+        //$("#tab2").layout( tabLayoutOptions );
+        //$("#tab3").layout( tabLayoutOptions );
+
+
+        // resize the tabs layout after creating the tabs
+        //secondaryLayout.center.pane.resizeAll(); // resize ONLY the tabs-wrapper layout - faster!
+
+        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+
+        $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+            secondaryLayout.resizeAll();
+            //console.log(e.target) // activated tab
+        })
+        myLayout.resizeAll();
     }
 
     function initJsonEditor()
@@ -329,6 +407,10 @@ $(function ()
         $('#editColumnsSave').click(function ()
         {
             editColSave()
+        });
+        $('#runCubeTest').click(function ()
+        {
+            runCubeTest()
         });
     }
 
@@ -667,6 +749,68 @@ $(function ()
         $('#cube_bizEndDate').val(date);
     }
 
+    function loadCubeTest()
+    {
+        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        {
+            _editor.setText('No n-cube to load');
+            setDirtyStatus(false);
+            return;
+        }
+        var testCtrl = $('#testView');
+        var testResult = $('#testResult');
+        var testList = $('#testList');
+
+        var testListResult = call("ncubeController.getTestData", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        if (testListResult.status === true)
+        {
+            testList.empty();
+
+            var ol = $("<ol/>");
+            if (testListResult.data != null) {
+                $.each(testListResult.data, function (index, value) {
+                    li = $("<li/>");
+                    li.html(value);
+                    ol.append(li);
+                });
+            } else {
+            }
+            testList.append(ol);
+        }
+        else {
+            var msg = 'Error fetching test data for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
+            if (testListResult.data != null) {
+                msg += (':<hr/>' + testListResult.data);
+            }
+            _errorId = showNote(msg);
+        }
+
+        var result = call("ncubeController.getColumnsAndCoordinateFromIds", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        if (result.status === true) {
+            testCtrl.empty();
+
+            $.each( result.data, function( key, value ) {
+                if ('@type' != key) {
+                    var outerdiv = $("<div/>").attr({'class': 'row'});
+                    var inneritem = $("<div/>").attr({'class': 'col-md-2'});
+                    var label = $("<label/>").attr({'for': key});
+                    label.html(key);
+                    var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': key});
+                    inneritem.append(label);
+                    inneritem.append(input);
+                    outerdiv.append(inneritem);
+                    testCtrl.append(outerdiv);
+                }
+            });
+        }
+        else
+        {
+            _errorId = showNote('Error fetching test parameters for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
+        }
+
+
+    }
+
     function loadCube()
     {
         if (_activeTab == 'ncubeTab')
@@ -683,7 +827,7 @@ $(function ()
         }
         else if (_activeTab == 'testTab')
         {
-            // TODO: Load Tests
+            loadCubeTest();
         }
         else if (_activeTab == 'picTab')
         {
@@ -1298,44 +1442,51 @@ $(function ()
         }
     }
 
-    function runTest(axisName) {
+    function runCubeTest() {
         clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
-        {
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
             _errorId = showNote('No n-cube selected. Axis cannot be updated.');
             return;
         }
-        var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
-        var axis;
-        if (result.status === true)
-        {
-            axis = result.data;
+
+        var newTest = {
+            '@type': 'java.util.HashMap'
+        };
+
+        var testList = $('#testView .form-control');
+
+        $.each(testList, function (index, value) {
+            newTest['' + value.id + ''] = '' + value.value + '';
+        });
+
+        var result = call("ncubeController.getCell", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, newTest]);
+
+        var resultPane = $('#testResult');
+        resultPane.hide();
+        resultPane.empty();
+        resultPane.append(createTestResult(result.status, result.data));
+        resultPane.fadeIn("fast");
+    }
+
+    function createTestResult(success, data) {
+        var panel;
+
+        var header = $('<div/>').prop({class: "panel-heading"});
+        if (success) {
+            panel = $('<div/>').prop({class: "panel panel-success"});
+            header.html("Success");
+        } else {
+            panel = $('<div/>').prop({class: "panel panel-danger"});
+            header.html("Failure");
         }
-        else
-        {
-            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr/>" + result.data);
-            return;
-        }
-        var forceState = axis.type.name == 'RULE';
-        $('#updateAxisLabel').html("Update Axis: " + axisName);
-        $('#updateAxisName').val(axisName);
-        $('#updateAxisTypeName').val(axis.type.name);
-        $('#updateAxisValueTypeName').val(axis.valueType.name);
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null});
-        if (forceState)
-        {
-            $('#updateAxisSortOrderRow').hide();
-            $('#updateAxisMultiMatchRow').hide();
-        }
-        else
-        {
-            $('#updateAxisSortOrderRow').show();
-            $('#updateAxisMultiMatchRow').show();
-            $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
-            $('#updateAxisMultiMatch').prop({'checked': axis.multiMatch === true, 'disabled': false});
-        }
-        _axisName = axisName;
-        $('#updateAxisModal').modal();
+
+        var body = $('<div/>').prop({class: "panel-body"});
+        var p = $('<p/>');
+        p.html(data);
+        body.append(p);
+        panel.append(header);
+        panel.append(body);
+        return panel;
     }
 
     function updateAxis(axisName)
