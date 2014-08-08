@@ -3,7 +3,6 @@ package com.cedarsoftware.service.ncube;
 import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
-import com.cedarsoftware.ncube.Column;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.util.CaseInsensitiveSet;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,21 +86,14 @@ public class NCubeService
         return ncube.toFormattedJson();
     }
 
-    public Object getCube(String name, String app, String version, String status)
+    public NCube getCube(String name, String app, String version, String status)
     {
-        try
+        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
+        if (ncube == null)
         {
-            NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
-            if (ncube == null)
-            {
-                throw new IllegalArgumentException("Could not retrieve NCube '" + name + "' not found for app: " + app + ", version: " + version);
-            }
-            return ncube;
+            throw new IllegalArgumentException("Could not retrieve NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
-        catch (Exception e)
-        {
-            return e.getMessage();
-        }
+        return ncube;
     }
 
     public Object[] getAppNames()
@@ -263,7 +254,7 @@ public class NCubeService
     /**
      * Update the 'informational' part of the Axis (not the columns).
      */
-    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch)
+    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
     {
         Connection connection = getConnection();
         NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
@@ -291,9 +282,6 @@ public class NCubeService
 
         // update preferred column order
         axis.setColumnOrder(isSorted ? Axis.SORTED : Axis.DISPLAY);
-
-        // update multi-match state
-        axis.setMultiMatch(multiMatch);
 
         NCubeManager.updateCube(connection, app, ncube, version);
     }
@@ -517,7 +505,6 @@ public class NCubeService
         return NCubeManager.getTestData(connection, app, name, version, new Date());
     }
 
-
     /**
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
@@ -533,33 +520,4 @@ public class NCubeService
 
         return NCubeManager.updateTestData(connection, app, name, version, tests);
     }
-
-    /**
-     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
-     * in the indicated (by colIds) cell.
-     */
-    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version, String status)
-    {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, status, new Date());
-
-        List<Axis> axes = ncube.getAxes();
-
-        Set<Long> ids = new LinkedHashSet<Long>();
-
-        for (Axis a : axes)
-        {
-            for (Column c : a.getColumns()) {
-                ids.add(c.getId());
-                break;
-            }
-        }
-
-        Map<String, Object> coords = new HashMap<String, Object>();
-
-        ncube.getColumnsAndCoordinateFromIds(ids, null, coords);
-        return coords;
-    }
-
-
 }

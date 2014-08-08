@@ -785,22 +785,28 @@ $(function ()
             _errorId = showNote(msg);
         }
 
-        var result = call("ncubeController.getColumnsAndCoordinateFromIds", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
-        if (result.status === true) {
+        var result = call("ncubeController.getCoordinatesForCells", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        if (result.status === true)
+        {
             testCtrl.empty();
 
-            $.each( result.data, function( key, value ) {
-                if ('@type' != key) {
-                    var outerdiv = $("<div/>").attr({'class': 'row'});
-                    var inneritem = $("<div/>").attr({'class': 'col-md-2'});
-                    var label = $("<label/>").attr({'for': key});
-                    label.html(key);
-                    var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': key});
-                    inneritem.append(label);
-                    inneritem.append(input);
-                    outerdiv.append(inneritem);
-                    testCtrl.append(outerdiv);
-                }
+            $.each( result.data, function(item)
+            {
+                $.each( result.data[item], function( key, value ) {
+                    if ('@type' != key)
+                    {
+                        var outerdiv = $("<div/>").attr({'class': 'row'});
+                        var inneritem = $("<div/>").attr({'class': 'col-md-2'});
+                        var label = $("<label/>").attr({'for': key});
+                        label.html(key);
+                        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': key});
+                        inneritem.append(label);
+                        inneritem.append(input);
+                        outerdiv.append(inneritem);
+                        testCtrl.append(outerdiv);
+                    }
+                });
+                testCtrl.append($("<hr>"));
             });
         }
         else
@@ -1522,14 +1528,11 @@ $(function ()
         if (forceState)
         {
             $('#updateAxisSortOrderRow').hide();
-            $('#updateAxisMultiMatchRow').hide();
         }
         else
         {
             $('#updateAxisSortOrderRow').show();
-            $('#updateAxisMultiMatchRow').show();
             $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
-            $('#updateAxisMultiMatch').prop({'checked': axis.multiMatch === true, 'disabled': false});
         }
         _axisName = axisName;
         $('#updateAxisModal').modal();
@@ -1541,8 +1544,7 @@ $(function ()
         var axisName = $('#updateAxisName').val();
         var hasDefault = $('#updateAxisDefaultCol').prop('checked');
         var sortOrder = $('#updateAxisSortOrder').prop('checked');
-        var multiMatch = $('#updateAxisMultiMatch').prop('checked');
-        var result = call("ncubeController.updateAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _axisName, axisName, hasDefault, sortOrder, multiMatch]);
+        var result = call("ncubeController.updateAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _axisName, axisName, hasDefault, sortOrder]);
         if (result.status === true)
         {
             loadCube();

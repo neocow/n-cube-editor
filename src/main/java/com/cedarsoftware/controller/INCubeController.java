@@ -29,7 +29,7 @@ public interface INCubeController extends IBaseController
     Object[] getAxes(String name, String app, String version, String status);
     Map getAxis(String name, String app, String version, String status, String axisName);
     void deleteAxis(String name, String app, String version, String axisName);
-    void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch);
+    void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted);
     void updateColumnCell(String name, String app, String version, String colId, String value);
     void updateAxisColumns(String name, String app, String version, Axis updatedAxis);
     Object updateCell(String name, String app, String version, Object[] colIds, String value);
@@ -38,5 +38,5 @@ public interface INCubeController extends IBaseController
     public void getTestData(String name, String app, String version, String status);
     public void saveTestData(String name, String app, String version, String testData);
     public Object getCell(String name, String app, String version, String status, HashMap map);
-    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version, String status);
+    public Object[] getCoordinatesForCells(String name, String app, String version, String status);
 }

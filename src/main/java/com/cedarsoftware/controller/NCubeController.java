@@ -429,7 +429,7 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
-    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean multiMatch)
+    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
     {
         try
         {
@@ -438,7 +438,7 @@ public class NCubeController extends BaseController implements INCubeController
                 markRquestFailed("This app and version CANNOT be edited.");
                 return;
             }
-            nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted, multiMatch);
+            nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted);
         }
         catch (Exception e)
         {
@@ -1006,17 +1006,23 @@ public class NCubeController extends BaseController implements INCubeController
         throw new IllegalArgumentException("Unknown cast: " + cmd);
     }
 
-    public Map<String,Object> getColumnsAndCoordinateFromIds(String name, String app, String version, String status)
+    /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
+    public Object[] getCoordinatesForCells(String name, String app, String version, String status)
     {
         try
         {
-            return nCubeService.getColumnsAndCoordinateFromIds(name, app, version, status);
+            NCube ncube = nCubeService.getCube(name, app, version, status);
+            List cells = ncube.getCoordinatesForCells();
+            return cells.toArray();
         }
         catch (Exception e)
         {
             fail(e);
+            return null;
         }
-        return null;
     }
 
     public Object getCell(String name, String app, String version, String status, HashMap map)
@@ -1028,7 +1034,7 @@ public class NCubeController extends BaseController implements INCubeController
         catch (Exception e)
         {
             fail(e);
+            return null;
         }
-        return null;
     }
 }
