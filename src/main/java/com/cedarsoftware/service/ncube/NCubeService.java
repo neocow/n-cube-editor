@@ -47,7 +47,7 @@ public class NCubeService
     private DataSource dataSource;
 
     public NCubeService() {
-        List<String> list = new ArrayList<>();
+        List<String> list = new ArrayList<String>();
         list.add("http://www.cedarsoftware.com");
         NCubeManager.addBaseResourceUrls(list, "0.0.1");
     }
@@ -460,7 +460,7 @@ public class NCubeService
         {
             JsonObject ncubes = (JsonObject) JsonReader.jsonToMaps(json);
             Object[] cubes = ncubes.getArray();
-            List cubeList = new ArrayList<>(cubes.length);
+            List cubeList = new ArrayList(cubes.length);
 
             for (Object cube : cubes)
             {
