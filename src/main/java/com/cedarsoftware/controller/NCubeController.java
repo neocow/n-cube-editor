@@ -58,7 +58,7 @@ public class NCubeController extends BaseController implements INCubeController
         nCubeService = service;
     }
 
-    private boolean isAllowed(String app, String version)
+    private static boolean isAllowed(String app, String version)
     {
         return isAllowed(app, version, "SNAPSHOT");
     }

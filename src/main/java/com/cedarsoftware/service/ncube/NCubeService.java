@@ -318,7 +318,6 @@ public class NCubeService
             throw new IllegalArgumentException("Column ID passed in (" + colId + ") does not match any axis on NCube '" + name + "'");
         }
 
-        // TODO: Finish convertStringToColumnValue()
         // TODO: Make sure this method is used when the inbound column values are sent from the Edit Column box.
         ncube.updateColumn(id, axis.convertStringToColumnValue(value));
         NCubeManager.updateCube(connection, app, ncube, version);
