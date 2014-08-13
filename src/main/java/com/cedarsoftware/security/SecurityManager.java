@@ -1,7 +1,5 @@
 package com.cedarsoftware.security;
 
-import org.apache.log4j.Logger;
-
 import com.gaic.esapi.Authentication;
 import com.gaic.esapi.ESAPI;
 import com.gaic.esapi.Protectable;
@@ -9,6 +7,7 @@ import com.gaic.esapi.Resource;
 import com.gaic.esapi.decision.GenericAction;
 import com.gaic.esapi.decision.GenericResource;
 import com.gaic.util.cpr.client.CPRPropertyProvider;
+import org.apache.log4j.Logger;
 
 public class SecurityManager implements Security
 {
@@ -19,11 +18,9 @@ public class SecurityManager implements Security
 
 	public SecurityManager()
 	{
-		CPRPropertyProvider cprPropertyProvider = CPRPropertyProvider.getInstance();
-		String username;
 		try
 		{
-			username = cprPropertyProvider.getStringProperty("com.gaic.executivedashboard.securityframework.test.username");
+			String username = CPRPropertyProvider.getInstance().getStringProperty("com.gaic.executivedashboard.securityframework.test.username");
 			_log.debug(String.format("ESAPI username [%s]", username));
 		}
         catch(Exception e)
