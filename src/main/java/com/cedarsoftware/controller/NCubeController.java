@@ -93,14 +93,7 @@ public class NCubeController extends BaseController implements INCubeController
                     try
                     {
                         sysInfo.getCells(input, output);
-                        if (output.containsKey("info"))
-                        {
-                            augInfo = (Map<String, Object>) output.get("info");
-                        }
-                        else
-                        {
-                            augInfo = makeGenericAugInfo();
-                        }
+                        augInfo = output.containsKey("info") ? (Map<String, Object>) output.get("info") : makeGenericAugInfo();
                     }
                     catch (Exception ignored)
                     {   // Blew up on running the rules
@@ -112,6 +105,7 @@ public class NCubeController extends BaseController implements INCubeController
                 augmentedInfo.add(augInfo);
             }
 
+            // Sort by Group, then by n-cube name
             Collections.sort(augmentedInfo, new Comparator<Map>()
             {
                 public int compare(Map o1, Map o2)
