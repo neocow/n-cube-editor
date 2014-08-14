@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +54,7 @@ import java.util.regex.Pattern;
  */
 public class NCubeController extends BaseController implements INCubeController
 {
+    public static final String SYS_NCUBE_INFO = "sys.ncube.info";
     private static final Pattern castPattern = Pattern.compile("^(exp:|method:|temp:|b:|\\[b:|s:|\\[s:|i:|\\[i:|L:|\\[L:|f:|\\[f:|d:|\\[d:|c:|\\[c:|z:|\\[z:|bd:|\\[bd:|bi:|\\[bi:|str-url:|bin-url:|exp-url:|method-url:|temp-url:|null:|date:)(.*)", Pattern.CASE_INSENSITIVE);
     private NCubeService nCubeService;
 
@@ -79,7 +81,7 @@ public class NCubeController extends BaseController implements INCubeController
             List baseUrls = new ArrayList();
             baseUrls.add("http://www.cedarsoftware.com");
             NCubeManager.addBaseResourceUrls(baseUrls, version);
-            NCube sysInfo = nCubeService.getCube("sys.ncube.info", app, version, status);
+            NCube sysInfo = nCubeService.getCube(SYS_NCUBE_INFO, app, version, status);
             Object[] list = nCubeService.getNCubes(null, app, version, status);
             List<Map<String, Object>> augmentedInfo = new ArrayList<>();
 
@@ -89,14 +91,25 @@ public class NCubeController extends BaseController implements INCubeController
                 Map<String, Object> input = new HashMap<>();
                 Map<String, Object> output = new CaseInsensitiveMap<>();
                 input.put("name", infoDto.name);
-                sysInfo.getCells(input, output);
-                if (!output.containsKey("info"))
+                Map augInfo;
+                if (sysInfo == null)
                 {
-                    markRquestFailed("Cube name matches nothing in sys.ncube.info.  Expected output.info to contain a Map with additional info about the n-cube (group, icon, and prefix).");
-                    return null;
+                    augInfo = new LinkedHashMap();
+                    augInfo.put("group", "General");
+                    augInfo.put("prefix", "");
+                    augInfo.put("url", "");
+                }
+                else
+                {
+                    sysInfo.getCells(input, output);
+                    if (!output.containsKey("info"))
+                    {
+                        markRquestFailed("Cube name matches nothing in sys.ncube.info.  Expected output.info to contain a Map with additional info about the n-cube (group, icon, and prefix).");
+                        return null;
+                    }
+                    augInfo = (Map) output.get("info");
                 }
 
-                Map augInfo = (Map) output.get("info");
                 augInfo.put("ncube", infoDto);
                 augmentedInfo.add(augInfo);
             }
@@ -1051,6 +1064,10 @@ public class NCubeController extends BaseController implements INCubeController
         try
         {
             NCube ncube = nCubeService.getCube(name, app, version, status);
+            if (ncube == null)
+            {
+                return new Object[]{};
+            }
             List cells = ncube.getCoordinatesForCells();
             return cells.toArray();
         }
