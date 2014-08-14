@@ -9,9 +9,11 @@ import com.cedarsoftware.ncube.GroovyMethod;
 import com.cedarsoftware.ncube.GroovyTemplate;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
+import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.StringUrlCmd;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
+import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.DateUtilities;
 import com.cedarsoftware.util.io.JsonObject;
@@ -20,7 +22,8 @@ import com.cedarsoftware.util.io.JsonReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -73,17 +76,50 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            Object[] list = nCubeService.getNCubes(filter, app, version, status);
-            Arrays.sort(list, new Comparator<Object>()
+            List baseUrls = new ArrayList();
+            baseUrls.add("http://www.cedarsoftware.com");
+            NCubeManager.addBaseResourceUrls(baseUrls, version);
+            NCube sysInfo = nCubeService.getCube("sys.ncube.info", app, version, status);
+            Object[] list = nCubeService.getNCubes(null, app, version, status);
+            List<Map<String, Object>> augmentedInfo = new ArrayList<>();
+
+            for (Object dto : list)
             {
-                public int compare(Object o1, Object o2)
+                NCubeInfoDto infoDto = (NCubeInfoDto) dto;
+                Map<String, Object> input = new HashMap<>();
+                Map<String, Object> output = new CaseInsensitiveMap<>();
+                input.put("name", infoDto.name);
+                sysInfo.getCells(input, output);
+                if (!output.containsKey("info"))
                 {
-                    NCubeInfoDto info1 = (NCubeInfoDto) o1;
-                    NCubeInfoDto info2 = (NCubeInfoDto) o2;
-                    return info1.name.compareToIgnoreCase(info2.name);
+                    markRquestFailed("Cube name matches nothing in sys.ncube.info.  Expected output.info to contain a Map with additional info about the n-cube (group, icon, and prefix).");
+                    return null;
+                }
+
+                Map augInfo = (Map) output.get("info");
+                augInfo.put("ncube", infoDto);
+                augmentedInfo.add(augInfo);
+            }
+
+            Collections.sort(augmentedInfo, new Comparator<Map>()
+            {
+                public int compare(Map o1, Map o2)
+                {
+                    String group1 = (String) o1.get("group");
+                    String group2 = (String) o2.get("group");
+                    if (group1.equalsIgnoreCase(group2))
+                    {   // Secondary sort key - group names are the same, then use the n-cube name within the group.
+                        NCubeInfoDto info1 = (NCubeInfoDto) o1.get("ncube");
+                        NCubeInfoDto info2 = (NCubeInfoDto) o2.get("ncube");
+                        return info1.name.compareToIgnoreCase(info2.name);
+                    }
+                    else
+                    {
+                        return group1.compareTo(group2);
+                    }
                 }
             });
-            return list;
+            return augmentedInfo.toArray();
         }
         catch (Exception e)
         {
