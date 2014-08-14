@@ -104,7 +104,7 @@ public class NCubeController extends BaseController implements INCubeController
                     sysInfo.getCells(input, output);
                     if (!output.containsKey("info"))
                     {
-                        markRquestFailed("Cube name matches nothing in sys.ncube.info.  Expected output.info to contain a Map with additional info about the n-cube (group, icon, and prefix).");
+                        markRquestFailed("Cube name matches nothing in " + SYS_NCUBE_INFO + ".  Expected output.info to contain a Map with additional info about the n-cube (group, icon, and prefix).");
                         return null;
                     }
                     augInfo = (Map) output.get("info");
