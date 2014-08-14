@@ -3,25 +3,14 @@ package com.cedarsoftware.controller;
 import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
-import com.cedarsoftware.ncube.BinaryUrlCmd;
-import com.cedarsoftware.ncube.GroovyExpression;
-import com.cedarsoftware.ncube.GroovyMethod;
-import com.cedarsoftware.ncube.GroovyTemplate;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
-import com.cedarsoftware.ncube.StringUrlCmd;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
-import com.cedarsoftware.util.DateUtilities;
-import com.cedarsoftware.util.io.JsonObject;
-import com.cedarsoftware.util.io.JsonReader;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,8 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * NCubeController API.
@@ -55,7 +42,6 @@ import java.util.regex.Pattern;
 public class NCubeController extends BaseController implements INCubeController
 {
     public static final String SYS_NCUBE_INFO = "sys.ncube.info";
-    private static final Pattern castPattern = Pattern.compile("^(exp:|method:|temp:|b:|\\[b:|s:|\\[s:|i:|\\[i:|L:|\\[L:|f:|\\[f:|d:|\\[d:|c:|\\[c:|z:|\\[z:|bd:|\\[bd:|bi:|\\[bi:|str-url:|bin-url:|exp-url:|method-url:|temp-url:|null:|date:)(.*)", Pattern.CASE_INSENSITIVE);
     private NCubeService nCubeService;
 
     public NCubeController(NCubeService service)
@@ -78,7 +64,7 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            List baseUrls = new ArrayList();
+            List<String> baseUrls = new ArrayList<>();
             baseUrls.add("http://www.cedarsoftware.com");
             NCubeManager.addBaseResourceUrls(baseUrls, version);
             NCube sysInfo = nCubeService.getCube(SYS_NCUBE_INFO, app, version, status);
@@ -91,10 +77,10 @@ public class NCubeController extends BaseController implements INCubeController
                 Map<String, Object> input = new HashMap<>();
                 Map<String, Object> output = new CaseInsensitiveMap<>();
                 input.put("name", infoDto.name);
-                Map augInfo;
+                Map<String, Object> augInfo;
                 if (sysInfo == null)
                 {
-                    augInfo = new LinkedHashMap();
+                    augInfo = new LinkedHashMap<>();
                     augInfo.put("group", "General");
                     augInfo.put("prefix", "");
                     augInfo.put("url", "");
@@ -107,7 +93,7 @@ public class NCubeController extends BaseController implements INCubeController
                         markRquestFailed("Cube name matches nothing in " + SYS_NCUBE_INFO + ".  Expected output.info to contain a Map with additional info about the n-cube (group, icon, and prefix).");
                         return null;
                     }
-                    augInfo = (Map) output.get("info");
+                    augInfo = (Map<String, Object>) output.get("info");
                 }
 
                 augInfo.put("ncube", infoDto);
@@ -195,7 +181,6 @@ public class NCubeController extends BaseController implements INCubeController
 
     /**
      * Create an n-cube (SNAPSHOT only).
-     * @return boolean true if successful, otherwise a String error message.
      */
     public void createCube(String name, String app, String version)
     {
@@ -267,7 +252,7 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            Set<String> references = new CaseInsensitiveSet<String>();
+            Set<String> references = new CaseInsensitiveSet<>();
             Object[] ncubes = nCubeService.getNCubes("%", app, version, status);
 
             for (Object ncube : ncubes)
@@ -372,8 +357,6 @@ public class NCubeController extends BaseController implements INCubeController
 
     /**
      * Change the SNAPSHOT version number of an n-cube.
-     *
-     * @return boolean true if successful, otherwise a String error message.
      */
     public void changeVersionValue(String app, String currVersion, String newSnapVer)
     {
@@ -394,7 +377,6 @@ public class NCubeController extends BaseController implements INCubeController
 
     /**
      * Add axis to an existing SNAPSHOT n-cube.
-     * @return boolean true if successful, otherwise String error message.
      */
     public void addAxis(String name, String app, String version, String axisName, String type, String valueType)
     {
@@ -459,7 +441,6 @@ public class NCubeController extends BaseController implements INCubeController
 
     /**
      * Delete the passed in axis.
-     * @return boolean true if successful, otherwise String error message is returned.
      */
     public void deleteAxis(String name, String app, String version, String axisName)
     {
@@ -543,7 +524,7 @@ public class NCubeController extends BaseController implements INCubeController
      * String, Date, Object[], BigDecimal, BigInteger, string url, binary url, groovy expression,
      * groovy method, groovy template, template url, expression url, method url, or null).
      */
-    public Object updateCell(String name, String app, String version, Object[] colIds, String value)
+    public Object updateCell(String name, String app, String version, Object[] colIds, Object value, String type, boolean cache, boolean url)
     {
         try
         {
@@ -552,7 +533,7 @@ public class NCubeController extends BaseController implements INCubeController
                 markRquestFailed("This app and version CANNOT be edited.");
                 return null;
             }
-            return nCubeService.updateCell(name, app, version, colIds, parseCellValue(value));
+            throw new RuntimeException("Not yet implemented.");
         }
         catch(Exception e)
         {
@@ -657,402 +638,6 @@ public class NCubeController extends BaseController implements INCubeController
         }
 
         return s.toString();
-    }
-
-    private static Object parseCellValue(final Object value)
-    {
-        if (value == null)
-        {
-            return null;
-        }
-
-        if (value instanceof Object[])
-        {
-            Object[] values = (Object[]) value;
-            for (int i=0; i < values.length; i++)
-            {
-                values[i] = parseCellValue(values[i]);
-            }
-            return values;
-        }
-
-        if (!(value instanceof String))
-        {
-            throw new IllegalArgumentException("Unprocessable value passed in for cell: " + value.toString());
-        }
-
-        String v = (String) value;
-        Matcher matcher = castPattern.matcher(v);
-
-        if (!matcher.find())
-        {
-            if (v.startsWith("'"))
-            {   // The ol' single-tick-mark-to-indicate-String trick from Excel
-                return v.substring(1);
-            }
-            else if (v.startsWith("["))
-            {
-                try
-                {
-                    JsonObject array = (JsonObject) JsonReader.jsonToMaps(v);
-                    Object[] values = (array).getArray();
-                    for (int i=0; i < values.length; i++)
-                    {
-                        values[i] = parseCellValue(values[i]);
-                    }
-                    return values;
-                }
-                catch (IOException ignored) { }
-            }
-
-            if (v.startsWith("["))
-            {   // handle Groovy's declarative Maps [ : ]  and [] with ' quoted strings
-                return value;
-            }
-
-            if (v.startsWith("{"))
-            {
-                try
-                {
-                    return JsonReader.jsonToJava(v);
-                }
-                catch (IOException e)
-                {
-                    return value;
-                }
-            }
-
-            try
-            {
-                return Long.parseLong(v);
-            }
-            catch (Exception ignored) { }
-
-            try
-            {
-                return new BigDecimal(v);
-            }
-            catch (Exception ignored) { }
-
-            try
-            {
-                return DateUtilities.parseDate(v);
-            }
-            catch (Exception ignored) { }
-
-            return value;
-        }
-
-        String cmd = matcher.group(1).toLowerCase();
-        String arg = matcher.group(2);
-        if ("exp:".equals(cmd))
-        {
-            return new GroovyExpression(arg, null);
-        }
-        else if ("method:".equals(cmd))
-        {
-            return new GroovyMethod(arg, null);
-        }
-        else if ("temp:".equals(cmd))
-        {
-            return new GroovyTemplate(arg, null, true);
-        }
-        else if ("b:".equals(cmd))
-        {
-            try
-            {
-                return Byte.parseByte(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to byte: " + arg, e);
-            }
-        }
-        else if ("[b:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                byte[] bytes = new byte[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    bytes[i] = ((Number)values[i]).byteValue();
-                }
-                return bytes;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("s:".equals(cmd))
-        {
-            try
-            {
-                return Short.parseShort(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to short: " + arg, e);
-            }
-        }
-        else if ("[s:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                short[] shorts = new short[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    shorts[i] = ((Number)values[i]).shortValue();
-                }
-                return shorts;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("i:".equals(cmd))
-        {
-            try
-            {
-                return Integer.parseInt(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to an integer: " + arg, e);
-            }
-        }
-        else if ("[i:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                int[] ints = new int[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    ints[i] = ((Number)values[i]).intValue();
-                }
-                return ints;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("l:".equals(cmd))
-        {
-            try
-            {
-                return Long.parseLong(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to a long integer: " + arg, e);
-            }
-        }
-        else if ("[l:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                long[] longs = new long[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    longs[i] = ((Number)values[i]).longValue();
-                }
-                return longs;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("f:".equals(cmd))
-        {
-            try
-            {
-                return Float.parseFloat(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to a floating point number: " + arg, e);
-            }
-        }
-        else if ("[f:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                float[] floats = new float[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    floats[i] = ((Number)values[i]).floatValue();
-                }
-                return floats;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("d:".equals(cmd))
-        {
-            try
-            {
-                return Double.parseDouble(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to a double precision floating-point number: " + arg, e);
-            }
-        }
-        else if ("[d:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                double[] doubles = new double[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    doubles[i] = ((Number)values[i]).doubleValue();
-                }
-                return doubles;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("c:".equals(cmd))
-        {
-            try
-            {
-                return arg.charAt(0);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to a character: " + arg, e);
-            }
-        }
-        else if ("[c:".equals(cmd))
-        {
-            try
-            {
-                return arg.toCharArray();
-            }
-            catch (Exception ignored) { }
-        }
-        else if ("z:".equals(cmd))
-        {
-            try
-            {
-                return Boolean.valueOf(arg) ? Boolean.TRUE : Boolean.FALSE;
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to a boolean: " + arg, e);
-            }
-        }
-        else if ("[z:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                boolean[] bools = new boolean[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    bools[i] = (Boolean)values[i] ? Boolean.TRUE : Boolean.FALSE;
-                }
-                return bools;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("bd:".equals(cmd))
-        {
-            try
-            {
-                return new BigDecimal(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to a BigDecimal: " + arg, e);
-            }
-        }
-        else if ("[bd:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                BigDecimal[] bigdecs = new BigDecimal[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    bigdecs[i] = new BigDecimal((String)values[i]);
-                }
-                return bigdecs;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("bi:".equals(cmd))
-        {
-            try
-            {
-                return new BigInteger(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be cast to a BigInteger: " + arg, e);
-            }
-        }
-        else if ("[bi:".equals(cmd))
-        {
-            try
-            {
-                JsonObject array = (JsonObject) JsonReader.jsonToMaps(arg);
-                Object[] values = (array).getArray();
-                BigInteger[] bigints = new BigInteger[values.length];
-                for (int i=0; i < values.length; i++)
-                {
-                    bigints[i] = new BigInteger((String)values[i]);
-                }
-                return bigints;
-            }
-            catch (IOException ignored) { }
-        }
-        else if ("str-url:".equals(cmd))
-        {
-            // TODO: allow for cache / no cache
-            StringUrlCmd stringUrlCmd = new StringUrlCmd(arg, false);
-            return stringUrlCmd;
-        }
-        else if ("bin-url:".equals(cmd))
-        {
-            // TODO: allow for cache / no cache
-            BinaryUrlCmd binaryUrlCmd = new BinaryUrlCmd(arg, false);
-            return binaryUrlCmd;
-        }
-        else if ("exp-url:".equals(cmd))
-        {
-            GroovyExpression exp = new GroovyExpression(null, arg);
-            return exp;
-        }
-        else if ("method-url:".equals(cmd))
-        {
-            GroovyMethod method = new GroovyMethod(null, arg);
-            return method;
-        }
-        else if ("temp-url:".equals(cmd))
-        {
-            GroovyTemplate template = new GroovyTemplate(null, arg, true);
-            return template;
-        }
-        else if ("date:".equals(cmd))
-        {
-            try
-            {
-                return DateUtilities.parseDate(arg);
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Value cannot be parsed as a date: " + arg, e);
-            }
-        }
-        else if ("null:".equals(cmd))
-        {
-            return null;
-        }
-        throw new IllegalArgumentException("Unknown cast: " + cmd);
     }
 
     /**

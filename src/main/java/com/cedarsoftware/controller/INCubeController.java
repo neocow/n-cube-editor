@@ -32,7 +32,7 @@ public interface INCubeController extends IBaseController
     void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted);
     void updateColumnCell(String name, String app, String version, String colId, String value);
     void updateAxisColumns(String name, String app, String version, Axis updatedAxis);
-    Object updateCell(String name, String app, String version, Object[] colIds, String value);
+    Object updateCell(String name, String app, String version, Object[] colIds, Object value, String type, boolean cache, boolean url);
     void renameCube(String oldName, String newName, String app, String version);
     void saveJson(String name, String app, String version, String json);
     public void getTestData(String name, String app, String version, String status);
