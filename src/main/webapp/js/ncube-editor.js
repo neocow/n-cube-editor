@@ -189,7 +189,10 @@ $(function ()
                 setDirtyStatus(true);
             }
         };
-        window._editor = _editor = new jsoneditor.JSONEditor(container, options);
+//        window._editor = _editor = new jsoneditor.JSONEditor(container, options);
+        var editor = new JSONEditor(container, options);
+        window._editor = editor;
+        _editor = editor;
 
         var editCtrl = $('#jsoneditor');
         var menu = editCtrl.find('.menu');
