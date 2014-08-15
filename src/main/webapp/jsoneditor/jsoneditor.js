@@ -1185,7 +1185,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var poweredBy = document.createElement('a');
 	      poweredBy.appendChild(document.createTextNode('powered by ace'));
-	      poweredBy.href = 'http://ace.ajax.org';
+	      poweredBy.href = 'https://ace.ajax.org';
 	      poweredBy.target = '_blank';
 	      poweredBy.className = 'poweredBy';
 	      poweredBy.onclick = function () {
