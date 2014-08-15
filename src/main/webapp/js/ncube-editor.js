@@ -411,31 +411,53 @@ $(function ()
     function loadNCubeListView()
     {
         $('#ncubeCount').html(Object.keys(_cubeList).length);
-        var list = $('#ncube-list');
-        list.empty();
+        var groupList = $('#ncube-list');
+        groupList.empty();
         $.each(_cubeList, function (key, value)
         {
-            var li = $("<li/>");
-            var anchor = $('<a href="#"/>');
-            anchor.click(function ()
+            var groupName = value['group'];
+            var groupNode = $('#ac-' + groupName);
+            if (groupNode.length == 0)
             {
-                var cubeName = anchor.text();
+                groupNode = $('<div/>').attr({class: 'accordion-group', 'id': 'ac-' + groupName});
+                var heading = $("<div/>").attr({class: 'accordion-heading'});
+                groupNode.append(heading);
+                var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
+                anchor.html(groupName);
+                heading.append(anchor);
+                groupList.append(groupNode);
+                var accordionBody = $('<div/>').attr({class:'accordion-body collapse', 'id':'grp-' + groupName});
+                var bodyInner = $('<div/>').attr({class:'accordion-inner'});
+                var ul1 = $('<ul/>').attr({class:'nav nav-list'});
+                bodyInner.append(ul1);
+                accordionBody.append(bodyInner);
+                groupNode.append(accordionBody);
+                groupList.append(groupNode);
+            }
+
+            var ul = groupNode.find('ul');
+            var li = $('<li/>');
+            var a = $('<a/>').attr({class:'ncube-notselected', 'href':'#','itemName':value['ncube'].name}).html(getSmallCubeName(value));
+            a.click(function ()
+            {
+                var cubeName = a.attr('itemName');
                 setListSelectedStatus(cubeName, '#ncube-list');
                 _selectedCubeName = cubeName;
                 loadCube(); // load spreadsheet side
             });
-            anchor.html(key);
-            if (value.name == _selectedCubeName)
+            ul.append(li);
+            li.append(a);
+            if (value['ncube'].name == _selectedCubeName)
             {
-                anchor.attr('class', 'ncube-selected');
+                a.attr('class', 'ncube-selected');
             }
-            else
-            {
-                anchor.attr('class', 'ncube-notselected');
-            }
-            li.append(anchor);
-            list.append(li);
         });
+    }
+
+    function getSmallCubeName(cubeInfo)
+    {
+        var prefix = cubeInfo['prefix'];
+        return cubeInfo['ncube'].name.substring(prefix.length);
     }
 
     function loadAppListView()
@@ -687,7 +709,7 @@ $(function ()
 
     function loadCubeDetails()
     {
-        var cube = _cubeList[_selectedCubeName];
+        var cube = _cubeList[_selectedCubeName]['ncube'];
         if (!cube)
         {
             return;
@@ -845,7 +867,8 @@ $(function ()
         {
             var anchor = $(value);
             var text = anchor.html();
-            if (text == itemName)
+            var elemName = anchor.attr('itemName');
+            if (itemName == text || itemName == elemName)
             {
                 anchor.attr('class', 'ncube-selected');
             }
@@ -887,10 +910,11 @@ $(function ()
         {
             $.each(result.data, function (index, value)
             {
-                _cubeList[value.name] = value;
+                var name = value['ncube'].name;
+                _cubeList[name] = value;
                 if (!first)
                 {
-                    first = value.name;
+                    first = name;
                 }
             });
         }
@@ -898,7 +922,7 @@ $(function ()
         {
             _errorId = showNote('Unable to load n-cubes:<hr/>' + result.data);
         }
-        _selectedCubeName = (_cubeList && first) ? _cubeList[first].name : null;
+        _selectedCubeName = (_cubeList && first) ? _cubeList[first]['ncube'].name : null;
     }
 
     function loadVersions()

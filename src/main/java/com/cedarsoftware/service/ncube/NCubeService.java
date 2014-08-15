@@ -89,10 +89,6 @@ public class NCubeService
     public NCube getCube(String name, String app, String version, String status)
     {
         NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not retrieve NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
         return ncube;
     }
 
