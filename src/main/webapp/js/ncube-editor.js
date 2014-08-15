@@ -235,12 +235,6 @@ $(function ()
         var saveButton = $('#saveButton');
         saveButton.click(function()
         {
-            // since clearError is currently disabled.
-            if (_errorId)
-            {
-                $.gritter.remove(_errorId);
-                _errorId = null;
-            }
             clearError();
             var result = call("ncubeController.saveJson", [_selectedCubeName, _selectedApp, _selectedVersion, _editor.getText()]);
             if (result.status === true)
@@ -552,18 +546,9 @@ $(function ()
             return;
         }
         var result = call("ncubeController.getHtml", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
-        var htmlContent;
         if (result.status === true)
         {
-            htmlContent = result.data;
-        }
-        else
-        {
-            htmlContent = "Unable to load '" + _selectedCubeName + "':<hr/>" + result.data;
-        }
-        $('#ncube-content').html(htmlContent);
-        if (result.status === true)
-        {
+            $('#ncube-content').html(result.data);
             $(".axis-menu").each(function ()
             {
                 var element = $(this);
@@ -609,6 +594,9 @@ $(function ()
                 ul.append(li);
                 element.append(ul);
             });
+        } else {
+            $('#ncube-content').empty();
+            _errorId = showNote('Unable to load ' + _selectedCubeName + ':<hr/>' + result.data);
         }
 
         $('.ncube-col').each(function ()
@@ -785,7 +773,7 @@ $(function ()
             _errorId = showNote(msg);
         }
 
-        var result = call("ncubeController.getCoordinatesForCells", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var result = call("ncubeController.getAllCoordinatesForCube", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true)
         {
             testCtrl.empty();
@@ -796,7 +784,7 @@ $(function ()
                     if ('@type' != key)
                     {
                         var outerdiv = $("<div/>").attr({'class': 'row'});
-                        var inneritem = $("<div/>").attr({'class': 'col-md-2'});
+                        var inneritem = $("<div/>").attr({'class': 'col-md-3'});
                         var label = $("<label/>").attr({'for': key});
                         label.html(key);
                         var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': key});
@@ -1869,14 +1857,11 @@ $(function ()
 
     function clearError()
     {
-        // Temporarily make the user close each error.
-
-/*      if (_errorId)
+        if (_errorId)
         {
             $.gritter.remove(_errorId);
             _errorId = null;
         }
-        */
     }
 
     function saveScroll()

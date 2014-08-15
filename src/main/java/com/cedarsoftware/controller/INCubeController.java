@@ -39,4 +39,5 @@ public interface INCubeController extends IBaseController
     public void saveTestData(String name, String app, String version, String testData);
     public Object getCell(String name, String app, String version, String status, HashMap map);
     public Object[] getCoordinatesForCells(String name, String app, String version, String status);
+    public Object[] getAllCoordinatesForCube(String name, String app, String version, String status);
 }

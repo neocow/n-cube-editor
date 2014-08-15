@@ -1010,6 +1010,32 @@ public class NCubeController extends BaseController implements INCubeController
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
+    public Object[] getAllCoordinatesForCube(String name, String app, String version, String status)
+    {
+        try
+        {
+            NCube ncube = nCubeService.getCube(name, app, version, status);
+            List<Map<String, Object>> cells = ncube.getCoordinateSetForCube();
+            for (Map<String, Object> coords : cells) {
+                for (Map.Entry<String, Object> item : coords.entrySet()) {
+                    String key = item.getKey();
+                }
+            }
+
+            return cells.toArray();
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
+    }
+
+
+    /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
     public Object[] getCoordinatesForCells(String name, String app, String version, String status)
     {
         try
