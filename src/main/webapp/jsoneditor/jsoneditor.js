@@ -24,7 +24,7 @@
  *
  * @author  Jos de Jong, <wjosdejong@gmail.com>
  * @version 3.1.1
- * @date    2014-08-15
+ * @date    2014-08-01
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
@@ -6261,4 +6261,4 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }
 /******/ ])
-});
+})
