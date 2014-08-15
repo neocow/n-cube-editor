@@ -41,7 +41,7 @@ import java.util.Set;
  */
 public class NCubeController extends BaseController implements INCubeController
 {
-    public static final String SYS_NCUBE_INFO = "sys.ncube.info";
+    public static final String SYS_NCUBE_INFO = "sys.groups";
     private NCubeService nCubeService;
 
     public NCubeController(NCubeService service)
@@ -139,7 +139,6 @@ public class NCubeController extends BaseController implements INCubeController
         augInfo = new LinkedHashMap<>();
         augInfo.put("group", "General");
         augInfo.put("prefix", "");
-        augInfo.put("url", "");
         return augInfo;
     }
 
