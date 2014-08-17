@@ -176,6 +176,7 @@ $(function ()
             //console.log(e.target) // activated tab
         })
         myLayout.resizeAll();
+
     }
 
     function initJsonEditor()
@@ -776,6 +777,7 @@ $(function ()
         {
             testList.empty();
 
+
             var ol = $("<ol/>");
             if (testListResult.data != null) {
                 $.each(testListResult.data, function (index, value) {
@@ -795,25 +797,19 @@ $(function ()
             _errorId = showNote(msg);
         }
 
-        var result = call("ncubeController.getAllCoordinatesForCube", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var result = call("ncubeController.getCoordinatesForCells", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true)
         {
             testCtrl.empty();
 
             $.each( result.data, function(item)
             {
+                //var outerdiv = $("<div/>").attr({'class': 'row'});
+
                 $.each( result.data[item], function( key, value ) {
                     if ('@type' != key)
                     {
-                        var outerdiv = $("<div/>").attr({'class': 'row'});
-                        var inneritem = $("<div/>").attr({'class': 'col-md-3'});
-                        var label = $("<label/>").attr({'for': key});
-                        label.html(key);
-                        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': key});
-                        inneritem.append(label);
-                        inneritem.append(input);
-                        outerdiv.append(inneritem);
-                        testCtrl.append(outerdiv);
+                        testCtrl.append(buildTypeSelectorFormGroup(key, value));
                     }
                 });
                 testCtrl.append($("<hr>"));
@@ -824,7 +820,70 @@ $(function ()
             _errorId = showNote('Error fetching test parameters for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
         }
 
+        $('.selectpicker').selectpicker();
 
+    }
+
+    function buildTypeSelector(typeStr) {
+        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow span2', 'data-style':'btn-primary'});
+
+        var obj = {
+            STRING: "String",
+            LONG: "Long",
+            BIG_DECIMAL : "Big Decimal",
+            DOUBLE : "Double",
+            DATE : "Date",
+            EXPRESSION : "Expression"
+        };
+
+        $.each(obj, function( i, value ) {
+            var opt = $("<option/>").attr({'value': i});
+            opt.text(value);
+            selector.append(opt);
+        });
+
+        return selector;
+    }
+
+    function buildUrlToggle() {
+        var togglediv = $("<div/>").attr({'class' : 'btn-group btn-toggle'});
+        var url = $("<button/>").attr({'class' : 'btn btn-default'});
+        url.text("URL");
+        var value = $("<button/>").attr({'class' : 'btn btn-primary active'});
+        value.text("Value");
+        togglediv.append(url);
+        togglediv.append(value);
+        return togglediv;
+    }
+
+    function buildTypeSelectorFormGroup(coordId, map) {
+        var cat = "testId-" + coordId;
+
+        var outerdiv = $("<div/>").attr({'class': 'form-group'});
+        var label = $("<label/>").attr({'for': cat, 'class' : 'col-md-2 control-label'});
+        label.html(coordId);
+        var inputdiv = $("<div/>").attr({'class': 'col-md-6'});
+        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat, 'placeholder' : map['value']});
+        inputdiv.append(input);
+
+        var selectordiv = $("<div/>").attr({'class': 'col-md-1'});
+        selectordiv.append(buildTypeSelector());
+
+        var togglediv = $("<div/>").attr({'class': 'col-md-2'});
+        togglediv.append(buildUrlToggle());
+
+        var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-md-1'});
+        var runTestButton = $("<button/>").attr({'class' : 'btn btn-default'});
+        runTestButton.text('Run Test');
+        buttonDiv.append(runTestButton);
+
+        outerdiv.append(label);
+        outerdiv.append(inputdiv);
+        outerdiv.append(togglediv);
+        outerdiv.append(selectordiv);
+        outerdiv.append(buttonDiv);
+
+        return outerdiv;
     }
 
     function loadCube()

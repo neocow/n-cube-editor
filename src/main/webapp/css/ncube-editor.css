@@ -68,7 +68,7 @@ a.ncube-notselected:hover {
 }
 
 #center {
-    background-color: #ffffff;
+    background-color: #EEEEEE;
     padding: 0 !important;
     margin: 0 !important;
     overflow: hidden !important;
@@ -76,8 +76,8 @@ a.ncube-notselected:hover {
 }
 
 #testLayoutCenter {
-    margin: 0;
-    padding: 0;
+    padding: 0 !important;
+    overflow: hidden !important;
 }
 
 #testLayoutEast {
