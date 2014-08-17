@@ -41,7 +41,7 @@ import java.util.Set;
  */
 public class NCubeController extends BaseController implements INCubeController
 {
-    public static final String SYS_NCUBE_INFO = "sys.ncube.info";
+    public static final String SYS_NCUBE_INFO = "sys.groups";
     private NCubeService nCubeService;
 
     public NCubeController(NCubeService service)
@@ -67,7 +67,13 @@ public class NCubeController extends BaseController implements INCubeController
             List<String> baseUrls = new ArrayList<>();
             baseUrls.add("http://www.cedarsoftware.com");
             NCubeManager.addBaseResourceUrls(baseUrls, version);
-            NCube sysInfo = nCubeService.getCube(SYS_NCUBE_INFO, app, version, status);
+            NCube sysInfo = null;
+            try
+            {
+                sysInfo = nCubeService.getCube(SYS_NCUBE_INFO, app, version, status);
+            }
+            catch (Exception ignored)
+            { }
             Object[] list = nCubeService.getNCubes(null, app, version, status);
             List<Map<String, Object>> augmentedInfo = new ArrayList<>();
 
@@ -80,26 +86,26 @@ public class NCubeController extends BaseController implements INCubeController
                 Map<String, Object> augInfo;
                 if (sysInfo == null)
                 {
-                    augInfo = new LinkedHashMap<>();
-                    augInfo.put("group", "General");
-                    augInfo.put("prefix", "");
-                    augInfo.put("url", "");
+                    augInfo = makeGenericAugInfo();
                 }
                 else
                 {
-                    sysInfo.getCells(input, output);
-                    if (!output.containsKey("info"))
+                    try
                     {
-                        markRquestFailed("Cube name matches nothing in " + SYS_NCUBE_INFO + ".  Expected output.info to contain a Map with additional info about the n-cube (group, icon, and prefix).");
-                        return null;
+                        sysInfo.getCells(input, output);
+                        augInfo = output.containsKey("info") ? (Map<String, Object>) output.get("info") : makeGenericAugInfo();
                     }
-                    augInfo = (Map<String, Object>) output.get("info");
+                    catch (Exception ignored)
+                    {   // Blew up on running the rules
+                        augInfo = makeGenericAugInfo();
+                    }
                 }
 
                 augInfo.put("ncube", infoDto);
                 augmentedInfo.add(augInfo);
             }
 
+            // Sort by Group, then by n-cube name
             Collections.sort(augmentedInfo, new Comparator<Map>()
             {
                 public int compare(Map o1, Map o2)
@@ -125,6 +131,15 @@ public class NCubeController extends BaseController implements INCubeController
             fail(e);
             return null;
         }
+    }
+
+    private Map<String, Object> makeGenericAugInfo()
+    {
+        Map<String, Object> augInfo;
+        augInfo = new LinkedHashMap<>();
+        augInfo.put("group", "General");
+        augInfo.put("prefix", "");
+        return augInfo;
     }
 
     public String getHtml(String name, String app, String version, String status)

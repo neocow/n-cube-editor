@@ -190,7 +190,9 @@ $(function ()
                 setDirtyStatus(true);
             }
         };
-        window._editor = _editor = new jsoneditor.JSONEditor(container, options);
+
+        // Create JSON Editor (http://jsoneditoronline.org/downloads/)
+        _editor = new JSONEditor(container, options);
 
         var editCtrl = $('#jsoneditor');
         var menu = editCtrl.find('.menu');
