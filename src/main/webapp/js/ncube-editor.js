@@ -176,6 +176,7 @@ $(function ()
             //console.log(e.target) // activated tab
         })
         myLayout.resizeAll();
+
     }
 
     function initJsonEditor()
@@ -237,12 +238,6 @@ $(function ()
         var saveButton = $('#saveButton');
         saveButton.click(function()
         {
-            // since clearError is currently disabled.
-            if (_errorId)
-            {
-                $.gritter.remove(_errorId);
-                _errorId = null;
-            }
             clearError();
             var result = call("ncubeController.saveJson", [_selectedCubeName, _selectedApp, _selectedVersion, _editor.getText()]);
             if (result.status === true)
@@ -414,6 +409,10 @@ $(function ()
         {
             runCubeTest()
         });
+        $('#generateTestsLink').click(function ()
+        {
+           generateTests();
+        });
     }
 
     function loadNCubeListView()
@@ -576,18 +575,9 @@ $(function ()
             return;
         }
         var result = call("ncubeController.getHtml", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
-        var htmlContent;
         if (result.status === true)
         {
-            htmlContent = result.data;
-        }
-        else
-        {
-            htmlContent = "Unable to load '" + _selectedCubeName + "':<hr/>" + result.data;
-        }
-        $('#ncube-content').html(htmlContent);
-        if (result.status === true)
-        {
+            $('#ncube-content').html(result.data);
             $(".axis-menu").each(function ()
             {
                 var element = $(this);
@@ -633,6 +623,9 @@ $(function ()
                 ul.append(li);
                 element.append(ul);
             });
+        } else {
+            $('#ncube-content').empty();
+            _errorId = showNote('Unable to load ' + _selectedCubeName + ':<hr/>' + result.data);
         }
 
         $('.ncube-col').each(function ()
@@ -786,20 +779,26 @@ $(function ()
         var testList = $('#testList');
 
         var testListResult = call("ncubeController.getTestData", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        testList.empty();
         if (testListResult.status === true)
         {
-            testList.empty();
 
-            var ol = $("<ol/>");
+            resultPane.fadeIn("fast");
+
             if (testListResult.data != null) {
+                $('#testListWarning').hide();
+                var ol = $("<ol/>");
                 $.each(testListResult.data, function (index, value) {
                     li = $("<li/>");
                     li.html(value);
                     ol.append(li);
                 });
+                testList.append(ol);
+                $('#testList').fadeIn("fast");
             } else {
+                $('#testList').hide();
+                $('#testListWarning').fadeIn("fast");
             }
-            testList.append(ol);
         }
         else {
             var msg = 'Error fetching test data for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
@@ -808,37 +807,150 @@ $(function ()
             }
             _errorId = showNote(msg);
         }
+        //$('.selectpicker').selectpicker();
 
+
+    }
+
+    function generateTests() {
         var result = call("ncubeController.getCoordinatesForCells", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true)
         {
-            testCtrl.empty();
+            var testCtrl = $('#testView');
+            var testList = $('#testList');
+            var testListWarning = $('#testListWarning');
 
-            $.each( result.data, function(item)
-            {
-                $.each( result.data[item], function( key, value ) {
-                    if ('@type' != key)
-                    {
-                        var outerdiv = $("<div/>").attr({'class': 'row'});
-                        var inneritem = $("<div/>").attr({'class': 'col-md-2'});
-                        var label = $("<label/>").attr({'for': key});
-                        label.html(key);
-                        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': key});
-                        inneritem.append(label);
-                        inneritem.append(input);
-                        outerdiv.append(inneritem);
-                        testCtrl.append(outerdiv);
+            testCtrl.empty();
+            testList.empty();
+
+
+            testListWarning.hide();
+            var ol = $("<ol/>");
+
+            try {
+                $.each(result.data, function (index, item) {
+
+
+                    li = $("<li/>");
+                    li.html(item['name']);
+                    ol.append(li);
+
+                    //var outerdiv = $("<div/>").attr({'class': 'row'});
+                    testCtrl.append(buildTestName(item['name']));
+
+                    try {
+
+                    $.each(item['coord'], function (key, value) {
+                        if (key.substring(0, 1) != "@") {
+                            testCtrl.append(buildTypeSelectorFormGroup(key, value));
+                        }
+                    });
+                    } catch (e) {
+                        alert(e);
                     }
+                    testCtrl.append($("<hr>"));
                 });
-                testCtrl.append($("<hr>"));
-            });
+            } catch (e) {
+               alert(e);
+            }
+
+            testList.append(ol);
+            testList.fadeIn("fast");
+
         }
         else
         {
             _errorId = showNote('Error fetching test parameters for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
         }
 
+        $('.selectpicker').selectpicker();
+    }
 
+    function buildTypeSelector(typeStr) {
+        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow span2', 'data-width': 'auto', 'data-style':'btn-primary'});
+
+        var obj = {
+            STRING: "String",
+            LONG: "Long",
+            BIG_DECIMAL : "Big Decimal",
+            DOUBLE : "Double",
+            DATE : "Date",
+            EXPRESSION : "Expression"
+        };
+
+        $.each(obj, function( i, value ) {
+            var opt = $("<option/>").attr({'value': i});
+            opt.text(value);
+            selector.append(opt);
+        });
+
+        return selector;
+    }
+
+    function buildUrlToggle() {
+        var togglediv = $("<div/>").attr({'class' : 'btn-group btn-toggle'});
+        var url = $("<button/>").attr({'class' : 'btn btn-default'});
+        url.text("URL");
+        var value = $("<button/>").attr({'class' : 'btn btn-primary active'});
+        value.text("Value");
+        togglediv.append(url);
+        togglediv.append(value);
+        return togglediv;
+    }
+
+    function buildTestName(name) {
+
+        var outerdiv = $("<div/>").attr({'class': 'form-group'});
+        var label = $("<label/>").attr({'for': name, 'class' : 'col-md-2 control-label'});
+        label.html("test name");
+        var inputdiv = $("<div/>").attr({'class': 'col-md-6'});
+        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': name });
+        input.val(name);
+        inputdiv.append(input);
+
+
+        //var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-md-1'});
+
+        //var runTestButton = $("<button/>").attr({'class' : 'btn btn-default'});
+        //runTestButton.text('Run Test');
+        //buttonDiv.append(runTestButton);
+
+        outerdiv.append(label);
+        outerdiv.append(inputdiv);
+
+        return outerdiv;
+
+    }
+
+    function buildTypeSelectorFormGroup(coordId, map) {
+        var cat = "testId-" + coordId;
+
+        var outerdiv = $("<div/>").attr({'class': 'form-group'});
+        var label = $("<label/>").attr({'for': cat, 'class' : 'col-md-2 control-label'});
+        label.html(coordId);
+        var inputdiv = $("<div/>").attr({'class': 'col-md-6'});
+        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat, 'placeholder' : map['value']});
+        inputdiv.append(input);
+
+        var selectordiv = $("<div/>").attr({'class': 'col-md-1'});
+        selectordiv.append(buildTypeSelector());
+
+        var togglediv = $("<div/>").attr({'class': 'col-md-2'});
+        togglediv.append(buildUrlToggle());
+
+        //var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-md-1'});
+
+        //var runTestButton = $("<button/>").attr({'class' : 'btn btn-default'});
+        //runTestButton.text('Run Test');
+        //buttonDiv.append(runTestButton);
+
+        outerdiv.append(label);
+        outerdiv.append(inputdiv);
+        outerdiv.append(togglediv);
+        outerdiv.append(selectordiv);
+        //outerdiv.append(buttonDiv);
+
+        return outerdiv;
     }
 
     function loadCube()
@@ -1895,14 +2007,11 @@ $(function ()
 
     function clearError()
     {
-        // Temporarily make the user close each error.
-
-/*      if (_errorId)
+        if (_errorId)
         {
             $.gritter.remove(_errorId);
             _errorId = null;
         }
-        */
     }
 
     function saveScroll()

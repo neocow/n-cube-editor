@@ -61,12 +61,43 @@ a.ncube-notselected:hover {
     font-size: small;
     font-weight: 500;
     padding-bottom: 0;
+    margin: 0;
+    padding-top: 0;
+    padding-left: 6px;
+    padding-right: 6px;
 }
+
 #center {
     background-color: #EEEEEE;
     padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    width: 100%;
+}
+
+#testLayoutCenter {
+    padding: 0 !important;
     overflow: hidden !important;
 }
+
+#testLayoutEast {
+    margin: 0;
+    padding: 0;
+}
+
+#tests {
+    margin: 0px;
+    padding: 0px;
+}
+
+#testLayoutSouth {
+    margin: 0px;
+    padding: 0px;
+}
+
+
+
+
 
 .navbar-custom {
     background-color: #2474b8;

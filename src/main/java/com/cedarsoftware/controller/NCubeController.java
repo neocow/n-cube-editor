@@ -19,6 +19,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * NCubeController API.
@@ -43,6 +45,8 @@ public class NCubeController extends BaseController implements INCubeController
 {
     public static final String SYS_NCUBE_INFO = "sys.groups";
     private NCubeService nCubeService;
+    Pattern antStyleReplacementPattern = Pattern.compile("[$][{](.*?)[}]");
+
 
     public NCubeController(NCubeService service)
     {
@@ -60,12 +64,47 @@ public class NCubeController extends BaseController implements INCubeController
         return "UD.REF.APP".equals(app) && version.startsWith("0.0.") && "SNAPSHOT".equals(status) || !"UD.REF.APP".equals(app);
     }
 
+    private static List<String> _defaultUrls = new ArrayList<String>();
+    public static void setDefaultUrls(List<String> urls) {
+        _defaultUrls = urls;
+    }
+
+    public List<String> resolveDefaultUrls(String app, String version, String status) {
+
+        List<String> urls = new ArrayList<>();
+
+        for (String s : _defaultUrls)
+        {
+            Matcher m = antStyleReplacementPattern.matcher(s);
+            StringBuffer sb = new StringBuffer(s.length());
+            while (m.find())
+            {
+                String text = m.group(1);
+
+                if ("version".equals(text))
+                {
+                    m.appendReplacement(sb, version);
+                }
+                else if ("application".equals(text))
+                {
+                    m.appendReplacement(sb, app);
+                }
+                else if ("status".equals(text))
+                {
+                    m.appendReplacement(sb, status);
+                }
+            }
+            m.appendTail(sb);
+            urls.add(sb.toString());
+        }
+        return urls;
+    }
+
     public Object[] getCubeList(String filter, String app, String version, String status)
     {
         try
         {
-            List<String> baseUrls = new ArrayList<>();
-            baseUrls.add("http://www.cedarsoftware.com");
+            List<String> baseUrls = resolveDefaultUrls(app, version, status);
             NCubeManager.addBaseResourceUrls(baseUrls, version);
             NCube sysInfo = null;
             try
@@ -668,8 +707,7 @@ public class NCubeController extends BaseController implements INCubeController
             {
                 return new Object[]{};
             }
-            List cells = ncube.getCoordinatesForCells();
-            return cells.toArray();
+            return ncube.getCoordinatesForCells().toArray();
         }
         catch (Exception e)
         {

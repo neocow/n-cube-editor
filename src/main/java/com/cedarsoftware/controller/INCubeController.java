@@ -2,7 +2,6 @@ package com.cedarsoftware.controller;
 
 import com.cedarsoftware.ncube.Axis;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,8 +20,7 @@ public interface INCubeController extends IBaseController
     Object[] getReferencesFrom(String name, String app, String version, String status);
     Object[] getRequiredScope(String name, String app, String version, String status);
     Object[] getAxes(String name, String app, String version, String status);
-    public Object getCell(String name, String app, String version, String status, HashMap map);
-    public Object[] getCoordinatesForCells(String name, String app, String version, String status);
+    Object[] getCoordinatesForCells(String name, String app, String version, String status);
     Map getAxis(String name, String app, String version, String status, String axisName);
     void getTestData(String name, String app, String version, String status);
 
