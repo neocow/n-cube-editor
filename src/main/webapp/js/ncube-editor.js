@@ -409,6 +409,10 @@ $(function ()
         {
             runCubeTest()
         });
+        $('#generateTestsLink').click(function ()
+        {
+           generateTests();
+        });
     }
 
     function loadNCubeListView()
@@ -775,21 +779,26 @@ $(function ()
         var testList = $('#testList');
 
         var testListResult = call("ncubeController.getTestData", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        testList.empty();
         if (testListResult.status === true)
         {
-            testList.empty();
 
+            resultPane.fadeIn("fast");
 
-            var ol = $("<ol/>");
             if (testListResult.data != null) {
+                $('#testListWarning').hide();
+                var ol = $("<ol/>");
                 $.each(testListResult.data, function (index, value) {
                     li = $("<li/>");
                     li.html(value);
                     ol.append(li);
                 });
+                testList.append(ol);
+                $('#testList').fadeIn("fast");
             } else {
+                $('#testList').hide();
+                $('#testListWarning').fadeIn("fast");
             }
-            testList.append(ol);
         }
         else {
             var msg = 'Error fetching test data for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
@@ -798,28 +807,56 @@ $(function ()
             }
             _errorId = showNote(msg);
         }
+        //$('.selectpicker').selectpicker();
 
 
     }
 
-    function buildDefaultTests() {
+    function generateTests() {
         var result = call("ncubeController.getCoordinatesForCells", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true)
         {
+            var testCtrl = $('#testView');
+            var testList = $('#testList');
+            var testListWarning = $('#testListWarning');
+
             testCtrl.empty();
+            testList.empty();
 
-            $.each( result.data, function(item)
-            {
-                //var outerdiv = $("<div/>").attr({'class': 'row'});
 
-                $.each( result.data[item], function( key, value ) {
-                    if ('@type' != key)
-                    {
-                        testCtrl.append(buildTypeSelectorFormGroup(key, value));
+            testListWarning.hide();
+            var ol = $("<ol/>");
+
+            try {
+                $.each(result.data, function (index, item) {
+
+
+                    li = $("<li/>");
+                    li.html(item['name']);
+                    ol.append(li);
+
+                    //var outerdiv = $("<div/>").attr({'class': 'row'});
+                    testCtrl.append(buildTestName(item['name']));
+
+                    try {
+
+                    $.each(item['coord'], function (key, value) {
+                        if (key.substring(0, 1) != "@") {
+                            testCtrl.append(buildTypeSelectorFormGroup(key, value));
+                        }
+                    });
+                    } catch (e) {
+                        alert(e);
                     }
+                    testCtrl.append($("<hr>"));
                 });
-                testCtrl.append($("<hr>"));
-            });
+            } catch (e) {
+               alert(e);
+            }
+
+            testList.append(ol);
+            testList.fadeIn("fast");
+
         }
         else
         {
@@ -861,6 +898,30 @@ $(function ()
         return togglediv;
     }
 
+    function buildTestName(name) {
+
+        var outerdiv = $("<div/>").attr({'class': 'form-group'});
+        var label = $("<label/>").attr({'for': name, 'class' : 'col-md-2 control-label'});
+        label.html("test name");
+        var inputdiv = $("<div/>").attr({'class': 'col-md-6'});
+        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': name });
+        input.val(name);
+        inputdiv.append(input);
+
+
+        //var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-md-1'});
+
+        //var runTestButton = $("<button/>").attr({'class' : 'btn btn-default'});
+        //runTestButton.text('Run Test');
+        //buttonDiv.append(runTestButton);
+
+        outerdiv.append(label);
+        outerdiv.append(inputdiv);
+
+        return outerdiv;
+
+    }
+
     function buildTypeSelectorFormGroup(coordId, map) {
         var cat = "testId-" + coordId;
 
@@ -877,16 +938,17 @@ $(function ()
         var togglediv = $("<div/>").attr({'class': 'col-md-2'});
         togglediv.append(buildUrlToggle());
 
-        var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-md-1'});
-        var runTestButton = $("<button/>").attr({'class' : 'btn btn-default'});
-        runTestButton.text('Run Test');
-        buttonDiv.append(runTestButton);
+        //var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-md-1'});
+
+        //var runTestButton = $("<button/>").attr({'class' : 'btn btn-default'});
+        //runTestButton.text('Run Test');
+        //buttonDiv.append(runTestButton);
 
         outerdiv.append(label);
         outerdiv.append(inputdiv);
         outerdiv.append(togglediv);
         outerdiv.append(selectordiv);
-        outerdiv.append(buttonDiv);
+        //outerdiv.append(buttonDiv);
 
         return outerdiv;
     }

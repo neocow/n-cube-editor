@@ -707,8 +707,7 @@ public class NCubeController extends BaseController implements INCubeController
             {
                 return new Object[]{};
             }
-            List cells = ncube.getCoordinatesForCells();
-            return cells.toArray();
+            return ncube.getCoordinatesForCells().toArray();
         }
         catch (Exception e)
         {
