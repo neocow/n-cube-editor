@@ -799,6 +799,10 @@ $(function ()
             _errorId = showNote(msg);
         }
 
+
+    }
+
+    function buildDefaultTests() {
         var result = call("ncubeController.getCoordinatesForCells", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
         if (result.status === true)
         {
@@ -823,11 +827,10 @@ $(function ()
         }
 
         $('.selectpicker').selectpicker();
-
     }
 
     function buildTypeSelector(typeStr) {
-        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow span2', 'data-style':'btn-primary'});
+        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow span2', 'data-width': 'auto', 'data-style':'btn-primary'});
 
         var obj = {
             STRING: "String",
