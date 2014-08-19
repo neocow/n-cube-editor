@@ -13,6 +13,7 @@ $(function ()
     var _versions = [];
     var _selectedCubeName = null;
     var _selectedApp = localStorage[SELECTED_APP];
+    var _selectedTest = null;
     var _selectedVersion = null;
     var _selectedStatus = "SNAPSHOT";
     var _axisName;
@@ -502,6 +503,54 @@ $(function ()
         });
     }
 
+    function loadTestListView()
+    {
+        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        {
+            _editor.setText('No n-cube to load');
+            setDirtyStatus(false);
+            return;
+        }
+
+        var testList = $('#testList');
+        testList.empty();
+
+        var testListResult = call("ncubeController.getTestData", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+
+        if (testListResult.status === true)
+        {
+            if (testListResult.data != null) {
+                $('#testListWarning').hide();
+                $.each(testListResult.data, function (index, value) {
+                    var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item'});
+                    anchor.click(function()
+                    {
+                        var testName = anchor.text();
+                        _selectedTest = testName;
+                        setListSelectedStatus(anchor.text(), '#testList');
+                    });
+                    anchor.html(value);
+                    if (value == _selectedTest) {
+                        anchor.addClass('active');
+                    }
+                    testList.append(anchor);
+                });
+                $('#testList').fadeIn("fast");
+            } else {
+                $('#testList').hide();
+                $('#testListWarning').fadeIn("fast");
+            }
+        }
+        else {
+            var msg = 'Error fetching test data for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
+            if (testListResult.data != null) {
+                msg += (':<hr/>' + testListResult.data);
+            }
+            _errorId = showNote(msg);
+        }
+    }
+
+
     function loadStatusListView()
     {
         var list = $('#status-list');
@@ -768,45 +817,11 @@ $(function ()
 
     function loadCubeTest()
     {
-        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
-        {
-            _editor.setText('No n-cube to load');
-            setDirtyStatus(false);
-            return;
-        }
         var testCtrl = $('#testView');
         var testResult = $('#testResult');
-        var testList = $('#testList');
 
-        var testListResult = call("ncubeController.getTestData", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
-        testList.empty();
-        if (testListResult.status === true)
-        {
+        loadTestListView();
 
-            resultPane.fadeIn("fast");
-
-            if (testListResult.data != null) {
-                $('#testListWarning').hide();
-                var ol = $("<ol/>");
-                $.each(testListResult.data, function (index, value) {
-                    li = $("<li/>");
-                    li.html(value);
-                    ol.append(li);
-                });
-                testList.append(ol);
-                $('#testList').fadeIn("fast");
-            } else {
-                $('#testList').hide();
-                $('#testListWarning').fadeIn("fast");
-            }
-        }
-        else {
-            var msg = 'Error fetching test data for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
-            if (testListResult.data != null) {
-                msg += (':<hr/>' + testListResult.data);
-            }
-            _errorId = showNote(msg);
-        }
         //$('.selectpicker').selectpicker();
 
 
@@ -1293,7 +1308,7 @@ $(function ()
             _selectedApp = newApp;
             loadAppListView();
             _selectedStatus = 'SNAPSHOT';
-            setListSelectedStatus('SNAPSHOT', '#status-list')
+            setListSelectedStatus('SNAPSHOT', '#status-list');
             loadVersions();
             _selectedVersion = newVersion;
             loadVersionListView();
