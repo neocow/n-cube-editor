@@ -15,6 +15,7 @@ $(function ()
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedTest = null;
     var _selectedVersion = null;
+    var _testData = null;
     var _selectedStatus = "SNAPSHOT";
     var _axisName;
     var _errorId = null;
@@ -302,6 +303,10 @@ $(function ()
         {
             renameCubeOk();
         });
+        $('#renameCubeOk').click(function ()
+        {
+            renameTestOk();
+        });
         $('#dupeCubeMenu').click(function ()
         {
             dupeCube()
@@ -406,13 +411,9 @@ $(function ()
         {
             editColSave()
         });
-        $('#runCubeTest').click(function ()
-        {
-            runCubeTest()
-        });
         $('#generateTestsLink').click(function ()
         {
-           generateTests();
+            loadTestListView("ncubeController.getCoordinatesForCells");
         });
     }
 
@@ -503,7 +504,7 @@ $(function ()
         });
     }
 
-    function loadTestListView()
+    function loadTestListView(funcName)
     {
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
@@ -514,25 +515,28 @@ $(function ()
 
         var testList = $('#testList');
         testList.empty();
+        var testCtrl = $('#testView');
+        testCtrl.empty();
+        var testResult = $('#testResult');
+        testResult.empty();
 
-        var testListResult = call("ncubeController.getTestData", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        var testListResult = call(funcName, [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
 
         if (testListResult.status === true)
         {
             if (testListResult.data != null) {
                 $('#testListWarning').hide();
+
+                _testData = testListResult.data;
                 $.each(testListResult.data, function (index, value) {
-                    var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item'});
-                    anchor.click(function()
-                    {
+                    var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item list-group-item-info'});
+                    anchor.click(function() {
                         var testName = anchor.text();
                         _selectedTest = testName;
-                        setListSelectedStatus(anchor.text(), '#testList');
+                        changeTestListSelection('#testList', testName);
+                        loadTestView(_testData[index]);
                     });
-                    anchor.html(value);
-                    if (value == _selectedTest) {
-                        anchor.addClass('active');
-                    }
+                    anchor.html(value['name']);
                     testList.append(anchor);
                 });
                 $('#testList').fadeIn("fast");
@@ -815,74 +819,50 @@ $(function ()
         $('#cube_bizEndDate').val(date);
     }
 
-    function loadCubeTest()
-    {
+    function loadTestView(testData) {
         var testCtrl = $('#testView');
-        var testResult = $('#testResult');
+        testCtrl.empty();
 
-        loadTestListView();
+        //var well = $("<div/>").attr({'class': 'well'});
 
-        //$('.selectpicker').selectpicker();
+        try {
 
+           testCtrl.append(buildTestName(testData['name']));
 
-    }
+            $.each(testData['coord'], function (key, value) {
+                if (key.substring(0, 1) != "@") {
+                    testCtrl.append(buildTypeSelectorFormGroup(key, value));
+                }
+            });
 
-    function generateTests() {
-        var result = call("ncubeController.getCoordinatesForCells", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
-        if (result.status === true)
-        {
-            var testCtrl = $('#testView');
-            var testList = $('#testList');
-            var testListWarning = $('#testListWarning');
-
-            testCtrl.empty();
-            testList.empty();
-
-
-            testListWarning.hide();
-            var ol = $("<ol/>");
-
-            try {
-                $.each(result.data, function (index, item) {
-
-
-                    li = $("<li/>");
-                    li.html(item['name']);
-                    ol.append(li);
-
-                    //var outerdiv = $("<div/>").attr({'class': 'row'});
-                    testCtrl.append(buildTestName(item['name']));
-
-                    try {
-
-                    $.each(item['coord'], function (key, value) {
-                        if (key.substring(0, 1) != "@") {
-                            testCtrl.append(buildTypeSelectorFormGroup(key, value));
-                        }
-                    });
-                    } catch (e) {
-                        alert(e);
-                    }
-                    testCtrl.append($("<hr>"));
-                });
-            } catch (e) {
-               alert(e);
-            }
-
-            testList.append(ol);
-            testList.fadeIn("fast");
-
-        }
-        else
-        {
-            _errorId = showNote('Error fetching test parameters for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
+            testCtrl.append(buildTypeSelectorFormGroup('expectedResult', testData['expectedResult']));
+        } catch (e) {
+           alert(e);
         }
 
+
+        //testCtrl.append(well);
         $('.selectpicker').selectpicker();
+
+
+
+        var group = $("<div/>").attr({'class': 'form-group form-group-lg'});
+        var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-lg-12'});
+        var runTestButton = $("<button/>").attr({'class' : 'btn btn-primary col-lg-1 pull-right'});
+        runTestButton.text('Run Test');
+        runTestButton.click(function ()
+        {
+            runCubeTest()
+        });
+
+        group.append(buttonDiv);
+        buttonDiv.append(runTestButton);
+        testCtrl.append(group);
+
     }
 
     function buildTypeSelector(typeStr) {
-        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow span2', 'data-width': 'auto', 'data-style':'btn-primary'});
+        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow col-lg-2', 'data-width': 'auto', 'data-style':'btn-default'});
 
         var obj = {
             STRING: "String",
@@ -898,74 +878,96 @@ $(function ()
             opt.text(value);
             selector.append(opt);
         });
-
         return selector;
     }
 
-    function buildUrlToggle() {
-        var togglediv = $("<div/>").attr({'class' : 'btn-group btn-toggle'});
+    function buildUrlToggle(urlIsSelected) {
+        var togglediv = $("<div/>").attr({'class' : 'btn-group btn-toggle col-lg-2'});
         var url = $("<button/>").attr({'class' : 'btn btn-default'});
         url.text("URL");
         var value = $("<button/>").attr({'class' : 'btn btn-primary active'});
         value.text("Value");
         togglediv.append(url);
         togglediv.append(value);
+        if (urlIsSelected) {
+            url.button('toggle');
+        } else {
+            value.button('toggle');
+        }
         return togglediv;
     }
 
     function buildTestName(name) {
 
-        var outerdiv = $("<div/>").attr({'class': 'form-group'});
-        var label = $("<label/>").attr({'for': name, 'class' : 'col-md-2 control-label'});
-        label.html("test name");
-        var inputdiv = $("<div/>").attr({'class': 'col-md-6'});
-        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': name });
-        input.val(name);
-        inputdiv.append(input);
+        var labelGroup = $("<div/>").attr({'class':'form-group form-group-lg'});
+        var label = $("<label/>").attr({'class' : 'col-lg-3 control-label'});
 
+        label.html("Test");
+        label.html("Test");
+        labelGroup.append(label);
 
-        //var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-md-1'});
+        var inputGroup = $("<div/>").attr({'class':'input-group col-lg-9'});
+        var inputGroupButton = $("<span/>").attr({'class':'input-group-btn'});
+        var inputItem = $("<input/>").attr({'class':'form-control', 'type':'text', 'readonly':true});
 
-        //var runTestButton = $("<button/>").attr({'class' : 'btn btn-default'});
-        //runTestButton.text('Run Test');
-        //buttonDiv.append(runTestButton);
+        var button = $("<div/>").attr({'class':'btn btn-primary', 'type':'button', 'test-to-run':name});
+        button.html("Rename");
+        button.click(function ()
+        {
+            renameTest(name);
+        });
 
-        outerdiv.append(label);
-        outerdiv.append(inputdiv);
+        inputItem.val(name);
+        inputGroupButton.append(button);
+        inputGroup.append(inputItem);
+        inputGroup.append(inputGroupButton);
+        labelGroup.append(inputGroup);
 
-        return outerdiv;
-
+        return labelGroup;
     }
 
     function buildTypeSelectorFormGroup(coordId, map) {
         var cat = "testId-" + coordId;
 
-        var outerdiv = $("<div/>").attr({'class': 'form-group'});
-        var label = $("<label/>").attr({'for': cat, 'class' : 'col-md-2 control-label'});
+        var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg'});
+        var label = $("<label/>").attr({'for': cat, 'class': 'control-label col-lg-3'});
         label.html(coordId);
-        var inputdiv = $("<div/>").attr({'class': 'col-md-6'});
-        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat, 'placeholder' : map['value']});
+        labelGroup.append(label);
+
+        var inputdiv = $("<div/>").attr({'class': 'col-lg-5'});
+        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat});
+        if (map != null) {
+            if (map['url'] != null) {
+                input.val(map['url']);
+            } else if (map['value'] != null) {
+                input.val(map['value']);
+            }
+        }
         inputdiv.append(input);
 
-        var selectordiv = $("<div/>").attr({'class': 'col-md-1'});
-        selectordiv.append(buildTypeSelector());
 
-        var togglediv = $("<div/>").attr({'class': 'col-md-2'});
-        togglediv.append(buildUrlToggle());
+        labelGroup.append(inputdiv);
+        labelGroup.append(buildUrlToggle(map['url'] != null));
+        labelGroup.append(buildTypeSelector(map['type']));
 
-        //var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-md-1'});
 
-        //var runTestButton = $("<button/>").attr({'class' : 'btn btn-default'});
-        //runTestButton.text('Run Test');
-        //buttonDiv.append(runTestButton);
+//        var togglediv = $("<div/>").attr({'class': 'col-lg-2'});
+//        togglediv.append();
+//        var selectordiv = $("<div/>").attr({'class': 'col-lg-2'});
+//        selectordiv.append();
 
-        outerdiv.append(label);
-        outerdiv.append(inputdiv);
-        outerdiv.append(togglediv);
-        outerdiv.append(selectordiv);
-        //outerdiv.append(buttonDiv);
 
-        return outerdiv;
+        //container.append(labeldiv);
+        //container.append(inputdiv);
+        //container.append(togglediv);
+        //container.append(selectordiv);
+
+        //row.append(container);
+
+
+
+
+        return labelGroup;
     }
 
     function loadCube()
@@ -984,7 +986,7 @@ $(function ()
         }
         else if (_activeTab == 'testTab')
         {
-            loadCubeTest();
+            loadTestListView("ncubeController.getTestData");
         }
         else if (_activeTab == 'picTab')
         {
@@ -1019,6 +1021,30 @@ $(function ()
             }
         });
     }
+
+    /**
+     * Tweak the class name of the selected / non-selected items
+     * to match what was selected.
+     */
+    function changeTestListSelection(listId, selectedItem)
+    {
+        var list = $(listId);
+        var items = list.find('a');
+        $.each(items, function (index, value)
+        {
+            var anchor = $(value);
+            var text = anchor.html();
+//            if (selectedItem == text)
+//            {
+//                anchor.addClass('active');
+//            }
+//            else
+//            {
+//                anchor.removeClass('active');
+//            }
+        });
+    }
+
 
     /**
      * Load NCube List from Database
@@ -1218,6 +1244,21 @@ $(function ()
         }
     }
 
+    function renameTest(test)
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Nothing to rename.');
+            return;
+        }
+        $('#renameTestOldName').val(test);
+        $('#renameTestNewName').val("");
+        $('#renameTestLabel').html('Rename \'' + test + '\'?');
+        $('#renameTestModal').modal();
+    }
+
+
     function renameCube()
     {
         clearError();
@@ -1260,6 +1301,38 @@ $(function ()
         else
         {
             _errorId = showNote("Unable to rename n-cube '" + _selectedCubeName + "':<hr/>" + result.data);
+        }
+    }
+
+    function renameTestOk()
+    {
+        $('#renameTestModal').modal('hide');
+        var oldName = $('#renameTestOldName').val();
+        var newName = $('#renameTestNewName').val();
+
+        if (result.status === true)
+        {
+            _testsDirty = true;
+
+
+
+//            loadAppNames();
+//            _selectedApp = newApp;
+//            loadAppListView();
+//            _selectedStatus = 'SNAPSHOT';
+//            setListSelectedStatus('SNAPSHOT', '#status-list')
+//            loadVersions();
+//            _selectedVersion = newVersion;
+//            loadVersionListView();
+//            setListSelectedStatus(_selectedVersion, '#version-list');
+//            loadNCubes();
+//            _selectedCubeName = newName;
+//            loadNCubeListView();
+//            loadCube();
+        }
+        else
+        {
+            _errorId = showNote("Unable to rename test '" + _selectedCubeName + "':<hr/>" + result.data);
         }
     }
 
@@ -1601,6 +1674,17 @@ $(function ()
         }
     }
 
+    function findCurrentTest() {
+        var temp = null;
+        $.each(_testData, function (index, value)
+        {
+            if (value['name'] == _selectedTest) {
+                return temp = value;
+            }
+        });
+        return temp;
+    }
+
     function runCubeTest() {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
@@ -1608,17 +1692,24 @@ $(function ()
             return;
         }
 
-        var newTest = {
-            '@type': 'java.util.HashMap'
-        };
+        var test = findCurrentTest();
 
-        var testList = $('#testView .form-control');
+        if (test == null) {
+            _errorId = showNote('No test selected.  Test cannot be run.');
+            return;
+        }
+//        var newTest = {
+//            '@type': 'java.util.HashMap'
+//        };
+//
+//        var testList = $('#testView .form-control');
+//
+//        $.each(testList, function (index, value) {
+//            newTest['' + value.id + ''] = '' + value.value + '';
+//        });
 
-        $.each(testList, function (index, value) {
-            newTest['' + value.id + ''] = '' + value.value + '';
-        });
 
-        var result = call("ncubeController.getCell", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, newTest]);
+        var result = call("ncubeController.getCell", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test['coord']]);
 
         var resultPane = $('#testResult');
         resultPane.hide();

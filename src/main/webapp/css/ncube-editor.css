@@ -71,13 +71,13 @@ a.ncube-notselected:hover {
     background-color: #EEEEEE;
     padding: 0 !important;
     margin: 0 !important;
-    overflow: hidden !important;
+    overflow: auto !important;
     width: 100%;
 }
 
 #testLayoutCenter {
     padding: 0 !important;
-    overflow: hidden !important;
+    overflow: auto !important;
 }
 
 #testLayoutEast {
@@ -95,7 +95,7 @@ a.ncube-notselected:hover {
     padding: 0px;
 }
 
-
+.top-buffer { margin-top:20px; }
 
 
 
