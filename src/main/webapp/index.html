@@ -14,7 +14,6 @@
     <link href="./css/bootstrap.min.css" rel="stylesheet"/>
     <link href="./css/bootstrap-theme.min.css" rel="stylesheet"/>
     <link href="./css/ncube-editor.css" rel="stylesheet"/>
-    <link href="./css/bootstrap-select.css" rel="stylesheet"/>
 
     <!-- Fav and touch icons -->
     <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="./ico/apple-touch-icon-144-precomposed.png">-->
@@ -249,14 +248,6 @@
                     <div class="col-md-5">
                         <label class="control-label" for="cube_defValue">Default Value</label>
                         <input class="form-control" type="text" id="cube_defValue"/>
-                    </div>
-
-                    <div class="col-md-5 col-md-offset-1">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox">Rule Mode
-                            </label>
-                        </div>
                     </div>
                 </div>
 
@@ -778,7 +769,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="editCellLabel" class="modal-title"></h3>
+                <h3 id="editCellLabel" class="modal-title">Edit cell</h3>
             </div>
             <div class="modal-body">
                 <form role="form">
@@ -786,12 +777,29 @@
                         <label for="editCellValue">Change to</label>
                         <input class="form-control" type="text" placeholder="" id="editCellValue"/>
                     </div>
+
+                    <div class="btn-group" data-toggle="buttons">
+                        <label class="btn btn-default active"><input type="radio" id="editCellRadioValue" checked>Value</label>
+                        <label class="btn btn-default"><input type="radio" id="editCellRadioURL">URL</label>
+                    </div>
+
+                    <br/><br/>
+                    <label>Data type</label>
+                    <select class="form-control">
+                        <option>Integer (64-bit)</option>
+                        <option>Date</option>
+                        <option>Decimal Financial (unlimited size)</option>
+                        <option>Decimal Engineering (64-bit double precision)</option>
+                        <option>Boolean (true / false)</option>
+                        <option>Expression (Groovy language)</option>
+                    </select>
                 </form>
             </div>
             <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
                 <button id="editCellOk" class="btn btn-primary">OK</button>
             </div>
+
         </div>
     </div>
 </div>

@@ -413,7 +413,15 @@ $(function ()
         });
         $('#generateTestsLink').click(function ()
         {
-            loadTestListView("ncubeController.getCoordinatesForCells");
+            loadTestListView("ncubeController.getCoordinatesForCells")
+        });
+        $('#editCellCancel').click(function()
+        {
+            editColCancel()
+        });
+        $('#editCellOk').click(function()
+        {
+            editColCancel()
         });
     }
 
@@ -554,7 +562,6 @@ $(function ()
         }
     }
 
-
     function loadStatusListView()
     {
         var list = $('#status-list');
@@ -683,37 +690,9 @@ $(function ()
             _errorId = showNote('Unable to load ' + _selectedCubeName + ':<hr class="hr-small"/>' + result.data);
         }
 
-        $('.ncube-col').each(function ()
-        {
-            // TODO: Default must not go into 'edit mode'
-            $(this).on("dblclick", function ()
-            {   // On double click, place into contenteditable mode
-                $(this).attr('contenteditable', 'true');
-                $(this).focus();
-            });
-            $(this).blur(function ()
-            {   // On blur, turn off contenteditable mode
-                var colId = $(this).attr('data-id').split('c')[1];
-                var value = cleanString($(this).html());
-                var result = call("ncubeController.updateColumnCell", [_selectedCubeName, _selectedApp, _selectedVersion, colId, value]);
-                clearError();
-                if (result.status === true)
-                {
-                    $(this).attr('contenteditable', 'false');
-                    $("[data-id='" + $(this).attr('data-id') + "']").each(function ()
-                    {
-                        $(this).html(value);
-                    });
-                }
-                else
-                {
-                    _errorId = showNote('Unable to update column value:<hr class="hr small"/>' + result.data);
-                }
-            });
-        });
-
-//        $('.cell').each(function ()
+//        $('.ncube-col').each(function ()
 //        {
+//            // TODO: Default must not go into 'edit mode'
 //            $(this).on("dblclick", function ()
 //            {   // On double click, place into contenteditable mode
 //                $(this).attr('contenteditable', 'true');
@@ -721,7 +700,33 @@ $(function ()
 //            });
 //            $(this).blur(function ()
 //            {   // On blur, turn off contenteditable mode
-//                $(this).attr('contenteditable', 'false');
+//                var colId = $(this).attr('data-id').split('c')[1];
+//                var value = cleanString($(this).html());
+//                var result = call("ncubeController.updateColumnCell", [_selectedCubeName, _selectedApp, _selectedVersion, colId, value]);
+//                clearError();
+//                if (result.status === true)
+//                {
+//                    $(this).attr('contenteditable', 'false');
+//                    $("[data-id='" + $(this).attr('data-id') + "']").each(function ()
+//                    {
+//                        $(this).html(value);
+//                    });
+//                }
+//                else
+//                {
+//                    _errorId = showNote('Unable to update column value:<hr class="hr small"/>' + result.data);
+//                }
+//            });
+//        });
+
+        $('.cell').each(function ()
+        {
+            $(this).on("dblclick", function ()
+            {   // On double click, place into contenteditable mode
+                editCell();
+            });
+//            $(this).blur(function ()
+//            {
 //                var cellId = $(this).attr('data-id').split('k')[1];
 //                var ids = cellId.split(".");
 //                var value = cleanString($(this).html());
@@ -737,7 +742,7 @@ $(function ()
 //                    $(this).html('');
 //                }
 //            });
-//        });
+        });
     }
 
     function loadCubeJson()
@@ -795,7 +800,7 @@ $(function ()
         $('#cube_updateDate').val(date);
         $('#cube_createHid').val(cube.createHid);
         $('#cube_updateHid').val(cube.updateHid);
-        var date = '';
+        date = '';
         if (cube.sysEffDate != undefined)
         {
             date = new Date(cube.sysEffDate.value).format('yyyy-mm-dd HH:MM:ss');
@@ -807,7 +812,7 @@ $(function ()
             date = new Date(cube.sysEndDate.value).format('yyyy-mm-dd HH:MM:ss');
         }
         $('#cube_sysEndDate').val(date);
-        var date = '';
+        date = '';
         if (cube.bizEffDate != undefined)
         {
             date = new Date(cube.bizEffDate.value).format('yyyy-mm-dd HH:MM:ss');
@@ -2066,6 +2071,32 @@ $(function ()
         else
         {
             _errorId = showNote("Unable to update columns for axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
+        }
+    }
+
+    function editCell()
+    {
+        clearError();
+        $('#editCellModal').modal('show');
+    }
+
+    function editCellCancel()
+    {
+        $('#editCellModal').modal('hide');
+    }
+
+    function editCellOK()
+    {
+        $('#editCellModal').modal('hide');
+        var result = {"status":true};
+
+        if (result.status === true)
+        {
+            loadCube();
+        }
+        else
+        {
+            _errorId = showNote("Unable to update cell value:<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
