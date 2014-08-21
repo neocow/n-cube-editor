@@ -513,12 +513,12 @@ $(function ()
             return;
         }
 
-        var testList = $('#testList');
-        testList.empty();
         var testCtrl = $('#testView');
         testCtrl.empty();
         var testResult = $('#testResult');
         testResult.empty();
+        var testListItems = $('#testListItems');
+        testListItems.empty();
 
         var testListResult = call(funcName, [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
 
@@ -526,18 +526,27 @@ $(function ()
         {
             if (testListResult.data != null) {
                 $('#testListWarning').hide();
-
                 _testData = testListResult.data;
+
+                var header = $("<a/>").attr({'class':'list-group-item active'});
+                var headerText = $("<h4/>").attr({'class':'list-group-item-heading'});
+                headerText.html("TESTS");
+                header.append(headerText);
+                testListItems.append(header);
+
                 $.each(testListResult.data, function (index, value) {
-                    var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item list-group-item-info'});
+                    var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item'});
+                    var h4 = $("<p/>").attr({'class':'list-group-item-text'});
+                    h4.html(value['name']);
+                    anchor.append(h4);
                     anchor.click(function() {
                         var testName = anchor.text();
                         _selectedTest = testName;
-                        changeTestListSelection('#testList', testName);
+                        changeTestListSelection('#testListItems', testName);
                         loadTestView(_testData[index]);
                     });
-                    anchor.html(value['name']);
-                    testList.append(anchor);
+                    testListItems.append(anchor);
+                    //anchor.html(value['name']);
                 });
                 $('#testList').fadeIn("fast");
             } else {
@@ -947,8 +956,8 @@ $(function ()
 
 
         labelGroup.append(inputdiv);
-        labelGroup.append(buildUrlToggle(map['url'] != null));
-        labelGroup.append(buildTypeSelector(map['type']));
+        labelGroup.append(buildUrlToggle(map != null && map['url'] != null));
+        labelGroup.append(buildTypeSelector(map != null && map['type']));
 
 
 //        var togglediv = $("<div/>").attr({'class': 'col-lg-2'});
@@ -1685,6 +1694,10 @@ $(function ()
         return temp;
     }
 
+    function retrieveCurrentTest() {
+
+    }
+
     function runCubeTest() {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
@@ -1692,12 +1705,14 @@ $(function ()
             return;
         }
 
-        var test = findCurrentTest();
+        var test = retrieveCurrentTest();
 
         if (test == null) {
             _errorId = showNote('No test selected.  Test cannot be run.');
             return;
         }
+
+
 //        var newTest = {
 //            '@type': 'java.util.HashMap'
 //        };
