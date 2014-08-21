@@ -248,7 +248,7 @@ $(function ()
             }
             else
             {
-                _errorId = showNote('Error saving JSON n-cube:<hr/>' + result.data);
+                _errorId = showNote('Error saving JSON n-cube:<hr class="hr-small"/>' + result.data);
             }
         });
 
@@ -548,7 +548,7 @@ $(function ()
         else {
             var msg = 'Error fetching test data for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
             if (testListResult.data != null) {
-                msg += (':<hr/>' + testListResult.data);
+                msg += (':<hr class="hr-small"/>' + testListResult.data);
             }
             _errorId = showNote(msg);
         }
@@ -1089,7 +1089,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote('Unable to load n-cubes:<hr/>' + result.data);
+            _errorId = showNote('Unable to load n-cubes:<hr class="hr-small"/>' + result.data);
         }
         _selectedCubeName = (_cubeList && first) ? _cubeList[first]['ncube'].name : null;
     }
@@ -1120,7 +1120,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote('Unable to load versions:<hr/>' + result.data);
+            _errorId = showNote('Unable to load versions:<hr class="hr-small"/>' + result.data);
         }
         _selectedVersion = (_versions) ? _versions[_versions.length - 1] : null;
     }
@@ -1139,7 +1139,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote('Unable to load n-cube Apps:<hr/>' + result.data);
+            _errorId = showNote('Unable to load n-cube Apps:<hr class="hr-small"/>' + result.data);
         }
         if (!_selectedApp && _apps)
         {
@@ -1173,7 +1173,7 @@ $(function ()
             }
             else
             {
-                _errorId = showNote('Failed to load App versions:<hr/>' + result.data);
+                _errorId = showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
             }
         });
         buildDropDown('#existVersionList', '#newCubeVersion', _versions, function ()
@@ -1206,7 +1206,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to create n-cube '" + cubeName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to create n-cube '" + cubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1242,7 +1242,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to delete n-cube '" + _selectedCubeName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to delete n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1302,7 +1302,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to rename n-cube '" + _selectedCubeName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to rename n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1334,7 +1334,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to rename test '" + _selectedCubeName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to rename test '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1361,7 +1361,7 @@ $(function ()
             }
             else
             {
-                _errorId = showNote('Unable to load App versions:<hr/>' + result.data);
+                _errorId = showNote('Unable to load App versions:<hr class="hr-small"/>' + result.data);
             }
         });
         buildDropDown('#dupeCubeVersionList', '#dupeCubeVersion', _versions, function ()
@@ -1395,7 +1395,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to duplicate n-cube '" + _selectedCubeName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to duplicate n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1432,7 +1432,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote('Error fetching inbound references to ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
+            _errorId = showNote('Error fetching inbound references to ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
         }
     }
 
@@ -1474,7 +1474,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote('Error fetching outbound references for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
+            _errorId = showNote('Error fetching outbound references for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
         }
     }
 
@@ -1507,7 +1507,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote('Error fetching required scope for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr/>' + result.data);
+            _errorId = showNote('Error fetching required scope for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
         }
     }
 
@@ -1552,7 +1552,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to release version '" + _selectedVersion + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to release version '" + _selectedVersion + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1590,7 +1590,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1640,7 +1640,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to add axis '" + axisName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1672,7 +1672,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to delete axis '" + axisName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1762,7 +1762,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr/>" + result.data);
+            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         var forceState = axis.type.name == 'RULE';
@@ -1797,7 +1797,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to update axis '" + axisName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to update axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1871,7 +1871,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr/>" + result.data);
+            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         sortColumns(axis);
@@ -2065,7 +2065,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to update columns for axis '" + axisName + "':<hr/>" + result.data);
+            _errorId = showNote("Unable to update columns for axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
