@@ -676,9 +676,11 @@ $(function ()
                 ul.append(li);
                 element.append(ul);
             });
-        } else {
+        }
+        else
+        {
             $('#ncube-content').empty();
-            _errorId = showNote('Unable to load ' + _selectedCubeName + ':<hr/>' + result.data);
+            _errorId = showNote('Unable to load ' + _selectedCubeName + ':<hr class="hr-small"/>' + result.data);
         }
 
         $('.ncube-col').each(function ()
@@ -705,7 +707,7 @@ $(function ()
                 }
                 else
                 {
-                    _errorId = showNote('Unable to update column value:<hr/>' + result.data);
+                    _errorId = showNote('Unable to update column value:<hr class="hr small"/>' + result.data);
                 }
             });
         });
@@ -731,7 +733,7 @@ $(function ()
 //                }
 //                else
 //                {
-//                    _errorId = showNote('Unable to update cell value:<hr/>' + result.data);
+//                    _errorId = showNote('Unable to update cell value:<hr class="hr-small"/>' + result.data);
 //                    $(this).html('');
 //                }
 //            });

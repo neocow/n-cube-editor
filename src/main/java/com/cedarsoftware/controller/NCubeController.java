@@ -687,7 +687,7 @@ public class NCubeController extends BaseController implements INCubeController
             t = t.getCause();
             if (t != null)
             {
-                s.append("<hr/>");
+                s.append("<hr class=\"hr-small\"/>");
             }
         }
 
