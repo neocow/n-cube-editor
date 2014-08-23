@@ -176,7 +176,7 @@ $(function ()
         $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
             secondaryLayout.resizeAll();
             //console.log(e.target) // activated tab
-        })
+        });
         myLayout.resizeAll();
 
     }
@@ -303,7 +303,7 @@ $(function ()
         {
             renameCubeOk();
         });
-        $('#renameCubeOk').click(function ()
+        $('#renameTestOk').click(function ()
         {
             renameTestOk();
         });
@@ -422,6 +422,18 @@ $(function ()
         $('#editCellOk').click(function()
         {
             editColCancel()
+        });
+        $('#editCellRadioValue').click(function()
+        {
+            $('#datatypes-value').toggle(true);
+            $('#datatypes-url').toggle(false);
+            $('#editCellCache').toggle(false);
+        });
+        $('#editCellRadioURL').click(function()
+        {
+            $('#datatypes-url').toggle(true);
+            $('#datatypes-value').toggle(false);
+            $('#editCellCache').toggle(true);
         });
     }
 
@@ -690,7 +702,7 @@ $(function ()
             _errorId = showNote('Unable to load ' + _selectedCubeName + ':<hr class="hr-small"/>' + result.data);
         }
 
-//        $('.ncube-col').each(function ()
+//        $('.column').each(function ()
 //        {
 //            // TODO: Default must not go into 'edit mode'
 //            $(this).on("dblclick", function ()
@@ -969,10 +981,7 @@ $(function ()
         //container.append(togglediv);
         //container.append(selectordiv);
 
-        //row.append(container);
-
-
-
+        //row.append(container)
 
         return labelGroup;
     }

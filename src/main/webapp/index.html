@@ -775,24 +775,41 @@
                 <form role="form">
                     <div class="form-group">
                         <label for="editCellValue">Change to</label>
-                        <input class="form-control" type="text" placeholder="" id="editCellValue"/>
+                        <textarea class="form-control" type="text" placeholder="" id="editCellValue" rows="4"></textarea>
                     </div>
 
-                    <div class="btn-group" data-toggle="buttons">
-                        <label class="btn btn-default active"><input type="radio" id="editCellRadioValue" checked>Value</label>
-                        <label class="btn btn-default"><input type="radio" id="editCellRadioURL">URL</label>
+                    <div class="form-group">
+                        <div class="btn-group" data-toggle="buttons">
+                            <label id="editCellRadioValue" class="btn btn-default active"><input type="radio" checked>Value</label>
+                            <label id="editCellRadioURL" class="btn btn-default"><input type="radio">URL</label>
+                        </div>
                     </div>
 
-                    <br/><br/>
-                    <label>Data type</label>
-                    <select class="form-control">
-                        <option>Integer (64-bit)</option>
-                        <option>Date</option>
-                        <option>Decimal Financial (unlimited size)</option>
-                        <option>Decimal Engineering (64-bit double precision)</option>
-                        <option>Boolean (true / false)</option>
-                        <option>Expression (Groovy language)</option>
-                    </select>
+                    <div class="form-group">
+                        <label>Data type</label>
+                        <select id="datatypes-value" class="form-control">
+                            <option id="dt-string">String</option>
+                            <option id="dt-integer">Integer (64-bit)</option>
+                            <option id="dt-date">Date</option>
+                            <option id="dt-boolean">Boolean (true / false)</option>
+                            <option id="dt-bigdecimal">Decimal Financial (unlimited size)</option>
+                            <option id="dt-double">Decimal Engineering (64-bit double precision)</option>
+                            <option id="dt-binary">Binary (byte[])</option>
+                            <option id="dt-exp">Expression (Groovy language)</option>
+                        </select>
+                        <select id="datatypes-url" class="form-control" style="display:none">
+                            <option id="dt-url-exp">Expression (Groovy language)</option>
+                            <option id="dt-url-method">Method (Groovy language)</option>
+                            <option id="dt-url-string">String</option>
+                            <option id="dt-url-binary">Binary (byte[])</option>
+                            <option id="dt-url-template">Template</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label id="editCellCache"><input type="checkbox">Cache result</label>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
