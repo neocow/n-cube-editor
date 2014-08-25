@@ -427,14 +427,25 @@ $(function ()
         {
             $('#datatypes-value').toggle(true);
             $('#datatypes-url').toggle(false);
-            $('#editCellCache').toggle(false);
+            $('#editCellCache').toggle(false);  // always hide 'Cache' checkbox in Value mode
         });
         $('#editCellRadioURL').click(function()
         {
             $('#datatypes-url').toggle(true);
             $('#datatypes-value').toggle(false);
-            $('#editCellCache').toggle(true);
+            showHideCacheCheckbox();
         });
+        $('#datatypes-url').change(function()
+        {
+            showHideCacheCheckbox();
+        });
+    }
+
+    function showHideCacheCheckbox()
+    {
+        var selDataType = $('#datatypes-url').val();
+        var isGroovy = selDataType == 'Expression (Groovy language)' || selDataType == 'Method (Groovy language)';
+        $('#editCellCache').toggle(!isGroovy);
     }
 
     function loadNCubeListView()
