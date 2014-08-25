@@ -52,6 +52,12 @@ a.ncube-notselected:hover {
     overflow: hidden !important;
 }
 
+.hr-small
+{
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
 #west {
     background-color: #555;
     height:100%;
