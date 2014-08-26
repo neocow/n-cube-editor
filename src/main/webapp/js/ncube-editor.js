@@ -103,6 +103,7 @@ $(function ()
             ,	east__minSize:				100
             ,	spacing_open:			5  // ALL panes
             ,	spacing_closed:			5 // ALL panes
+            ,   center__minSize:           600
             //            ,	south__spacing_open:			5  // ALL panes
             //,	south__spacing_closed:			5 // ALL panes
         });
@@ -209,6 +210,26 @@ $(function ()
         var saveButton = $('#saveButton');
         saveButton.prop('disabled', !dirty);
         if (dirty === true)
+        {
+            saveButton.html('Save*');
+        }
+        else
+        {
+            saveButton.html('Save');
+        }
+    }
+
+    function setTestsDirty(dirty)
+    {
+        _testsDirty = dirty;
+        var saveButton = $('#saveTestButton');
+
+        if (saveButton == null) {
+            return;
+        }
+
+        saveButton.prop('disabled', !_testsDirty);
+        if (_testsDirty === true)
         {
             saveButton.html('Save*');
         }
@@ -875,8 +896,8 @@ $(function ()
 
 
         var group = $("<div/>").attr({'class': 'form-group form-group-lg'});
-        var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-lg-12'});
-        var runTestButton = $("<button/>").attr({'class' : 'btn btn-primary col-lg-1 pull-right'});
+        var buttonDiv = $("<div/>").attr({'class' : 'btn-group col-lg-2 col-lg-offset-10'});
+        var runTestButton = $("<button/>").attr({'class' : 'btn btn-primary'});
         runTestButton.text('Run Test');
         runTestButton.click(function ()
         {
@@ -893,71 +914,119 @@ $(function ()
         var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow col-lg-2', 'data-width': 'auto', 'data-style':'btn-default'});
 
         var obj = {
-            STRING: "String",
-            LONG: "Long",
-            BIG_DECIMAL : "Big Decimal",
-            DOUBLE : "Double",
-            DATE : "Date",
-            EXPRESSION : "Expression"
+            "STRING": "String",
+            "LONG": "Long",
+            "BIG_DECIMAL" : "Big Decimal",
+            "DOUBLE" : "Double",
+            "DATE" : "Date",
+            "EXPRESSION" : "Expression"
         };
 
         $.each(obj, function( i, value ) {
             var opt = $("<option/>").attr({'value': i});
             opt.text(value);
+
+            if (typeStr != null && typeStr == i) {
+                opt.prop({'selected' : true});
+            }
             selector.append(opt);
         });
         return selector;
     }
 
     function buildUrlToggle(urlIsSelected) {
-        var togglediv = $("<div/>").attr({'class' : 'btn-group btn-toggle col-lg-2'});
-        var url = $("<button/>").attr({'class' : 'btn btn-default'});
-        url.text("URL");
-        var value = $("<button/>").attr({'class' : 'btn btn-primary active'});
-        value.text("Value");
-        togglediv.append(url);
-        togglediv.append(value);
+        var togglediv = $("<div/>").attr({'class' : 'btn-group col-lg-2', 'data-toggle':'buttons'});
+        var urlLabel = $("<label/>").attr({'class': 'btn'});
+        var url = $("<input/>").attr({'type':'radio', 'name':'options', 'id':'url-option'});
+
+        urlLabel.append(url);
+        urlLabel.text("URL");
+
+        var valueLabel = $("<label/>").attr({'class':'btn'});
+        var value = $("<input/>").attr({'type' : 'radio', 'name':'options', 'id':'value-option'});
+
+        valueLabel.append(value);
+        valueLabel.text("Value");
+
+        urlLabel.button();
+        valueLabel.button();
+
+        togglediv.append(urlLabel);
+        togglediv.append(valueLabel);
+
         if (urlIsSelected) {
-            url.button('toggle');
+            urlLabel.addClass('active');
+            urlLabel.prop('checked', true);
+            urlLabel.addClass('btn-primary');
+            valueLabel.addClass('btn-default');
         } else {
-            value.button('toggle');
+            value.addClass('active');
+            valueLabel.prop('checked', true);
+            valueLabel.addClass('btn-primary');
+            urlLabel.addClass('btn-default');
         }
+
+        urlLabel.click(function ()
+        {
+            _testsDirty = true;
+            urlLabel.removeClass('btn-default');
+            urlLabel.addClass('btn-primary');
+            valueLabel.addClass('btn-default');
+            valueLabel.removeClass('btn-primary');
+        });
+
+        valueLabel.click(function ()
+        {
+            _testsDirty = true;
+            valueLabel.removeClass('btn-default');
+            valueLabel.addClass('btn-primary');
+            urlLabel.addClass('btn-default');
+            urlLabel.removeClass('btn-primary');
+        });
+
+
+
         return togglediv;
     }
 
     function buildTestName(name) {
-
-        var labelGroup = $("<div/>").attr({'class':'form-group form-group-lg'});
-        var label = $("<label/>").attr({'class' : 'col-lg-3 control-label'});
-
-        label.html("Test");
+        var cat = "testId-" + name;
+        var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg col-lg-12'});
+        var label = $("<label/>").attr({'for': cat, 'class': 'control-label col-lg-3'});
         label.html("Test");
         labelGroup.append(label);
 
-        var inputGroup = $("<div/>").attr({'class':'input-group col-lg-9'});
-        var inputGroupButton = $("<span/>").attr({'class':'input-group-btn'});
-        var inputItem = $("<input/>").attr({'class':'form-control', 'type':'text', 'readonly':true});
 
-        var button = $("<div/>").attr({'class':'btn btn-primary', 'type':'button', 'test-to-run':name});
-        button.html("Rename");
-        button.click(function ()
+        var inputdiv = $("<div/>").attr({'class': 'col-lg-5'});
+        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat, 'readonly':'readonly'});
+        input.val(name);
+        inputdiv.append(input);
+
+
+        labelGroup.append(inputdiv);
+
+
+        var renameDiv = $("<div/>").attr({'class' : 'btn-group col-lg-4', 'data-toggle':'buttons'});
+        var renameLabel = $("<label/>").attr({'class': 'btn btn-default'});
+        var renameButton = $("<input/>").attr({'type':'button' });
+
+        renameLabel.append(renameButton);
+        renameLabel.text("Rename");
+
+        renameLabel.button();
+        renameDiv.append(renameLabel);
+        renameLabel.click(function ()
         {
             renameTest(name);
         });
 
-        inputItem.val(name);
-        inputGroupButton.append(button);
-        inputGroup.append(inputItem);
-        inputGroup.append(inputGroupButton);
-        labelGroup.append(inputGroup);
-
+        labelGroup.append(renameDiv);
         return labelGroup;
-    }
+        }
 
     function buildTypeSelectorFormGroup(coordId, map) {
         var cat = "testId-" + coordId;
-
-        var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg'});
+        var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg col-lg-12'});
         var label = $("<label/>").attr({'for': cat, 'class': 'control-label col-lg-3'});
         label.html(coordId);
         labelGroup.append(label);
@@ -976,21 +1045,12 @@ $(function ()
 
         labelGroup.append(inputdiv);
         labelGroup.append(buildUrlToggle(map != null && map['url'] != null));
-        labelGroup.append(buildTypeSelector(map != null && map['type']));
 
-
-//        var togglediv = $("<div/>").attr({'class': 'col-lg-2'});
-//        togglediv.append();
-//        var selectordiv = $("<div/>").attr({'class': 'col-lg-2'});
-//        selectordiv.append();
-
-
-        //container.append(labeldiv);
-        //container.append(inputdiv);
-        //container.append(togglediv);
-        //container.append(selectordiv);
-
-        //row.append(container)
+        var type = null;
+        if (map != null) {
+            type = map['type'];
+        }
+        labelGroup.append(buildTypeSelector(type));
 
         return labelGroup;
     }
@@ -1059,14 +1119,7 @@ $(function ()
         {
             var anchor = $(value);
             var text = anchor.html();
-//            if (selectedItem == text)
-//            {
-//                anchor.addClass('active');
-//            }
-//            else
-//            {
-//                anchor.removeClass('active');
-//            }
+
         });
     }
 
@@ -1338,7 +1391,6 @@ $(function ()
         if (result.status === true)
         {
             _testsDirty = true;
-
 
 
 //            loadAppNames();
