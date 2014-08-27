@@ -24,6 +24,7 @@ $(function ()
     var _editor;
     var _activeTab = 'ncubeTab';
     var _jsonEditorMode = 'format';
+    var _cellId = null;
 
     initialize();
 
@@ -438,24 +439,35 @@ $(function ()
         });
         $('#editCellCancel').click(function()
         {
-            editColCancel()
+            editCellCancel()
         });
         $('#editCellOk').click(function()
         {
-            editColCancel()
+            editCellOK()
         });
         $('#editCellRadioValue').click(function()
         {
             $('#datatypes-value').toggle(true);
             $('#datatypes-url').toggle(false);
-            $('#editCellCache').toggle(false);
+            $('#editCellCache').toggle(false);  // always hide 'Cache' checkbox in Value mode
         });
         $('#editCellRadioURL').click(function()
         {
             $('#datatypes-url').toggle(true);
             $('#datatypes-value').toggle(false);
-            $('#editCellCache').toggle(true);
+            showHideCacheCheckbox();
         });
+        $('#datatypes-url').change(function()
+        {
+            showHideCacheCheckbox();
+        });
+    }
+
+    function showHideCacheCheckbox()
+    {
+        var selDataType = $('#datatypes-url').val();
+        var isGroovy = selDataType == 'Expression (Groovy language)' || selDataType == 'Method (Groovy language)';
+        $('#editCellCache').toggle(!isGroovy);
     }
 
     function loadNCubeListView()
@@ -764,26 +776,11 @@ $(function ()
         $('.cell').each(function ()
         {
             $(this).on("dblclick", function ()
-            {   // On double click, place into contenteditable mode
-                editCell();
+            {   // On double click open Edit Cell modal
+                var cellId = $(this).attr('data-id').split('k')[1];
+                _cellId = cellId.split("-");
+                editCell(cleanString($(this).html()));
             });
-//            $(this).blur(function ()
-//            {
-//                var cellId = $(this).attr('data-id').split('k')[1];
-//                var ids = cellId.split(".");
-//                var value = cleanString($(this).html());
-//                var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, ids, value]);
-//                clearError();
-//                if (result.status === true)
-//                {
-//                    $(this).html(result.data);
-//                }
-//                else
-//                {
-//                    _errorId = showNote('Unable to update cell value:<hr class="hr-small"/>' + result.data);
-//                    $(this).html('');
-//                }
-//            });
         });
     }
 
@@ -2185,30 +2182,46 @@ $(function ()
         }
     }
 
-    function editCell()
+    function editCell(value)
     {
         clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Cell cannot be updated.');
+            return;
+        }
+        if (_selectedStatus == "RELEASE")
+        {
+            _errorId = showNote('Only a SNAPSHOT version can be modified.');
+            return;
+        }
+
+        $('#editCellValue').html(value);
         $('#editCellModal').modal('show');
     }
 
     function editCellCancel()
     {
+        _cellId = null;
         $('#editCellModal').modal('hide');
     }
 
     function editCellOK()
     {
+        var val = $('#editCellValue').val();
         $('#editCellModal').modal('hide');
-        var result = {"status":true};
 
-        if (result.status === true)
+        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, val]);
+
+        if (result.status === false)
         {
-            loadCube();
-        }
-        else
-        {
+            _cellId = null;
             _errorId = showNote("Unable to update cell value:<hr class=\"hr-small\"/>" + result.data);
+            $(this).html('');
+            return;
         }
+
+        $(this).html(result.data);
     }
 
     // --------------------------------------------------------------------------------------------
