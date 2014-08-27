@@ -992,13 +992,13 @@ $(function ()
     function buildTestName(name) {
         var cat = "testId-" + name;
         var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg col-lg-12'});
-        var label = $("<label/>").attr({'for': cat, 'class': 'control-label col-lg-3'});
+        var label = $("<label/>").attr({'for': 'selectedTestName', 'class': 'control-label col-lg-3'});
         label.html("Test");
         labelGroup.append(label);
 
 
         var inputdiv = $("<div/>").attr({'class': 'col-lg-5'});
-        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat, 'readonly':'readonly'});
+        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': 'selectedTestName', 'readonly':'readonly'});
         input.val(name);
         inputdiv.append(input);
 
@@ -1382,17 +1382,57 @@ $(function ()
         }
     }
 
+    function testNameAlreadyExists(name) {
+
+        if (_testData == null) {
+            return false;
+        }
+
+        var found = false;
+        $.each(_testData, function (index, value)
+        {
+            if (value['name'] == name) {
+                found = true;
+            }
+        });
+
+        return found;
+    }
+
+    function validateTestName(name) {
+        var nameRegex = /^([A-Za-z0-9-.]{3,64})$/g;
+
+        if (!nameRegex.test(name)) {
+            _errorId = showNote("Test name is invalid. Test names can only contain letters, numbers, and, ., and -");
+            return false;
+        }
+
+        if (testNameAlreadyExists(name)) {
+            _errorId = showNote("There is already a test with that name.  Please rename and try again.");
+            return false;
+        }
+
+        return true;
+    }
+
     function renameTestOk()
     {
-        $('#renameTestModal').modal('hide');
+        clearError();
         var oldName = $('#renameTestOldName').val();
         var newName = $('#renameTestNewName').val();
 
-        if (result.status === true)
-        {
-            _testsDirty = true;
+        if (!validateTestName(newName)) {
+            return;
+        }
 
+        $('#renameTestModal').modal('hide');
 
+        _testsDirty = true;
+
+        var item = $('#selectedTestName');
+        if (item != null) {
+            item.val(newName);
+        }
 //            loadAppNames();
 //            _selectedApp = newApp;
 //            loadAppListView();
@@ -1406,11 +1446,6 @@ $(function ()
 //            _selectedCubeName = newName;
 //            loadNCubeListView();
 //            loadCube();
-        }
-        else
-        {
-            _errorId = showNote("Unable to rename test '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
-        }
     }
 
     function dupeCube()
