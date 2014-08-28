@@ -104,7 +104,7 @@ $(function ()
             ,	east__minSize:				100
             ,	spacing_open:			5  // ALL panes
             ,	spacing_closed:			5 // ALL panes
-            ,   center__minSize:           600
+            ,   center__minWidth:           600
             //            ,	south__spacing_open:			5  // ALL panes
             //,	south__spacing_closed:			5 // ALL panes
         });
