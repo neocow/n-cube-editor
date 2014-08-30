@@ -2151,13 +2151,14 @@ $(function ()
 
     function editCellOK()
     {
-        var val = _editCellValue.val();
-        var isUrl = _editCellRadioURL.find('input').is(':checked');
-        var selDataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
-        var cache = _editCellCache.find('input').is(':checked');
+        var cellInfo = {};
+        cellInfo.isUrl = _editCellRadioURL.find('input').is(':checked');
+        cellInfo.value = _editCellValue.val();
+        cellInfo.dataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        cellInfo.isCached = _editCellCache.find('input').is(':checked');
         _editCellModal.modal('hide');
 
-        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, val, selDataType, cache, isUrl]);
+        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, cellInfo]);
 
         if (result.status === false)
         {
@@ -2167,7 +2168,7 @@ $(function ()
             return;
         }
 
-        _uiCellId.html(val);
+        _uiCellId.html(cellInfo.value);
     }
 
     // --------------------------------------------------------------------------------------------

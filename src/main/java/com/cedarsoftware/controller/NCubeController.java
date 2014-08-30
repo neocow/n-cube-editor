@@ -8,6 +8,7 @@ import com.cedarsoftware.ncube.Column;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
+import com.cedarsoftware.ncube.ReleaseStatus;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
@@ -576,30 +577,6 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
-    /**
-     * In-place update of a cell.  Requires heavy parsing to interpret what the user's intended
-     * data type is for the cell (byte, short, int, long, float, double, boolean, character,
-     * String, Date, Object[], BigDecimal, BigInteger, string url, binary url, groovy expression,
-     * groovy method, groovy template, template url, expression url, method url, or null).
-     */
-    public Object updateCell(String name, String app, String version, Object[] colIds, Object value, String type, boolean cache, boolean url)
-    {
-        try
-        {
-            if (!isAllowed(app, version))
-            {
-                markRquestFailed("This app and version CANNOT be edited.");
-                return null;
-            }
-            return "foo";
-        }
-        catch(Exception e)
-        {
-            fail(e);
-            return null;
-        }
-    }
-
     public void renameCube(String oldName, String newName, String app, String version)
     {
         try
@@ -733,6 +710,39 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
+    /**
+     * In-place update of a cell.  Requires heavy parsing to interpret what the user's intended
+     * data type is for the cell (byte, short, int, long, float, double, boolean, character,
+     * String, Date, Object[], BigDecimal, BigInteger, string url, binary url, groovy expression,
+     * groovy method, groovy template, template url, expression url, method url, or null).
+     */
+    public boolean updateCell(String name, String app, String version, Object[] ids, CellInfo cellInfo)
+    {
+        try
+        {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return false;
+            }
+
+            NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
+            Set<Long> colIds = getCoordinate(ids, ncube);
+
+            Object cellValue = cellInfo.isUrl ?
+                    CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
+                    CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false);
+
+            nCubeService.updateCell(name, app, version, colIds.toArray(), cellValue);
+            return true;
+        }
+        catch(Exception e)
+        {
+            fail(e);
+            return false;
+        }
+    }
+
     public Object getCellNoExecute(String name, String app, String version, String status, Object[] ids)
     {
         try
@@ -741,24 +751,7 @@ public class NCubeController extends BaseController implements INCubeController
             NCube ncube = nCubeService.getCube(name, app, version, status);
 
             // 2. create an SHA1 to axis name maps
-            Map<String, Axis> axes = new HashMap<>();
-            for (Axis axis : (List<Axis>)ncube.getAxes())
-            {
-                axes.put(EncryptionUtilities.calculateSHA1Hash(axis.getName().getBytes()), axis);
-            }
-
-            // 3. Locate columns on each axis
-            Set<Long> colIds = new HashSet<>();
-            for (Object id : ids)
-            {
-                Object[] pair = (Object[]) id;
-                String sha1AxisName = (String) pair[0];
-                String pos = (String) pair[1];
-                Axis axis = axes.get(sha1AxisName);
-                List<Column> cols = axis.getColumns();
-                Column column = cols.get(Integer.parseInt(pos));
-                colIds.add(column.getId());
-            }
+            Set<Long> colIds = getCoordinate(ids, ncube);
 
             Object cell = ncube.getCellByIdNoExecute(colIds);
             CellInfo cellInfo = new CellInfo(cell);
@@ -770,6 +763,29 @@ public class NCubeController extends BaseController implements INCubeController
             fail(e);
             return null;
         }
+    }
+
+    private Set<Long> getCoordinate(Object[] ids, NCube ncube)
+    {
+        Map<String, Axis> axes = new HashMap<>();
+        for (Axis axis : (List<Axis>)ncube.getAxes())
+        {
+            axes.put(EncryptionUtilities.calculateSHA1Hash(axis.getName().getBytes()), axis);
+        }
+
+        // 3. Locate columns on each axis
+        Set<Long> colIds = new HashSet<>();
+        for (Object id : ids)
+        {
+            Object[] pair = (Object[]) id;
+            String sha1AxisName = (String) pair[0];
+            String pos = (String) pair[1];
+            Axis axis = axes.get(sha1AxisName);
+            List<Column> cols = axis.getColumns();
+            Column column = cols.get(Integer.parseInt(pos));
+            colIds.add(column.getId());
+        }
+        return colIds;
     }
 
 }

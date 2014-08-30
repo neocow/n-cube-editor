@@ -1,6 +1,7 @@
 package com.cedarsoftware.controller;
 
 import com.cedarsoftware.ncube.Axis;
+import com.cedarsoftware.ncube.CellInfo;
 
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public interface INCubeController extends IBaseController
     void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted);
     void updateColumnCell(String name, String app, String version, String colId, String value);
     void updateAxisColumns(String name, String app, String version, Axis updatedAxis);
-    Object updateCell(String name, String app, String version, Object[] colIds, Object value, String type, boolean cache, boolean url);
+    boolean updateCell(String name, String app, String version, Object[] colIds, CellInfo cellInfo);
     void renameCube(String oldName, String newName, String app, String version);
     void saveJson(String name, String app, String version, String json);
     void saveTestData(String name, String app, String version, String testData);
