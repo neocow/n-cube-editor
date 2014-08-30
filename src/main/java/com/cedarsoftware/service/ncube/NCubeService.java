@@ -1,5 +1,6 @@
 package com.cedarsoftware.service.ncube;
 
+import com.cedarsoftware.ncube.ApplicationID;
 import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
@@ -18,7 +19,6 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -192,7 +192,7 @@ public class NCubeService
      * column ID to a String in the process.  This allows the column ID to work on
      * clients (like Javascript) that cannot support 64-bit values.
      */
-    Map convertAxis(Axis axis) throws IOException
+    static Map convertAxis(Axis axis) throws IOException
     {
         String json = JsonWriter.objectToJson(axis);
         Map axisConverted = JsonReader.jsonToMaps(json);
@@ -341,31 +341,11 @@ public class NCubeService
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
-    public Object updateCell(String name, String app, String version, Object[] colIds, Object value)
+    public void updateNCube(NCube ncube, Set<Long> ids, Object value)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-
-        Set<Long> ids = new HashSet<Long>();
-        for (Object id : colIds)
-        {
-            try
-            {
-                ids.add(Long.parseLong((String)id));
-            }
-            catch (Exception e)
-            {
-                throw new IllegalArgumentException("Could not set cell because coordinate passed in references unknown column: " + id + ", NCube '" + name + "'");
-            }
-        }
-
-        ncube.setCellById(value, ids);
-        NCubeManager.updateCube(connection, app, ncube, version);
-        return ncube.getCellByIdNoExecute(ids).toString();
+        ApplicationID appId = ncube.getApplicationID();
+        NCubeManager.updateCube(connection, appId.getApp(), ncube, appId.getVersion());
     }
 
     /**

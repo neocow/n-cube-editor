@@ -5,6 +5,7 @@
  * @author John DeRegnaucourt
  */
 
+// TODO: Retain last selected version and last selected cube
 $(function ()
 {
     var _cubeList = {};
@@ -422,6 +423,10 @@ $(function ()
         $('#generateTestsLink').click(function ()
         {
             loadTestListView("ncubeController.getCoordinatesForCells")
+        });
+        $('#editCellClear').click(function()
+        {
+            editCellClear();
         });
         $('#editCellCancel').click(function()
         {
@@ -2115,7 +2120,11 @@ $(function ()
 
         var cellInfo = result.data;
         // Set the cell value (String)
-        _editCellValue.html(cellInfo.value);
+        _editCellValue.html(cellInfo.value ? cellInfo.value : "");
+        if (cellInfo.dataType == "null" || !cellInfo.dataType)
+        {
+            cellInfo.dataType = "string";
+        }
 
         // Set the correct entry in the drop-down
         if (cellInfo.isUrl)
@@ -2135,12 +2144,29 @@ $(function ()
         _editCellRadioURL.find('input').prop('checked', cellInfo.isUrl);
 
         // Show/Hide the Cache check box
-        _editCellCache.toggle(cellInfo.isUrl);
+        _editCellCache.toggle(cellInfo.isUrl && cellInfo.dataType != "exp" && cellInfo.dataType != "model");
 
         // Set the Cache check box state
         _editCellCache.find('input').prop('checked', cellInfo.isCached);
 
         _editCellModal.modal('show');
+    }
+
+    function editCellClear()
+    {
+        _editCellModal.modal('hide');
+        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, null]);
+
+        if (result.status === false)
+        {
+            _cellId = null;
+            _errorId = showNote('Unable to clear cell:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        _uiCellId.html('');
+        _uiCellId.attr({'class':'cell'});
+        _cellId = null;
     }
 
     function editCellCancel()
@@ -2151,10 +2177,10 @@ $(function ()
 
     function editCellOK()
     {
-        var cellInfo = {};
+        var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
         cellInfo.isUrl = _editCellRadioURL.find('input').is(':checked');
         cellInfo.value = _editCellValue.val();
-        cellInfo.dataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        cellInfo.dataType = cellInfo.isUrl ? _urlDropdown.val() : _valueDropdown.val();
         cellInfo.isCached = _editCellCache.find('input').is(':checked');
         _editCellModal.modal('hide');
 
@@ -2163,12 +2189,24 @@ $(function ()
         if (result.status === false)
         {
             _cellId = null;
-            _errorId = showNote("Unable to update cell value:<hr class=\"hr-small\"/>" + result.data);
-            $(this).html('');
+            _errorId = showNote('Unable to update cell:<hr class="hr-small"/>' + result.data);
             return;
         }
 
         _uiCellId.html(cellInfo.value);
+        if (cellInfo.isUrl)
+        {
+            _uiCellId.attr({'class':'cell cell-url'});
+        }
+        else if (cellInfo.dataType == "exp" || cellInfo.dataType == "method")
+        {
+            _uiCellId.attr({'class':'cell cell-code'});
+        }
+        else
+        {
+            _uiCellId.attr({'class':'cell'});
+        }
+        _cellId = null;
     }
 
     // --------------------------------------------------------------------------------------------

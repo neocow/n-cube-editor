@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-public class NCubeController extends BaseController implements INCubeController
+public class NCubeController extends BaseController
 {
     public static final String SYS_NCUBE_INFO = "sys.groups";
     private NCubeService nCubeService;
@@ -729,11 +729,19 @@ public class NCubeController extends BaseController implements INCubeController
             NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
             Set<Long> colIds = getCoordinate(ids, ncube);
 
-            Object cellValue = cellInfo.isUrl ?
-                    CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
-                    CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false);
-
-            nCubeService.updateCell(name, app, version, colIds.toArray(), cellValue);
+            Object cellValue = null;
+            if (cellInfo == null)
+            {
+                ncube.removeCellById(colIds);
+            }
+            else
+            {
+                cellValue = cellInfo.isUrl ?
+                        CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
+                        CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false);
+                ncube.setCellById(cellValue, colIds);
+            }
+            nCubeService.updateNCube(ncube, colIds, cellValue);
             return true;
         }
         catch(Exception e)
