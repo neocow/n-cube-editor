@@ -16,6 +16,7 @@ import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.EncryptionUtilities;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ import java.util.regex.Pattern;
 public class NCubeController extends BaseController
 {
     public static final String SYS_NCUBE_INFO = "sys.groups";
+    private static final Pattern VERSION_REGEX = Pattern.compile("[.]");
     private NCubeService nCubeService;
     Pattern antStyleReplacementPattern = Pattern.compile("[$][{](.*?)[}]");
 
@@ -229,7 +231,30 @@ public class NCubeController extends BaseController
     {
         try
         {
-            return nCubeService.getAppVersions(app, status);
+            Object[] appVersions = nCubeService.getAppVersions(app, status);
+            Arrays.sort(appVersions, new Comparator<Object>()
+            {
+                public int compare(Object o1, Object o2)
+                {
+                    String v1 = (String)o1;
+                    String v2 = (String)o2;
+                    return getVersionValue(v1) - getVersionValue(v2);
+                }
+
+                int getVersionValue(String v)
+                {
+                    String[] pieces = VERSION_REGEX.split(v);
+                    if (pieces.length != 3)
+                    {
+                        return 0;
+                    }
+                    int major = Integer.valueOf(pieces[0]) * 1000 * 1000;
+                    int minor = Integer.valueOf(pieces[0]) * 1000;
+                    int rev = Integer.valueOf(pieces[0]);
+                    return major + minor + rev;
+                }
+            });
+            return appVersions;
         }
         catch (Exception e)
         {
