@@ -3,6 +3,8 @@ package com.cedarsoftware.controller;
 import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
+import com.cedarsoftware.ncube.CellInfo;
+import com.cedarsoftware.ncube.Column;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
@@ -10,11 +12,13 @@ import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
+import com.cedarsoftware.util.EncryptionUtilities;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -587,7 +591,7 @@ public class NCubeController extends BaseController implements INCubeController
                 markRquestFailed("This app and version CANNOT be edited.");
                 return null;
             }
-            throw new RuntimeException("Not yet implemented.");
+            return "foo";
         }
         catch(Exception e)
         {
@@ -728,4 +732,44 @@ public class NCubeController extends BaseController implements INCubeController
             return null;
         }
     }
+
+    public Object getCellNoExecute(String name, String app, String version, String status, Object[] ids)
+    {
+        try
+        {
+            // 1. Fetch the n-cube
+            NCube ncube = nCubeService.getCube(name, app, version, status);
+
+            // 2. create an SHA1 to axis name maps
+            Map<String, Axis> axes = new HashMap<>();
+            for (Axis axis : (List<Axis>)ncube.getAxes())
+            {
+                axes.put(EncryptionUtilities.calculateSHA1Hash(axis.getName().getBytes()), axis);
+            }
+
+            // 3. Locate columns on each axis
+            Set<Long> colIds = new HashSet<>();
+            for (Object id : ids)
+            {
+                Object[] pair = (Object[]) id;
+                String sha1AxisName = (String) pair[0];
+                String pos = (String) pair[1];
+                Axis axis = axes.get(sha1AxisName);
+                List<Column> cols = axis.getColumns();
+                Column column = cols.get(Integer.parseInt(pos));
+                colIds.add(column.getId());
+            }
+
+            Object cell = ncube.getCellByIdNoExecute(colIds);
+            CellInfo cellInfo = new CellInfo(cell);
+            cellInfo.collapseToUiSupportedTypes();
+            return cellInfo;
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
+    }
+
 }

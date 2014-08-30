@@ -25,6 +25,13 @@ $(function ()
     var _activeTab = 'ncubeTab';
     var _jsonEditorMode = 'format';
     var _cellId = null;
+    var _uiCellId = null;
+    var _urlDropdown = $('#datatypes-url');
+    var _valueDropdown = $('#datatypes-value');
+    var _editCellCache = $('#editCellCache');
+    var _editCellValue = $('#editCellValue');
+    var _editCellRadioURL = $('#editCellRadioURL');
+    var _editCellModal = $('#editCellModal');
 
     initialize();
 
@@ -424,29 +431,26 @@ $(function ()
         {
             editCellOK()
         });
-        $('#editCellRadioValue').click(function()
+
+        _editCellRadioURL.change(function()
         {
-            $('#datatypes-value').toggle(true);
-            $('#datatypes-url').toggle(false);
-            $('#editCellCache').toggle(false);  // always hide 'Cache' checkbox in Value mode
+            var isUrl = _editCellRadioURL.find('input').is(':checked');
+            _urlDropdown.toggle(isUrl);
+            _valueDropdown.toggle(!isUrl);
+            showHideCacheCheckbox(isUrl);
         });
-        $('#editCellRadioURL').click(function()
+        _urlDropdown.change(function()
         {
-            $('#datatypes-url').toggle(true);
-            $('#datatypes-value').toggle(false);
-            showHideCacheCheckbox();
-        });
-        $('#datatypes-url').change(function()
-        {
-            showHideCacheCheckbox();
+            var isUrl = _editCellRadioURL.find('input').is(':checked');
+            showHideCacheCheckbox(isUrl)
         });
     }
 
-    function showHideCacheCheckbox()
+    function showHideCacheCheckbox(isUrl)
     {
-        var selDataType = $('#datatypes-url').val();
-        var isGroovy = selDataType == 'Expression (Groovy language)' || selDataType == 'Method (Groovy language)';
-        $('#editCellCache').toggle(!isGroovy);
+        var selDataType = _urlDropdown.val();
+        var isGroovy = selDataType == 'exp' || selDataType == 'method';
+        _editCellCache.toggle(!isGroovy && isUrl);
     }
 
     function loadNCubeListView()
@@ -747,9 +751,16 @@ $(function ()
         {
             $(this).on("dblclick", function ()
             {   // On double click open Edit Cell modal
-                var cellId = $(this).attr('data-id').split('k')[1];
-                _cellId = cellId.split("-");
-                editCell(cleanString($(this).html()));
+                _uiCellId = $(this);
+                var cellId = _uiCellId.attr('data-id').split('k')[1];
+                var pairs = cellId.split("_");
+                var coord =[];
+                for (var i=0; i < pairs.length; i++)
+                {
+                    coord[coord.length] = pairs[i].split("-");
+                }
+                _cellId = coord;
+                editCell();
             });
         });
     }
@@ -2094,22 +2105,59 @@ $(function ()
             return;
         }
 
-        $('#editCellValue').html(value);
-        $('#editCellModal').modal('show');
+        var result = call("ncubeController.getCellNoExecute", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, _cellId]);
+
+        if (result.status === false)
+        {
+            _errorId = showNote('Unable to fetch the cell contents: ' + result.data);
+            return;
+        }
+
+        var cellInfo = result.data;
+        // Set the cell value (String)
+        _editCellValue.html(cellInfo.value);
+
+        // Set the correct entry in the drop-down
+        if (cellInfo.isUrl)
+        {
+            _urlDropdown.val(cellInfo.dataType);
+        }
+        else
+        {
+            _valueDropdown.val(cellInfo.dataType);
+        }
+
+        // Choose the correct data type drop-down (show/hide the other)
+        _urlDropdown.toggle(cellInfo.isUrl);
+        _valueDropdown.toggle(!cellInfo.isUrl);
+
+        // Set the URL check box
+        _editCellRadioURL.find('input').prop('checked', cellInfo.isUrl);
+
+        // Show/Hide the Cache check box
+        _editCellCache.toggle(cellInfo.isUrl);
+
+        // Set the Cache check box state
+        _editCellCache.find('input').prop('checked', cellInfo.isCached);
+
+        _editCellModal.modal('show');
     }
 
     function editCellCancel()
     {
         _cellId = null;
-        $('#editCellModal').modal('hide');
+        _editCellModal.modal('hide');
     }
 
     function editCellOK()
     {
-        var val = $('#editCellValue').val();
-        $('#editCellModal').modal('hide');
+        var val = _editCellValue.val();
+        var isUrl = _editCellRadioURL.find('input').is(':checked');
+        var selDataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        var cache = _editCellCache.find('input').is(':checked');
+        _editCellModal.modal('hide');
 
-        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, val]);
+        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, val, selDataType, cache, isUrl]);
 
         if (result.status === false)
         {
@@ -2119,7 +2167,7 @@ $(function ()
             return;
         }
 
-        $(this).html(result.data);
+        _uiCellId.html(val);
     }
 
     // --------------------------------------------------------------------------------------------
@@ -2192,16 +2240,6 @@ $(function ()
         console.log(localStorage['top']);
         console.log(typeof localStorage['top']);
         div.scrollTop(localStorage['top']);
-    }
-
-    function cleanString(string)
-    {
-        var s1 = string.replace(/<br>/g, "");
-        var s2 = s1.replace(/&lt;/g, "<");
-        var s3 = s2.replace(/&gt;/g, ">");
-        var s4 = s3.replace(/&nbsp;/g, " ");
-        var s5 = s4.replace(/&amp;/g, "&");
-        return s5;
     }
 
     function getUniqueId()

@@ -384,6 +384,21 @@ public class NCubeService
         return ncube.getCell(map);
     }
 
+    /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
+    public Object getCellNoExecute(String name, String app, String version, String status, Set<Long> coord)
+    {
+        Connection connection = getConnection();
+        NCube ncube = NCubeManager.loadCube(connection, app, name, version, status, new Date());
+        if (ncube == null)
+        {
+            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
+        }
+
+        return ncube.getCellByIdNoExecute(coord);
+    }
 
     public boolean renameCube(String oldName, String newName, String app, String version)
     {
