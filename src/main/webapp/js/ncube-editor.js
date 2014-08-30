@@ -2139,7 +2139,7 @@ $(function ()
 
         var cellInfo = result.data;
         // Set the cell value (String)
-        _editCellValue.html(cellInfo.value ? cellInfo.value : "");
+        _editCellValue.val(cellInfo.value ? cellInfo.value : "");
         if (cellInfo.dataType == "null" || !cellInfo.dataType)
         {
             cellInfo.dataType = "string";

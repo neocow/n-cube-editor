@@ -689,7 +689,14 @@ public class NCubeController extends BaseController
         StringBuilder s = new StringBuilder();
         while (t != null)
         {
-            s.append(t.getMessage());
+            if (t.getMessage() == null)
+            {
+                s.append(t.toString());
+            }
+            else
+            {
+                s.append(t.getMessage());
+            }
             t = t.getCause();
             if (t != null)
             {
