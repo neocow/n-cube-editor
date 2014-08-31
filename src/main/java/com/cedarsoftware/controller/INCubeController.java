@@ -20,7 +20,7 @@ public interface INCubeController extends IBaseController
     Object[] getReferencesFrom(String name, String app, String version, String status);
     Object[] getRequiredScope(String name, String app, String version, String status);
     Object[] getAxes(String name, String app, String version, String status);
-    Object[] getCoordinatesForCells(String name, String app, String version, String status);
+    Object[] generateTests(String name, String app, String version, String status);
     Map getAxis(String name, String app, String version, String status, String axisName);
     void getTestData(String name, String app, String version, String status);
 

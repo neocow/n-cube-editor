@@ -435,7 +435,7 @@ $(function ()
         });
         $('#generateTestsLink').click(function ()
         {
-            loadTestListView("ncubeController.getCoordinatesForCells")
+            loadTestListView("ncubeController.generateTests")
         });
         $('#editCellCancel').click(function()
         {

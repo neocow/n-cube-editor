@@ -6,6 +6,7 @@ import com.cedarsoftware.ncube.AxisValueType;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
+import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
@@ -698,7 +699,7 @@ public class NCubeController extends BaseController implements INCubeController
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
-    public Object[] getCoordinatesForCells(String name, String app, String version, String status)
+    public Object[] generateTests(String name, String app, String version, String status)
     {
         try
         {
@@ -707,7 +708,18 @@ public class NCubeController extends BaseController implements INCubeController
             {
                 return new Object[]{};
             }
-            return ncube.getCoordinatesForCells().toArray();
+            List<NCubeTest> list = ncube.generateNCubeTests();
+
+            Object[] items = new Object[list.size()];
+            int i=0;
+            for (NCubeTest test : list) {
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("name", test.getName());
+                map.put("coord", test.getCoordDescription());
+                map.put("expectedResult", test.getExpectedResultDescription());
+                items[i++] = map;
+            }
+            return items;
         }
         catch (Exception e)
         {
