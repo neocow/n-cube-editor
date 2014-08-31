@@ -5,14 +5,13 @@
  * @author John DeRegnaucourt
  */
 
-// TODO: Retain last selected version and last selected cube
 $(function ()
 {
     var _cubeList = {};
     var _apps = [];
     var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
-    var _selectedCubeName = null;
+    var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedTest = null;
     var _selectedVersion = localStorage[SELECTED_VERSION];
@@ -187,7 +186,25 @@ $(function ()
             //console.log(e.target) // activated tab
         });
         myLayout.resizeAll();
+        openGroupContainingLastSelectedNCube();
+    }
 
+    function openGroupContainingLastSelectedNCube()
+    {
+        if (!_selectedCubeName)
+        {
+            return;
+        }
+        // Re-open Group containing last-selected cube name
+        var groupNode = $("[itemname='" + _selectedCubeName + "']");
+        if (groupNode)
+        {
+            groupNode = groupNode.closest('div.accordion-body');
+            if (groupNode)
+            {
+                groupNode.collapse('show');
+            }
+        }
     }
 
     function initJsonEditor()
@@ -562,6 +579,7 @@ $(function ()
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
+                openGroupContainingLastSelectedNCube();
             });
             anchor.html(value);
             if (value == _selectedStatus)
@@ -595,6 +613,7 @@ $(function ()
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
+                openGroupContainingLastSelectedNCube();
             });
             anchor.html(value);
             if (value == _selectedVersion)
@@ -645,6 +664,7 @@ $(function ()
                 clearError();
                 var cubeName = a.attr('itemName');
                 setListSelectedStatus(cubeName, '#ncube-list');
+                localStorage[SELECTED_CUBE] = cubeName;
                 _selectedCubeName = cubeName;
                 loadCube(); // load spreadsheet side
             });
@@ -653,6 +673,10 @@ $(function ()
             if (value['ncube'].name == _selectedCubeName)
             {
                 a.attr('class', 'ncube-selected');
+            }
+            else
+            {
+                a.attr('class', 'ncube-notselected');
             }
         });
     }
@@ -1088,19 +1112,16 @@ $(function ()
         clearError();
         if (!_selectedApp)
         {
-            _selectedCubeName = null;
             _errorId = showNote('No App selected, cannot load n-cubes.');
             return;
         }
         if (!_selectedVersion)
         {
-            _selectedCubeName = null;
             _errorId = showNote('No Version selected, cannot load n-cubes.');
             return;
         }
         if (!_selectedStatus)
         {
-            _selectedCubeName = null;
             _errorId = showNote('No Status selected, cannot load n-cubes.');
             return;
         }
@@ -1122,7 +1143,23 @@ $(function ()
         {
             _errorId = showNote('Unable to load n-cubes:<hr class="hr-small"/>' + result.data);
         }
-        _selectedCubeName = (_cubeList && first) ? _cubeList[first]['ncube'].name : null;
+        if (!_selectedCubeName || !doesCubeExist())
+        {
+            _selectedCubeName = (_cubeList && first) ? _cubeList[first]['ncube'].name : null;
+        }
+    }
+
+    function doesCubeExist()
+    {
+        var found = false;
+        $.each(_cubeList, function(key, value)
+        {
+            if (key == _selectedCubeName)
+            {
+                found = true;
+            }
+        });
+        return found;
     }
 
     function loadVersions()
@@ -1131,13 +1168,11 @@ $(function ()
         clearError();
         if (!_selectedApp)
         {
-            _selectedVersion = null;
             _errorId = showNote('Unable to load versions, no n-cube App selected.');
             return;
         }
         if (!_selectedStatus)
         {
-            _selectedVersion = null;
             _errorId = showNote('Unable to load versions, no n-cube Status selected.');
             return;
         }
