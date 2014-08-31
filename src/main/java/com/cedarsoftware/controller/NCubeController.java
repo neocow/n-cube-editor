@@ -9,12 +9,17 @@ import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.ReleaseStatus;
+import com.cedarsoftware.ncube.formatters.HtmlFormatter;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.EncryptionUtilities;
+import com.cedarsoftware.util.StringUtilities;
+import com.cedarsoftware.util.io.JsonReader;
+import com.cedarsoftware.util.io.JsonWriter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -489,8 +494,14 @@ public class NCubeController extends BaseController
     {
         try
         {
-            List<Map> axes = nCubeService.getAxes(name, app, version, status);
-            return axes.toArray();
+            NCube ncube = nCubeService.getCube(name, app, version, status);
+            List<Axis> axes = ncube.getAxes();
+            List<Map> axesConverted = new ArrayList<>();
+            for (Axis axis : axes)
+            {
+                axesConverted.add(convertAxis(axis));
+            }
+            return axesConverted.toArray();
         }
         catch (Exception e)
         {
@@ -514,13 +525,39 @@ public class NCubeController extends BaseController
     {
         try
         {
-            return nCubeService.getAxis(name, app, version, status, axisName);
+            NCube ncube = nCubeService.getCube(name, app, version, status);
+            Axis axis = ncube.getAxis(axisName);
+            return convertAxis(axis);
         }
         catch (Exception e)
         {
             fail(e);
             return null;
         }
+    }
+
+    /**
+     * Convert Axis to Map of Map representation (using json-io) and modify the
+     * column ID to a String in the process.  This allows the column ID to work on
+     * clients (like Javascript) that cannot support 64-bit values.
+     */
+    static Map convertAxis(Axis axis) throws IOException
+    {
+        String json = JsonWriter.objectToJson(axis);
+        Map axisConverted = JsonReader.jsonToMaps(json);
+        Map cols = (Map) axisConverted.get("columns");
+        Object[] items = (Object[]) cols.get("@items");
+        if (items != null)
+        {
+            for (Object item : items)
+            {
+                Map col = (Map) item;
+                Long id = (Long) col.get("id");
+                col.put("id", id.toString());
+
+            }
+        }
+        return axisConverted;
     }
 
     /**
@@ -810,7 +847,10 @@ public class NCubeController extends BaseController
         Map<String, Axis> axes = new HashMap<>();
         for (Axis axis : (List<Axis>)ncube.getAxes())
         {
-            axes.put(EncryptionUtilities.calculateSHA1Hash(axis.getName().getBytes()), axis);
+            final String axisName = axis.getName();
+            String colName = HtmlFormatter.isSafeAxisName(axisName) ?
+                    axisName :  EncryptionUtilities.calculateSHA1Hash(StringUtilities.getBytes(axisName, "UTF-8"));
+            axes.put(colName, axis);
         }
 
         // 3. Locate columns on each axis
@@ -818,9 +858,9 @@ public class NCubeController extends BaseController
         for (Object id : ids)
         {
             Object[] pair = (Object[]) id;
-            String sha1AxisName = (String) pair[0];
+            String axisName = (String) pair[0];
             String pos = (String) pair[1];
-            Axis axis = axes.get(sha1AxisName);
+            Axis axis = axes.get(axisName);
             List<Column> cols = axis.getColumns();
             Column column = cols.get(Integer.parseInt(pos));
             colIds.add(column.getId());

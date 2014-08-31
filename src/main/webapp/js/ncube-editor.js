@@ -211,9 +211,13 @@ $(function ()
     {
         // create the editor
         var container = document.getElementById('jsoneditor');
+        // TODO: Uncomment 'modes:' below when you figure out how to detect when the drop-down changes, so that
+        // you can add back the Save button and remove the 'PoweredBy'
+
         var options =
         {
             mode: 'code',
+//            modes:['code','tree','view','form','text'],
             change: function()
             {
                 setDirtyStatus(true);
@@ -222,7 +226,6 @@ $(function ()
 
         // Create JSON Editor (http://jsoneditoronline.org/downloads/)
         _editor = new JSONEditor(container, options);
-
         var editCtrl = $('#jsoneditor');
         var menu = editCtrl.find('.menu');
         var save = $("<button/>").attr({id:'saveButton', style:'background-image:none;width:64px',title:'Save changes'});
@@ -784,8 +787,7 @@ $(function ()
             $(this).on("dblclick", function ()
             {   // On double click open Edit Cell modal
                 _uiCellId = $(this);
-                var cellId = _uiCellId.attr('data-id').split('k')[1];
-                var pairs = cellId.split("_");
+                var pairs = _uiCellId.attr('data-id').split("_");
                 var coord =[];
                 for (var i=0; i < pairs.length; i++)
                 {
