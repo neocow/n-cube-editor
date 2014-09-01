@@ -11,10 +11,10 @@ $(function ()
     var _apps = [];
     var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
-    var _selectedCubeName = null;
+    var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedTest = null;
-    var _selectedVersion = null;
+    var _selectedVersion = localStorage[SELECTED_VERSION];
     var _testData = null;
     var _selectedStatus = "SNAPSHOT";
     var _axisName;
@@ -25,6 +25,13 @@ $(function ()
     var _activeTab = 'ncubeTab';
     var _jsonEditorMode = 'format';
     var _cellId = null;
+    var _uiCellId = null;
+    var _urlDropdown = $('#datatypes-url');
+    var _valueDropdown = $('#datatypes-value');
+    var _editCellCache = $('#editCellCache');
+    var _editCellValue = $('#editCellValue');
+    var _editCellRadioURL = $('#editCellRadioURL');
+    var _editCellModal = $('#editCellModal');
 
     initialize();
 
@@ -180,14 +187,33 @@ $(function ()
             //console.log(e.target) // activated tab
         });
         myLayout.resizeAll();
+        openGroupContainingLastSelectedNCube();
+    }
 
+    function openGroupContainingLastSelectedNCube()
+    {
+        if (!_selectedCubeName)
+        {
+            return;
+        }
+        // Re-open Group containing last-selected cube name
+        var groupNode = $("[itemname='" + _selectedCubeName + "']");
+        if (groupNode)
+        {
+            groupNode = groupNode.closest('div.accordion-body');
+            if (groupNode)
+            {
+                groupNode.collapse('show');
+            }
+        }
     }
 
     function initJsonEditor()
     {
         // create the editor
         var container = document.getElementById('jsoneditor');
-        var options = {
+        var options =
+        {
             mode: 'code',
             change: function()
             {
@@ -437,6 +463,10 @@ $(function ()
         {
             loadTestListView("ncubeController.generateTests")
         });
+        $('#editCellClear').click(function()
+        {
+            editCellClear();
+        });
         $('#editCellCancel').click(function()
         {
             editCellCancel()
@@ -445,81 +475,26 @@ $(function ()
         {
             editCellOK()
         });
-        $('#editCellRadioValue').click(function()
+
+        _editCellRadioURL.change(function()
         {
-            $('#datatypes-value').toggle(true);
-            $('#datatypes-url').toggle(false);
-            $('#editCellCache').toggle(false);  // always hide 'Cache' checkbox in Value mode
+            var isUrl = _editCellRadioURL.find('input').is(':checked');
+            _urlDropdown.toggle(isUrl);
+            _valueDropdown.toggle(!isUrl);
+            showHideCacheCheckbox(isUrl);
         });
-        $('#editCellRadioURL').click(function()
+        _urlDropdown.change(function()
         {
-            $('#datatypes-url').toggle(true);
-            $('#datatypes-value').toggle(false);
-            showHideCacheCheckbox();
-        });
-        $('#datatypes-url').change(function()
-        {
-            showHideCacheCheckbox();
+            var isUrl = _editCellRadioURL.find('input').is(':checked');
+            showHideCacheCheckbox(isUrl)
         });
     }
 
-    function showHideCacheCheckbox()
+    function showHideCacheCheckbox(isUrl)
     {
-        var selDataType = $('#datatypes-url').val();
-        var isGroovy = selDataType == 'Expression (Groovy language)' || selDataType == 'Method (Groovy language)';
-        $('#editCellCache').toggle(!isGroovy);
-    }
-
-    function loadNCubeListView()
-    {
-        $('#ncubeCount').html(Object.keys(_cubeList).length);
-        var groupList = $('#ncube-list');
-        groupList.empty();
-        $.each(_cubeList, function (key, value)
-        {
-            var groupName = value['group'];
-            var groupNode = $('#ac-' + groupName);
-            if (groupNode.length == 0)
-            {
-                groupNode = $('<div/>').attr({class: 'accordion-group', 'id': 'ac-' + groupName});
-                var heading = $("<div/>").attr({class: 'accordion-heading'});
-                groupNode.append(heading);
-                var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
-                anchor.html(groupName);
-                heading.append(anchor);
-                groupList.append(groupNode);
-                var accordionBody = $('<div/>').attr({class:'accordion-body collapse', 'id':'grp-' + groupName});
-                var bodyInner = $('<div/>').attr({class:'accordion-inner'});
-                var ul1 = $('<ul/>').attr({class:'nav nav-list'});
-                bodyInner.append(ul1);
-                accordionBody.append(bodyInner);
-                groupNode.append(accordionBody);
-                groupList.append(groupNode);
-            }
-
-            var ul = groupNode.find('ul');
-            var li = $('<li/>');
-            var a = $('<a/>').attr({class:'ncube-notselected', 'href':'#','itemName':value['ncube'].name}).html(getSmallCubeName(value));
-            a.click(function ()
-            {
-                var cubeName = a.attr('itemName');
-                setListSelectedStatus(cubeName, '#ncube-list');
-                _selectedCubeName = cubeName;
-                loadCube(); // load spreadsheet side
-            });
-            ul.append(li);
-            li.append(a);
-            if (value['ncube'].name == _selectedCubeName)
-            {
-                a.attr('class', 'ncube-selected');
-            }
-        });
-    }
-
-    function getSmallCubeName(cubeInfo)
-    {
-        var prefix = cubeInfo['prefix'];
-        return cubeInfo['ncube'].name.substring(prefix.length);
+        var selDataType = _urlDropdown.val();
+        var isGroovy = selDataType == 'exp' || selDataType == 'method';
+        _editCellCache.toggle(!isGroovy && isUrl);
     }
 
     function loadAppListView()
@@ -634,6 +609,7 @@ $(function ()
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
+                openGroupContainingLastSelectedNCube();
             });
             anchor.html(value);
             if (value == _selectedStatus)
@@ -662,10 +638,12 @@ $(function ()
             {
                 var version = anchor.text();
                 setListSelectedStatus(version, '#version-list');
+                localStorage[SELECTED_VERSION] = version;
                 _selectedVersion = version;
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
+                openGroupContainingLastSelectedNCube();
             });
             anchor.html(value);
             if (value == _selectedVersion)
@@ -679,6 +657,64 @@ $(function ()
             li.append(anchor);
             list.append(li);
         });
+    }
+
+    function loadNCubeListView()
+    {
+        $('#ncubeCount').html(Object.keys(_cubeList).length);
+        var groupList = $('#ncube-list');
+        groupList.empty();
+        $.each(_cubeList, function (key, value)
+        {
+            var groupName = value['group'];
+            var groupNode = $('#ac-' + groupName);
+            if (groupNode.length == 0)
+            {
+                groupNode = $('<div/>').attr({class: 'accordion-group', 'id': 'ac-' + groupName});
+                var heading = $("<div/>").attr({class: 'accordion-heading'});
+                groupNode.append(heading);
+                var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
+                anchor.html(groupName);
+                heading.append(anchor);
+                groupList.append(groupNode);
+                var accordionBody = $('<div/>').attr({class:'accordion-body collapse', 'id':'grp-' + groupName});
+                var bodyInner = $('<div/>').attr({class:'accordion-inner'});
+                var ul1 = $('<ul/>').attr({class:'nav nav-list'});
+                bodyInner.append(ul1);
+                accordionBody.append(bodyInner);
+                groupNode.append(accordionBody);
+                groupList.append(groupNode);
+            }
+
+            var ul = groupNode.find('ul');
+            var li = $('<li/>');
+            var a = $('<a/>').attr({class:'ncube-notselected', 'href':'#','itemName':value['ncube'].name}).html(getSmallCubeName(value));
+            a.click(function ()
+            {
+                clearError();
+                var cubeName = a.attr('itemName');
+                setListSelectedStatus(cubeName, '#ncube-list');
+                localStorage[SELECTED_CUBE] = cubeName;
+                _selectedCubeName = cubeName;
+                loadCube(); // load spreadsheet side
+            });
+            ul.append(li);
+            li.append(a);
+            if (value['ncube'].name == _selectedCubeName)
+            {
+                a.attr('class', 'ncube-selected');
+            }
+            else
+            {
+                a.attr('class', 'ncube-notselected');
+            }
+        });
+    }
+
+    function getSmallCubeName(cubeInfo)
+    {
+        var prefix = cubeInfo['prefix'];
+        return cubeInfo['ncube'].name.substring(prefix.length);
     }
 
     function loadCubeHtml()
@@ -777,9 +813,16 @@ $(function ()
         {
             $(this).on("dblclick", function ()
             {   // On double click open Edit Cell modal
-                var cellId = $(this).attr('data-id').split('k')[1];
-                _cellId = cellId.split("-");
-                editCell(cleanString($(this).html()));
+                _uiCellId = $(this);
+                var cellId = _uiCellId.attr('data-id').split('k')[1];
+                var pairs = cellId.split("_");
+                var coord =[];
+                for (var i=0; i < pairs.length; i++)
+                {
+                    coord[coord.length] = pairs[i].split("-");
+                }
+                _cellId = coord;
+                editCell();
             });
         });
     }
@@ -801,6 +844,7 @@ $(function ()
         {
             _editor.setText("Unable to load '" + _selectedCubeName + "'. " + result.data);
         }
+
         var editCtrl = $('#jsoneditor');
         if (_jsonEditorMode == 'format')
         {
@@ -1130,19 +1174,16 @@ $(function ()
         clearError();
         if (!_selectedApp)
         {
-            _selectedCubeName = null;
             _errorId = showNote('No App selected, cannot load n-cubes.');
             return;
         }
         if (!_selectedVersion)
         {
-            _selectedCubeName = null;
             _errorId = showNote('No Version selected, cannot load n-cubes.');
             return;
         }
         if (!_selectedStatus)
         {
-            _selectedCubeName = null;
             _errorId = showNote('No Status selected, cannot load n-cubes.');
             return;
         }
@@ -1164,7 +1205,23 @@ $(function ()
         {
             _errorId = showNote('Unable to load n-cubes:<hr class="hr-small"/>' + result.data);
         }
-        _selectedCubeName = (_cubeList && first) ? _cubeList[first]['ncube'].name : null;
+        if (!_selectedCubeName || !doesCubeExist())
+        {
+            _selectedCubeName = (_cubeList && first) ? _cubeList[first]['ncube'].name : null;
+        }
+    }
+
+    function doesCubeExist()
+    {
+        var found = false;
+        $.each(_cubeList, function(key, value)
+        {
+            if (key == _selectedCubeName)
+            {
+                found = true;
+            }
+        });
+        return found;
     }
 
     function loadVersions()
@@ -1173,13 +1230,11 @@ $(function ()
         clearError();
         if (!_selectedApp)
         {
-            _selectedVersion = null;
             _errorId = showNote('Unable to load versions, no n-cube App selected.');
             return;
         }
         if (!_selectedStatus)
         {
-            _selectedVersion = null;
             _errorId = showNote('Unable to load versions, no n-cube Status selected.');
             return;
         }
@@ -1195,7 +1250,22 @@ $(function ()
         {
             _errorId = showNote('Unable to load versions:<hr class="hr-small"/>' + result.data);
         }
-        _selectedVersion = (_versions) ? _versions[_versions.length - 1] : null;
+        if (!_selectedVersion || !doesVersionExist(_selectedVersion))
+        {
+            _selectedVersion = (_versions && _versions.length > 0) ? _versions[_versions.length - 1] : null;
+        }
+    }
+
+    function doesVersionExist(selVer)
+    {
+        for (var i=0; i < _versions.length; i++)
+        {
+            if (_versions[i] == selVer)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     function loadAppNames()
@@ -2196,32 +2266,103 @@ $(function ()
             return;
         }
 
-        $('#editCellValue').html(value);
-        $('#editCellModal').modal('show');
+        var result = call("ncubeController.getCellNoExecute", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, _cellId]);
+
+        if (result.status === false)
+        {
+            _errorId = showNote('Unable to fetch the cell contents: ' + result.data);
+            return;
+        }
+
+        var cellInfo = result.data;
+        // Set the cell value (String)
+        _editCellValue.val(cellInfo.value ? cellInfo.value : "");
+        if (cellInfo.dataType == "null" || !cellInfo.dataType)
+        {
+            cellInfo.dataType = "string";
+        }
+
+        // Set the correct entry in the drop-down
+        if (cellInfo.isUrl)
+        {
+            _urlDropdown.val(cellInfo.dataType);
+        }
+        else
+        {
+            _valueDropdown.val(cellInfo.dataType);
+        }
+
+        // Choose the correct data type drop-down (show/hide the other)
+        _urlDropdown.toggle(cellInfo.isUrl);
+        _valueDropdown.toggle(!cellInfo.isUrl);
+
+        // Set the URL check box
+        _editCellRadioURL.find('input').prop('checked', cellInfo.isUrl);
+
+        // Show/Hide the Cache check box
+        _editCellCache.toggle(cellInfo.isUrl && cellInfo.dataType != "exp" && cellInfo.dataType != "model");
+
+        // Set the Cache check box state
+        _editCellCache.find('input').prop('checked', cellInfo.isCached);
+
+        _editCellModal.modal('show');
+    }
+
+    function editCellClear()
+    {
+        _editCellModal.modal('hide');
+        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, null]);
+
+        if (result.status === false)
+        {
+            _cellId = null;
+            _errorId = showNote('Unable to clear cell:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        _uiCellId.html('');
+        _uiCellId.attr({'class':'cell'});
+        _cellId = null;
     }
 
     function editCellCancel()
     {
         _cellId = null;
-        $('#editCellModal').modal('hide');
+        _editCellModal.modal('hide');
     }
 
     function editCellOK()
     {
-        var val = $('#editCellValue').val();
-        $('#editCellModal').modal('hide');
+        var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
+        cellInfo.isUrl = _editCellRadioURL.find('input').is(':checked');
+        cellInfo.value = _editCellValue.val();
+        cellInfo.dataType = cellInfo.isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        cellInfo.isCached = _editCellCache.find('input').is(':checked');
+        _editCellModal.modal('hide');
 
-        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, val]);
+        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, cellInfo]);
 
         if (result.status === false)
         {
             _cellId = null;
-            _errorId = showNote("Unable to update cell value:<hr class=\"hr-small\"/>" + result.data);
-            $(this).html('');
+            _errorId = showNote('Unable to update cell:<hr class="hr-small"/>' + result.data);
             return;
         }
 
-        $(this).html(result.data);
+        _uiCellId.html(cellInfo.value);
+        if (cellInfo.isUrl)
+        {
+            _uiCellId.attr({'class':'cell cell-url'});
+        }
+        else if (cellInfo.dataType == "exp" || cellInfo.dataType == "method")
+        {
+            _uiCellId.attr({'class':'cell cell-code'});
+        }
+        else
+        {
+            _uiCellId.attr({'class':'cell'});
+        }
+        _cellId = null;
     }
 
     // --------------------------------------------------------------------------------------------
@@ -2294,16 +2435,6 @@ $(function ()
         console.log(localStorage['top']);
         console.log(typeof localStorage['top']);
         div.scrollTop(localStorage['top']);
-    }
-
-    function cleanString(string)
-    {
-        var s1 = string.replace(/<br>/g, "");
-        var s2 = s1.replace(/&lt;/g, "<");
-        var s3 = s2.replace(/&gt;/g, ">");
-        var s4 = s3.replace(/&nbsp;/g, " ");
-        var s5 = s4.replace(/&amp;/g, "&");
-        return s5;
     }
 
     function getUniqueId()

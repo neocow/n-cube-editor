@@ -3,19 +3,25 @@ package com.cedarsoftware.controller;
 import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
+import com.cedarsoftware.ncube.CellInfo;
+import com.cedarsoftware.ncube.Column;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
+import com.cedarsoftware.ncube.ReleaseStatus;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
+import com.cedarsoftware.util.EncryptionUtilities;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,9 +48,10 @@ import java.util.regex.Pattern;
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-public class NCubeController extends BaseController implements INCubeController
+public class NCubeController extends BaseController
 {
     public static final String SYS_NCUBE_INFO = "sys.groups";
+    private static final Pattern VERSION_REGEX = Pattern.compile("[.]");
     private NCubeService nCubeService;
     Pattern antStyleReplacementPattern = Pattern.compile("[$][{](.*?)[}]");
 
@@ -225,7 +232,30 @@ public class NCubeController extends BaseController implements INCubeController
     {
         try
         {
-            return nCubeService.getAppVersions(app, status);
+            Object[] appVersions = nCubeService.getAppVersions(app, status);
+            Arrays.sort(appVersions, new Comparator<Object>()
+            {
+                public int compare(Object o1, Object o2)
+                {
+                    String v1 = (String)o1;
+                    String v2 = (String)o2;
+                    return getVersionValue(v1) - getVersionValue(v2);
+                }
+
+                int getVersionValue(String v)
+                {
+                    String[] pieces = VERSION_REGEX.split(v);
+                    if (pieces.length != 3)
+                    {
+                        return 0;
+                    }
+                    int major = Integer.valueOf(pieces[0]) * 1000 * 1000;
+                    int minor = Integer.valueOf(pieces[0]) * 1000;
+                    int rev = Integer.valueOf(pieces[0]);
+                    return major + minor + rev;
+                }
+            });
+            return appVersions;
         }
         catch (Exception e)
         {
@@ -573,30 +603,6 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
-    /**
-     * In-place update of a cell.  Requires heavy parsing to interpret what the user's intended
-     * data type is for the cell (byte, short, int, long, float, double, boolean, character,
-     * String, Date, Object[], BigDecimal, BigInteger, string url, binary url, groovy expression,
-     * groovy method, groovy template, template url, expression url, method url, or null).
-     */
-    public Object updateCell(String name, String app, String version, Object[] colIds, Object value, String type, boolean cache, boolean url)
-    {
-        try
-        {
-            if (!isAllowed(app, version))
-            {
-                markRquestFailed("This app and version CANNOT be edited.");
-                return null;
-            }
-            throw new RuntimeException("Not yet implemented.");
-        }
-        catch(Exception e)
-        {
-            fail(e);
-            return null;
-        }
-    }
-
     public void renameCube(String oldName, String newName, String app, String version)
     {
         try
@@ -684,7 +690,14 @@ public class NCubeController extends BaseController implements INCubeController
         StringBuilder s = new StringBuilder();
         while (t != null)
         {
-            s.append(t.getMessage());
+            if (t.getMessage() == null)
+            {
+                s.append(t.toString());
+            }
+            else
+            {
+                s.append(t.getMessage());
+            }
             t = t.getCause();
             if (t != null)
             {
@@ -728,27 +741,6 @@ public class NCubeController extends BaseController implements INCubeController
         }
     }
 
-    /**
-     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
-     * in the indicated (by colIds) cell.
-     */
-    /*
-    public Object[] generateTests(String name, String app, String version, String status)
-    {
-        try
-        {
-            NCube ncube = nCubeService.getCube(name, app, version, status);
-            Object[] array = (ncube == null) ? new Object[]{} : ncube.getCoordinatesForCells().toArray();
-            nCubeService.updateTestData(name, app, version, new NCubeTestParser().parse(data));
-            return array;
-        }
-        catch (Exception e)
-        {
-            fail(e);
-            return null;
-        }
-    }
-*/
     public Object getCell(String name, String app, String version, String status, HashMap map)
     {
         try
@@ -761,4 +753,91 @@ public class NCubeController extends BaseController implements INCubeController
             return null;
         }
     }
+
+    /**
+     * In-place update of a cell.  Requires heavy parsing to interpret what the user's intended
+     * data type is for the cell (byte, short, int, long, float, double, boolean, character,
+     * String, Date, Object[], BigDecimal, BigInteger, string url, binary url, groovy expression,
+     * groovy method, groovy template, template url, expression url, method url, or null).
+     */
+    public boolean updateCell(String name, String app, String version, Object[] ids, CellInfo cellInfo)
+    {
+        try
+        {
+            if (!isAllowed(app, version))
+            {
+                markRquestFailed("This app and version CANNOT be edited.");
+                return false;
+            }
+
+            NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
+            Set<Long> colIds = getCoordinate(ids, ncube);
+
+            Object cellValue = null;
+            if (cellInfo == null)
+            {
+                ncube.removeCellById(colIds);
+            }
+            else
+            {
+                cellValue = cellInfo.isUrl ?
+                        CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
+                        CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false);
+                ncube.setCellById(cellValue, colIds);
+            }
+            nCubeService.updateNCube(ncube, colIds, cellValue);
+            return true;
+        }
+        catch(Exception e)
+        {
+            fail(e);
+            return false;
+        }
+    }
+
+    public Object getCellNoExecute(String name, String app, String version, String status, Object[] ids)
+    {
+        try
+        {
+            // 1. Fetch the n-cube
+            NCube ncube = nCubeService.getCube(name, app, version, status);
+
+            // 2. create an SHA1 to axis name maps
+            Set<Long> colIds = getCoordinate(ids, ncube);
+
+            Object cell = ncube.getCellByIdNoExecute(colIds);
+            CellInfo cellInfo = new CellInfo(cell);
+            cellInfo.collapseToUiSupportedTypes();
+            return cellInfo;
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
+    }
+
+    private Set<Long> getCoordinate(Object[] ids, NCube ncube)
+    {
+        Map<String, Axis> axes = new HashMap<>();
+        for (Axis axis : (List<Axis>)ncube.getAxes())
+        {
+            axes.put(EncryptionUtilities.calculateSHA1Hash(axis.getName().getBytes()), axis);
+        }
+
+        // 3. Locate columns on each axis
+        Set<Long> colIds = new HashSet<>();
+        for (Object id : ids)
+        {
+            Object[] pair = (Object[]) id;
+            String sha1AxisName = (String) pair[0];
+            String pos = (String) pair[1];
+            Axis axis = axes.get(sha1AxisName);
+            List<Column> cols = axis.getColumns();
+            Column column = cols.get(Integer.parseInt(pos));
+            colIds.add(column.getId());
+        }
+        return colIds;
+    }
+
 }
