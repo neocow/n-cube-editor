@@ -13,7 +13,7 @@ $(function ()
     var _versions = [];
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
-    var _selectedTest = null;
+    var _selectedTest = -1;
     var _selectedVersion = localStorage[SELECTED_VERSION];
     var _testData = null;
     var _selectedStatus = "SNAPSHOT";
@@ -109,8 +109,8 @@ $(function ()
             ,	livePaneResizing:			true
             ,	south__minSize:				100
             ,	east__minSize:				100
-            ,	spacing_open:			5  // ALL panes
-            ,	spacing_closed:			5 // ALL panes
+            ,	spacing_open:			3  // ALL panes
+            ,	spacing_closed:			3 // ALL panes
             ,   center__minWidth:           600
             //            ,	south__spacing_open:			5  // ALL panes
             //,	south__spacing_closed:			5 // ALL panes
@@ -145,8 +145,8 @@ $(function ()
             ,	west__animatePaneSizing:	false
             ,   west__fxName_open:          "none"
             ,	west__fxName_close:			"none"	// NO animation when closing west-pane
-            ,   spacing_open:         4
-            ,   spacing_closed:       4
+            ,   spacing_open:         3
+            ,   spacing_closed:       3
             ,   west__resizeable:           true
             ,   west__size:                 "auto"
             ,   west__minSize:              170
@@ -534,19 +534,21 @@ $(function ()
 
     function loadTestListView(funcName)
     {
-        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
-        {
-            _editor.setText('No n-cube to load');
-            setDirtyStatus(false);
-            return;
-        }
-
         var testCtrl = $('#testView');
         testCtrl.empty();
         var testResult = $('#testResult');
         testResult.empty();
         var testListItems = $('#testListItems');
         testListItems.empty();
+        _testData = null;
+        _selectedTest = -1;
+
+        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        {
+            _editor.setText('No n-cube to load');
+            setDirtyStatus(false);
+            return;
+        }
 
         var testListResult = call(funcName, [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
 
@@ -556,21 +558,21 @@ $(function ()
                 $('#testListWarning').hide();
                 _testData = testListResult.data;
 
-                var header = $("<a/>").attr({'class':'list-group-item active'});
-                var headerText = $("<h4/>").attr({'class':'list-group-item-heading'});
-                headerText.html("TESTS");
-                header.append(headerText);
-                testListItems.append(header);
+                var headerText = $("<h4/>").attr({'class':'list-group-item text-center active'});
+                var pHeader = $("<p/>").attr({'class':'list-group-item-text text-center active', 'style':'color:#FFFFFF;'});
+                pHeader.html("TESTS");
+                headerText.append(pHeader);
+                testListItems.append(headerText);
 
                 $.each(testListResult.data, function (index, value) {
                     var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item'});
-                    var h4 = $("<p/>").attr({'class':'list-group-item-text'});
-                    h4.html(value['name']);
-                    anchor.append(h4);
+                    var p = $("<p/>").attr({'class':'list-group-item-text'});
+                    p.html(value['name']);
+                    anchor.append(p);
                     anchor.click(function() {
                         var testName = anchor.text();
-                        _selectedTest = testName;
-                        changeTestListSelection('#testListItems', testName);
+                        _selectedTest = index;
+                        changeTestListSelection('#testListItems', index);
                         loadTestView(_testData[index]);
                     });
                     testListItems.append(anchor);
@@ -786,7 +788,7 @@ $(function ()
 //            $(this).on("dblclick", function ()
 //            {   // On double click, place into contenteditable mode
 //                $(this).attr('contenteditable', 'true');
-//                $(this).focus();
+//                $(this).focus(
 //            });
 //            $(this).blur(function ()
 //            {   // On blur, turn off contenteditable mode
@@ -921,11 +923,19 @@ $(function ()
 
             $.each(testData['coord'], function (key, value) {
                 if (key.substring(0, 1) != "@") {
-                    testCtrl.append(buildTypeSelectorFormGroup(key, value));
+                    var url = value == null ? null : value['url'];
+                    var v = value == null ? null : value['value'];
+                    var type = value == null ? null : value['type'];
+                    testCtrl.append(buildParameter(key, type, url, v));
                 }
             });
 
-            testCtrl.append(buildTypeSelectorFormGroup('expectedResult', testData['expectedResult']));
+
+            var expectedResult = testData['expectedResult'];
+            var url = expectedResult == null ? null : expectedResult['url'];
+            var v = expectedResult == null ? null : expectedResult['value'];
+            var type = expectedResult == null ? null : expectedResult['type'];
+            testCtrl.append(buildParameter('expectedResult', type, url, v));
         } catch (e) {
            alert(e);
         }
@@ -951,27 +961,41 @@ $(function ()
 
     }
 
-    function buildTypeSelector(typeStr) {
-        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow col-lg-2', 'data-width': 'auto', 'data-style':'btn-default'});
+    function createTypeSelector(typeStr, url) {
+        if (typeStr == null) {
+            typeStr = 'string';
+        }
+        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow col-lg-2', 'data-width': 'auto', 'data-style': 'btn-default'});
+        return fillTypeSelector(selector, typeStr, url);
+    }
 
-        var obj = {
-            "STRING": "String",
-            "LONG": "Long",
-            "BIG_DECIMAL" : "Big Decimal",
-            "DOUBLE" : "Double",
-            "DATE" : "Date",
-            "EXPRESSION" : "Expression"
-        };
+    function fillTypeSelector(selector, typeStr, url) {
 
-        $.each(obj, function( i, value ) {
-            var opt = $("<option/>").attr({'value': i});
-            opt.text(value);
+        if (selector == null) {
+            return;
+        }
+        selector.empty();
 
-            if (typeStr != null && typeStr == i) {
+        var options = null;
+
+        if (url) {
+            options = $('#datatypes-url').find('option');
+        } else {
+            options = $('#datatypes-value').find('option');
+        }
+
+        $.each(options, function (i, value)
+        {
+            var item = $(value);
+            var opt = $("<option/>").attr({'value': item.val()});
+            opt.text(item.text());
+
+            if (typeStr != null && typeStr == item.val()) {
                 opt.prop({'selected' : true});
             }
             selector.append(opt);
         });
+
         return selector;
     }
 
@@ -1031,7 +1055,6 @@ $(function ()
     }
 
     function buildTestName(name) {
-        var cat = "testId-" + name;
         var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg col-lg-12'});
         var label = $("<label/>").attr({'for': 'selectedTestName', 'class': 'control-label col-lg-3'});
         label.html("Test");
@@ -1065,33 +1088,28 @@ $(function ()
         return labelGroup;
         }
 
-    function buildTypeSelectorFormGroup(coordId, map) {
+    function buildParameter(coordId, type, url, value) {
         var cat = "testId-" + coordId;
         var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg col-lg-12'});
         var label = $("<label/>").attr({'for': cat, 'class': 'control-label col-lg-3'});
         label.html(coordId);
         labelGroup.append(label);
 
-        var inputdiv = $("<div/>").attr({'class': 'col-lg-5'});
+        var inputdiv = $("<div/>").attr({'class': 'col-lg-3'});
         var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat});
-        if (map != null) {
-            if (map['url'] != null) {
-                input.val(map['url']);
-            } else if (map['value'] != null) {
-                input.val(map['value']);
-            }
+
+        if (url != null) {
+            input.val(url);
+        } else if (value != null) {
+            input.val(value);
         }
         inputdiv.append(input);
 
 
         labelGroup.append(inputdiv);
-        labelGroup.append(buildUrlToggle(map != null && map['url'] != null));
+        labelGroup.append(buildUrlToggle(url != null));
 
-        var type = null;
-        if (map != null) {
-            type = map['type'];
-        }
-        labelGroup.append(buildTypeSelector(type));
+        labelGroup.append(createTypeSelector(type, url != null));
 
         return labelGroup;
     }
@@ -1158,9 +1176,11 @@ $(function ()
         var items = list.find('a');
         $.each(items, function (index, value)
         {
-            var anchor = $(value);
-            var text = anchor.html();
-
+            if (_testData != null && index == selectedItem) {
+                $(value).css( "background-color", "#d9edf7" );
+            } else {
+                $(value).css( "background-color", "" );
+            }
         });
     }
 
