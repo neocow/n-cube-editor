@@ -277,7 +277,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
 
@@ -314,13 +314,13 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited");
+                markRequestFailed("This app and version CANNOT be edited");
                 return false;
             }
 
             if (!nCubeService.deleteCube(name, app, version))
             {
-                markRquestFailed("Cannot delete RELEASE n-cube.");
+                markRequestFailed("Cannot delete RELEASE n-cube.");
             }
             return true;
         }
@@ -411,7 +411,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(newApp, newVersion))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             nCubeService.duplicateCube(newName, name, newApp, app, newVersion, version, status);
@@ -433,7 +433,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, "never"))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             nCubeService.releaseCubes(app, version, newSnapVer);
@@ -453,7 +453,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, "never"))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             nCubeService.changeVersionValue(app, currVersion, newSnapVer);
@@ -476,37 +476,6 @@ public class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e);
-        }
-    }
-
-    /**
-     * @return Object[] of JSON structure representing each axis or String error
-     * message.  The Axis will look like this:
-     * [ { "name":"axisName",
-     *     "type":"DISCRETE",
-     *     "valueType":"STRING",
-     *     "defaultColumn":true | false,
-     *     "preferredOrder":0 | 1,
-     *     "multiMatch": true | false
-     * }, ... ]
-     */
-    public Object[] getAxes(String name, String app, String version, String status)
-    {
-        try
-        {
-            NCube ncube = nCubeService.getCube(name, app, version, status);
-            List<Axis> axes = ncube.getAxes();
-            List<Map> axesConverted = new ArrayList<>();
-            for (Axis axis : axes)
-            {
-                axesConverted.add(convertAxis(axis));
-            }
-            return axesConverted.toArray();
-        }
-        catch (Exception e)
-        {
-            fail(e);
-            return null;
         }
     }
 
@@ -549,12 +518,11 @@ public class NCubeController extends BaseController
         Object[] items = (Object[]) cols.get("@items");
         if (items != null)
         {
+            int i=0;
             for (Object item : items)
             {
                 Map col = (Map) item;
-                Long id = (Long) col.get("id");
-                col.put("id", id.toString());
-
+                col.put("id", i++);
             }
         }
         return axisConverted;
@@ -569,7 +537,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             nCubeService.deleteAxis(name, app, version, axisName);
@@ -586,7 +554,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted);
@@ -601,37 +569,24 @@ public class NCubeController extends BaseController
      * Update an entire set of columns on an axis at one time.  The updatedAxis is not a real axis,
      * but treated like an Axis-DTO where the list of columns within the axis are in display order.
      */
-    public void updateAxisColumns(String name, String app, String version, Axis updatedAxis)
+    public void updateAxisColumns(String name, String app, String version, Map<String, Object> updatedAxis)
     {
         try
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
-            nCubeService.updateAxisColumns(name, app, version, updatedAxis);
-        }
-        catch (Exception e)
-        {
-            fail(e);
-        }
-    }
+            NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
+            Axis oldAxis = ncube.getAxis((String)updatedAxis.get("name"));
+            updatedAxis.put("@type", Axis.class.getName());
+//            Axis update = new Axis(updatedAxis.get("name"), updatedAxis.get("type"), updatedAxis.get("valueType"), updatedAxis.get("hasDefault"));
 
-    /**
-     * Update column value in-place, with the passed in value.  The value will be a String that n-cube
-     * must make inferences about to convert into a DISCRETE value, RANGE, SET, etc.
-     */
-    public void updateColumnCell(String name, String app, String version, String colId, String value)
-    {
-        try
-        {
-            if (!isAllowed(app, version))
-            {
-                markRquestFailed("This app and version CANNOT be edited.");
-                return;
-            }
-            nCubeService.updateColumnCell(name, app, version, colId, value);
+            Axis update = new Axis((String)updatedAxis.get("name"), AxisType.DISCRETE, AxisValueType.STRING, false);
+            // TODO: Test adding column at FRONT
+            oldAxis.updateColumns(update);
+//            nCubeService.updateNCube(ncube);
         }
         catch (Exception e)
         {
@@ -645,7 +600,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             nCubeService.renameCube(oldName, newName, app, version);
@@ -662,7 +617,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             nCubeService.updateCube(name, app, version, json);
@@ -692,7 +647,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             nCubeService.updateTestData(name, app, version, testData);
@@ -704,7 +659,7 @@ public class NCubeController extends BaseController
     }
 
 
-    private static void markRquestFailed(Object data)
+    private static void markRequestFailed(Object data)
     {
         JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_STATUS, false);
         JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_FAIL_MESSAGE, data);
@@ -718,7 +673,7 @@ public class NCubeController extends BaseController
      */
     private static void fail(Exception e)
     {
-        markRquestFailed(getCauses(e));
+        markRequestFailed(getCauses(e));
     }
 
     private static String getCauses(Throwable t)
@@ -752,12 +707,14 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = nCubeService.getCube(name, app, version, status);
-            if (ncube == null)
-            {
-                return new Object[]{};
-            }
-            return ncube.getCoordinatesForCells().toArray();
+//            NCube ncube = nCubeService.getCube(name, app, version, status);
+//            if (ncube == null)
+//            {
+//                return new Object[]{};
+//            }
+//            return ncube.getCoordinatesForCells().toArray();
+            // TODO: Ken do what you need to do with this API
+            return null;
         }
         catch (Exception e)
         {
@@ -791,7 +748,7 @@ public class NCubeController extends BaseController
         {
             if (!isAllowed(app, version))
             {
-                markRquestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be edited.");
                 return false;
             }
 
@@ -810,7 +767,7 @@ public class NCubeController extends BaseController
                         CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false);
                 ncube.setCellById(cellValue, colIds);
             }
-            nCubeService.updateNCube(ncube, colIds, cellValue);
+            nCubeService.updateNCube(ncube);
             return true;
         }
         catch(Exception e)

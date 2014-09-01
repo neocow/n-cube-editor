@@ -1897,6 +1897,7 @@ $(function ()
         var displayOrder = 0;
         $.each(axis.columns["@items"], function (key, item)
         {
+            delete item['@type'];
             if (!item.displayOrder || item.displayOrder < 2147483647)
             {   // Don't add default column in
                 item.displayOrder = displayOrder++;
@@ -1943,6 +1944,7 @@ $(function ()
         if (result.status === true)
         {
             axis = result.data;
+            delete axis['@type'];
             if (!axis.columns['@items'])
             {
                 axis.columns['@items'] = [];
@@ -1954,7 +1956,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
+            _errorId = showNote("Could not retrieve axes for n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         sortColumns(axis);
@@ -2148,7 +2150,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to update columns for axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
+            _errorId = showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 

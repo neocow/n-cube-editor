@@ -257,27 +257,10 @@ public class NCubeService
     }
 
     /**
-     * Update an entire set of columns at once.  This method will delete columns no longer in the passed in
-     * list, add columns that are new (have negative ids), and update columns with the same id but new value.
-     */
-    public void updateAxisColumns(String name, String app, String version, Axis updatedAxis)
-    {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-        Axis oldAxis = ncube.getAxis(updatedAxis.getName());
-        oldAxis.updateColumns(updatedAxis);
-        NCubeManager.updateCube(connection, app, ncube, version);
-    }
-
-    /**
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
-    public void updateNCube(NCube ncube, Set<Long> ids, Object value)
+    public void updateNCube(NCube ncube)
     {
         Connection connection = getConnection();
         ApplicationID appId = ncube.getApplicationID();
