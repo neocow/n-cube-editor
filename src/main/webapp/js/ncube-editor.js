@@ -2058,12 +2058,12 @@ $(function ()
                 _errorId = showNote("Error parsing message :<hr class=\"hr-small\"/>" + e.message);
             }
 
+            header.html("Result");
+            panel = $('<div/>').prop({class: "panel"});
             if (item["status"] == "Success") {
-                header.html("Success");
-                panel = $('<div/>').prop({class: "panel panel-success"});
+                panel.addClass("panel-success");
             } else {
-                header.html("Failure");
-                panel = $('<div/>').prop({class: "panel panel-warning"});
+                panel.addClass("panel-danger");
             }
             p.html(item["message"]);
         } else {
