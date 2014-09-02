@@ -261,14 +261,14 @@
 
 
         <div id="tests" class="tab-pane fade container" style="height:100%;width:100%">
-            <div id="testLayoutEast" class="pane ui-layout-east" title="Resize" style="overflow: hidden" aria-disabled="false">
+            <div id="testLayoutEast" class="pane ui-layout-east" title="Test List" style="overflow: auto !important;" aria-disabled="false">
 
                 <div id="testList" class="list-group">
                      <div id="testListItems" class="list-group-item">
 
                      </div>
 
-                    <div class="btn-group"><button class="btn btn-primary">Save Tests</button></div>
+                    <div class="btn-group"><button id="saveTestsButton" class="btn btn-primary">Save Tests</button></div>
                  </div>
                  <div id="testListWarning" class="panel panel-info">
                     <div class="panel-heading" >
@@ -282,7 +282,6 @@
 
             <div class="pane ui-layout-south" style="overflow: hidden">
                 <div id="testResult" class="content">
-                    <a class=""></a>
                 </div>
             </div>
             <div id="testLayoutCenter" class="pane ui-layout-center">

@@ -93,12 +93,6 @@ $(function ()
         var hStat = statListDiv.height();
         var hVer = verListDiv.height();
 
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-            alert(e.target.id);
-        });
-
-
-
         initJsonEditor();
         addListeners();
 
@@ -486,6 +480,17 @@ $(function ()
             editCellOK()
         });
 
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            // store to local storage.
+        });
+
+        $('#saveTestsButton').click(function ()
+        {
+            saveAllTests();
+        });
+
+
+
         _editCellRadioURL.change(function()
         {
             var isUrl = _editCellRadioURL.find('input').is(':checked');
@@ -548,8 +553,6 @@ $(function ()
         testCtrl.empty();
         var testResult = $('#testResult');
         testResult.empty();
-        var testListItems = $('#testListItems');
-        testListItems.empty();
         _testData = null;
         _selectedTest = -1;
 
@@ -564,35 +567,8 @@ $(function ()
 
         if (testListResult.status === true)
         {
-            if (testListResult.data != null) {
-                $('#testListWarning').hide();
-                _testData = testListResult.data;
-
-                var headerText = $("<h4/>").attr({'class':'list-group-item text-center active'});
-                var pHeader = $("<p/>").attr({'class':'list-group-item-text text-center active', 'style':'color:#FFFFFF;'});
-                pHeader.html("TESTS");
-                headerText.append(pHeader);
-                testListItems.append(headerText);
-
-                $.each(testListResult.data, function (index, value) {
-                    var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item'});
-                    var p = $("<p/>").attr({'class':'list-group-item-text'});
-                    p.html(value['name']);
-                    anchor.append(p);
-                    anchor.click(function() {
-                        var testName = anchor.text();
-                        _selectedTest = index;
-                        changeTestListSelection('#testListItems', index);
-                        loadTestView(index);
-                    });
-                    testListItems.append(anchor);
-                    //anchor.html(value['name']);
-                });
-                $('#testList').fadeIn("fast");
-            } else {
-                $('#testList').hide();
-                $('#testListWarning').fadeIn("fast");
-            }
+            _testData = testListResult.data;
+            refreshTestList();
         }
         else {
             var msg = 'Error fetching test data for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
@@ -600,6 +576,44 @@ $(function ()
                 msg += (':<hr class="hr-small"/>' + testListResult.data);
             }
             _errorId = showNote(msg);
+        }
+    }
+
+    function refreshTestList() {
+
+        var testListItems = $('#testListItems');
+        testListItems.empty();
+
+        if (_testData != null) {
+            $('#testListWarning').hide();
+
+            var headerText = $("<h4/>").attr({'class':'list-group-item text-center active'});
+            var pHeader = $("<p/>").attr({'class':'list-group-item-text text-center active', 'style':'color:#FFFFFF;'});
+            pHeader.html("TESTS");
+            headerText.append(pHeader);
+            testListItems.append(headerText);
+
+            $.each(_testData, function (index, value) {
+                var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item'});
+                var p = $("<p/>").attr({'class':'list-group-item-text'});
+                p.html(value['name']);
+                anchor.append(p);
+                if (index == _selectedTest) {
+                    anchor.css( "background-color", "#d9edf7" );
+                }
+                anchor.click(function() {
+                    var testName = anchor.text();
+                    _selectedTest = index;
+                    changeTestListSelection('#testListItems', index);
+                    loadTestView(index);
+                });
+                testListItems.append(anchor);
+                //anchor.html(value['name']);
+            });
+            $('#testList').fadeIn("fast");
+        } else {
+            $('#testList').hide();
+            $('#testListWarning').fadeIn("fast");
         }
     }
 
@@ -1152,7 +1166,7 @@ $(function ()
         }
         else if (_activeTab == 'testTab')
         {
-            loadTestListView("ncubeController.getTestData");
+            loadTestListView("ncubeController.getTests");
         }
         else if (_activeTab == 'picTab')
         {
@@ -1538,23 +1552,18 @@ $(function ()
 
         _testsDirty = true;
 
+        // change name of selected itm
         var item = $('#selectedTestName');
         if (item != null) {
             item.val(newName);
         }
-//            loadAppNames();
-//            _selectedApp = newApp;
-//            loadAppListView();
-//            _selectedStatus = 'SNAPSHOT';
-//            setListSelectedStatus('SNAPSHOT', '#status-list')
-//            loadVersions();
-//            _selectedVersion = newVersion;
-//            loadVersionListView();
-//            setListSelectedStatus(_selectedVersion, '#version-list');
-//            loadNCubes();
-//            _selectedCubeName = newName;
-//            loadNCubeListView();
-//            loadCube();
+
+        // change currently selected model item
+        var test = _testData[_selectedTest];
+        test["name"] = newName;
+
+        // change in our list.
+        refreshTestList();
     }
 
     function dupeCube()
@@ -1906,25 +1915,54 @@ $(function ()
         return temp;
     }
 
-
-    function runCubeTest() {
+    function saveAllTests()
+    {
         clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
             _errorId = showNote('No n-cube selected. Axis cannot be updated.');
             return;
         }
 
-        if (_testData == null || _selectedTest == -1) {
+        if (_testData == null)
+        {
             _errorId = showNote('No test selected.  Test cannot be run.');
             return;
         }
 
+        var test = getActiveTest();
 
-        var currentTest = _testData[_selectedTest];
+        //  If a test is currently selected
+        if (test != null) {
+            //  locate test in list to add it in...and add it before saving.
+            var oldTest = _testData[_selectedTest];
+            if (test["name"] == oldTest["name"]) {
+                _testData[_selectedTest] = test;
+            }
+        }
 
+        var result = call("ncubeController.saveTests", [_selectedCubeName, _selectedApp, _selectedVersion, _testData]);
+        if (result.status === true)
+        {
+            _testsDirty = true;
+        }
+        else
+        {
+            _errorId = showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
+        }
+
+    }
+
+    function getActiveTest()
+    {
         var test = {};
 
         var name = $("#selectedTestName").val();
+
+        if (name == null) {
+            return null;
+        }
+
         test["name"] = name;
         test["@type"] = "com.cedarsoftware.ncube.NCubeTest";
 
@@ -1934,25 +1972,9 @@ $(function ()
 
         $.each(elements, function (index, value)
         {
-            var parameter = {};
-
             var id = value.id;
             var parameterId = id.replace("test-parameter-", "");
-
-            var item = $("#" + id + "-value").val();
-            var url = $("#" + id + "-url").hasClass("btn-primary");
-            var type = $("#" + id + "-selector").val();
-
-            if (url) {
-                parameter["url"] = item;
-            } else {
-                parameter["value"] = item;
-            }
-
-            parameter["type"] = type;
-
-            coord[parameterId] = parameter;
-
+            coord[parameterId] = retrieveParameter(id);
         });
 
         test["coordDescription"] = coord;
@@ -1960,33 +1982,66 @@ $(function ()
         var results = $("#testView > div[id='expectedResultDescription']");
         $.each(results, function (index, value)
         {
-            var parameter = {};
-
             var id = value.id;
-
-            var item = $("#" + id + "-value").val();
-            var url = $("#" + id + "-url").hasClass("btn-primary");
-            var type = $("#" + id + "-selector").val();
-
-            if (url) {
-                parameter["url"] = item;
-            } else {
-                parameter["value"] = item;
-            }
-
-            parameter["type"] = type;
-
-            test[id] = parameter;
+            test[id] = retrieveParameter(id);
         });
 
+        return test;
+    }
 
-        var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);
+    function retrieveParameter(id) {
+        var parameter = {};
 
-        var resultPane = $('#testResult');
-        resultPane.hide();
-        resultPane.empty();
-        resultPane.append(createTestResult(result.status, result.data));
-        resultPane.fadeIn("fast");
+        var item = $("#" + id + "-value").val();
+        var url = $("#" + id + "-url").hasClass("btn-primary");
+        var type = $("#" + id + "-selector").val();
+
+        if (url)
+        {
+            parameter["url"] = item;
+        }
+        else
+        {
+            parameter["value"] = item;
+        }
+
+        parameter["type"] = type;
+
+        return parameter;
+    }
+
+    function runCubeTest() {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
+            _errorId = showNote('No n-cube selected. Test cannot be run.');
+            return;
+        }
+
+        if (_testData == null || _selectedTest == -1) {
+            _errorId = showNote('No test selected.  Test cannot be run.');
+            return;
+        }
+
+        try {
+            var currentTest = _testData[_selectedTest];
+
+            var test = getActiveTest();
+            var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);
+
+            if (result.status != true) {
+                _errorId = showNote("Could not run cube test '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
+                return;
+            }
+
+
+            var resultPane = $('#testResult');
+            resultPane.hide();
+            resultPane.empty();
+            resultPane.append(createTestResult(result.status, result.data));
+            resultPane.fadeIn("fast");
+        } catch (e) {
+            _errorId = showNote("Could not run cube test '" + axisName + "':<hr class=\"hr-small\"/>" + e.message);
+        }
     }
 
     function createTestResult(success, data) {
@@ -2000,7 +2055,7 @@ $(function ()
             try {
                 item = $.parseJSON(data);
             } catch (e) {
-                alert(e);
+                _errorId = showNote("Error parsing message :<hr class=\"hr-small\"/>" + e.message);
             }
 
             if (item["status"] == "Success") {

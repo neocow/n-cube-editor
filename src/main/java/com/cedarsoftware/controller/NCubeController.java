@@ -670,29 +670,35 @@ public class NCubeController extends BaseController
         }
     }
 
-    public void getTestData(String name, String app, String version, String status)
+    public Object[] getTests(String name, String app, String version, String status)
     {
         try
         {
-            nCubeService.getTestData(name, app, version, status);
+            String s = nCubeService.getTestData(name, app, version, status);
+            if (StringUtilities.isEmpty(s)) {
+                return null;
+            }
+            return (Object[])JsonReader.jsonToJava(s);
         }
         catch (Exception e)
         {
             fail(e);
         }
+        return null;
     }
 
 
-    public void saveTestData(String name, String app, String version, String testData)
+    public void saveTests(String name, String app, String version, Object[] tests)
     {
         try
         {
             if (!isAllowed(app, version))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be saved.");
                 return;
             }
-            nCubeService.updateTestData(name, app, version, testData);
+            String data = JsonWriter.objectToJson(tests);
+            nCubeService.updateTestData(name, app, version, data);
         }
         catch (Exception e)
         {
@@ -773,8 +779,8 @@ public class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e);
-            return null;
         }
+        return null;
     }
 
     public Object getCell(String name, String app, String version, String status, HashMap map)

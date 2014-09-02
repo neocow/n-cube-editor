@@ -409,7 +409,7 @@ public class NCubeService
         NCube ncube = NCubeManager.loadCube(connection, app, name, version, status, new Date());
         if (ncube == null)
         {
-            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
+            throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app + ", version: " + version);
         }
 
         return NCubeManager.getTestData(connection, app, name, version, new Date());
@@ -425,7 +425,7 @@ public class NCubeService
         NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
         if (ncube == null)
         {
-            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
+            throw new IllegalArgumentException("Could not update test data, NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
 
         return NCubeManager.updateTestData(connection, app, name, version, tests);
