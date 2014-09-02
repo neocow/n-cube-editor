@@ -14,13 +14,11 @@ import com.cedarsoftware.util.io.JsonWriter;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import javax.sql.DataSource;
-import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -166,68 +164,6 @@ public class NCubeService
     }
 
     /**
-     * Return the full set of Axis objects for this n-cube.  The Axes are returned in Map form with
-     * the column IDs converted to Strings (from Longs) due to the 64-bit Javascript issue.  The axes
-     * when sent back still come back in as proper Axis objects, as json-io will convert the String id
-     * to a Long when placing the value into the Axis object.
-     */
-    public List<Map> getAxes(String name, String app, String version, String status) throws IOException
-    {
-        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not load axes, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-        List<Axis> axes = ncube.getAxes();
-        List<Map> axesConverted = new ArrayList<Map>();
-        for (Axis axis : axes)
-        {
-            axesConverted.add(convertAxis(axis));
-        }
-        return axesConverted;
-    }
-
-    /**
-     * Convert Axis to Map of Map representation (using json-io) and modify the
-     * column ID to a String in the process.  This allows the column ID to work on
-     * clients (like Javascript) that cannot support 64-bit values.
-     */
-    static Map convertAxis(Axis axis) throws IOException
-    {
-        String json = JsonWriter.objectToJson(axis);
-        Map axisConverted = JsonReader.jsonToMaps(json);
-        Map cols = (Map) axisConverted.get("columns");
-        Object[] items = (Object[]) cols.get("@items");
-        if (items != null)
-        {
-            for (Object item : items)
-            {
-                Map col = (Map) item;
-                Long id = (Long) col.get("id");
-                col.put("id", id.toString());
-
-            }
-        }
-        return axisConverted;
-    }
-
-    /**
-     * Retrieve the specified axis, however, return it as a Map (JsonObject) so that it can be
-     * massaged on the way out.  This is done to allow converting of the column IDs from Long to
-     * String so that they can round-trip to a Javascript client (which cannot handle a 64-bit long).
-     */
-    public Map getAxis(String name, String app, String version, String status, String axisName) throws IOException
-    {
-        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could get axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-        Axis axis = ncube.getAxis(axisName);
-        return convertAxis(axis);
-    }
-
-    /**
      * Delete the specified axis.
      */
     public void deleteAxis(String name, String app, String version, String axisName)
@@ -321,27 +257,10 @@ public class NCubeService
     }
 
     /**
-     * Update an entire set of columns at once.  This method will delete columns no longer in the passed in
-     * list, add columns that are new (have negative ids), and update columns with the same id but new value.
-     */
-    public void updateAxisColumns(String name, String app, String version, Axis updatedAxis)
-    {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-        Axis oldAxis = ncube.getAxis(updatedAxis.getName());
-        oldAxis.updateColumns(updatedAxis);
-        NCubeManager.updateCube(connection, app, ncube, version);
-    }
-
-    /**
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
-    public void updateNCube(NCube ncube, Set<Long> ids, Object value)
+    public void updateNCube(NCube ncube)
     {
         Connection connection = getConnection();
         ApplicationID appId = ncube.getApplicationID();

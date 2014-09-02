@@ -212,9 +212,13 @@ $(function ()
     {
         // create the editor
         var container = document.getElementById('jsoneditor');
+        // TODO: Uncomment 'modes:' below when you figure out how to detect when the drop-down changes, so that
+        // you can add back the Save button and remove the 'PoweredBy'
+
         var options =
         {
             mode: 'code',
+//            modes:['code','tree','view','form','text'],
             change: function()
             {
                 setDirtyStatus(true);
@@ -223,7 +227,6 @@ $(function ()
 
         // Create JSON Editor (http://jsoneditoronline.org/downloads/)
         _editor = new JSONEditor(container, options);
-
         var editCtrl = $('#jsoneditor');
         var menu = editCtrl.find('.menu');
         var save = $("<button/>").attr({id:'saveButton', style:'background-image:none;width:64px',title:'Save changes'});
@@ -816,8 +819,7 @@ $(function ()
             $(this).on("dblclick", function ()
             {   // On double click open Edit Cell modal
                 _uiCellId = $(this);
-                var cellId = _uiCellId.attr('data-id').split('k')[1];
-                var pairs = cellId.split("_");
+                var pairs = _uiCellId.attr('data-id').split("_");
                 var coord =[];
                 for (var i=0; i < pairs.length; i++)
                 {
@@ -2017,6 +2019,7 @@ $(function ()
         var displayOrder = 0;
         $.each(axis.columns["@items"], function (key, item)
         {
+            delete item['@type'];
             if (!item.displayOrder || item.displayOrder < 2147483647)
             {   // Don't add default column in
                 item.displayOrder = displayOrder++;
@@ -2063,6 +2066,7 @@ $(function ()
         if (result.status === true)
         {
             axis = result.data;
+            delete axis['@type'];
             if (!axis.columns['@items'])
             {
                 axis.columns['@items'] = [];
@@ -2074,7 +2078,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
+            _errorId = showNote("Could not retrieve axes for n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         sortColumns(axis);
@@ -2268,7 +2272,7 @@ $(function ()
         }
         else
         {
-            _errorId = showNote("Unable to update columns for axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
+            _errorId = showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
