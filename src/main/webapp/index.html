@@ -13,6 +13,7 @@
     <link href="./css/jquery.gritter.css" rel="stylesheet"/>
     <link href="./css/bootstrap.min.css" rel="stylesheet"/>
     <link href="./css/bootstrap-theme.min.css" rel="stylesheet"/>
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet"/>
     <link href="./css/ncube-editor.css" rel="stylesheet"/>
 
     <!-- Fav and touch icons -->
@@ -261,7 +262,12 @@
 
         <div id="tests" class="tab-pane fade container" style="height:100%;width:100%">
             <div id="testLayoutEast" class="pane ui-layout-east" title="Resize" style="overflow: hidden" aria-disabled="false">
-                 <div id="testList" class="list-group"></div>
+
+                <div id="testList" class="list-group">
+                     <div id="testListItems" class="list-group-item">
+
+                     </div>
+                 </div>
                  <div id="testListWarning" class="panel panel-info">
                     <div class="panel-heading" >
                         No tests were found
@@ -273,7 +279,9 @@
             </div>
 
             <div class="pane ui-layout-south" style="overflow: hidden">
-                <div id="testResult" class="content"></div>
+                <div id="testResult" class="content">
+                    <a class=""></a>
+                </div>
             </div>
             <div id="testLayoutCenter" class="pane ui-layout-center">
                 <form id="testView" class="form-horizontal col-lg-12" role="form">
@@ -753,7 +761,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't rename</button>
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Don't rename</button>
                 <button id="renameTestOk" class="btn btn-primary">Rename</button>
             </div>
         </div>
@@ -826,6 +834,7 @@
 <script type="text/javascript" src="./js/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="./js/jquery-ui-1.11.0.js"></script>
 <script type="text/javascript" src="./js/bootstrap.min.js"></script>
+<script type="text/javascript" src="./js/bootstrap-select.min.js"></script>
 <script type="text/javascript" src="./js/jquery.layout-1.4.0.js"></script>
 <script type="text/javascript" src="./js/jquery.gritter.min.js"></script>
 <script type="text/javascript" src="./js/mitDate.js"></script>
