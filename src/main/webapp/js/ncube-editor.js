@@ -15,6 +15,7 @@ $(function ()
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedTest = -1;
     var _selectedVersion = localStorage[SELECTED_VERSION];
+    var _selectedTab = localStorage[SELECTED_TAB];
     var _testData = null;
     var _selectedStatus = "SNAPSHOT";
     var _axisName;
@@ -91,6 +92,12 @@ $(function ()
         var hApp = appListDiv.height();
         var hStat = statListDiv.height();
         var hVer = verListDiv.height();
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            alert(e.target.id);
+        });
+
+
 
         initJsonEditor();
         addListeners();

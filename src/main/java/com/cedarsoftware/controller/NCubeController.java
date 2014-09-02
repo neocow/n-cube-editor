@@ -10,6 +10,7 @@ import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
+import com.cedarsoftware.ncube.UrlCommandCell;
 import com.cedarsoftware.ncube.formatters.HtmlFormatter;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
@@ -118,8 +119,21 @@ public class NCubeController extends BaseController
         try
         {
             NCube ncube = nCubeService.getCube(name, app, version, status);
-            Object actual = ncube.getCell(test.getCoordinate());
+            Map coord = test.getCoordinate();
+            Object actual = ncube.getCell(coord);
             Object expected = test.getExpectedResult();
+
+
+            // For UrlCommands we need to actually execute the command for an apple to apple comparison.
+            // Note:  a GroovyExpression that returns true is the same as a Boolean.True return type.
+            if (expected instanceof UrlCommandCell) {
+                UrlCommandCell cell = (UrlCommandCell)expected;
+
+                coord.put("ncube", ncube);
+                coord.put("input", new HashMap());
+                coord.put("output", new HashMap());
+                expected = cell.execute(coord);
+            }
 
             if (!DeepEquals.deepEquals(actual, expected)) {
                 HashMap map = new HashMap();
