@@ -926,7 +926,7 @@ $(function ()
 
            testCtrl.append(buildTestName(testData['name']));
 
-            $.each(testData['coord'], function (key, value) {
+            $.each(testData['coordDescription'], function (key, value) {
                 if (key.substring(0, 1) != "@") {
                     var url = value == null ? null : value['url'];
                     var v = value == null ? null : value['value'];
@@ -936,11 +936,11 @@ $(function ()
             });
 
 
-            var expectedResult = testData['expectedResult'];
+            var expectedResult = testData['expectedResultDescription'];
             var url = expectedResult == null ? null : expectedResult['url'];
             var v = expectedResult == null ? null : expectedResult['value'];
             var type = expectedResult == null ? null : expectedResult['type'];
-            testCtrl.append(buildParameter('expectedResult', type, url, v, false));
+            testCtrl.append(buildParameter('expectedResultDescription', type, url, v, false));
         } catch (e) {
             _errorId = showNote('Unable to load test view ' + testData['name'] + ':<hr class="hr-small"/>' + e.message);
         }
@@ -1899,9 +1899,6 @@ $(function ()
         return temp;
     }
 
-    function retrieveCurrentTest() {
-
-    }
 
     function runCubeTest() {
         clearError();
@@ -1951,9 +1948,9 @@ $(function ()
 
         });
 
-        test["coord"] = coord;
+        test["coordDescription"] = coord;
 
-        var results = $("#testView > div[id='expectedResult']");
+        var results = $("#testView > div[id='expectedResultDescription']");
         $.each(results, function (index, value)
         {
             var parameter = {};
@@ -1973,7 +1970,6 @@ $(function ()
             parameter["type"] = type;
 
             test[id] = parameter;
-
         });
 
 
@@ -1988,19 +1984,33 @@ $(function ()
 
     function createTestResult(success, data) {
         var panel;
+        var p = $('<p/>');
+
 
         var header = $('<div/>').prop({class: "panel-heading"});
         if (success) {
-            panel = $('<div/>').prop({class: "panel panel-success"});
-            header.html("Success");
+            var item = null;
+            try {
+                item = $.parseJSON(data);
+            } catch (e) {
+                alert(e);
+            }
+
+            if (item["status"] == "Success") {
+                header.html("Success");
+                panel = $('<div/>').prop({class: "panel panel-success"});
+            } else {
+                header.html("Failure");
+                panel = $('<div/>').prop({class: "panel panel-warning"});
+            }
+            p.html(item["message"]);
         } else {
             panel = $('<div/>').prop({class: "panel panel-danger"});
             header.html("Failure");
+            p.html(data);
         }
 
         var body = $('<div/>').prop({class: "panel-body"});
-        var p = $('<p/>');
-        p.html(data);
         body.append(p);
         panel.append(header);
         panel.append(body);

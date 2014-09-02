@@ -117,15 +117,21 @@ public class NCubeController extends BaseController
     public String runTest(String name, String app, String version, String status, NCubeTest test) {
         try
         {
-            NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
+            NCube ncube = nCubeService.getCube(name, app, version, status);
             Object actual = ncube.getCell(test.getCoordinate());
             Object expected = test.getExpectedResult();
 
             if (!DeepEquals.deepEquals(actual, expected)) {
-                return "Expected:  " + expected + " Actual:  " + actual;
+                HashMap map = new HashMap();
+                map.put("status", "Failure");
+                map.put("message", "Expected: '" + expected + "'<br />  Actual: '" + actual + "'");
+                return JsonWriter.objectToJson(map);
             }
 
-            return "Success";
+            HashMap map = new HashMap();
+            map.put("status", "Success");
+            map.put("message", "Success");
+            return JsonWriter.objectToJson(map);
         }
         catch(Exception e)
         {
@@ -734,18 +740,21 @@ public class NCubeController extends BaseController
             {
                 return new Object[]{};
             }
-            List<NCubeTest> list = ncube.generateNCubeTests();
+            return ncube.generateNCubeTests().toArray();
 
+            /*
             Object[] items = new Object[list.size()];
             int i=0;
             for (NCubeTest test : list) {
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("name", test.getName());
-                map.put("coord", test.getCoordDescription());
-                map.put("expectedResult", test.getExpectedResultDescription());
+                map.put("coordDescription", test.getCoordDescription());
+                map.put("expectedResultDescription", test.getExpectedResultDescription());
                 items[i++] = map;
             }
+
             return items;
+            */
         }
         catch (Exception e)
         {
