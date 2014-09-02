@@ -18,6 +18,8 @@ import com.cedarsoftware.util.EncryptionUtilities;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,6 +60,7 @@ public class NCubeController extends BaseController
     private static final Pattern VERSION_REGEX = Pattern.compile("[.]");
     private NCubeService nCubeService;
     Pattern antStyleReplacementPattern = Pattern.compile("[$][{](.*?)[}]");
+    private static final Log LOG = LogFactory.getLog(NCubeController.class);
 
 
     public NCubeController(NCubeService service)
@@ -123,8 +126,10 @@ public class NCubeController extends BaseController
             {
                 sysInfo = nCubeService.getCube(SYS_NCUBE_INFO, app, version, status);
             }
-            catch (Exception ignored)
-            { }
+            catch (Exception e)
+            {
+                LOG.info("Failed to find 'sys.group' for app: '" + app + ", version: " + version + ", status: " + status);
+            }
             Object[] list = nCubeService.getNCubes(null, app, version, status);
             List<Map<String, Object>> augmentedInfo = new ArrayList<>();
 
@@ -184,7 +189,7 @@ public class NCubeController extends BaseController
         }
     }
 
-    private Map<String, Object> makeGenericAugInfo()
+    private static Map<String, Object> makeGenericAugInfo()
     {
         Map<String, Object> augInfo;
         augInfo = new LinkedHashMap<>();
@@ -573,6 +578,13 @@ public class NCubeController extends BaseController
     {
         try
         {
+            // TODO: 1) when saving n-cube, add SHA1 to ncube's meta data.
+            // TODO: 2) when updating n-cube, check that persisted sha1 matches the sha1 of the loaded one that was
+            //          sent to the client.  How are we going to send / save that value on the to /on the client.
+            // TODO: 3) rebase ids on load.
+            // TODO: 4) Use re-based ids in HTML
+            //
+
             if (!isAllowed(app, version))
             {
                 markRequestFailed("This app and version CANNOT be edited.");
