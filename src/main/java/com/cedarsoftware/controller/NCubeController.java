@@ -15,6 +15,7 @@ import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
+import com.cedarsoftware.util.DeepEquals;
 import com.cedarsoftware.util.EncryptionUtilities;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonReader;
@@ -111,6 +112,26 @@ public class NCubeController extends BaseController
             urls.add(sb.toString());
         }
         return urls;
+    }
+
+    public String runTest(String name, String app, String version, String status, NCubeTest test) {
+        try
+        {
+            NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
+            Object actual = ncube.getCell(test.getCoordinate());
+            Object expected = test.getExpectedResult();
+
+            if (!DeepEquals.deepEquals(actual, expected)) {
+                return "Expected:  " + expected + " Actual:  " + actual;
+            }
+
+            return "Success";
+        }
+        catch(Exception e)
+        {
+            fail(e);
+            return null;
+        }
     }
 
     public Object[] getCubeList(String filter, String app, String version, String status)

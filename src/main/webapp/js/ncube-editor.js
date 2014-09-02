@@ -576,7 +576,7 @@ $(function ()
                         var testName = anchor.text();
                         _selectedTest = index;
                         changeTestListSelection('#testListItems', index);
-                        loadTestView(_testData[index]);
+                        loadTestView(index);
                     });
                     testListItems.append(anchor);
                     //anchor.html(value['name']);
@@ -913,7 +913,10 @@ $(function ()
         $('#cube_bizEndDate').val(date);
     }
 
-    function loadTestView(testData) {
+    function loadTestView(index) {
+
+        var testData = _testData[index];
+
         var testCtrl = $('#testView');
         testCtrl.empty();
 
@@ -928,7 +931,7 @@ $(function ()
                     var url = value == null ? null : value['url'];
                     var v = value == null ? null : value['value'];
                     var type = value == null ? null : value['type'];
-                    testCtrl.append(buildParameter(key, type, url, v));
+                    testCtrl.append(buildParameter(key, type, url, v, true));
                 }
             });
 
@@ -937,9 +940,9 @@ $(function ()
             var url = expectedResult == null ? null : expectedResult['url'];
             var v = expectedResult == null ? null : expectedResult['value'];
             var type = expectedResult == null ? null : expectedResult['type'];
-            testCtrl.append(buildParameter('expectedResult', type, url, v));
+            testCtrl.append(buildParameter('expectedResult', type, url, v, false));
         } catch (e) {
-           alert(e);
+            _errorId = showNote('Unable to load test view ' + testData['name'] + ':<hr class="hr-small"/>' + e.message);
         }
 
 
@@ -954,7 +957,7 @@ $(function ()
         runTestButton.text('Run Test');
         runTestButton.click(function ()
         {
-            runCubeTest()
+            runCubeTest();
         });
 
         group.append(buttonDiv);
@@ -963,11 +966,12 @@ $(function ()
 
     }
 
-    function createTypeSelector(typeStr, url) {
+    function createTypeSelector(parameterId, typeStr, url) {
         if (typeStr == null) {
             typeStr = 'string';
         }
-        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow col-lg-2', 'data-width': 'auto', 'data-style': 'btn-default'});
+        var selectorId = parameterId + "-selector"
+        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow col-lg-2', 'data-width': 'auto', 'data-style': 'btn-default', 'id':selectorId});
         return fillTypeSelector(selector, typeStr, url);
     }
 
@@ -1001,16 +1005,19 @@ $(function ()
         return selector;
     }
 
-    function buildUrlToggle(urlIsSelected) {
+    function buildUrlToggle(coordId, urlIsSelected) {
         var togglediv = $("<div/>").attr({'class' : 'btn-group col-lg-2', 'data-toggle':'buttons'});
-        var urlLabel = $("<label/>").attr({'class': 'btn'});
-        var url = $("<input/>").attr({'type':'radio', 'name':'options', 'id':'url-option'});
+
+        var urlId = coordId + "-url";
+        var urlLabel = $("<label/>").attr({'class': 'btn', 'id':urlId});
+        var url = $("<input/>").attr({'type':'radio', 'name':'options'});
 
         urlLabel.append(url);
         urlLabel.text("URL");
 
-        var valueLabel = $("<label/>").attr({'class':'btn'});
-        var value = $("<input/>").attr({'type' : 'radio', 'name':'options', 'id':'value-option'});
+        var valueId = coordId + "-non-url";
+        var valueLabel = $("<label/>").attr({'class':'btn', 'id':valueId});
+        var value = $("<input/>").attr({'type' : 'radio', 'name':'options'});
 
         valueLabel.append(value);
         valueLabel.text("Value");
@@ -1090,9 +1097,15 @@ $(function ()
         return labelGroup;
         }
 
-    function buildParameter(coordId, type, url, value) {
-        var cat = "testId-" + coordId;
-        var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg col-lg-12'});
+    function buildParameter(coordId, type, url, value, append) {
+        var parameterId = coordId;
+
+        if (append) {
+            parameterId = "test-parameter-" + coordId;
+        }
+        var labelGroup = $("<div/>").attr({'class': 'form-group form-group-lg col-lg-12', 'id':parameterId});
+
+        var cat = parameterId + "-value";
         var label = $("<label/>").attr({'for': cat, 'class': 'control-label col-lg-3'});
         label.html(coordId);
         labelGroup.append(label);
@@ -1109,9 +1122,9 @@ $(function ()
 
 
         labelGroup.append(inputdiv);
-        labelGroup.append(buildUrlToggle(url != null));
+        labelGroup.append(buildUrlToggle(parameterId, url != null));
 
-        labelGroup.append(createTypeSelector(type, url != null));
+        labelGroup.append(createTypeSelector(parameterId, type, url != null));
 
         return labelGroup;
     }
@@ -1897,26 +1910,74 @@ $(function ()
             return;
         }
 
-        var test = retrieveCurrentTest();
-
-        if (test == null) {
+        if (_testData == null || _selectedTest == -1) {
             _errorId = showNote('No test selected.  Test cannot be run.');
             return;
         }
 
 
-//        var newTest = {
-//            '@type': 'java.util.HashMap'
-//        };
-//
-//        var testList = $('#testView .form-control');
-//
-//        $.each(testList, function (index, value) {
-//            newTest['' + value.id + ''] = '' + value.value + '';
-//        });
+        var currentTest = _testData[_selectedTest];
+
+        var test = {};
+
+        var name = $("#selectedTestName").val();
+        test["name"] = name;
+        test["@type"] = "com.cedarsoftware.ncube.NCubeTest";
+
+        var elements = $("#testView > div[id^='test-parameter']");
+
+        var coord = {};
+
+        $.each(elements, function (index, value)
+        {
+            var parameter = {};
+
+            var id = value.id;
+            var parameterId = id.replace("test-parameter-", "");
+
+            var item = $("#" + id + "-value").val();
+            var url = $("#" + id + "-url").hasClass("btn-primary");
+            var type = $("#" + id + "-selector").val();
+
+            if (url) {
+                parameter["url"] = item;
+            } else {
+                parameter["value"] = item;
+            }
+
+            parameter["type"] = type;
+
+            coord[parameterId] = parameter;
+
+        });
+
+        test["coord"] = coord;
+
+        var results = $("#testView > div[id='expectedResult']");
+        $.each(results, function (index, value)
+        {
+            var parameter = {};
+
+            var id = value.id;
+
+            var item = $("#" + id + "-value").val();
+            var url = $("#" + id + "-url").hasClass("btn-primary");
+            var type = $("#" + id + "-selector").val();
+
+            if (url) {
+                parameter["url"] = item;
+            } else {
+                parameter["value"] = item;
+            }
+
+            parameter["type"] = type;
+
+            test[id] = parameter;
+
+        });
 
 
-        var result = call("ncubeController.getCell", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test['coord']]);
+        var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);
 
         var resultPane = $('#testResult');
         resultPane.hide();
