@@ -10,11 +10,13 @@ import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
+import com.cedarsoftware.ncube.UrlCommandCell;
 import com.cedarsoftware.ncube.formatters.HtmlFormatter;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
+import com.cedarsoftware.util.DeepEquals;
 import com.cedarsoftware.util.EncryptionUtilities;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonReader;
@@ -114,6 +116,45 @@ public class NCubeController extends BaseController
             urls.add(sb.toString());
         }
         return urls;
+    }
+
+    public String runTest(String name, String app, String version, String status, NCubeTest test) {
+        try
+        {
+            NCube ncube = nCubeService.getCube(name, app, version, status);
+            Map coord = test.getCoordinate();
+            Object actual = ncube.getCell(coord);
+            Object expected = test.getExpectedResult();
+
+
+            // For UrlCommands we need to actually execute the command for an apple to apple comparison.
+            // Note:  a GroovyExpression that returns true is the same as a Boolean.True return type.
+            if (expected instanceof UrlCommandCell) {
+                UrlCommandCell cell = (UrlCommandCell)expected;
+
+                coord.put("ncube", ncube);
+                coord.put("input", new HashMap());
+                coord.put("output", new HashMap());
+                expected = cell.execute(coord);
+            }
+
+            if (!DeepEquals.deepEquals(actual, expected)) {
+                HashMap map = new HashMap();
+                map.put("status", "Failure");
+                map.put("message", "Expected: '" + expected + "'<br />  Actual: '" + actual + "'");
+                return JsonWriter.objectToJson(map);
+            }
+
+            HashMap map = new HashMap();
+            map.put("status", "Success");
+            map.put("message", "Success");
+            return JsonWriter.objectToJson(map);
+        }
+        catch(Exception e)
+        {
+            fail(e);
+            return null;
+        }
     }
 
     public Object[] getCubeList(String filter, String app, String version, String status)
@@ -641,29 +682,35 @@ public class NCubeController extends BaseController
         }
     }
 
-    public void getTestData(String name, String app, String version, String status)
+    public Object[] getTests(String name, String app, String version, String status)
     {
         try
         {
-            nCubeService.getTestData(name, app, version, status);
+            String s = nCubeService.getTestData(name, app, version, status);
+            if (StringUtilities.isEmpty(s)) {
+                return null;
+            }
+            return (Object[])JsonReader.jsonToJava(s);
         }
         catch (Exception e)
         {
             fail(e);
         }
+        return null;
     }
 
 
-    public void saveTestData(String name, String app, String version, String testData)
+    public void saveTests(String name, String app, String version, Object[] tests)
     {
         try
         {
             if (!isAllowed(app, version))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("This app and version CANNOT be saved.");
                 return;
             }
-            nCubeService.updateTestData(name, app, version, testData);
+            String data = JsonWriter.objectToJson(tests);
+            nCubeService.updateTestData(name, app, version, data);
         }
         catch (Exception e)
         {
@@ -725,24 +772,27 @@ public class NCubeController extends BaseController
             {
                 return new Object[]{};
             }
-            List<NCubeTest> list = ncube.generateNCubeTests();
+            return ncube.generateNCubeTests().toArray();
 
+            /*
             Object[] items = new Object[list.size()];
             int i=0;
             for (NCubeTest test : list) {
                 HashMap<String, Object> map = new HashMap<>();
                 map.put("name", test.getName());
-                map.put("coord", test.getCoordDescription());
-                map.put("expectedResult", test.getExpectedResultDescription());
+                map.put("coordDescription", test.getCoordDescription());
+                map.put("expectedResultDescription", test.getExpectedResultDescription());
                 items[i++] = map;
             }
+
             return items;
+            */
         }
         catch (Exception e)
         {
             fail(e);
-            return null;
         }
+        return null;
     }
 
     public Object getCell(String name, String app, String version, String status, HashMap map)
