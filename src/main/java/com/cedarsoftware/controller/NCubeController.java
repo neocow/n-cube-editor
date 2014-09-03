@@ -301,8 +301,8 @@ public class NCubeController extends BaseController
                         return 0;
                     }
                     int major = Integer.valueOf(pieces[0]) * 1000 * 1000;
-                    int minor = Integer.valueOf(pieces[0]) * 1000;
-                    int rev = Integer.valueOf(pieces[0]);
+                    int minor = Integer.valueOf(pieces[1]) * 1000;
+                    int rev = Integer.valueOf(pieces[2]);
                     return major + minor + rev;
                 }
             });
