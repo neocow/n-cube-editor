@@ -4,20 +4,17 @@ import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
 import com.cedarsoftware.ncube.CellInfo;
-import com.cedarsoftware.ncube.Column;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
 import com.cedarsoftware.ncube.UrlCommandCell;
-import com.cedarsoftware.ncube.formatters.HtmlFormatter;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.DeepEquals;
-import com.cedarsoftware.util.EncryptionUtilities;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
@@ -620,7 +617,6 @@ public class NCubeController extends BaseController
     {
         try
         {
-            // TODO: 1) when saving n-cube, add SHA1 to ncube's meta data.
             // TODO: 2) when updating n-cube, check that persisted sha1 matches the sha1 of the loaded one that was
             //          sent to the client.  How are we going to send / save that value on the to /on the client.
             // TODO: 3) rebase ids on load.
@@ -825,7 +821,7 @@ public class NCubeController extends BaseController
             }
 
             NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
-            Set<Long> colIds = getCoordinate(ids, ncube);
+            Set<Long> colIds = getCoordinate(ids);
 
             Object cellValue = null;
             if (cellInfo == null)
@@ -857,7 +853,7 @@ public class NCubeController extends BaseController
             NCube ncube = nCubeService.getCube(name, app, version, status);
 
             // 2. create an SHA1 to axis name maps
-            Set<Long> colIds = getCoordinate(ids, ncube);
+            Set<Long> colIds = getCoordinate(ids);
 
             Object cell = ncube.getCellByIdNoExecute(colIds);
             CellInfo cellInfo = new CellInfo(cell);
@@ -871,28 +867,13 @@ public class NCubeController extends BaseController
         }
     }
 
-    private Set<Long> getCoordinate(Object[] ids, NCube ncube)
+    private static Set<Long> getCoordinate(Object[] ids)
     {
-        Map<String, Axis> axes = new HashMap<>();
-        for (Axis axis : (List<Axis>)ncube.getAxes())
-        {
-            final String axisName = axis.getName();
-            String colName = HtmlFormatter.isSafeAxisName(axisName) ?
-                    axisName :  EncryptionUtilities.calculateSHA1Hash(StringUtilities.getBytes(axisName, "UTF-8"));
-            axes.put(colName, axis);
-        }
-
         // 3. Locate columns on each axis
         Set<Long> colIds = new HashSet<>();
         for (Object id : ids)
         {
-            Object[] pair = (Object[]) id;
-            String axisName = (String) pair[0];
-            String pos = (String) pair[1];
-            Axis axis = axes.get(axisName);
-            List<Column> cols = axis.getColumns();
-            Column column = cols.get(Integer.parseInt(pos));
-            colIds.add(column.getId());
+            colIds.add(Long.parseLong((String)id));
         }
         return colIds;
     }

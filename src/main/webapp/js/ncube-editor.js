@@ -840,13 +840,7 @@ $(function ()
             $(this).on("dblclick", function ()
             {   // On double click open Edit Cell modal
                 _uiCellId = $(this);
-                var pairs = _uiCellId.attr('data-id').split("_");
-                var coord =[];
-                for (var i=0; i < pairs.length; i++)
-                {
-                    coord[coord.length] = pairs[i].split("-");
-                }
-                _cellId = coord;
+                _cellId = _uiCellId.attr('data-id').split("_");
                 editCell();
             });
         });
