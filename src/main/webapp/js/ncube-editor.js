@@ -2146,7 +2146,6 @@ $(function ()
         var displayOrder = 0;
         $.each(axis.columns["@items"], function (key, item)
         {
-            delete item['@type'];
             if (!item.displayOrder || item.displayOrder < 2147483647)
             {   // Don't add default column in
                 item.displayOrder = displayOrder++;
@@ -2193,7 +2192,6 @@ $(function ()
         if (result.status === true)
         {
             axis = result.data;
-            delete axis['@type'];
             if (!axis.columns['@items'])
             {
                 axis.columns['@items'] = [];

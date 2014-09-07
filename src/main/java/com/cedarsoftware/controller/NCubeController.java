@@ -4,6 +4,7 @@ import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
 import com.cedarsoftware.ncube.CellInfo;
+import com.cedarsoftware.ncube.Column;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
@@ -562,11 +563,12 @@ public class NCubeController extends BaseController
         Object[] items = (Object[]) cols.get("@items");
         if (items != null)
         {
-            int i=0;
             for (Object item : items)
             {
                 Map col = (Map) item;
-                col.put("id", i++);
+                Column actualCol= axis.getColumnById((Long)col.get("id"));
+                col.put("id", String.valueOf(col.get("id")));
+                col.put("value", new CellInfo(actualCol.getValue()).value);
             }
         }
         return axisConverted;
@@ -613,30 +615,19 @@ public class NCubeController extends BaseController
      * Update an entire set of columns on an axis at one time.  The updatedAxis is not a real axis,
      * but treated like an Axis-DTO where the list of columns within the axis are in display order.
      */
-    public void updateAxisColumns(String name, String app, String version, Map<String, Object> updatedAxis)
+    public void updateAxisColumns(String name, String app, String version, Axis updatedAxis)
     {
         try
         {
-            // TODO: 2) when updating n-cube, check that persisted sha1 matches the sha1 of the loaded one that was
-            //          sent to the client.  How are we going to send / save that value on the to /on the client.
-            // TODO: 3) rebase ids on load.
-            // TODO: 4) Use re-based ids in HTML
-            //
-
             if (!isAllowed(app, version))
             {
                 markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
-            Axis oldAxis = ncube.getAxis((String)updatedAxis.get("name"));
-            updatedAxis.put("@type", Axis.class.getName());
-//            Axis update = new Axis(updatedAxis.get("name"), updatedAxis.get("type"), updatedAxis.get("valueType"), updatedAxis.get("hasDefault"));
-
-            Axis update = new Axis((String)updatedAxis.get("name"), AxisType.DISCRETE, AxisValueType.STRING, false);
-            // TODO: Test adding column at FRONT
-            oldAxis.updateColumns(update);
-//            nCubeService.updateNCube(ncube);
+            Axis oldAxis = ncube.getAxis(updatedAxis.getName());
+            oldAxis.updateColumns(updatedAxis);
+            nCubeService.updateNCube(ncube);
         }
         catch (Exception e)
         {
@@ -730,6 +721,7 @@ public class NCubeController extends BaseController
     private static void fail(Exception e)
     {
         markRequestFailed(getCauses(e));
+        LOG.warn(e);
     }
 
     private static String getCauses(Throwable t)
