@@ -2141,7 +2141,6 @@ $(function ()
                     item.value = inputText.val();
                 });
 
-                // TODO: Need to format Range, Set, Nearest, Rule?
                 inputText.val(item.value);
                 span.append(inputBtn);
                 div.append(span);
