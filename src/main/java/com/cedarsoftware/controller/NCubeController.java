@@ -80,7 +80,7 @@ public class NCubeController extends BaseController
         return "UD.REF.APP".equals(app) && version.startsWith("0.0.") && "SNAPSHOT".equals(status) || !"UD.REF.APP".equals(app);
     }
 
-    private static List<String> _defaultUrls = new ArrayList<String>();
+    private static List<String> _defaultUrls = new ArrayList<>();
     public static void setDefaultUrls(List<String> urls) {
         _defaultUrls = urls;
     }
@@ -625,8 +625,7 @@ public class NCubeController extends BaseController
                 return;
             }
             NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
-            Axis oldAxis = ncube.getAxis(updatedAxis.getName());
-            oldAxis.updateColumns(updatedAxis);
+            ncube.updateColumns(updatedAxis);
             nCubeService.updateNCube(ncube);
         }
         catch (Exception e)
