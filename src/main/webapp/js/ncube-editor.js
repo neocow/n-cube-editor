@@ -669,7 +669,6 @@ $(function ()
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
-                openGroupContainingLastSelectedNCube();
             });
             anchor.html(value);
             if (value == _selectedStatus)
@@ -703,7 +702,6 @@ $(function ()
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
-                openGroupContainingLastSelectedNCube();
             });
             anchor.html(value);
             if (value == _selectedVersion)
@@ -840,47 +838,21 @@ $(function ()
             _errorId = showNote('Unable to load ' + _selectedCubeName + ':<hr class="hr-small"/>' + result.data);
         }
 
-//        $('.column').each(function ()
-//        {
-//            // TODO: Default must not go into 'edit mode'
-//            $(this).on("dblclick", function ()
-//            {   // On double click, place into contenteditable mode
-//                $(this).attr('contenteditable', 'true');
-//                $(this).focus(
-//            });
-//            $(this).blur(function ()
-//            {   // On blur, turn off contenteditable mode
-//                var colId = $(this).attr('data-id').split('c')[1];
-//                var value = cleanString($(this).html());
-//                var result = call("ncubeController.updateColumnCell", [_selectedCubeName, _selectedApp, _selectedVersion, colId, value]);
-//                clearError();
-//                if (result.status === true)
-//                {
-//                    $(this).attr('contenteditable', 'false');
-//                    $("[data-id='" + $(this).attr('data-id') + "']").each(function ()
-//                    {
-//                        $(this).html(value);
-//                    });
-//                }
-//                else
-//                {
-//                    _errorId = showNote('Unable to update column value:<hr class="hr small"/>' + result.data);
-//                }
-//            });
-//        });
+        $('.column').each(function ()
+        {
+            $(this).dblclick(function()
+            {   // On double click, bring up column value editor modal
+                var col = $(this);
+                editColumns(col.attr('data-axis'));
+            });
+        });
 
         $('.cell').each(function ()
         {
-            $(this).on("dblclick", function ()
+            $(this).dblclick(function ()
             {   // On double click open Edit Cell modal
                 _uiCellId = $(this);
-                var pairs = _uiCellId.attr('data-id').split("_");
-                var coord =[];
-                for (var i=0; i < pairs.length; i++)
-                {
-                    coord[coord.length] = pairs[i].split("-");
-                }
-                _cellId = coord;
+                _cellId = _uiCellId.attr('data-id').split("_");
                 editCell();
             });
         });
@@ -1369,6 +1341,7 @@ $(function ()
         {
             console.log('Unknown tab selected: ' + _activeTab);
         }
+        openGroupContainingLastSelectedNCube();
     }
 
     /**
@@ -1564,6 +1537,7 @@ $(function ()
         var result = call("ncubeController.createCube", [cubeName, appName, version]);
         if (result.status === true)
         {
+            _selectedCubeName = cubeName;
             loadAppNames();
             _selectedApp = appName;
             loadAppListView();
@@ -2367,7 +2341,6 @@ $(function ()
         var displayOrder = 0;
         $.each(axis.columns["@items"], function (key, item)
         {
-            delete item['@type'];
             if (!item.displayOrder || item.displayOrder < 2147483647)
             {   // Don't add default column in
                 item.displayOrder = displayOrder++;
@@ -2385,7 +2358,6 @@ $(function ()
                     item.value = inputText.val();
                 });
 
-                // TODO: Need to format Range, Set, Nearest, Rule?
                 inputText.val(item.value);
                 span.append(inputBtn);
                 div.append(span);
@@ -2414,7 +2386,6 @@ $(function ()
         if (result.status === true)
         {
             axis = result.data;
-            delete axis['@type'];
             if (!axis.columns['@items'])
             {
                 axis.columns['@items'] = [];
@@ -2721,17 +2692,22 @@ $(function ()
             return;
         }
 
-        _uiCellId.html(cellInfo.value);
         if (cellInfo.isUrl)
         {
+            _uiCellId.html(cellInfo.value);
             _uiCellId.attr({'class':'cell cell-url'});
         }
         else if (cellInfo.dataType == "exp" || cellInfo.dataType == "method")
         {
+            var pre2 = $('<pre/>').attr({'class':'ncube-pre'});
+            pre2.html(cellInfo.value);
+            _uiCellId.html('');
+            _uiCellId.append(pre2);
             _uiCellId.attr({'class':'cell cell-code'});
         }
         else
         {
+            _uiCellId.html(cellInfo.value);
             _uiCellId.attr({'class':'cell'});
         }
         _cellId = null;

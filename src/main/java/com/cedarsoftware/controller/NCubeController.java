@@ -11,13 +11,11 @@ import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
 import com.cedarsoftware.ncube.UrlCommandCell;
-import com.cedarsoftware.ncube.formatters.HtmlFormatter;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.DeepEquals;
-import com.cedarsoftware.util.EncryptionUtilities;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
@@ -82,7 +80,7 @@ public class NCubeController extends BaseController
         return "UD.REF.APP".equals(app) && version.startsWith("0.0.") && "SNAPSHOT".equals(status) || !"UD.REF.APP".equals(app);
     }
 
-    private static List<String> _defaultUrls = new ArrayList<String>();
+    private static List<String> _defaultUrls = new ArrayList<>();
     public static void setDefaultUrls(List<String> urls) {
         _defaultUrls = urls;
     }
@@ -301,8 +299,8 @@ public class NCubeController extends BaseController
                         return 0;
                     }
                     int major = Integer.valueOf(pieces[0]) * 1000 * 1000;
-                    int minor = Integer.valueOf(pieces[0]) * 1000;
-                    int rev = Integer.valueOf(pieces[0]);
+                    int minor = Integer.valueOf(pieces[1]) * 1000;
+                    int rev = Integer.valueOf(pieces[2]);
                     return major + minor + rev;
                 }
             });
@@ -565,11 +563,12 @@ public class NCubeController extends BaseController
         Object[] items = (Object[]) cols.get("@items");
         if (items != null)
         {
-            int i=0;
             for (Object item : items)
             {
                 Map col = (Map) item;
-                col.put("id", i++);
+                Column actualCol= axis.getColumnById((Long)col.get("id"));
+                col.put("id", String.valueOf(col.get("id")));
+                col.put("value", new CellInfo(actualCol.getValue()).value);
             }
         }
         return axisConverted;
@@ -616,31 +615,18 @@ public class NCubeController extends BaseController
      * Update an entire set of columns on an axis at one time.  The updatedAxis is not a real axis,
      * but treated like an Axis-DTO where the list of columns within the axis are in display order.
      */
-    public void updateAxisColumns(String name, String app, String version, Map<String, Object> updatedAxis)
+    public void updateAxisColumns(String name, String app, String version, Axis updatedAxis)
     {
         try
         {
-            // TODO: 1) when saving n-cube, add SHA1 to ncube's meta data.
-            // TODO: 2) when updating n-cube, check that persisted sha1 matches the sha1 of the loaded one that was
-            //          sent to the client.  How are we going to send / save that value on the to /on the client.
-            // TODO: 3) rebase ids on load.
-            // TODO: 4) Use re-based ids in HTML
-            //
-
             if (!isAllowed(app, version))
             {
                 markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
             NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
-            Axis oldAxis = ncube.getAxis((String)updatedAxis.get("name"));
-            updatedAxis.put("@type", Axis.class.getName());
-//            Axis update = new Axis(updatedAxis.get("name"), updatedAxis.get("type"), updatedAxis.get("valueType"), updatedAxis.get("hasDefault"));
-
-            Axis update = new Axis((String)updatedAxis.get("name"), AxisType.DISCRETE, AxisValueType.STRING, false);
-            // TODO: Test adding column at FRONT
-            oldAxis.updateColumns(update);
-//            nCubeService.updateNCube(ncube);
+            ncube.updateColumns(updatedAxis);
+            nCubeService.updateNCube(ncube);
         }
         catch (Exception e)
         {
@@ -734,6 +720,7 @@ public class NCubeController extends BaseController
     private static void fail(Exception e)
     {
         markRequestFailed(getCauses(e));
+        LOG.warn(e);
     }
 
     private static String getCauses(Throwable t)
@@ -825,7 +812,7 @@ public class NCubeController extends BaseController
             }
 
             NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
-            Set<Long> colIds = getCoordinate(ids, ncube);
+            Set<Long> colIds = getCoordinate(ids);
 
             Object cellValue = null;
             if (cellInfo == null)
@@ -853,12 +840,8 @@ public class NCubeController extends BaseController
     {
         try
         {
-            // 1. Fetch the n-cube
             NCube ncube = nCubeService.getCube(name, app, version, status);
-
-            // 2. create an SHA1 to axis name maps
-            Set<Long> colIds = getCoordinate(ids, ncube);
-
+            Set<Long> colIds = getCoordinate(ids);
             Object cell = ncube.getCellByIdNoExecute(colIds);
             CellInfo cellInfo = new CellInfo(cell);
             cellInfo.collapseToUiSupportedTypes();
@@ -871,28 +854,13 @@ public class NCubeController extends BaseController
         }
     }
 
-    private Set<Long> getCoordinate(Object[] ids, NCube ncube)
+    private static Set<Long> getCoordinate(Object[] ids)
     {
-        Map<String, Axis> axes = new HashMap<>();
-        for (Axis axis : (List<Axis>)ncube.getAxes())
-        {
-            final String axisName = axis.getName();
-            String colName = HtmlFormatter.isSafeAxisName(axisName) ?
-                    axisName :  EncryptionUtilities.calculateSHA1Hash(StringUtilities.getBytes(axisName, "UTF-8"));
-            axes.put(colName, axis);
-        }
-
         // 3. Locate columns on each axis
         Set<Long> colIds = new HashSet<>();
         for (Object id : ids)
         {
-            Object[] pair = (Object[]) id;
-            String axisName = (String) pair[0];
-            String pos = (String) pair[1];
-            Axis axis = axes.get(axisName);
-            List<Column> cols = axis.getColumns();
-            Column column = cols.get(Integer.parseInt(pos));
-            colIds.add(column.getId());
+            colIds.add(Long.parseLong((String)id));
         }
         return colIds;
     }
