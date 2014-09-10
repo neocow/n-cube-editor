@@ -13,9 +13,9 @@ $(function ()
     var _versions = [];
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
-    var _selectedTest = -1;
     var _selectedVersion = localStorage[SELECTED_VERSION];
     var _selectedTab = localStorage[SELECTED_TAB];
+    var _testSelectionAnchor = -1;
     var _testData = null;
     var _selectedStatus = "SNAPSHOT";
     var _axisName;
@@ -520,10 +520,22 @@ $(function ()
             runCurrentTest();
         });
 
-        $('#renameCurrentTest').click(function ()
+        $('#renameCurrentTestMenu').click(function ()
         {
-            renameCurrentTest();
+            renameCurrentTestMenu();
         });
+
+        $('#duplicateCurrentTestMenu').click(function ()
+        {
+            duplicateCurrentTestMenu();
+        });
+
+        $("#duplicateCurrentTestOk").click(function ()
+        {
+            duplicateCurrentTestOk();
+        });
+
+
 
 
 
@@ -590,7 +602,7 @@ $(function ()
         var testResult = $('#testResult');
         testResult.empty();
         _testData = null;
-        _selectedTest = -1;
+        _testSelectionAnchor = -1;
 
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
@@ -604,6 +616,7 @@ $(function ()
         if (testListResult.status === true)
         {
             _testData = testListResult.data;
+            _testSelectionAnchor = 0;
             refreshTestList();
         }
         else {
@@ -629,21 +642,31 @@ $(function ()
                 anchor.html('<span class="glyphicon glyphicon-unchecked" style="vertical-align: -1px;"></span>&nbsp;&nbsp;' + value['name']);
 
 
-                if (index == _selectedTest) {
-                    var target = link.find("span");
-                    target.toggleClass("glyphicon-unchecked glyphicon-check");
+                if (index == _testSelectionAnchor) {
+                    var span = anchor.find("span");
+                    span.addClass("glyphicon-check");
                     anchor.toggleClass("selected");
                 }
 
                 anchor.click(function(e) {
-                    _selectedTest = index;
 
                     var link = $(e.currentTarget);
                     var target = link.find("span");
 
-                    target.toggleClass("glyphicon-unchecked glyphicon-check");
-                    link.toggleClass("selected");
+                    if (e.shiftKey) {
 
+                    } else if (e.ctrlKey) {
+                        target.toggleClass("glyphicon-unchecked glyphicon-check");
+                        link.toggleClass("selected");
+                    } else {
+                        _testSelectionAnchor = index;
+                        clearTestSelection();
+                        target.addClass("glyphicon-check");
+                        target.removeClass("glyphicon-unchecked");
+                        link.addClass("selected");
+                    }
+
+                    enableTestItems();
                     loadTestView(index);
                 });
                 testListItems.append(anchor);
@@ -731,6 +754,7 @@ $(function ()
             span.removeClass("glyphicon-check");
             span.addClass("glyphicon-unchecked");
         });
+        enableTestItems();
     }
 
     function selectAllTests()
@@ -743,8 +767,118 @@ $(function ()
             span.addClass("glyphicon-check");
             span.removeClass("glyphicon-unchecked");
         });
+        enableTestItems();
     }
 
+    function enableTestItems() {
+        var count = $("#testListItems a.selected").length;
+
+        $("#renameCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+        $("#runCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+        $("#duplicateCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+    }
+
+    function findTestByName(name) {
+        if (_testData == null) {
+            return null;
+        }
+
+        for (var i=0; i<_testData.length; i++) {
+            if (name == _testData[i]["name"]) {
+                return _testData[i];
+            }
+        }
+        return null;
+    }
+
+
+    function duplicateCurrentTestMenu() {
+        clearError();
+
+        if ($('#duplicateCurrentTestMenu').parent().hasClass('disabled')) {
+            return;
+        }
+
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube is currently selected. There is nothing to rename.');
+            return;
+        }
+
+        var list = getSelectedTestList();
+
+        if (list.length != 1)
+        {
+            if (list.length == 0) {
+                _errorId = showNote('No test is currently selected. Select a test to duplicate.');
+            } else {
+                _errorId = showNote('More than one test is selected. There can only be one test selected to duplicate.');
+            }
+            return;
+        }
+
+        $('#duplicateTestTitle').html('Duplicate \'' + $(list[0]).text().trim() + '\' ?');
+        $('#duplicateTestNameField').text("");
+        $('#duplicateTestModal').modal();
+    }
+
+    function getSelectedTestList() {
+        return $("#testListItems a.selected");
+    }
+
+    function getSelectedTestCount() {
+        return getSelectedTestList().length;
+    }
+
+    function getSelectedTestFromModel() {
+        var list = getSelectedTestList();
+        return findTestByName($(list[0]).text().trim());
+    }
+
+    function duplicateCurrentTestOk() {
+        // see if name already exists in tests?
+        $('#duplicateTestModal').hide();
+
+        var newName = $('#duplicateTestNameField').val().trim();
+
+        var test = getSelectedTestFromModel();
+
+        var newTest = duplicateTest(test, newName);
+        _testData.push(newTest);
+        refreshTestList();
+    }
+
+    function duplicateTest(test, newTestName) {
+        var newTest = {};
+        newTest["name"] = newTestName;
+
+        var parameters = {};
+
+        $.each(test["coordDescription"], function(paramKey, paramDescription) {
+            var parameter = {};
+
+            if (paramKey.indexOf('@') == 0) {
+                parameter[paramKey] = paramDescription;
+            } else {
+                $.each(paramDescription, function(key, value) {
+                    parameter[key] = value;
+                });
+            }
+
+            parameters[paramKey] = parameter;
+        });
+
+        newTest["coordDescription"] = parameters;
+
+        var result = {};
+        $.each(test["expectedResultDescription"], function(key, value) {
+            result[key] = value;
+        });
+
+        newTest["expectedResultDescription"] = result;
+
+        return newTest;
+    }
 
     function loadNCubeListView()
     {
@@ -1026,7 +1160,7 @@ $(function ()
 
         var list = [{"name" : "Run Test" , "func" : function() { runCurrentTest(); }},
                     {"name" : "divider" },
-                    {"name" : "Add Parameter" , "func" : function() { addTestParameter(); }}];
+                    {"name" : "Add Parameter" , "func" : function() { addTestParameterMenu(); }}];
 
         var ul = $("<ul/>").attr({'class':'dropdown-menu'});
 
@@ -1252,7 +1386,7 @@ $(function ()
 
         renameButton.click(function ()
         {
-            renameCurrentTest();
+            renameCurrentTestMenu();
         });
 
         inputGroupAddOn.append(renameButton);
@@ -1599,9 +1733,9 @@ $(function ()
     }
 
 
-    function deleteTestParameterOk() {
+    function deleteTestParameterOk()
+    {
         $('#deleteTestParameter').modal('hide');
-
         var id = $('#deleteParameterHiddenId').html();
         $(id).remove();
     }
@@ -1642,7 +1776,7 @@ $(function ()
         }
     }
 
-    function renameCurrentTest()
+    function renameTestMenu()
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
@@ -1651,14 +1785,19 @@ $(function ()
             return;
         }
 
-        if (!_selectedTest)
+        var list = $("#testListItems a");
+
+        if (list.length != 1)
         {
-            _errorId = showNote('No test is currently selected. There is nothing to rename.');
+            if (list.length == 0) {
+                _errorId = showNote('No test is currently selected. Select a test to duplicate.');
+            } else {
+                _errorId = showNote('More than one test is selected. There can only be one test selected to duplicate.');
+            }
             return;
         }
 
-
-        var test = _testData[_selectedTest]["name"];
+        var test = _testData[_testSelectionAnchor]["name"];
 
 
         $('#renameTestOldName').val(test);
@@ -1768,7 +1907,7 @@ $(function ()
         }
 
         // change currently selected model item
-        var test = _testData[_selectedTest];
+        var test = _testData[_testSelectionAnchor];
         test["name"] = newName;
 
         // change in our list.
@@ -2117,7 +2256,7 @@ $(function ()
         var temp = null;
         $.each(_testData, function (index, value)
         {
-            if (value['name'] == _selectedTest) {
+            if (value['name'] == _testSelectionAnchor) {
                 return temp = value;
             }
         });
@@ -2147,9 +2286,9 @@ $(function ()
         //  If a test is currently selected
         if (test != null) {
             //  locate test in list to add it in...and add it before saving.
-            var oldTest = _testData[_selectedTest];
+            var oldTest = _testData[_testSelectionAnchor];
             if (test["name"] == oldTest["name"]) {
-                _testData[_selectedTest] = test;
+                _testData[_testSelectionAnchor] = test;
             }
         }
 
@@ -2222,7 +2361,12 @@ $(function ()
         return parameter;
     }
 
-    function addTestParameter() {
+    function addTestParameterMenu() {
+        $( "#foo").unbind( "click" );
+    }
+
+    function addTestParameterOk() {
+
     }
 
     function runCurrentTest() {
@@ -2232,13 +2376,13 @@ $(function ()
             return;
         }
 
-        if (_testData == null || _selectedTest == -1) {
+        if (_testData == null || _testSelectionAnchor == -1) {
             _errorId = showNote('No test selected.  Test cannot be run.');
             return;
         }
 
         try {
-            var currentTest = _testData[_selectedTest];
+            var currentTest = _testData[_testSelectionAnchor];
 
             var test = getActiveTest();
             var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);
