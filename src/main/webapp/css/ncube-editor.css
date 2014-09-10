@@ -34,9 +34,7 @@ a.ncube-notselected:hover {
     padding: 5px;
 }
 .panel-body {
-    padding: 10px;
-    padding-right: 5px;
-    padding-left: 5px;
+    padding: 10px 5px;
     overflow: auto;
 }
 
@@ -58,19 +56,24 @@ a.ncube-notselected:hover {
     margin-bottom: 2px;
 }
 
-#west {
+#west, #testLayoutEast {
     background-color: #555;
     height:100%;
     width: 100%;
     text-align: left;
-    font-family: "arial","helvetica", sans-serif;
+    /*font-family: "arial","helvetica", sans-serif;*/
+    font-family: 'Open Sans', sans-serif;
     font-size: small;
-    font-weight: 500;
+    font-weight: 600;
     padding-bottom: 0;
     margin: 0;
     padding-top: 0;
     padding-left: 6px;
     padding-right: 6px;
+}
+
+#west > a.accordion-toggle {
+    font-size: larger;
 }
 
 #center {
@@ -81,18 +84,33 @@ a.ncube-notselected:hover {
     width: 100%;
 }
 
+#app-list-div {
+    margin-top: 6px;
+}
+
+#ncube-list-div {
+    margin-bottom: 6px;
+}
+
 #testLayoutCenter {
     padding: 0 !important;
     overflow: auto !important;
 }
+
+
 
 #testLayoutEast {
     margin: 0;
     padding: 0;
 }
 
-#testView {
-    margin-top: 8px;
+#testListWarning {
+    margin: 5px 5px 0px 5px;
+}
+
+
+#testListItems {
+    margin-bottom: 0px;
 }
 
 #tests {
@@ -107,6 +125,29 @@ a.ncube-notselected:hover {
 
 .top-buffer { margin-top:20px; }
 
+#testView {
+    min-width: 740px;
+}
+
+#testLayoutEast > .panel {
+    margin-bottom: 0;
+}
+
+
+#testList div.panel-body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+
+#testListItems a.selected {
+    background: rgb(217, 237, 247); /* fallback */
+    background: rgba(217, 237, 247, .8);
+}
+
+#testListItems a.list-group-item {
+    padding: 5px;
+}
 
 
 .navbar-custom {
@@ -207,3 +248,16 @@ a.ncube-notselected:hover {
 .navbar-custom .navbar-link:hover {
     color: #a0d0ff;
 }
+
+/*
+.bs-docs-nav .dropdown-toggle .icon-bar {
+    background-color: #563d7c;
+}
+
+.dropdown-toggle .icon-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 1px;
+}
+*/

@@ -8,6 +8,7 @@
     <meta name="description" content="HTML 5 GUI Editor for building NCubes">
     <meta name="author" content="John DeRegnaucourt">
 
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:600' rel='stylesheet' type='text/css'>
     <link href="./css/jquery.layout-1.4.0.css" rel="stylesheet"/>
     <link href="./css/jquery-ui-1.11.0.css" rel="stylesheet"/>
     <link href="./css/jquery.gritter.css" rel="stylesheet"/>
@@ -96,6 +97,7 @@
             </ul>
         </div>
     </div>
+
 
     <div id="version-list-div" class="panel panel-warning">
         <div class="panel-heading">
@@ -259,34 +261,57 @@
             </form>
         </div>
 
-
         <div id="tests" class="tab-pane fade container" style="height:100%;width:100%">
-            <div id="testLayoutEast" class="pane ui-layout-east" title="Test List" style="overflow: auto !important;" aria-disabled="false">
+            <div id="testLayoutEast" class="pane ui-layout-east" title="Tests" style="overflow: hidden;" aria-disabled="false">
 
-                <div id="testList" class="list-group">
-                     <div id="testListItems" class="list-group-item">
-
-                     </div>
-
-                    <div class="btn-group"><button id="saveTestsButton" class="btn btn-primary">Save Tests</button></div>
-                 </div>
-                 <div id="testListWarning" class="panel panel-info">
-                    <div class="panel-heading" >
-                        No tests were found
+                <div id="testList" class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <div class="btn-group">
+                                <a type="button" class="btn btn-primary">Tests</a>
+                                <a type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+                                    <span class="caret"></span>
+                                    <span class="sr-only">Toggle Dropdown</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a id="renameCurrentTest" href="#">Rename Test</a></li>
+                                    <li><a id="runCurrentTest">Run Test</a></li>
+                                    <li class="divider"></li>
+                                    <li><a id="saveAllTests" href="#">Save All</a></li>
+                                    <li><a id="runAllTests" href="#">Run All</a></li>
+                                </ul>
+                            </div>
+                            <span id="testCount" class="badge pull-right">4</span>
+                        </h4>
                     </div>
-                     <div class="panel-body">
-                         <p>There were no tests found for this cube.  Would you like to <a id="generateTestsLink" href="#">generate tests?</a></p>
-                     </div>
-                 </div>
+                    <div class="panel-body" style="height: 100%;">
+                        <ul class="list-group" id="testListItems">
+                        </ul>
+                    </div>
+                </div>
+                <div id="testListWarning" class="panel panel-info">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <span>No tests were found</span>
+                        </h4>
+                    </div>
+                    <div class="panel-body">
+                        <p>There were no tests found for this cube.  Would you like to <a id="generateTestsLink" href="#">generate tests?</a></p>
+                    </div>
+                </div>
+
+
+
             </div>
 
-            <div class="pane ui-layout-south" style="overflow: hidden">
-                <div id="testResult" class="content">
-                </div>
-            </div>
             <div id="testLayoutCenter" class="pane ui-layout-center">
-                <form id="testView" class="form-horizontal col-lg-12" role="form">
-                </form>
+                <div class="well well-lg" style="height:100%;">
+                    <form id="testView" role="form">
+                    </form>
+                    <div id="testResult" class="content">
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -411,6 +436,28 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Cube Modal -->
+<div id="deleteParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteParameterLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="deleteParameterLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <h4>Are you sure?</h4>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
+                <button id="deleteParameterOk" class="btn btn-primary">Delete</button>
+            </div>
+        </div>
+        <input type="hidden" id="deleteParameterHiddenId" value="" />
+    </div>
+</div>
+
 
 <!-- Duplicate Cube Modal -->
 <div id="dupeCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="dupeCubeLabel"
