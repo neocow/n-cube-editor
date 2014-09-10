@@ -113,7 +113,6 @@ $(function ()
             ,  east__onresize: function()
             {
                 calculateTestPanelSize();
-                calculateTestPanelSize();
             }
 
         });
@@ -182,7 +181,6 @@ $(function ()
         // resize the tabs layout after creating the tabs
         //secondaryLayout.center.pane.resizeAll(); // resize ONLY the tabs-wrapper layout - faster!
 
-        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
         ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
 
         $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
@@ -422,6 +420,14 @@ $(function ()
         {
             releaseCubesOk()
         });
+        $('#clearTestSelection').click(function ()
+        {
+            clearTestSelection()
+        });
+        $('#selectAllTests').click(function ()
+        {
+            selectAllTests()
+        });
         $('#changeVerMenu').click(function ()
         {
             changeVersion()
@@ -627,9 +633,7 @@ $(function ()
                     var target = link.find("span");
                     target.toggleClass("glyphicon-unchecked glyphicon-check");
                     anchor.toggleClass("selected");
-
                 }
-
 
                 anchor.click(function(e) {
                     _selectedTest = index;
@@ -716,6 +720,31 @@ $(function ()
             list.append(li);
         });
     }
+
+    function clearTestSelection()
+    {
+        $("#testListItems a").each(function (index, elem)
+        {
+            var a = $(elem);
+            var span = a.find("span");
+            a.removeClass("selected");
+            span.removeClass("glyphicon-check");
+            span.addClass("glyphicon-unchecked");
+        });
+    }
+
+    function selectAllTests()
+    {
+        $("#testListItems a").each(function (index, elem)
+        {
+            var a = $(elem);
+            var span = a.find("span");
+            a.addClass("selected");
+            span.addClass("glyphicon-check");
+            span.removeClass("glyphicon-unchecked");
+        });
+    }
+
 
     function loadNCubeListView()
     {
@@ -1233,8 +1262,6 @@ $(function ()
         controls.append(inputGroup);
         labelGroup.append(controls);
 
-
-        return labelGroup;
         return labelGroup;
     }
 
@@ -2196,7 +2223,6 @@ $(function ()
     }
 
     function addTestParameter() {
-        alert("false");
     }
 
     function runCurrentTest() {

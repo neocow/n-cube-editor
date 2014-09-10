@@ -118,6 +118,10 @@ a.ncube-notselected:hover {
     padding: 0px;
 }
 
+#testResult {
+    margin-top: 20px;
+}
+
 #testLayoutSouth {
     margin: 0px;
     padding: 0px;

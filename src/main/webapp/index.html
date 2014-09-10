@@ -268,12 +268,15 @@
                     <div class="panel-heading">
                         <h4 class="panel-title">
                             <div class="btn-group">
-                                <a type="button" class="btn btn-primary">Tests</a>
+                                <a id="runSelectedTests" type="button" class="btn btn-primary">Run Tests</a>
                                 <a type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
                                     <span class="caret"></span>
                                     <span class="sr-only">Toggle Dropdown</span>
                                 </a>
                                 <ul class="dropdown-menu">
+                                    <li><a id="clearTestSelection">Clear Selection</a></li>
+                                    <li><a id="selectAllTests">Select All</a></li>
+                                    <li class="divider"></li>
                                     <li><a id="renameCurrentTest" href="#">Rename Test</a></li>
                                     <li><a id="runCurrentTest">Run Test</a></li>
                                     <li class="divider"></li>
@@ -308,10 +311,9 @@
                 <div class="well well-lg" style="height:100%;">
                     <form id="testView" role="form">
                     </form>
-                    <div id="testResult" class="content">
+                    <div id="testResult" class="content col-sm-12">
                     </div>
                 </div>
-
             </div>
         </div>
 
