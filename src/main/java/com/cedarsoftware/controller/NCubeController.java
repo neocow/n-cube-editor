@@ -840,12 +840,8 @@ public class NCubeController extends BaseController
     {
         try
         {
-            // 1. Fetch the n-cube
             NCube ncube = nCubeService.getCube(name, app, version, status);
-
-            // 2. create an SHA1 to axis name maps
             Set<Long> colIds = getCoordinate(ids);
-
             Object cell = ncube.getCellByIdNoExecute(colIds);
             CellInfo cellInfo = new CellInfo(cell);
             cellInfo.collapseToUiSupportedTypes();

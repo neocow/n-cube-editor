@@ -592,8 +592,8 @@ $(function ()
             testListItems.append(headerText);
 
             $.each(_testData, function (index, value) {
-                var anchor = $("<a/>").attr({'href':'#', 'class':'list-group-item'});
-                var p = $("<p/>").attr({'class':'list-group-item-text'});
+                var anchor = $('<a/>').attr({'href':'#', 'class':'list-group-item'});
+                var p = $('<p/>').attr({'class':'list-group-item-text'});
                 p.html(value['name']);
                 anchor.append(p);
                 if (index == _selectedTest) {
@@ -2475,17 +2475,22 @@ $(function ()
             return;
         }
 
-        _uiCellId.html(cellInfo.value);
         if (cellInfo.isUrl)
         {
+            _uiCellId.html(cellInfo.value);
             _uiCellId.attr({'class':'cell cell-url'});
         }
         else if (cellInfo.dataType == "exp" || cellInfo.dataType == "method")
         {
+            var pre2 = $('<pre/>').attr({'class':'ncube-pre'});
+            pre2.html(cellInfo.value);
+            _uiCellId.html('');
+            _uiCellId.append(pre2);
             _uiCellId.attr({'class':'cell cell-code'});
         }
         else
         {
+            _uiCellId.html(cellInfo.value);
             _uiCellId.attr({'class':'cell'});
         }
         _cellId = null;
