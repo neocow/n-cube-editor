@@ -884,14 +884,9 @@ $(function ()
         refreshTestList();
 
 
-        var container = $('#testListItems');
-        var scrollTo = $('#testListItems a.selected');
-        container.scrollTop(
-                scrollTo.offset().top - container.offset().top + container.scrollTop()
-        );
-//        container.animate({
-//            scrollTop: scrollTo.offset().top - container.offset().top + container.scrollTop()
-//        });
+        $('#testList div.panel-body').animate({
+            scrollTop: $('#testListItems a.selected').offset().top
+        }, 200);
     }
 
     function duplicateTest(test, newTestName) {
@@ -1420,7 +1415,7 @@ $(function ()
         labelGroup.append(label);
 
         var controls = $("<div/>").attr({'class': 'controls'});
-        var inputGroup = $("<div/>").attr({'class':'input-group'});
+        var inputGroup = $("<div/>").attr({'class':'input-group input-group-sm'});
 
         var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': 'selectedTestName', 'readonly':'readonly'});
         input.val(name);
@@ -1465,7 +1460,7 @@ $(function ()
             //$("#" + $(e.currentTarget).attr("data-ref")).remove();
 
             var param = $(e.currentTarget).attr("data-ref");
-            var test = $('#selectedTestName').html();
+            var test = $('#selectedTestName').val();
 
             deleteTestParameter(test, param);
         });
@@ -1774,16 +1769,19 @@ $(function ()
         }
 
         $('#deleteParameterLabel').html('Delete \'' + parameterName + '\' from the test \'' + testName + '\'?');
-        $('#deleteParameterHiddenId').html(parameterName);
-        $('#deleteParameterModal').modal();
+        $('#deleteParameterHiddenId').val(parameterName);
+        $('#deleteParameterModal').modal({
+            keyboard: true
+        });
     }
+
 
 
     function deleteTestParameterOk()
     {
-        $('#deleteTestParameter').modal('hide');
-        var id = $('#deleteParameterHiddenId').html();
-        $(id).remove();
+        $('#deleteParameterModal').modal('hide');
+        var id = $('#deleteParameterHiddenId').val();
+        $('#' + id).remove();
     }
 
     function deleteCube()
@@ -1849,7 +1847,11 @@ $(function ()
         $('#renameTestOldName').val(test);
         $('#renameTestNewName').val("");
         $('#renameTestLabel').html('Rename \'' + test + '\'?');
-        $('#renameTestModal').modal();
+
+        $('#renameTestModal').modal({
+            keyboard: true
+        });
+
     }
 
 
