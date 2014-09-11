@@ -97,7 +97,9 @@ a.ncube-notselected:hover {
     overflow: auto !important;
 }
 
-
+#testLayoutCenter > .well {
+    margin-bottom: 0;
+}
 
 #testLayoutEast {
     margin: 0;
@@ -133,10 +135,10 @@ a.ncube-notselected:hover {
     min-width: 740px;
 }
 
-#testLayoutEast > .panel {
+#testLayoutEast div#testList {
     margin-bottom: 0;
+    border-radius: 0;
 }
-
 
 #testList div.panel-body {
     padding: 0;
@@ -152,7 +154,6 @@ a.ncube-notselected:hover {
 #testListItems a.list-group-item {
     padding: 5px;
 }
-
 
 .navbar-custom {
     background-color: #2474b8;

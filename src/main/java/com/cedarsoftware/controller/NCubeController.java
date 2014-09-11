@@ -757,9 +757,13 @@ public class NCubeController extends BaseController
             NCube ncube = nCubeService.getCube(name, app, version, status);
             if (ncube == null)
             {
-                return new Object[]{};
+                throw new IllegalArgumentException("No cube was found for:  " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
             }
-            return ncube.generateNCubeTests().toArray();
+
+            Object[] tests = ncube.generateNCubeTests().toArray();
+            nCubeService.updateTestData(name, app, version, JsonWriter.objectToJson(tests));
+
+            return tests;
 
             /*
             Object[] items = new Object[list.size()];

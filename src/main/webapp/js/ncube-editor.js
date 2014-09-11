@@ -597,12 +597,10 @@ $(function ()
 
     function loadTestListView(funcName)
     {
-        var testCtrl = $('#testView');
-        testCtrl.empty();
-        var testResult = $('#testResult');
-        testResult.empty();
         _testData = null;
         _testSelectionAnchor = -1;
+
+        enableTestItems();
 
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
@@ -639,36 +637,41 @@ $(function ()
 
             $.each(_testData, function (index, value) {
                 var anchor = $("<a/>").attr({'class':'list-group-item'});
-                anchor.html('<span class="glyphicon glyphicon-unchecked" style="vertical-align: -1px;"></span>&nbsp;&nbsp;' + value['name']);
-
+                anchor.html('<span class="glyphicon" style="vertical-align: -1px;"></span>&nbsp;&nbsp;' + value['name']);
 
                 if (index == _testSelectionAnchor) {
-                    var span = anchor.find("span");
-                    span.addClass("glyphicon-check");
+
+                    //var span = anchor.find("span");
+                    //span.addClass("glyphicon-check");
                     anchor.toggleClass("selected");
+                    loadTestView(index);
                 }
 
                 anchor.click(function(e) {
 
                     var link = $(e.currentTarget);
-                    var target = link.find("span");
+//                    var target = link.find("span");
 
-                    if (e.shiftKey) {
-
-                    } else if (e.ctrlKey) {
-                        target.toggleClass("glyphicon-unchecked glyphicon-check");
-                        link.toggleClass("selected");
-                    } else {
+//                    if (e.shiftKey)
+//                    {
+//                    } else if (e.ctrlKey) {
+//                        target.toggleClass("glyphicon-unchecked glyphicon-check");
+//                        link.toggleClass("selected");
+//                    } else {
                         _testSelectionAnchor = index;
                         clearTestSelection();
-                        target.addClass("glyphicon-check");
-                        target.removeClass("glyphicon-unchecked");
+                        //target.addClass("glyphicon-check");
+                        //target.removeClass("glyphicon-unchecked");
                         link.addClass("selected");
-                    }
+//                    }
 
                     enableTestItems();
                     loadTestView(index);
-                });
+                }
+
+
+
+                );
                 testListItems.append(anchor);
             });
             $('#testList').fadeIn("fast");
@@ -676,6 +679,7 @@ $(function ()
             $('#testList').hide();
             $('#testListWarning').fadeIn("fast");
         }
+        enableTestItems();
     }
 
     function loadStatusListView()
@@ -751,8 +755,8 @@ $(function ()
             var a = $(elem);
             var span = a.find("span");
             a.removeClass("selected");
-            span.removeClass("glyphicon-check");
-            span.addClass("glyphicon-unchecked");
+            //span.removeClass("glyphicon-check");
+            //span.addClass("glyphicon-unchecked");
         });
         enableTestItems();
     }
@@ -764,8 +768,8 @@ $(function ()
             var a = $(elem);
             var span = a.find("span");
             a.addClass("selected");
-            span.addClass("glyphicon-check");
-            span.removeClass("glyphicon-unchecked");
+            //span.addClass("glyphicon-check");
+            //span.removeClass("glyphicon-unchecked");
         });
         enableTestItems();
     }
@@ -776,6 +780,11 @@ $(function ()
         $("#renameCurrentTestMenu").parent().toggleClass('disabled', count != 1);
         $("#runCurrentTestMenu").parent().toggleClass('disabled', count != 1);
         $("#duplicateCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+
+        if (count != 1) {
+            $('#testView').empty();
+            $('#testResult').empty();
+        }
     }
 
     function findTestByName(name) {
@@ -790,6 +799,7 @@ $(function ()
         }
         return null;
     }
+
 
 
     function duplicateCurrentTestMenu() {
@@ -835,17 +845,53 @@ $(function ()
         return findTestByName($(list[0]).text().trim());
     }
 
+    function findTestByName(test) {
+        for (var i=0; i<_testData.length; i++) {
+            if (_testData[i]["name"] == test) {
+                return _testData[i];
+            }
+        }
+/*
+        var list = $("#testListItems a");
+        for (i=0; i<list.length; i++) {
+            if (list[i].innerText.trim() == test) {
+                return list[i];
+            }
+        }
+*/
+        return null;
+    }
+
     function duplicateCurrentTestOk() {
         // see if name already exists in tests?
-        $('#duplicateTestModal').hide();
 
         var newName = $('#duplicateTestNameField').val().trim();
 
-        var test = getSelectedTestFromModel();
+        if (findTestByName(newName) != null)
+        {
+            _errorId = showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
+            return;
+        }
 
-        var newTest = duplicateTest(test, newName);
+        $('#duplicateTestModal').modal('hide');
+
+
+        var newTest = duplicateTest(getSelectedTestFromModel(), newName);
+
+        // scroll to item we just added.
         _testData.push(newTest);
+        _testSelectionAnchor = _testData.length-1;
         refreshTestList();
+
+
+        var container = $('#testListItems');
+        var scrollTo = $('#testListItems a.selected');
+        container.scrollTop(
+                scrollTo.offset().top - container.offset().top + container.scrollTop()
+        );
+//        container.animate({
+//            scrollTop: scrollTo.offset().top - container.offset().top + container.scrollTop()
+//        });
     }
 
     function duplicateTest(test, newTestName) {
@@ -1109,8 +1155,8 @@ $(function ()
 
         var testCtrl = $('#testView');
         testCtrl.empty();
-
-        //var well = $("<div/>").attr({'class': 'well'});
+        var testResult = $('#testResult');
+        testResult.empty();
 
         try {
 
@@ -1776,7 +1822,7 @@ $(function ()
         }
     }
 
-    function renameTestMenu()
+    function renameCurrentTestMenu()
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
@@ -1785,7 +1831,7 @@ $(function ()
             return;
         }
 
-        var list = $("#testListItems a");
+        var list = $("#testListItems a.selected");
 
         if (list.length != 1)
         {
@@ -2250,17 +2296,6 @@ $(function ()
         {
             _errorId = showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
-    }
-
-    function findCurrentTest() {
-        var temp = null;
-        $.each(_testData, function (index, value)
-        {
-            if (value['name'] == _testSelectionAnchor) {
-                return temp = value;
-            }
-        });
-        return temp;
     }
 
     function runAllTests() {
