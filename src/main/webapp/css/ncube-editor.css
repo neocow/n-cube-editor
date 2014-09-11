@@ -161,7 +161,7 @@ a.ncube-notselected:hover {
 
 #testListItems a.selected {
     background: rgb(217, 237, 247); /* fallback */
-    background: rgba(217, 237, 247, .8);
+    background: rgba(61, 139, 202, .25);
 }
 
 #testListItems a.list-group-item {
