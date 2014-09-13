@@ -1457,8 +1457,6 @@ $(function ()
         deleteParamButton.append(glyph);
         deleteParamButton.click(function (e)
         {
-            //$("#" + $(e.currentTarget).attr("data-ref")).remove();
-
             var param = $(e.currentTarget).attr("data-ref");
             var test = $('#selectedTestName').val();
 
