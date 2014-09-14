@@ -13,9 +13,9 @@ $(function ()
     var _versions = [];
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
-    var _selectedTest = -1;
     var _selectedVersion = localStorage[SELECTED_VERSION];
     var _selectedTab = localStorage[SELECTED_TAB];
+    var _testSelectionAnchor = -1;
     var _testData = null;
     var _selectedStatus = "SNAPSHOT";
     var _axisName;
@@ -388,6 +388,10 @@ $(function ()
         {
             deleteTestParameterOk();
         });
+        $('#addParameterOk').click(function ()
+        {
+            addTestParameterOk();
+        });
         $('#showRefsToMenu').click(function ()
         {
             showRefsToCube()
@@ -507,7 +511,7 @@ $(function ()
 
         $('#saveAllTests').click(function ()
         {
-            saveAllTests();
+            saveAllTests(false);
         });
 
         $('#runAllTests').click(function ()
@@ -520,10 +524,22 @@ $(function ()
             runCurrentTest();
         });
 
-        $('#renameCurrentTest').click(function ()
+        $('#renameCurrentTestMenu').click(function ()
         {
-            renameCurrentTest();
+            renameCurrentTestMenu();
         });
+
+        $('#duplicateCurrentTestMenu').click(function ()
+        {
+            duplicateCurrentTestMenu();
+        });
+
+        $("#duplicateCurrentTestOk").click(function ()
+        {
+            duplicateCurrentTestOk();
+        });
+
+
 
 
 
@@ -585,12 +601,10 @@ $(function ()
 
     function loadTestListView(funcName)
     {
-        var testCtrl = $('#testView');
-        testCtrl.empty();
-        var testResult = $('#testResult');
-        testResult.empty();
         _testData = null;
-        _selectedTest = -1;
+        _testSelectionAnchor = -1;
+
+        enableTestItems();
 
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
@@ -604,6 +618,7 @@ $(function ()
         if (testListResult.status === true)
         {
             _testData = testListResult.data;
+            _testSelectionAnchor = 0;
             refreshTestList();
         }
         else {
@@ -626,26 +641,41 @@ $(function ()
 
             $.each(_testData, function (index, value) {
                 var anchor = $("<a/>").attr({'class':'list-group-item'});
-                anchor.html('<span class="glyphicon glyphicon-unchecked" style="vertical-align: -1px;"></span>&nbsp;&nbsp;' + value['name']);
+                anchor.html('<span class="glyphicon" style="vertical-align: -1px;"></span>&nbsp;&nbsp;' + value['name']);
 
+                if (index == _testSelectionAnchor) {
 
-                if (index == _selectedTest) {
-                    var target = link.find("span");
-                    target.toggleClass("glyphicon-unchecked glyphicon-check");
+                    //var span = anchor.find("span");
+                    //span.addClass("glyphicon-check");
                     anchor.toggleClass("selected");
+                    loadTestView(index);
                 }
 
                 anchor.click(function(e) {
-                    _selectedTest = index;
 
                     var link = $(e.currentTarget);
-                    var target = link.find("span");
+//                    var target = link.find("span");
 
-                    target.toggleClass("glyphicon-unchecked glyphicon-check");
-                    link.toggleClass("selected");
+//                    if (e.shiftKey)
+//                    {
+//                    } else if (e.ctrlKey) {
+//                        target.toggleClass("glyphicon-unchecked glyphicon-check");
+//                        link.toggleClass("selected");
+//                    } else {
+                        _testSelectionAnchor = index;
+                        clearTestSelection();
+                        //target.addClass("glyphicon-check");
+                        //target.removeClass("glyphicon-unchecked");
+                        link.addClass("selected");
+//                    }
 
+                    enableTestItems();
                     loadTestView(index);
-                });
+                }
+
+
+
+                );
                 testListItems.append(anchor);
             });
             $('#testList').fadeIn("fast");
@@ -653,6 +683,7 @@ $(function ()
             $('#testList').hide();
             $('#testListWarning').fadeIn("fast");
         }
+        enableTestItems();
     }
 
     function loadStatusListView()
@@ -728,9 +759,10 @@ $(function ()
             var a = $(elem);
             var span = a.find("span");
             a.removeClass("selected");
-            span.removeClass("glyphicon-check");
-            span.addClass("glyphicon-unchecked");
+            //span.removeClass("glyphicon-check");
+            //span.addClass("glyphicon-unchecked");
         });
+        enableTestItems();
     }
 
     function selectAllTests()
@@ -740,11 +772,158 @@ $(function ()
             var a = $(elem);
             var span = a.find("span");
             a.addClass("selected");
-            span.addClass("glyphicon-check");
-            span.removeClass("glyphicon-unchecked");
+            //span.addClass("glyphicon-check");
+            //span.removeClass("glyphicon-unchecked");
         });
+        enableTestItems();
     }
 
+    function enableTestItems() {
+        var count = $("#testListItems a.selected").length;
+
+        $("#renameCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+        $("#runCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+        $("#duplicateCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+
+        if (count != 1) {
+            $('#testView').empty();
+            $('#testResult').empty();
+        }
+    }
+
+    function findTestByName(name) {
+        if (_testData == null) {
+            return null;
+        }
+
+        for (var i=0; i<_testData.length; i++) {
+            if (name == _testData[i]["name"]) {
+                return _testData[i];
+            }
+        }
+        return null;
+    }
+
+
+
+    function duplicateCurrentTestMenu() {
+        clearError();
+
+        if ($('#duplicateCurrentTestMenu').parent().hasClass('disabled')) {
+            return;
+        }
+
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube is currently selected. There is nothing to rename.');
+            return;
+        }
+
+        var list = getSelectedTestList();
+
+        if (list.length != 1)
+        {
+            if (list.length == 0) {
+                _errorId = showNote('No test is currently selected. Select a test to duplicate.');
+            } else {
+                _errorId = showNote('More than one test is selected. There can only be one test selected to duplicate.');
+            }
+            return;
+        }
+
+        $('#duplicateTestTitle').html('Duplicate \'' + $(list[0]).text().trim() + '\' ?');
+        $('#duplicateTestNameField').text("");
+        $('#duplicateTestModal').modal();
+    }
+
+    function getSelectedTestList() {
+        return $("#testListItems a.selected");
+    }
+
+    function getSelectedTestCount() {
+        return getSelectedTestList().length;
+    }
+
+    function getSelectedTestFromModel() {
+        var list = getSelectedTestList();
+        return findTestByName($(list[0]).text().trim());
+    }
+
+    function findTestByName(test) {
+        for (var i=0; i<_testData.length; i++) {
+            if (_testData[i]["name"] == test) {
+                return _testData[i];
+            }
+        }
+/*
+        var list = $("#testListItems a");
+        for (i=0; i<list.length; i++) {
+            if (list[i].innerText.trim() == test) {
+                return list[i];
+            }
+        }
+*/
+        return null;
+    }
+
+    function duplicateCurrentTestOk() {
+        // see if name already exists in tests?
+
+        var newName = $('#duplicateTestNameField').val().trim();
+
+        if (findTestByName(newName) != null)
+        {
+            _errorId = showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
+            return;
+        }
+
+        $('#duplicateTestModal').modal('hide');
+
+
+        var newTest = duplicateTest(getSelectedTestFromModel(), newName);
+
+        // scroll to item we just added.
+        _testData.push(newTest);
+        _testSelectionAnchor = _testData.length-1;
+        refreshTestList();
+        saveAllTests(true);
+
+
+        $('#testList div.panel-body').animate({
+            scrollTop: $('#testListItems a.selected').offset().top
+        }, 200);
+    }
+
+    function duplicateTest(test, newTestName) {
+        var newTest = {};
+        newTest["name"] = newTestName;
+
+        var parameters = {};
+
+        $.each(test["coord"], function(paramKey, paramDescription) {
+            if (paramKey.indexOf('@') == 0) {
+                parameters[paramKey] = paramDescription;
+            } else {
+                var parameter = {};
+                $.each(paramDescription, function(key, value) {
+                    parameter[key] = value;
+                });
+                parameters[paramKey] = parameter;
+            }
+
+        });
+
+        newTest["coord"] = parameters;
+
+        var result = {};
+        $.each(test["expected"], function(key, value) {
+            result[key] = value;
+        });
+
+        newTest["expected"] = result;
+
+        return newTest;
+    }
 
     function loadNCubeListView()
     {
@@ -975,28 +1154,31 @@ $(function ()
 
         var testCtrl = $('#testView');
         testCtrl.empty();
-
-        //var well = $("<div/>").attr({'class': 'well'});
+        var testResult = $('#testResult');
+        testResult.empty();
 
         try {
 
            testCtrl.append(buildTestName(testData['name']));
 
-            $.each(testData['coordDescription'], function (key, value) {
+            $.each(testData['coord'], function (key, value) {
                 if (key.substring(0, 1) != "@") {
-                    var url = value == null ? null : value['url'];
+                    var isUrl = value == null ? null : value['isUrl'];
                     var v = value == null ? null : value['value'];
                     var type = value == null ? null : value['type'];
-                    testCtrl.append(buildParameter(key, type, url, v, true));
+                    testCtrl.append(buildParameter(key, type, isUrl, v));
                 }
             });
 
+            $.each(testData['expected'], function (key, value) {
+                if (key.substring(0, 1) != "@") {
+                    var isUrl = value == null ? null : value['isUrl'];
+                    var v = value == null ? null : value['value'];
+                    var type = value == null ? null : value['type'];
+                    testCtrl.append(buildParameter(key, type, isUrl, v));
+                }
+            });
 
-            var expectedResult = testData['expectedResultDescription'];
-            var url = expectedResult == null ? null : expectedResult['url'];
-            var v = expectedResult == null ? null : expectedResult['value'];
-            var type = expectedResult == null ? null : expectedResult['type'];
-            testCtrl.append(buildParameter('expectedResultDescription', type, url, v, false));
         } catch (e) {
             _errorId = showNote('Unable to load test view ' + testData['name'] + ':<hr class="hr-small"/>' + e.message);
         }
@@ -1010,15 +1192,18 @@ $(function ()
     }
 
     function buildTestButton() {
-        var formGroup = $("<div/>").attr({'class': 'form-group'});
+        var formGroup = $("<div/>").attr({'id':'test-button', 'class': 'form-group'});
         var buttonGroup = $("<div/>").attr({'class' : 'btn-group pull-right'});
 
-        var defaultButton = $("<button/>").attr({'class' : 'btn btn-primary'});
+        var defaultButton = $("<button/>").attr({'class' : 'btn btn-primary', 'type':'button'});
         defaultButton.text('Run Test');
+
         defaultButton.click(function ()
         {
             runCurrentTest();
         });
+
+
 
         var dropDown = $("<button/>").attr({'class' : 'btn btn-primary dropdown-toggle', 'data-toggle':'dropdown', 'href':'#'});
         dropDown.html("<span class='caret'></span><span class='sr-only'>Toggle Dropdown</span>");
@@ -1026,7 +1211,7 @@ $(function ()
 
         var list = [{"name" : "Run Test" , "func" : function() { runCurrentTest(); }},
                     {"name" : "divider" },
-                    {"name" : "Add Parameter" , "func" : function() { addTestParameter(); }}];
+                    {"name" : "Add Parameter" , "func" : function() { addTestParameterMenu(); }}];
 
         var ul = $("<ul/>").attr({'class':'dropdown-menu'});
 
@@ -1051,9 +1236,8 @@ $(function ()
         buttonGroup.append(defaultButton);
         buttonGroup.append(dropDown);
         buttonGroup.append(ul);
-
-
         formGroup.append(buttonGroup);
+
         return formGroup;
 
     }
@@ -1240,7 +1424,7 @@ $(function ()
         labelGroup.append(label);
 
         var controls = $("<div/>").attr({'class': 'controls'});
-        var inputGroup = $("<div/>").attr({'class':'input-group'});
+        var inputGroup = $("<div/>").attr({'class':'input-group input-group-sm'});
 
         var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': 'selectedTestName', 'readonly':'readonly'});
         input.val(name);
@@ -1252,7 +1436,7 @@ $(function ()
 
         renameButton.click(function ()
         {
-            renameCurrentTest();
+            renameCurrentTestMenu();
         });
 
         inputGroupAddOn.append(renameButton);
@@ -1265,15 +1449,10 @@ $(function ()
         return labelGroup;
     }
 
-    function buildParameter(coordId, type, url, value, append) {
-        var parameterId = coordId;
+    function buildParameter(coordId, type, isUrl, value) {
+        var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':coordId});
 
-        if (append) {
-            parameterId = "test-parameter-" + coordId;
-        }
-        var labelGroup = $("<div/>").attr({'class': 'form-group', 'id':parameterId});
-
-        var cat = parameterId + "-value";
+        var cat = coordId + "-value";
         var label = $("<label/>").attr({'for': cat, 'class': 'control-label'});
         label.html(coordId);
 
@@ -1282,10 +1461,8 @@ $(function ()
         deleteParamButton.append(glyph);
         deleteParamButton.click(function (e)
         {
-            //$("#" + $(e.currentTarget).attr("data-ref")).remove();
-
             var param = $(e.currentTarget).attr("data-ref");
-            var test = $('#selectedTestName').html();
+            var test = $('#selectedTestName').val();
 
             deleteTestParameter(test, param);
         });
@@ -1299,39 +1476,35 @@ $(function ()
         var controls = $("<div/>").attr({'class': 'controls'});
         var inputGroup = $("<div/>").attr({'class':'input-group input-group-sm'});
 
-        var urlId = parameterId + "-url";
-        var isUrl = $("<button/>").attr({'type':'button', 'class':'btn btn-default', 'name':urlId, 'id':urlId, 'value':'url'});
+        var urlId = coordId + "-url";
+        var urlButton = $("<button/>").attr({'type':'button', 'class':'btn btn-default', 'name':urlId, 'id':urlId, 'value':'url'});
 
-        if (url != null) {
-            isUrl.html("&nbsp;URL&nbsp;");
+        if (isUrl) {
+            urlButton.html("&nbsp;URL&nbsp;");
         } else {
-            isUrl.html("Value");
+            urlButton.html("Value");
         }
 
-        isUrl.click(function ()
+        urlButton.click(function ()
         {
-            var txt = isUrl.text();
+            var txt = urlButton.text();
             if (txt == "Value") {
-                isUrl.html("&nbsp;URL&nbsp;");
+                urlButton.html("&nbsp;URL&nbsp;");
             } else {
-                isUrl.html("Value");
+                urlButton.html("Value");
             }
             _testsDirty = true;
         });
 
 
-        inputGroupAddon.append(isUrl);
+        inputGroupAddon.append(urlButton);
         inputGroup.append(inputGroupAddon);
 
         var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat}); //placeholder?
+        input.val(value);
 
-        if (url != null) {
-            input.val(url);
-        } else if (value != null) {
-            input.val(value);
-        }
         inputGroup.append(input);
-        inputGroup.append(createTypeSelector(parameterId, type, url != null));
+        inputGroup.append(createTypeSelector(coordId, type, isUrl));
 
         controls.append(inputGroup);
         labelGroup.append(controls);
@@ -1594,16 +1767,20 @@ $(function ()
         }
 
         $('#deleteParameterLabel').html('Delete \'' + parameterName + '\' from the test \'' + testName + '\'?');
-        $('#deleteParameterHiddenId').html(parameterName);
-        $('#deleteParameterModal').modal();
+        $('#deleteParameterHiddenId').val(parameterName);
+        $('#deleteParameterModal').modal({
+            keyboard: true
+        });
     }
 
 
-    function deleteTestParameterOk() {
-        $('#deleteTestParameter').modal('hide');
 
-        var id = $('#deleteParameterHiddenId').html();
-        $(id).remove();
+    function deleteTestParameterOk()
+    {
+        $('#deleteParameterModal').modal('hide');
+        var id = $('#deleteParameterHiddenId').val();
+        $("#testView > div[parameter-id='" + id + "']").remove();
+        saveAllTests(false);
     }
 
     function deleteCube()
@@ -1642,7 +1819,7 @@ $(function ()
         }
     }
 
-    function renameCurrentTest()
+    function renameCurrentTestMenu()
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
@@ -1651,20 +1828,29 @@ $(function ()
             return;
         }
 
-        if (!_selectedTest)
+        var list = $("#testListItems a.selected");
+
+        if (list.length != 1)
         {
-            _errorId = showNote('No test is currently selected. There is nothing to rename.');
+            if (list.length == 0) {
+                _errorId = showNote('No test is currently selected. Select a test to duplicate.');
+            } else {
+                _errorId = showNote('More than one test is selected. There can only be one test selected to duplicate.');
+            }
             return;
         }
 
-
-        var test = _testData[_selectedTest]["name"];
+        var test = _testData[_testSelectionAnchor]["name"];
 
 
         $('#renameTestOldName').val(test);
         $('#renameTestNewName').val("");
         $('#renameTestLabel').html('Rename \'' + test + '\'?');
-        $('#renameTestModal').modal();
+
+        $('#renameTestModal').modal({
+            keyboard: true
+        });
+
     }
 
 
@@ -1768,7 +1954,7 @@ $(function ()
         }
 
         // change currently selected model item
-        var test = _testData[_selectedTest];
+        var test = _testData[_testSelectionAnchor];
         test["name"] = newName;
 
         // change in our list.
@@ -2113,21 +2299,10 @@ $(function ()
         }
     }
 
-    function findCurrentTest() {
-        var temp = null;
-        $.each(_testData, function (index, value)
-        {
-            if (value['name'] == _selectedTest) {
-                return temp = value;
-            }
-        });
-        return temp;
-    }
-
     function runAllTests() {
     }
 
-    function saveAllTests()
+    function saveAllTests(modelIsUpToDate)
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
@@ -2142,14 +2317,16 @@ $(function ()
             return;
         }
 
-        var test = getActiveTest();
+        if (!modelIsUpToDate) {
+            var test = getActiveTest();
 
-        //  If a test is currently selected
-        if (test != null) {
-            //  locate test in list to add it in...and add it before saving.
-            var oldTest = _testData[_selectedTest];
-            if (test["name"] == oldTest["name"]) {
-                _testData[_selectedTest] = test;
+            //  If a test is currently selected
+            if (test != null) {
+                //  locate test in list to add it in...and add it before saving.
+                var oldTest = _testData[_testSelectionAnchor];
+                if (test["name"] == oldTest["name"]) {
+                    _testData[_testSelectionAnchor] = test;
+                }
             }
         }
 
@@ -2178,51 +2355,70 @@ $(function ()
         test["name"] = name;
         test["@type"] = "com.cedarsoftware.ncube.NCubeTest";
 
-        var elements = $("#testView > div[id^='test-parameter']");
+        var parameters = $("#testView > div[parameter-id]");
 
-        var coord = {};
+        var coord = {"@type":"java.util.HashMap"};
 
-        $.each(elements, function (index, value)
+        $.each(parameters, function (index, value)
         {
-            var id = value.id;
-            var parameterId = id.replace("test-parameter-", "");
-            coord[parameterId] = retrieveParameter(id);
+            var id = value.getAttribute("parameter-id");
+            coord[id] = retrieveParameter(id);
         });
 
-        test["coordDescription"] = coord;
+        test["coord"] = coord;
 
-        var results = $("#testView > div[id='expectedResultDescription']");
-        $.each(results, function (index, value)
+        var expected = $("#testView > div[expected-id]");
+
+        var results = {"@type":"java.util.HashMap"};
+        $.each(expected, function (index, value)
         {
-            var id = value.id;
-            test[id] = retrieveParameter(id);
+            var id = value.getAttribute("expected-id");
+            results[id] = retrieveParameter(id);
         });
+
+        test["expected"] = results;
 
         return test;
     }
 
     function retrieveParameter(id) {
-        var parameter = {};
+        var parameter = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
-        var item = $("#" + id + "-value").val();
-        var value = $("#" + id + "-url").text() == "Value";
-        var type = $("#" + id + "-selector").val();
-
-        if (value)
-        {
-            parameter["value"] = item;
-        }
-        else
-        {
-            parameter["url"] = item;
-        }
-
-        parameter["type"] = type;
+        parameter["value"] = $("#" + id + "-value").val();
+        parameter["isUrl"] = $("#" + id + "-url").text() != "Value";
+        parameter["dataType"] = $("#" + id + "-selector").val();
 
         return parameter;
     }
 
-    function addTestParameter() {
+    function addTestParameterMenu() {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Nothing to delete.');
+            return;
+        }
+
+        $('#addParameterField').val('');
+        $('#addParameterModal').modal({
+            keyboard: true
+        });
+    }
+
+
+    function addTestParameterOk() {
+        $('#addParameterModal').modal('hide');
+
+        var id = $('#addParameterField').val();
+
+        //validate
+        var param = buildParameter(id, "string", false, '');
+
+        param.insertBefore('#test-button');
+        $('.selectpicker').selectpicker();
+
+        saveAllTests(false);
+
     }
 
     function runCurrentTest() {
@@ -2232,13 +2428,13 @@ $(function ()
             return;
         }
 
-        if (_testData == null || _selectedTest == -1) {
+        if (_testData == null || _testSelectionAnchor == -1) {
             _errorId = showNote('No test selected.  Test cannot be run.');
             return;
         }
 
         try {
-            var currentTest = _testData[_selectedTest];
+            var currentTest = _testData[_testSelectionAnchor];
 
             var test = getActiveTest();
             var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);

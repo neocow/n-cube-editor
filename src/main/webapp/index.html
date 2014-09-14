@@ -274,14 +274,16 @@
                                     <span class="sr-only">Toggle Dropdown</span>
                                 </a>
                                 <ul class="dropdown-menu">
+                                    <li><a id="saveAllTests" href="#">Save All</a></li>
+                                    <li><a id="runAllTests" href="#">Run All</a></li>
+                                    <li class="divider"></li>
                                     <li><a id="clearTestSelection">Clear Selection</a></li>
                                     <li><a id="selectAllTests">Select All</a></li>
                                     <li class="divider"></li>
-                                    <li><a id="renameCurrentTest" href="#">Rename Test</a></li>
-                                    <li><a id="runCurrentTest">Run Test</a></li>
+                                    <li><a id="renameCurrentTestMenu" href="#">Rename Test</a></li>
+                                    <li><a id="runCurrentTestMenu">Run Test</a></li>
                                     <li class="divider"></li>
-                                    <li><a id="saveAllTests" href="#">Save All</a></li>
-                                    <li><a id="runAllTests" href="#">Run All</a></li>
+                                    <li><a id="duplicateCurrentTestMenu" href="#">Duplicate Test</a></li>
                                 </ul>
                             </div>
                             <span id="testCount" class="badge pull-right">4</span>
@@ -438,6 +440,59 @@
         </div>
     </div>
 </div>
+
+
+<!-- New Name Modal -->
+<div id="addParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addParameterTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="addParameterTitle" class="modal-title">Create New Parameter</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="addParameterField">New Parameter Name</label>
+                        <input class="form-control" type="text" id="addParameterField" placeholder="Type Name Here"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't create</button>
+                <button id="addParameterOk" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Name Modal -->
+<div id="duplicateTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="duplicateTestTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="duplicateTestTitle" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="duplicateTestNameField">New Test Name</label>
+                        <input class="form-control" type="text" id="duplicateTestNameField"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't Duplicate</button>
+                <button id="duplicateCurrentTestOk" class="btn btn-primary">Duplicate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- Delete Cube Modal -->
 <div id="deleteParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteParameterLabel"

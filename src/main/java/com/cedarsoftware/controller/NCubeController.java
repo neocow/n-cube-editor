@@ -10,12 +10,10 @@ import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
-import com.cedarsoftware.ncube.UrlCommandCell;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
-import com.cedarsoftware.util.DeepEquals;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
@@ -120,33 +118,35 @@ public class NCubeController extends BaseController
         try
         {
             NCube ncube = nCubeService.getCube(name, app, version, status);
-            Map coord = test.getCoordinate();
-            Object actual = ncube.getCell(coord);
-            Object expected = test.getExpectedResult();
+            Map coord = test.createCoord();
+            coord.put("ncube", ncube);
+
+            Map output = new LinkedHashMap();
+
+            Object actual = ncube.getCells(coord, output);
+            //Object expected = test.createExpected();
 
 
             // For UrlCommands we need to actually execute the command for an apple to apple comparison.
             // Note:  a GroovyExpression that returns true is the same as a Boolean.True return type.
-            if (expected instanceof UrlCommandCell) {
-                UrlCommandCell cell = (UrlCommandCell)expected;
+//            if (expected instanceof UrlCommandCell) {
+//                UrlCommandCell cell = (UrlCommandCell)expected;
+//
+//                coord.put("input", new HashMap());
+//                coord.put("output", new HashMap());
+//                expected = cell.execute(coord);
+//            }
 
-                coord.put("ncube", ncube);
-                coord.put("input", new HashMap());
-                coord.put("output", new HashMap());
-                expected = cell.execute(coord);
-            }
+//            if (!DeepEquals.deepEquals(actual, expected)) {
+//                HashMap map = new HashMap();
+//                map.put("status", "Failure");
+//                map.put("message", "Expected: '" + expected + "'<br />  Actual: '" + actual + "'");
+//                return JsonWriter.objectToJson(map);
+//            }
 
-            if (!DeepEquals.deepEquals(actual, expected)) {
-                HashMap map = new HashMap();
-                map.put("status", "Failure");
-                map.put("message", "Expected: '" + expected + "'<br />  Actual: '" + actual + "'");
-                return JsonWriter.objectToJson(map);
-            }
-
-            HashMap map = new HashMap();
-            map.put("status", "Success");
-            map.put("message", "Success");
-            return JsonWriter.objectToJson(map);
+            output.put("status", "Success");
+            output.put("message", JsonWriter.objectToJson(output));
+            return JsonWriter.objectToJson(output);
         }
         catch(Exception e)
         {
@@ -757,9 +757,13 @@ public class NCubeController extends BaseController
             NCube ncube = nCubeService.getCube(name, app, version, status);
             if (ncube == null)
             {
-                return new Object[]{};
+                throw new IllegalArgumentException("No cube was found for:  " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
             }
-            return ncube.generateNCubeTests().toArray();
+
+            Object[] tests = ncube.generateNCubeTests().toArray();
+            nCubeService.updateTestData(name, app, version, JsonWriter.objectToJson(tests));
+
+            return tests;
 
             /*
             Object[] items = new Object[list.size()];
