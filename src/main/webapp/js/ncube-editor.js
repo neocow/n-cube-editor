@@ -511,7 +511,7 @@ $(function ()
 
         $('#saveAllTests').click(function ()
         {
-            saveAllTests();
+            saveAllTests(false);
         });
 
         $('#runAllTests').click(function ()
@@ -886,6 +886,7 @@ $(function ()
         _testData.push(newTest);
         _testSelectionAnchor = _testData.length-1;
         refreshTestList();
+        saveAllTests(true);
 
 
         $('#testList div.panel-body').animate({
@@ -900,17 +901,16 @@ $(function ()
         var parameters = {};
 
         $.each(test["coord"], function(paramKey, paramDescription) {
-            var parameter = {};
-
             if (paramKey.indexOf('@') == 0) {
-                parameter[paramKey] = paramDescription;
+                parameters[paramKey] = paramDescription;
             } else {
+                var parameter = {};
                 $.each(paramDescription, function(key, value) {
                     parameter[key] = value;
                 });
+                parameters[paramKey] = parameter;
             }
 
-            parameters[paramKey] = parameter;
         });
 
         newTest["coord"] = parameters;
@@ -1780,6 +1780,7 @@ $(function ()
         $('#deleteParameterModal').modal('hide');
         var id = $('#deleteParameterHiddenId').val();
         $("#testView > div[parameter-id='" + id + "']").remove();
+        saveAllTests(false);
     }
 
     function deleteCube()
@@ -2301,7 +2302,7 @@ $(function ()
     function runAllTests() {
     }
 
-    function saveAllTests()
+    function saveAllTests(modelIsUpToDate)
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
@@ -2316,14 +2317,16 @@ $(function ()
             return;
         }
 
-        var test = getActiveTest();
+        if (!modelIsUpToDate) {
+            var test = getActiveTest();
 
-        //  If a test is currently selected
-        if (test != null) {
-            //  locate test in list to add it in...and add it before saving.
-            var oldTest = _testData[_testSelectionAnchor];
-            if (test["name"] == oldTest["name"]) {
-                _testData[_testSelectionAnchor] = test;
+            //  If a test is currently selected
+            if (test != null) {
+                //  locate test in list to add it in...and add it before saving.
+                var oldTest = _testData[_testSelectionAnchor];
+                if (test["name"] == oldTest["name"]) {
+                    _testData[_testSelectionAnchor] = test;
+                }
             }
         }
 
@@ -2414,7 +2417,7 @@ $(function ()
         param.insertBefore('#test-button');
         $('.selectpicker').selectpicker();
 
-        saveAllTests();
+        saveAllTests(false);
 
     }
 
