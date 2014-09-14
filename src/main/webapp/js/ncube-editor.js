@@ -388,6 +388,10 @@ $(function ()
         {
             deleteTestParameterOk();
         });
+        $('#addParameterOk').click(function ()
+        {
+            addTestParameterOk();
+        });
         $('#showRefsToMenu').click(function ()
         {
             showRefsToCube()
@@ -895,7 +899,7 @@ $(function ()
 
         var parameters = {};
 
-        $.each(test["coordDescription"], function(paramKey, paramDescription) {
+        $.each(test["coord"], function(paramKey, paramDescription) {
             var parameter = {};
 
             if (paramKey.indexOf('@') == 0) {
@@ -909,14 +913,14 @@ $(function ()
             parameters[paramKey] = parameter;
         });
 
-        newTest["coordDescription"] = parameters;
+        newTest["coord"] = parameters;
 
         var result = {};
-        $.each(test["expectedResultDescription"], function(key, value) {
+        $.each(test["expected"], function(key, value) {
             result[key] = value;
         });
 
-        newTest["expectedResultDescription"] = result;
+        newTest["expected"] = result;
 
         return newTest;
     }
@@ -1157,21 +1161,24 @@ $(function ()
 
            testCtrl.append(buildTestName(testData['name']));
 
-            $.each(testData['coordDescription'], function (key, value) {
+            $.each(testData['coord'], function (key, value) {
                 if (key.substring(0, 1) != "@") {
-                    var url = value == null ? null : value['url'];
+                    var isUrl = value == null ? null : value['isUrl'];
                     var v = value == null ? null : value['value'];
                     var type = value == null ? null : value['type'];
-                    testCtrl.append(buildParameter(key, type, url, v, true));
+                    testCtrl.append(buildParameter(key, type, isUrl, v));
                 }
             });
 
+            $.each(testData['expected'], function (key, value) {
+                if (key.substring(0, 1) != "@") {
+                    var isUrl = value == null ? null : value['isUrl'];
+                    var v = value == null ? null : value['value'];
+                    var type = value == null ? null : value['type'];
+                    testCtrl.append(buildParameter(key, type, isUrl, v));
+                }
+            });
 
-            var expectedResult = testData['expectedResultDescription'];
-            var url = expectedResult == null ? null : expectedResult['url'];
-            var v = expectedResult == null ? null : expectedResult['value'];
-            var type = expectedResult == null ? null : expectedResult['type'];
-            testCtrl.append(buildParameter('expectedResultDescription', type, url, v, false));
         } catch (e) {
             _errorId = showNote('Unable to load test view ' + testData['name'] + ':<hr class="hr-small"/>' + e.message);
         }
@@ -1185,15 +1192,18 @@ $(function ()
     }
 
     function buildTestButton() {
-        var formGroup = $("<div/>").attr({'class': 'form-group'});
+        var formGroup = $("<div/>").attr({'id':'test-button', 'class': 'form-group'});
         var buttonGroup = $("<div/>").attr({'class' : 'btn-group pull-right'});
 
-        var defaultButton = $("<button/>").attr({'class' : 'btn btn-primary'});
+        var defaultButton = $("<button/>").attr({'class' : 'btn btn-primary', 'type':'button'});
         defaultButton.text('Run Test');
+
         defaultButton.click(function ()
         {
             runCurrentTest();
         });
+
+
 
         var dropDown = $("<button/>").attr({'class' : 'btn btn-primary dropdown-toggle', 'data-toggle':'dropdown', 'href':'#'});
         dropDown.html("<span class='caret'></span><span class='sr-only'>Toggle Dropdown</span>");
@@ -1226,9 +1236,8 @@ $(function ()
         buttonGroup.append(defaultButton);
         buttonGroup.append(dropDown);
         buttonGroup.append(ul);
-
-
         formGroup.append(buttonGroup);
+
         return formGroup;
 
     }
@@ -1440,15 +1449,10 @@ $(function ()
         return labelGroup;
     }
 
-    function buildParameter(coordId, type, url, value, append) {
-        var parameterId = coordId;
+    function buildParameter(coordId, type, isUrl, value) {
+        var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':coordId});
 
-        if (append) {
-            parameterId = "test-parameter-" + coordId;
-        }
-        var labelGroup = $("<div/>").attr({'class': 'form-group', 'id':parameterId});
-
-        var cat = parameterId + "-value";
+        var cat = coordId + "-value";
         var label = $("<label/>").attr({'for': cat, 'class': 'control-label'});
         label.html(coordId);
 
@@ -1472,39 +1476,35 @@ $(function ()
         var controls = $("<div/>").attr({'class': 'controls'});
         var inputGroup = $("<div/>").attr({'class':'input-group input-group-sm'});
 
-        var urlId = parameterId + "-url";
-        var isUrl = $("<button/>").attr({'type':'button', 'class':'btn btn-default', 'name':urlId, 'id':urlId, 'value':'url'});
+        var urlId = coordId + "-url";
+        var urlButton = $("<button/>").attr({'type':'button', 'class':'btn btn-default', 'name':urlId, 'id':urlId, 'value':'url'});
 
-        if (url != null) {
-            isUrl.html("&nbsp;URL&nbsp;");
+        if (isUrl) {
+            urlButton.html("&nbsp;URL&nbsp;");
         } else {
-            isUrl.html("Value");
+            urlButton.html("Value");
         }
 
-        isUrl.click(function ()
+        urlButton.click(function ()
         {
-            var txt = isUrl.text();
+            var txt = urlButton.text();
             if (txt == "Value") {
-                isUrl.html("&nbsp;URL&nbsp;");
+                urlButton.html("&nbsp;URL&nbsp;");
             } else {
-                isUrl.html("Value");
+                urlButton.html("Value");
             }
             _testsDirty = true;
         });
 
 
-        inputGroupAddon.append(isUrl);
+        inputGroupAddon.append(urlButton);
         inputGroup.append(inputGroupAddon);
 
         var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat}); //placeholder?
+        input.val(value);
 
-        if (url != null) {
-            input.val(url);
-        } else if (value != null) {
-            input.val(value);
-        }
         inputGroup.append(input);
-        inputGroup.append(createTypeSelector(parameterId, type, url != null));
+        inputGroup.append(createTypeSelector(coordId, type, isUrl));
 
         controls.append(inputGroup);
         labelGroup.append(controls);
@@ -1779,7 +1779,7 @@ $(function ()
     {
         $('#deleteParameterModal').modal('hide');
         var id = $('#deleteParameterHiddenId').val();
-        $('#' + id).remove();
+        $("#testView > div[parameter-id='" + id + "']").remove();
     }
 
     function deleteCube()
@@ -2352,55 +2352,69 @@ $(function ()
         test["name"] = name;
         test["@type"] = "com.cedarsoftware.ncube.NCubeTest";
 
-        var elements = $("#testView > div[id^='test-parameter']");
+        var parameters = $("#testView > div[parameter-id]");
 
-        var coord = {};
+        var coord = {"@type":"java.util.HashMap"};
 
-        $.each(elements, function (index, value)
+        $.each(parameters, function (index, value)
         {
-            var id = value.id;
-            var parameterId = id.replace("test-parameter-", "");
-            coord[parameterId] = retrieveParameter(id);
+            var id = value.getAttribute("parameter-id");
+            coord[id] = retrieveParameter(id);
         });
 
-        test["coordDescription"] = coord;
+        test["coord"] = coord;
 
-        var results = $("#testView > div[id='expectedResultDescription']");
-        $.each(results, function (index, value)
+        var expected = $("#testView > div[expected-id]");
+
+        var results = {"@type":"java.util.HashMap"};
+        $.each(expected, function (index, value)
         {
-            var id = value.id;
-            test[id] = retrieveParameter(id);
+            var id = value.getAttribute("expected-id");
+            results[id] = retrieveParameter(id);
         });
+
+        test["expected"] = results;
 
         return test;
     }
 
     function retrieveParameter(id) {
-        var parameter = {};
+        var parameter = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
-        var item = $("#" + id + "-value").val();
-        var value = $("#" + id + "-url").text() == "Value";
-        var type = $("#" + id + "-selector").val();
-
-        if (value)
-        {
-            parameter["value"] = item;
-        }
-        else
-        {
-            parameter["url"] = item;
-        }
-
-        parameter["type"] = type;
+        parameter["value"] = $("#" + id + "-value").val();
+        parameter["isUrl"] = $("#" + id + "-url").text() != "Value";
+        parameter["dataType"] = $("#" + id + "-selector").val();
 
         return parameter;
     }
 
     function addTestParameterMenu() {
-        $( "#foo").unbind( "click" );
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. Nothing to delete.');
+            return;
+        }
+
+        $('#addParameterField').val('');
+        $('#addParameterModal').modal({
+            keyboard: true
+        });
     }
 
+
     function addTestParameterOk() {
+        $('#addParameterModal').modal('hide');
+
+        var id = $('#addParameterField').val();
+
+        //validate
+        var param = buildParameter(id, "string", false, '');
+
+        param.insertBefore('#test-button');
+        $('.selectpicker').selectpicker();
+
+        saveAllTests();
 
     }
 
