@@ -2516,9 +2516,9 @@ $(function ()
         }
 
         try {
-            var currentTest = _testData[_testSelectionAnchor];
-
             var test = getActiveTest();
+            _testData[_testSelectionAnchor] = test;
+
             var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);
 
             if (result.status != true) {
@@ -2527,6 +2527,7 @@ $(function ()
             }
 
             showTestResult(result.data["status"] == "Success", result.data["message"]);
+            saveAllTests(true);
         } catch (e) {
             _errorId = showNote("Could not run cube test '" + axisName + "':<hr class=\"hr-small\"/>" + e.message);
         }
