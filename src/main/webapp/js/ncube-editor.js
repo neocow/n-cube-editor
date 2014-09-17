@@ -1202,6 +1202,7 @@ $(function ()
         $('#testAssertionsDiv').hide();
         $('#testNameDiv').hide();
         $('#testButtonGroupDiv').hide();
+        $('#testResultsDiv').hide();
 
         var testParameters = $('#testParameters');
         testParameters.empty();
