@@ -280,10 +280,10 @@
                                     <li><a id="clearTestSelection">Clear Selection</a></li>
                                     <li><a id="selectAllTests">Select All</a></li>
                                     <li class="divider"></li>
-                                    <li><a id="renameCurrentTestMenu" href="#">Rename Test</a></li>
+                                    <li><a id="renameCurrentTestMenu">Rename Test</a></li>
                                     <li><a id="runCurrentTestMenu">Run Test</a></li>
                                     <li class="divider"></li>
-                                    <li><a id="duplicateCurrentTestMenu" href="#">Duplicate Test</a></li>
+                                    <li><a id="duplicateCurrentTestMenu">Duplicate Test</a></li>
                                 </ul>
                             </div>
                             <span id="testCount" class="badge pull-right">4</span>
@@ -318,15 +318,18 @@
                         </button>
                         <ul class="dropdown-menu" role="menu">
                             <li><a id="runTestMenu" href="#">Run Test</a></li>
+                            <li><a id="renameTestMenu" href="#">Rename Test</a></li>
                             <li class="divider" />
                             <li><a id="addParameterMenu" href="#">Add Parameter</a></li>
                             <li><a id="addAssertionMenu" href="#">Add Assertion</a></li>
+                            <li class="divider" />
+                            <li><a id="duplicateTestMenu" href="#">Duplicate Test</a></li>
                         </ul>
                     </div>
                     <div id="testNameDiv">
                         <h3 id="selectedTestName"></h3>
                     </div>
-                    <div id="testParametersDiv" class="panel panel-info">
+                    <div id="testParametersDiv" class="panel panel-default">
                         <div class="panel-heading">
                             <h4 class="panel-title">
                                 <span>Parameters</span>
@@ -495,12 +498,12 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="addParameterTitle" class="modal-title">Create New Parameter</h3>
+                <h3 id="addParameterTitle" class="modal-title"></h3>
             </div>
             <div class="modal-body">
                 <form role="form">
                     <div class="form-group">
-                        <label for="addParameterField">New Parameter Name</label>
+                        <label id="addParameterLabel" for="addParameterField">Parameter Name</label>
                         <input class="form-control" type="text" id="addParameterField" placeholder="Type Name Here"/>
                     </div>
                 </form>
@@ -547,41 +550,19 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 class="modal-title">Delete Parameter?</h3>
+                <h3 class="modal-title" id="deleteParameterTitle"></h3>
             </div>
             <div class="modal-body">
                 <h4 id="deleteParameterLabel"></h4>
             </div>
             <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
-                <button id="deleteParameterOk" class="btn btn-primary">Delete</button>
+                <button id="deleteParameterOk" class="btn btn-primary" ref-data="">Delete</button>
             </div>
         </div>
         <input type="hidden" id="deleteParameterHiddenId" value="" />
     </div>
 </div>
-
-<!-- Delete Assertion Modal -->
-<div id="deleteAssertionModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteAssertionLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 class="modal-title">Delete Assertion?</h3>
-            </div>
-            <div class="modal-body">
-                <h4 id="deleteAssertionLabel"></h4>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
-                <button id="deleteAssertionOk" class="btn btn-primary">Delete</button>
-            </div>
-        </div>
-        <input type="hidden" id="deleteAssertionHiddenId" value="" />
-    </div>
-</div>
-
 
 <!-- Duplicate Cube Modal -->
 <div id="dupeCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="dupeCubeLabel"

@@ -386,23 +386,19 @@ $(function ()
         });
         $('#deleteParameterOk').click(function ()
         {
-            deleteTestParameterOk();
+            deleteTestItemOk();
         });
         $('#addParameterMenu').click(function ()
         {
-            addTestParameterMenu();
+            addTestItemMenu(false);
         });
         $('#addAssertionMenu').click(function ()
         {
-            addTestAssertionMenu();
+            addTestItemMenu(true);
         });
         $('#addParameterOk').click(function ()
         {
-            addTestParameterOk();
-        });
-        $('#addAssertionOk').click(function ()
-        {
-            addAssertionOk();
+            addTestItemOk();
         });
         $('#showRefsToMenu').click(function ()
         {
@@ -546,17 +542,22 @@ $(function ()
             runCurrentTest();
         });
 
-        $('#runTestMenu').click(function ()
-        {
-            runCurrentTest();
-        });
-
         $('#renameCurrentTestMenu').click(function ()
         {
             renameCurrentTestMenu();
         });
 
+        $('#renameTestMenu').click(function ()
+        {
+            renameCurrentTestMenu();
+        });
+
         $('#duplicateCurrentTestMenu').click(function ()
+        {
+            duplicateCurrentTestMenu();
+        });
+
+        $('#duplicateTestMenu').click(function ()
         {
             duplicateCurrentTestMenu();
         });
@@ -1201,6 +1202,7 @@ $(function ()
         $('#testAssertionsDiv').hide();
         $('#testNameDiv').hide();
         $('#testButtonGroupDiv').hide();
+        $('#testResultsDiv').hide();
 
         var testParameters = $('#testParameters');
         testParameters.empty();
@@ -1514,8 +1516,13 @@ $(function ()
         {
             var param = $(e.currentTarget).attr("data-ref");
             var test = $('#selectedTestName').html();
+            var title = isAssertion ? "Delete Assertion?" : "Delete Parameter?";
+            var label = isAssertion ?
+                "Delete assertion '" + param + "' from '" + test + "'?" :
+                "Delete parameter '" + param + "' from '" + test + "'?";
+            var selector = isAssertion ? "#testAssertions" : "#testParameters";
 
-            deleteTestParameter(test, param);
+            deleteTestItem(title, label, selector, param);
         });
 
 
@@ -1811,7 +1818,7 @@ $(function ()
         }
     }
 
-    function deleteTestParameter(testName, parameterName)
+    function deleteTestItem(title, label, parentSelector, parameterName)
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
@@ -1820,44 +1827,22 @@ $(function ()
             return;
         }
 
-        $('#deleteParameterLabel').html('Delete parameter \'' + parameterName + '\'?');
+        $('#deleteParameterTitle').html(title);
+        $('#deleteParameterLabel').html(label);
         $('#deleteParameterHiddenId').val(parameterName);
+        $('#deleteParameterOk').attr({'data-ref': parentSelector});
         $('#deleteParameterModal').modal({
             keyboard: true
         });
     }
 
-    function deleteTestAssertion(testName, parameterName)
-    {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
-        {
-            _errorId = showNote('No n-cube selected. Nothing to delete.');
-            return;
-        }
-
-        $('#deleteAssertionLabel').html('Delete assertion \'' + parameterName + '\'?');
-        $('#deleteAssertionHiddenId').val(parameterName);
-        $('#deleteAssertionModal').modal({
-            keyboard: true
-        });
-    }
-
-    function deleteTestAssertionOk()
-    {
-        $('#deleteAssertionModal').modal('hide');
-        var id = $('#deleteAssertionHiddenId').val();
-        $("#testAssertions > div[parameter-id='" + id + "']").remove();
-        saveAllTests(false);
-    }
-
-
-
-    function deleteTestParameterOk()
+    function deleteTestItemOk()
     {
         $('#deleteParameterModal').modal('hide');
+
         var id = $('#deleteParameterHiddenId').val();
-        $("#testParameters > div[parameter-id='" + id + "']").remove();
+        var parent = $('#deleteParameterOk').attr('data-ref');
+        $(parent + " > div[parameter-id='" + id + "']").remove();
         saveAllTests(false);
     }
 
@@ -2476,7 +2461,7 @@ $(function ()
         return parameter;
     }
 
-    function addTestParameterMenu() {
+    function addTestItemMenu(isAssertion) {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
@@ -2484,22 +2469,35 @@ $(function ()
             return;
         }
 
+        var title = isAssertion ? 'Create Assertion' : 'Create Parameter';
+        var label = isAssertion ? 'Assertion Name' : 'Parameter Name';
+        var dataRef = isAssertion ? '#testAssertions' : '#testParameters';
+
         $('#addParameterField').val('');
+        $('#addParameerLabel').html(label);
+        $('#addParameterTitle').html(title);
+        $('#addParameterOk').attr({'data-ref' : dataRef});
         $('#addParameterModal').modal({
             keyboard: true
         });
     }
 
-
-    function addTestParameterOk() {
+    function addTestItemOk() {
         $('#addParameterModal').modal('hide');
 
         var id = $('#addParameterField').val();
+        var lookup = $('#addParameterOk').attr('data-ref');
+        var val = $('#addParameterTitle').html();
 
         //validate
-        var param = buildParameter(id, "string", false, '');
+        var param = buildParameter(id, "string", false, '', "Create Assertion" == val);
 
-        param.insertAfter('#testParameters .form-group:last');
+        if ($(lookup + ' .form-group').count > 0) {
+            param.insertAfter(lookup + ' .form-group:last');
+        } else {
+            $(lookup).append(param);
+        }
+
         $('.selectpicker').selectpicker();
 
         saveAllTests(false);
@@ -2519,57 +2517,42 @@ $(function ()
         }
 
         try {
-            var currentTest = _testData[_testSelectionAnchor];
-
             var test = getActiveTest();
+            _testData[_testSelectionAnchor] = test;
+
             var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);
 
             if (result.status != true) {
-                _errorId = showNote("Could not run cube test '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
+                showTestResult(false, "Could not run test:  " + result.data);
                 return;
             }
 
-
-            showTestResult(result.status, result.data);
+            showTestResult(result.data["status"] == "Success", result.data["message"]);
+            saveAllTests(true);
         } catch (e) {
             _errorId = showNote("Could not run cube test '" + axisName + "':<hr class=\"hr-small\"/>" + e.message);
         }
     }
 
-    function showTestResult(success, data) {
+    function showTestResult(success, message) {
         var testResultsDiv = $('#testResultsDiv');
         testResultsDiv.hide();
 
         var testResults = $('#testResults');
         testResults.empty();
 
-        if (success) {
-            /*
-             var item = null;
-             try {
-             item = $.parseJSON(data);
-             } catch (e) {
-             _errorId = showNote("Error parsing message :<hr class=\"hr-small\"/>" + e.message);
-             }
-             */
-
-            if (data["status"] == "Success") {
-                testResultsDiv.addClass("panel-success");
-                testResultsDiv.removeClass("panel-danger");
-                testResultsDiv.removeClass("panel-warning");
-            } else {
-                testResultsDiv.addClass("panel-warning");
-                testResultsDiv.removeClass("panel-success");
-                testResultsDiv.removeClass("panel-danger");
-            }
-        } else {
+        if (success)
+        {
+            testResultsDiv.addClass("panel-success");
+            testResultsDiv.removeClass("panel-danger");
+        }
+        else
+        {
             testResultsDiv.addClass("panel-danger");
             testResultsDiv.removeClass("panel-success");
-            testResultsDiv.removeClass("panel-warning");
         }
 
-        testResults.text(data["message"]);
-
+        testResults.text(message);
         testResultsDiv.fadeIn("fast");
     }
 
