@@ -513,6 +513,20 @@ $(function ()
             editCellOK()
         });
 
+        $( '#deleteParameterModal' ).on( 'keypress', function( e ) {
+            if( e.keyCode === 13 ) {
+                e.preventDefault();
+                $('#deleteParameterOk').click();
+            }
+        } );
+
+        $( '#deleteTestModal' ).on( 'keypress', function( e ) {
+            if( e.keyCode === 13 ) {
+                e.preventDefault();
+                $('#deleteTestOk').click();
+            }
+        } );
+
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
             // store to local storage.
         });
@@ -552,6 +566,21 @@ $(function ()
             renameCurrentTestMenu();
         });
 
+        $('#deleteCurrentTestMenu').click(function ()
+        {
+            deleteCurrentTestMenu();
+        });
+
+        $('#deleteTestMenu').click(function ()
+        {
+            deleteCurrentTestMenu();
+        });
+
+        $('#deleteTestOk').click(function ()
+        {
+            deleteTestOk();
+        });
+
         $('#duplicateCurrentTestMenu').click(function ()
         {
             duplicateCurrentTestMenu();
@@ -565,22 +594,6 @@ $(function ()
         $("#duplicateCurrentTestOk").click(function ()
         {
             duplicateCurrentTestOk();
-        });
-
-        $("#assertionsGoToTop").click(function ()
-        {
-            $('#testLayoutCenter > .well').animate({
-                scrollTop: $('#testParametersDiv').offset().top
-            }, 200);
-
-        });
-
-        $("#resultsGoToTop").click(function ()
-        {
-            $('#testLayoutCenter > .well').animate({
-                scrollTop: $('#testParametersDiv').offset().top
-            }, 200);
-
         });
 
         _editCellRadioURL.change(function()
@@ -794,11 +807,10 @@ $(function ()
 
     function clearTestSelection()
     {
-        $("#testListItems a").each(function (index, elem)
+        $("#testListItems a.selected").each(function (index, elem)
         {
-            var a = $(elem);
-            var span = a.find("span");
-            a.removeClass("selected");
+            $(elem).removeClass("selected");
+            //var span = $(elem).find("span");
             //span.removeClass("glyphicon-check");
             //span.addClass("glyphicon-unchecked");
         });
@@ -824,16 +836,15 @@ $(function ()
         $("#renameCurrentTestMenu").parent().toggleClass('disabled', count != 1);
         $("#runCurrentTestMenu").parent().toggleClass('disabled', count != 1);
         $("#duplicateCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+        $("#deleteCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+
+        $("#renameTestMenu").parent().toggleClass('disabled', count != 1);
+        $("#duplicateTestMenu").parent().toggleClass('disabled', count != 1);
+        $("#runTestMenu").parent().toggleClass('disabled', count != 1);
+        $("#deleteTestMenu").parent().toggleClass('disabled', count != 1);
 
         if (count != 1) {
-            $('#testParametersDiv').hide();
-            $('#testParameters').empty();
-            $('#testAssertionsDiv').hide();
-            $('#testAssertions').empty();
-            $('#testResultsDiv').hide();
-            $('#testResults').empty();
-            $('#testNameDiv').hide();
-            $('#testButtonGroupDiv').hide();
+            clearTestView();
         }
     }
 
@@ -1194,22 +1205,27 @@ $(function ()
         $('#cube_bizEndDate').val(date);
     }
 
-    function loadTestView(index) {
-
-        var testData = _testData[index];
-
+    function clearTestView() {
         $('#testParametersDiv').hide();
         $('#testAssertionsDiv').hide();
         $('#testNameDiv').hide();
         $('#testButtonGroupDiv').hide();
         $('#testResultsDiv').hide();
 
+        $('#testParameters').empty();
+        $('#testAssertions').empty();
+        $('#testResults').empty();
+    }
+
+    function loadTestView(index) {
+
+        var testData = _testData[index];
+
+        clearTestView();
+
         var testParameters = $('#testParameters');
-        testParameters.empty();
         var testAssertions = $('#testAssertions');
-        testAssertions.empty();
         var testResult = $('#testResults');
-        testResult.empty();
 
         try {
             $('#selectedTestName').html(testData['name']);
@@ -1308,200 +1324,6 @@ $(function ()
         return selector;
     }
 
-    /*
-     * Bootstrap way?
-
-     function createTypeSelector(parameterId, typeStr, url) {
-     if (typeStr == null) {
-     typeStr = 'string';
-     }
-     var selectorId = parameterId + "-selector"
-
-     var inputGroupBtn = $("<div/>").attr({'class':'input-group-btn'});
-     //inputGroupBtn.append(createTypeSelector(parameterId, type, url != null))
-
-
-     //        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow', 'data-width':'auto', 'data-style': 'btn-default', 'id':selectorId});
-
-     var button = $("<button/>").attr({'type':'button', 'class' : 'btn btn-default'});
-     //button.html("String");
-
-
-     var selector = $("<button/>").attr({'type':'button', 'class':'btn btn-default dropdown-toggle', 'data-toggle':'dropdown', 'href':'#'});
-     selector.html("<span class='caret'></span><span class='sr-only'>Toggle Dropdown</span>");
-
-     var ul = $("<ul/>").attr({'class':'dropdown-menu'});
-
-     fillTypeSelector(button, ul, typeStr, url);
-
-     inputGroupBtn.append(button);
-     inputGroupBtn.append(selector);
-     inputGroupBtn.append(ul);
-
-     return inputGroupBtn;
-     }
-
-
-     function fillTypeSelector(button, selector, typeStr, url) {
-
-     if (selector == null) {
-     return;
-     }
-     selector.empty();
-
-     var options = null;
-
-     if (url) {
-     options = $('#datatypes-url').find('option');
-     } else {
-     options = $('#datatypes-value').find('option');
-     }
-
-     $.each(options, function (i, value)
-     {
-     var item = $(value);
-
-     var li = $("<li/>");
-     var a = $("<a/>").attr({'href':'#', 'data-value':item.val()});
-     a.text(item.text());
-
-     a.click(function ()
-     {
-     alert("Success!");
-     });
-
-     if (typeStr != null && typeStr == item.val()) {
-     button.text(item.text());
-     }
-
-     li.append(a);
-     selector.append(li);
-     });
-     }
-
-     function buildUrlToggle(coordId, urlIsSelected) {
-     var togglediv = $("<div/>").attr({'class' : 'btn-group col-sm-2', 'data-toggle':'buttons'});
-
-     var urlId = coordId + "-url";
-     var urlLabel = $("<label/>").attr({'class': 'btn', 'id':urlId});
-     var url = $("<input/>").attr({'type':'radio', 'name':'options'});
-
-     urlLabel.append(url);
-     urlLabel.text("URL");
-
-     var valueId = coordId + "-non-url";
-     var valueLabel = $("<label/>").attr({'class':'btn', 'id':valueId});
-     var value = $("<input/>").attr({'type' : 'radio', 'name':'options'});
-
-     valueLabel.append(value);
-     valueLabel.text("Value");
-
-     urlLabel.button();
-     valueLabel.button();
-
-     togglediv.append(urlLabel);
-     togglediv.append(valueLabel);
-
-     if (urlIsSelected) {
-     urlLabel.addClass('active');
-     urlLabel.prop('checked', true);
-     urlLabel.addClass('btn-primary');
-     valueLabel.addClass('btn-default');
-     } else {
-     value.addClass('active');
-     valueLabel.prop('checked', true);
-     valueLabel.addClass('btn-primary');
-     urlLabel.addClass('btn-default');
-     }
-
-     urlLabel.click(function ()
-     {
-     _testsDirty = true;
-     urlLabel.removeClass('btn-default');
-     urlLabel.addClass('btn-primary');
-     valueLabel.addClass('btn-default');
-     valueLabel.removeClass('btn-primary');
-     });
-
-     valueLabel.click(function ()
-     {
-     _testsDirty = true;
-     valueLabel.removeClass('btn-default');
-     valueLabel.addClass('btn-primary');
-     urlLabel.addClass('btn-default');
-     urlLabel.removeClass('btn-primary');
-     });
-
-
-
-     return togglediv;
-     }
-
-
-     */
-
-    function buildAssertion(coordId, isUrl, value) {
-        var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':coordId});
-
-        var cat = coordId + "-value";
-        var label = $("<label/>").attr({'for': cat, 'class': 'control-label'});
-        label.html(coordId);
-
-        var deleteParamButton = $("<a/>").attr({'class':'btn btn-danger pull-right', 'font-size':'9px', 'data-ref':coordId, 'style':'padding: 1px 3px; font-size: 9px; line-height: 1.5; border-radius: 3px;', 'title':'Delete ' + coordId});
-        var glyph = $("<span/>").attr({'class':'glyphicon glyphicon-remove', 'style':'vertical-align: -1px;' });
-        deleteParamButton.append(glyph);
-        deleteParamButton.click(function (e)
-        {
-            var param = $(e.currentTarget).attr("data-ref");
-            var test = $('#selectedTestName').html();
-
-            deleteTestAssertion(test, param);
-        });
-
-
-        labelGroup.append(label);
-        labelGroup.append(deleteParamButton);
-
-
-        var inputGroupAddon = $("<span/>").attr({'class':'input-group-btn'});
-        var controls = $("<div/>").attr({'class': 'controls'});
-        var inputGroup = $("<div/>").attr({'class':'input-group input-group-sm'});
-
-        var urlId = coordId + "-url";
-        var urlButton = $("<button/>").attr({'type':'button', 'class':'btn btn-default', 'name':urlId, 'id':urlId, 'value':'url'});
-
-        if (isUrl) {
-            urlButton.html("&nbsp;URL&nbsp;");
-        } else {
-            urlButton.html("Value");
-        }
-
-        urlButton.click(function ()
-        {
-            var txt = urlButton.text();
-            if (txt == "Value") {
-                urlButton.html("&nbsp;URL&nbsp;");
-            } else {
-                urlButton.html("Value");
-            }
-            _testsDirty = true;
-        });
-
-
-        inputGroupAddon.append(urlButton);
-        inputGroup.append(inputGroupAddon);
-
-        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat}); //placeholder?
-        input.val(value);
-
-        inputGroup.append(input);
-
-        controls.append(inputGroup);
-        labelGroup.append(controls);
-
-        return labelGroup;
-    }
-
     function buildParameter(coordId, type, isUrl, value, isAssertion) {
         var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':coordId});
 
@@ -1509,7 +1331,7 @@ $(function ()
         var label = $("<label/>").attr({'for': cat, 'class': 'control-label'});
         label.html(coordId);
 
-        var deleteParamButton = $("<a/>").attr({'class':'btn btn-danger pull-right', 'font-size':'9px', 'data-ref':coordId, 'style':'padding: 1px 3px; font-size: 9px; line-height: 1.5; border-radius: 3px;', 'title':'Delete ' + coordId});
+        var deleteParamButton = $("<a/>").attr({'class':'red-item pull-right', 'font-size':'9px', 'data-ref':coordId, 'style':'padding: 1px 3px; font-size: 12px; line-height: 1.5; border-radius: 3px;', 'title':'Delete ' + coordId});
         var glyph = $("<span/>").attr({'class':'glyphicon glyphicon-remove', 'style':'vertical-align: -1px;' });
         deleteParamButton.append(glyph);
         deleteParamButton.click(function (e)
@@ -1881,6 +1703,54 @@ $(function ()
             _errorId = showNote("Unable to delete n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
+
+    function deleteCurrentTestMenu()
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube is currently selected. There is nothing to rename.');
+            return;
+        }
+
+        var list = $("#testListItems a.selected");
+
+        if (list.length != 1)
+        {
+            if (list.length == 0) {
+                _errorId = showNote('No test is currently selected. Select a test to delete.');
+            } else {
+                _errorId = showNote('More than one test is selected. There can only be one test selected to delete.');
+            }
+            return;
+        }
+
+        var test = _testData[_testSelectionAnchor]["name"];
+
+        $('#deleteTestTitle').html("Delete Test");
+        $('#deleteTestLabel').html("Are you sure you want to delete the test '" + test + "'?");
+        $('#deleteTestModal').modal({
+            keyboard: true
+        });
+
+    }
+
+    function deleteTestOk()
+    {
+        clearError();
+
+        var list = $("#testListItems a.selected");
+
+        $('#deleteTestModal').modal('hide');
+
+        _testData.splice(_testSelectionAnchor, 1);
+        _testSelectionAnchor = -1;
+
+        refreshTestList();
+        saveAllTests(true);
+    }
+
+
 
     function renameCurrentTestMenu()
     {
@@ -2383,10 +2253,7 @@ $(function ()
             //  If a test is currently selected
             if (test != null) {
                 //  locate test in list to add it in...and add it before saving.
-                var oldTest = _testData[_testSelectionAnchor];
-                if (test["name"] == oldTest["name"]) {
-                    _testData[_testSelectionAnchor] = test;
-                }
+                _testData[_testSelectionAnchor] = test;
             }
         }
 
@@ -2489,7 +2356,7 @@ $(function ()
         var lookup = $('#addParameterOk').attr('data-ref');
         var val = $('#addParameterTitle').html();
 
-        //validate
+        //validate parameters or assertion name doesn't already exist.
         var param = buildParameter(id, "string", false, '', "Create Assertion" == val);
 
         if ($(lookup + ' .form-group').count > 0) {
@@ -2524,11 +2391,23 @@ $(function ()
 
             if (result.status != true) {
                 showTestResult(false, "Could not run test:  " + result.data);
+
+                $('#testLayoutCenter > .well').animate({
+                    scrollTop: $('#testResultsDiv').offset().top
+                }, 200);
+
                 return;
             }
 
             showTestResult(result.data["status"] == "Success", result.data["message"]);
+
+
+            $('#testLayoutCenter > .well').animate({
+                scrollTop: $('#testResultsDiv').offset().top
+            }, 200);
+
             saveAllTests(true);
+
         } catch (e) {
             _errorId = showNote("Could not run cube test '" + axisName + "':<hr class=\"hr-small\"/>" + e.message);
         }
