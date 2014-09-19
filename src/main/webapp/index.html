@@ -270,18 +270,19 @@
                     <div class="panel-heading">
                         <h4 class="panel-title">
                             <div class="btn-group">
-                                <a id="runSelectedTests" type="button" class="btn btn-primary">Run Tests</a>
+                                <a id="runSelectedTests" type="button" class="btn btn-primary">Run All</a>
                                 <a type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
                                     <span class="caret"></span>
                                     <span class="sr-only">Toggle Dropdown</span>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a id="saveAllTests" href="#">Save All</a></li>
                                     <li><a id="runAllTests" href="#">Run All</a></li>
+                                    <li><a id="runCurrentTestMenu">Run Selected</a></li>
+                                    <li class="divider"></li>
+                                    <li><a id="saveAllTests" href="#">Save All</a></li>
                                     <li class="divider"></li>
                                     <li><a id="renameCurrentTestMenu">Rename Test</a></li>
                                     <li><a id="deleteCurrentTestMenu">Delete Test</a></li>
-                                    <li><a id="runCurrentTestMenu">Run Test</a></li>
                                     <li class="divider"></li>
                                     <li><a id="duplicateCurrentTestMenu">Duplicate Test</a></li>
                                 </ul>
@@ -312,19 +313,21 @@
             <div id="testLayoutCenter" class="pane ui-layout-center">
                 <div class="well">
                     <div id="testButtonGroupDiv" class="btn-group pull-right">
-                        <button id="defaultRunTestButton" class="btn btn-default" type="button">Run Test</button>
+                        <button id="defaultRunTestButton" class="btn btn-default" type="button">Run</button>
                         <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                             <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
                         </button>
                         <ul class="dropdown-menu" role="menu">
-                            <li><a id="runTestMenu" href="#">Run Test</a></li>
-                            <li><a id="renameTestMenu" href="#">Rename Test</a></li>
-                            <li><a id="deleteTestMenu" href="#">Delete Test</a></li>
+                            <li><a id="runTestMenu" href="#">Run</a></li>
+                            <li><a id="saveTestMenu" href="#">Save</a></li>
+                            <li class="divider" />
+                            <li><a id="renameTestMenu" href="#">Rename</a></li>
+                            <li><a id="deleteTestMenu" href="#">Delete</a></li>
                             <li class="divider" />
                             <li><a id="addParameterMenu" href="#">Add Parameter</a></li>
                             <li><a id="addAssertionMenu" href="#">Add Assertion</a></li>
                             <li class="divider" />
-                            <li><a id="duplicateTestMenu" href="#">Duplicate Test</a></li>
+                            <li><a id="duplicateTestMenu" href="#">Duplicate</a></li>
                         </ul>
                     </div>
                     <div id="testNameDiv">

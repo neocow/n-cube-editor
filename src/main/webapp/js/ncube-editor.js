@@ -167,27 +167,16 @@ $(function ()
 
         });
 
-        // after creating the tabs, resize the tabs-wrapper layout...
-        // we can access this layout as a 'child' property of the outer-center pane
-        //myLayout.center.pane.resizeAll();
-
-        // init ALL the tab-layouts - all use the same options
-        // layout-initialization will _complete_ the first time each layout becomes 'visible'
-        //$("#tab1").layout( tabLayoutOptions );
-        //$("#tab2").layout( tabLayoutOptions );
-        //$("#tab3").layout( tabLayoutOptions );
-
-
-        // resize the tabs layout after creating the tabs
-        //secondaryLayout.center.pane.resizeAll(); // resize ONLY the tabs-wrapper layout - faster!
-
         ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+
 
         $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
             secondaryLayout.resizeAll();
             calculateTestPanelSize();
+
             //console.log(e.target) // activated tab
         });
+
         myLayout.resizeAll();
         //calculateTestPanelSize();
         openGroupContainingLastSelectedNCube();
@@ -519,13 +508,18 @@ $(function ()
             }
         } );
 
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-            // store to local storage.
-        });
-
         $('#saveAllTests').click(function ()
         {
+            $(this).css({'cursor':'wait'})
             saveAllTests(false);
+            $(this).css({'cursor':'default'})
+        });
+
+        $('#saveTestMenu').click(function ()
+        {
+            $(this).css({'cursor':'wait'})
+            saveAllTests(false);
+            $(this).css({'cursor':'default'})
         });
 
         $('#runAllTests').click(function ()
@@ -535,17 +529,23 @@ $(function ()
 
         $('#runCurrentTest').click(function ()
         {
+            $(this).css({'cursor':'wait'})
             runCurrentTest();
+            $(this).css({'cursor':'default'})
         });
 
         $('#defaultRunTestButton').click(function ()
         {
+            $(this).css({'cursor':'wait'})
             runCurrentTest();
+            $(this).css({'cursor':'default'})
         });
 
         $('#runTestMenu').click(function ()
         {
+            $(this).css({'cursor':'wait'})
             runCurrentTest();
+            $(this).css({'cursor':'default'})
         });
 
         $('#renameCurrentTestMenu').click(function ()
@@ -1211,13 +1211,20 @@ $(function ()
 
     function loadTestView(index) {
 
-        var testData = _testData[index];
 
         clearTestView();
+
+        if (_testData == null || _testSelectionAnchor < 0) {
+            return;
+        }
+
+        var testData = _testData[index];
 
         var testParameters = $('#testParameters');
         var testAssertions = $('#testAssertions');
         var testResult = $('#testResults');
+
+
 
         try {
             $('#selectedTestName').html(testData['name']);
