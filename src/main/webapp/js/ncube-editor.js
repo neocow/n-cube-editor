@@ -432,14 +432,6 @@ $(function ()
         {
             releaseCubesOk()
         });
-        $('#clearTestSelection').click(function ()
-        {
-            clearTestSelection()
-        });
-        $('#selectAllTests').click(function ()
-        {
-            selectAllTests()
-        });
         $('#changeVerMenu').click(function ()
         {
             changeVersion()
