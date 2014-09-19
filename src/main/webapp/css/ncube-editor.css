@@ -190,6 +190,7 @@ div#east div.panel-body {
     height: 100%;
     width: 100%;
     overflow: auto;
+    padding: 0;
 
     border: none white;
     border-radius: 0px;
@@ -220,14 +221,11 @@ div#east div.panel-body {
 
 .red-item {
     text-shadow: 0 -1px 0 rgba(0,0,0,0.2);
-    color: #d9534f;
-    background-color: transparent;
+    color: #C0C0C0;
 }
 
 .red-item:hover {
     color: #d9534f;
-    background-color: rgba(102,175,233,0.2);
-    border-color: #66afe9;
     outline: 0;
 }
 
