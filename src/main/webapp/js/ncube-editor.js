@@ -508,20 +508,6 @@ $(function ()
             }
         } );
 
-        $('#saveAllTests').click(function ()
-        {
-            $(this).css({'cursor':'wait'})
-            saveAllTests(false);
-            $(this).css({'cursor':'default'})
-        });
-
-        $('#saveTestMenu').click(function ()
-        {
-            $(this).css({'cursor':'wait'})
-            saveAllTests(false);
-            $(this).css({'cursor':'default'})
-        });
-
         $('#runAllTests').click(function ()
         {
             runAllTests();
