@@ -2416,7 +2416,7 @@ $(function ()
             testResultsDiv.removeClass("panel-success");
         }
 
-        testResults.text(message);
+        testResults.html(message);
         testResultsDiv.fadeIn("fast");
     }
 
