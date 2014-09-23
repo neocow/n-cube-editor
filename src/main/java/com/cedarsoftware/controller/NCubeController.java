@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
 import com.cedarsoftware.ncube.CellInfo;
 import com.cedarsoftware.ncube.Column;
+import com.cedarsoftware.ncube.GroovyExpression;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
@@ -29,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -125,16 +127,37 @@ public class NCubeController extends BaseController
             Object actual = ncube.getCells(coord, output);
 
 
-//            if (!DeepEquals.deepEquals(actual, expected)) {
-//                HashMap map = new HashMap();
-//                map.put("status", "Failure");
-//                map.put("message", "Expected: '" + expected + "'<br />  Actual: '" + actual + "'");
-//                return JsonWriter.objectToJson(map);
-//            }
+            Map args = new LinkedHashMap();
+            args.put("input", coord);
+            args.put("output", output);
+            args.put("ncube", ncube);
 
-            output.put("status", "Success");
-            output.put("message", new TestResultsFormatter(output).format());
-            return output;
+            Map<String, GroovyExpression> assertions = test.createAssertions();
+
+            boolean success = true;
+            Set<String> errors = new LinkedHashSet<>();
+            for (Map.Entry<String, GroovyExpression> entry : assertions.entrySet()) {
+                GroovyExpression exp = entry.getValue();
+
+                try
+                {
+                    if (!Boolean.TRUE.equals(exp.execute(args)))
+                    {
+                        errors.add("[assertion failed] " + entry.getKey());
+                        success = false;
+                    }
+                } catch (Exception e) {
+                    errors.add("[exception ]" + entry.getKey());
+                    success = false;
+                }
+            }
+
+            output.put("_failures", errors);
+
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("_message", new TestResultsFormatter(output).format());
+            map.put("_result", success);
+            return map;
         }
         catch(Exception e)
         {

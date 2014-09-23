@@ -2266,39 +2266,33 @@ $(function ()
 
         test["name"] = name;
         test["@type"] = "com.cedarsoftware.ncube.NCubeTest";
+        test["coord"] = retrieveParameters("#testParameters", false);
+        test["expected"] = retrieveParameters("#testAssertions", true);
 
-        var parameters = $("#testParameters > div[parameter-id]");
+        return test;
+    }
+
+    function retrieveParameters(id, isAssertion) {
+        var parameters = $(id + " > div[parameter-id]");
 
         var coord = {"@type":"java.util.HashMap"};
 
         $.each(parameters, function (index, value)
         {
             var id = value.getAttribute("parameter-id");
-            coord[id] = retrieveParameter(id);
+            coord[id] = retrieveParameter(id, isAssertion);
         });
 
-        test["coord"] = coord;
-
-        var expected = $("#testAssertions > div[parameter-id]");
-
-        var results = {"@type":"java.util.HashMap"};
-        $.each(expected, function (index, value)
-        {
-            var id = value.getAttribute("parameter-id");
-            results[id] = retrieveParameter(id);
-        });
-
-        test["expected"] = results;
-
-        return test;
+        return coord;
     }
-
-    function retrieveParameter(id) {
+    function retrieveParameter(id, isAssertion) {
         var parameter = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
         parameter["value"] = $("#" + id + "-value").val();
         parameter["isUrl"] = $("#" + id + "-url").text() != "Value";
-        parameter["dataType"] = $("#" + id + "-selector").val();
+
+        var type = isAssertion ? "exp" : $("#" + id + "-selector").val();
+        parameter["dataType"] = type;
 
         return parameter;
     }
@@ -2308,7 +2302,6 @@ $(function ()
 
         parameter["value"] = $("#" + id + "-value").val();
         parameter["isUrl"] = $("#" + id + "-url").text() != "Value";
-        parameter["dataType"] = "exp";
 
         return parameter;
     }
@@ -2384,7 +2377,7 @@ $(function ()
                 return;
             }
 
-            showTestResult(result.data["status"] == "Success", result.data["message"]);
+            showTestResult(result.data["_result"], result.data["_message"]);
 
 
             $('#testLayoutCenter > .well').animate({
