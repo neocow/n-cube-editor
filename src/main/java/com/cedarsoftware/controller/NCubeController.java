@@ -11,6 +11,7 @@ import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
+import com.cedarsoftware.ncube.formatters.NCubeTestFormatter;
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
@@ -120,6 +121,9 @@ public class NCubeController extends BaseController
     public Map runTest(String name, String app, String version, String status, NCubeTest test) {
         try
         {
+
+            nCubeService.loadCubes(name, app, version, status);
+
             NCube ncube = nCubeService.getCube(name, app, version, status);
             Map coord = test.createCoord();
 
@@ -132,22 +136,26 @@ public class NCubeController extends BaseController
             args.put("output", output);
             args.put("ncube", ncube);
 
-            Map<String, GroovyExpression> assertions = test.createAssertions();
+            List<GroovyExpression> assertions = test.createAssertions();
 
             boolean success = true;
+            int i = 0;
             Set<String> errors = new LinkedHashSet<>();
-            for (Map.Entry<String, GroovyExpression> entry : assertions.entrySet()) {
-                GroovyExpression exp = entry.getValue();
+            for (GroovyExpression entry : assertions) {
+                GroovyExpression exp = entry;
+                i++;
 
                 try
                 {
-                    if (!Boolean.TRUE.equals(exp.execute(args)))
+                    if (!NCube.isTrue(exp.execute(args)))
                     {
-                        errors.add("[assertion failed] " + entry.getKey());
+                        errors.add("[assertion failed] ");
                         success = false;
                     }
                 } catch (Exception e) {
-                    errors.add("[exception ]" + entry.getKey());
+                    errors.add("[exception ]");
+                    errors.add("\n");
+                    errors.add(getCauses(e));
                     success = false;
                 }
             }
@@ -687,7 +695,13 @@ public class NCubeController extends BaseController
             if (StringUtilities.isEmpty(s)) {
                 return null;
             }
-            return (Object[])JsonReader.jsonToJava(s);
+            try
+            {
+                Map map = (Map)JsonReader.jsonToMaps(s);
+                return null;
+            } catch (Exception e) {
+                return new Object[0];
+            }
         }
         catch (Exception e)
         {
@@ -706,7 +720,8 @@ public class NCubeController extends BaseController
                 markRequestFailed("This app and version CANNOT be saved.");
                 return;
             }
-            String data = JsonWriter.objectToJson(tests);
+            //String data = JsonWriter.objectToJson(tests);
+            String data = new NCubeTestFormatter().format(tests);
             nCubeService.updateTestData(name, app, version, data);
         }
         catch (Exception e)
@@ -772,7 +787,8 @@ public class NCubeController extends BaseController
             }
 
             Object[] tests = ncube.generateNCubeTests().toArray();
-            nCubeService.updateTestData(name, app, version, JsonWriter.objectToJson(tests));
+            String data = new NCubeTestFormatter().format(tests);
+            nCubeService.updateTestData(name, app, version, data);
 
             return tests;
 

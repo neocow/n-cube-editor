@@ -375,19 +375,19 @@ $(function ()
         });
         $('#deleteParameterOk').click(function ()
         {
-            deleteTestItemOk();
+            deleteParameterOk();
         });
         $('#addParameterMenu').click(function ()
         {
-            addTestItemMenu(false);
+            addParameterMenu();
         });
         $('#addAssertionMenu').click(function ()
         {
-            addTestItemMenu(true);
+            addNewAssertion();
         });
         $('#addParameterOk').click(function ()
         {
-            addTestItemOk();
+            addParameterOk();
         });
         $('#showRefsToMenu').click(function ()
         {
@@ -508,19 +508,28 @@ $(function ()
             }
         } );
 
-        $('#runAllTests').click(function ()
+        $('#runAllTestsMenu').click(function ()
         {
+            $(this).css({'cursor':'wait'})
             runAllTests();
+            $(this).css({'cursor':'default'})
         });
 
-        $('#runCurrentTest').click(function ()
+        $('#runAllTestsButton').click(function ()
+        {
+            $(this).css({'cursor':'wait'})
+            runAllTests();
+            $(this).css({'cursor':'default'})
+        });
+
+        $('#runCurrentTestMenu').click(function ()
         {
             $(this).css({'cursor':'wait'})
             runCurrentTest();
             $(this).css({'cursor':'default'})
         });
 
-        $('#defaultRunTestButton').click(function ()
+        $('#runTestButton').click(function ()
         {
             $(this).css({'cursor':'wait'})
             runCurrentTest();
@@ -1200,7 +1209,7 @@ $(function ()
 
         clearTestView();
 
-        if (_testData == null || _testSelectionAnchor < 0) {
+        if (_testData == null || _testData.size == 0 ||  _testSelectionAnchor < 0) {
             return;
         }
 
@@ -1229,13 +1238,11 @@ $(function ()
 
             var assertions = testData['expected'];
             if (assertions != null  && assertions) {
-                $.each(assertions, function (key, value) {
-                    if (key.substring(0, 1) != "@") {
-                        var isUrl = value == null ? null : value['isUrl'];
-                        var v = value == null ? null : value['value'];
-                        var dataType = value == null ? null : value['dataType'];
-                        testAssertions.append(buildParameter(key, "exp", isUrl, v, true));
-                    }
+                $.each(assertions, function (index, value) {
+                    var isUrl = value == null ? null : value['isUrl'];
+                    var v = value == null ? null : value['value'];
+                    var dataType = value == null ? null : value['dataType'];
+                    testAssertions.append(buildParameter("Assertion-"+ 1, "exp", isUrl, v, true));
                 });
             }
 
@@ -1254,7 +1261,7 @@ $(function ()
             _errorId = showNote('Unable to load test view ' + testData['name'] + ':<hr class="hr-small"/>' + e.message);
         }
 
-        $('.selectpicker').selectpicker();
+        //$('.selectpicker').selectpicker();
 
         /*  should be in index.html
          testParameters.append(buildTestButton());
@@ -1371,14 +1378,15 @@ $(function ()
         inputGroup.append(input);
 
         if (!isAssertion) {
-            inputGroup.append(createTypeSelector(coordId, type, isUrl));
+            var selector = createTypeSelector(coordId, type, isUrl);
+            inputGroup.append(selector);
+            selector.selectpicker();
         }
 
         controls.append(inputGroup);
         labelGroup.append(controls);
 
         //        labelGroup.append(buildUrlToggle(parameterId, url != null));
-
 
         return labelGroup;
     }
@@ -1643,7 +1651,7 @@ $(function ()
         });
     }
 
-    function deleteTestItemOk()
+    function deleteParameterOk()
     {
         $('#deleteParameterModal').modal('hide');
 
@@ -2266,26 +2274,26 @@ $(function ()
 
         test["name"] = name;
         test["@type"] = "com.cedarsoftware.ncube.NCubeTest";
-        test["coord"] = retrieveParameters("#testParameters", false);
-        test["expected"] = retrieveParameters("#testAssertions", true);
+        test["coord"] = retrieveParameters();
+        test["expected"] = retrieveAssertions();
 
         return test;
     }
 
-    function retrieveParameters(id, isAssertion) {
-        var parameters = $(id + " > div[parameter-id]");
-
+    function retrieveParameters() {
+        var parameters = $("#testParameters > div[parameter-id]");
         var coord = {"@type":"java.util.HashMap"};
 
         $.each(parameters, function (index, value)
         {
             var id = value.getAttribute("parameter-id");
-            coord[id] = retrieveParameter(id, isAssertion);
+            coord[id] = retrieveParameter(id);
         });
 
         return coord;
     }
-    function retrieveParameter(id, isAssertion) {
+
+    function retrieveParameter(id) {
         var parameter = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
         parameter["value"] = $("#" + id + "-value").val();
@@ -2297,16 +2305,28 @@ $(function ()
         return parameter;
     }
 
-    function retrieveAssertion(id) {
-        var parameter = {"@type":"com.cedarsoftware.ncube.CellInfo"};
+    function retrieveAssertions() {
+        var assertions = $('#testAssertions > div[parameter-id]');
+        var array = new Array(assertions.count);
 
-        parameter["value"] = $("#" + id + "-value").val();
-        parameter["isUrl"] = $("#" + id + "-url").text() != "Value";
+        $.each(assertions, function(index, value) {
+            array[index] = retrieveAssertion(value.getAttribute("parameter-id"));
+        });
 
-        return parameter;
+        return array;
     }
 
-    function addTestItemMenu(isAssertion) {
+    function retrieveAssertion(id) {
+        var item = {"@type":"com.cedarsoftware.ncube.CellInfo"};
+
+        item["value"] = $("#" + id + "-value").val();
+        item["isUrl"] = $("#" + id + "-url").text() != "Value";
+        item["dataType"] = "exp";
+
+        return item;
+    }
+
+    function addParameterMenu() {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
@@ -2314,39 +2334,39 @@ $(function ()
             return;
         }
 
-        var title = isAssertion ? 'Create Assertion' : 'Create Parameter';
-        var label = isAssertion ? 'Assertion Name' : 'Parameter Name';
-        var dataRef = isAssertion ? '#testAssertions' : '#testParameters';
-
         $('#addParameterField').val('');
-        $('#addParameerLabel').html(label);
-        $('#addParameterTitle').html(title);
-        $('#addParameterOk').attr({'data-ref' : dataRef});
         $('#addParameterModal').modal({
             keyboard: true
         });
     }
 
-    function addTestItemOk() {
+    function addParameterOk() {
         $('#addParameterModal').modal('hide');
 
         var id = $('#addParameterField').val();
-        var lookup = $('#addParameterOk').attr('data-ref');
-        var val = $('#addParameterTitle').html();
 
-        //validate parameters or assertion name doesn't already exist.
-        var param = buildParameter(id, "string", false, '', "Create Assertion" == val);
+        var param = buildParameter(id, "string", false, '', false);
 
-        if ($(lookup + ' .form-group').count > 0) {
-            param.insertAfter(lookup + ' .form-group:last');
+        if ($('#testParameters .form-group').count > 0) {
+            param.insertAfter('#testParameters .form-group:last');
         } else {
-            $(lookup).append(param);
+            $('#testParameters').append(param);
         }
 
-        $('.selectpicker').selectpicker();
+        saveAllTests(false);
+    }
+
+    function addNewAssertion() {
+        var count = $('#testParameters .form-group').count;
+        var param = buildParameter("Assertion-" + count, "string", false, '', false);
+
+        if ($('#testAssertions .form-group').count > 0) {
+            param.insertAfter('#testAssertions .form-group:last');
+        } else {
+            $('#testAssertions').append(param);
+        }
 
         saveAllTests(false);
-
     }
 
     function runCurrentTest() {
