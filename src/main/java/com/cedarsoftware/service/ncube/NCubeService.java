@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
 import com.cedarsoftware.ncube.NCube;
+import com.cedarsoftware.ncube.NCubeJdbcConnectionProvider;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.StringUtilities;
@@ -412,6 +413,16 @@ public class NCubeService
         }
 
         return NCubeManager.getTestData(connection, app, name, version, new Date());
+    }
+
+    /**
+     * Load all cubes into the manager.
+     */
+    public void loadCubes(String name, String app, String version, String status)
+    {
+        NCubeJdbcConnectionProvider provider = new NCubeJdbcConnectionProvider(getConnection());
+        ApplicationID id = new ApplicationID(null, app, version);
+        NCubeManager.loadCubes(provider, id, status, new Date());
     }
 
     /**
