@@ -1232,9 +1232,9 @@ $(function ()
                     if (key.substring(0, 1) != "@") {
                         var value = item['value'];
 
-                        var isUrl = value['isUrl'] == null ? false : value['isUrl'];
-                        var v = value['value'] == null ? null : value['value'];
-                        var dataType = value['dataType'] == null ? null : value['dataType'];
+                        var isUrl = value.isUrl == null ? false : value.isUrl;
+                        var v = value.value == null ? null : value.value;
+                        var dataType = value.dataType == null ? null : value.dataType;
                         testParameters.append(buildParameter(key, dataType, isUrl, v, false));
                     }
                 });
@@ -1244,23 +1244,11 @@ $(function ()
             if (assertions != null  && assertions) {
                 $.each(assertions, function (index, value) {
                     var isUrl = value['isUrl'] == null ? null : value['isUrl'];
-                    var v = value['value'] == null ? null : value['value'];
-                    var dataType = value['dataType'] == null ? null : value['dataType'];
+                    var v = value.value == null ? null : value.value;
+                    var dataType = value.dataType == null ? null : value.dataType;
                     testAssertions.append(buildParameter("Assertion-"+ (index + 1), "exp", isUrl, v, true));
                 });
             }
-
-            /*
-             $.each(testData['expected'], function (key, value) {
-             if (key.substring(0, 1) != "@") {
-             var isUrl = value == null ? null : value['isUrl'];
-             var v = value == null ? null : value['value'];
-             var type = value == null ? null : value['type'];
-             testCtrl.append(buildParameter(key, type, isUrl, v));
-             }
-             });
-             */
-
         } catch (e) {
             _errorId = showNote('Unable to load test view ' + testData['name'] + ':<hr class="hr-small"/>' + e.message);
         }
@@ -2355,7 +2343,7 @@ $(function ()
 
         var param = buildParameter(id, "string", false, '', false);
 
-        if ($('#testParameters .form-group').count > 0) {
+        if ($('#testParameters .form-group').length > 0) {
             param.insertAfter('#testParameters .form-group:last');
         } else {
             $('#testParameters').append(param);
@@ -2365,10 +2353,10 @@ $(function ()
     }
 
     function addNewAssertion() {
-        var count = $('#testParameters .form-group').count;
-        var param = buildParameter("Assertion-" + count, "string", false, '', false);
+        var count = $('#testAssertions .form-group').length;
+        var param = buildParameter("Assertion-" + (count+1), "exp", false, '', true);
 
-        if ($('#testAssertions .form-group').count > 0) {
+        if (count > 0) {
             param.insertAfter('#testAssertions .form-group:last');
         } else {
             $('#testAssertions').append(param);
