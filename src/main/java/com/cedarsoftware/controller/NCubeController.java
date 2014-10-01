@@ -11,7 +11,8 @@ import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
-import com.cedarsoftware.ncube.formatters.NCubeTestFormatter;
+import com.cedarsoftware.ncube.formatters.NCubeTestReader;
+import com.cedarsoftware.ncube.formatters.NCubeTestWriter;
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
@@ -697,8 +698,8 @@ public class NCubeController extends BaseController
             }
             try
             {
-                Map map = (Map)JsonReader.jsonToMaps(s);
-                return null;
+                Object[] os = new NCubeTestReader().convert(s).toArray();
+                return os;
             } catch (Exception e) {
                 return new Object[0];
             }
@@ -721,7 +722,7 @@ public class NCubeController extends BaseController
                 return;
             }
             //String data = JsonWriter.objectToJson(tests);
-            String data = new NCubeTestFormatter().format(tests);
+            String data = new NCubeTestWriter().format(tests);
             nCubeService.updateTestData(name, app, version, data);
         }
         catch (Exception e)
@@ -786,11 +787,7 @@ public class NCubeController extends BaseController
                 throw new IllegalArgumentException("No cube was found for:  " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
             }
 
-            Object[] tests = ncube.generateNCubeTests().toArray();
-            String data = new NCubeTestFormatter().format(tests);
-            nCubeService.updateTestData(name, app, version, data);
-
-            return tests;
+            return ncube.generateNCubeTests().toArray();
 
             /*
             Object[] items = new Object[list.size()];

@@ -1225,12 +1225,16 @@ $(function ()
             $('#selectedTestName').html(testData['name']);
 
             var coordinate = testData['coord'];
+
             if (coordinate != null  && coordinate) {
-                $.each(coordinate, function (key, value) {
+                $.each(coordinate, function (index, item) {
+                    var key = item['key'];
                     if (key.substring(0, 1) != "@") {
-                        var isUrl = value == null ? null : value['isUrl'];
-                        var v = value == null ? null : value['value'];
-                        var dataType = value == null ? null : value['dataType'];
+                        var value = item['value'];
+
+                        var isUrl = value['isUrl'] == null ? false : value['isUrl'];
+                        var v = value['value'] == null ? null : value['value'];
+                        var dataType = value['dataType'] == null ? null : value['dataType'];
                         testParameters.append(buildParameter(key, dataType, isUrl, v, false));
                     }
                 });
@@ -1239,10 +1243,10 @@ $(function ()
             var assertions = testData['expected'];
             if (assertions != null  && assertions) {
                 $.each(assertions, function (index, value) {
-                    var isUrl = value == null ? null : value['isUrl'];
-                    var v = value == null ? null : value['value'];
-                    var dataType = value == null ? null : value['dataType'];
-                    testAssertions.append(buildParameter("Assertion-"+ 1, "exp", isUrl, v, true));
+                    var isUrl = value['isUrl'] == null ? null : value['isUrl'];
+                    var v = value['value'] == null ? null : value['value'];
+                    var dataType = value['dataType'] == null ? null : value['dataType'];
+                    testAssertions.append(buildParameter("Assertion-"+ (index + 1), "exp", isUrl, v, true));
                 });
             }
 
@@ -2282,12 +2286,16 @@ $(function ()
 
     function retrieveParameters() {
         var parameters = $("#testParameters > div[parameter-id]");
-        var coord = {"@type":"java.util.HashMap"};
+        var coord = [];
+
 
         $.each(parameters, function (index, value)
         {
+            var pair = {};
             var id = value.getAttribute("parameter-id");
-            coord[id] = retrieveParameter(id);
+            pair['key'] = id;
+            pair['value'] = retrieveParameter(id);
+            coord.push(pair);
         });
 
         return coord;
@@ -2299,7 +2307,7 @@ $(function ()
         parameter["value"] = $("#" + id + "-value").val();
         parameter["isUrl"] = $("#" + id + "-url").text() != "Value";
 
-        var type = isAssertion ? "exp" : $("#" + id + "-selector").val();
+        var type = $("#" + id + "-selector").val();
         parameter["dataType"] = type;
 
         return parameter;
@@ -2407,7 +2415,7 @@ $(function ()
             saveAllTests(true);
 
         } catch (e) {
-            _errorId = showNote("Could not run cube test '" + axisName + "':<hr class=\"hr-small\"/>" + e.message);
+            _errorId = showNote("Could not run cube test:<hr class=\"hr-small\"/>" + e.message);
         }
     }
 
