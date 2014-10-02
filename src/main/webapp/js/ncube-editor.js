@@ -1205,11 +1205,9 @@ $(function ()
     }
 
     function loadTestView(index) {
-
-
         clearTestView();
 
-        if (_testData == null || _testData.size == 0 ||  _testSelectionAnchor < 0) {
+        if (!_testData || _testData.length == 0 ||  _testSelectionAnchor < 0) {
             return;
         }
 
@@ -1218,8 +1216,6 @@ $(function ()
         var testParameters = $('#testParameters');
         var testAssertions = $('#testAssertions');
         var testResult = $('#testResults');
-
-
 
         try {
             $('#selectedTestName').html(testData['name']);
@@ -1232,9 +1228,9 @@ $(function ()
                     if (key.substring(0, 1) != "@") {
                         var value = item['value'];
 
-                        var isUrl = value.isUrl == null ? false : value.isUrl;
-                        var v = value.value == null ? null : value.value;
-                        var dataType = value.dataType == null ? null : value.dataType;
+                        var isUrl = (value == null || value.isUrl == null) ? false : value.isUrl;
+                        var v = (value == null || value.value == null) ? null : value.value;
+                        var dataType = (value == null || value.dataType == null) ? null : value.dataType;
                         testParameters.append(buildParameter(key, dataType, isUrl, v, false));
                     }
                 });
@@ -1250,7 +1246,8 @@ $(function ()
                 });
             }
         } catch (e) {
-            _errorId = showNote('Unable to load test view ' + testData['name'] + ':<hr class="hr-small"/>' + e.message);
+            console.log(e);
+            _errorId = showNote('Unable to load test view:<hr class="hr-small"/>' + e.message);
         }
 
         //$('.selectpicker').selectpicker();

@@ -274,6 +274,8 @@ div#east div.panel-body {
 
 #selectedTestName {
     color: white;
+    margin-top: 5px;
+    margin-bottom: 15px;
     font-weight: bold;
     font-family: 'Open Sans', sans-serif;
     font-weight: 600;

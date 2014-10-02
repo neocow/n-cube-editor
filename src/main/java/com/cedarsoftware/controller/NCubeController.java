@@ -11,6 +11,7 @@ import com.cedarsoftware.ncube.NCubeInfoDto;
 import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
+import com.cedarsoftware.ncube.RuleInfo;
 import com.cedarsoftware.ncube.formatters.NCubeTestReader;
 import com.cedarsoftware.ncube.formatters.NCubeTestWriter;
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter;
@@ -129,8 +130,7 @@ public class NCubeController extends BaseController
             Map coord = test.createCoord();
 
             Map output = new LinkedHashMap();
-            Object actual = ncube.getCells(coord, output);
-
+            ncube.getCell(coord, output);
 
             Map args = new LinkedHashMap();
             args.put("input", coord);
@@ -142,19 +142,23 @@ public class NCubeController extends BaseController
             boolean success = true;
             int i = 0;
             Set<String> errors = new LinkedHashSet<>();
-            for (GroovyExpression entry : assertions) {
-                GroovyExpression exp = entry;
+            for (GroovyExpression exp : assertions)
+            {
                 i++;
 
                 try
                 {
+                    Map assOutput = new LinkedHashMap<>(output);
+                    RuleInfo ruleInfo = new RuleInfo();
+                    assOutput.put(NCube.RULE_EXEC_INFO, ruleInfo);
+                    args.put("output", assOutput);
                     if (!NCube.isTrue(exp.execute(args)))
                     {
-                        errors.add("[assertion failed] ");
+                        errors.add("[assertion " + i + " failed]: " + exp.getCmd());
                         success = false;
                     }
                 } catch (Exception e) {
-                    errors.add("[exception ]");
+                    errors.add("[exception]");
                     errors.add("\n");
                     errors.add(getCauses(e));
                     success = false;
@@ -208,7 +212,7 @@ public class NCubeController extends BaseController
                 {
                     try
                     {
-                        sysInfo.getCells(input, output);
+                        sysInfo.getCell(input, output);
                         augInfo = output.containsKey("info") ? (Map<String, Object>) output.get("info") : makeGenericAugInfo();
                     }
                     catch (Exception ignored)
@@ -747,7 +751,7 @@ public class NCubeController extends BaseController
     private static void fail(Exception e)
     {
         markRequestFailed(getCauses(e));
-        LOG.warn(e);
+        LOG.warn("error occurred", e);
     }
 
     private static String getCauses(Throwable t)
@@ -784,24 +788,10 @@ public class NCubeController extends BaseController
             NCube ncube = nCubeService.getCube(name, app, version, status);
             if (ncube == null)
             {
-                throw new IllegalArgumentException("No cube was found for:  " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
+                throw new IllegalArgumentException("No cube was found for: " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
             }
 
             return ncube.generateNCubeTests().toArray();
-
-            /*
-            Object[] items = new Object[list.size()];
-            int i=0;
-            for (NCubeTest test : list) {
-                HashMap<String, Object> map = new HashMap<>();
-                map.put("name", test.getName());
-                map.put("coordDescription", test.getCoordDescription());
-                map.put("expectedResultDescription", test.getExpectedResultDescription());
-                items[i++] = map;
-            }
-
-            return items;
-            */
         }
         catch (Exception e)
         {
