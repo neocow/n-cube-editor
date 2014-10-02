@@ -1246,7 +1246,7 @@ $(function ()
                     var isUrl = value['isUrl'] == null ? null : value['isUrl'];
                     var v = value.value == null ? null : value.value;
                     var dataType = value.dataType == null ? null : value.dataType;
-                    testAssertions.append(buildParameter("Assertion-"+ (index + 1), "exp", isUrl, v, true));
+                    testAssertions.append(buildParameter(index + 1, "exp", isUrl, v, true));
                 });
             }
         } catch (e) {
@@ -1309,26 +1309,33 @@ $(function ()
     }
 
     function buildParameter(coordId, type, isUrl, value, isAssertion) {
-        var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':coordId});
+        var id = generateId();
+        var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':id, 'parameter-key':coordId});
 
-        var cat = coordId + "-value";
+        var cat = id + "-value";
         var label = $("<label/>").attr({'for': cat, 'class': 'control-label'});
-        label.html(coordId);
 
-        var deleteParamButton = $("<a/>").attr({'class':'red-item pull-right', 'font-size':'9px', 'data-ref':coordId, 'style':'padding: 1px 3px; font-size: 12px; line-height: 1.5; border-radius: 3px;', 'title':'Delete ' + coordId});
+        if (isAssertion) {
+            label.html('' + coordId + '.');
+        } else {
+            label.html(coordId);
+        }
+
+        var deleteParamButton = $("<a/>").attr({'class':'red-item pull-right', 'font-size':'9px', 'parameter-key':coordId, 'parameter-id':id, 'style':'padding: 1px 3px; font-size: 12px; line-height: 1.5; border-radius: 3px;', 'title':'Delete ' + coordId});
         var glyph = $("<span/>").attr({'class':'glyphicon glyphicon-remove', 'style':'vertical-align: -1px;' });
         deleteParamButton.append(glyph);
         deleteParamButton.click(function (e)
         {
-            var param = $(e.currentTarget).attr("data-ref");
+            var paramKey = $(e.currentTarget).attr("parameter-key");
+            var deleteId = $(e.currentTarget).attr("parameter-id");
             var test = $('#selectedTestName').html();
             var title = isAssertion ? "Delete Assertion?" : "Delete Parameter?";
             var label = isAssertion ?
-                "Delete assertion '" + param + "' from '" + test + "'?" :
-                "Delete parameter '" + param + "' from '" + test + "'?";
+                "Delete assertion '" + paramKey + "' from '" + test + "'?" :
+                "Delete parameter '" + paramKey + "' from '" + test + "'?";
             var selector = isAssertion ? "#testAssertions" : "#testParameters";
 
-            deleteTestItem(title, label, selector, param);
+            deleteTestItem(title, label, selector, deleteId);
         });
 
 
@@ -1340,7 +1347,7 @@ $(function ()
         var controls = $("<div/>").attr({'class': 'controls'});
         var inputGroup = $("<div/>").attr({'class':'input-group input-group-sm'});
 
-        var urlId = coordId + "-url";
+        var urlId = id + "-url";
         var urlButton = $("<button/>").attr({'type':'button', 'class':'btn btn-default', 'name':urlId, 'id':urlId, 'value':'url'});
 
         if (isUrl) {
@@ -1370,7 +1377,7 @@ $(function ()
         inputGroup.append(input);
 
         if (!isAssertion) {
-            var selector = createTypeSelector(coordId, type, isUrl);
+            var selector = createTypeSelector(id, type, isUrl);
             inputGroup.append(selector);
             selector.selectpicker();
         }
@@ -1625,6 +1632,15 @@ $(function ()
         }
     }
 
+    function renameAssertions()
+    {
+        $("#testAssertions .form-group").each(function (index, value)
+        {
+            $(value).find('label.conrol-label').html("" + index + ".");
+            value.setAttribute('parameter-key', index);
+        });
+    }
+
     function deleteTestItem(title, label, parentSelector, parameterName)
     {
         clearError();
@@ -1650,6 +1666,11 @@ $(function ()
         var id = $('#deleteParameterHiddenId').val();
         var parent = $('#deleteParameterOk').attr('data-ref');
         $(parent + " > div[parameter-id='" + id + "']").remove();
+
+        if ('#testAssertions' == parent) {
+            renameAssertions();
+        }
+
         saveAllTests(false);
     }
 
@@ -2214,6 +2235,10 @@ $(function ()
         }
     }
 
+    function generateId() {
+        return '' + Math.random().toString(36);
+    }
+
     function runAllTests() {
     }
 
@@ -2281,7 +2306,7 @@ $(function ()
         {
             var pair = {};
             var id = value.getAttribute("parameter-id");
-            pair['key'] = id;
+            pair['key'] = value.getAttribute("parameter-key");
             pair['value'] = retrieveParameter(id);
             coord.push(pair);
         });
@@ -2341,6 +2366,7 @@ $(function ()
 
         var id = $('#addParameterField').val();
 
+        // check to see if parameter already exists in parameter-key of #testAssertions .form-group
         var param = buildParameter(id, "string", false, '', false);
 
         if ($('#testParameters .form-group').length > 0) {
@@ -2354,7 +2380,7 @@ $(function ()
 
     function addNewAssertion() {
         var count = $('#testAssertions .form-group').length;
-        var param = buildParameter("Assertion-" + (count+1), "exp", false, '', true);
+        var param = buildParameter(count+1, "exp", false, '', true);
 
         if (count > 0) {
             param.insertAfter('#testAssertions .form-group:last');
