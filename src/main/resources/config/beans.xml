@@ -65,9 +65,9 @@
 
     <util:list id="defaultUrls" value-type="java.lang.Object">
         <util:list value-type="java.lang.String">
-            <value>https://cdn.gaig.com/private/ud/ra-resources/${version}/public</value>
-            <value>https://cdn.gaig.com/private/ud/ra-resources/${version}/private</value>
-            <value>https://cdn.gaig.com/private/ud/ra-resources/${version}/private/groovy</value>
+            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/public</value>-->
+            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/private</value>-->
+            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/private/groovy</value>-->
         </util:list>
     </util:list>
 
