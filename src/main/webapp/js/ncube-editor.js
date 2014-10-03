@@ -2311,7 +2311,8 @@ $(function ()
 
     function retrieveParameters() {
         var parameters = $("#testParameters > div[parameter-id]");
-        var coord = [];
+        var coord = new Array(parameters.length);
+
 
 
         $.each(parameters, function (index, value)
@@ -2320,7 +2321,7 @@ $(function ()
             var v = $(value);
             pair['key'] = v.attr("parameter-id");
             pair['value'] = retrieveParameter(v);
-            coord.push(pair);
+            coord[index] = pair;
         });
 
         return coord;
@@ -2338,7 +2339,7 @@ $(function ()
 
     function retrieveAssertions() {
         var assertions = $('#testAssertions > div[parameter-id]');
-        var array = new Array(assertions.count);
+        var array = new Array(assertions.length);
 
         $.each(assertions, function(index, value) {
             array[index] = retrieveAssertion($(value));
