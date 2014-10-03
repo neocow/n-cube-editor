@@ -876,7 +876,7 @@ $(function ()
         }
 
         $('#duplicateTestTitle').html('Duplicate \'' + $(list[0]).text().trim() + '\' ?');
-        $('#duplicateTestNameField').text("");
+        $('#duplicateTestNameField').val('');
         $('#duplicateTestModal').modal();
     }
 
@@ -940,28 +940,47 @@ $(function ()
 
     function duplicateTest(test, newTestName) {
         var newTest = {};
+        newTest["@type"] = "com.cedarsoftware.ncube.NCubeTest";
         newTest["name"] = newTestName;
 
-        var parameters = {};
+        var parameters = [];
 
-        $.each(test["coord"], function(paramKey, paramDescription) {
-            if (paramKey.indexOf('@') == 0) {
-                parameters[paramKey] = paramDescription;
+        $.each(test["coord"], function(index, item) {
+            var pair = {};
+
+            pair["key"] = item["key"];
+
+            var cell = item["value"];
+            var newCell = {};
+
+            if (!cell) {
+                pair["value"] = null;
             } else {
-                var parameter = {};
-                $.each(paramDescription, function(key, value) {
-                    parameter[key] = value;
+                $.each(cell, function(key, value) {
+                    newCell[key] = value;
                 });
-                parameters[paramKey] = parameter;
+                pair["value"] = newCell;
             }
 
+            parameters.push(pair);
         });
 
         newTest["coord"] = parameters;
 
-        var result = {};
-        $.each(test["expected"], function(key, value) {
-            result[key] = value;
+        var result = [];
+
+        $.each(test["expected"], function(index, item) {
+            var newCell = {};
+
+            if (!item) {
+                newCell = null;
+            } else {
+                $.each(item, function (key, value) {
+                    newCell[key] = value;
+                });
+            }
+
+            result.push(newCell);
         });
 
         newTest["expected"] = result;
@@ -1242,7 +1261,7 @@ $(function ()
                     var isUrl = value['isUrl'] == null ? null : value['isUrl'];
                     var v = value.value == null ? null : value.value;
                     var dataType = value.dataType == null ? null : value.dataType;
-                    testAssertions.append(buildParameter("Assertion-"+ (index + 1), "exp", isUrl, v, true));
+                    testAssertions.append(buildParameter(index + 1, "exp", isUrl, v, true));
                 });
             }
         } catch (e) {
@@ -1263,12 +1282,11 @@ $(function ()
 
     }
 
-    function createTypeSelector(parameterId, typeStr, url) {
+    function createTypeSelector(typeStr, url) {
         if (typeStr == null) {
             typeStr = 'string';
         }
-        var selectorId = parameterId + "-selector"
-        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow', 'data-width':'auto', 'data-style': 'btn-default', 'id':selectorId});
+        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow', 'data-width':'auto', 'data-style': 'btn-default'});
         //        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow col-lg-2', 'data-width': 'auto', 'data-style': 'btn-default', 'id':selectorId});
 
         //var selector = $("<button/>").attr({'class' : 'btn btn-default', 'id':selectorId})
@@ -1310,22 +1328,27 @@ $(function ()
 
         var cat = coordId + "-value";
         var label = $("<label/>").attr({'for': cat, 'class': 'control-label'});
-        label.html(coordId);
 
-        var deleteParamButton = $("<a/>").attr({'class':'red-item pull-right', 'font-size':'9px', 'data-ref':coordId, 'style':'padding: 1px 3px; font-size: 12px; line-height: 1.5; border-radius: 3px;', 'title':'Delete ' + coordId});
+        if (isAssertion) {
+            label.html('' + coordId + '.');
+        } else {
+            label.html(coordId);
+        }
+
+        var deleteParamButton = $("<a/>").attr({'class':'red-item pull-right', 'font-size':'9px', 'parameter-id':coordId, 'style':'padding: 1px 3px; font-size: 12px; line-height: 1.5; border-radius: 3px;', 'title':'Delete ' + coordId});
         var glyph = $("<span/>").attr({'class':'glyphicon glyphicon-remove', 'style':'vertical-align: -1px;' });
         deleteParamButton.append(glyph);
         deleteParamButton.click(function (e)
         {
-            var param = $(e.currentTarget).attr("data-ref");
+            var paramId = $(e.currentTarget).attr("parameter-id");
             var test = $('#selectedTestName').html();
             var title = isAssertion ? "Delete Assertion?" : "Delete Parameter?";
             var label = isAssertion ?
-                "Delete assertion '" + param + "' from '" + test + "'?" :
-                "Delete parameter '" + param + "' from '" + test + "'?";
+                "Delete assertion '" + paramId + "' from '" + test + "'?" :
+                "Delete parameter '" + paramId + "' from '" + test + "'?";
             var selector = isAssertion ? "#testAssertions" : "#testParameters";
 
-            deleteTestItem(title, label, selector, param);
+            deleteTestItem(title, label, selector, paramId);
         });
 
 
@@ -1337,8 +1360,7 @@ $(function ()
         var controls = $("<div/>").attr({'class': 'controls'});
         var inputGroup = $("<div/>").attr({'class':'input-group input-group-sm'});
 
-        var urlId = coordId + "-url";
-        var urlButton = $("<button/>").attr({'type':'button', 'class':'btn btn-default', 'name':urlId, 'id':urlId, 'value':'url'});
+        var urlButton = $("<button/>").attr({'type':'button', 'class':'btn btn-default', 'value':'url'});
 
         if (isUrl) {
             urlButton.html("&nbsp;URL&nbsp;");
@@ -1367,7 +1389,7 @@ $(function ()
         inputGroup.append(input);
 
         if (!isAssertion) {
-            var selector = createTypeSelector(coordId, type, isUrl);
+            var selector = createTypeSelector(type, isUrl);
             inputGroup.append(selector);
             selector.selectpicker();
         }
@@ -1622,6 +1644,18 @@ $(function ()
         }
     }
 
+    function renameAssertions()
+    {
+        $("#testAssertions .form-group").each(function (index, value)
+        {
+            var v = $(value);
+            var count = index + 1;
+            v.attr('parameter-id', count);
+            v.find('label.control-label').html("" + count + ".");
+            v.find('a[parameter-id]').attr('parameter-id', count);
+        });
+    }
+
     function deleteTestItem(title, label, parentSelector, parameterName)
     {
         clearError();
@@ -1647,6 +1681,11 @@ $(function ()
         var id = $('#deleteParameterHiddenId').val();
         var parent = $('#deleteParameterOk').attr('data-ref');
         $(parent + " > div[parameter-id='" + id + "']").remove();
+
+        if ('#testAssertions' == parent) {
+            renameAssertions();
+        }
+
         saveAllTests(false);
     }
 
@@ -2211,6 +2250,7 @@ $(function ()
         }
     }
 
+
     function runAllTests() {
     }
 
@@ -2277,23 +2317,21 @@ $(function ()
         $.each(parameters, function (index, value)
         {
             var pair = {};
-            var id = value.getAttribute("parameter-id");
-            pair['key'] = id;
-            pair['value'] = retrieveParameter(id);
+            var v = $(value);
+            pair['key'] = v.attr("parameter-id");
+            pair['value'] = retrieveParameter(v);
             coord.push(pair);
         });
 
         return coord;
     }
 
-    function retrieveParameter(id) {
+    function retrieveParameter(group) {
         var parameter = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
-        parameter["value"] = $("#" + id + "-value").val();
-        parameter["isUrl"] = $("#" + id + "-url").text() != "Value";
-
-        var type = $("#" + id + "-selector").val();
-        parameter["dataType"] = type;
+        parameter["value"] = group.find('input').val();
+        parameter["isUrl"] = group.find('button[value]').text() != "Value";
+        parameter["dataType"] = group.find('select').val();
 
         return parameter;
     }
@@ -2303,17 +2341,17 @@ $(function ()
         var array = new Array(assertions.count);
 
         $.each(assertions, function(index, value) {
-            array[index] = retrieveAssertion(value.getAttribute("parameter-id"));
+            array[index] = retrieveAssertion($(value));
         });
 
         return array;
     }
 
-    function retrieveAssertion(id) {
+    function retrieveAssertion(group) {
         var item = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
-        item["value"] = $("#" + id + "-value").val();
-        item["isUrl"] = $("#" + id + "-url").text() != "Value";
+        item["value"] = group.find('input').val();
+        item["isUrl"] = group.find('button[value]').text() != "Value";
         item["dataType"] = "exp";
 
         return item;
@@ -2338,6 +2376,7 @@ $(function ()
 
         var id = $('#addParameterField').val();
 
+        // check to see if parameter already exists in parameter-key of #testAssertions .form-group
         var param = buildParameter(id, "string", false, '', false);
 
         if ($('#testParameters .form-group').length > 0) {
@@ -2351,7 +2390,7 @@ $(function ()
 
     function addNewAssertion() {
         var count = $('#testAssertions .form-group').length;
-        var param = buildParameter("Assertion-" + (count+1), "exp", false, '', true);
+        var param = buildParameter(count+1, "exp", false, '', true);
 
         if (count > 0) {
             param.insertAfter('#testAssertions .form-group:last');
