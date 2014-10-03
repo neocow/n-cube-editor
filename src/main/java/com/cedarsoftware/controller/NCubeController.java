@@ -786,12 +786,19 @@ public class NCubeController extends BaseController
         try
         {
             NCube ncube = nCubeService.getCube(name, app, version, status);
+            if (!"SNAPSHOT".equalsIgnoreCase(status)) {
+                throw new IllegalArgumentException("You cannot generate tests for release cubes");
+            }
+
             if (ncube == null)
             {
                 throw new IllegalArgumentException("No cube was found for: " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
             }
 
-            return ncube.generateNCubeTests().toArray();
+            Object[] list = ncube.generateNCubeTests().toArray();
+
+            nCubeService.updateTestData(name, app, version, new NCubeTestWriter().format(list));
+            return list;
         }
         catch (Exception e)
         {
