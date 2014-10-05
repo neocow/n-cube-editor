@@ -7,6 +7,7 @@
 
 $(function ()
 {
+    var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
     var _cubeList = {};
     var _apps = [];
     var _statuses = ['RELEASE', 'SNAPSHOT'];
@@ -238,27 +239,6 @@ $(function ()
         var saveButton = $('#saveButton');
         saveButton.prop('disabled', !dirty);
         if (dirty === true)
-        {
-            saveButton.html('Save*');
-        }
-        else
-        {
-            saveButton.html('Save');
-        }
-    }
-
-    function setTestsDirty(dirty)
-    {
-        _testsDirty = dirty;
-
-        var saveButton = $('#saveAllTests');
-
-        if (saveButton == null) {
-            return;
-        }
-
-        saveButton.prop('disabled', !_testsDirty);
-        if (_testsDirty === true)
         {
             saveButton.html('Save*');
         }
@@ -508,6 +488,14 @@ $(function ()
             }
         } );
 
+        $( '#createNewTestModal' ).on( 'keypress', function( e ) {
+            if( e.keyCode === 13 ) {
+                e.preventDefault();
+                $('#createNewTestOk').click();
+            }
+        } );
+
+
         $('#runAllTestsMenu').click(function ()
         {
             $(this).css({'cursor':'wait'})
@@ -568,6 +556,16 @@ $(function ()
             deleteTestOk();
         });
 
+        $('#createNewTestMenu').click(function ()
+        {
+            createNewTestMenu();
+        });
+
+        $('#createNewTestOk').click(function ()
+        {
+            createNewTestOk();
+        });
+
         $('#duplicateCurrentTestMenu').click(function ()
         {
             duplicateCurrentTestMenu();
@@ -582,6 +580,17 @@ $(function ()
         {
             duplicateCurrentTestOk();
         });
+
+        $('#deleteAllTestsMenu').click(function ()
+        {
+            deleteAllTestsMenu();
+        });
+
+        $('#deleteAllTestsOk').click(function ()
+        {
+            deleteAllTestsOk();
+        });
+
 
         _editCellRadioURL.change(function()
         {
@@ -685,35 +694,18 @@ $(function ()
 
                 if (index == _testSelectionAnchor) {
 
-                    //var span = anchor.find("span");
-                    //span.addClass("glyphicon-check");
                     anchor.toggleClass("selected");
                 }
 
                 anchor.click(function(e) {
 
                         var link = $(e.currentTarget);
-                        //                    var target = link.find("span");
-
-                        //                    if (e.shiftKey)
-                        //                    {
-                        //                    } else if (e.ctrlKey) {
-                        //                        target.toggleClass("glyphicon-unchecked glyphicon-check");
-                        //                        link.toggleClass("selected");
-                        //                    } else {
                         _testSelectionAnchor = index;
                         clearTestSelection();
-                        //target.addClass("glyphicon-check");
-                        //target.removeClass("glyphicon-unchecked");
                         link.addClass("selected");
-                        //                    }
-
                         enableTestItems();
-                        loadTestView(_testSelectionAnchor);
+                        loadTestView();
                     }
-
-
-
                 );
                 testListItems.append(anchor);
             });
@@ -722,7 +714,7 @@ $(function ()
             $('#testList').hide();
             $('#testListWarning').fadeIn("fast");
         }
-        loadTestView(_testSelectionAnchor);
+        loadTestView();
         enableTestItems();
     }
 
@@ -848,6 +840,84 @@ $(function ()
         return null;
     }
 
+    function createNewTestMenu() {
+        clearError();
+
+        if ($('#createNewTestMenu').parent().hasClass('disabled')) {
+            return;
+        }
+
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube is currently selected. You cannot create a test.');
+            return;
+        }
+
+        $('#createNewTestField').val('');
+        $('#createNewTestModal').modal();
+    }
+
+    function deleteAllTestsMenu() {
+        clearError();
+
+        if ($('#deleteAllTestsMenu').parent().hasClass('disabled')) {
+            return;
+        }
+
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube is currently selected. You cannot delete all tests.');
+            return;
+        }
+
+        $('#deleteAllTestsModal').modal();
+    }
+
+    function deleteAllTestsOk() {
+        _testData = [];
+        _testSelectionAnchor = -1;
+
+        saveAllTests(true);
+        refreshTestList();
+
+        $('#deleteAllTestsModal').hide();
+    }
+
+    function createNewTestOk() {
+        var newName = $('#createNewTestField').val().trim();
+
+        if (findTestByName(newName) != null)
+        {
+            _errorId = showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
+            return;
+        }
+
+
+        var result = call("ncubeController.createNewTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, newName]);
+
+        if (result.status === true)
+        {
+            _testData.push(result.data);
+            _testSelectionAnchor = _testData.length-1;
+
+            refreshTestList();
+            saveAllTests(true);
+
+            $('#createNewTestModal').modal('hide');
+
+            $('#testList div.panel-body').animate({
+                scrollTop: $('#testListItems a.selected').offset().top
+            }, 200);
+        }
+        else {
+            var msg = 'Error creating new test for ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + ')';
+            if (result.data != null) {
+                msg += (':<hr class="hr-small"/>' + result.data);
+            }
+            _errorId = showNote(msg);
+        }
+    }
+
 
 
     function duplicateCurrentTestMenu() {
@@ -859,7 +929,7 @@ $(function ()
 
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
-            _errorId = showNote('No n-cube is currently selected. There is nothing to rename.');
+            _errorId = showNote('No n-cube is currently selected. There is no test to duplicate.');
             return;
         }
 
@@ -879,6 +949,8 @@ $(function ()
         $('#duplicateTestNameField').val('');
         $('#duplicateTestModal').modal();
     }
+
+
 
     function getSelectedTestList() {
         return $("#testListItems a.selected");
@@ -1223,14 +1295,18 @@ $(function ()
         $('#testResults').empty();
     }
 
-    function loadTestView(index) {
+    function loadTestView() {
         clearTestView();
+
+        if (_testSelectionAnchor >= _testData.length) {
+            _testSelectionAnchor = -1;
+        }
 
         if (!_testData || _testData.length == 0 ||  _testSelectionAnchor < 0) {
             return;
         }
 
-        var testData = _testData[index];
+        var testData = _testData[_testSelectionAnchor];
 
         var testParameters = $('#testParameters');
         var testAssertions = $('#testAssertions');
@@ -1269,17 +1345,10 @@ $(function ()
             _errorId = showNote('Unable to load test view:<hr class="hr-small"/>' + e.message);
         }
 
-        //$('.selectpicker').selectpicker();
-
-        /*  should be in index.html
-         testParameters.append(buildTestButton());
-         */
         $('#testParametersDiv').fadeIn('fast');
         $('#testAssertionsDiv').fadeIn('fast');
         $('#testNameDiv').fadeIn('fast');
         $('#testButtonGroupDiv').fadeIn('fast');
-
-
     }
 
     function createTypeSelector(typeStr, url) {
@@ -1287,9 +1356,6 @@ $(function ()
             typeStr = 'string';
         }
         var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow', 'data-width':'auto', 'data-style': 'btn-default'});
-        //        var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow col-lg-2', 'data-width': 'auto', 'data-style': 'btn-default', 'id':selectorId});
-
-        //var selector = $("<button/>").attr({'class' : 'btn btn-default', 'id':selectorId})
         return fillTypeSelector(selector, typeStr, url);
     }
 
@@ -1323,32 +1389,45 @@ $(function ()
         return selector;
     }
 
-    function buildParameter(coordId, type, isUrl, value, isAssertion) {
-        var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':coordId});
+    function leftPad (str, length) {
+        var pad = length - str.length;
 
-        var cat = coordId + "-value";
-        var label = $("<label/>").attr({'for': cat, 'class': 'control-label'});
-
-        if (isAssertion) {
-            label.html('' + coordId + '.');
-        } else {
-            label.html(coordId);
+        if (pad < 1 || pad > 11) {
+            return str;
         }
 
-        var deleteParamButton = $("<a/>").attr({'class':'red-item pull-right', 'font-size':'9px', 'parameter-id':coordId, 'style':'padding: 1px 3px; font-size: 12px; line-height: 1.5; border-radius: 3px;', 'title':'Delete ' + coordId});
+        return _padding[pad] + str;
+    }
+
+    // these are just temporary to use as an id
+    function generateRandomId() {
+        return leftPad(Math.random().toString(36).substring(7), 11);
+    }
+
+    function buildParameter(labelText, type, isUrl, value, isAssertion) {
+        var ident = generateRandomId();
+
+        var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':labelText, 'id':ident});
+
+        var cat = ident + "-value";
+        var label = $("<label/>").attr({'for': cat, 'class': 'control-label'}).html(labelText);
+
+        var deleteParamButton = $("<a/>").attr({'class':'red-item pull-right', 'font-size':'9px', 'style':'padding: 1px 3px; font-size: 12px; line-height: 1.5; border-radius: 3px;'});
         var glyph = $("<span/>").attr({'class':'glyphicon glyphicon-remove', 'style':'vertical-align: -1px;' });
         deleteParamButton.append(glyph);
         deleteParamButton.click(function (e)
         {
-            var paramId = $(e.currentTarget).attr("parameter-id");
+            var parent = $(e.currentTarget).parent("div.form-group");
+            var param = parent.attr('parameter-id');
+
             var test = $('#selectedTestName').html();
             var title = isAssertion ? "Delete Assertion?" : "Delete Parameter?";
             var label = isAssertion ?
-                "Delete assertion '" + paramId + "' from '" + test + "'?" :
-                "Delete parameter '" + paramId + "' from '" + test + "'?";
+                "Delete assertion '" + param + "' from '" + test + "'?" :
+                "Delete parameter '" + param + "' from '" + test + "'?";
             var selector = isAssertion ? "#testAssertions" : "#testParameters";
 
-            deleteTestItem(title, label, selector, paramId);
+            deleteTestItem(title, label, selector, parent.attr('id'));
         });
 
 
@@ -1376,17 +1455,13 @@ $(function ()
             } else {
                 urlButton.html("Value");
             }
-            _testsDirty = true;
         });
 
 
         inputGroupAddon.append(urlButton);
         inputGroup.append(inputGroupAddon);
 
-        var input = $("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat}); //placeholder?
-        input.val(value);
-
-        inputGroup.append(input);
+        inputGroup.append($("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat}).val(value));
 
         if (!isAssertion) {
             var selector = createTypeSelector(type, isUrl);
@@ -1396,8 +1471,6 @@ $(function ()
 
         controls.append(inputGroup);
         labelGroup.append(controls);
-
-        //        labelGroup.append(buildUrlToggle(parameterId, url != null));
 
         return labelGroup;
     }
@@ -1679,8 +1752,7 @@ $(function ()
         $('#deleteParameterModal').modal('hide');
 
         var id = $('#deleteParameterHiddenId').val();
-        var parent = $('#deleteParameterOk').attr('data-ref');
-        $(parent + " > div[parameter-id='" + id + "']").remove();
+        $('#' + id).remove();
 
         if ('#testAssertions' == parent) {
             renameAssertions();
@@ -1898,8 +1970,6 @@ $(function ()
         }
 
         $('#renameTestModal').modal('hide');
-
-        _testsDirty = true;
 
         // change name of selected test
         $('#selectedTestName').html(newName);
@@ -2265,7 +2335,7 @@ $(function ()
 
         if (_testData == null)
         {
-            _errorId = showNote('No test selected.  Test cannot be run.');
+            _errorId = showNote('No test selected.  There are no tests to save.');
             return;
         }
 
@@ -2280,11 +2350,8 @@ $(function ()
         }
 
         var result = call("ncubeController.saveTests", [_selectedCubeName, _selectedApp, _selectedVersion, _testData]);
-        if (result.status === true)
-        {
-            _testsDirty = true;
-        }
-        else
+
+        if (!result.status)
         {
             _errorId = showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
         }
@@ -2313,28 +2380,16 @@ $(function ()
         var parameters = $("#testParameters > div[parameter-id]");
         var coord = new Array(parameters.length);
 
-
-
         $.each(parameters, function (index, value)
         {
             var pair = {};
             var v = $(value);
             pair['key'] = v.attr("parameter-id");
-            pair['value'] = retrieveParameter(v);
+            pair['value'] = retrieveCellInfo(v, true);
             coord[index] = pair;
         });
 
         return coord;
-    }
-
-    function retrieveParameter(group) {
-        var parameter = {"@type":"com.cedarsoftware.ncube.CellInfo"};
-
-        parameter["value"] = group.find('input').val();
-        parameter["isUrl"] = group.find('button[value]').text() != "Value";
-        parameter["dataType"] = group.find('select').val();
-
-        return parameter;
     }
 
     function retrieveAssertions() {
@@ -2342,20 +2397,25 @@ $(function ()
         var array = new Array(assertions.length);
 
         $.each(assertions, function(index, value) {
-            array[index] = retrieveAssertion($(value));
+            array[index] = retrieveCellInfo($(value), false);
         });
 
         return array;
     }
 
-    function retrieveAssertion(group) {
-        var item = {"@type":"com.cedarsoftware.ncube.CellInfo"};
+    function retrieveCellInfo(group, hasSelector) {
+        var cell = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
-        item["value"] = group.find('input').val();
-        item["isUrl"] = group.find('button[value]').text() != "Value";
-        item["dataType"] = "exp";
+        cell["value"] = group.find('input').val();
+        cell["isUrl"] = group.find('button[value]').text() != "Value";
 
-        return item;
+        if (hasSelector) {
+            cell["dataType"] = "exp";
+        } else {
+            cell["dataType"] = group.find('select').val();
+        }
+
+        return cell;
     }
 
     function addParameterMenu() {
