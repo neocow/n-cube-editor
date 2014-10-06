@@ -33,7 +33,15 @@ $(function ()
     var _editCellCache = $('#editCellCache');
     var _editCellValue = $('#editCellValue');
     var _editCellRadioURL = $('#editCellRadioURL');
+
+    //  modal dialogs
     var _editCellModal = $('#editCellModal');
+    var _addParameterModal = $('#addParameterModal');
+    var _deleteParameterModal = $('#deleteParameterModal');
+    var _createNewTestModal = $('#createNewTestModal');
+    var _renameTestModal = $('#renameTestModal');
+    var _duplicateTestModal = $('#duplicateTestModal');
+    var _deleteTestModal = $('#deleteTestmodal');
 
     initialize();
 
@@ -474,27 +482,66 @@ $(function ()
             editCellOK()
         });
 
-        $( '#deleteParameterModal' ).on( 'keypress', function( e ) {
+        //  Set focused field when dialog appears so user can just start typing.
+        _addParameterModal.on('shown.bs.modal', function () {
+            $('#addParameterField').focus();
+        });
+
+        _createNewTestModal.on('shown.bs.modal', function () {
+            $('#createNewTestField').focus();
+        });
+
+        _renameTestModal.on('shown.bs.modal', function () {
+            $('#renameTestNewName').focus();
+        });
+
+        _duplicateTestModal.on('shown.bs.modal', function () {
+            $('#duplicateTestNameField').focus();
+        });
+
+
+        //  Set default button clicked when <enter> is hit.
+        _addParameterModal.on( 'keypress', function( e ) {
+            if( e.keyCode === 13 ) {
+                e.preventDefault();
+                $('#addParameterOk').click();
+            }
+        });
+
+        _renameTestModal.on( 'keypress', function( e ) {
+            if( e.keyCode === 13 ) {
+                e.preventDefault();
+                $('#renameTestOk').click();
+            }
+        });
+
+        _deleteParameterModal.on( 'keypress', function( e ) {
             if( e.keyCode === 13 ) {
                 e.preventDefault();
                 $('#deleteParameterOk').click();
             }
-        } );
+        });
 
-        $( '#deleteTestModal' ).on( 'keypress', function( e ) {
+        _duplicateTestModal.on( 'keypress', function( e ) {
+            if( e.keyCode === 13 ) {
+                e.preventDefault();
+                $('#duplicateCurrentTestOk').click();
+            }
+        });
+
+        _deleteTestModal.on( 'keypress', function( e ) {
             if( e.keyCode === 13 ) {
                 e.preventDefault();
                 $('#deleteTestOk').click();
             }
-        } );
+        });
 
-        $( '#createNewTestModal' ).on( 'keypress', function( e ) {
+        _createNewTestModal.on( 'keypress', function( e ) {
             if( e.keyCode === 13 ) {
                 e.preventDefault();
-                $('#createNewTestOk').click();
+                $('#addParameterOk').click();
             }
-        } );
-
+        });
 
         $('#runAllTestsMenu').click(function ()
         {
@@ -854,7 +901,9 @@ $(function ()
         }
 
         $('#createNewTestField').val('');
-        $('#createNewTestModal').modal();
+        _createNewTestModal.modal({
+            keyboard: true
+        });
     }
 
     function deleteAllTestsMenu() {
@@ -870,17 +919,19 @@ $(function ()
             return;
         }
 
-        $('#deleteAllTestsModal').modal();
+        $('#deleteAllTestsModal').modal({
+            keyboard: true
+        });
     }
 
     function deleteAllTestsOk() {
+        $('#deleteAllTestsModal').modal('hide');
+
         _testData = [];
         _testSelectionAnchor = -1;
 
         saveAllTests(true);
         refreshTestList();
-
-        $('#deleteAllTestsModal').hide();
     }
 
     function createNewTestOk() {
@@ -903,7 +954,7 @@ $(function ()
             refreshTestList();
             saveAllTests(true);
 
-            $('#createNewTestModal').modal('hide');
+            _createNewTestModal.modal('hide');
 
             $('#testList div.panel-body').animate({
                 scrollTop: $('#testListItems a.selected').offset().top
@@ -971,14 +1022,6 @@ $(function ()
                 return _testData[i];
             }
         }
-        /*
-         var list = $("#testListItems a");
-         for (i=0; i<list.length; i++) {
-         if (list[i].innerText.trim() == test) {
-         return list[i];
-         }
-         }
-         */
         return null;
     }
 
@@ -1326,7 +1369,7 @@ $(function ()
                         var isUrl = (value == null || value.isUrl == null) ? false : value.isUrl;
                         var v = (value == null || value.value == null) ? null : value.value;
                         var dataType = (value == null || value.dataType == null) ? null : value.dataType;
-                        testParameters.append(buildParameter(key, dataType, isUrl, v, false));
+                        testParameters.append(buildParameter(key, dataType, isUrl, v, true, false, deleteParameter));
                     }
                 });
             }
@@ -1337,7 +1380,7 @@ $(function ()
                     var isUrl = value['isUrl'] == null ? null : value['isUrl'];
                     var v = value.value == null ? null : value.value;
                     var dataType = value.dataType == null ? null : value.dataType;
-                    testAssertions.append(buildParameter(index + 1, "exp", isUrl, v, true));
+                    testAssertions.append(buildParameter(index + 1, "exp", isUrl, v, false, true, deleteAssertion));
                 });
             }
         } catch (e) {
@@ -1404,7 +1447,7 @@ $(function ()
         return leftPad(Math.random().toString(36).substring(7), 11);
     }
 
-    function buildParameter(labelText, type, isUrl, value, isAssertion) {
+    function buildParameter(labelText, type, isUrl, value, hasSelector, isRenumberable, deleteFunc) {
         var ident = generateRandomId();
 
         var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':labelText, 'id':ident});
@@ -1415,20 +1458,7 @@ $(function ()
         var deleteParamButton = $("<a/>").attr({'class':'red-item pull-right', 'font-size':'9px', 'style':'padding: 1px 3px; font-size: 12px; line-height: 1.5; border-radius: 3px;'});
         var glyph = $("<span/>").attr({'class':'glyphicon glyphicon-remove', 'style':'vertical-align: -1px;' });
         deleteParamButton.append(glyph);
-        deleteParamButton.click(function (e)
-        {
-            var parent = $(e.currentTarget).parent("div.form-group");
-            var param = parent.attr('parameter-id');
-
-            var test = $('#selectedTestName').html();
-            var title = isAssertion ? "Delete Assertion?" : "Delete Parameter?";
-            var label = isAssertion ?
-                "Delete assertion '" + param + "' from '" + test + "'?" :
-                "Delete parameter '" + param + "' from '" + test + "'?";
-            var selector = isAssertion ? "#testAssertions" : "#testParameters";
-
-            deleteTestItem(title, label, selector, parent.attr('id'));
-        });
+        deleteParamButton.click(deleteFunc);
 
 
         labelGroup.append(label);
@@ -1463,7 +1493,7 @@ $(function ()
 
         inputGroup.append($("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat}).val(value));
 
-        if (!isAssertion) {
+        if (hasSelector) {
             var selector = createTypeSelector(type, isUrl);
             inputGroup.append(selector);
             selector.selectpicker();
@@ -1729,7 +1759,30 @@ $(function ()
         });
     }
 
-    function deleteTestItem(title, label, parentSelector, parameterName)
+    function deleteParameter(e)
+    {
+        var parent = $(e.currentTarget).parent("div.form-group");
+        var param = parent.attr('parameter-id');
+        var test = $('#selectedTestName').html();
+
+        var title = "Delete Parameter?";
+        var label = "Delete parameter '" + param + "' from '" + test + "'?";
+
+        deleteTestItem(title, label, false, parent.attr('id'));
+    }
+
+    function deleteAssertion(e)
+    {
+        var parent = $(e.currentTarget).parent("div.form-group");
+        var param = parent.attr('parameter-id');
+        var test = $('#selectedTestName').html();
+        var title = "Delete Assertion?";
+        var label = "Delete assertion '" + param + "' from '" + test + "'?";
+
+        deleteTestItem(title, label, true, parent.attr('id'));
+    }
+
+    function deleteTestItem(title, label, isRenumberable, paramId)
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
@@ -1740,21 +1793,23 @@ $(function ()
 
         $('#deleteParameterTitle').html(title);
         $('#deleteParameterLabel').html(label);
-        $('#deleteParameterHiddenId').val(parameterName);
-        $('#deleteParameterOk').attr({'data-ref': parentSelector});
-        $('#deleteParameterModal').modal({
+        $('#deleteParameterHiddenId').val(paramId);
+        $('#deleteParameterOk').attr({'isRenumberable': isRenumberable});
+        _deleteParameterModal.modal({
             keyboard: true
         });
     }
 
-    function deleteParameterOk()
+    function deleteParameterOk(e)
     {
-        $('#deleteParameterModal').modal('hide');
+        _deleteParameterModal.modal('hide');
 
         var id = $('#deleteParameterHiddenId').val();
+        var isRenumberable = $('#deleteParameterOk').attr('isRenumberable')
+
         $('#' + id).remove();
 
-        if ('#testAssertions' == parent) {
+        if (isRenumberable == "true") {
             renameAssertions();
         }
 
@@ -1873,7 +1928,7 @@ $(function ()
         $('#renameTestNewName').val("");
         $('#renameTestLabel').html('Rename \'' + test + '\'?');
 
-        $('#renameTestModal').modal({
+        _renameTestModal.modal({
             keyboard: true
         });
 
@@ -1969,7 +2024,7 @@ $(function ()
             return;
         }
 
-        $('#renameTestModal').modal('hide');
+        _renameTestModal.modal('hide');
 
         // change name of selected test
         $('#selectedTestName').html(newName);
@@ -2322,6 +2377,7 @@ $(function ()
 
 
     function runAllTests() {
+        _errorId = showNote('Functionality not implemented yet.');
     }
 
     function saveAllTests(modelIsUpToDate)
@@ -2427,18 +2483,20 @@ $(function ()
         }
 
         $('#addParameterField').val('');
-        $('#addParameterModal').modal({
+
+        _addParameterModal.modal({
             keyboard: true
         });
+
     }
 
     function addParameterOk() {
-        $('#addParameterModal').modal('hide');
+        _addParameterModal.modal('hide');
 
         var id = $('#addParameterField').val();
 
         // check to see if parameter already exists in parameter-key of #testAssertions .form-group
-        var param = buildParameter(id, "string", false, '', false);
+        var param = buildParameter(id, "string", false, '', true, false, deleteParameter);
 
         if ($('#testParameters .form-group').length > 0) {
             param.insertAfter('#testParameters .form-group:last');
@@ -2451,7 +2509,7 @@ $(function ()
 
     function addNewAssertion() {
         var count = $('#testAssertions .form-group').length;
-        var param = buildParameter(count+1, "exp", false, '', true);
+        var param = buildParameter(count+1, "exp", false, 'true', false, true, deleteAssertion);
 
         if (count > 0) {
             param.insertAfter('#testAssertions .form-group:last');
@@ -2566,7 +2624,9 @@ $(function ()
             $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
         }
         _axisName = axisName;
-        $('#updateAxisModal').modal();
+        $('#updateAxisModal').modal({
+            keyboard: true
+        });
     }
 
     function updateAxisOk()
