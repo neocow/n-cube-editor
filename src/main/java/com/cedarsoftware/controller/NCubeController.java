@@ -12,6 +12,7 @@ import com.cedarsoftware.ncube.NCubeManager;
 import com.cedarsoftware.ncube.NCubeTest;
 import com.cedarsoftware.ncube.ReleaseStatus;
 import com.cedarsoftware.ncube.RuleInfo;
+import com.cedarsoftware.ncube.StringValuePair;
 import com.cedarsoftware.ncube.formatters.NCubeTestReader;
 import com.cedarsoftware.ncube.formatters.NCubeTestWriter;
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter;
@@ -786,19 +787,67 @@ public class NCubeController extends BaseController
         try
         {
             NCube ncube = nCubeService.getCube(name, app, version, status);
-            if (!"SNAPSHOT".equalsIgnoreCase(status)) {
-                throw new IllegalArgumentException("You cannot generate tests for release cubes");
-            }
 
             if (ncube == null)
             {
                 throw new IllegalArgumentException("No cube was found for: " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
             }
 
+            if (!"SNAPSHOT".equalsIgnoreCase(status))
+            {
+                throw new IllegalArgumentException("You cannot generate tests for release cubes");
+            }
+
             Object[] list = ncube.generateNCubeTests().toArray();
 
             nCubeService.updateTestData(name, app, version, new NCubeTestWriter().format(list));
             return list;
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+        return null;
+    }
+
+    /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
+    public NCubeTest createNewTest(String name, String app, String version, String status, String testName)
+    {
+        try
+        {
+            NCube ncube = nCubeService.getCube(name, app, version, status);
+
+            if (StringUtilities.isEmpty(testName)) {
+                throw new IllegalArgumentException("Invalid name for test:  '" + testName + "'");
+            }
+            if (ncube == null)
+            {
+                throw new IllegalArgumentException("No cube was found for: " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
+            }
+
+            if (!"SNAPSHOT".equalsIgnoreCase(status))
+            {
+                throw new IllegalArgumentException("You cannot generate tests for release cubes");
+            }
+
+            Set<String> items = ncube.getRequiredScope();
+            int size = items == null ? 0 : items.size();
+
+            StringValuePair<CellInfo>[] coords = new StringValuePair[size];
+            if (size > 0) {
+                int i = 0;
+                for (String s : items) {
+                    coords[i++] = new StringValuePair(s, null);
+                }
+            }
+
+            CellInfo[] assertions = {new CellInfo("exp", "true", false, false)};
+            NCubeTest test = new NCubeTest(testName, coords, assertions);
+
+            return test;
         }
         catch (Exception e)
         {

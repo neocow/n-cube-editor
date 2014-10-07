@@ -281,7 +281,9 @@
                                     <li class="divider"></li>
                                     <li><a id="renameCurrentTestMenu">Rename Test</a></li>
                                     <li><a id="deleteCurrentTestMenu">Delete Test</a></li>
+                                    <li><a id="deleteAllTestsMenu">Delete All Tests</a></li>
                                     <li class="divider"></li>
+                                    <li><a id="createNewTestMenu">Create Test</a></li>
                                     <li><a id="duplicateCurrentTestMenu">Duplicate Test</a></li>
                                 </ul>
                             </div>
@@ -488,7 +490,7 @@
 </div>
 
 
-<!-- New Name Modal -->
+<!-- Add Parameter Modal -->
 <div id="addParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addParameterTitle"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog">
@@ -513,7 +515,53 @@
     </div>
 </div>
 
-<!-- New Name Modal -->
+<!-- Create New Test Modal -->
+<div id="createNewTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="createNewTestTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="createNewTestTitle" class="modal-title">Create New Test</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="addParameterField">New Test Name</label>
+                        <input class="form-control" type="text" id="createNewTestField" placeholder="Type New Test Name Here"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't create</button>
+                <button id="createNewTestOk" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete All Tests Modal -->
+<div id="deleteAllTestsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteAllTestsTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="deleteAllTestsTitle" class="modal-title">Delete All Tests?</h3>
+            </div>
+            <div class="modal-body">
+                <p class="text-warning"><span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;Are you sure you want to delete all tests?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
+                <button id="deleteAllTestsOk" class="btn btn-primary">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Duplicate Test Modal -->
 <div id="duplicateTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="duplicateTestTitle"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog">
