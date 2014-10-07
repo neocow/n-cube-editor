@@ -2537,6 +2537,7 @@ $(function ()
             _testData[_testSelectionAnchor] = test;
 
             var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);
+            saveAllTests(true);
 
             if (result.status != true) {
                 showTestResult(false, "Could not run test:  " + result.data);
@@ -2554,8 +2555,6 @@ $(function ()
             $('#testLayoutCenter > .well').animate({
                 scrollTop: $('#testResultsDiv').offset().top
             }, 200);
-
-            saveAllTests(true);
 
         } catch (e) {
             _errorId = showNote("Could not run cube test:<hr class=\"hr-small\"/>" + e.message);
