@@ -844,7 +844,7 @@ public class NCubeController extends BaseController
                 }
             }
 
-            CellInfo[] assertions = {new CellInfo("exp", "true", false, false)};
+            CellInfo[] assertions = {new CellInfo("exp", "output.return", false, false)};
             NCubeTest test = new NCubeTest(testName, coords, assertions);
 
             return test;

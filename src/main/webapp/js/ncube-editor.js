@@ -2509,7 +2509,7 @@ $(function ()
 
     function addNewAssertion() {
         var count = $('#testAssertions .form-group').length;
-        var param = buildParameter(count+1, "exp", false, 'true', false, true, deleteAssertion);
+        var param = buildParameter(count+1, "exp", false, 'output.return', false, true, deleteAssertion);
 
         if (count > 0) {
             param.insertAfter('#testAssertions .form-group:last');
