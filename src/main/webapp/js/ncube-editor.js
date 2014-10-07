@@ -1800,7 +1800,7 @@ $(function ()
         });
     }
 
-    function deleteParameterOk(e)
+    function deleteParameterOk()
     {
         _deleteParameterModal.modal('hide');
 
@@ -2466,9 +2466,9 @@ $(function ()
         cell["isUrl"] = group.find('button[value]').text() != "Value";
 
         if (hasSelector) {
-            cell["dataType"] = "exp";
-        } else {
             cell["dataType"] = group.find('select').val();
+        } else {
+            cell["dataType"] = "exp";
         }
 
         return cell;
