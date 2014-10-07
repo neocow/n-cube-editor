@@ -125,7 +125,7 @@ public class NCubeController extends BaseController
         try
         {
 
-            nCubeService.loadCubes(name, app, version, status);
+            nCubeService.loadCubes(app, version, status);
 
             NCube ncube = nCubeService.getCube(name, app, version, status);
             Map coord = test.createCoord();
