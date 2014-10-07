@@ -211,11 +211,17 @@ public class NCubeService
         }
         else if (!axis.hasDefaultColumn() && hasDefault)
         {
-            ncube.addColumn(axisName, null);
+            if (axis.getType() != AxisType.NEAREST)
+            {
+                ncube.addColumn(axisName, null);
+            }
         }
 
         // update preferred column order
-        axis.setColumnOrder(isSorted ? Axis.SORTED : Axis.DISPLAY);
+        if (axis.getType() != AxisType.RULE)
+        {
+            axis.setColumnOrder(isSorted ? Axis.SORTED : Axis.DISPLAY);
+        }
 
         NCubeManager.updateCube(connection, app, ncube, version);
     }
