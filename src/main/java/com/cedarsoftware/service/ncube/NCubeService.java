@@ -424,7 +424,7 @@ public class NCubeService
     /**
      * Load all cubes into the manager.
      */
-    public void loadCubes(String name, String app, String version, String status)
+    public void loadCubes(String app, String version, String status)
     {
         NCubeJdbcConnectionProvider provider = new NCubeJdbcConnectionProvider(getConnection());
         ApplicationID id = new ApplicationID(null, app, version);

@@ -43,6 +43,10 @@ $(function ()
     var _duplicateTestModal = $('#duplicateTestModal');
     var _deleteTestModal = $('#deleteTestmodal');
 
+    //  locations
+    var _testResultsDiv = $('#testResultsDiv');
+    var _testListWarning = $('#testListWarning');
+
     initialize();
 
     function initialize()
@@ -732,7 +736,7 @@ $(function ()
         testListItems.empty();
 
         if (_testData != null && _testData.length > 0) {
-            $('#testListWarning').hide();
+            _testListWarning.hide();
             $("#testCount").html(_testData.length);
 
             $.each(_testData, function (index, value) {
@@ -759,7 +763,7 @@ $(function ()
             $('#testList').fadeIn("fast");
         } else {
             $('#testList').hide();
-            $('#testListWarning').fadeIn("fast");
+            _testListWarning.fadeIn("fast");
         }
         loadTestView();
         enableTestItems();
@@ -1331,7 +1335,7 @@ $(function ()
         $('#testAssertionsDiv').hide();
         $('#testNameDiv').hide();
         $('#testButtonGroupDiv').hide();
-        $('#testResultsDiv').hide();
+        _testResultsDiv.hide();
 
         $('#testParameters').empty();
         $('#testAssertions').empty();
@@ -2537,12 +2541,13 @@ $(function ()
             _testData[_testSelectionAnchor] = test;
 
             var result = call("ncubeController.runTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, test]);
+            saveAllTests(true);
 
             if (result.status != true) {
                 showTestResult(false, "Could not run test:  " + result.data);
 
                 $('#testLayoutCenter > .well').animate({
-                    scrollTop: $('#testResultsDiv').offset().top
+                    scrollTop: _testResultsDiv.offset().top
                 }, 200);
 
                 return;
@@ -2552,10 +2557,8 @@ $(function ()
 
 
             $('#testLayoutCenter > .well').animate({
-                scrollTop: $('#testResultsDiv').offset().top
+                scrollTop: _testResultsDiv.offset().top
             }, 200);
-
-            saveAllTests(true);
 
         } catch (e) {
             _errorId = showNote("Could not run cube test:<hr class=\"hr-small\"/>" + e.message);
@@ -2563,25 +2566,24 @@ $(function ()
     }
 
     function showTestResult(success, message) {
-        var testResultsDiv = $('#testResultsDiv');
-        testResultsDiv.hide();
+        _testResultsDiv.hide();
 
         var testResults = $('#testResults');
         testResults.empty();
 
         if (success)
         {
-            testResultsDiv.addClass("panel-success");
-            testResultsDiv.removeClass("panel-danger");
+            _testResultsDiv.addClass("panel-success");
+            _testResultsDiv.removeClass("panel-danger");
         }
         else
         {
-            testResultsDiv.addClass("panel-danger");
-            testResultsDiv.removeClass("panel-success");
+            _testResultsDiv.addClass("panel-danger");
+            _testResultsDiv.removeClass("panel-success");
         }
 
         testResults.html(message);
-        testResultsDiv.fadeIn("fast");
+        _testResultsDiv.fadeIn("fast");
     }
 
     function updateAxis(axisName)
