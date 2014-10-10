@@ -136,14 +136,13 @@ public class NCubeController extends BaseController
     public Map runTest(String name, String app, String version, String status, NCubeTest test) {
         try
         {
-
             nCubeService.loadCubes(app, version, status);
 
             NCube ncube = nCubeService.getCube(name, app, version, status);
             Map coord = test.createCoord();
 
             Map output = new LinkedHashMap();
-            ncube.getCell(coord, output);
+            ncube.getCell(coord, output);               // Execute test case
 
             Map args = new LinkedHashMap();
             args.put("input", coord);
