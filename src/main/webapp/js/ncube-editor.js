@@ -1156,10 +1156,16 @@ $(function ()
             $('#ncube-content').html(result.data);
 
             // Disallow any selecting within the table
-            $('table').addClass('noselect');
-            $('table th').addClass('noselect');
-            $('table tr').addClass('noselect');
-            $('table td').addClass('noselect');
+            var table = $('table');
+            table.addClass('noselect');
+            var td = table.find('td');
+            table.find('th').addClass('noselect');
+            table.find('tr').addClass('noselect');
+            td.addClass('noselect');
+            td.keypress(function(event)
+            {
+                console.log(event);
+            });
 
             $(".axis-menu").each(function ()
             {
@@ -1234,6 +1240,12 @@ $(function ()
                 if (event.shiftKey)
                 {
                     var selectedCell = $('.cell-selected');
+                    // TODO: Find out current rectangle and add to it
+                    // TODO: Color background of PRE tags as selected
+                    // TODO: Implement Ctrl-X (Cut)
+                    // TODO: Implement optional keys (with minus sign support)
+                    // TODO: test all regex's related to finding referenced cubes
+                    // TODO: test CellInfo (in preparation for list, array, set, map)
                     if (!selectedCell || selectedCell.length != 1)
                     {
                         clearSelectedCells();
@@ -1269,8 +1281,8 @@ $(function ()
                         {
                             for (var row = aRow; row <= dRow; row++)
                             {
-                                var cell = table.rows[row].cells[column]; // This is a DOM "TD" element
-                                var jqCell = $(cell);                     // Now it's a jQuery object.
+                                var domCell = table.rows[row].cells[column]; // This is a DOM "TD" element
+                                var jqCell = $(domCell);                     // Now it's a jQuery object.
                                 jqCell.addClass("cell-selected");
                             }
                         }
@@ -1436,30 +1448,6 @@ $(function ()
         $('#cube_updateDate').val(date);
         $('#cube_createHid').val(cube.createHid);
         $('#cube_updateHid').val(cube.updateHid);
-        date = '';
-        if (cube.sysEffDate != undefined)
-        {
-            date = new Date(cube.sysEffDate.value).format('yyyy-mm-dd HH:MM:ss');
-        }
-        $('#cube_sysEffDate').val(date);
-        date = '';
-        if (cube.sysEndDate != undefined)
-        {
-            date = new Date(cube.sysEndDate.value).format('yyyy-mm-dd HH:MM:ss');
-        }
-        $('#cube_sysEndDate').val(date);
-        date = '';
-        if (cube.bizEffDate != undefined)
-        {
-            date = new Date(cube.bizEffDate.value).format('yyyy-mm-dd HH:MM:ss');
-        }
-        $('#cube_bizEffDate').val(date);
-        date = '';
-        if (cube.bizEndDate != undefined)
-        {
-            date = new Date(cube.bizEndDate.value).format('yyyy-mm-dd HH:MM:ss');
-        }
-        $('#cube_bizEndDate').val(date);
     }
 
     function clearTestView() {
