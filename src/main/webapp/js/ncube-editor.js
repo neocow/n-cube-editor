@@ -1235,55 +1235,82 @@ $(function ()
     {
         $('.cell').each(function ()
         {
-            $(this).click(function (event)
+            var cell = $(this);
+            cell.click(function (event)
             {
-                if (event.shiftKey)
+                if (event.shiftKey || event.ctrlKey)
                 {
                     var selectedCell = $('.cell-selected');
-                    // TODO: Find out current rectangle and add to it
                     // TODO: Color background of PRE tags as selected
-                    // TODO: Implement Ctrl-X (Cut)
-                    // TODO: Implement optional keys (with minus sign support)
+                    // TODO: Where does cell menu go?
+                    // TODO: Implement OptionalScopeKeys (with minus sign support)
                     // TODO: test all regex's related to finding referenced cubes
                     // TODO: test CellInfo (in preparation for list, array, set, map)
-                    if (!selectedCell || selectedCell.length != 1)
+                    if (!selectedCell || selectedCell.length == 0)
                     {
                         clearSelectedCells();
-                        $(this).addClass('cell-selected');
+                        cell.addClass('cell-selected');
                     }
                     else
                     {
-                        var anchorCell = selectedCell;
-                        var aCol = anchorCell.parent().children().index(anchorCell);
-                        var aRow = anchorCell.parent().parent().children().index(anchorCell.parent());
+                        var table = $(".table-ncube")[0];
+                        var minRow = 10000000000;
+                        var minCol = 10000000000;
+                        var maxRow = -1;
+                        var maxCol = -1;
+                        var tableRows = table.rows;
 
-                        var dCol = $(this).parent().children().index($(this));
-                        var dRow = $(this).parent().parent().children().index($(this).parent());
+                        $('.cell-selected').each(function()
+                        {
+                            var iCell = $(this);
+                            var iRow = getRow(iCell);
+                            var iCol = getCol(iCell) - countTH(tableRows[iRow].cells);
+                            if (iRow < minRow)
+                            {
+                                minRow = iRow;
+                            }
+                            if (iRow > maxRow)
+                            {
+                                maxRow = iRow;
+                            }
+                            if (iCol < minCol)
+                            {
+                                minCol = iCol;
+                            }
+                            if (iCol > maxCol)
+                            {
+                                maxCol = iCol;
+                            }
+                        });
+                        var aRow = getRow(cell);
+                        var aCol = getCol(cell) - countTH(tableRows[aRow].cells);
 
                         // Ensure that the rectangle goes from top left to lower right
-                        if (aCol > dCol)
+                        if (aCol > maxCol)
                         {
-                            var tempCol = aCol;
-                            aCol = dCol;
-                            dCol = tempCol;
+                            maxCol = aCol;
+                        }
+                        if (aCol < minCol)
+                        {
+                            minCol = aCol;
+                        }
+                        if (aRow > maxRow)
+                        {
+                            maxRow = aRow;
+                        }
+                        if (aRow < minRow)
+                        {
+                            minRow = aRow;
                         }
 
-                        if (aRow > dRow)
+                        for (var column = minCol; column <= maxCol; column++)
                         {
-                            var tempRow = aRow;
-                            aRow = dRow;
-                            dRow = tempRow;
-                        }
-
-                        var table = $(".table-ncube")[0];
-
-                        for (var column = aCol; column <= dCol; column++)
-                        {
-                            for (var row = aRow; row <= dRow; row++)
+                            for (var row = minRow; row <= maxRow; row++)
                             {
-                                var domCell = table.rows[row].cells[column]; // This is a DOM "TD" element
-                                var jqCell = $(domCell);                     // Now it's a jQuery object.
-                                jqCell.addClass("cell-selected");
+                                var numTH = countTH(tableRows[row].cells);
+                                var domCell = tableRows[row].cells[column + numTH]; // This is a DOM "TD" element
+                                var jqCell = $(domCell);                             // Now it's a jQuery object.
+                                jqCell.addClass('cell-selected');
                             }
                         }
                     }
@@ -1291,17 +1318,42 @@ $(function ()
                 else
                 {   // On a straight-up click, nuke any existing selection.
                     clearSelectedCells();
-                    $(this).addClass('cell-selected');
+                    cell.addClass('cell-selected');
                 }
             });
 
-            $(this).dblclick(function ()
+            cell.dblclick(function ()
             {   // On double click open Edit Cell modal
-                _uiCellId = $(this);
+                _uiCellId = cell;
                 _cellId = _uiCellId.attr('data-id').split("_");
                 editCell();
             });
         });
+    }
+
+    function countTH(row)
+    {
+        var count = 0;
+        for (var i=0; i < row.length; i++)
+        {
+            if (row[i].tagName == "TH")
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    function getCol(cell)
+    {
+        var col = cell.parent().children().index(cell);
+        return col;
+    }
+
+    function getRow(cell)
+    {
+        var row = cell.parent().parent().children().index(cell.parent());
+        return row;
     }
 
     function clearSelectedCells()
