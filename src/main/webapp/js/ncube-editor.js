@@ -177,21 +177,15 @@ $(function ()
                 secondaryLayout.resizeAll();
                 //                _editor.resize();
             }
-
         });
 
         ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
-
-
         $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
             secondaryLayout.resizeAll();
             calculateTestPanelSize();
-
-            //console.log(e.target) // activated tab
         });
 
         myLayout.resizeAll();
-        //calculateTestPanelSize();
         openGroupContainingLastSelectedNCube();
     }
 
@@ -503,7 +497,6 @@ $(function ()
             $('#duplicateTestNameField').focus();
         });
 
-
         //  Set default button clicked when <enter> is hit.
         _addParameterModal.on( 'keypress', function( e ) {
             if( e.keyCode === 13 ) {
@@ -641,7 +634,6 @@ $(function ()
         {
             deleteAllTestsOk();
         });
-
 
         _editCellRadioURL.change(function()
         {
@@ -840,9 +832,6 @@ $(function ()
         $("#testListItems a.selected").each(function (index, elem)
         {
             $(elem).removeClass("selected");
-            //var span = $(elem).find("span");
-            //span.removeClass("glyphicon-check");
-            //span.addClass("glyphicon-unchecked");
         });
         enableTestItems();
     }
@@ -854,8 +843,6 @@ $(function ()
             var a = $(elem);
             var span = a.find("span");
             a.addClass("selected");
-            //span.addClass("glyphicon-check");
-            //span.removeClass("glyphicon-unchecked");
         });
         enableTestItems();
     }
@@ -947,7 +934,6 @@ $(function ()
             return;
         }
 
-
         var result = call("ncubeController.createNewTest", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, newName]);
 
         if (result.status === true)
@@ -972,8 +958,6 @@ $(function ()
             _errorId = showNote(msg);
         }
     }
-
-
 
     function duplicateCurrentTestMenu() {
         clearError();
@@ -1004,8 +988,6 @@ $(function ()
         $('#duplicateTestNameField').val('');
         $('#duplicateTestModal').modal();
     }
-
-
 
     function getSelectedTestList() {
         return $("#testListItems a.selected");
@@ -1042,7 +1024,6 @@ $(function ()
 
         $('#duplicateTestModal').modal('hide');
 
-
         var newTest = duplicateTest(getSelectedTestFromModel(), newName);
 
         // scroll to item we just added.
@@ -1050,7 +1031,6 @@ $(function ()
         _testSelectionAnchor = _testData.length-1;
         refreshTestList();
         saveAllTests(true);
-
 
         $('#testList div.panel-body').animate({
             scrollTop: $('#testListItems a.selected').offset().top
@@ -1244,6 +1224,89 @@ $(function ()
                 _uiCellId = $(this);
                 _cellId = _uiCellId.attr('data-id').split("_");
                 editCell();
+            });
+        });
+        buildCubeNameLinks();
+    }
+
+    function buildCubeNameLinks()
+    {
+        // Build cube list names
+        var cubeNames = [];
+        $.each(_cubeList, function (key, value)
+        {
+            if (key.length > 1)
+            {   // Only support n-cube names with 2 or more characters in them (too many false replaces will occur otherwise)
+                cubeNames.push(key);
+            }
+        });
+
+        // Sort n-cube names by longest to shortest (eliminates subset matching)
+        cubeNames.sort(function (a, b)
+        {
+            return b.length - a.length;
+        });
+
+        // Create parallel map of cube name to HTML cube name
+        var anchorCubeNames = {};
+        $.each(cubeNames, function (key, cubeName)
+        {
+            anchorCubeNames[cubeName] = '<a class="ncube-anchor" href="#">' + cubeName + '</a>';
+        });
+
+        var failedCheck = {};
+        // Add links to all n-cubes within GroovyCode (inside pre tags)
+        var regex = new RegExp(cubeNames.join("|"), "gi");
+        $('.column, .cell').each(function ()
+        {
+            var html = $(this).html();
+            var found = false;
+            html = html.replace(regex, function (matched)
+            {
+                found = true;
+                return anchorCubeNames[matched];
+            });
+            if (found)
+            {   // substitute new text with anchor tag
+                $(this).html(html);
+            }
+            else
+            {
+                if (!failedCheck[html] && anchorCubeNames['rpm.class.' + html] || anchorCubeNames['rpm.enum.' + html])
+                {
+                    html = '<a class="ncube-anchor" href="#">' + html + '</a>';
+                    $(this).html(html);
+                }
+                else
+                {
+                    failedCheck[html] = true;
+                }
+            }
+        });
+
+        failedCheck = null;
+
+        // Add click handler that opens clicked cube names
+        $('.ncube-anchor').each(function ()
+        {
+            $(this).click(function ()
+            {
+                var cubeName = $(this).html();
+                if (!anchorCubeNames[cubeName])
+                {
+                    if (anchorCubeNames['rpm.class.' + cubeName])
+                    {
+                        cubeName = 'rpm.class.' + cubeName;
+                    }
+                    else if (anchorCubeNames['rpm.enum.' + cubeName])
+                    {
+                        cubeName = 'rpm.enum.' + cubeName;
+                    }
+                }
+                _selectedCubeName = cubeName;
+                setListSelectedStatus(_selectedCubeName, '#ncube-list', true);
+                loadCube();
+                setListSelectedStatus(_selectedCubeName, '#ncube-list', true);
             });
         });
     }
@@ -1544,8 +1607,8 @@ $(function ()
      */
     function setListSelectedStatus(itemName, listId)
     {
-        var list = $(listId);
-        var items = list.find('li a');
+        var items = $(listId).find('li a');
+        var saveSelected = null;
         $.each(items, function (index, value)
         {
             var anchor = $(value);
@@ -1553,6 +1616,7 @@ $(function ()
             var elemName = anchor.attr('itemName');
             if (itemName == text || itemName == elemName)
             {
+                saveSelected = anchor;
                 anchor.attr('class', 'ncube-selected');
             }
             else
@@ -1560,6 +1624,11 @@ $(function ()
                 anchor.attr('class', 'ncube-notselected');
             }
         });
+
+        if (saveSelected)
+        {
+            saveSelected.scrollintoview();
+        }
     }
 
     /**
