@@ -58,10 +58,6 @@ $(function ()
         loadStatusListView();
         loadVersionListView();
         loadNCubeListView();
-        setListSelectedStatus(_selectedApp, '#app-list');
-        setListSelectedStatus(_selectedStatus, '#status-list');
-        setListSelectedStatus(_selectedVersion, '#version-list');
-        setListSelectedStatus(_selectedCubeName, '#ncube-list');
         loadCube();
 
         $.fn.selectRange = function (start, end)
@@ -689,6 +685,7 @@ $(function ()
             li.append(anchor);
             list.append(li);
         });
+        setListSelectedStatus(_selectedApp, '#app-list');
     }
 
     function loadTestListView(funcName)
@@ -792,6 +789,7 @@ $(function ()
             li.append(anchor);
             list.append(li);
         });
+        setListSelectedStatus(_selectedStatus, '#status-list');
     }
 
     function loadVersionListView()
@@ -825,6 +823,7 @@ $(function ()
             li.append(anchor);
             list.append(li);
         });
+        setListSelectedStatus(_selectedVersion, '#version-list');
     }
 
     function clearTestSelection()
@@ -1121,7 +1120,6 @@ $(function ()
             {
                 clearError();
                 var cubeName = a.attr('itemName');
-                setListSelectedStatus(cubeName, '#ncube-list');
                 localStorage[SELECTED_CUBE] = cubeName;
                 _selectedCubeName = cubeName;
                 loadCube(); // load spreadsheet side
@@ -1304,9 +1302,7 @@ $(function ()
                     }
                 }
                 _selectedCubeName = cubeName;
-                setListSelectedStatus(_selectedCubeName, '#ncube-list', true);
                 loadCube();
-                setListSelectedStatus(_selectedCubeName, '#ncube-list', true);
             });
         });
     }
@@ -1599,6 +1595,7 @@ $(function ()
             console.log('Unknown tab selected: ' + _activeTab);
         }
         openGroupContainingLastSelectedNCube();
+        setListSelectedStatus(_selectedCubeName, '#ncube-list');
     }
 
     /**
@@ -1804,12 +1801,10 @@ $(function ()
             loadAppNames();
             _selectedApp = appName;
             loadAppListView();
-            setListSelectedStatus(_selectedApp, '#app-list')
             var saveSelectedVersion = _selectedVersion;
             loadVersions();
             _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
             loadVersionListView();
-            setListSelectedStatus(_selectedVersion, '#version-list');
             loadNCubes();
             loadNCubeListView();
             loadCube();
@@ -1909,12 +1904,10 @@ $(function ()
         {
             loadAppNames();
             loadAppListView();
-            setListSelectedStatus(_selectedApp, '#app-list')
             var saveSelectedVersion = _selectedVersion;
             loadVersions();
             _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
             loadVersionListView();
-            setListSelectedStatus(_selectedVersion, '#version-list');
             loadNCubes();
             loadNCubeListView();
             loadCube();
@@ -2041,7 +2034,6 @@ $(function ()
             loadVersions();
             _selectedVersion = newVersion;
             loadVersionListView();
-            setListSelectedStatus(_selectedVersion, '#version-list');
             loadNCubes();
             _selectedCubeName = newName;
             loadNCubeListView();
@@ -2159,7 +2151,6 @@ $(function ()
             loadVersions();
             _selectedVersion = newVersion;
             loadVersionListView();
-            setListSelectedStatus(_selectedVersion, '#version-list');
             loadNCubes();
             _selectedCubeName = newName;
             loadNCubeListView();
@@ -2195,7 +2186,6 @@ $(function ()
                 {
                     showRefsToCubeClose();
                     _selectedCubeName = value;
-                    setListSelectedStatus(_selectedCubeName, '#ncube-list');
                     loadCube();
                 });
                 li.append(anchor);
@@ -2237,7 +2227,6 @@ $(function ()
                 {
                     showRefsFromCubeClose();
                     _selectedCubeName = value;
-                    setListSelectedStatus(_selectedCubeName, '#ncube-list');
                     loadCube();
                 });
                 li.append(anchor);
@@ -2319,7 +2308,6 @@ $(function ()
             loadVersionListView();
             loadNCubes();
             loadNCubeListView();
-            setListSelectedStatus(_selectedCubeName, '#ncube-list');
             loadCube();
         }
         else
@@ -2357,7 +2345,6 @@ $(function ()
             loadVersionListView();
             loadNCubes();
             loadNCubeListView();
-            setListSelectedStatus(_selectedCubeName, '#ncube-list');
             loadCube();
         }
         else
