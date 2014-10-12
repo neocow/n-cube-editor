@@ -1154,6 +1154,13 @@ $(function ()
         if (result.status === true)
         {
             $('#ncube-content').html(result.data);
+
+            // Disallow any selecting within the table
+            $('table').addClass('noselect');
+            $('table th').addClass('noselect');
+            $('table tr').addClass('noselect');
+            $('table td').addClass('noselect');
+
             $(".axis-menu").each(function ()
             {
                 var element = $(this);
@@ -1214,9 +1221,68 @@ $(function ()
                 editColumns(col.attr('data-axis'));
             });
         });
+        processCellClicks();
+        buildCubeNameLinks();
+    }
 
+    function processCellClicks()
+    {
         $('.cell').each(function ()
         {
+            $(this).click(function (event)
+            {
+                if (event.shiftKey)
+                {
+                    var selectedCell = $('.cell-selected');
+                    if (!selectedCell || selectedCell.length != 1)
+                    {
+                        clearSelectedCells();
+                        $(this).addClass('cell-selected');
+                    }
+                    else
+                    {
+                        var anchorCell = selectedCell;
+                        var aCol = anchorCell.parent().children().index(anchorCell);
+                        var aRow = anchorCell.parent().parent().children().index(anchorCell.parent());
+
+                        var dCol = $(this).parent().children().index($(this));
+                        var dRow = $(this).parent().parent().children().index($(this).parent());
+
+                        // Ensure that the rectangle goes from top left to lower right
+                        if (aCol > dCol)
+                        {
+                            var tempCol = aCol;
+                            aCol = dCol;
+                            dCol = tempCol;
+                        }
+
+                        if (aRow > dRow)
+                        {
+                            var tempRow = aRow;
+                            aRow = dRow;
+                            dRow = tempRow;
+                        }
+
+                        var table = $(".table-ncube")[0];
+
+                        for (var column = aCol; column <= dCol; column++)
+                        {
+                            for (var row = aRow; row <= dRow; row++)
+                            {
+                                var cell = table.rows[row].cells[column]; // This is a DOM "TD" element
+                                var jqCell = $(cell);                     // Now it's a jQuery object.
+                                jqCell.addClass("cell-selected");
+                            }
+                        }
+                    }
+                }
+                else
+                {   // On a straight-up click, nuke any existing selection.
+                    clearSelectedCells();
+                    $(this).addClass('cell-selected');
+                }
+            });
+
             $(this).dblclick(function ()
             {   // On double click open Edit Cell modal
                 _uiCellId = $(this);
@@ -1224,7 +1290,14 @@ $(function ()
                 editCell();
             });
         });
-        buildCubeNameLinks();
+    }
+
+    function clearSelectedCells()
+    {
+        $(".cell-selected").each(function()
+        {
+            $(this).removeClass('cell-selected');
+        });
     }
 
     function buildCubeNameLinks()

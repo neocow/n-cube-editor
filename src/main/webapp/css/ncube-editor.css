@@ -17,13 +17,25 @@ body {
     text-shadow: none !important;
 }
 
+.cell-selected {
+    background-color: lightblue !important;
+}
+
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 #ncubeTabContent {
     border: none #dcdcdc;
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 .top-buffer { margin-top:25px; }
-
 
 a.ncube-selected:hover, .a.ncube-selected:active {
     color: white;
@@ -34,7 +46,7 @@ a.ncube-notselected:hover {
     background-color: #ddd !important;
 }
 .panel {
-    margin-bottom: 10px;
+    margin-bottom: 10px;                                                                    ::
     overflow: hidden;
 }
 .panel-heading {
@@ -90,13 +102,10 @@ div#east div.panel-body {
     font-family: 'Open Sans', sans-serif;
     font-size: small;
     font-weight: 600;
-    padding-bottom: 0;
     margin: 0;
-    padding-top: 0;
-    padding-left: 6px;
-    padding-right: 6px;
+    padding: 0 6px;
     border: none;
-    border-radius: 0px;
+    border-radius: 0;
     overflow:hidden;
 
     background: black;
@@ -121,14 +130,11 @@ div#east div.panel-body {
     font-family: 'Open Sans', sans-serif;
     font-size: small;
     font-weight: 600;
-    padding-bottom: 0;
     margin: 0;
-    padding-top: 0;
-    padding-left: 6px;
-    padding-right: 6px;
+    padding: 0 6px;
     background: #b5bdc8;
     border: none;
-    border-radius: 0px;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -157,12 +163,12 @@ div#east div.panel-body {
     overflow: auto !important;
     background:transparent;
     border: none #dcdcdc;
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 #testLayoutCenter > .well {
     border: none white;
-    border-radius: 0px;
+    border-radius: 0;
     margin-bottom: 0;
     height: 100%;
     overflow: auto;
@@ -189,7 +195,7 @@ div#east div.panel-body {
     padding: 0;
 
     border: none white;
-    border-radius: 0px;
+    border-radius: 0;
 
     background: #000000;
     background: rgba(0, 0, 0, .65);
@@ -239,17 +245,17 @@ div#east div.panel-body {
 }
 
 #testListWarning {
-    margin: 5px 5px 0px 5px;
+    margin: 5px 5px 0 5px;
 }
 
 
 #testListItems {
-    margin-bottom: 0px;
+    margin-bottom: 0;
 }
 
 #tests, #ncube {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     height: 100%;
     width: 100%;
     overflow: hidden;
@@ -262,8 +268,8 @@ div#east div.panel-body {
 }
 
 #testLayoutSouth {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
 }
 
 .top-buffer { margin-top:20px; }
@@ -278,7 +284,6 @@ div#east div.panel-body {
     margin-bottom: 15px;
     font-weight: bold;
     font-family: 'Open Sans', sans-serif;
-    font-weight: 600;
 }
 
 #testLayoutEast div#testList {
