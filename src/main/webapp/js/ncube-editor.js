@@ -1248,10 +1248,6 @@ $(function ()
                 if (event.shiftKey || event.ctrlKey)
                 {
                     var selectedCell = $('td.cell-selected');
-                    // TODO: Where does cell menu go? (for cut/copy/paste)
-                    // TODO: Implement OptionalScopeKeys (with minus sign support)
-                    // TODO: test all regex's related to finding referenced cubes
-                    // TODO: test CellInfo (in preparation for list, array, set, map)
                     if (!selectedCell || selectedCell.length == 0)
                     {
                         clearSelectedCells();
@@ -1267,48 +1263,24 @@ $(function ()
                         var maxCol = -1;
                         var tableRows = table.rows;
 
-                        $('td.cell-selected').each(function()
+                        selectedCell.each(function()
                         {
                             var iCell = $(this);
                             var iRow = getRow(iCell);
                             var iCol = getCol(iCell) - countTH(tableRows[iRow].cells);
-                            if (iRow < minRow)
-                            {
-                                minRow = iRow;
-                            }
-                            if (iRow > maxRow)
-                            {
-                                maxRow = iRow;
-                            }
-                            if (iCol < minCol)
-                            {
-                                minCol = iCol;
-                            }
-                            if (iCol > maxCol)
-                            {
-                                maxCol = iCol;
-                            }
+                            if (iRow < minRow) minRow = iRow;
+                            if (iRow > maxRow) maxRow = iRow;
+                            if (iCol < minCol) minCol = iCol;
+                            if (iCol > maxCol) maxCol = iCol;
                         });
                         var aRow = getRow(cell);
                         var aCol = getCol(cell) - countTH(tableRows[aRow].cells);
 
                         // Ensure that the rectangle goes from top left to lower right
-                        if (aCol > maxCol)
-                        {
-                            maxCol = aCol;
-                        }
-                        if (aCol < minCol)
-                        {
-                            minCol = aCol;
-                        }
-                        if (aRow > maxRow)
-                        {
-                            maxRow = aRow;
-                        }
-                        if (aRow < minRow)
-                        {
-                            minRow = aRow;
-                        }
+                        if (aCol > maxCol) maxCol = aCol;
+                        if (aCol < minCol) minCol = aCol;
+                        if (aRow > maxRow) maxRow = aRow;
+                        if (aRow < minRow) minRow = aRow;
 
                         for (var column = minCol; column <= maxCol; column++)
                         {
@@ -1417,7 +1389,7 @@ $(function ()
             }
             else
             {
-                if (!failedCheck[html] && anchorCubeNames['rpm.class.' + html] || anchorCubeNames['rpm.enum.' + html])
+                if (!failedCheck[html] && (anchorCubeNames['rpm.class.' + html] || anchorCubeNames['rpm.enum.' + html] || anchorCubeNames['rpm.scope.class.' + html]))
                 {
                     html = '<a class="ncube-anchor" href="#">' + html + '</a>';
                     $(this).html(html);
@@ -1446,6 +1418,10 @@ $(function ()
                     else if (anchorCubeNames['rpm.enum.' + cubeName])
                     {
                         cubeName = 'rpm.enum.' + cubeName;
+                    }
+                    else if (anchorCubeNames['rpm.scope.class.' + cubeName])
+                    {
+                        cubeName = 'rpm.scope.class.' + cubeName;
                     }
                 }
                 _selectedCubeName = cubeName;
