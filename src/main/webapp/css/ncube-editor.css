@@ -45,8 +45,17 @@ a.ncube-selected:hover, .a.ncube-selected:active {
 a.ncube-notselected:hover {
     background-color: #ddd !important;
 }
+
+.th-ncube a, .th-ncube-top a {
+    color: lightskyblue;
+}
+
+.th-ncube a:hover, .th-ncube-top a:hover {
+    color: lightcyan;
+}
+
 .panel {
-    margin-bottom: 10px;                                                                    ::
+    margin-bottom: 10px;
     overflow: hidden;
 }
 .panel-heading {
