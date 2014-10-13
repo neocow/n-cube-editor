@@ -1158,14 +1158,10 @@ $(function ()
             // Disallow any selecting within the table
             var table = $('table');
             table.addClass('noselect');
-            var td = table.find('td');
             table.find('th').addClass('noselect');
             table.find('tr').addClass('noselect');
+            var td = table.find('td');
             td.addClass('noselect');
-            td.keypress(function(event)
-            {
-                console.log(event);
-            });
 
             $(".axis-menu").each(function ()
             {
@@ -1233,16 +1229,26 @@ $(function ()
 
     function processCellClicks()
     {
-        $('.cell').each(function ()
+        // Add ability for the user to double-click axis and pop-up the 'Update Axis' modal
+        $('.ncube-head').each(function()
+        {
+            $(this).dblclick(function()
+            {
+                var div = $(this).find('div');
+                var axisName = div.attr('data-id');
+                updateAxis(axisName);
+            });
+        });
+
+        $('td.cell').each(function ()
         {
             var cell = $(this);
             cell.click(function (event)
             {
                 if (event.shiftKey || event.ctrlKey)
                 {
-                    var selectedCell = $('.cell-selected');
-                    // TODO: Color background of PRE tags as selected
-                    // TODO: Where does cell menu go?
+                    var selectedCell = $('td.cell-selected');
+                    // TODO: Where does cell menu go? (for cut/copy/paste)
                     // TODO: Implement OptionalScopeKeys (with minus sign support)
                     // TODO: test all regex's related to finding referenced cubes
                     // TODO: test CellInfo (in preparation for list, array, set, map)
@@ -1250,6 +1256,7 @@ $(function ()
                     {
                         clearSelectedCells();
                         cell.addClass('cell-selected');
+                        cell.children().addClass('cell-selected');
                     }
                     else
                     {
@@ -1260,7 +1267,7 @@ $(function ()
                         var maxCol = -1;
                         var tableRows = table.rows;
 
-                        $('.cell-selected').each(function()
+                        $('td.cell-selected').each(function()
                         {
                             var iCell = $(this);
                             var iRow = getRow(iCell);
@@ -1311,6 +1318,7 @@ $(function ()
                                 var domCell = tableRows[row].cells[column + numTH]; // This is a DOM "TD" element
                                 var jqCell = $(domCell);                             // Now it's a jQuery object.
                                 jqCell.addClass('cell-selected');
+                                jqCell.children().addClass('cell-selected');
                             }
                         }
                     }
@@ -1319,9 +1327,11 @@ $(function ()
                 {   // On a straight-up click, nuke any existing selection.
                     clearSelectedCells();
                     cell.addClass('cell-selected');
+                    cell.children().addClass('cell-selected');
                 }
             });
 
+            // Add ability for user to double-click and get the edit cell modal
             cell.dblclick(function ()
             {   // On double click open Edit Cell modal
                 _uiCellId = cell;
