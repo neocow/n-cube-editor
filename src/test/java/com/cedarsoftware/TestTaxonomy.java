@@ -13,7 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by kpartlow on 10/8/2014.
+ * Created by kpartlow on 10/8/2014
  */
 public class TestTaxonomy
 {
@@ -74,7 +74,7 @@ public class TestTaxonomy
         {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(in)))
             {
-                String s = null;
+                String s;
 
                 while ((s = reader.readLine()) != null)
                 {
@@ -115,7 +115,7 @@ public class TestTaxonomy
         taxonomyGroupCells.setLength(0);
     }
 
-    public String getStartStringTaxonomy()
+    public static String getStartStringTaxonomy()
     {
         return "{\n" +
                 "  \"ncube\": \"rpm.enum.taxonomy.values\",\n" +
@@ -136,7 +136,7 @@ public class TestTaxonomy
     }
 
 
-    public String getStartStringTaxonomyGroup()
+    public static String getStartStringTaxonomyGroup()
     {
         return "{\n" +
                 "  \"ncube\": \"rpm.enum.taxonomy.group.table\",\n" +
@@ -151,7 +151,7 @@ public class TestTaxonomy
     }
 
 
-    public String getMidStringTaxonomy()
+    public static String getMidStringTaxonomy()
     {
         return "]\n" +
                 "    },\n" +
@@ -185,7 +185,7 @@ public class TestTaxonomy
     }
 
 
-    public String getMidStringTaxonomyGroup()
+    public static String getMidStringTaxonomyGroup()
     {
         return "      ]\n" +
                 "    }\n" +
@@ -193,13 +193,13 @@ public class TestTaxonomy
                 "  \"cells\": [";
     }
 
-    public String getLastStringTaxonomyGroup()
+    public static String getLastStringTaxonomyGroup()
     {
         return "]}";
     }
 
 
-    public String getLastStringTaxonomy()
+    public static String getLastStringTaxonomy()
     {
         return "]}";
     }
