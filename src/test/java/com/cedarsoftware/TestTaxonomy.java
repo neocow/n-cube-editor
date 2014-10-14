@@ -27,10 +27,6 @@ public class TestTaxonomy
     @Test
     public void testGenerateTaxonomy() throws Exception
     {
-
-
-        StringBuilder g = new StringBuilder();
-
         initializeBuilders();
         readData();
 
@@ -38,7 +34,6 @@ public class TestTaxonomy
 
         writeOutTaxonomyCube(dir);
         writeOutTaxonomyGroups(dir);
-
     }
 
 
