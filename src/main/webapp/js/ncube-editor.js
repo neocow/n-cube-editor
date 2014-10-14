@@ -511,6 +511,10 @@ $(function ()
         {
             editColSave()
         });
+        $('#createTestsLink').click(function ()
+        {
+            createNewTestMenu();
+        });
         $('#generateTestsLink').click(function ()
         {
             loadTestListView("ncubeController.generateTests")
@@ -1546,11 +1550,8 @@ $(function ()
     function loadTestView() {
         clearTestView();
 
-        if (_testSelectionAnchor >= _testData.length) {
+        if (!_testData || _testData.length == 0 || _testSelectionAnchor >= _testData.length || _testSelectionAnchor < 0) {
             _testSelectionAnchor = -1;
-        }
-
-        if (!_testData || _testData.length == 0 ||  _testSelectionAnchor < 0) {
             return;
         }
 
