@@ -40,18 +40,13 @@
 
 <body>
 
-<header class="navbar navbar-custom navbar-fixed-top bs-docs-nav" role="banner">
+<header class="navbar navbar-custom navbar-fixed-top noselect" role="banner">
     <div class="navbar-header">
-        <button class="navbar-toggle collapsed" type="button" data-toggle="collapse"
-                data-target=".bs-navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
+        <button class="navbar-toggle collapsed" type="button" data-toggle="collapse">
         </button>
-        <img height="45" src="./img/cube-logo.png"/><a class="navbar-brand" href="#">Configuration Editor</a>
+        <img height="40" src="./img/cube-logo.png"/><a class="navbar-brand" href="#">Configuration Editor</a>
     </div>
-    <nav class="navbar-collapse bs-navbar-collapse collapse" role="navigation" style="height: 1px;">
+    <nav class="navbar-collapse collapse" role="navigation" style="height: 1px;">
         <ul class="nav navbar-nav">
             <li>
                 <a id="ncubeTab" href="#ncube" data-toggle="tab">n-cube</a>
@@ -69,10 +64,22 @@
                 <a id="picTab" href="#drillPic" data-toggle="tab">Picture</a>
             </li>
         </ul>
+        <ul class="nav navbar-nav pull-right">
+            <li class="dropdown">
+                <a id="EditMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Edit <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li><a id="edit-cut-cells" href="#">Cut</a></li>
+                    <li><a id="edit-copy-cells" href="#">Copy</a></li>
+                    <li><a id="edit-paste-cells" href="#">Paste</a></li>
+                    <li class="divider"></li>
+                    <li><a id="edit-set-cells" href="#">Set selected cells...</a></li>
+                </ul>
+            </li>
+        </ul>
     </nav>
 </header>
 
-<div id="west" class="ui-layout-west">
+<div id="west" class="ui-layout-west noselect">
     <div id="app-list-div" class="panel panel-warning">
         <div class="panel-heading">
             <h4 class="panel-title">
@@ -144,7 +151,7 @@
 
 <div id="center" class="ui-layout-center">
     <div id="ncubeTabContent" class="tab-content ui-layout-content" style="padding:0px">
-        <div id="ncube" class="tab-pane fade in active">
+        <div id="ncube" class="tab-pane in active">
             <div class="well">
                 <div id="ncube-content" style="overflow:visible">
                 </div>
@@ -154,11 +161,11 @@
         <!-- JSON Editor -->
 
         <!--<a class="coinbase-button" data-code="b5a778fb54e80f56eb34f1ef4b643f3d" data-button-style="custom_large" data-custom="ncube-editor" href="https://coinbase.com/checkouts/b5a778fb54e80f56eb34f1ef4b643f3d">Donate Bitcoins</a><script src="https://coinbase.com/assets/button.js" type="text/javascript"></script>-->
-        <div id="json" class="tab-pane fade" style="height:100%;width:100%">
+        <div id="json" class="tab-pane" style="height:100%;width:100%">
             <div id="jsoneditor" style="height:100%;width:100%"></div>
         </div>
 
-        <div id="details" class="tab-pane fade" style="overflow:hidden">
+        <div id="details" class="tab-pane" style="overflow:hidden">
             <br/>
 
             <form role="form" class="container">
@@ -233,7 +240,7 @@
             </form>
         </div>
 
-        <div id="tests" class="tab-pane fade container">
+        <div id="tests" class="tab-pane container">
             <div id="testLayoutEast" class="pane ui-layout-east" title="Tests" aria-disabled="false">
 
                 <div id="testList" class="panel panel-warning">
@@ -334,7 +341,7 @@
             </div>
         </div>
 
-        <div id="drillPic" class="tab-pane fade" style="height:100%;width:100%">
+        <div id="drillPic" class="tab-pane" style="height:100%;width:100%">
            Product Model
         </div>
 

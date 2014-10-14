@@ -18,6 +18,7 @@ import com.cedarsoftware.ncube.formatters.NCubeTestWriter;
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter;
 import com.cedarsoftware.service.ncube.NCubeService;
 import com.cedarsoftware.servlet.JsonCommandServlet;
+import com.cedarsoftware.util.ArrayUtilities;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
 import com.cedarsoftware.util.StringUtilities;
@@ -727,7 +728,6 @@ public class NCubeController extends BaseController
         return null;
     }
 
-
     public void saveTests(String name, String app, String version, Object[] tests)
     {
         try
@@ -746,7 +746,6 @@ public class NCubeController extends BaseController
             fail(e);
         }
     }
-
 
     private static void markRequestFailed(Object data)
     {
@@ -881,10 +880,7 @@ public class NCubeController extends BaseController
     }
 
     /**
-     * In-place update of a cell.  Requires heavy parsing to interpret what the user's intended
-     * data type is for the cell (byte, short, int, long, float, double, boolean, character,
-     * String, Date, Object[], BigDecimal, BigInteger, string url, binary url, groovy expression,
-     * groovy method, groovy template, template url, expression url, method url, or null).
+     * In-place update of a cell.
      */
     public boolean updateCell(String name, String app, String version, Object[] ids, CellInfo cellInfo)
     {
@@ -899,14 +895,13 @@ public class NCubeController extends BaseController
             NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
             Set<Long> colIds = getCoordinate(ids);
 
-            Object cellValue = null;
             if (cellInfo == null)
             {
                 ncube.removeCellById(colIds);
             }
             else
             {
-                cellValue = cellInfo.isUrl ?
+                Object cellValue = cellInfo.isUrl ?
                         CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
                         CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false);
                 ncube.setCellById(cellValue, colIds);
@@ -937,6 +932,34 @@ public class NCubeController extends BaseController
             fail(e);
             return null;
         }
+    }
+
+    public boolean clearCells(String app, String version, String status, String cubeName, Object[] ids)
+    {
+        if (!isAllowed(app, version))
+        {
+            markRequestFailed("This app and version CANNOT be edited.");
+            return false;
+        }
+
+        if (ids == null || ids.length == 0)
+        {
+            return true;
+        }
+
+        NCube ncube = nCubeService.getCube(cubeName, app, version, ReleaseStatus.SNAPSHOT.name());
+        for (int i=0; i < ids.length; i++)
+        {
+            Object[] cellId = (Object[]) ids[i];
+            if (ArrayUtilities.isEmpty(cellId))
+            {
+                continue;
+            }
+            Set<Long> colIds = getCoordinate(cellId);
+            ncube.removeCellById(colIds);
+        }
+        nCubeService.updateNCube(ncube);
+        return true;
     }
 
     private static Set<Long> getCoordinate(Object[] ids)

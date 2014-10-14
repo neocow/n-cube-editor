@@ -126,7 +126,6 @@ $(function ()
 
         });
 
-
         myLayout = $('body').layout({
             name:   "BodyLayout"
             //	reference only - these options are NOT required because 'true' is the default
@@ -183,9 +182,57 @@ $(function ()
 
         myLayout.resizeAll();
         openGroupContainingLastSelectedNCube();
+        buildNCubeEditMenu();
     }
 
-    function calculateTestPanelSize() {
+    function editCut()
+    {
+        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        {
+            return;
+        }
+        var cells = [];
+        $(".cell-selected").each(function ()
+        {   // Clear cells from spreadsheet
+            var cell = $(this);
+            var cellId = cell.attr('data-id');
+            if (cellId)
+            {
+                cells.push(cellId.split("_"));
+            }
+            $(this).empty();
+        });
+
+        // Clear cells from database
+        var result = call("ncubeController.clearCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, cells]);
+        if (!result.status)
+        {
+            _errorId = showNote('Error cutting cells:<hr class="hr-small"/>' + result.data);
+        }
+    }
+
+    function buildNCubeEditMenu()
+    {
+        $('#edit-cut-cells').click(function ()
+        {
+            editCut();
+        });
+        $('#edit-copy-cells').click(function()
+        {
+            console.log('copy');
+        });
+        $('#edit-paste-cells').click(function()
+        {
+            console.log('paste');
+        });
+        $('#edit-set-cells').click(function()
+        {
+            console.log('set-cells');
+        });
+    }
+
+    function calculateTestPanelSize()
+    {
         var east = $('#testLayoutEast');
         var testList = $('#testList').find('> .panel-body');
         testList.height(east.height() - 47);
@@ -219,7 +266,7 @@ $(function ()
         var options =
         {
             mode: 'code',
-            //            modes:['code','tree','view','form','text'],
+//            modes:['code','tree','view','form','text'],
             change: function()
             {
                 setDirtyStatus(true);
@@ -287,6 +334,7 @@ $(function ()
         $('#ncubeTab').click(function (e)
         {
             clearError();
+            $('#EditMenu').show();
             _activeTab = 'ncubeTab';
             loadCube();
         });
@@ -294,6 +342,7 @@ $(function ()
         $('#jsonTab').click(function (e)
         {
             clearError();
+            $('#EditMenu').hide();
             _activeTab = "jsonTab";
             loadCube();
         });
@@ -301,6 +350,7 @@ $(function ()
         $('#detailsTab').click(function (e)
         {
             clearError();
+            $('#EditMenu').hide();
             _activeTab = "detailsTab";
             loadCube();
         });
@@ -308,6 +358,7 @@ $(function ()
         $('#testTab').click(function(e)
         {
             clearError();
+            $('#EditMenu').hide();
             _activeTab = "testTab";
             loadCube();
         });
@@ -315,6 +366,7 @@ $(function ()
         $('#picTab').click(function(e)
         {
             clearError();
+            $('#EditMenu').hide();
             _activeTab = "picTab";
             loadCube();
         });
@@ -999,15 +1051,6 @@ $(function ()
     function getSelectedTestFromModel() {
         var list = getSelectedTestList();
         return findTestByName($(list[0]).text().trim());
-    }
-
-    function findTestByName(test) {
-        for (var i=0; i<_testData.length; i++) {
-            if (_testData[i]["name"] == test) {
-                return _testData[i];
-            }
-        }
-        return null;
     }
 
     function duplicateCurrentTestOk() {

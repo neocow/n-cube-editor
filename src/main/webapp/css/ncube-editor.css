@@ -46,11 +46,15 @@ a.ncube-notselected:hover {
     background-color: #ddd !important;
 }
 
+th.ncube-dead:hover {
+    background: #76A7FF;
+}
+
 .th-ncube a, .th-ncube-top a {
     color: lightskyblue;
 }
 
-.th-ncube a:hover, .th-ncube-top a:hover {
+.th-ncube > a:hover, .th-ncube-top > a:hover {
     color: lightcyan;
 }
 
