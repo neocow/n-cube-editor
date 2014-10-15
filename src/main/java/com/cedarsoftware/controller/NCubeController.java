@@ -27,11 +27,13 @@ import com.cedarsoftware.util.io.JsonWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -83,6 +85,16 @@ public class NCubeController extends BaseController
     //temp condition!!
     private static boolean isAllowed(String app, String version, String status)
     {
+        HttpServletRequest request = JsonCommandServlet.servletRequest.get();
+        Enumeration e = request.getHeaderNames();
+        System.out.println("HTTP Request Headers:");
+        while (e.hasMoreElements())
+        {
+            String headerName = (String) e.nextElement();
+            System.out.print(headerName);
+            System.out.print(" = ");
+            System.out.println(request.getHeader(headerName));
+        }
         return "UD.REF.APP".equals(app) && version.startsWith("0.0.") && "SNAPSHOT".equals(status) || !"UD.REF.APP".equals(app);
     }
 
