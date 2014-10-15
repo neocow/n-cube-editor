@@ -1,6 +1,6 @@
 package com.cedarsoftware;
 
-import org.junit.Test;
+import org.junit.Ignore;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -24,7 +24,7 @@ public class TestTaxonomy
     StringBuilder taxonomyGroupColumns = new StringBuilder();
     StringBuilder taxonomyGroupCells = new StringBuilder();
 
-    @Test
+    @Ignore
     public void testGenerateTaxonomy() throws Exception
     {
         initializeBuilders();
