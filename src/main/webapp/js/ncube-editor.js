@@ -1462,18 +1462,21 @@ $(function ()
             link.click(function ()
             {
                 var cubeName = link.html().toLowerCase();
-                if (!anchorCubeNames[cubeName])
+                if (anchorCubeNames[cubeName])
+                {
+                    _selectedCubeName = link.html();
+                }
+                else
                 {
                     if (anchorCubeNames['rpm.class.' + cubeName])
                     {
-                        cubeName = 'rpm.class.' + cubeName;
+                        _selectedCubeName = 'rpm.class.' + link.html();
                     }
                     else if (anchorCubeNames['rpm.enum.' + cubeName])
                     {
-                        cubeName = 'rpm.enum.' + cubeName;
+                        _selectedCubeName = 'rpm.enum.' + link.html();
                     }
                 }
-                _selectedCubeName = cubeName;
                 loadCube();
             });
         });
