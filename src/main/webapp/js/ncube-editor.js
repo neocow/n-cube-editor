@@ -1287,6 +1287,7 @@ $(function ()
             });
         });
 
+        // Add support for individual and shift-selection of cells within the table cell area
         $('td.cell').each(function ()
         {
             var cell = $(this);
@@ -1415,31 +1416,35 @@ $(function ()
         var anchorCubeNames = {};
         $.each(cubeNames, function (key, cubeName)
         {
-            anchorCubeNames[cubeName] = '<a class="ncube-anchor" href="#">' + cubeName + '</a>';
+            anchorCubeNames[cubeName.toLowerCase()] = '<a class="ncube-anchor" href="#">' + cubeName + '</a>';
         });
 
         var failedCheck = {};
-        // Add links to all n-cubes within GroovyCode (inside pre tags)
+        // Add links to all n-cubes within columns and cells
         var regex = new RegExp(cubeNames.join("|"), "gi");
         $('.column, .cell').each(function ()
         {
-            var html = $(this).html();
+            var cell = $(this);
+            var html = cell.html();
             var found = false;
+
             html = html.replace(regex, function (matched)
             {
                 found = true;
-                return anchorCubeNames[matched];
+                return anchorCubeNames[matched.toLowerCase()];
             });
+
             if (found)
             {   // substitute new text with anchor tag
-                $(this).html(html);
+                cell.html(html);
             }
             else
             {
-                if (!failedCheck[html] && (anchorCubeNames['rpm.class.' + html] || anchorCubeNames['rpm.enum.' + html] || anchorCubeNames['rpm.scope.class.' + html]))
+                var loHtml = html.toLowerCase();
+                if (!failedCheck[html] && (anchorCubeNames['rpm.class.' + loHtml] || anchorCubeNames['rpm.enum.' + loHtml]))
                 {
                     html = '<a class="ncube-anchor" href="#">' + html + '</a>';
-                    $(this).html(html);
+                    cell.html(html);
                 }
                 else
                 {
@@ -1453,9 +1458,10 @@ $(function ()
         // Add click handler that opens clicked cube names
         $('.ncube-anchor').each(function ()
         {
-            $(this).click(function ()
+            var link = $(this);
+            link.click(function ()
             {
-                var cubeName = $(this).html();
+                var cubeName = link.html().toLowerCase();
                 if (!anchorCubeNames[cubeName])
                 {
                     if (anchorCubeNames['rpm.class.' + cubeName])
@@ -1465,10 +1471,6 @@ $(function ()
                     else if (anchorCubeNames['rpm.enum.' + cubeName])
                     {
                         cubeName = 'rpm.enum.' + cubeName;
-                    }
-                    else if (anchorCubeNames['rpm.scope.class.' + cubeName])
-                    {
-                        cubeName = 'rpm.scope.class.' + cubeName;
                     }
                 }
                 _selectedCubeName = cubeName;
