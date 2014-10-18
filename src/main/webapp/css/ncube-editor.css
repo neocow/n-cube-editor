@@ -107,14 +107,19 @@ div#east div.panel-body {
     margin-bottom: 2px;
 }
 
+.cube-list-font {
+    font-family: "arial","helvetica", sans-serif;
+    font-size: small;
+    font-weight: bold;
+}
+
 #west {
     height:100%;
     width: 100%;
     text-align: left;
-    /*font-family: "arial","helvetica", sans-serif;*/
-    font-family: 'Open Sans', sans-serif;
+    font-family: "arial","helvetica", sans-serif;
     font-size: small;
-    font-weight: 600;
+    font-weight: normal;
     margin: 0;
     padding: 0 6px;
     border: none;
@@ -139,10 +144,9 @@ div#east div.panel-body {
     height:100%;
     width: 100%;
     text-align: left;
-    /*font-family: "arial","helvetica", sans-serif;*/
-    font-family: 'Open Sans', sans-serif;
+    font-family: "arial","helvetica", sans-serif;
     font-size: small;
-    font-weight: 600;
+    font-weight: normal;
     margin: 0;
     padding: 0 6px;
     background: #b5bdc8;

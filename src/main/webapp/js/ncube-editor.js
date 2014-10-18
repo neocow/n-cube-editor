@@ -192,16 +192,31 @@ $(function ()
             return;
         }
         var cells = [];
+        var lastRow = -1;
+        var clipData = "";
         $(".cell-selected").each(function ()
-        {   // Clear cells from spreadsheet
+        {   // Visit selected cells in spreadsheet
             var cell = $(this);
+            var cellRow = getRow(cell);
+            if (lastRow == cellRow)
+            {
+                clipData += '\t';
+            }
+            else
+            {
+                if (lastRow != -1) clipData += '\n';
+                lastRow = cellRow;
+            }
+            clipData = clipData + cell.text();
             var cellId = cell.attr('data-id');
             if (cellId)
             {
                 cells.push(cellId.split("_"));
             }
-            $(this).empty();
+            cell.empty();
         });
+        clipData += '\n';
+//        $("#cell-clipboard").html(clipData);
 
         // Clear cells from database
         var result = call("ncubeController.clearCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, cells]);
@@ -1147,7 +1162,7 @@ $(function ()
                 groupNode = $('<div/>').attr({class: 'accordion-group', 'id': 'ac-' + groupName});
                 var heading = $("<div/>").attr({class: 'accordion-heading'});
                 groupNode.append(heading);
-                var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
+                var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open cube-list-font', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
                 anchor.html(groupName);
                 heading.append(anchor);
                 groupList.append(groupNode);
