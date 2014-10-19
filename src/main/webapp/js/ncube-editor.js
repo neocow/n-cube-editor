@@ -192,16 +192,31 @@ $(function ()
             return;
         }
         var cells = [];
+        var lastRow = -1;
+        var clipData = "";
         $(".cell-selected").each(function ()
-        {   // Clear cells from spreadsheet
+        {   // Visit selected cells in spreadsheet
             var cell = $(this);
+            var cellRow = getRow(cell);
+            if (lastRow == cellRow)
+            {
+                clipData += '\t';
+            }
+            else
+            {
+                if (lastRow != -1) clipData += '\n';
+                lastRow = cellRow;
+            }
+            clipData = clipData + cell.text();
             var cellId = cell.attr('data-id');
             if (cellId)
             {
                 cells.push(cellId.split("_"));
             }
-            $(this).empty();
+            cell.empty();
         });
+        clipData += '\n';
+//        $("#cell-clipboard").html(clipData);
 
         // Clear cells from database
         var result = call("ncubeController.clearCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, cells]);
@@ -1147,7 +1162,7 @@ $(function ()
                 groupNode = $('<div/>').attr({class: 'accordion-group', 'id': 'ac-' + groupName});
                 var heading = $("<div/>").attr({class: 'accordion-heading'});
                 groupNode.append(heading);
-                var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
+                var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open cube-list-font', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
                 anchor.html(groupName);
                 heading.append(anchor);
                 groupList.append(groupNode);
@@ -1287,6 +1302,7 @@ $(function ()
             });
         });
 
+        // Add support for individual and shift-selection of cells within the table cell area
         $('td.cell').each(function ()
         {
             var cell = $(this);
@@ -1415,31 +1431,35 @@ $(function ()
         var anchorCubeNames = {};
         $.each(cubeNames, function (key, cubeName)
         {
-            anchorCubeNames[cubeName] = '<a class="ncube-anchor" href="#">' + cubeName + '</a>';
+            anchorCubeNames[cubeName.toLowerCase()] = '<a class="ncube-anchor" href="#">' + cubeName + '</a>';
         });
 
         var failedCheck = {};
-        // Add links to all n-cubes within GroovyCode (inside pre tags)
+        // Add links to all n-cubes within columns and cells
         var regex = new RegExp(cubeNames.join("|"), "gi");
         $('.column, .cell').each(function ()
         {
-            var html = $(this).html();
+            var cell = $(this);
+            var html = cell.html();
             var found = false;
+
             html = html.replace(regex, function (matched)
             {
                 found = true;
-                return anchorCubeNames[matched];
+                return anchorCubeNames[matched.toLowerCase()];
             });
+
             if (found)
             {   // substitute new text with anchor tag
-                $(this).html(html);
+                cell.html(html);
             }
             else
             {
-                if (!failedCheck[html] && (anchorCubeNames['rpm.class.' + html] || anchorCubeNames['rpm.enum.' + html] || anchorCubeNames['rpm.scope.class.' + html]))
+                var loHtml = html.toLowerCase();
+                if (!failedCheck[html] && (anchorCubeNames['rpm.class.' + loHtml] || anchorCubeNames['rpm.enum.' + loHtml]))
                 {
                     html = '<a class="ncube-anchor" href="#">' + html + '</a>';
-                    $(this).html(html);
+                    cell.html(html);
                 }
                 else
                 {
@@ -1453,25 +1473,25 @@ $(function ()
         // Add click handler that opens clicked cube names
         $('.ncube-anchor').each(function ()
         {
-            $(this).click(function ()
+            var link = $(this);
+            link.click(function ()
             {
-                var cubeName = $(this).html();
-                if (!anchorCubeNames[cubeName])
+                var cubeName = link.html().toLowerCase();
+                if (anchorCubeNames[cubeName])
+                {
+                    _selectedCubeName = link.html();
+                }
+                else
                 {
                     if (anchorCubeNames['rpm.class.' + cubeName])
                     {
-                        cubeName = 'rpm.class.' + cubeName;
+                        _selectedCubeName = 'rpm.class.' + link.html();
                     }
                     else if (anchorCubeNames['rpm.enum.' + cubeName])
                     {
-                        cubeName = 'rpm.enum.' + cubeName;
-                    }
-                    else if (anchorCubeNames['rpm.scope.class.' + cubeName])
-                    {
-                        cubeName = 'rpm.scope.class.' + cubeName;
+                        _selectedCubeName = 'rpm.enum.' + link.html();
                     }
                 }
-                _selectedCubeName = cubeName;
                 loadCube();
             });
         });
