@@ -27,13 +27,11 @@ import com.cedarsoftware.util.io.JsonWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -85,16 +83,17 @@ public class NCubeController extends BaseController
     //temp condition!!
     private static boolean isAllowed(String app, String version, String status)
     {
-        HttpServletRequest request = JsonCommandServlet.servletRequest.get();
-        Enumeration e = request.getHeaderNames();
-        System.out.println("HTTP Request Headers:");
-        while (e.hasMoreElements())
-        {
-            String headerName = (String) e.nextElement();
-            System.out.print(headerName);
-            System.out.print(" = ");
-            System.out.println(request.getHeader(headerName));
-        }
+        // Uncomment to dump HTTP request headers
+//        HttpServletRequest request = JsonCommandServlet.servletRequest.get();
+//        Enumeration e = request.getHeaderNames();
+//        System.out.println("HTTP Request Headers:");
+//        while (e.hasMoreElements())
+//        {
+//            String headerName = (String) e.nextElement();
+//            System.out.print(headerName);
+//            System.out.print(" = ");
+//            System.out.println(request.getHeader(headerName));
+//        }
         return "UD.REF.APP".equals(app) && version.startsWith("0.0.") && "SNAPSHOT".equals(status) || !"UD.REF.APP".equals(app);
     }
 
@@ -956,7 +955,8 @@ public class NCubeController extends BaseController
 
         if (ids == null || ids.length == 0)
         {
-            return true;
+            markRequestFailed("No IDs of cells to cut/clear were given.");
+            return false;
         }
 
         NCube ncube = nCubeService.getCube(cubeName, app, version, ReleaseStatus.SNAPSHOT.name());
@@ -972,6 +972,42 @@ public class NCubeController extends BaseController
         }
         nCubeService.updateNCube(ncube);
         return true;
+    }
+
+    public boolean pasteCells(String app, String version, String status, String cubeName, Object[] values, Object[] coords)
+    {
+        if (!isAllowed(app, version))
+        {
+            markRequestFailed("This app and version CANNOT be edited.");
+            return false;
+        }
+
+        if (values == null || values.length == 0 || coords == null || coords.length == 0 || coords.length > values.length)
+        {
+            markRequestFailed("Values and coordinates must not be empty or length of 0.  Also, there must be at the same or more values than coordinates.");
+            return false;
+        }
+
+        NCube ncube = nCubeService.getCube(cubeName, app, version, ReleaseStatus.SNAPSHOT.name());
+        for (int i=0; i < coords.length; i++)
+        {
+            Object[] row = (Object[]) coords[i];
+            Object[] valueRow = (Object[]) values[i];
+            if (row == null || row.length < 1)
+            {
+                break;
+            }
+
+            for (int j=0; j < row.length; j++)
+            {
+                Object[] ids = (Object[]) row[j];
+                Set<Long> cellId = getCoordinate(ids);
+                ncube.setCellById(valueRow[j], cellId);
+            }
+        }
+        nCubeService.updateNCube(ncube);
+        return true;
+
     }
 
     private static Set<Long> getCoordinate(Object[] ids)
