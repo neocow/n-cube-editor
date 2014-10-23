@@ -125,7 +125,6 @@ $(function ()
             {
                 calculateTestPanelSize();
             }
-
         });
 
         myLayout = $('body').layout({
@@ -273,15 +272,23 @@ $(function ()
         // Paste cells from database
         var result = call("ncubeController.pasteCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, values, coords]);
 
-        if (!result.status)
+        if (result.status)
+        {
+            reloadCube();
+        }
+        else
         {
             _errorId = showNote('Error pasting cells:<hr class="hr-small"/>' + result.data);
         }
+    }
 
-        // TODO: Redraw after paste (only affected cells)
-        // TODO: Hide the textarea used as clipboard
-        // TODO: Restore focus to original component (or just spreadsheet forcefully)
-        // Need 'patch-fetch' API (fetch only requested cells)
+    function reloadCube()
+    {
+        var doc = document.documentElement;
+        var left = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+        var top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+        loadCube();
+        window.scrollTo(left, top);
     }
 
     function getCellId(cell)
@@ -3369,8 +3376,7 @@ $(function ()
             _uiCellId.attr({'class':'cell'});
         }
         _cellId = null;
-
-        // TODO: Redraw after cell edit
+        reloadCube();
     }
 
     // --------------------------------------------------------------------------------------------

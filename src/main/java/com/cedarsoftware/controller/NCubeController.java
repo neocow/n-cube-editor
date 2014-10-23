@@ -1,5 +1,6 @@
 package com.cedarsoftware.controller;
 
+import com.cedarsoftware.ncube.ApplicationID;
 import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
@@ -21,6 +22,7 @@ import com.cedarsoftware.servlet.JsonCommandServlet;
 import com.cedarsoftware.util.ArrayUtilities;
 import com.cedarsoftware.util.CaseInsensitiveMap;
 import com.cedarsoftware.util.CaseInsensitiveSet;
+import com.cedarsoftware.util.DateUtilities;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
@@ -28,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,6 +68,7 @@ public class NCubeController extends BaseController
 {
     public static final String SYS_NCUBE_INFO = "sys.groups";
     private static final Pattern VERSION_REGEX = Pattern.compile("[.]");
+    private static final Pattern IS_NUMBER_REGEX = Pattern.compile("^[\\d,.e+-]+$");
     private NCubeService nCubeService;
     Pattern antStyleReplacementPattern = Pattern.compile("[$][{](.*?)[}]");
     private static final Log LOG = LogFactory.getLog(NCubeController.class);
@@ -137,7 +141,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            nCubeService.loadCubes(app, version, status);
+            nCubeService.loadCubes(new ApplicationID(null, app, version, status));
         }
         catch(Exception e)
         {
@@ -148,9 +152,8 @@ public class NCubeController extends BaseController
     public Map runTest(String name, String app, String version, String status, NCubeTest test) {
         try
         {
-            nCubeService.loadCubes(app, version, status);
-
-            NCube ncube = nCubeService.getCube(name, app, version, status);
+            nCubeService.loadCubes(new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
             Map coord = test.createCoord();
 
             Map output = new LinkedHashMap();
@@ -212,7 +215,7 @@ public class NCubeController extends BaseController
             NCube sysInfo = null;
             try
             {
-                sysInfo = nCubeService.getCube(SYS_NCUBE_INFO, app, version, status);
+                sysInfo = getCube(SYS_NCUBE_INFO, new ApplicationID(null, app, version, status));
             }
             catch (Exception e)
             {
@@ -290,7 +293,8 @@ public class NCubeController extends BaseController
     {
         try
         {
-            return nCubeService.getHtml(name, app, version, status);
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            return ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month");
         }
         catch (Exception e)
         {
@@ -299,11 +303,23 @@ public class NCubeController extends BaseController
         }
     }
 
+    private NCube getCube(String name, ApplicationID appId)
+    {
+        NCube ncube = NCubeManager.getCube(name, appId);
+        if (ncube == null)
+        {
+            nCubeService.loadCubes(appId);
+            ncube = NCubeManager.getCube(name, appId);
+        }
+        return ncube;
+    }
+
     public String getJson(String name, String app, String version, String status)
     {
         try
         {
-            return nCubeService.getJson(name, app, version, status);
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            return ncube.toFormattedJson();
         }
         catch (Exception e)
         {
@@ -440,8 +456,8 @@ public class NCubeController extends BaseController
             for (Object ncube : ncubes)
             {
                 NCubeInfoDto info = (NCubeInfoDto) ncube;
-                Set<String> refs = nCubeService.getReferencedCubeNames(info.name, app, version, status);
-                if (refs.contains(name))
+                NCubeManager.getReferencedCubeNames(new ApplicationID(null, app, version, status), info.name, references);
+                if (references.contains(name))
                 {
                     references.add(info.name);
                 }
@@ -465,8 +481,9 @@ public class NCubeController extends BaseController
     {
         try
         {
-            Set<String> refs = nCubeService.getReferencedCubeNames(name, app, version, status);
-            return refs.toArray();
+            Set<String> references = new CaseInsensitiveSet<>();
+            NCubeManager.getReferencedCubeNames(new ApplicationID(null, app, version, status), name, references);
+            return references.toArray();
         }
         catch (Exception e)
         {
@@ -484,7 +501,8 @@ public class NCubeController extends BaseController
     {
         try
         {
-            Set<String> refs = nCubeService.getRequiredScope(name, app, version, status);
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            Set<String> refs = ncube.getRequiredScope();
             return refs.toArray();
         }
         catch (Exception e)
@@ -587,7 +605,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = nCubeService.getCube(name, app, version, status);
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
             Axis axis = ncube.getAxis(axisName);
             return convertAxis(axis);
         }
@@ -672,7 +690,7 @@ public class NCubeController extends BaseController
                 markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
-            NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
             ncube.updateColumns(updatedAxis);
             nCubeService.updateNCube(ncube);
         }
@@ -807,7 +825,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = nCubeService.getCube(name, app, version, status);
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
 
             if (ncube == null)
             {
@@ -839,7 +857,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = nCubeService.getCube(name, app, version, status);
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
 
             if (StringUtilities.isEmpty(testName)) {
                 throw new IllegalArgumentException("Invalid name for test:  '" + testName + "'");
@@ -877,11 +895,12 @@ public class NCubeController extends BaseController
         return null;
     }
 
-    public Object getCell(String name, String app, String version, String status, HashMap map)
+    public Object getCell(String name, String app, String version, String status, Map input)
     {
         try
         {
-            return nCubeService.getCell(name, app, version, status, map);
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            return ncube.getCell(input);
         }
         catch (Exception e)
         {
@@ -903,7 +922,7 @@ public class NCubeController extends BaseController
                 return false;
             }
 
-            NCube ncube = nCubeService.getCube(name, app, version, ReleaseStatus.SNAPSHOT.name());
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
             Set<Long> colIds = getCoordinate(ids);
 
             if (cellInfo == null)
@@ -931,7 +950,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = nCubeService.getCube(name, app, version, status);
+            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
             Set<Long> colIds = getCoordinate(ids);
             Object cell = ncube.getCellByIdNoExecute(colIds);
             CellInfo cellInfo = new CellInfo(cell);
@@ -959,7 +978,7 @@ public class NCubeController extends BaseController
             return false;
         }
 
-        NCube ncube = nCubeService.getCube(cubeName, app, version, ReleaseStatus.SNAPSHOT.name());
+        NCube ncube = getCube(cubeName, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
         for (int i=0; i < ids.length; i++)
         {
             Object[] cellId = (Object[]) ids[i];
@@ -988,7 +1007,7 @@ public class NCubeController extends BaseController
             return false;
         }
 
-        NCube ncube = nCubeService.getCube(cubeName, app, version, ReleaseStatus.SNAPSHOT.name());
+        NCube ncube = getCube(cubeName, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
         for (int i=0; i < coords.length; i++)
         {
             Object[] row = (Object[]) coords[i];
@@ -1002,12 +1021,94 @@ public class NCubeController extends BaseController
             {
                 Object[] ids = (Object[]) row[j];
                 Set<Long> cellId = getCoordinate(ids);
-                ncube.setCellById(valueRow[j], cellId);
+                Object value = convertStringToValue((String) valueRow[j]);
+                if (value == null)
+                {
+                    ncube.removeCellById(cellId);
+                }
+                else
+                {
+                    ncube.setCellById(value, cellId);
+                }
             }
         }
         nCubeService.updateNCube(ncube);
         return true;
+    }
 
+    private static Object convertStringToValue(String origValue)
+    {
+        if (origValue == null || StringUtilities.isEmpty(origValue))
+        {
+            return null;
+        }
+
+        String value = origValue.trim();
+        if (StringUtilities.isEmpty(value))
+        {
+            return null;
+        }
+
+        if ("0".equals(value))
+        {
+            return 0L;
+        }
+        else if ("true".equalsIgnoreCase(value))
+        {
+            return true;
+        }
+        else if ("false".equalsIgnoreCase(value))
+        {
+            return false;
+        }
+
+        if (isNumeric(value))
+        {
+            value = removeCommas(value);
+            if (!value.contains("."))
+            {
+                try
+                {
+                    return Long.parseLong(value);
+                }
+                catch (Exception ignored) { }
+            }
+
+            try
+            {
+                return new BigDecimal(value);
+            }
+            catch (Exception ignored) { }
+        }
+
+        // Try as a date (the code below supports numerous different date formats)
+        try
+        {
+            return DateUtilities.parseDate(value);
+        }
+        catch (Exception ignored) { }
+
+        // OK, if all else fails, return it as the string it was
+        return origValue;
+    }
+
+    public static boolean isNumeric(String str)
+    {
+        return IS_NUMBER_REGEX.matcher(str).matches();  // match a number with optional '-' and decimal.
+    }
+
+    private static String removeCommas(String str)
+    {
+        StringBuilder s = new StringBuilder();
+        for (int i=0; i < str.length(); i++)
+        {
+            char x = str.charAt(i);
+            if (x != ',')
+            {
+                s.append(x);
+            }
+        }
+        return s.toString();
     }
 
     private static Set<Long> getCoordinate(Object[] ids)
@@ -1020,5 +1121,4 @@ public class NCubeController extends BaseController
         }
         return colIds;
     }
-
 }
