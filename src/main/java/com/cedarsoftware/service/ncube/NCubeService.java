@@ -6,7 +6,9 @@ import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeJdbcConnectionProvider;
+import com.cedarsoftware.ncube.NCubeJdbcPersister;
 import com.cedarsoftware.ncube.NCubeManager;
+import com.cedarsoftware.ncube.NCubePersister;
 import com.cedarsoftware.ncube.ReleaseStatus;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonObject;
@@ -52,6 +54,9 @@ public class NCubeService
     public void setDataSource(DataSource ds)
     {
         dataSource = ds;
+        NCubePersister persister = new NCubeJdbcPersister();
+        persister.setNCubeConnectionProvider(new NCubeJdbcConnectionProvider(ds));
+        NCubeManager.setNCubePersister(persister);
     }
 
     private Connection getConnection()
@@ -349,8 +354,7 @@ public class NCubeService
      */
     public void loadCubes(ApplicationID appId)
     {
-        NCubeJdbcConnectionProvider provider = new NCubeJdbcConnectionProvider(getConnection());
-        NCubeManager.loadCubes(provider, appId);
+        NCubeManager.loadCubes(appId);
     }
 
     /**
