@@ -6,8 +6,10 @@ import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
 import com.cedarsoftware.ncube.NCube;
 import com.cedarsoftware.ncube.NCubeJdbcConnectionProvider;
+import com.cedarsoftware.ncube.NCubeJdbcPersister;
 import com.cedarsoftware.ncube.NCubeManager;
-import com.cedarsoftware.util.CaseInsensitiveSet;
+import com.cedarsoftware.ncube.NCubePersister;
+import com.cedarsoftware.ncube.ReleaseStatus;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
@@ -18,9 +20,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * RESTful Ajax/JSON API for editor application
@@ -54,6 +54,9 @@ public class NCubeService
     public void setDataSource(DataSource ds)
     {
         dataSource = ds;
+        NCubePersister persister = new NCubeJdbcPersister();
+        persister.setNCubeConnectionProvider(new NCubeJdbcConnectionProvider(ds));
+        NCubeManager.setNCubePersister(persister);
     }
 
     private Connection getConnection()
@@ -64,32 +67,6 @@ public class NCubeService
     public Object[] getNCubes(String pattern, String app, String version, String status)
     {
         return NCubeManager.getNCubes(getConnection(), app, version, status, pattern, new Date());
-    }
-
-    public String getHtml(String name, String app, String version, String status)
-    {
-        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not get HTML, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-        return ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month");
-    }
-
-    public String getJson(String name, String app, String version, String status)
-    {
-        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not get HTML, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-        return ncube.toFormattedJson();
-    }
-
-    public NCube getCube(String name, String app, String version, String status)
-    {
-        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
-        return ncube;
     }
 
     public Object[] getAppNames()
@@ -110,23 +87,6 @@ public class NCubeService
     public boolean deleteCube(String name, String app, String version)
     {
         return NCubeManager.deleteCube(getConnection(), app, name, version, false);
-    }
-
-    public Set<String> getReferencedCubeNames(String name, String app, String version, String status)
-    {
-        Set<String> refs = new CaseInsensitiveSet<String>();
-        NCubeManager.getReferencedCubeNames(getConnection(), app, name, version, status, new Date(), refs);
-        return refs;
-    }
-
-    public Set<String> getRequiredScope(String name, String app, String version, String status)
-    {
-        NCube ncube = NCubeManager.loadCube(getConnection(), app, name, version, status, new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could get required scope, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-        return ncube.getRequiredScope();
     }
 
     public void duplicateCube(String newName, String name, String newApp, String app, String newVersion, String version, String status)
@@ -153,7 +113,7 @@ public class NCubeService
             throw new IllegalArgumentException("Axis name cannot be empty.");
         }
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -170,7 +130,7 @@ public class NCubeService
     public void deleteAxis(String name, String app, String version, String axisName)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not delete axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -191,7 +151,7 @@ public class NCubeService
     public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update axis '" + origAxisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -236,7 +196,7 @@ public class NCubeService
     public void updateColumnCell(String name, String app, String version, String colId, String value)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -271,38 +231,6 @@ public class NCubeService
         Connection connection = getConnection();
         ApplicationID appId = ncube.getApplicationID();
         NCubeManager.updateCube(connection, appId.getApp(), ncube, appId.getVersion());
-    }
-
-    /**
-     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
-     * in the indicated (by colIds) cell.
-     */
-    public Object getCell(String name, String app, String version, String status, HashMap map)
-    {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, status, new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-
-        return ncube.getCell(map);
-    }
-
-    /**
-     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
-     * in the indicated (by colIds) cell.
-     */
-    public Object getCellNoExecute(String name, String app, String version, String status, Set<Long> coord)
-    {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, status, new Date());
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-
-        return ncube.getCellByIdNoExecute(coord);
     }
 
     public boolean renameCube(String oldName, String newName, String app, String version)
@@ -412,7 +340,7 @@ public class NCubeService
     public String getTestData(String name, String app, String version, String status)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, status, new Date());
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, status));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app + ", version: " + version);
@@ -424,11 +352,9 @@ public class NCubeService
     /**
      * Load all cubes into the manager.
      */
-    public void loadCubes(String app, String version, String status)
+    public void loadCubes(ApplicationID appId)
     {
-        NCubeJdbcConnectionProvider provider = new NCubeJdbcConnectionProvider(getConnection());
-        ApplicationID id = new ApplicationID(null, app, version);
-        NCubeManager.loadCubes(provider, id, status, new Date());
+        NCubeManager.loadCubes(appId);
     }
 
     /**
@@ -438,7 +364,7 @@ public class NCubeService
     public boolean updateTestData(String name, String app, String version, String tests)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.loadCube(connection, app, name, version, "SNAPSHOT", new Date());
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update test data, NCube '" + name + "' not found for app: " + app + ", version: " + version);

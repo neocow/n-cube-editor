@@ -113,6 +113,23 @@ div#east div.panel-body {
     font-weight: bold;
 }
 
+#nce-clipboard-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    z-index: 100;
+    display: none;
+    opacity: 0;
+}
+
+#cell-clipboard {
+    width: 1px;
+    height: 1px;
+    padding: 0;
+}
+
 #west {
     height:100%;
     width: 100%;

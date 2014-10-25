@@ -33,6 +33,7 @@ $(function ()
     var _editCellCache = $('#editCellCache');
     var _editCellValue = $('#editCellValue');
     var _editCellRadioURL = $('#editCellRadioURL');
+    var _clipboard = $('#cell-clipboard');
 
     //  modal dialogs
     var _editCellModal = $('#editCellModal');
@@ -46,6 +47,7 @@ $(function ()
     //  locations
     var _testResultsDiv = $('#testResultsDiv');
     var _testListWarning = $('#testListWarning');
+    var _focusedElement = null;
 
     initialize();
 
@@ -123,7 +125,6 @@ $(function ()
             {
                 calculateTestPanelSize();
             }
-
         });
 
         myLayout = $('body').layout({
@@ -175,9 +176,28 @@ $(function ()
         });
 
         ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
-        $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+        $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e)
+        {
             secondaryLayout.resizeAll();
             calculateTestPanelSize();
+        });
+
+        $(document).keydown(function(e)
+        {
+            if (_activeTab == 'ncubeTab')
+            {
+                if (e.metaKey || e.ctrlKey)
+                {   // Control Key (command in the case of Mac)
+                    if (e.keyCode == 88 || e.keyCode == 67)
+                    {   // Ctrl-C or Ctrl-X
+                        editCutCopy(e.keyCode == 88);
+                    }
+                    else if (e.keyCode == 86)
+                    {   // Ctrl-V
+                        editPaste();
+                    }
+                }
+            }
         });
 
         myLayout.resizeAll();
@@ -185,16 +205,114 @@ $(function ()
         buildNCubeEditMenu();
     }
 
-    function editCut()
+    function editPaste()
     {
         if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
         {
             return;
         }
+        var firstCell = $('td.cell-selected');
+        if (!firstCell || firstCell.length < 1)
+        {
+            return;
+        }
+        firstCell = $(firstCell[0])
+
+        var table = $(".table-ncube")[0];
+        var tableRows = table.rows;
+
+        // Location of first selected cell in 2D spreadsheet view.
+        var row = getRow(firstCell);
+        var col = getCol(firstCell) - countTH(tableRows[row].cells);
+
+        // Point focus to hidden text area so that it will receive the pasted content
+        _focusedElement = $(':focus');
+        _clipboard.focusin();
+        _clipboard.select();
+
+        var content = _clipboard.val();
+        if (!content || content == "")
+        {
+            return;
+        }
+
+        // Parse the clipboard content and build-up coordinates where this content will be pasted.
+        var values = [];
+        var coords = [];
+        var lines = content.split('\n');
+
+        for (var i=0; i < lines.length; i++)
+        {
+            if (lines[i] && lines[i] != "")
+            {
+                var strValues = lines[i].split('\t');
+                values.push(strValues);
+                var rowCoords = [];
+                for (var j=0; j < strValues.length; j++)
+                {
+                    var numTH = countTH(tableRows[row].cells);
+                    var colIdx = col + j + numTH;
+                    if (colIdx < tableRows[row].cells.length)
+                    {   // Do attempt to read past edge of 2D grid
+                        var domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
+                        var jqCell = $(domCell);                             // Now it's a jQuery object.
+                        rowCoords[j] = getCellId(jqCell);
+                    }
+                }
+                coords.push(rowCoords);
+                row++;
+
+                if (row >= tableRows.length)
+                {   // Do not go past bottom of grid
+                    break;
+                }
+            }
+        }
+
+        // Paste cells from database
+        var result = call("ncubeController.pasteCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, values, coords]);
+
+        if (result.status)
+        {
+            reloadCube();
+        }
+        else
+        {
+            _errorId = showNote('Error pasting cells:<hr class="hr-small"/>' + result.data);
+        }
+    }
+
+    function reloadCube()
+    {
+        var doc = document.documentElement;
+        var left = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+        var top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+        loadCube();
+        window.scrollTo(left, top);
+    }
+
+    function getCellId(cell)
+    {
+        var cellId = cell.attr('data-id');
+        if (cellId)
+        {
+            return cellId.split("_");
+        }
+        return null;
+    }
+
+    function editCutCopy(isCut)
+    {
+        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        {
+            return;
+        }
+        _focusedElement = $(':focus');
         var cells = [];
         var lastRow = -1;
         var clipData = "";
-        $(".cell-selected").each(function ()
+
+        $('td.cell-selected').each(function ()
         {   // Visit selected cells in spreadsheet
             var cell = $(this);
             var cellRow = getRow(cell);
@@ -208,21 +326,29 @@ $(function ()
                 lastRow = cellRow;
             }
             clipData = clipData + cell.text();
-            var cellId = cell.attr('data-id');
+            var cellId = getCellId(cell);
             if (cellId)
             {
-                cells.push(cellId.split("_"));
+                cells.push(cellId);
             }
-            cell.empty();
+            if (isCut)
+            {
+                cell.empty();
+            }
         });
         clipData += '\n';
-//        $("#cell-clipboard").html(clipData);
+        _clipboard.val(clipData);
+        _clipboard.focusin();
+        _clipboard.select();
 
         // Clear cells from database
-        var result = call("ncubeController.clearCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, cells]);
-        if (!result.status)
+        if (isCut)
         {
-            _errorId = showNote('Error cutting cells:<hr class="hr-small"/>' + result.data);
+            var result = call("ncubeController.clearCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, cells]);
+            if (!result.status)
+            {
+                _errorId = showNote('Error cutting cells:<hr class="hr-small"/>' + result.data);
+            }
         }
     }
 
@@ -230,7 +356,7 @@ $(function ()
     {
         $('#edit-cut-cells').click(function ()
         {
-            editCut();
+            editCutCopy();
         });
         $('#edit-copy-cells').click(function()
         {
@@ -3250,6 +3376,7 @@ $(function ()
             _uiCellId.attr({'class':'cell'});
         }
         _cellId = null;
+        reloadCube();
     }
 
     // --------------------------------------------------------------------------------------------
