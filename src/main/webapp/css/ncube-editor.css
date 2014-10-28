@@ -120,7 +120,7 @@ div#east div.panel-body {
     width: 0;
     height: 0;
     z-index: 100;
-    display: none;
+    display: block;
     opacity: 0;
 }
 

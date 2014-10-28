@@ -141,7 +141,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            nCubeService.loadCubes(new ApplicationID(null, app, version, status));
+            nCubeService.loadCubes(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
         }
         catch(Exception e)
         {
@@ -152,8 +152,8 @@ public class NCubeController extends BaseController
     public Map runTest(String name, String app, String version, String status, NCubeTest test) {
         try
         {
-            nCubeService.loadCubes(new ApplicationID(null, app, version, status));
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            nCubeService.loadCubes(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             Map coord = test.createCoord();
 
             Map output = new LinkedHashMap();
@@ -211,11 +211,11 @@ public class NCubeController extends BaseController
         try
         {
             List<String> baseUrls = resolveDefaultUrls(app, version, status);
-            NCubeManager.addBaseResourceUrls(baseUrls, new ApplicationID(null, app, version, status).getAppStr(""));
+            NCubeManager.addBaseResourceUrls(baseUrls, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status).getAppStr(""));
             NCube sysInfo = null;
             try
             {
-                sysInfo = getCube(SYS_NCUBE_INFO, new ApplicationID(null, app, version, status));
+                sysInfo = getCube(SYS_NCUBE_INFO, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             }
             catch (Exception e)
             {
@@ -293,7 +293,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             return ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month");
         }
         catch (Exception e)
@@ -318,7 +318,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             return ncube.toFormattedJson();
         }
         catch (Exception e)
@@ -456,7 +456,7 @@ public class NCubeController extends BaseController
             for (Object ncube : ncubes)
             {
                 NCubeInfoDto info = (NCubeInfoDto) ncube;
-                NCubeManager.getReferencedCubeNames(new ApplicationID(null, app, version, status), info.name, references);
+                NCubeManager.getReferencedCubeNames(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), info.name, references);
                 if (references.contains(name))
                 {
                     references.add(info.name);
@@ -482,7 +482,7 @@ public class NCubeController extends BaseController
         try
         {
             Set<String> references = new CaseInsensitiveSet<>();
-            NCubeManager.getReferencedCubeNames(new ApplicationID(null, app, version, status), name, references);
+            NCubeManager.getReferencedCubeNames(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name, references);
             return references.toArray();
         }
         catch (Exception e)
@@ -501,7 +501,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             Set<String> refs = ncube.getRequiredScope();
             return refs.toArray();
         }
@@ -605,7 +605,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             Axis axis = ncube.getAxis(axisName);
             return convertAxis(axis);
         }
@@ -690,7 +690,7 @@ public class NCubeController extends BaseController
                 markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
             ncube.updateColumns(updatedAxis);
             nCubeService.updateNCube(ncube);
         }
@@ -825,7 +825,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
 
             if (ncube == null)
             {
@@ -857,7 +857,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
 
             if (StringUtilities.isEmpty(testName)) {
                 throw new IllegalArgumentException("Invalid name for test:  '" + testName + "'");
@@ -899,7 +899,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             return ncube.getCell(input);
         }
         catch (Exception e)
@@ -922,7 +922,7 @@ public class NCubeController extends BaseController
                 return false;
             }
 
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
             Set<Long> colIds = getCoordinate(ids);
 
             if (cellInfo == null)
@@ -950,7 +950,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(name, new ApplicationID(null, app, version, status));
+            NCube ncube = getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             Set<Long> colIds = getCoordinate(ids);
             Object cell = ncube.getCellByIdNoExecute(colIds);
             CellInfo cellInfo = new CellInfo(cell);
@@ -978,7 +978,7 @@ public class NCubeController extends BaseController
             return false;
         }
 
-        NCube ncube = getCube(cubeName, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+        NCube ncube = getCube(cubeName, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
         for (int i=0; i < ids.length; i++)
         {
             Object[] cellId = (Object[]) ids[i];
@@ -1007,7 +1007,7 @@ public class NCubeController extends BaseController
             return false;
         }
 
-        NCube ncube = getCube(cubeName, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+        NCube ncube = getCube(cubeName, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
         for (int i=0; i < coords.length; i++)
         {
             Object[] row = (Object[]) coords[i];

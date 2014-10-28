@@ -113,7 +113,7 @@ public class NCubeService
             throw new IllegalArgumentException("Axis name cannot be empty.");
         }
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -130,7 +130,7 @@ public class NCubeService
     public void deleteAxis(String name, String app, String version, String axisName)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not delete axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -151,7 +151,7 @@ public class NCubeService
     public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update axis '" + origAxisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -196,7 +196,7 @@ public class NCubeService
     public void updateColumnCell(String name, String app, String version, String colId, String value)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -340,7 +340,7 @@ public class NCubeService
     public String getTestData(String name, String app, String version, String status)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, status));
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app + ", version: " + version);
@@ -364,7 +364,7 @@ public class NCubeService
     public boolean updateTestData(String name, String app, String version, String tests)
     {
         Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(null, app, version, ReleaseStatus.SNAPSHOT.name()));
+        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update test data, NCube '" + name + "' not found for app: " + app + ", version: " + version);
