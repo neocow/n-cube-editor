@@ -1,79 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" 
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-  xmlns:tx="http://www.springframework.org/schema/tx"
-  xmlns:aop="http://www.springframework.org/schema/aop"
-  xmlns:p="http://www.springframework.org/schema/p"
-  xmlns:util="http://www.springframework.org/schema/util"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
-  	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
-  	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
-    http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd"        >
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
 
-	<bean name="ncubeController" class="com.cedarsoftware.controller.NCubeController">
-        <constructor-arg ref="ncubeService"/>
-	</bean>
+    <bean name="ncubeController" class="com.cedarsoftware.controller.NCubeController">
+        <constructor-arg>
+            <bean name="ncubeService" class="com.cedarsoftware.service.ncube.NCubeService" />
+        </constructor-arg>
+    </bean>
+
+
 
     <!--
     p:username="execdash"
     p:password="puCupRaQaZe3"
     -->
 
-    <bean id="ncubeTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-        <property name="dataSource" ref="ncubeDataSource" />
-    </bean>
-
-    <tx:annotation-driven transaction-manager="ncubeTransactionManager" />
-    <tx:advice id="ncubeTxAdvice" transaction-manager="ncubeTransactionManager">
-        <tx:attributes>
-            <tx:method name="*" propagation="REQUIRED"/>
-            <tx:method name="get*" propagation="REQUIRED" read-only="true"/>
-            <tx:method name="is*" propagation="REQUIRED" read-only="true"/>
-            <tx:method name="has*" propagation="REQUIRED" read-only="true"/>
-        </tx:attributes>
-    </tx:advice>
-
-    <aop:config>
-        <aop:pointcut id="ncubeServiceMethods" expression="within(com.cedarsoftware.service.ncube.*)"/>
-        <aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>
-    </aop:config>
-
-    <bean id="ncubeService" class="com.cedarsoftware.service.ncube.NCubeService">
-        <property name="dataSource" ref="ncubeDataSource"/>
-    </bean>
-
-    <!--  Method for setting version information for a single app. -->
-    <!--
-    <bean id="version" class="java.lang.String">
-        <constructor-arg value="1.1.14" />
-    </bean>
-
-    <util:list id="urlParameters" value-type="java.lang.Object">
-        <util:list value-type="java.lang.String">
-            <value>https://cdn.gaig.com/private/ud/ra-resources/#{version.toString()}/public</value>
-            <value>https://cdn.gaig.com/private/ud/ra-resources/#{version.toString()}/private</value>
-            <value>https://cdn.gaig.com/private/ud/ra-resources/#{version.toString()}/private/groovy</value>
-        </util:list>
-        <value type="java.lang.String">#{version.toString()}</value>
-    </util:list>
-
     <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-        <property name="staticMethod" value="com.cedarsoftware.ncube.NCubeManager.addBaseResourceUrls"/>
-        <property name="arguments" ref="urlParameters"/>
+        <property name="staticMethod" value="com.cedarsoftware.ncube.NCubeManager.setNCubePersister"/>
+        <property name="arguments">
+            <list>
+                <ref bean="persister"/>
+            </list>
+        </property>
     </bean>
-    -->
 
-    <util:list id="defaultUrls" value-type="java.lang.Object">
-        <util:list value-type="java.lang.String">
-            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/public</value>-->
-            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/private</value>-->
-            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/private/groovy</value>-->
-        </util:list>
-    </util:list>
+    <bean id="persister" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod" value="com.cedarsoftware.util.ProxyFactory.create"/>
+        <property name="arguments">
+            <list>
+                <ref bean="persisterInterface" />
+                <ref bean="persisterAdapter"/>
+            </list>
+        </property>
+    </bean>
 
-    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-        <property name="staticMethod" value="com.cedarsoftware.controller.NCubeController.setDefaultUrls"/>
-        <property name="arguments" ref="defaultUrls"/>
+
+
+    <bean id="persisterInterface" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod">
+            <value>java.lang.Class.forName</value>
+        </property>
+        <property name="arguments">
+            <list>
+                <value>com.cedarsoftware.ncube.NCubePersister</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="persisterImpl" class="com.cedarsoftware.ncube.NCubeJdbcPersister" />
+
+    <bean id="persisterAdapter" class="com.cedarsoftware.ncube.DataSourcePersistenceProxy" >
+        <constructor-arg ref="ncubeDataSource"  />
+        <constructor-arg ref="persisterInterface"  />
+        <constructor-arg ref="persisterImpl" />
     </bean>
 
 
