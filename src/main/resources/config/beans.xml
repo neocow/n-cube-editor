@@ -49,20 +49,33 @@
         </property>
     </bean>
 
-    <bean id="persisterImpl" class="com.cedarsoftware.ncube.NCubeJdbcPersister" />
 
     <bean id="persisterAdapter" class="com.cedarsoftware.ncube.DataSourcePersistenceProxy" >
         <constructor-arg ref="ncubeDataSource"  />
         <constructor-arg ref="persisterInterface"  />
-        <constructor-arg ref="persisterImpl" />
+        <constructor-arg ref="jdbcPersisterImpl" />
     </bean>
 
+    <bean id="jdbcPersisterImpl" class="com.cedarsoftware.ncube.NCubeJdbcPersister" />
+
+    <!--  When using mongo as your test database, set an environment variable spring.profiles.active=mysql
+    <bean id="mongoPersisterImpl" class="com.cedarsoftware.ncube.NCubeMongoPersister" />
+    -->
+
+    <!--
+    <beans profile="mongo">
+        <bean id="persisterAdapter" class="com.cedarsoftware.ncube.MongoPersistenceProxy" >
+            <constructor-arg ref="ncubeDataSource"  />
+            <constructor-arg ref="persisterInterface"  />
+            <constructor-arg ref="mongoPersisterImpl" />
+        </bean>
+    </beans>
+    -->
 
     <!--
         When using mysql as your test database, set an environment variable spring.profiles.active=mysql
         The profiles list can be comma separated if you need more than one profile
     -->
-
     <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
           p:driverClassName="oracle.jdbc.driver.OracleDriver"
           p:url="jdbc:oracle:thin:@10.50.214.14:1526:uwdeskd"
