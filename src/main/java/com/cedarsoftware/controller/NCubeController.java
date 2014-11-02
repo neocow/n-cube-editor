@@ -738,17 +738,18 @@ public class NCubeController extends BaseController
     {
         try
         {
-            String s = nCubeService.getTestData(name, app, version, status);
-            if (StringUtilities.isEmpty(s)) {
+            NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
+            if (ncube == null)
+            {
+                throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app + ", version: " + version);
+            }
+
+            String s = NCubeManager.getTestData(ncube.getApplicationID(), name);
+            if (StringUtilities.isEmpty(s))
+            {
                 return null;
             }
-            try
-            {
-                Object[] os = new NCubeTestReader().convert(s).toArray();
-                return os;
-            } catch (Exception e) {
-                return new Object[0];
-            }
+            return new NCubeTestReader().convert(s).toArray();
         }
         catch (Exception e)
         {

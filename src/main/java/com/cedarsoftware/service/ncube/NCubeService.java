@@ -334,22 +334,6 @@ public class NCubeService
     }
 
     /**
-     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
-     * in the indicated (by colIds) cell.
-     */
-    public String getTestData(String name, String app, String version, String status)
-    {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app + ", version: " + version);
-        }
-
-        return NCubeManager.getTestData(connection, app, name, version, new Date());
-    }
-
-    /**
      * Load all cubes into the manager.
      */
     public void loadCubes(ApplicationID appId)

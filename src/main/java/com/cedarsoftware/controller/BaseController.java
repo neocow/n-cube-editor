@@ -1,7 +1,5 @@
 package com.cedarsoftware.controller;
 
-import com.cedarsoftware.security.Security;
-import com.cedarsoftware.security.SecurityManager;
 import org.apache.log4j.Logger;
 
 /**
@@ -26,20 +24,9 @@ import org.apache.log4j.Logger;
 public class BaseController implements IBaseController
 {
     private static final Logger _log = Logger.getLogger(BaseController.class);
-	private Security security = new SecurityManager();
 
 	public void logout()
 	{
 	}
-	
-	protected String getHID()
-	{
-		return security.getHID();
-	}
-    
-    protected Security getSecurity()
-    {
-    	return security;
-    }
-   
+
 }
