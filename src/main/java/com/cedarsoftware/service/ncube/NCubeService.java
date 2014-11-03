@@ -5,21 +5,14 @@ import com.cedarsoftware.ncube.Axis;
 import com.cedarsoftware.ncube.AxisType;
 import com.cedarsoftware.ncube.AxisValueType;
 import com.cedarsoftware.ncube.NCube;
-import com.cedarsoftware.ncube.NCubeJdbcConnectionProvider;
-import com.cedarsoftware.ncube.NCubeJdbcPersister;
 import com.cedarsoftware.ncube.NCubeManager;
-import com.cedarsoftware.ncube.NCubePersister;
 import com.cedarsoftware.ncube.ReleaseStatus;
 import com.cedarsoftware.util.StringUtilities;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -43,67 +36,46 @@ import java.util.List;
  */
 public class NCubeService
 {
-    private DataSource dataSource;
-
-    public NCubeService() {
-//        List<String> list = new ArrayList<String>();
-//        list.add("http://www.cedarsoftware.com");
-//        NCubeManager.addBaseResourceUrls(list, "0.0.1");
-    }
-
-    public void setDataSource(DataSource ds)
-    {
-        dataSource = ds;
-        NCubePersister persister = new NCubeJdbcPersister();
-        persister.setNCubeConnectionProvider(new NCubeJdbcConnectionProvider(ds));
-        NCubeManager.setNCubePersister(persister);
-    }
-
-    private Connection getConnection()
-    {
-        return DataSourceUtils.getConnection(dataSource);
-    }
 
     public Object[] getNCubes(String pattern, String app, String version, String status)
     {
-        return NCubeManager.getNCubes(getConnection(), app, version, status, pattern, new Date());
+        return NCubeManager.getNCubes(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
     }
 
     public Object[] getAppNames()
     {
-        return NCubeManager.getAppNames(getConnection(), new Date());
+        return NCubeManager.getAppNames();
     }
 
     public Object[] getAppVersions(String app, String status)
     {
-        return NCubeManager.getAppVersions(getConnection(), app, status, new Date());
+        return NCubeManager.getAppVersions(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, ApplicationID.DEFAULT_VERSION, status));
     }
 
     public void createCube(NCube ncube, String app, String version)
     {
-        NCubeManager.createCube(getConnection(), app, ncube, version);
+        NCubeManager.createCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), ncube);
     }
 
     public boolean deleteCube(String name, String app, String version)
     {
-        return NCubeManager.deleteCube(getConnection(), app, name, version, false);
+        return NCubeManager.deleteCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), name, false);
     }
 
     public void duplicateCube(String newName, String name, String newApp, String app, String newVersion, String version, String status)
     {
-        NCubeManager.duplicate(getConnection(), newName, name, newApp, app, newVersion, version, status, new Date());
+        NCubeManager.duplicate(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), new ApplicationID(ApplicationID.DEFAULT_TENANT, newApp, newVersion, status), name, newName);
     }
 
     public void releaseCubes(String app, String version, String newSnapVer)
     {
-        Connection connection = getConnection();
-        NCubeManager.releaseCubes(connection, app, version);
-        NCubeManager.createSnapshotCubes(connection, app, version, newSnapVer);
+        NCubeManager.releaseCubes(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
+        NCubeManager.createSnapshotCubes(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), newSnapVer);
     }
 
     public void changeVersionValue(String app, String currVersion, String newSnapVer)
     {
-        NCubeManager.changeVersionValue(getConnection(), app, currVersion, newSnapVer);
+        NCubeManager.changeVersionValue(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, currVersion, ReleaseStatus.SNAPSHOT.name()), newSnapVer);
     }
 
     public void addAxis(String name, String app, String version, String axisName, String type, String valueType)
@@ -112,16 +84,16 @@ public class NCubeService
         {
             throw new IllegalArgumentException("Axis name cannot be empty.");
         }
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
+
+        ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
+        NCube ncube = NCubeManager.getCube(name, id);
         if (ncube == null)
         {
-            throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
+            throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + name + "' not found for app: " + id.toString());
         }
 
         Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY);
-        ncube.addAxis(axis);
-        NCubeManager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(id, ncube);
     }
 
     /**
@@ -129,8 +101,8 @@ public class NCubeService
      */
     public void deleteAxis(String name, String app, String version, String axisName)
     {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
+        ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
+        NCube ncube = NCubeManager.getCube(name, id);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not delete axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -142,7 +114,7 @@ public class NCubeService
         }
 
         ncube.deleteAxis(axisName);
-        NCubeManager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(id, ncube);
     }
 
     /**
@@ -150,8 +122,8 @@ public class NCubeService
      */
     public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
     {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
+        ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
+        NCube ncube = NCubeManager.getCube(name, id);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update axis '" + origAxisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -183,7 +155,7 @@ public class NCubeService
             axis.setColumnOrder(isSorted ? Axis.SORTED : Axis.DISPLAY);
         }
 
-        NCubeManager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(id, ncube);
     }
 
     /**
@@ -195,8 +167,8 @@ public class NCubeService
      */
     public void updateColumnCell(String name, String app, String version, String colId, String value)
     {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
+        ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
+        NCube ncube = NCubeManager.getCube(name, appId);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -219,7 +191,7 @@ public class NCubeService
         }
 
         ncube.updateColumn(id, axis.convertStringToColumnValue(value));
-        NCubeManager.updateCube(connection, app, ncube, version);
+        NCubeManager.updateCube(appId, ncube);
     }
 
     /**
@@ -228,15 +200,14 @@ public class NCubeService
      */
     public void updateNCube(NCube ncube)
     {
-        Connection connection = getConnection();
         ApplicationID appId = ncube.getApplicationID();
-        NCubeManager.updateCube(connection, appId.getApp(), ncube, appId.getVersion());
+        NCubeManager.updateCube(appId, ncube);
     }
 
     public boolean renameCube(String oldName, String newName, String app, String version)
     {
-        Connection connection = getConnection();
-        return NCubeManager.renameCube(connection, oldName, newName, app, version);
+        ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
+        return NCubeManager.renameCube(id, oldName, newName);
     }
 
     /**
@@ -260,8 +231,7 @@ public class NCubeService
             cubes.add(NCube.fromSimpleJson(json));
         }
 
-        Connection connection = getConnection();
-
+        ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
         for (Object object : cubes)
         {
             if (object instanceof NCube)
@@ -275,13 +245,13 @@ public class NCubeService
                     }
                 }
 
-                if (NCubeManager.doesCubeExist(connection, app, ncube.getName(), version, "SNAPSHOT", new Date()))
+                if (NCubeManager.doesCubeExist(id, ncube.getName()))
                 {
-                    NCubeManager.updateCube(connection, app, ncube, version);
+                    NCubeManager.updateCube(id, ncube);
                 }
                 else
                 {
-                    NCubeManager.createCube(connection, app, ncube, version);
+                    NCubeManager.createCube(id, ncube);
                 }
             }
             else
@@ -292,7 +262,7 @@ public class NCubeService
 
                 if ("delete".equalsIgnoreCase(cmd))
                 {
-                    NCubeManager.deleteCube(connection, app, cubeName, version, false);
+                    NCubeManager.deleteCube(id, cubeName, false);
                 }
             }
         }
@@ -334,6 +304,22 @@ public class NCubeService
     }
 
     /**
+     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
+     * in the indicated (by colIds) cell.
+     */
+    public String getTestData(String name, String app, String version, String status)
+    {
+        ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status);
+        NCube ncube = NCubeManager.getCube(name, id);
+        if (ncube == null)
+        {
+            throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app + ", version: " + version);
+        }
+
+        return NCubeManager.getTestData(id, name);
+    }
+
+    /**
      * Load all cubes into the manager.
      */
     public void loadCubes(ApplicationID appId)
@@ -347,13 +333,13 @@ public class NCubeService
      */
     public boolean updateTestData(String name, String app, String version, String tests)
     {
-        Connection connection = getConnection();
-        NCube ncube = NCubeManager.getCube(name, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()));
+        ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
+        NCube ncube = NCubeManager.getCube(name, id);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update test data, NCube '" + name + "' not found for app: " + app + ", version: " + version);
         }
 
-        return NCubeManager.updateTestData(connection, app, name, version, tests);
+        return NCubeManager.updateTestData(id, name, tests);
     }
 }
