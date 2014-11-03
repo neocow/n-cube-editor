@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
        xmlns:p="http://www.springframework.org/schema/p"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+  	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+  	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd">
 
     <bean name="ncubeController" class="com.cedarsoftware.controller.NCubeController">
         <constructor-arg>
@@ -11,11 +15,38 @@
     </bean>
 
 
+    <bean id="ncubeTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="ncubeDataSource" />
+    </bean>
+
+    <tx:annotation-driven transaction-manager="ncubeTransactionManager" />
+    <tx:advice id="ncubeTxAdvice" transaction-manager="ncubeTransactionManager">
+        <tx:attributes>
+            <tx:method name="*" propagation="REQUIRED"/>
+            <tx:method name="get*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="is*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="has*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="does*" propagation="REQUIRED" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <aop:pointcut id="ncubeServiceMethods" expression="within(com.cedarsoftware.service.ncube.*)"/>
+        <aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>
+    </aop:config>
 
     <!--
     p:username="execdash"
     p:password="puCupRaQaZe3"
     -->
+
+    <bean id="connectionProvider" class="com.cedarsoftware.SpringConnectionProvider">
+        <constructor-arg ref="ncubeDataSource" />
+    </bean>
+
+    <bean id="persister" class="com.cedarsoftware.ncube.NCubeJdbcPersisterAdapter">
+        <constructor-arg ref="connectionProvider" />
+    </bean>
 
     <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
         <property name="staticMethod" value="com.cedarsoftware.ncube.NCubeManager.setNCubePersister"/>
@@ -26,64 +57,11 @@
         </property>
     </bean>
 
-    <bean id="persister" class="com.cedarsoftware.ncube.JdbcPersister">
-        <constructor-arg ref="dataSource" />
-    </bean>
-
-    <!--  The correct way
-    <bean id="persister" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-        <property name="staticMethod" value="com.cedarsoftware.util.ProxyFactory.create"/>
-        <property name="arguments">
-            <list>
-                <ref bean="persisterInterface" />
-                <ref bean="persisterAdapter"/>
-            </list>
-        </property>
-    </bean>
-
-
-
-    <bean id="persisterInterface" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-        <property name="staticMethod">
-            <value>java.lang.Class.forName</value>
-        </property>
-        <property name="arguments">
-            <list>
-                <value>com.cedarsoftware.ncube.NCubePersister</value>
-            </list>
-        </property>
-    </bean>
-
-    <bean id="persisterAdapter" class="com.cedarsoftware.ncube.DataSourcePersistenceProxy" >
-        <constructor-arg ref="ncubeDataSource"  />
-        <constructor-arg ref="persisterInterface"  />
-        <constructor-arg ref="jdbcPersisterImpl" />
-    </bean>
-
-    <bean id="jdbcPersisterImpl" class="com.cedarsoftware.ncube.NCubeJdbcPersister" />
-
-    -->
-
-
-    <!--  When using mongo as your test database, set an environment variable spring.profiles.active=mysql
-    <bean id="mongoPersisterImpl" class="com.cedarsoftware.ncube.NCubeMongoPersister" />
-    -->
-
-    <!--
-    <beans profile="mongo">
-        <bean id="persisterAdapter" class="com.cedarsoftware.ncube.MongoPersistenceProxy" >
-            <constructor-arg ref="ncubeDataSource"  />
-            <constructor-arg ref="persisterInterface"  />
-            <constructor-arg ref="mongoPersisterImpl" />
-        </bean>
-    </beans>
-    -->
-
     <!--
         When using mysql as your test database, set an environment variable spring.profiles.active=mysql
         The profiles list can be comma separated if you need more than one profile
     -->
-    <bean id="dataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
+    <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
           p:driverClassName="oracle.jdbc.driver.OracleDriver"
           p:url="jdbc:oracle:thin:@10.50.214.14:1526:uwdeskd"
           p:username="ra_desktop"
@@ -107,7 +85,7 @@
 
 
     <beans profile="mysql">
-        <bean id="dataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
+        <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
               p:driverClassName="com.mysql.jdbc.Driver"
               p:url="jdbc:mysql://localhost:3306/ncube"
               p:username="ncube"
