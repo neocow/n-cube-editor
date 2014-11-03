@@ -26,6 +26,11 @@
         </property>
     </bean>
 
+    <bean id="persister" class="com.cedarsoftware.ncube.JdbcPersister">
+        <constructor-arg ref="dataSource" />
+    </bean>
+
+    <!--  The correct way
     <bean id="persister" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
         <property name="staticMethod" value="com.cedarsoftware.util.ProxyFactory.create"/>
         <property name="arguments">
@@ -49,7 +54,6 @@
         </property>
     </bean>
 
-
     <bean id="persisterAdapter" class="com.cedarsoftware.ncube.DataSourcePersistenceProxy" >
         <constructor-arg ref="ncubeDataSource"  />
         <constructor-arg ref="persisterInterface"  />
@@ -57,6 +61,9 @@
     </bean>
 
     <bean id="jdbcPersisterImpl" class="com.cedarsoftware.ncube.NCubeJdbcPersister" />
+
+    -->
+
 
     <!--  When using mongo as your test database, set an environment variable spring.profiles.active=mysql
     <bean id="mongoPersisterImpl" class="com.cedarsoftware.ncube.NCubeMongoPersister" />
@@ -76,7 +83,7 @@
         When using mysql as your test database, set an environment variable spring.profiles.active=mysql
         The profiles list can be comma separated if you need more than one profile
     -->
-    <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
+    <bean id="dataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
           p:driverClassName="oracle.jdbc.driver.OracleDriver"
           p:url="jdbc:oracle:thin:@10.50.214.14:1526:uwdeskd"
           p:username="ra_desktop"
@@ -100,7 +107,7 @@
 
 
     <beans profile="mysql">
-        <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
+        <bean id="dataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
               p:driverClassName="com.mysql.jdbc.Driver"
               p:url="jdbc:mysql://localhost:3306/ncube"
               p:username="ncube"
