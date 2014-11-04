@@ -211,7 +211,7 @@ public class NCubeController extends BaseController
         try
         {
             List<String> baseUrls = resolveDefaultUrls(app, version, status);
-            NCubeManager.addBaseResourceUrls(baseUrls, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status).getAppStr(""));
+            NCubeManager.addBaseResourceUrls(baseUrls, new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status));
             NCube sysInfo = null;
             try
             {
