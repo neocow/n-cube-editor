@@ -59,7 +59,7 @@ public class NCubeService
 
     public boolean deleteCube(String name, String app, String version)
     {
-        return NCubeManager.deleteCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), name, false);
+        return NCubeManager.deleteCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), name);
     }
 
     public void duplicateCube(String newName, String name, String newApp, String app, String newVersion, String version, String status)
@@ -262,7 +262,7 @@ public class NCubeService
 
                 if ("delete".equalsIgnoreCase(cmd))
                 {
-                    NCubeManager.deleteCube(id, cubeName, false);
+                    NCubeManager.deleteCube(id, cubeName);
                 }
             }
         }
