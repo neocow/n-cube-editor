@@ -280,7 +280,8 @@ public class NCubeController extends BaseController
     {
         try
         {
-            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
+            ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status);
+            NCube ncube = getCube(appId, name);
             return ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month");
         }
         catch (Exception e)
@@ -292,7 +293,12 @@ public class NCubeController extends BaseController
 
     private NCube getCube(ApplicationID appId, String name)
     {
-        return NCubeManager.getCube(appId, name);
+        NCube cube = NCubeManager.getCube(appId, name);
+        if (cube == null)
+        {
+            throw new IllegalArgumentException("Unable to load cube: " + name + " for app: " + appId);
+        }
+        return cube;
     }
 
     public String getJson(String name, String app, String version, String status)
@@ -810,11 +816,6 @@ public class NCubeController extends BaseController
         {
             NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
 
-            if (ncube == null)
-            {
-                throw new IllegalArgumentException("No cube was found for: " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
-            }
-
             if (!"SNAPSHOT".equalsIgnoreCase(status))
             {
                 throw new IllegalArgumentException("You cannot generate tests for release cubes");
@@ -842,12 +843,9 @@ public class NCubeController extends BaseController
         {
             NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
 
-            if (StringUtilities.isEmpty(testName)) {
-                throw new IllegalArgumentException("Invalid name for test:  '" + testName + "'");
-            }
-            if (ncube == null)
+            if (StringUtilities.isEmpty(testName))
             {
-                throw new IllegalArgumentException("No cube was found for: " + ncube.getName() + ", app: " + app + ", version: " + version + ", status: " + status);
+                throw new IllegalArgumentException("Invalid name for test:  '" + testName + "'");
             }
 
             if (!"SNAPSHOT".equalsIgnoreCase(status))
@@ -963,11 +961,7 @@ public class NCubeController extends BaseController
 
         ApplicationID appId = new ApplicationID(ApplicationID. DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
         NCube ncube = getCube(appId, cubeName);
-        if (ncube == null)
-        {
-            markRequestFailed("Could not load cube: " + cubeName + " for app: " + appId);
-            return false;
-        }
+
         for (Object id : ids)
         {
             Object[] cellId = (Object[]) id;
