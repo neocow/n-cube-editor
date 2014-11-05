@@ -37,7 +37,7 @@
         <version.java-util>1.12.0</version.java-util>
         <version.json-command-servlet>1.1.0</version.json-command-servlet>
         <version.urlrewrite>4.0.4</version.urlrewrite>
-        <version.ncube>2.9.19-SNAPSHOT</version.ncube>
+        <version.ncube>3.0.0-SNAPSHOT</version.ncube>
         <version.junit>4.11</version.junit>
         <version.spring>3.2.6.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>

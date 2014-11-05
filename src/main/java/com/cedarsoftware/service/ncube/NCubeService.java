@@ -42,9 +42,9 @@ public class NCubeService
         return NCubeManager.getNCubes(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
     }
 
-    public Object[] getAppNames()
+    public Object[] getAppNames(String account)
     {
-        return NCubeManager.getAppNames();
+        return NCubeManager.getAppNames(account);
     }
 
     public Object[] getAppVersions(String app, String status)
@@ -86,7 +86,7 @@ public class NCubeService
         }
 
         ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
-        NCube ncube = NCubeManager.getCube(name, id);
+        NCube ncube = NCubeManager.getCube(id, name);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + name + "' not found for app: " + id.toString());
@@ -102,7 +102,7 @@ public class NCubeService
     public void deleteAxis(String name, String app, String version, String axisName)
     {
         ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
-        NCube ncube = NCubeManager.getCube(name, id);
+        NCube ncube = NCubeManager.getCube(id, name);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not delete axis '" + axisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -123,7 +123,7 @@ public class NCubeService
     public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
     {
         ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
-        NCube ncube = NCubeManager.getCube(name, id);
+        NCube ncube = NCubeManager.getCube(id, name);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update axis '" + origAxisName + "', NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -168,7 +168,7 @@ public class NCubeService
     public void updateColumnCell(String name, String app, String version, String colId, String value)
     {
         ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
-        NCube ncube = NCubeManager.getCube(name, appId);
+        NCube ncube = NCubeManager.getCube(appId, name);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update Column, NCube '" + name + "' not found for app: " + app + ", version: " + version);
@@ -310,7 +310,7 @@ public class NCubeService
     public String getTestData(String name, String app, String version, String status)
     {
         ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status);
-        NCube ncube = NCubeManager.getCube(name, id);
+        NCube ncube = NCubeManager.getCube(id, name);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app + ", version: " + version);
@@ -320,21 +320,13 @@ public class NCubeService
     }
 
     /**
-     * Load all cubes into the manager.
-     */
-    public void loadCubes(ApplicationID appId)
-    {
-        NCubeManager.loadCubes(appId);
-    }
-
-    /**
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
     public boolean updateTestData(String name, String app, String version, String tests)
     {
         ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
-        NCube ncube = NCubeManager.getCube(name, id);
+        NCube ncube = NCubeManager.getCube(id, name);
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update test data, NCube '" + name + "' not found for app: " + app + ", version: " + version);
