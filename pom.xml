@@ -49,7 +49,7 @@
         <version.plugin.javadoc>2.10.1</version.plugin.javadoc>
         <version.plugin.gpg>1.5</version.plugin.gpg>
         <version.plugin.release>2.5.1</version.plugin.release>
-
+        <version.java>1.7</version.java>
     </properties>
 
     <pluginRepositories>
@@ -129,8 +129,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${version.plugin.compiler}</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>${version.java}</source>
+                    <target>${version.java}</target>
                 </configuration>
             </plugin>
 
