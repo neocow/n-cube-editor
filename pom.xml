@@ -39,7 +39,7 @@
         <version.urlrewrite>4.0.4</version.urlrewrite>
         <version.ncube>3.0.0-SNAPSHOT</version.ncube>
         <version.junit>4.11</version.junit>
-        <version.spring>3.2.6.RELEASE</version.spring>
+        <version.spring>3.2.11.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>
         <version.log4j>1.2.16</version.log4j>
 		<version.core.util>3.9.0</version.core.util>

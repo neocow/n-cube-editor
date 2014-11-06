@@ -3258,6 +3258,7 @@ $(function ()
         {
             _errorId = showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
         }
+        reloadCube();
     }
 
     function editCell(value)

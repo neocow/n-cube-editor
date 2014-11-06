@@ -3,10 +3,10 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns:aop="http://www.springframework.org/schema/aop"
-       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
   	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
-  	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd">
+  	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <bean name="ncubeController" class="com.cedarsoftware.controller.NCubeController">
         <constructor-arg>
@@ -56,6 +56,21 @@
             </list>
         </property>
     </bean>
+
+
+    <util:list id="defaultUrls" value-type="java.lang.Object">
+        <util:list value-type="java.lang.String">
+            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/public</value>-->
+            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/private</value>-->
+            <!--<value>https://cdn.gaig.com/private/ud/ra-resources/${version}/private/groovy</value>-->
+        </util:list>
+    </util:list>
+
+    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod" value="com.cedarsoftware.controller.NCubeController.setDefaultUrls"/>
+        <property name="arguments" ref="defaultUrls"/>
+    </bean>
+
 
     <!--
         When using mysql as your test database, set an environment variable spring.profiles.active=mysql
