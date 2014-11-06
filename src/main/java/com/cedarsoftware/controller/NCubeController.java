@@ -286,7 +286,8 @@ public class NCubeController extends BaseController
         }
         catch (Exception e)
         {
-            fail(e);
+            markRequestFailed(getCauses(e));
+            LOG.info(getCauses(e));
             return null;
         }
     }
