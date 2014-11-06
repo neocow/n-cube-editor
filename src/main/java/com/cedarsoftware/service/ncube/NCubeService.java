@@ -92,6 +92,7 @@ public class NCubeService
         }
 
         Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY);
+        ncube.addAxis(axis);
         NCubeManager.updateCube(id, ncube);
     }
 
