@@ -845,11 +845,6 @@ public class NCubeController extends BaseController
         {
             NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
 
-            if (ncube == null)
-            {
-                throw new IllegalArgumentException("Could not create test: " + testName + ", cube: " + name + " not found for app " + app);
-            }
-
             if (StringUtilities.isEmpty(testName))
             {
                 throw new IllegalArgumentException("Invalid name during test creation: " + testName + ", cube: " + name + " not found for app " + app);
@@ -954,82 +949,92 @@ public class NCubeController extends BaseController
 
     public boolean clearCells(String app, String version, String status, String cubeName, Object[] ids)
     {
-        if (!isAllowed(app, version))
+        try
         {
-            markRequestFailed("This app and version CANNOT be edited.");
-            return false;
-        }
-
-        if (ids == null || ids.length == 0)
-        {
-            markRequestFailed("No IDs of cells to cut/clear were given.");
-            return false;
-        }
-
-        ApplicationID appId = new ApplicationID(ApplicationID. DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
-        NCube ncube = getCube(appId, cubeName);
-
-        if (ncube == null)
-        {
-            markRequestFailed("Could not load cube: " + cubeName + " for app: " + appId);
-            return false;
-        }
-
-        for (Object id : ids)
-        {
-            Object[] cellId = (Object[]) id;
-            if (ArrayUtilities.isEmpty(cellId))
+            if (!isAllowed(app, version))
             {
-                continue;
+                markRequestFailed("This app and version CANNOT be edited.");
+                return false;
             }
-            Set<Long> colIds = getCoordinate(cellId);
-            ncube.removeCellById(colIds);
+
+            if (ids == null || ids.length == 0)
+            {
+                markRequestFailed("No IDs of cells to cut/clear were given.");
+                return false;
+            }
+
+            ApplicationID appId = new ApplicationID(ApplicationID. DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
+            NCube ncube = getCube(appId, cubeName);
+
+            for (Object id : ids)
+            {
+                Object[] cellId = (Object[]) id;
+                if (ArrayUtilities.isEmpty(cellId))
+                {
+                    continue;
+                }
+                Set<Long> colIds = getCoordinate(cellId);
+                ncube.removeCellById(colIds);
+            }
+            nCubeService.updateNCube(ncube);
+            return true;
         }
-        nCubeService.updateNCube(ncube);
-        return true;
+        catch (Exception e)
+        {
+            fail(e);
+            return false;
+        }
     }
 
     public boolean pasteCells(String app, String version, String status, String cubeName, Object[] values, Object[] coords)
     {
-        if (!isAllowed(app, version))
+        try
         {
-            markRequestFailed("This app and version CANNOT be edited.");
-            return false;
-        }
-
-        if (values == null || values.length == 0 || coords == null || coords.length == 0 || coords.length > values.length)
-        {
-            markRequestFailed("Values and coordinates must not be empty or length of 0.  Also, there must be at the same or more values than coordinates.");
-            return false;
-        }
-
-        NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), cubeName);
-        for (int i=0; i < coords.length; i++)
-        {
-            Object[] row = (Object[]) coords[i];
-            Object[] valueRow = (Object[]) values[i];
-            if (row == null || row.length < 1)
+            if (!isAllowed(app, version))
             {
-                break;
+                markRequestFailed("This app and version CANNOT be edited.");
+                return false;
             }
 
-            for (int j=0; j < row.length; j++)
+            if (values == null || values.length == 0 || coords == null || coords.length == 0 || coords.length > values.length)
             {
-                Object[] ids = (Object[]) row[j];
-                Set<Long> cellId = getCoordinate(ids);
-                Object value = convertStringToValue((String) valueRow[j]);
-                if (value == null)
+                markRequestFailed("Values and coordinates must not be empty or length of 0.  Also, there must be at the same or more values than coordinates.");
+                return false;
+            }
+
+            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), cubeName);
+            for (int i=0; i < coords.length; i++)
+            {
+                Object[] row = (Object[]) coords[i];
+                Object[] valueRow = (Object[]) values[i];
+                if (row == null || row.length < 1)
                 {
-                    ncube.removeCellById(cellId);
+                    break;
                 }
-                else
+
+                for (int j=0; j < row.length; j++)
                 {
-                    ncube.setCellById(value, cellId);
+                    Object[] ids = (Object[]) row[j];
+                    Set<Long> cellId = getCoordinate(ids);
+                    Object value = convertStringToValue((String) valueRow[j]);
+                    if (value == null)
+                    {
+                        ncube.removeCellById(cellId);
+                    }
+                    else
+                    {
+                        ncube.setCellById(value, cellId);
+                    }
                 }
             }
+            nCubeService.updateNCube(ncube);
+            return true;
         }
-        nCubeService.updateNCube(ncube);
-        return true;
+        catch (Exception e)
+        {
+            fail(e);
+            return false;
+        }
     }
 
     private static Object convertStringToValue(String origValue)
