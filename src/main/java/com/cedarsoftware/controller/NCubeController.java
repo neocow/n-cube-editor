@@ -282,7 +282,8 @@ public class NCubeController extends BaseController
         {
             ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status);
             NCube ncube = getCube(appId, name);
-            return ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month");
+            String html = ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month");
+            return html;
         }
         catch (Exception e)
         {
@@ -729,7 +730,7 @@ public class NCubeController extends BaseController
             NCube ncube = NCubeManager.getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
             if (ncube == null)
             {
-                throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app + ", version: " + version);
+                throw new IllegalArgumentException("Could not find test data '" + name + "' not found for app: " + app);
             }
 
             String s = NCubeManager.getTestData(ncube.getApplicationID(), name);
@@ -843,14 +844,19 @@ public class NCubeController extends BaseController
         {
             NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
 
+            if (ncube == null)
+            {
+                throw new IllegalArgumentException("Could not create test: " + testName + ", cube: " + name + " not found for app " + app);
+            }
+
             if (StringUtilities.isEmpty(testName))
             {
-                throw new IllegalArgumentException("Invalid name for test:  '" + testName + "'");
+                throw new IllegalArgumentException("Invalid name during test creation: " + testName + ", cube: " + name + " not found for app " + app);
             }
 
             if (!"SNAPSHOT".equalsIgnoreCase(status))
             {
-                throw new IllegalArgumentException("You cannot generate tests for release cubes");
+                throw new IllegalArgumentException("You cannot generate new tests for release cubes");
             }
 
             Set<String> items = ncube.getRequiredScope();
@@ -961,6 +967,12 @@ public class NCubeController extends BaseController
 
         ApplicationID appId = new ApplicationID(ApplicationID. DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
         NCube ncube = getCube(appId, cubeName);
+
+        if (ncube == null)
+        {
+            markRequestFailed("Could not load cube: " + cubeName + " for app: " + appId);
+            return false;
+        }
 
         for (Object id : ids)
         {
