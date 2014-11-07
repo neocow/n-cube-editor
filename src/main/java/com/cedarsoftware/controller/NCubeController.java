@@ -72,6 +72,7 @@ public class NCubeController extends BaseController
     private NCubeService nCubeService;
     Pattern antStyleReplacementPattern = Pattern.compile("[$][{](.*?)[}]");
     private static final Log LOG = LogFactory.getLog(NCubeController.class);
+    private static final String tempUser = System.getProperty("system.username");
 
 
     public NCubeController(NCubeService service)
@@ -395,7 +396,7 @@ public class NCubeController extends BaseController
             axis.addColumn("Nov");
             axis.addColumn("Dec");
             ncube.addAxis(axis);
-            nCubeService.createCube(ncube, app, version);
+            nCubeService.createCube(ncube, app, version, tempUser);
         }
         catch (Exception e)
         {
@@ -417,7 +418,7 @@ public class NCubeController extends BaseController
                 return false;
             }
 
-            if (!nCubeService.deleteCube(name, app, version))
+            if (!nCubeService.deleteCube(name, app, version, tempUser))
             {
                 markRequestFailed("Cannot delete RELEASE n-cube.");
             }
@@ -515,7 +516,7 @@ public class NCubeController extends BaseController
                 markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
-            nCubeService.duplicateCube(newName, name, newApp, app, newVersion, version, status);
+            nCubeService.duplicateCube(newName, name, newApp, app, newVersion, version, status, tempUser);
         }
         catch (Exception e)
         {
@@ -572,7 +573,7 @@ public class NCubeController extends BaseController
     {
         try
         {
-            nCubeService.addAxis(name, app, version, axisName, type, valueType);
+            nCubeService.addAxis(name, app, version, axisName, type, valueType, tempUser);
         }
         catch (Exception e)
         {
@@ -642,7 +643,7 @@ public class NCubeController extends BaseController
                 markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
-            nCubeService.deleteAxis(name, app, version, axisName);
+            nCubeService.deleteAxis(name, app, version, axisName, tempUser);
         }
         catch (Exception e)
         {
@@ -659,7 +660,7 @@ public class NCubeController extends BaseController
                 markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
-            nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted);
+            nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted, tempUser);
         }
         catch (Exception e)
         {
@@ -682,7 +683,7 @@ public class NCubeController extends BaseController
             }
             NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), name);
             ncube.updateColumns(updatedAxis);
-            nCubeService.updateNCube(ncube);
+            nCubeService.updateNCube(ncube, tempUser);
         }
         catch (Exception e)
         {
@@ -716,7 +717,7 @@ public class NCubeController extends BaseController
                 markRequestFailed("This app and version CANNOT be edited.");
                 return;
             }
-            nCubeService.updateCube(name, app, version, json);
+            nCubeService.updateCube(name, app, version, json, tempUser);
         }
         catch (Exception e)
         {
@@ -919,7 +920,7 @@ public class NCubeController extends BaseController
                         CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false);
                 ncube.setCellById(cellValue, colIds);
             }
-            nCubeService.updateNCube(ncube);
+            nCubeService.updateNCube(ncube, tempUser);
             return true;
         }
         catch(Exception e)
@@ -976,7 +977,7 @@ public class NCubeController extends BaseController
                 Set<Long> colIds = getCoordinate(cellId);
                 ncube.removeCellById(colIds);
             }
-            nCubeService.updateNCube(ncube);
+            nCubeService.updateNCube(ncube, tempUser);
             return true;
         }
         catch (Exception e)
@@ -1027,7 +1028,7 @@ public class NCubeController extends BaseController
                     }
                 }
             }
-            nCubeService.updateNCube(ncube);
+            nCubeService.updateNCube(ncube, tempUser);
             return true;
         }
         catch (Exception e)

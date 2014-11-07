@@ -51,19 +51,19 @@ public class NCubeService
         return NCubeManager.getAppVersions(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, ApplicationID.DEFAULT_VERSION, status));
     }
 
-    public void createCube(NCube ncube, String app, String version)
+    public void createCube(NCube ncube, String app, String version, String username)
     {
-        NCubeManager.createCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), ncube);
+        NCubeManager.createCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), ncube, username);
     }
 
-    public boolean deleteCube(String name, String app, String version)
+    public boolean deleteCube(String name, String app, String version, String username)
     {
-        return NCubeManager.deleteCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), name);
+        return NCubeManager.deleteCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), name, username);
     }
 
-    public void duplicateCube(String newName, String name, String newApp, String app, String newVersion, String version, String status)
+    public void duplicateCube(String newName, String name, String newApp, String app, String newVersion, String version, String status, String username)
     {
-        NCubeManager.duplicate(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), new ApplicationID(ApplicationID.DEFAULT_TENANT, newApp, newVersion, status), name, newName);
+        NCubeManager.duplicate(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), new ApplicationID(ApplicationID.DEFAULT_TENANT, newApp, newVersion, status), name, newName, username);
     }
 
     public void releaseCubes(String app, String version, String newSnapVer)
@@ -77,7 +77,7 @@ public class NCubeService
         NCubeManager.changeVersionValue(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, currVersion, ReleaseStatus.SNAPSHOT.name()), newSnapVer);
     }
 
-    public void addAxis(String name, String app, String version, String axisName, String type, String valueType)
+    public void addAxis(String name, String app, String version, String axisName, String type, String valueType, String username)
     {
         if (StringUtilities.isEmpty(axisName))
         {
@@ -93,13 +93,13 @@ public class NCubeService
 
         Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY);
         ncube.addAxis(axis);
-        NCubeManager.updateCube(id, ncube);
+        NCubeManager.updateCube(id, ncube, username);
     }
 
     /**
      * Delete the specified axis.
      */
-    public void deleteAxis(String name, String app, String version, String axisName)
+    public void deleteAxis(String name, String app, String version, String axisName, String username)
     {
         ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
         NCube ncube = NCubeManager.getCube(id, name);
@@ -114,13 +114,13 @@ public class NCubeService
         }
 
         ncube.deleteAxis(axisName);
-        NCubeManager.updateCube(id, ncube);
+        NCubeManager.updateCube(id, ncube, username);
     }
 
     /**
      * Update the 'informational' part of the Axis (not the columns).
      */
-    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
+    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, String username)
     {
         ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
         NCube ncube = NCubeManager.getCube(id, name);
@@ -155,7 +155,7 @@ public class NCubeService
             axis.setColumnOrder(isSorted ? Axis.SORTED : Axis.DISPLAY);
         }
 
-        NCubeManager.updateCube(id, ncube);
+        NCubeManager.updateCube(id, ncube, username);
     }
 
     /**
@@ -165,7 +165,7 @@ public class NCubeService
      * example, and it will be added as a Range(10, 25) and will go through all the proper
      * "up promotion" before being set into the column.
      */
-    public void updateColumnCell(String name, String app, String version, String colId, String value)
+    public void updateColumnCell(String name, String app, String version, String colId, String value, String username)
     {
         ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
         NCube ncube = NCubeManager.getCube(appId, name);
@@ -191,17 +191,17 @@ public class NCubeService
         }
 
         ncube.updateColumn(id, axis.convertStringToColumnValue(value));
-        NCubeManager.updateCube(appId, ncube);
+        NCubeManager.updateCube(appId, ncube, username);
     }
 
     /**
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
-    public void updateNCube(NCube ncube)
+    public void updateNCube(NCube ncube, String username)
     {
         ApplicationID appId = ncube.getApplicationID();
-        NCubeManager.updateCube(appId, ncube);
+        NCubeManager.updateCube(appId, ncube, username);
     }
 
     public boolean renameCube(String oldName, String newName, String app, String version)
@@ -214,7 +214,7 @@ public class NCubeService
      * Update / Save a single n-cube -or- create / update a batch of n-cubes, represented as a JSON
      * array [] of n-cubes.
      */
-    public void updateCube(String name, String app, String version, String json)
+    public void updateCube(String name, String app, String version, String json, String username)
     {
         json = json.trim();
         List cubes;
@@ -247,11 +247,11 @@ public class NCubeService
 
                 if (NCubeManager.doesCubeExist(id, ncube.getName()))
                 {
-                    NCubeManager.updateCube(id, ncube);
+                    NCubeManager.updateCube(id, ncube, username);
                 }
                 else
                 {
-                    NCubeManager.createCube(id, ncube);
+                    NCubeManager.createCube(id, ncube, username);
                 }
             }
             else
@@ -262,7 +262,7 @@ public class NCubeService
 
                 if ("delete".equalsIgnoreCase(cmd))
                 {
-                    NCubeManager.deleteCube(id, cubeName);
+                    NCubeManager.deleteCube(id, cubeName, username);
                 }
             }
         }
