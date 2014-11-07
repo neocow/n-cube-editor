@@ -1661,24 +1661,14 @@ $(function ()
             return;
         }
         $('#cube_id').val(cube.id);
-        $('#cube_app').val(cube.app);
         $('#cube_name').val(cube.name);
-        $('#cube_version').val(cube.version);
-        $('#cube_status').val(cube.status);
         var date = '';
         if (cube.createDate != undefined)
         {
             date = new Date(cube.createDate.value).format('yyyy-mm-dd HH:MM:ss');
         }
         $('#cube_createDate').val(date);
-        date = '';
-        if (cube.updateDate != undefined)
-        {
-            date = new Date(cube.updateDate.value).format('yyyy-mm-dd HH:MM:ss');
-        }
-        $('#cube_updateDate').val(date);
         $('#cube_createHid').val(cube.createHid);
-        $('#cube_updateHid').val(cube.updateHid);
     }
 
     function clearTestView() {
