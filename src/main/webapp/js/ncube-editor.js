@@ -1662,6 +1662,7 @@ $(function ()
         }
         $('#cube_id').val(cube.id);
         $('#cube_name').val(cube.name);
+        $('#cube_revision').val(cube.revision);
         var date = '';
         if (cube.createDate != undefined)
         {
