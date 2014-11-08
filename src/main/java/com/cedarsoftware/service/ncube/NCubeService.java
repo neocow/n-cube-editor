@@ -38,7 +38,7 @@ public class NCubeService
 {
     public Object[] getNCubes(String pattern, String app, String version, String status)
     {
-        return NCubeManager.getCubeRecords(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
+        return NCubeManager.getCubeRecordsFromDatabase(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
     }
 
     public Object[] getAppNames(String account)
