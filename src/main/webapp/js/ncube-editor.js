@@ -1134,6 +1134,9 @@ $(function ()
 
         if (result.status === true)
         {
+            if (_testData == null) {
+                _testData = [];
+            }
             _testData.push(result.data);
             _testSelectionAnchor = _testData.length-1;
 
