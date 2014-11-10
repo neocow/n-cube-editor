@@ -548,6 +548,22 @@ $(function ()
         {
             deleteCubeOk()
         });
+        $('#restoreCubeMenu').click(function ()
+        {
+            restoreCube()
+        });
+        $('#restoreCubeOk').click(function ()
+        {
+            restoreCubeOk()
+        });
+        $('#revisionHistoryMenu').click(function ()
+        {
+            revisionHistory()
+        });
+        $('#revisionHistoryOk').click(function ()
+        {
+            revisionHistoryOk()
+        });
         $('#deleteParameterOk').click(function ()
         {
             deleteParameterOk();
@@ -2196,6 +2212,127 @@ $(function ()
         {
             _errorId = showNote("Unable to delete n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
+    }
+
+    function restoreCube()
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. No (inbound) references to show.');
+            return;
+        }
+        var ul = $('#deletedCubeList');
+        ul.empty();
+        $('#restoreCubeLabel').html('Restore Cubes in \'(' + _selectedVersion + ', ' + _selectedStatus + ') ?');
+        $('#restoreCubeModal').modal();
+        var result = call("ncubeController.getDeletedCubeList", ["", _selectedApp, _selectedVersion, _selectedStatus]);
+        if (result.status === true)
+        {
+            $.each(result.data, function (index, value)
+            {
+                var li = $("<li/>").attr({'class': 'list-group-item'});
+                var anchor = $('<a href="#"/>');
+                anchor.html(value.name);
+                //anchor.click(function ()
+                //{
+                //    showRefsToCubeClose();
+                //    _selectedCubeName = value;
+                //    loadCube();
+                //});
+                li.append(anchor);
+                ul.append(li);
+            });
+        }
+        else
+        {
+            _errorId = showNote('Error fetching deleted cubes (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
+        }
+    }
+
+    function restoreCubeOk()
+    {
+        $('#restoreCubeModal').modal('hide');
+        var result = call("ncubeController.restoreCube", [_selectedCubeName, _selectedApp, _selectedVersion]);
+        if (result.status === true)
+        {
+            loadAppNames();
+            loadAppListView();
+            var saveSelectedVersion = _selectedVersion;
+            loadVersions();
+            _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
+            loadVersionListView();
+            loadNCubes();
+            loadNCubeListView();
+            loadCube();
+        }
+        else
+        {
+            _errorId = showNote("Unable to restore n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
+        }
+    }
+
+    function revisionHistory()
+    {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        {
+            _errorId = showNote('No n-cube selected. No revision history to show.');
+            return;
+        }
+        var ul = $('#revisionHistoryList');
+        ul.empty();
+        $('#revisionHistoryLabel').html('Revision History for ' + _selectedCubeName);
+        $('#revisionHistoryModal').modal();
+        var result = call("ncubeController.getRevisionHistory", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        if (result.status === true)
+        {
+            $.each(result.data, function (index, value)
+            {
+                var li = $("<li/>").attr({'class': 'list-group-item'});
+                var anchor = $('<a href="#"/>');
+                var date = '';
+                if (value.createDate != undefined)
+                {
+                    date = new Date(value.createDate.value).format('yyyy-mm-dd HH:MM:ss');
+                }
+                anchor.html('rev: ' + value.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + value.createHid);
+                //anchor.click(function ()
+                //{
+                //    showRefsToCubeClose();
+                //    _selectedCubeName = value;
+                //    loadCube();
+                //});
+                li.append(anchor);
+                ul.append(li);
+            });
+        }
+        else
+        {
+            _errorId = showNote('Error fetching revision history (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
+        }
+    }
+
+    function revisionHistoryOk()
+    {
+        $('#revisionHistoryModal').modal('hide');
+        //var result = call("ncubeController.restoreCube", [_selectedCubeName, _selectedApp, _selectedVersion]);
+        //if (result.status === true)
+        //{
+        //    loadAppNames();
+        //    loadAppListView();
+        //    var saveSelectedVersion = _selectedVersion;
+        //    loadVersions();
+        //    _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
+        //    loadVersionListView();
+        //    loadNCubes();
+        //    loadNCubeListView();
+        //    loadCube();
+        //}
+        //else
+        //{
+        //    _errorId = showNote("Unable to restore n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
+        //}
     }
 
     function deleteCurrentTestMenu()
