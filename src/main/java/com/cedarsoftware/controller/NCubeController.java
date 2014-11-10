@@ -72,7 +72,7 @@ public class NCubeController extends BaseController
     private NCubeService nCubeService;
     Pattern antStyleReplacementPattern = Pattern.compile("[$][{](.*?)[}]");
     private static final Log LOG = LogFactory.getLog(NCubeController.class);
-    private static final String tempUser = System.getProperty("system.username");
+    private static final String tempUser = System.getProperty("user.name");
 
 
     public NCubeController(NCubeService service)
@@ -192,6 +192,23 @@ public class NCubeController extends BaseController
             fail(e);
             return null;
         }
+    }
+
+    public Object[] getDeletedCubeList(String filter, String app, String version, String status)
+    {
+        Object[] cubeInfos = nCubeService.getDeletedCubes(filter, app, version, status);
+        return cubeInfos;
+    }
+
+    public void restoreCube(String cubeName, String app, String version, String status)
+    {
+        nCubeService.restoreCube(cubeName, app, version, status);
+    }
+
+    public Object[] getRevisionHistory(String cubeName, String app, String version, String status)
+    {
+        Object[] cubeInfos = nCubeService.getRevisionHistory(cubeName, app, version, status);
+        return cubeInfos;
     }
 
     public Object[] getCubeList(String filter, String app, String version, String status)

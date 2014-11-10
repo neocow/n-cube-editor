@@ -41,6 +41,21 @@ public class NCubeService
         return NCubeManager.getCubeRecordsFromDatabase(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
     }
 
+    public Object[] getDeletedCubes(String pattern, String app, String version, String status)
+    {
+        return NCubeManager.getDeletedCubesFromDatabase(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
+    }
+
+    public void restoreCube(String cubeName, String app, String version, String status)
+    {
+        NCubeManager.restoreCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), cubeName);
+    }
+
+    public Object[] getRevisionHistory(String cubeName, String app, String version, String status)
+    {
+        return NCubeManager.getRevisionHistory(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), cubeName);
+    }
+
     public Object[] getAppNames(String account)
     {
         return NCubeManager.getAppNames(account);

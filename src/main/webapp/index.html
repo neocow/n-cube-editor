@@ -137,7 +137,9 @@
                         <li><a href="#" id="renameCubeMenu">Rename</a></li>
                         <li><a href="#" id="dupeCubeMenu">Duplicate</a></li>
                         <li><a href="#" id="deleteCubeMenu">Delete</a></li>
+                        <li><a href="#" id="restoreCubeMenu">Restore</a></li>
                         <li class="divider"></li>
+                        <li><a href="#" id="revisionHistoryMenu">Show revision history</a></li>
                         <li><a href="#" id="showRefsToMenu">Show inbound references</a></li>
                         <li><a href="#" id="showRefsFromMenu">Show outbound references</a></li>
                         <li><a href="#" id="showReqScopeMenu">Show required scope</a></li>
@@ -448,6 +450,47 @@
     </div>
 </div>
 
+<!-- Restore Cube Modal -->
+<div id="restoreCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="restoreCubeLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="restoreCubeLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body" style="overflow: auto;height:450px">
+                <ul id="deletedCubeList" class="list-group">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't restore</button>
+                <button id="restoreCubeOk" class="btn btn-primary">Restore</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revision History Modal -->
+<div id="revisionHistoryModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="revisionHistoryLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="revisionHistoryLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body" style="overflow: auto;height:450px">
+                <ul id="revisionHistoryList" class="list-group">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <!--<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>-->
+                <button id="revisionHistoryOk" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Add Parameter Modal -->
 <div id="addParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addParameterTitle"
