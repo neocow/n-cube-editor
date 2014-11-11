@@ -42,7 +42,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -70,7 +69,6 @@ public class NCubeController extends BaseController
     private static final Pattern VERSION_REGEX = Pattern.compile("[.]");
     private static final Pattern IS_NUMBER_REGEX = Pattern.compile("^[\\d,.e+-]+$");
     private NCubeService nCubeService;
-    Pattern antStyleReplacementPattern = Pattern.compile("[$][{](.*?)[}]");
     private static final Log LOG = LogFactory.getLog(NCubeController.class);
     private static final String tempUser = System.getProperty("user.name");
 
@@ -102,43 +100,8 @@ public class NCubeController extends BaseController
         return "UD.REF.APP".equals(app) && version.startsWith("0.0.") && "SNAPSHOT".equals(status) || !"UD.REF.APP".equals(app);
     }
 
-    private static List<String> _defaultUrls = new ArrayList<>();
-    public static void setDefaultUrls(List<String> urls) {
-        _defaultUrls = urls;
-    }
-
-    public List<String> resolveDefaultUrls(String app, String version, String status) {
-
-        List<String> urls = new ArrayList<>();
-
-        for (String s : _defaultUrls)
-        {
-            Matcher m = antStyleReplacementPattern.matcher(s);
-            StringBuffer sb = new StringBuffer(s.length());
-            while (m.find())
-            {
-                String text = m.group(1);
-
-                if ("version".equals(text))
-                {
-                    m.appendReplacement(sb, version);
-                }
-                else if ("application".equals(text))
-                {
-                    m.appendReplacement(sb, app);
-                }
-                else if ("status".equals(text))
-                {
-                    m.appendReplacement(sb, status);
-                }
-            }
-            m.appendTail(sb);
-            urls.add(sb.toString());
-        }
-        return urls;
-    }
-
-    public Map runTest(String name, String app, String version, String status, NCubeTest test) {
+    public Map runTest(String name, String app, String version, String status, NCubeTest test)
+    {
         try
         {
             NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
@@ -215,8 +178,6 @@ public class NCubeController extends BaseController
     {
         try
         {
-            List<String> baseUrls = resolveDefaultUrls(app, version, status);
-            NCubeManager.addBaseResourceUrls(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), baseUrls);
             NCube sysInfo = null;
             try
             {
