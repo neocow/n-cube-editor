@@ -46,9 +46,9 @@ public class NCubeService
         return NCubeManager.getDeletedCubesFromDatabase(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
     }
 
-    public void restoreCube(String cubeName, String app, String version, String status)
+    public void restoreCube(String cubeName, String app, String version, String status, String username)
     {
-        NCubeManager.restoreCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), cubeName);
+        NCubeManager.restoreCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), cubeName, username);
     }
 
     public Object[] getRevisionHistory(String cubeName, String app, String version, String status)
