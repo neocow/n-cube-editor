@@ -202,7 +202,7 @@ public class NCubeController extends BaseController
 
     public void restoreCube(String cubeName, String app, String version, String status)
     {
-        nCubeService.restoreCube(cubeName, app, version, status);
+        nCubeService.restoreCube(cubeName, app, version, status, tempUser);
     }
 
     public Object[] getRevisionHistory(String cubeName, String app, String version, String status)
