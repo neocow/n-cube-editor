@@ -19,7 +19,6 @@
         <property name="dataSource" ref="ncubeDataSource" />
     </bean>
 
-    <tx:annotation-driven transaction-manager="ncubeTransactionManager" />
     <tx:advice id="ncubeTxAdvice" transaction-manager="ncubeTransactionManager">
         <tx:attributes>
             <tx:method name="*" propagation="REQUIRED"/>
