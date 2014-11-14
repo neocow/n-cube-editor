@@ -2227,25 +2227,18 @@ $(function ()
         }
         var ul = $('#deletedCubeList');
         ul.empty();
-        $('#restoreCubeLabel').html('Restore Cubes in \'(' + _selectedVersion + ', ' + _selectedStatus + ') ?');
-        $('#restoreCubeModal').modal();
-        var result = call("ncubeController.getDeletedCubeList", ["", _selectedApp, _selectedVersion, _selectedStatus]);
+        $('#restoreCubeLabel').html('Restore Cubes in ' + _selectedVersion + ', ' + _selectedStatus);
+        var result = call("ncubeController.getDeletedCubeList", ["", _selectedApp, _selectedVersion]);
         if (result.status === true)
         {
             $.each(result.data, function (index, value)
             {
-                var li = $("<li/>").attr({'class': 'list-group-item'});
-                var anchor = $('<a href="#"/>');
-                anchor.html(value.name);
-                //anchor.click(function ()
-                //{
-                //    showRefsToCubeClose();
-                //    _selectedCubeName = value;
-                //    loadCube();
-                //});
-                li.append(anchor);
-                ul.append(li);
+                var label = $('<label/>').prop({class: 'checkbox'}).text(value.name);
+                var input = $('<input>').prop({class: 'restoreCheck', 'type': 'checkbox'});
+                input.prependTo(label); // <=== create input without the closing tag
+                ul.append(label);
             });
+            $('#restoreCubeModal').modal();
         }
         else
         {
@@ -2256,15 +2249,20 @@ $(function ()
     function restoreCubeOk()
     {
         $('#restoreCubeModal').modal('hide');
-        var result = call("ncubeController.restoreCube", [_selectedCubeName, _selectedApp, _selectedVersion]);
+
+        var input = $('.restoreCheck');
+        var cubesToRestore = [];
+        $.each(input, function (index, label)
+        {
+            if ($(this).is(':checked'))
+            {
+                cubesToRestore.push($(this).parent().text());
+            }
+        });
+
+        var result = call("ncubeController.restoreCube", [_selectedApp, _selectedVersion, _selectedStatus, cubesToRestore]);
         if (result.status === true)
         {
-            loadAppNames();
-            loadAppListView();
-            var saveSelectedVersion = _selectedVersion;
-            loadVersions();
-            _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
-            loadVersionListView();
             loadNCubes();
             loadNCubeListView();
             loadCube();

@@ -157,15 +157,15 @@ public class NCubeController extends BaseController
         }
     }
 
-    public Object[] getDeletedCubeList(String filter, String app, String version, String status)
+    public Object[] getDeletedCubeList(String filter, String app, String version)
     {
-        Object[] cubeInfos = nCubeService.getDeletedCubes(filter, app, version, status);
+        Object[] cubeInfos = nCubeService.getDeletedCubes(filter, app, version);
         return cubeInfos;
     }
 
-    public void restoreCube(String cubeName, String app, String version, String status)
+    public void restoreCube(String app, String version, String status, Object[] cubeNames)
     {
-        nCubeService.restoreCube(cubeName, app, version, status, tempUser);
+        nCubeService.restoreCube(app, version, status, cubeNames, tempUser);
     }
 
     public Object[] getRevisionHistory(String cubeName, String app, String version, String status)
