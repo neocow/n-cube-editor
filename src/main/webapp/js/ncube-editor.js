@@ -184,7 +184,9 @@ $(function ()
 
         $(document).keydown(function(e)
         {
-            if (_activeTab == 'ncubeTab')
+            var isModalDisplayed = $('body').hasClass('modal-open');
+
+            if (_activeTab == 'ncubeTab' && !isModalDisplayed)
             {
                 if (e.metaKey || e.ctrlKey)
                 {   // Control Key (command in the case of Mac)
