@@ -861,6 +861,9 @@ public class NCubeController extends BaseController
     {
         try
         {
+            // TODO: Set Thread-aware OutputStream into System.out and System.err (may need to differentiate
+            // between request threads - set value on Thread to help) - this will allow writing non-request
+            // output into original system.err, system.out
             NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
             return ncube.getCell(input);
         }
