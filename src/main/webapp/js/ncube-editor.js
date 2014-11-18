@@ -1432,6 +1432,34 @@ $(function ()
                 editColumns(col.attr('data-axis'));
             });
         });
+
+        $('.cmd-url').each(function()
+        {
+            var anchor = $(this);
+            anchor.click(function()
+            {
+                clearError();
+                var link = anchor.html();
+                if (link.indexOf('http:') == 0 || link.indexOf('https:') == 0 || link.indexOf('file:') == 0)
+                {
+                    window.open(link);
+                }
+                else
+                {
+                    var result = call("ncubeController.resolveRelativeUrl", [_selectedApp, _selectedVersion, _selectedStatus, link]);
+                    if (result.status === true && result.data)
+                    {
+                        link = result.data;
+                        window.open(link);
+                    }
+                    else
+                    {
+                        var msg = result.data ? result.data : "Unable to resolve relative URL against entries sys.classpath";
+                        _errorId = showNote('Unable to open ' + link + ':<hr class="hr-small"/>' + msg);
+                    }
+                }
+            });
+        });
         processCellClicks();
         buildCubeNameLinks();
     }

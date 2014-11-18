@@ -1016,6 +1016,22 @@ public class NCubeController extends BaseController
         }
     }
 
+    public String resolveRelativeUrl(String app, String version, String status, String relativeUrl)
+    {
+        try
+        {
+            String absUrl = NCubeManager.resolveRelativeUrl(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), relativeUrl);
+            return absUrl;
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
+    }
+
+    // ----------------------------------------- utility (non-API) methods ---------------------------------------------
+
     private static Object convertStringToValue(String origValue)
     {
         if (origValue == null || StringUtilities.isEmpty(origValue))
