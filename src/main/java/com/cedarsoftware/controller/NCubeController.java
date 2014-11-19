@@ -42,6 +42,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 /**
@@ -71,6 +72,7 @@ public class NCubeController extends BaseController
     private NCubeService nCubeService;
     private static final Log LOG = LogFactory.getLog(NCubeController.class);
     private static final String tempUser = System.getProperty("user.name");
+    static final AtomicLong baseAxisId = new AtomicLong(1);
 
 
     public NCubeController(NCubeService service)
@@ -360,7 +362,7 @@ public class NCubeController extends BaseController
             }
 
             NCube ncube = new NCube(name);
-            Axis axis = new Axis("Month", AxisType.DISCRETE, AxisValueType.STRING, false, Axis.DISPLAY);
+            Axis axis = new Axis("Month", AxisType.DISCRETE, AxisValueType.STRING, false, Axis.DISPLAY, baseAxisId.getAndIncrement());
             axis.addColumn("Jan");
             axis.addColumn("Feb");
             axis.addColumn("Mar");
