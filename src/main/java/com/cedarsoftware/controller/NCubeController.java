@@ -29,12 +29,14 @@ import com.cedarsoftware.util.io.JsonWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -71,7 +73,6 @@ public class NCubeController extends BaseController
     private static final Pattern IS_NUMBER_REGEX = Pattern.compile("^[\\d,.e+-]+$");
     private NCubeService nCubeService;
     private static final Log LOG = LogFactory.getLog(NCubeController.class);
-    private static final String tempUser = System.getProperty("user.name");
     static final AtomicLong baseAxisId = new AtomicLong(1);
 
 
@@ -80,26 +81,63 @@ public class NCubeController extends BaseController
         nCubeService = service;
     }
 
-    private static boolean isAllowed(String app, String version)
+    private String getUserForDatabase()
     {
-        return isAllowed(app, version, "SNAPSHOT");
+        String user = getUser();
+        return StringUtilities.length(user) > 10 ? user.substring(0, 10) : user;
     }
 
-    //temp condition!!
-    private static boolean isAllowed(String app, String version, String status)
+    private static String getUser()
     {
-        // Uncomment to dump HTTP request headers
-//        HttpServletRequest request = JsonCommandServlet.servletRequest.get();
-//        Enumeration e = request.getHeaderNames();
-//        System.out.println("HTTP Request Headers:");
-//        while (e.hasMoreElements())
-//        {
-//            String headerName = (String) e.nextElement();
-//            System.out.print(headerName);
-//            System.out.print(" = ");
-//            System.out.println(request.getHeader(headerName));
-//        }
-        return "UD.REF.APP".equals(app) && version.startsWith("0.0.") && "SNAPSHOT".equals(status) || !"UD.REF.APP".equals(app);
+        String user = null;
+        HttpServletRequest request = JsonCommandServlet.servletRequest.get();
+        Enumeration e = request.getHeaderNames();
+        while (e.hasMoreElements())
+        {
+            String headerName = (String) e.nextElement();
+            if ("smuser".equalsIgnoreCase(headerName))
+            {
+                user = request.getHeader(headerName);
+                break;
+            }
+        }
+
+        if (StringUtilities.isEmpty(user))
+        {
+            user = System.getProperty("user.name");
+        }
+
+        return user;
+    }
+
+    private boolean isAllowed(String app, String version)
+    {
+        String user = getUser();
+        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
+        Map input = new HashMap();
+        input.put("username", user);
+        input.put("function", "admin");
+        return (boolean) adminCube.getCell(input);
+    }
+
+    private boolean isAllowed(String app, String version, String cubeName)
+    {
+        if (StringUtilities.isEmpty(cubeName))
+        {
+            return false;
+        }
+
+        String user = getUser();
+        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
+        if (adminCube == null)
+        {
+            return false;
+        }
+        String permFunc = cubeName.toLowerCase().startsWith("sys.") ? "admin" : "edit";
+        Map input = new HashMap();
+        input.put("username", user);
+        input.put("function", permFunc);
+        return (boolean) adminCube.getCell(input);
     }
 
     public Map runTest(String name, String app, String version, String status, NCubeTest test)
@@ -167,7 +205,7 @@ public class NCubeController extends BaseController
 
     public void restoreCube(String app, String version, String status, Object[] cubeNames)
     {
-        nCubeService.restoreCube(app, version, status, cubeNames, tempUser);
+        nCubeService.restoreCube(app, version, status, cubeNames, getUserForDatabase());
     }
 
     public Object[] getRevisionHistory(String cubeName, String app, String version, String status)
@@ -355,9 +393,9 @@ public class NCubeController extends BaseController
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, name))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to create cube: " + name + " in app: " + app);
                 return;
             }
 
@@ -376,7 +414,7 @@ public class NCubeController extends BaseController
             axis.addColumn("Nov");
             axis.addColumn("Dec");
             ncube.addAxis(axis);
-            nCubeService.createCube(ncube, app, version, tempUser);
+            nCubeService.createCube(ncube, app, version, getUserForDatabase());
         }
         catch (Exception e)
         {
@@ -388,17 +426,17 @@ public class NCubeController extends BaseController
      * Delete an n-cube (SNAPSHOT only).
      * @return boolean true if successful, otherwise a String error message.
      */
-    public boolean deleteCube(String name, String app, String version)
+    public boolean deleteCube(String cubeName, String app, String version)
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, cubeName))
             {
-                markRequestFailed("This app and version CANNOT be edited");
+                markRequestFailed("You do not have permission to delete cube: " + cubeName + " in app: " + app);
                 return false;
             }
 
-            if (!nCubeService.deleteCube(name, app, version, tempUser))
+            if (!nCubeService.deleteCube(cubeName, app, version, getUserForDatabase()))
             {
                 markRequestFailed("Cannot delete RELEASE n-cube.");
             }
@@ -491,12 +529,12 @@ public class NCubeController extends BaseController
     {
         try
         {
-            if (!isAllowed(newApp, newVersion))
+            if (!isAllowed(newApp, newVersion, name))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to duplicate cube: " + name + " in app: " + app);
                 return;
             }
-            nCubeService.duplicateCube(newName, name, newApp, app, newVersion, version, status, tempUser);
+            nCubeService.duplicateCube(newName, name, newApp, app, newVersion, version, status, getUserForDatabase());
         }
         catch (Exception e)
         {
@@ -513,9 +551,9 @@ public class NCubeController extends BaseController
     {
         try
         {
-            if (!isAllowed(app, "never"))
+            if (!isAllowed(app, version))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to release cubes in app: " + app);
                 return;
             }
             nCubeService.releaseCubes(app, version, newSnapVer);
@@ -533,9 +571,9 @@ public class NCubeController extends BaseController
     {
         try
         {
-            if (!isAllowed(app, "never"))
+            if (!isAllowed(app, currVersion))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to change version value in app: " + app);
                 return;
             }
             nCubeService.changeVersionValue(app, currVersion, newSnapVer);
@@ -553,7 +591,12 @@ public class NCubeController extends BaseController
     {
         try
         {
-            nCubeService.addAxis(name, app, version, axisName, type, valueType, tempUser);
+            if (!isAllowed(app, version, name))
+            {
+                markRequestFailed("You do not have permission to add axis to cube: " + name + " in app: " + app);
+                return;
+            }
+            nCubeService.addAxis(name, app, version, axisName, type, valueType, getUserForDatabase());
         }
         catch (Exception e)
         {
@@ -614,16 +657,16 @@ public class NCubeController extends BaseController
     /**
      * Delete the passed in axis.
      */
-    public void deleteAxis(String name, String app, String version, String axisName)
+    public void deleteAxis(String cubeName, String app, String version, String axisName)
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, cubeName))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to delete axis for cube: " + cubeName + " in app: " + app);
                 return;
             }
-            nCubeService.deleteAxis(name, app, version, axisName, tempUser);
+            nCubeService.deleteAxis(cubeName, app, version, axisName, getUserForDatabase());
         }
         catch (Exception e)
         {
@@ -631,16 +674,17 @@ public class NCubeController extends BaseController
         }
     }
 
-    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
+    public void updateAxis(String cubeName, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, cubeName))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to update axis for cube: " + cubeName + " in app: " + app);
                 return;
             }
-            nCubeService.updateAxis(name, app, version, origAxisName, axisName, hasDefault, isSorted, tempUser);
+
+            nCubeService.updateAxis(cubeName, app, version, origAxisName, axisName, hasDefault, isSorted, getUserForDatabase());
         }
         catch (Exception e)
         {
@@ -652,18 +696,19 @@ public class NCubeController extends BaseController
      * Update an entire set of columns on an axis at one time.  The updatedAxis is not a real axis,
      * but treated like an Axis-DTO where the list of columns within the axis are in display order.
      */
-    public void updateAxisColumns(String name, String app, String version, Axis updatedAxis)
+    public void updateAxisColumns(String cubeName, String app, String version, Axis updatedAxis)
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, cubeName))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to update columns on cube: " + cubeName + " in app: " + app);
                 return;
             }
-            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), name);
+
+            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), cubeName);
             ncube.updateColumns(updatedAxis);
-            nCubeService.updateNCube(ncube, tempUser);
+            nCubeService.updateNCube(ncube, getUserForDatabase());
         }
         catch (Exception e)
         {
@@ -675,9 +720,9 @@ public class NCubeController extends BaseController
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, oldName))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to rename cube: " + oldName + " in app: " + app);
                 return;
             }
             nCubeService.renameCube(oldName, newName, app, version);
@@ -688,16 +733,16 @@ public class NCubeController extends BaseController
         }
     }
 
-    public void saveJson(String name, String app, String version, String json)
+    public void saveJson(String cubeName, String app, String version, String json)
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, cubeName))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permission to save JSON for cube: " + cubeName + " in app: " + app);
                 return;
             }
-            nCubeService.updateCube(name, app, version, json, tempUser);
+            nCubeService.updateCube(cubeName, app, version, json, getUserForDatabase());
         }
         catch (Exception e)
         {
@@ -859,37 +904,20 @@ public class NCubeController extends BaseController
         return null;
     }
 
-    public Object getCell(String name, String app, String version, String status, Map input)
-    {
-        try
-        {
-            // TODO: Set Thread-aware OutputStream into System.out and System.err (may need to differentiate
-            // between request threads - set value on Thread to help) - this will allow writing non-request
-            // output into original system.err, system.out
-            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), name);
-            return ncube.getCell(input);
-        }
-        catch (Exception e)
-        {
-            fail(e);
-            return null;
-        }
-    }
-
     /**
      * In-place update of a cell.
      */
-    public boolean updateCell(String name, String app, String version, Object[] ids, CellInfo cellInfo)
+    public boolean updateCell(String cubeName, String app, String version, Object[] ids, CellInfo cellInfo)
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, cubeName))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permissions to update cells in cube: " + cubeName + " for app: " + app);
                 return false;
             }
 
-            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), name);
+            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), cubeName);
             Set<Long> colIds = getCoordinate(ids);
 
             if (cellInfo == null)
@@ -903,7 +931,7 @@ public class NCubeController extends BaseController
                         CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false);
                 ncube.setCellById(cellValue, colIds);
             }
-            nCubeService.updateNCube(ncube, tempUser);
+            nCubeService.updateNCube(ncube, getUserForDatabase());
             return true;
         }
         catch(Exception e)
@@ -935,9 +963,9 @@ public class NCubeController extends BaseController
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, cubeName))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permissions to cut cells from cube: " + cubeName + " for app: " + app);
                 return false;
             }
 
@@ -960,7 +988,7 @@ public class NCubeController extends BaseController
                 Set<Long> colIds = getCoordinate(cellId);
                 ncube.removeCellById(colIds);
             }
-            nCubeService.updateNCube(ncube, tempUser);
+            nCubeService.updateNCube(ncube, getUserForDatabase());
             return true;
         }
         catch (Exception e)
@@ -974,9 +1002,9 @@ public class NCubeController extends BaseController
     {
         try
         {
-            if (!isAllowed(app, version))
+            if (!isAllowed(app, version, cubeName))
             {
-                markRequestFailed("This app and version CANNOT be edited.");
+                markRequestFailed("You do not have permissions to paste into cube: " + cubeName + " for app: " + app);
                 return false;
             }
 
@@ -1011,7 +1039,7 @@ public class NCubeController extends BaseController
                     }
                 }
             }
-            nCubeService.updateNCube(ncube, tempUser);
+            nCubeService.updateNCube(ncube, getUserForDatabase());
             return true;
         }
         catch (Exception e)
