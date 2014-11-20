@@ -1611,7 +1611,7 @@ $(function ()
 
         var failedCheck = {};
         // Add links to all n-cubes within columns and cells
-        var regex = new RegExp('(^|[^a-zA-Z0-9_])(' + cubeNames.join("|") + ')([^a-zA-Z0-9_]|$)', "gi");
+        var regex = new RegExp(cubeNames.join("|"), "gi");
         $('.column, .cell').each(function ()
         {
             var cell = $(this);
