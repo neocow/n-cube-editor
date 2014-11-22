@@ -112,34 +112,32 @@ public class NCubeController extends BaseController
 
     private boolean isAllowed(String app, String version)
     {
-        return true;
-//        String user = getUser();
-//        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
-//        Map input = new HashMap();
-//        input.put("username", user);
-//        input.put("function", "admin");
-//        return (boolean) adminCube.getCell(input);
+        String user = getUser();
+        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
+        Map input = new HashMap();
+        input.put("username", user);
+        input.put("function", "admin");
+        return (boolean) adminCube.getCell(input);
     }
 
     private boolean isAllowed(String app, String version, String cubeName)
     {
-        return true;
-//        if (StringUtilities.isEmpty(cubeName))
-//        {
-//            return false;
-//        }
-//
-//        String user = getUser();
-//        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
-//        if (adminCube == null)
-//        {
-//            return false;
-//        }
-//        String permFunc = cubeName.toLowerCase().startsWith("sys.") ? "admin" : "edit";
-//        Map input = new HashMap();
-//        input.put("username", user);
-//        input.put("function", permFunc);
-//        return (boolean) adminCube.getCell(input);
+        if (StringUtilities.isEmpty(cubeName))
+        {
+            return false;
+        }
+
+        String user = getUser();
+        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
+        if (adminCube == null)
+        {
+            return false;
+        }
+        String permFunc = cubeName.toLowerCase().startsWith("sys.") ? "admin" : "edit";
+        Map input = new HashMap();
+        input.put("username", user);
+        input.put("function", permFunc);
+        return (boolean) adminCube.getCell(input);
     }
 
     public Map runTest(String name, String app, String version, String status, NCubeTest test)
