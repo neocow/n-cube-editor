@@ -112,32 +112,34 @@ public class NCubeController extends BaseController
 
     private boolean isAllowed(String app, String version)
     {
-        String user = getUser();
-        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
-        Map input = new HashMap();
-        input.put("username", user);
-        input.put("function", "admin");
-        return (boolean) adminCube.getCell(input);
+        return true;
+//        String user = getUser();
+//        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
+//        Map input = new HashMap();
+//        input.put("username", user);
+//        input.put("function", "admin");
+//        return (boolean) adminCube.getCell(input);
     }
 
     private boolean isAllowed(String app, String version, String cubeName)
     {
-        if (StringUtilities.isEmpty(cubeName))
-        {
-            return false;
-        }
-
-        String user = getUser();
-        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
-        if (adminCube == null)
-        {
-            return false;
-        }
-        String permFunc = cubeName.toLowerCase().startsWith("sys.") ? "admin" : "edit";
-        Map input = new HashMap();
-        input.put("username", user);
-        input.put("function", permFunc);
-        return (boolean) adminCube.getCell(input);
+        return true;
+//        if (StringUtilities.isEmpty(cubeName))
+//        {
+//            return false;
+//        }
+//
+//        String user = getUser();
+//        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
+//        if (adminCube == null)
+//        {
+//            return false;
+//        }
+//        String permFunc = cubeName.toLowerCase().startsWith("sys.") ? "admin" : "edit";
+//        Map input = new HashMap();
+//        input.put("username", user);
+//        input.put("function", permFunc);
+//        return (boolean) adminCube.getCell(input);
     }
 
     public Map runTest(String name, String app, String version, String status, NCubeTest test)
@@ -998,7 +1000,7 @@ public class NCubeController extends BaseController
         }
     }
 
-    public boolean pasteCells(String app, String version, String status, String cubeName, Object[] values, Object[] coords)
+    public boolean pasteCells(String app, String version, String cubeName, Object[] values, Object[] coords)
     {
         try
         {
@@ -1008,18 +1010,23 @@ public class NCubeController extends BaseController
                 return false;
             }
 
-            if (values == null || values.length == 0 || coords == null || coords.length == 0 || coords.length > values.length)
+            if (values == null || values.length == 0 || coords == null || coords.length == 0)
             {
-                markRequestFailed("Values and coordinates must not be empty or length of 0.  Also, there must be at the same or more values than coordinates.");
+                markRequestFailed("Values and coordinates must not be empty or length of 0.");
                 return false;
             }
 
-            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), cubeName);
+            ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
+            NCube ncube = getCube(appId, cubeName);
+            if (ncube == null)
+            {
+                markRequestFailed("Cube: " + cubeName + " not found for app: " + appId);
+                return false;
+            }
             for (int i=0; i < coords.length; i++)
             {
                 Object[] row = (Object[]) coords[i];
-                Object[] valueRow = (Object[]) values[i];
-                if (row == null || row.length < 1)
+                if (ArrayUtilities.isEmpty(row))
                 {
                     break;
                 }
@@ -1028,7 +1035,7 @@ public class NCubeController extends BaseController
                 {
                     Object[] ids = (Object[]) row[j];
                     Set<Long> cellId = getCoordinate(ids);
-                    Object value = convertStringToValue((String) valueRow[j]);
+                    Object value = convertStringToValue(getValueRepeatIfNecessary(values, i, j));
                     if (value == null)
                     {
                         ncube.removeCellById(cellId);
@@ -1047,6 +1054,24 @@ public class NCubeController extends BaseController
             fail(e);
             return false;
         }
+    }
+
+    private static String getValueRepeatIfNecessary(Object[] values, int row, int col)
+    {
+        if (row > (values.length - 1))
+        {
+            row %= values.length;
+        }
+        Object[] valueRow = (Object[]) values[row];
+        if (ArrayUtilities.isEmpty(valueRow))
+        {
+            return null;
+        }
+        if (col > (valueRow.length - 1))
+        {
+            col %= valueRow.length;
+        }
+        return (String) valueRow[col];
     }
 
     public String resolveRelativeUrl(String app, String version, String status, String relativeUrl)

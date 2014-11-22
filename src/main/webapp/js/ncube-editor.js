@@ -218,7 +218,8 @@ $(function ()
         {
             return;
         }
-        firstCell = $(firstCell[0])
+        var lastCell = $(firstCell[firstCell.length - 1]);
+        firstCell = $(firstCell[0]);
 
         var table = $(".table-ncube")[0];
         var tableRows = table.rows;
@@ -226,6 +227,12 @@ $(function ()
         // Location of first selected cell in 2D spreadsheet view.
         var row = getRow(firstCell);
         var col = getCol(firstCell) - countTH(tableRows[row].cells);
+
+        // Location of the last selected cell in 2D spreadsheet view.
+        var lastRow = getRow(lastCell);
+        var lastCol = getCol(lastCell) - countTH(tableRows[lastRow].cells);
+
+        var onlyOneCellSelected = row == lastRow && col == lastCol;
 
         // Point focus to hidden text area so that it will receive the pasted content
         _focusedElement = $(':focus');
@@ -241,23 +248,24 @@ $(function ()
         // Parse the clipboard content and build-up coordinates where this content will be pasted.
         var values = [];
         var coords = [];
+        var firstRow = row;
         var lines = content.split('\n');
 
-        for (var i=0; i < lines.length; i++)
+        for (var i = 0; i < lines.length; i++)
         {
             if (lines[i] && lines[i] != "")
             {
                 var strValues = lines[i].split('\t');
                 values.push(strValues);
                 var rowCoords = [];
-                for (var j=0; j < strValues.length; j++)
+                for (var j = 0; j < strValues.length; j++)
                 {
                     var numTH = countTH(tableRows[row].cells);
                     var colIdx = col + j + numTH;
                     if (colIdx < tableRows[row].cells.length)
                     {   // Do attempt to read past edge of 2D grid
                         var domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
-                        var jqCell = $(domCell);                             // Now it's a jQuery object.
+                        var jqCell = $(domCell);                    // Now it's a jQuery object.
                         rowCoords[j] = getCellId(jqCell);
                     }
                 }
@@ -271,8 +279,29 @@ $(function ()
             }
         }
 
+        // If more than one cell is selected, create coords for all selected cells.
+        // Server will repeat values, properly throughout the selected 'clip' region.
+        if (!onlyOneCellSelected)
+        {
+            coords = [];
+            row = firstRow;
+            for (var r = firstRow; r <= lastRow; r++)
+            {
+                rowCoords = [];
+                for (var c = col; c <= lastCol; c++)
+                {
+                    numTH = countTH(tableRows[row].cells);
+                    domCell = tableRows[row].cells[c + numTH]; // This is a DOM "TD" element
+                    jqCell = $(domCell);                    // Now it's a jQuery object.
+                    rowCoords[c - col] = getCellId(jqCell);
+                }
+                coords.push(rowCoords);
+                row++;
+            }
+        }
+
         // Paste cells from database
-        var result = call("ncubeController.pasteCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, values, coords]);
+        var result = call("ncubeController.pasteCells", [_selectedApp, _selectedVersion, _selectedCubeName, values, coords]);
 
         if (result.status)
         {
@@ -280,6 +309,7 @@ $(function ()
         }
         else
         {
+            clearError();
             _errorId = showNote('Error pasting cells:<hr class="hr-small"/>' + result.data);
         }
     }
