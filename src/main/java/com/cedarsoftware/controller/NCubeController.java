@@ -301,7 +301,7 @@ public class NCubeController extends BaseController
         {
             ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status);
             NCube ncube = getCube(appId, name);
-            String html = ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month");
+            String html = ncube.toHtml("trait", "traits", "businessDivisionCode", "bu", "month", "months", "col", "column", "cols", "columns");
             return html;
         }
         catch (Exception e)
