@@ -3099,7 +3099,8 @@ $(function ()
         }
     }
 
-    function showTestResult(success, message) {
+    function showTestResult(success, message)
+    {
         _testResultsDiv.hide();
 
         var testResults = $('#testResults');
