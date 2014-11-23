@@ -175,10 +175,10 @@ public class NCubeController extends BaseController
 
                 try
                 {
-                    Map assOutput = new LinkedHashMap<>(output);
+                    Map assertionOutput = new LinkedHashMap<>(output);
                     RuleInfo ruleInfo = new RuleInfo();
-                    assOutput.put(NCube.RULE_EXEC_INFO, ruleInfo);
-                    args.put("output", assOutput);
+                    assertionOutput.put(NCube.RULE_EXEC_INFO, ruleInfo);
+                    args.put("output", assertionOutput);
                     if (!NCube.isTrue(exp.execute(args)))
                     {
                         errors.add("[assertion " + i + " failed]: " + exp.getCmd());
