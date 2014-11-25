@@ -497,6 +497,9 @@ $(function ()
             if (result.status === true)
             {
                 setDirtyStatus(false);
+                loadNCubes();
+                loadNCubeListView();
+                loadCube();
             }
             else
             {
