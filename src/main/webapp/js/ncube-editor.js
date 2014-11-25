@@ -720,6 +720,10 @@ $(function ()
         {
             editCellOK()
         });
+        $('#dataChangeType').click(function()
+        {
+            changeType();
+        });
 
         //  Set focused field when dialog appears so user can just start typing.
         _addParameterModal.on('shown.bs.modal', function () {
@@ -2245,12 +2249,11 @@ $(function ()
 
     function deleteCube()
     {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (!ensureModifiable('Cannot delete n-cube.'))
         {
-            _errorId = showNote('No n-cube selected. Nothing to delete.');
             return;
         }
+
         $('#deleteCubeLabel').html('Delete \'' + _selectedCubeName + '\' (' + _selectedVersion + ', ' + _selectedStatus + ') ?');
         $('#deleteCubeModal').modal();
     }
@@ -2442,8 +2445,6 @@ $(function ()
         saveAllTests(true);
     }
 
-
-
     function renameCurrentTestMenu()
     {
         clearError();
@@ -2481,12 +2482,11 @@ $(function ()
 
     function renameCube()
     {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (ensureModifiable('Unable to rename cube.'))
         {
-            _errorId = showNote('No n-cube selected. Nothing to rename.');
             return;
         }
+
         $('#renameCubeAppName').val(_selectedApp);
         $('#renameCubeVersion').val(_selectedVersion);
         $('#renameCubeName').val(_selectedCubeName);
@@ -2757,17 +2757,11 @@ $(function ()
 
     function releaseCubes()
     {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (!ensureModifiable('Release of SNAP cannot happen.'))
         {
-            _errorId = showNote('No n-cube selected. No version to release.');
             return;
         }
-        if (_selectedStatus == "RELEASE")
-        {
-            _errorId = showNote('Only a SNAPSHOT version can be released.');
-            return;
-        }
+
         $('#releaseCubesLabel').html('Release ' + _selectedApp + ' ' + _selectedVersion + ' SNAPSHOT ?');
         $('#releaseCubesAppName').val(_selectedApp);
         $('#releaseCubesModal').modal();
@@ -2796,17 +2790,11 @@ $(function ()
 
     function changeVersion()
     {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (!ensureModifiable('Version cannot be changed.'))
         {
-            _errorId = showNote('No n-cube selected. No SNAPSHOT version can be changed.');
             return;
         }
-        if (_selectedStatus == "RELEASE")
-        {
-            _errorId = showNote('Only a SNAPSHOT version can be changed.');
-            return;
-        }
+
         $('#changeVerLabel').html('Change ' + _selectedApp + ' ' + _selectedVersion + ' ?');
         $('#changeVerModal').modal();
     }
@@ -2833,17 +2821,11 @@ $(function ()
 
     function addAxis()
     {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (!ensureModifiable('Axis cannot be added.'))
         {
-            _errorId = showNote('No n-cube selected. Axis cannot be added.');
             return;
         }
-        if (_selectedStatus == "RELEASE")
-        {
-            _errorId = showNote('Only a SNAPSHOT version can be modified.');
-            return;
-        }
+
         var generalTypes = ['STRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
         var ruleTypes = ['EXPRESSION'];
         buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected)
@@ -2883,17 +2865,11 @@ $(function ()
 
     function deleteAxis(axisName)
     {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (!ensureModifiable('Axis cannot be deleted.'))
         {
-            _errorId = showNote('No n-cube selected. Axis cannot be deleted.');
             return;
         }
-        if (_selectedStatus == "RELEASE")
-        {
-            _errorId = showNote('Only a SNAPSHOT version can be modified.');
-            return;
-        }
+
         $('#deleteAxisName').val(axisName);
         $('#deleteAxisModal').modal();
     }
@@ -2970,7 +2946,8 @@ $(function ()
         return test;
     }
 
-    function retrieveParameters() {
+    function retrieveParameters()
+    {
         var parameters = $("#testParameters > div[parameter-id]");
         var coord = new Array(parameters.length);
 
@@ -2986,7 +2963,8 @@ $(function ()
         return coord;
     }
 
-    function retrieveAssertions() {
+    function retrieveAssertions()
+    {
         var assertions = $('#testAssertions > div[parameter-id]');
         var array = new Array(assertions.length);
 
@@ -2997,7 +2975,8 @@ $(function ()
         return array;
     }
 
-    function retrieveCellInfo(group, hasSelector) {
+    function retrieveCellInfo(group, hasSelector)
+    {
         var cell = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
         cell["value"] = group.find('input').val();
@@ -3012,7 +2991,8 @@ $(function ()
         return cell;
     }
 
-    function addParameterMenu() {
+    function addParameterMenu()
+    {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
@@ -3028,7 +3008,8 @@ $(function ()
 
     }
 
-    function addParameterOk() {
+    function addParameterOk()
+    {
         _addParameterModal.modal('hide');
 
         var id = $('#addParameterField').val();
@@ -3123,17 +3104,11 @@ $(function ()
 
     function updateAxis(axisName)
     {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (!ensureModifiable('Axis cannot be updated.'))
         {
-            _errorId = showNote('No n-cube selected. Axis cannot be updated.');
-            return;
+            return false;
         }
-        if (_selectedStatus == "RELEASE")
-        {
-            _errorId = showNote('Only a SNAPSHOT version can be modified.');
-            return;
-        }
+
         var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
         var axis;
         if (result.status === true)
@@ -3223,19 +3198,29 @@ $(function ()
         });
     }
 
-    function editColumns(axisName)
+    function ensureModifiable(operation)
     {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
-            _errorId = showNote('No n-cube selected. Columns cannot be edited.');
-            return;
+            _errorId = showNote(operation + ' No n-cube selected.');
+            return false;
         }
         if (_selectedStatus == "RELEASE")
         {
-            _errorId = showNote('Only a SNAPSHOT version can be modified.');
-            return;
+            _errorId = showNote(operation + ' Only a SNAPSHOT version can be modified.');
+            return false;
         }
+        return true;
+    }
+
+    function editColumns(axisName)
+    {
+        if (!ensureModifiable('Columns cannot be edited.'))
+        {
+            return false;
+        }
+
         var result = call("ncubeController.getAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus, axisName]);
         var axis;
         if (result.status === true)
@@ -3451,17 +3436,24 @@ $(function ()
         reloadCube();
     }
 
-    function editCell(value)
+    function changeType()
     {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (!ensureModifiable('Cell types cannot be changed.'))
         {
-            _errorId = showNote('No n-cube selected. Cell cannot be updated.');
             return;
         }
-        if (_selectedStatus == "RELEASE")
+
+        // TODO: Turn off field value, then pop-up edit cell modal.
+        // Set flag in modal so that it handles OK differently, has no clear.
+        // In editCell() make sure to turn on appropriate fields.
+
+        alert('Change type');
+    }
+
+    function editCell(value)
+    {
+        if (!ensureModifiable('Cell cannot be updated.'))
         {
-            _errorId = showNote('Only a SNAPSHOT version can be modified.');
             return;
         }
 
