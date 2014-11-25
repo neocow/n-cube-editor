@@ -1098,6 +1098,14 @@ public class NCubeController extends BaseController
         }
     }
 
+    public void clearCache() {
+        try {
+            NCubeManager.clearCache();
+        } catch (Exception e) {
+            fail(e);
+        }
+    }
+
     // ----------------------------------------- utility (non-API) methods ---------------------------------------------
 
     private static Object convertStringToValue(String origValue)
@@ -1185,4 +1193,5 @@ public class NCubeController extends BaseController
         }
         return colIds;
     }
+
 }

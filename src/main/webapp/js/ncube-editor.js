@@ -727,6 +727,10 @@ $(function ()
         {
             changeType();
         });
+        $('#clearCache').click(function()
+        {
+            clearCache();
+        });
 
         //  Set focused field when dialog appears so user can just start typing.
         _addParameterModal.on('shown.bs.modal', function () {
@@ -3451,6 +3455,17 @@ $(function ()
         // In editCell() make sure to turn on appropriate fields.
 
         alert('Change type');
+    }
+
+    function clearCache()
+    {
+        var result = call("ncubeController.clearCache", []);
+
+        if (result.status === false)
+        {
+            _errorId = showNote('Unable to fetch the cell contents: ' + result.data);
+            return;
+        }
     }
 
     function editCell(value)
