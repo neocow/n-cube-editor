@@ -14,7 +14,6 @@ import com.cedarsoftware.util.io.JsonWriter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * RESTful Ajax/JSON API for editor application
@@ -37,8 +36,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class NCubeService
 {
-    static final AtomicLong baseAxisId = new AtomicLong(1);
-
     public Object[] getNCubes(String pattern, String app, String version, String status)
     {
         return NCubeManager.getCubeRecordsFromDatabase(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
@@ -110,7 +107,7 @@ public class NCubeService
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + name + "' not found for app: " + id.toString());
         }
 
-        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY, baseAxisId.getAndIncrement());
+        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY, ncube.getMaxAxisId() + 1);
         ncube.addAxis(axis);
         NCubeManager.updateCube(id, ncube, username);
     }
