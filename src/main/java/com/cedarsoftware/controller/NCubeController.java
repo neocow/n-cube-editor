@@ -1104,6 +1104,36 @@ public class NCubeController extends BaseController
         }
     }
 
+    public Object[] getDelta(String app, String version, String status, int rev, String app2, String version2, String status2, int rev2)
+    {
+        try
+        {
+            ApplicationID appIdNew = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status);
+            ApplicationID appIdOld = new ApplicationID(ApplicationID.DEFAULT_TENANT, app2, version2, status2);
+            throw new RuntimeException("Not yet implemented");
+        }
+        catch(Exception e)
+        {
+            fail(e);
+            return null;
+        }
+    }
+
+    public Map getHeaders()
+    {
+        HttpServletRequest request = JsonCommandServlet.servletRequest.get();
+        Enumeration e = request.getHeaderNames();
+        Map<String, String> headers = new LinkedHashMap<>();
+
+        while (e.hasMoreElements())
+        {
+            String headerName = (String) e.nextElement();
+            headers.put(headerName, request.getHeader(headerName));
+        }
+
+        return headers;
+    }
+
     // ----------------------------------------- utility (non-API) methods ---------------------------------------------
 
     private static Object convertStringToValue(String origValue)

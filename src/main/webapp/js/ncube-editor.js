@@ -439,7 +439,7 @@ $(function ()
         var options =
         {
             mode: 'code',
-//            modes:['code','tree','view','form','text'],
+            //            modes:['code','tree','view','form','text'],
             change: function()
             {
                 setDirtyStatus(true);
@@ -2489,7 +2489,7 @@ $(function ()
 
     function renameCube()
     {
-        if (ensureModifiable('Unable to rename cube.'))
+        if (!ensureModifiable('Unable to rename cube.'))
         {
             return;
         }
@@ -2764,7 +2764,7 @@ $(function ()
 
     function releaseCubes()
     {
-        if (!ensureModifiable('Release of SNAP cannot happen.'))
+        if (!ensureModifiable('Release of SNAPSHOT cannot happen.'))
         {
             return;
         }
@@ -2953,8 +2953,7 @@ $(function ()
         return test;
     }
 
-    function retrieveParameters()
-    {
+    function retrieveParameters() {
         var parameters = $("#testParameters > div[parameter-id]");
         var coord = new Array(parameters.length);
 
@@ -2970,8 +2969,7 @@ $(function ()
         return coord;
     }
 
-    function retrieveAssertions()
-    {
+    function retrieveAssertions() {
         var assertions = $('#testAssertions > div[parameter-id]');
         var array = new Array(assertions.length);
 
@@ -2982,8 +2980,7 @@ $(function ()
         return array;
     }
 
-    function retrieveCellInfo(group, hasSelector)
-    {
+    function retrieveCellInfo(group, hasSelector) {
         var cell = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
         cell["value"] = group.find('input').val();
@@ -2998,8 +2995,7 @@ $(function ()
         return cell;
     }
 
-    function addParameterMenu()
-    {
+    function addParameterMenu() {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
@@ -3015,8 +3011,7 @@ $(function ()
 
     }
 
-    function addParameterOk()
-    {
+    function addParameterOk() {
         _addParameterModal.modal('hide');
 
         var id = $('#addParameterField').val();

@@ -13,6 +13,7 @@ import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -107,7 +108,17 @@ public class NCubeService
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + name + "' not found for app: " + id.toString());
         }
 
-        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY, ncube.getMaxAxisId() + 1);
+        long maxId = -1;
+        Iterator<Axis> i = ncube.getAxes().iterator();
+        while (i.hasNext())
+        {
+            Axis axis = i.next();
+            if (axis.getId() > maxId)
+            {
+                maxId = axis.getId();
+            }
+        }
+        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY, maxId + 1);
         ncube.addAxis(axis);
         NCubeManager.updateCube(id, ncube, username);
     }
