@@ -33,11 +33,11 @@
     </developers>
 
     <properties>
-        <version.json-io>2.7.3</version.json-io>
+        <version.json-io>2.7.6</version.json-io>
         <version.java-util>1.14.1</version.java-util>
         <version.json-command-servlet>1.1.2</version.json-command-servlet>
         <version.urlrewrite>4.0.4</version.urlrewrite>
-        <version.ncube>3.0.10</version.ncube>
+        <version.ncube>3.1.0</version.ncube>
         <version.junit>4.11</version.junit>
         <version.spring>3.2.11.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>
