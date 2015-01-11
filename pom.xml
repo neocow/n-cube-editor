@@ -33,16 +33,15 @@
     </developers>
 
     <properties>
-        <version.json-io>2.7.6</version.json-io>
-        <version.java-util>1.14.1</version.java-util>
-        <version.json-command-servlet>1.1.2</version.json-command-servlet>
+        <version.json-io>2.8.0</version.json-io>
+        <version.java-util>1.15.0</version.java-util>
+        <version.json-command-servlet>1.2.0</version.json-command-servlet>
+        <version.log4j>2.1</version.log4j>
         <version.urlrewrite>4.0.4</version.urlrewrite>
-        <version.ncube>3.1.0</version.ncube>
+        <version.ncube>3.1.1-SNAPSHOT</version.ncube>
         <version.junit>4.11</version.junit>
-        <version.spring>3.2.11.RELEASE</version.spring>
+        <version.spring>4.1.4.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>
-        <version.log4j>1.2.16</version.log4j>
-		<version.core.util>3.9.0</version.core.util>
         <version.plugin.compiler>3.2</version.plugin.compiler>
         <version.plugin.deploy>2.8.2</version.plugin.deploy>
         <version.plugin.source>2.4</version.plugin.source>
@@ -175,9 +174,20 @@
             <version>${version.urlrewrite}</version>
         </dependency>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
             <version>${version.log4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${version.log4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-web</artifactId>
+            <version>${version.log4j}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -247,11 +257,6 @@
         	<!--<artifactId>commons-beanutils</artifactId>-->
         	<!--<version>${version.commons-beanutils}</version>-->
         <!--</dependency>-->
-		<dependency>
-			<groupId>com.gaic.bue.uwd</groupId>
-			<artifactId>core-util</artifactId>
-			<version>${version.core.util}</version>
-		</dependency>
 	</dependencies>
 
     <dependencyManagement>

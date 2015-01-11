@@ -28,8 +28,8 @@ import com.cedarsoftware.util.ThreadAwarePrintStream;
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr;
 import com.cedarsoftware.util.io.JsonReader;
 import com.cedarsoftware.util.io.JsonWriter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -73,7 +73,7 @@ public class NCubeController extends BaseController
     private static final Pattern VERSION_REGEX = Pattern.compile("[.]");
     private static final Pattern IS_NUMBER_REGEX = Pattern.compile("^[\\d,.e+-]+$");
     private NCubeService nCubeService;
-    private static final Log LOG = LogFactory.getLog(NCubeController.class);
+    private static final Logger LOG = LogManager.getLogger(NCubeController.class);
 
     public NCubeController(NCubeService service)
     {

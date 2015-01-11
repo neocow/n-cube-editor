@@ -1,7 +1,5 @@
 package com.cedarsoftware.controller;
 
-import org.apache.log4j.Logger;
-
 /**
  * Common functionality for all Controllers.
  *
@@ -23,8 +21,6 @@ import org.apache.log4j.Logger;
  */
 public class BaseController implements IBaseController
 {
-    private static final Logger _log = Logger.getLogger(BaseController.class);
-
 	public void logout()
 	{
 	}

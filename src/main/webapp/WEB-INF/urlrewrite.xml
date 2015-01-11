@@ -3,13 +3,24 @@
         "http://www.tuckey.org/res/dtds/urlrewrite4.0.dtd">
 
 <urlrewrite>
-    <rule match-type="wildcard">
-        <note>
-            Redirect inbound requests for static content to n-cube which will
-            serve the requests from internal CDN.
-        </note>
-        <from>*dyn*</from>
-        <run class="com.cedarsoftware.ncube.util.CdnRouter" method="route" />
-        <to>null</to>
-    </rule>
+    <!--<rule match-type="wildcard">-->
+        <!--<note>-->
+            <!--Redirect inbound requests for static content to n-cube which will-->
+            <!--serve the requests from internal CDN.-->
+        <!--</note>-->
+        <!--<from>*dyn*</from>-->
+        <!--<run class="com.cedarsoftware.ncube.util.CdnRouter" method="route" />-->
+        <!--<to>null</to>-->
+    <!--</rule>-->
+
+    <!--<rule match-type="regex">-->
+        <!--<note>-->
+            <!--Redirect inbound requests for static content to n-cube which will-->
+            <!--serve the requests from internal CDN.-->
+        <!--</note>-->
+        <!--<from>^/cmd/[^/]+/.*$</from>-->
+        <!--<run class="com.cedarsoftware.ncube.util.CdnRouter" method="route" />-->
+        <!--<to>null</to>-->
+    <!--</rule>-->
+
 </urlrewrite>

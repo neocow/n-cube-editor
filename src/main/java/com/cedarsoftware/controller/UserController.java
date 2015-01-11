@@ -2,9 +2,8 @@ package com.cedarsoftware.controller;
 
 import com.cedarsoftware.dto.User;
 import com.cedarsoftware.service.ncube.IUserService;
-import org.apache.log4j.Logger;
-
-import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Use to manage application user.
@@ -27,19 +26,19 @@ import java.util.List;
  */
 public class UserController
 {
-	private static final Logger _log = Logger.getLogger(UserController.class);
+	private static final Logger LOG = LogManager.getLogger(UserController.class);
     private IUserService _service;
-    
+
 	public UserController(IUserService service)
 	{
 		_service = service;
 	}
-		
+
 	private IUserService getUserService()
 	{
 		return _service;
 	}
-	
+
 	public Object[] getUserOption(String key)
 	{
 		if (key == null || key.length() < 1)
@@ -55,7 +54,7 @@ public class UserController
 //		}
 //		return options.toArray();
 	}
-	
+
 	public void setUserOption(String key, String value)
 	{
 		if (key == null || key.length() < 1)
@@ -64,11 +63,11 @@ public class UserController
 		}
 //		getUserService().setValue(getHID(), key, value);
 	}
-	
+
 	public User getUser(String userId)
-	{		
+	{
 		if (userId == null || userId.length() < 1)
-		{	
+		{
 			return null;
 		}
         return null;
