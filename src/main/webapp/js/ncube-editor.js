@@ -424,7 +424,7 @@ $(function ()
             groupNode = groupNode.closest('div.accordion-body');
             if (groupNode)
             {
-                groupNode.collapse('show');
+                groupNode.collapse(true);
             }
         }
     }
@@ -479,12 +479,12 @@ $(function ()
     function addListeners()
     {
         var editor = $('#jsoneditor');
-        editor.find(".format").click(function(e)
+        editor.find(".format").click(function()
         {
             _jsonEditorMode = 'format';
         });
 
-        editor.find('.compact').click(function(e)
+        editor.find('.compact').click(function()
         {
             _jsonEditorMode = 'compact';
         });
@@ -507,7 +507,7 @@ $(function ()
             }
         });
 
-        $('#ncubeTab').click(function (e)
+        $('#ncubeTab').click(function ()
         {
             clearError();
             $('#EditMenu').show();
@@ -515,7 +515,7 @@ $(function ()
             loadCube();
         });
 
-        $('#jsonTab').click(function (e)
+        $('#jsonTab').click(function ()
         {
             clearError();
             $('#EditMenu').hide();
@@ -523,7 +523,7 @@ $(function ()
             loadCube();
         });
 
-        $('#detailsTab').click(function (e)
+        $('#detailsTab').click(function ()
         {
             clearError();
             $('#EditMenu').hide();
@@ -531,7 +531,7 @@ $(function ()
             loadCube();
         });
 
-        $('#testTab').click(function(e)
+        $('#testTab').click(function()
         {
             clearError();
             $('#EditMenu').hide();
@@ -539,7 +539,7 @@ $(function ()
             loadCube();
         });
 
-        $('#picTab').click(function(e)
+        $('#picTab').click(function()
         {
             clearError();
             $('#EditMenu').hide();
@@ -794,35 +794,35 @@ $(function ()
 
         $('#runAllTestsMenu').click(function ()
         {
-            $(this).css({'cursor':'wait'})
+            $(this).css({'cursor':'wait'});
             runAllTests();
             $(this).css({'cursor':'default'})
         });
 
         $('#runAllTestsButton').click(function ()
         {
-            $(this).css({'cursor':'wait'})
+            $(this).css({'cursor':'wait'});
             runAllTests();
             $(this).css({'cursor':'default'})
         });
 
         $('#runCurrentTestMenu').click(function ()
         {
-            $(this).css({'cursor':'wait'})
+            $(this).css({'cursor':'wait'});
             runCurrentTest();
             $(this).css({'cursor':'default'})
         });
 
         $('#runTestButton').click(function ()
         {
-            $(this).css({'cursor':'wait'})
+            $(this).css({'cursor':'wait'});
             runCurrentTest();
             $(this).css({'cursor':'default'})
         });
 
         $('#runTestMenu').click(function ()
         {
-            $(this).css({'cursor':'wait'})
+            $(this).css({'cursor':'wait'});
             runCurrentTest();
             $(this).css({'cursor':'default'})
         });
@@ -1084,7 +1084,7 @@ $(function ()
 
     function clearTestSelection()
     {
-        $("#testListItems a.selected").each(function (index, elem)
+        $("#testListItems").find("a.selected").each(function (index, elem)
         {
             $(elem).removeClass("selected");
         });
@@ -1093,7 +1093,7 @@ $(function ()
 
     function selectAllTests()
     {
-        $("#testListItems a").each(function (index, elem)
+        $("#testListItems").find("a").each(function (index, elem)
         {
             var a = $(elem);
             var span = a.find("span");
@@ -1103,7 +1103,7 @@ $(function ()
     }
 
     function enableTestItems() {
-        var count = $("#testListItems a.selected").length;
+        var count = $("#testListItems").find("a.selected").length;
 
         $("#renameCurrentTestMenu").parent().toggleClass('disabled', count != 1);
         $("#runCurrentTestMenu").parent().toggleClass('disabled', count != 1);
@@ -3206,12 +3206,7 @@ $(function ()
 
     function loadColumns(axis)
     {
-        _columnList.empty();
         var axisList = axis.columns['@items'];
-        $.each(_columnList.find('.form-control'), function(key, item)
-        {
-            axisList[key].value = item.value;
-        });
         _columnList.empty();
         _columnList.prop('model', axis);
         var displayOrder = 0;
@@ -3228,7 +3223,21 @@ $(function ()
                 {
                     inputBtn[0].checked = true;
                 }
+
+                var hasMetaProps = item.metaProps;
+                if (hasMetaProps)
+                {
+                    var inputName = $('<input/>').prop({class: "form-control", "type": "text"});
+                    inputName.attr({"data-type":"name"});
+                    inputName.blur(function ()
+                    {
+                        item.metaProps.name = inputName.val();
+                    });
+                    inputName.val(item.metaProps.name);
+                }
+
                 var inputText = $('<input/>').prop({class: "form-control", "type": "text"});
+                inputText.attr({"data-type":"cond"});
                 inputText.blur(function()
                 {
                     item.value = inputText.val();
@@ -3237,6 +3246,10 @@ $(function ()
                 inputText.val(item.value);
                 span.append(inputBtn);
                 div.append(span);
+                if (hasMetaProps)
+                {
+                    div.append(inputName);
+                }
                 div.append(inputText);
                 rowDiv.append(div);
                 _columnList.append(rowDiv);
@@ -3354,7 +3367,7 @@ $(function ()
         loadColumns(axis);
 
         // Select newly added column name, so user can just type over it.
-        input = $('#editColumnsList').find('.form-control');
+        input = _columnList.find('.form-control');
         input[loc + 1].select();
     }
 
@@ -3463,9 +3476,17 @@ $(function ()
     function editColSave()
     {
         var axis = _columnList.prop('model');
-        _columnList.find('input[type=text]').each(function(index, elem)
+        _columnList.find('input[data-type=cond]').each(function(index, elem)
         {
             axis.columns['@items'][index].value = elem.value;
+        });
+        _columnList.find('input[data-type=name]').each(function(index, elem)
+        {
+            var col = axis.columns['@items'][index];
+            if (col.metaProp)
+            {
+                col.metaProp.name = elem.value;
+            }
         });
         $('#editColumnsModal').modal('hide');
         axis.defaultCol = null;
@@ -3493,7 +3514,7 @@ $(function ()
         // Set flag in modal so that it handles OK differently, has no clear.
         // In editCell() make sure to turn on appropriate fields.
 
-        alert('Change type');
+        alert('Change type not yet implemented.');
     }
 
     function clearCache()
@@ -3503,7 +3524,6 @@ $(function ()
         if (result.status === false)
         {
             _errorId = showNote('Unable to fetch the cell contents: ' + result.data);
-            return;
         }
     }
 
