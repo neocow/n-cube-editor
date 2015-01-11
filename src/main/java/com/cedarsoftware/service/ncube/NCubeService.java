@@ -147,7 +147,7 @@ public class NCubeService
     /**
      * Update the 'informational' part of the Axis (not the columns).
      */
-    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, String username)
+    public void updateAxis(String name, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean fireAll, String username)
     {
         ApplicationID id = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
         NCube ncube = NCubeManager.getCube(id, name);
@@ -177,7 +177,11 @@ public class NCubeService
         }
 
         // update preferred column order
-        if (axis.getType() != AxisType.RULE)
+        if (axis.getType() == AxisType.RULE)
+        {
+            axis.setFireAll(fireAll);
+        }
+        else
         {
             axis.setColumnOrder(isSorted ? Axis.SORTED : Axis.DISPLAY);
         }

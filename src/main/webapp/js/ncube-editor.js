@@ -3122,25 +3122,68 @@ $(function ()
             _errorId = showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
-        var forceState = axis.type.name == 'RULE';
+        var isRule = axis.type.name == 'RULE';
+        var isNearest = axis.type.name == 'NEAREST';
         $('#updateAxisLabel').html("Update Axis: " + axisName);
         $('#updateAxisName').val(axisName);
         $('#updateAxisTypeName').val(axis.type.name);
         $('#updateAxisValueTypeName').val(axis.valueType.name);
         $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null});
-        if (forceState)
+        if (isRule)
         {
-            $('#updateAxisSortOrderRow').hide();
+            hideAxisSortOption();
+            showAxisDefaultColumnOption(axis);
+            showAxisFireAllOption(axis);
+        }
+        else if (isNearest)
+        {
+            hideAxisSortOption();
+            hideAxisDefaultColumnOption();
+            hideAxisFireAllOption();
         }
         else
         {
-            $('#updateAxisSortOrderRow').show();
-            $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
+            showAxisSortOption(axis);
+            showAxisDefaultColumnOption(axis);
+            hideAxisFireAllOption();
         }
         _axisName = axisName;
         $('#updateAxisModal').modal({
             keyboard: true
         });
+    }
+
+    function showAxisSortOption(axis)
+    {
+        $('#updateAxisSortOrderRow').show();
+        $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
+    }
+
+    function hideAxisSortOption()
+    {
+        $('#updateAxisSortOrderRow').hide();
+    }
+
+    function showAxisDefaultColumnOption(axis)
+    {
+        $('#updateAxisDefaultColRow').show();
+        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null, 'disabled': false});
+    }
+
+    function hideAxisDefaultColumnOption()
+    {
+        $('#updateAxisDefaultColRow').hide();
+    }
+
+    function showAxisFireAllOption(axis)
+    {
+        $('#updateAxisFireAllRow').show();
+        $('#updateAxisFireAll').prop({'checked': axis.fireAll == true, 'disabled': false});
+    }
+
+    function hideAxisFireAllOption()
+    {
+        $('#updateAxisFireAllRow').hide();
     }
 
     function updateAxisOk()
@@ -3149,7 +3192,8 @@ $(function ()
         var axisName = $('#updateAxisName').val();
         var hasDefault = $('#updateAxisDefaultCol').prop('checked');
         var sortOrder = $('#updateAxisSortOrder').prop('checked');
-        var result = call("ncubeController.updateAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _axisName, axisName, hasDefault, sortOrder]);
+        var fireAll = $('#updateAxisFireAll').prop('checked');
+        var result = call("ncubeController.updateAxis", [_selectedCubeName, _selectedApp, _selectedVersion, _axisName, axisName, hasDefault, sortOrder, fireAll]);
         if (result.status === true)
         {
             loadCube();

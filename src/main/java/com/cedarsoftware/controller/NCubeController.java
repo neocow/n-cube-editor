@@ -684,7 +684,7 @@ public class NCubeController extends BaseController
         }
     }
 
-    public void updateAxis(String cubeName, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted)
+    public void updateAxis(String cubeName, String app, String version, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean fireAll)
     {
         try
         {
@@ -694,7 +694,7 @@ public class NCubeController extends BaseController
                 return;
             }
 
-            nCubeService.updateAxis(cubeName, app, version, origAxisName, axisName, hasDefault, isSorted, getUserForDatabase());
+            nCubeService.updateAxis(cubeName, app, version, origAxisName, axisName, hasDefault, isSorted, fireAll, getUserForDatabase());
         }
         catch (Exception e)
         {
