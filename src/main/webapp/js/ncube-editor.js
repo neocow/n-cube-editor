@@ -3224,11 +3224,14 @@ $(function ()
                     inputBtn[0].checked = true;
                 }
 
-                var hasMetaProps = item.metaProps;
-                if (hasMetaProps)
+                if (axis.type.name == 'RULE')
                 {
+                    if (!item.metaProps)
+                    {
+                        item.metaProps = {"name": "Condition " + displayOrder};
+                    }
                     var inputName = $('<input/>').prop({class: "form-control", "type": "text"});
-                    inputName.attr({"data-type":"name"});
+                    inputName.attr({"data-type": "name"});
                     inputName.blur(function ()
                     {
                         item.metaProps.name = inputName.val();
@@ -3246,7 +3249,7 @@ $(function ()
                 inputText.val(item.value);
                 span.append(inputBtn);
                 div.append(span);
-                if (hasMetaProps)
+                if (axis.type.name == 'RULE')
                 {
                     div.append(inputName);
                 }
