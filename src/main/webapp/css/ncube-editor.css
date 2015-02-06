@@ -17,10 +17,6 @@ body {
     text-shadow: none !important;
 }
 
-.cell-selected {
-    background-color: lightblue !important;
-}
-
 .noselect {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -44,18 +40,6 @@ a.ncube-selected:hover, .a.ncube-selected:active {
 
 a.ncube-notselected:hover {
     background-color: #ddd !important;
-}
-
-th.ncube-dead:hover {
-    background: #76A7FF;
-}
-
-.th-ncube a, .th-ncube-top a {
-    color: lightskyblue;
-}
-
-.th-ncube > a:hover, .th-ncube-top > a:hover {
-    color: lightcyan;
 }
 
 .panel {
