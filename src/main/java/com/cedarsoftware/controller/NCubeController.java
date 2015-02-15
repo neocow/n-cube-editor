@@ -72,6 +72,7 @@ public class NCubeController extends BaseController
     public static final String SYS_NCUBE_INFO = "sys.groups";
     private static final Pattern VERSION_REGEX = Pattern.compile("[.]");
     private static final Pattern IS_NUMBER_REGEX = Pattern.compile("^[\\d,.e+-]+$");
+    private static final Pattern NO_QUOTES_REGEX = Pattern.compile("\"");
     private NCubeService nCubeService;
     private static final Logger LOG = LogManager.getLogger(NCubeController.class);
 
@@ -658,7 +659,12 @@ public class NCubeController extends BaseController
                 Map col = (Map) item;
                 Column actualCol= axis.getColumnById((Long)col.get("id"));
                 col.put("id", String.valueOf(col.get("id")));
-                col.put("value", new CellInfo(actualCol.getValue()).value);
+                String value = new CellInfo(actualCol.getValue()).value;
+                if (axis.getValueType() == AxisValueType.DATE)
+                {
+                    value = NO_QUOTES_REGEX.matcher(value).replaceAll("");
+                }
+                col.put("value", value);
             }
         }
         return axisConverted;

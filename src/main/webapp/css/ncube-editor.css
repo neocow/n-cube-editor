@@ -3,6 +3,13 @@ body {
     background-color: #FAF0E6;
 }
 
+#editColumnsModal .modal-dialog  {width:75%;}
+
+@media screen and (min-width: 768px) {
+
+    #editColumnsModal .modal-dialog  {width:800px;}
+}
+
 .ncube-selected {
     color: white;
     background-color:darkorange;

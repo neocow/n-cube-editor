@@ -1629,7 +1629,7 @@ $(function ()
     {
         // Build cube list names
         var cubeNames = [];
-        $.each(_cubeList, function (key, value)
+        $.each(_cubeList, function (key)
         {
             if (key.length > 1)
             {   // Only support n-cube names with 2 or more characters in them (too many false replaces will occur otherwise)
@@ -1651,8 +1651,22 @@ $(function ()
         });
 
         var failedCheck = {};
+
         // Add links to all n-cubes within columns and cells
-        var regex = new RegExp(cubeNames.join("|"), "gi");
+        var len = cubeNames.length;
+        var s = "";
+        var word = '(\\b)';
+
+        for (var i=0; i < len; i++)
+        {
+            s += word + cubeNames[i].replace('.', '\\.') + word;
+            if (i < len - 1)
+            {
+                s += '|'
+            }
+        }
+
+        var regex = new RegExp(s, "gi");
         $('.column, .cell').each(function ()
         {
             var cell = $(this);
@@ -3206,6 +3220,72 @@ $(function ()
 
     function loadColumns(axis)
     {
+        var inst = $('#editColInstructions')
+        if ('DISCRETE' == axis.type.name)
+        {
+            inst.html("<b>Discrete column</b><br> \
+            <ul>A <i>discrete</i> column has a single value per column. Values are matched with '='.  Strings are matched case-sensitively.  Case of entered values is retained. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
+        <li>Examples: \
+        <ul> \
+        <li>Enter string values as is, no quotes: OH</li> \
+        <li>Valid number: <code>42</code></li> \
+        <li>Valid date: <code>2015/02/14</code> (or 14 Feb 2015, Feb 14, 2015, February 14th, 2015, 2015-02-14)</li> \
+        <li>Do not use mm/dd/yyyy or dd/mm/yyyy. \
+        </li></ul></li></ul>");
+        }
+        else if ('RANGE' == axis.type.name)
+        {
+            inst.html("<b>Range column</b><br> \
+            <ul>A <i>range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+        <li>Enter low value, high value. Treated inclusive, exclusive.</li> \
+        <li>Examples: \
+        <ul> \
+        <li><i>Number range</i>: <code>25, 75</code> (meaning x >= 25 AND x < 75)</li> \
+        <li><i>Number range</i>: <code>[100, 1000]</code> (brackets optional)</li> \
+        <li><i>Date range</i>: <code>2015/01/01, 2017-01-01</code> (date >= 2015-01-01 AND date < 2017-01-01) \
+        </li></ul></li></ul>");
+        }
+        else if ('SET' == axis.type.name)
+        {
+            inst.html("<b>Set column</b><br> \
+            <ul>A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values match with '=' and ranges match when value is within the range.  Overlapping ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+        <li>Examples: \
+        <ul> \
+        <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
+        <li><i>Strings</i>: <code>TX, OH, GA</code></li> \
+        <li><i>Strings with spaces</i>: <code>brown fox, jumps honey badger, is eaten</code></li> \
+        <li><i>Date range</i>: <code>[2010/01/01, 2012/12/31]</code></li> \
+        <li><i>Date ranges</i>: <code>[2015-01-01, 2016-12-31], [2019/01/01, 2020/12/31]</code> \
+        </li></ul></li></ul>");
+        }
+        else if ('NEAREST' == axis.type.name)
+        {
+            inst.html("<b>Nearest column</b><br> \
+        <ul>Single value per column.  The <i>closest</i> column on the axis to the passed in value is matched.  Strings are compared similar to spell-check (<a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm).  Lat/Lon's column values are compared using earth curvature in distance calculation (<a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla).  Numbers compared using abs(column - value).  Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
+        <li>Examples: \
+        <ul> \
+        <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> 'alfa' will match column <code>Alpha</code>.  It has closest 'edit' distance.</li> \
+        <li>With columns <code>1, 10, 100, 1000</code>, <i>value</i> 400 will match column <code>100</code>. (Distance of 300 is smallest).</li> \
+        <li>Dates are entered in the same formats in Discrete column instructions (many formats supported).</li> \
+        <li>Do not use mm/dd/yyyy or dd/mm/yyyy for dates.</li></ul></li></ul>");
+        }
+        else if ('RULE' == axis.type.name)
+        {
+            inst.html("<b>Rule column</b><br> \
+            <ul>A rule condition is entered into each column.  All rule conditions that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> conditions will fire. See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>.  The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, if the name of a rule is bound to the rule axis, execution will start on that rule.  A rule axis can have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, otherwise a CoordinateNotFound exception will be thrown.\
+        <li>Notes: \
+        <ul> \
+        <li>Enter the [optional] rule name in the top line (no quotes).</li> \
+        <li>Enter <i>condition</i> in <a href=\"http://groovy.codehaus.org/\" target=\"_blank\">Groovy</a> on the second line.</li> \
+        <li>The <i>input</i> and <i>output</i> Maps and <i>ncube</i> are available in the condition and statements (cells).</li> \
+        <li><i>Example condition</i>: <code>input.state == 'OH'</code></li> \
+        </ul></li></ul>");
+        }
+        else
+        {
+            inst.html('Unknown axis type');
+        }
+
         var axisList = axis.columns['@items'];
         _columnList.empty();
         _columnList.prop('model', axis);

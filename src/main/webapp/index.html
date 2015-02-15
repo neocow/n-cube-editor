@@ -4,17 +4,18 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <title>n-cube</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="HTML 5 GUI Editor for building NCubes">
     <meta name="author" content="John DeRegnaucourt">
 
-    <link href="./css/jquery.layout-1.4.0.css" rel="stylesheet"/>
-    <link href="./css/jquery-ui-1.11.0.css" rel="stylesheet"/>
-    <link href="./css/jquery.gritter.css" rel="stylesheet"/>
-    <link href="./css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="./css/bootstrap-theme.min.css" rel="stylesheet"/>
-    <link href="./css/bootstrap-select.min.css" rel="stylesheet"/>
-    <link href="./css/ncube-editor.css" rel="stylesheet"/>
+    <link href="css/jquery.layout-1.4.0.css" rel="stylesheet"/>
+    <link href="css/jquery-ui-1.11.0.css" rel="stylesheet"/>
+    <link href="css/jquery.gritter.css" rel="stylesheet"/>
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <!--<link href="css/bootstrap-responsive.min.css" rel="stylesheet"/>-->
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet"/>
+    <!--<link href="css/bootstrap-select.min.css" rel="stylesheet"/>-->
+    <link href="css/ncube-editor.css" rel="stylesheet"/>
 
     <!-- Fav and touch icons -->
     <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="./ico/apple-touch-icon-144-precomposed.png">-->
@@ -277,7 +278,7 @@
                             <li><a id="renameTestMenu" href="#">Rename</a></li>
                             <li><a id="deleteTestMenu" href="#">Delete</a></li>
                             <li class="divider" />
-                            <li><a id="addParameterMenu" href="#">Add Parameter</a></li>
+                            <li><a id="addParameterMenu" href="#">Add Input</a></li>
                             <li><a id="addAssertionMenu" href="#">Add Assertion</a></li>
                             <li class="divider" />
                             <li><a id="duplicateTestMenu" href="#">Duplicate</a></li>
@@ -492,7 +493,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="addParameterTitle" class="modal-title">Add Parameter</h3>
+                <h3 id="addParameterTitle" class="modal-title">Add Input</h3>
             </div>
             <div class="modal-body">
                 <form role="form">
@@ -941,7 +942,21 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="editColumnsLabel" class="modal-title"></h3>
             </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
+            <div class="modal-body" style="overflow: auto;height:500px">
+                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingOne">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne"
+                                   aria-expanded="true" aria-controls="collapseOne">Instructions</a>
+                            </h4>
+                        </div>
+                        <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                            <div id="editColInstructions" class="panel-body"></div>
+                        </div>
+                    </div>
+                </div>
+                <br>
                 <ul id="editColumnsList" class="list-group">
                 </ul>
             </div>
