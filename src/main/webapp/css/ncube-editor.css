@@ -146,7 +146,10 @@ div#editColumnsModal ul.list-group
     font-size: small;
     font-weight: normal;
     margin: 0;
-    padding: 0 6px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-right: 5px;
+    padding-left: 5px;
     border: none;
     border-radius: 0;
     overflow:hidden;
@@ -193,11 +196,11 @@ div#editColumnsModal ul.list-group
 }
 
 #app-list-div {
-    margin-top: 6px;
+    margin-top: 8px;
 }
 
 #ncube-list-div {
-    margin-bottom: 6px;
+    margin-bottom: 0px;
 }
 
 #testLayoutCenter {
@@ -257,7 +260,7 @@ div#editColumnsModal ul.list-group
 }
 
 #testParameters div.form-group, #testAssertions div.form-group {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     margin-top: 10px;
 }
 
@@ -269,6 +272,10 @@ div#editColumnsModal ul.list-group
     overflow: visible;
 }
 
+div#testLayoutCenter div.well {
+    padding: 10px;
+}
+
 #testLayoutEast {
     margin: 0;
     padding: 0;
@@ -277,7 +284,6 @@ div#editColumnsModal ul.list-group
 #testListWarning {
     margin: 5px 5px 0 5px;
 }
-
 
 #testListItems {
     margin-bottom: 0;
@@ -291,7 +297,6 @@ div#editColumnsModal ul.list-group
     overflow: hidden;
     position: relative;
 }
-
 
 #testResult {
     margin-top: 20px;
@@ -343,13 +348,14 @@ div#editColumnsModal ul.list-group
 }
 
 #testAssertionsDiv, #testResultsDiv {
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 .navbar-custom {
     background-color: #2474b8;
     border-color: #1f639c;
     padding-right: 40px;
+    margin-bottom: 0;
 }
 .navbar-custom .navbar-brand {
     color: #ffffff;
