@@ -1749,15 +1749,24 @@ $(function ()
         {
             return;
         }
-        $('#cube_name').val(cube.name);
-        $('#cube_revision').val(cube.revision);
-        var date = '';
-        if (cube.createDate != undefined)
+
+        var result = call("ncubeController.getRevisionHistory", [_selectedCubeName, _selectedApp, _selectedVersion, _selectedStatus]);
+        if (!result.status)
         {
-            date = new Date(cube.createDate.value).format('yyyy-mm-dd HH:MM:ss');
+            _errorId = showNote('Unable to load cube details:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        var info = result.data[0];
+        $('#cube_name').val(info.name);
+        $('#cube_revision').val(info.revision);
+        var date = '';
+        if (info.createDate != undefined)
+        {
+            date = new Date(info.createDate.value).format('yyyy-mm-dd HH:MM:ss');
         }
         $('#cube_createDate').val(date);
-        $('#cube_createHid').val(cube.createHid);
+        $('#cube_createHid').val(info.createHid);
+        $('#cube_notes').val(info.notes);
     }
 
     function clearTestView() {
@@ -3279,24 +3288,24 @@ $(function ()
         if ('DISCRETE' == axis.type.name)
         {
             insTitle.html('Instructions - Discrete Column');
-            inst.html("<ul>A <i>Discrete</i> column has a single value per column. Values are matched with '='. \
+            inst.html("<i>Discrete</i> column has a single value per column. Values are matched with '='. \
             Strings are matched case-sensitively.  Look ups are indexed and run \
             in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
-        <li>Examples: \
+        <ul><li>Examples: \
         <ul> \
-        <li>Enter string values as is, no quotes: OH</li> \
+        <li>Enter string values as is, no quotes: <code>OH</code></li> \
         <li>Valid number: <code>42</code></li> \
-        <li>Valid date: <code>2015/02/14</code> (or 14 Feb 2015, Feb 14, 2015, February 14th, 2015, 2015-02-14)</li> \
+        <li>Valid date: <code>2015/02/14</code> (or <code>14 Feb 2015</code>, <code>Feb 14, 2015</code>, <code>February 14th, 2015</code>, <code>2015-02-14</code>)</li> \
         <li>Do not use mm/dd/yyyy or dd/mm/yyyy. \
         </li></ul></li></ul>");
         }
         else if ('RANGE' == axis.type.name)
         {
             insTitle.html('Instructions - Range Column');
-            inst.html("<ul>A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
+            inst.html("A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
             <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Look ups are indexed \
             and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <li>Enter low value, high value. Treated [inclusive, exclusive).</li> \
+        <ul><li>Enter low value, high value. Treated [inclusive, exclusive).</li> \
         <li>Examples: \
         <ul> \
         <li><i>Number range</i>: <code>25, 75</code> (meaning x >= 25 AND x < 75)</li> \
@@ -3307,11 +3316,11 @@ $(function ()
         else if ('SET' == axis.type.name)
         {
             insTitle.html('Instructions - Set Column');
-            inst.html("<ul>A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
+            inst.html("A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
             match with '=' and ranges match when value is within the range [inclusive, exclusive).  Overlapping\
             ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis.\
-            Look ups are index and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <li>Examples: \
+            Look ups are indexed and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+        <ul><li>Examples: \
         <ul> \
         <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
         <li><i>Strings</i>: <code>TX, OH, GA</code></li> \
@@ -3323,32 +3332,32 @@ $(function ()
         else if ('NEAREST' == axis.type.name)
         {
             insTitle.html('Instructions - Nearest Column');
-            inst.html("<ul>A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
+            inst.html("A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
             axis to the passed in value is matched.  Strings are compared similar to spell-check \
-            (<a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm). \
+            (See <a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm). \
             Lat/Lon's column values are compared using earth curvature in distance calculation \
-            (<a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla). \
+            (See <a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla). \
             Numbers compared using abs(column - value).  Look ups scan all columns and run in \
             <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
-        <li>Examples: \
+        <ul><li>Examples: \
         <ul> \
-        <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> 'alfa' will match column <code>Alpha</code>.  It has closest 'edit' distance.</li> \
-        <li>With columns <code>1, 10, 100, 1000</code>, <i>value</i> 400 will match column <code>100</code>. (Distance of 300 is smallest).</li> \
+        <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> <code>alfa</code> will match column <code>Alpha</code>.  It has the closest 'edit' distance.</li> \
+        <li>With columns <code>1, 10, 100, 1000</code>, <i>value</i> <code>400</code> will match column <code>100</code>. (Distance of 300 is smallest).</li> \
         <li>Dates are entered in the same formats in Discrete column instructions (many formats supported).</li> \
         <li>Do not use mm/dd/yyyy or dd/mm/yyyy for dates.</li></ul></li></ul>");
         }
         else if ('RULE' == axis.type.name)
         {
             insTitle.html('Instructions - Rule Column');
-            inst.html("<ul>A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
+            inst.html("A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
             that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> \
-            conditions will fire. See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>. \
+            conditions will fire. (See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>). \
             The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, \
             if the name of a rule is bound to the rule axis, execution will start on the named rule.  A rule axis can \
             have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, \
-            otherwise a CoordinateNotFound exception will be thrown.  Look ups scan all columns (except when fire one is indicated) \
+            otherwise a CoordinateNotFound exception will be thrown.  Look ups scan all columns (except when fire once is indicated) \
             and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
-        <li>Notes: \
+        <ul><li>Notes: \
         <ul> \
         <li>Enter the [optional] rule name in the top line (no quotes).</li> \
         <li>Enter <i>condition</i> in <a href=\"http://groovy.codehaus.org/\" target=\"_blank\">Groovy</a> on the second line.</li> \
