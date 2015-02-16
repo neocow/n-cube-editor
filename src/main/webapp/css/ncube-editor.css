@@ -411,7 +411,7 @@ div#east div.panel-body {
     border-top-color: #ffffff;
     border-bottom-color: #ffffff;
 }
-@media (max-width: 767) {
+@media (max-device-width: 767px) {
     .navbar-custom .navbar-nav .open .dropdown-menu > li > a {
         color: #ffffff;
     }

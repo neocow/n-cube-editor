@@ -1797,22 +1797,22 @@ $(function ()
         }
 
         var testData = _testData[_testSelectionAnchor];
-
         var testParameters = $('#testParameters');
         var testAssertions = $('#testAssertions');
-        var testResult = $('#testResults');
 
-        try {
+        try
+        {
             $('#selectedTestName').html(testData['name']);
-
             var coordinate = testData['coord'];
 
-            if (coordinate != null  && coordinate) {
-                $.each(coordinate, function (index, item) {
+            if (coordinate != null  && coordinate)
+            {
+                $.each(coordinate, function (index, item)
+                {
                     var key = item['key'];
-                    if (key.substring(0, 1) != "@") {
+                    if (key.substring(0, 1) != "@")
+                    {
                         var value = item['value'];
-
                         var isUrl = (value == null || value.isUrl == null) ? false : value.isUrl;
                         var v = (value == null || value.value == null) ? null : value.value;
                         var dataType = (value == null || value.dataType == null) ? null : value.dataType;
@@ -1822,15 +1822,19 @@ $(function ()
             }
 
             var assertions = testData['expected'];
-            if (assertions != null  && assertions) {
-                $.each(assertions, function (index, value) {
+            if (assertions != null  && assertions)
+            {
+                $.each(assertions, function (index, value)
+                {
                     var isUrl = value['isUrl'] == null ? null : value['isUrl'];
                     var v = value.value == null ? null : value.value;
                     var dataType = value.dataType == null ? null : value.dataType;
                     testAssertions.append(buildParameter(index + 1, "exp", isUrl, v, false, true, deleteAssertion));
                 });
             }
-        } catch (e) {
+        }
+        catch (e)
+        {
             console.log(e);
             _errorId = showNote('Unable to load test view:<hr class="hr-small"/>' + e.message);
         }
@@ -1870,7 +1874,8 @@ $(function ()
             var opt = $("<option/>").attr({'value': item.val()});
             opt.text(item.text());
 
-            if (typeStr != null && typeStr == item.val()) {
+            if (typeStr != null && typeStr == item.val())
+            {
                 opt.prop({'selected' : true});
             }
             selector.append(opt);
@@ -1894,7 +1899,8 @@ $(function ()
         return leftPad(Math.random().toString(36).substring(7), 11);
     }
 
-    function buildParameter(labelText, type, isUrl, value, hasSelector, isRenumberable, deleteFunc) {
+    function buildParameter(labelText, type, isUrl, value, hasSelector, isRenumberable, deleteFunc)
+    {
         var ident = generateRandomId();
 
         var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':labelText, 'id':ident});
@@ -1934,10 +1940,8 @@ $(function ()
             }
         });
 
-
         inputGroupAddon.append(urlButton);
         inputGroup.append(inputGroupAddon);
-
         inputGroup.append($("<input/>").attr({'class': 'form-control', 'type': 'text', 'id': cat}).val(value));
 
         if (hasSelector) {
@@ -2946,16 +2950,15 @@ $(function ()
         {
             _errorId = showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
         }
-
     }
 
     function getActiveTest()
     {
         var test = {};
-
         var name = $("#selectedTestName").html();
 
-        if (name == null) {
+        if (name == null)
+        {
             return null;
         }
 
@@ -2963,7 +2966,6 @@ $(function ()
         test["@type"] = "com.cedarsoftware.ncube.NCubeTest";
         test["coord"] = retrieveParameters();
         test["expected"] = retrieveAssertions();
-
         return test;
     }
 
