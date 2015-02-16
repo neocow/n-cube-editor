@@ -3280,7 +3280,9 @@ $(function ()
         if ('DISCRETE' == axis.type.name)
         {
             insTitle.html('Instructions - Discrete Column');
-            inst.html("<ul>A <i>discrete</i> column has a single value per column. Values are matched with '='.  Strings are matched case-sensitively.  Case of entered values is retained. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
+            inst.html("<ul>A <i>Discrete</i> column has a single value per column. Values are matched with '='. \
+            Strings are matched case-sensitively.  Look ups are indexed and run \
+            in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
         <li>Examples: \
         <ul> \
         <li>Enter string values as is, no quotes: OH</li> \
@@ -3292,8 +3294,10 @@ $(function ()
         else if ('RANGE' == axis.type.name)
         {
             insTitle.html('Instructions - Range Column');
-            inst.html("<ul>A <i>range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <li>Enter low value, high value. Treated inclusive, exclusive.</li> \
+            inst.html("<ul>A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
+            <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Look ups are indexed \
+            and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+        <li>Enter low value, high value. Treated [inclusive, exclusive).</li> \
         <li>Examples: \
         <ul> \
         <li><i>Number range</i>: <code>25, 75</code> (meaning x >= 25 AND x < 75)</li> \
@@ -3304,12 +3308,15 @@ $(function ()
         else if ('SET' == axis.type.name)
         {
             insTitle.html('Instructions - Set Column');
-            inst.html("<ul>A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values match with '=' and ranges match when value is within the range.  Overlapping ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+            inst.html("<ul>A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
+            match with '=' and ranges match when value is within the range [inclusive, exclusive).  Overlapping\
+            ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis.\
+            Look ups are index and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
         <li>Examples: \
         <ul> \
         <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
         <li><i>Strings</i>: <code>TX, OH, GA</code></li> \
-        <li><i>Strings with spaces</i>: <code>brown fox, jumps honey badger, is eaten</code></li> \
+        <li><i>Strings (3) with spaces</i>: <code>brown fox, jumps honey badger, is eaten</code></li> \
         <li><i>Date range</i>: <code>[2010/01/01, 2012/12/31]</code></li> \
         <li><i>Date ranges</i>: <code>[2015-01-01, 2016-12-31], [2019/01/01, 2020/12/31]</code> \
         </li></ul></li></ul>");
@@ -3317,7 +3324,13 @@ $(function ()
         else if ('NEAREST' == axis.type.name)
         {
             insTitle.html('Instructions - Nearest Column');
-            inst.html("<ul>Single value per column.  The <i>closest</i> column on the axis to the passed in value is matched.  Strings are compared similar to spell-check (<a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm).  Lat/Lon's column values are compared using earth curvature in distance calculation (<a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla).  Numbers compared using abs(column - value).  Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
+            inst.html("<ul>A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
+            axis to the passed in value is matched.  Strings are compared similar to spell-check \
+            (<a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm). \
+            Lat/Lon's column values are compared using earth curvature in distance calculation \
+            (<a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla). \
+            Numbers compared using abs(column - value).  Look ups scan all columns and run in \
+            <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
         <li>Examples: \
         <ul> \
         <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> 'alfa' will match column <code>Alpha</code>.  It has closest 'edit' distance.</li> \
@@ -3328,7 +3341,14 @@ $(function ()
         else if ('RULE' == axis.type.name)
         {
             insTitle.html('Instructions - Rule Column');
-            inst.html("<ul>A rule condition is entered into each column.  All rule conditions that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> conditions will fire. See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>.  The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, if the name of a rule is bound to the rule axis, execution will start on that rule.  A rule axis can have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, otherwise a CoordinateNotFound exception will be thrown.\
+            inst.html("<ul>A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
+            that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> \
+            conditions will fire. See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>. \
+            The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, \
+            if the name of a rule is bound to the rule axis, execution will start on the named rule.  A rule axis can \
+            have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, \
+            otherwise a CoordinateNotFound exception will be thrown.  Look ups scan all columns (except when fire one is indicated) \
+            and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
         <li>Notes: \
         <ul> \
         <li>Enter the [optional] rule name in the top line (no quotes).</li> \
