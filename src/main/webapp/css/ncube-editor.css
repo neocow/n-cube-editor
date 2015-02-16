@@ -6,19 +6,18 @@ body {
 #editColumnsModal .modal-dialog  {width:75%;}
 
 @media screen and (min-width: 768px) {
-
     #editColumnsModal .modal-dialog  {width:800px;}
 }
 
 .ncube-selected {
-    color: white;
-    background-color:darkorange;
+    color: #444 !important;
+    background-color:rgba(61, 139, 202, 0.25) !important;
     padding: 0 5px 0 5px !important;
     text-shadow: none !important;
 }
 
 .ncube-notselected {
-    color: black;
+    color: #444;
     background-color: white;
     padding: 0 5px 0 5px !important;
     text-shadow: none !important;
@@ -41,11 +40,12 @@ body {
 .top-buffer { margin-top:25px; }
 
 a.ncube-selected:hover, .a.ncube-selected:active {
-    color: white;
-    background-color: darkorange !important;
+    color: darkgray;
+    background-color: rgba(61, 139, 202, 0.20) !important;
 }
 
 a.ncube-notselected:hover {
+    color: #444;
     background-color: #ddd !important;
 }
 
@@ -53,8 +53,14 @@ a.ncube-notselected:hover {
     margin-bottom: 10px;
     overflow: hidden;
 }
+
+div#testLayoutEast, div#west, div.panel {
+    border: none !important;
+}
+
 .panel-heading {
     padding: 5px;
+    background-color: #D1C5B7;
 }
 
 div#west div.panel-body {
@@ -65,6 +71,17 @@ div#west div.panel-body {
 div#east div.panel-body {
     overflow: auto;
     height: 100%;
+}
+
+div#editColumnsModal div.panel-group
+{
+    margin-bottom: 0;
+}
+
+div#editColumnsModal ul.list-group
+{
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .modal-header {
@@ -235,18 +252,6 @@ div#east div.panel-body {
     background: linear-gradient(to bottom,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,1) 100%); /* W3C */
 }
 
-
-.red-item {
-    text-shadow: 0 -1px 0 rgba(0,0,0,0.2);
-    color: #C0C0C0;
-}
-
-.red-item:hover {
-    color: #d9534f;
-    outline: 0;
-}
-
-
 #testParameters > .panel-body {
     padding: 15px;
 }
@@ -344,6 +349,7 @@ div#east div.panel-body {
 .navbar-custom {
     background-color: #2474b8;
     border-color: #1f639c;
+    padding-right: 40px;
 }
 .navbar-custom .navbar-brand {
     color: #ffffff;
@@ -439,16 +445,3 @@ div#east div.panel-body {
 .navbar-custom .navbar-link:hover {
     color: #a0d0ff;
 }
-
-/*
-.bs-docs-nav .dropdown-toggle .icon-bar {
-    background-color: #563d7c;
-}
-
-.dropdown-toggle .icon-bar {
-    display: block;
-    width: 22px;
-    height: 2px;
-    border-radius: 1px;
-}
-*/
