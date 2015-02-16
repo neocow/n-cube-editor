@@ -1628,72 +1628,57 @@ $(function ()
     function buildCubeNameLinks()
     {
         // Build cube list names
-        var cubeNames = [];
-        $.each(_cubeList, function (key)
-        {
-            if (key.length > 1)
-            {   // Only support n-cube names with 2 or more characters in them (too many false replaces will occur otherwise)
-                cubeNames.push(key);
-            }
-        });
-
-        // Sort n-cube names by longest to shortest (eliminates subset matching)
-        cubeNames.sort(function (a, b)
-        {
-            return b.length - a.length;
-        });
-
-        // Create parallel map of cube name to HTML cube name
-        var anchorCubeNames = {};
-        $.each(cubeNames, function (key, cubeName)
-        {
-            anchorCubeNames[cubeName.toLowerCase()] = '<a class="ncube-anchor" href="#">' + cubeName + '</a>';
-        });
-
-        var failedCheck = {};
-
-        // Add links to all n-cubes within columns and cells
-        var len = cubeNames.length;
+        var cubeLowerNames = {};
         var s = "";
         var word = '(\\b)';
-
-        for (var i=0; i < len; i++)
+        $.each(_cubeList, function (key)
         {
-            s += word + cubeNames[i].replace('.', '\\.') + word;
-            if (i < len - 1)
-            {
-                s += '|'
+            if (key.length > 2)
+            {   // Only support n-cube names with 3 or more characters in them (too many false replaces will occur otherwise)
+                var lowName = key.toLowerCase();
+                cubeLowerNames[lowName] = true;
+                s += word + lowName.replace('.', '\\.') + word + '|';
             }
+        });
+
+        if (s.length > 0)
+        {
+            s = s.substring(0, s.length - 1);
         }
 
+        var failedCheck = {};
         var regex = new RegExp(s, "gi");
+
         $('.column, .cell').each(function ()
         {
             var cell = $(this);
             var html = cell.html();
-            var found = false;
-
-            html = html.replace(regex, function (matched)
+            if (html && html.length > 2)
             {
-                found = true;
-                return anchorCubeNames[matched.toLowerCase()];
-            });
+                var found = false;
 
-            if (found)
-            {   // substitute new text with anchor tag
-                cell.html(html);
-            }
-            else
-            {
-                var loHtml = html.toLowerCase();
-                if (!failedCheck[html] && (anchorCubeNames['rpm.class.' + loHtml] || anchorCubeNames['rpm.enum.' + loHtml]))
+                html = html.replace(regex, function (matched)
                 {
-                    html = '<a class="ncube-anchor" href="#">' + html + '</a>';
+                    found = true;
+                    return '<a class="ncube-anchor" href="#">' + matched + '</a>';
+                });
+
+                if (found)
+                {   // substitute new text with anchor tag
                     cell.html(html);
                 }
                 else
                 {
-                    failedCheck[html] = true;
+                    var loHtml = html.toLowerCase();
+                    if (!failedCheck[html] && (cubeLowerNames['rpm.class.' + loHtml] || cubeLowerNames['rpm.enum.' + loHtml]))
+                    {
+                        html = '<a class="ncube-anchor" href="#">' + html + '</a>';
+                        cell.html(html);
+                    }
+                    else
+                    {
+                        failedCheck[html] = true;
+                    }
                 }
             }
         });
@@ -1707,17 +1692,17 @@ $(function ()
             link.click(function ()
             {
                 var cubeName = link.html().toLowerCase();
-                if (anchorCubeNames[cubeName])
+                if (cubeLowerNames[cubeName])
                 {
                     _selectedCubeName = link.html();
                 }
                 else
                 {
-                    if (anchorCubeNames['rpm.class.' + cubeName])
+                    if (cubeLowerNames['rpm.class.' + cubeName])
                     {
                         _selectedCubeName = 'rpm.class.' + link.html();
                     }
-                    else if (anchorCubeNames['rpm.enum.' + cubeName])
+                    else if (cubeLowerNames['rpm.enum.' + cubeName])
                     {
                         _selectedCubeName = 'rpm.enum.' + link.html();
                     }
@@ -1976,7 +1961,7 @@ $(function ()
         }
         else if (_activeTab == 'picTab')
         {
-            // TODO: Load D3.js pictures
+            buildGraph();
         }
         else
         {
@@ -1984,6 +1969,74 @@ $(function ()
         }
         openGroupContainingLastSelectedNCube();
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
+    }
+
+    function getGraphData()
+    {
+        return [{"crimeType": "mip", "totalCrimes": 24}, {
+            "crimeType": "theft",
+            "totalCrimes": 558
+        }, {"crimeType": "drugs", "totalCrimes": 81}, {"crimeType": "arson", "totalCrimes": 3}, {
+            "crimeType": "assault",
+            "totalCrimes": 80
+        }, {"crimeType": "burglary", "totalCrimes": 49}, {
+            "crimeType": "disorderlyConduct",
+            "totalCrimes": 63
+        }, {"crimeType": "mischief", "totalCrimes": 189}, {
+            "crimeType": "dui",
+            "totalCrimes": 107
+        }, {"crimeType": "resistingArrest", "totalCrimes": 11}, {
+            "crimeType": "sexCrimes",
+            "totalCrimes": 24
+        }, {"crimeType": "other", "totalCrimes": 58}];
+    }
+
+    function buildGraph()
+    {
+        var width = 1000,
+            height = 800,
+            radius = Math.min(width, height) / 2;
+
+        var color = d3.scale.ordinal()
+            .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+        var arc = d3.svg.arc()
+            .outerRadius(radius - 10)
+            .innerRadius(radius - 70);
+
+        var pie = d3.layout.pie()
+            .sort(null)
+            .value(function (d) {
+                return d.totalCrimes;
+            });
+
+
+        var svg = d3.select("#visual")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        var g = svg.selectAll(".arc")
+            .data(pie(getGraphData()))
+            .enter().append("g")
+            .attr("class", "arc");
+
+        g.append("path")
+            .attr("d", arc)
+            .style("fill", function (d) {
+                return color(d.data.crimeType);
+            });
+
+        g.append("text")
+            .attr("transform", function (d) {
+                return "translate(" + arc.centroid(d) + ")";
+            })
+            .attr("dy", ".35em")
+            .style("text-anchor", "middle")
+            .text(function (d) {
+                return d.data.crimeType;
+            });
     }
 
     /**
@@ -3222,11 +3275,12 @@ $(function ()
 
     function loadColumns(axis)
     {
-        var inst = $('#editColInstructions')
+        var insTitle = $('#editColInstTitle');
+        var inst = $('#editColInstructions');
         if ('DISCRETE' == axis.type.name)
         {
-            inst.html("<b>Discrete column</b><br> \
-            <ul>A <i>discrete</i> column has a single value per column. Values are matched with '='.  Strings are matched case-sensitively.  Case of entered values is retained. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
+            insTitle.html('Instructions - Discrete Column');
+            inst.html("<ul>A <i>discrete</i> column has a single value per column. Values are matched with '='.  Strings are matched case-sensitively.  Case of entered values is retained. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
         <li>Examples: \
         <ul> \
         <li>Enter string values as is, no quotes: OH</li> \
@@ -3237,8 +3291,8 @@ $(function ()
         }
         else if ('RANGE' == axis.type.name)
         {
-            inst.html("<b>Range column</b><br> \
-            <ul>A <i>range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+            insTitle.html('Instructions - Range Column');
+            inst.html("<ul>A <i>range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
         <li>Enter low value, high value. Treated inclusive, exclusive.</li> \
         <li>Examples: \
         <ul> \
@@ -3249,8 +3303,8 @@ $(function ()
         }
         else if ('SET' == axis.type.name)
         {
-            inst.html("<b>Set column</b><br> \
-            <ul>A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values match with '=' and ranges match when value is within the range.  Overlapping ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+            insTitle.html('Instructions - Set Column');
+            inst.html("<ul>A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values match with '=' and ranges match when value is within the range.  Overlapping ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis. Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
         <li>Examples: \
         <ul> \
         <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
@@ -3262,8 +3316,8 @@ $(function ()
         }
         else if ('NEAREST' == axis.type.name)
         {
-            inst.html("<b>Nearest column</b><br> \
-        <ul>Single value per column.  The <i>closest</i> column on the axis to the passed in value is matched.  Strings are compared similar to spell-check (<a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm).  Lat/Lon's column values are compared using earth curvature in distance calculation (<a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla).  Numbers compared using abs(column - value).  Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
+            insTitle.html('Instructions - Nearest Column');
+            inst.html("<ul>Single value per column.  The <i>closest</i> column on the axis to the passed in value is matched.  Strings are compared similar to spell-check (<a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm).  Lat/Lon's column values are compared using earth curvature in distance calculation (<a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla).  Numbers compared using abs(column - value).  Runs in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
         <li>Examples: \
         <ul> \
         <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> 'alfa' will match column <code>Alpha</code>.  It has closest 'edit' distance.</li> \
@@ -3273,8 +3327,8 @@ $(function ()
         }
         else if ('RULE' == axis.type.name)
         {
-            inst.html("<b>Rule column</b><br> \
-            <ul>A rule condition is entered into each column.  All rule conditions that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> conditions will fire. See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>.  The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, if the name of a rule is bound to the rule axis, execution will start on that rule.  A rule axis can have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, otherwise a CoordinateNotFound exception will be thrown.\
+            insTitle.html('Instructions - Rule Column');
+            inst.html("<ul>A rule condition is entered into each column.  All rule conditions that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> conditions will fire. See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>.  The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, if the name of a rule is bound to the rule axis, execution will start on that rule.  A rule axis can have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, otherwise a CoordinateNotFound exception will be thrown.\
         <li>Notes: \
         <ul> \
         <li>Enter the [optional] rule name in the top line (no quotes).</li> \
@@ -3285,6 +3339,7 @@ $(function ()
         }
         else
         {
+            insTitle.html('Instructions');
             inst.html('Unknown axis type');
         }
 
