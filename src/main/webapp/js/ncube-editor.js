@@ -1408,10 +1408,6 @@ $(function ()
             // Disallow any selecting within the table
             var table = $('table');
             table.addClass('noselect');
-            table.find('th').addClass('noselect');
-            table.find('tr').addClass('noselect');
-            var td = table.find('td');
-            td.addClass('noselect');
 
             $(".axis-menu").each(function ()
             {
