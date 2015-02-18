@@ -2215,8 +2215,8 @@ $(function ()
 
     function showActiveChangeSet()
     {
-        var changeSetName = localStorage[SELECTED_CHANGESET] ? localStorage[SELECTED_CHANGESET] : 'root';
-        $('#ChangeSetMenu').html('Change set:&nbsp;&nbsp;<kbd>' + changeSetName + '</kbd>&nbsp;&nbsp;<b class="caret"></b>');
+        var changeSetName = localStorage[SELECTED_CHANGESET] ? localStorage[SELECTED_CHANGESET] : 'none';
+        $('#ChangeSetMenu').html('Change set:&nbsp;<button class="btn-primary">&nbsp;' + changeSetName + '&nbsp;<b class="caret"></b></button>');
     }
 
     function loadAppNames()
