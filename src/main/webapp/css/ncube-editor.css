@@ -3,12 +3,6 @@ body {
     background-color: #FAF0E6;
 }
 
-#editColumnsModal .modal-dialog  {width:75%;}
-
-@media screen and (min-width: 768px) {
-    #editColumnsModal .modal-dialog  {width:800px;}
-}
-
 .ncube-selected {
     color: #444 !important;
     background-color:rgba(61, 139, 202, 0.25) !important;
@@ -76,6 +70,12 @@ div#east div.panel-body {
 div#editColumnsModal div.panel-group
 {
     margin-bottom: 0;
+}
+
+div#restoreCubeModal ul.list-group
+{
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 div#editColumnsModal ul.list-group

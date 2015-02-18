@@ -15,7 +15,7 @@ $(function ()
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
-    var _selectedTab = localStorage[SELECTED_TAB];
+    var _activeChangeSet = localStorage[SELECTED_CHANGESET] ? localStorage[SELECTED_CHANGESET] : null;
     var _testSelectionAnchor = -1;
     var _testData = null;
     var _selectedStatus = "SNAPSHOT";
@@ -53,6 +53,7 @@ $(function ()
 
     function initialize()
     {
+        showActiveChangeSet();
         loadAppNames();
         loadVersions();
         loadNCubes();
@@ -731,6 +732,22 @@ $(function ()
         {
             clearCache();
         });
+        $('#changeSetCreate').click(function()
+        {
+            newChangeSet();
+        });
+        $('#changeSetSwitch').click(function()
+        {
+            switchChangeSet();
+        });
+        $('#changeSetCommit').click(function()
+        {
+            commitChangeSet();
+        });
+        $('#changeSetRollback').click(function()
+        {
+            rollbackChangeSet();
+        });
 
         //  Set focused field when dialog appears so user can just start typing.
         _addParameterModal.on('shown.bs.modal', function () {
@@ -899,6 +916,26 @@ $(function ()
             var isUrl = _editCellRadioURL.find('input').is(':checked');
             showHideCacheCheckbox(isUrl)
         });
+    }
+
+    function newChangeSet()
+    {
+        alert('Create new Change Set');
+    }
+
+    function switchChangeSet()
+    {
+        alert('Switch Change Set');
+    }
+
+    function commitChangeSet()
+    {
+        alert('Commit Change Set');
+    }
+
+    function rollbackChangeSet()
+    {
+        alert('Rollback Change Set');
     }
 
     function showHideCacheCheckbox(isUrl)
@@ -2174,6 +2211,12 @@ $(function ()
             }
         }
         return false;
+    }
+
+    function showActiveChangeSet()
+    {
+        var changeSetName = localStorage[SELECTED_CHANGESET] ? localStorage[SELECTED_CHANGESET] : 'root';
+        $('#ChangeSetMenu').html('Change set:&nbsp;&nbsp;<kbd>' + changeSetName + '</kbd>&nbsp;&nbsp;<b class="caret"></b>');
     }
 
     function loadAppNames()

@@ -16,25 +16,18 @@
     <link href="css/bootstrap-select.min.css" rel="stylesheet"/>
     <link href="css/ncube-editor.css" rel="stylesheet"/>
 
-    <!-- Fav and touch icons -->
-    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="./ico/apple-touch-icon-144-precomposed.png">-->
-    <!--<link rel="apple-touch-icon-precomposed" sizes="114x114" href="./ico/apple-touch-icon-114-precomposed.png">-->
-    <!--<link rel="apple-touch-icon-precomposed" sizes="72x72" href="./ico/apple-touch-icon-72-precomposed.png">-->
-    <!--<link rel="apple-touch-icon-precomposed" href="./ico/apple-touch-icon-57-precomposed.png">-->
-    <!--<link rel="shortcut icon" href="./ico/favicon.png">-->
-
     <!-- jsoneditor -->
-    <link rel="stylesheet" type="text/css" href="./jsoneditor/jsoneditor.min.css">
-    <script type="text/javascript" src="./jsoneditor/jsoneditor.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="jsoneditor/jsoneditor.min.css">
+    <script type="text/javascript" src="jsoneditor/jsoneditor.min.js"></script>
 
     <!-- ace code editor -->
-    <script type="text/javascript" src="./jsoneditor/asset/ace/ace.js"></script>
-    <script type="text/javascript" src="./jsoneditor/asset/ace/mode-json.js"></script>
-    <script type="text/javascript" src="./jsoneditor/asset/ace/theme-textmate.js"></script>
-    <script type="text/javascript" src="./jsoneditor/asset/ace/theme-jsoneditor.js"></script>
+    <script type="text/javascript" src="jsoneditor/asset/ace/ace.js"></script>
+    <script type="text/javascript" src="jsoneditor/asset/ace/mode-json.js"></script>
+    <script type="text/javascript" src="jsoneditor/asset/ace/theme-textmate.js"></script>
+    <script type="text/javascript" src="jsoneditor/asset/ace/theme-jsoneditor.js"></script>
 
     <!-- json lint -->
-    <script type="text/javascript" src="./jsoneditor/asset/jsonlint/jsonlint.js"></script>
+    <script type="text/javascript" src="jsoneditor/asset/jsonlint/jsonlint.js"></script>
 </head>
 
 <body>
@@ -43,7 +36,8 @@
     <div class="navbar-header">
         <button class="navbar-toggle collapsed" type="button" data-toggle="collapse">
         </button>
-        <img height="40" src="./img/cube-logo.png"/><a class="navbar-brand" href="#">Configuration Editor</a>
+        <!--suppress CheckImageSize -->
+        <img height="40" src="img/cube-logo.png"/><a class="navbar-brand" href="#">Configuration Editor</a>
     </div>
     <nav class="navbar-collapse collapse" role="navigation" style="height: 1px;">
         <ul class="nav navbar-nav">
@@ -61,6 +55,16 @@
             </li>
             <li>
                 <a id="picTab" href="#drillPic" data-toggle="tab">Picture</a>
+            </li>
+            <li class="dropdown">
+                <a id="ChangeSetMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Change set: </a>
+                <ul class="dropdown-menu">
+                    <li><a id="changeSetCreate" href="#">New...</a></li>
+                    <li><a id="changeSetSwitch" href="#">Switch...</a></li>
+                    <li class="divider"></li>
+                    <li><a id="changeSetCommit" href="#">Commit...</a></li>
+                    <li><a id="changeSetRollback" href="#">Rollback...</a></li>
+                </ul>
             </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
@@ -92,18 +96,17 @@
 
     <div id="version-list-div" class="panel">
         <div class="panel-heading">
-            <h4 class="panel-title">
-                <div class="btn-group">
-                    <button type="button" class="btn-sm btn-primary dropdown-toggle" data-toggle="dropdown">
-                        <span>Version</span><span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
-                        <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
-                    </ul>
-                </div>
-                <span id="verCount" class="badge pull-right"></span>
-            </h4>
+            <h4 class="panel-title"></h4>
+            <div class="btn-group">
+                <button type="button" class="btn-sm btn-primary dropdown-toggle" data-toggle="dropdown">
+                    <span>Version</span><span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
+                    <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
+                </ul>
+            </div>
+            <span id="verCount" class="badge pull-right"></span>
         </div>
         <div class="panel-body">
             <ul class="nav nav-list" id="version-list">
@@ -120,26 +123,25 @@
 
     <div id="ncube-list-div" class="panel">
         <div class="panel-heading">
-            <h4 class="panel-title">
-                <div class="btn-group">
-                    <button type="button" class="btn-sm btn-primary dropdown-toggle" data-toggle="dropdown">
-                        <span>n-cubes</span><span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" id="newCubeMenu">New</a></li>
-                        <li><a href="#" id="renameCubeMenu">Rename</a></li>
-                        <li><a href="#" id="dupeCubeMenu">Duplicate</a></li>
-                        <li><a href="#" id="deleteCubeMenu">Delete</a></li>
-                        <li><a href="#" id="restoreCubeMenu">Restore</a></li>
-                        <li class="divider"></li>
-                        <li><a href="#" id="revisionHistoryMenu">Show revision history</a></li>
-                        <li><a href="#" id="showRefsToMenu">Show inbound references</a></li>
-                        <li><a href="#" id="showRefsFromMenu">Show outbound references</a></li>
-                        <li><a href="#" id="showReqScopeMenu">Show required scope</a></li>
-                    </ul>
-                </div>
-                <span id="ncubeCount" class="badge pull-right"></span>
-            </h4>
+            <h4 class="panel-title"></h4>
+            <div class="btn-group">
+                <button type="button" class="btn-sm btn-primary dropdown-toggle" data-toggle="dropdown">
+                    <span>n-cubes</span><span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a href="#" id="newCubeMenu">New</a></li>
+                    <li><a href="#" id="renameCubeMenu">Rename</a></li>
+                    <li><a href="#" id="dupeCubeMenu">Duplicate</a></li>
+                    <li><a href="#" id="deleteCubeMenu">Delete</a></li>
+                    <li><a href="#" id="restoreCubeMenu">Restore</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#" id="revisionHistoryMenu">Show revision history</a></li>
+                    <li><a href="#" id="showRefsToMenu">Show inbound references</a></li>
+                    <li><a href="#" id="showRefsFromMenu">Show outbound references</a></li>
+                    <li><a href="#" id="showReqScopeMenu">Show required scope</a></li>
+                </ul>
+            </div>
+            <span id="ncubeCount" class="badge pull-right"></span>
         </div>
         <div class="panel-body">
             <div class="accordion" id="ncube-list">
@@ -149,7 +151,7 @@
 </div>
 
 <div id="center" class="ui-layout-center">
-    <div id="ncubeTabContent" class="tab-content ui-layout-content" style="padding:0px">
+    <div id="ncubeTabContent" class="tab-content ui-layout-content" style="padding:0">
         <div id="ncube" class="tab-pane in active">
             <div class="well">
                 <div id="ncube-content" style="overflow:visible">
@@ -206,7 +208,7 @@
                 <div class="row top-buffer">
                     <div class="col-md-10">
                         <label class="control-label" for="cube_notes">Notes</label>
-                        <textarea class="form-control" type="text" id="cube_notes"></textarea>
+                        <textarea class="form-control" id="cube_notes"></textarea>
                     </div>
                 </div>
             </form>
@@ -217,27 +219,26 @@
 
                 <div id="testList" class="panel">
                     <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <div class="btn-group">
-                                <a id="runAllTestsButton" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-play" style="color:white"></span>&nbsp;Run All</a>
-                                <a type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
-                                    <span class="caret"></span>
-                                    <span class="sr-only">Toggle Dropdown</span>
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a id="runAllTestsMenu" href="#">Run All</a></li>
-                                    <li><a id="runCurrentTestMenu">Run Selected</a></li>
-                                    <li class="divider"></li>
-                                    <li><a id="renameCurrentTestMenu">Rename Test</a></li>
-                                    <li><a id="deleteCurrentTestMenu">Delete Test</a></li>
-                                    <li><a id="deleteAllTestsMenu">Delete All Tests</a></li>
-                                    <li class="divider"></li>
-                                    <li><a id="createNewTestMenu">Create Test</a></li>
-                                    <li><a id="duplicateCurrentTestMenu">Duplicate Test</a></li>
-                                </ul>
-                            </div>
-                            <span id="testCount" class="badge pull-right">4</span>
-                        </h4>
+                        <h4 class="panel-title"></h4>
+                        <div class="btn-group">
+                            <a id="runAllTestsButton" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-play" style="color:white"></span>&nbsp;Run All</a>
+                            <a type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a id="runAllTestsMenu" href="#">Run All</a></li>
+                                <li><a id="runCurrentTestMenu">Run Selected</a></li>
+                                <li class="divider"></li>
+                                <li><a id="renameCurrentTestMenu">Rename Test</a></li>
+                                <li><a id="deleteCurrentTestMenu">Delete Test</a></li>
+                                <li><a id="deleteAllTestsMenu">Delete All Tests</a></li>
+                                <li class="divider"></li>
+                                <li><a id="createNewTestMenu">Create Test</a></li>
+                                <li><a id="duplicateCurrentTestMenu">Duplicate Test</a></li>
+                            </ul>
+                        </div>
+                        <span id="testCount" class="badge pull-right">4</span>
                     </div>
                     <div class="panel-body" style="height: 100%;">
                         <ul class="list-group" id="testListItems">
@@ -573,8 +574,6 @@
     </div>
 </div>
 
-
-
 <!-- Delete Parameter Modal -->
 <div id="deleteParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteParameterLabel"
      aria-hidden="true" data-backdrop="static">
@@ -589,14 +588,14 @@
             </div>
             <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
-                <button id="deleteParameterOk" class="btn btn-primary" ref-data="">Delete</button>
+                <button id="deleteParameterOk" class="btn btn-primary">Delete</button>
             </div>
         </div>
         <input type="hidden" id="deleteParameterHiddenId" value="" />
     </div>
 </div>
 
-<!-- Delete Parameter Modal -->
+<!-- Delete Test Modal -->
 <div id="deleteTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteTestTitle"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog">
@@ -610,7 +609,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
-                <button id="deleteTestOk" class="btn btn-primary" ref-data="">Delete</button>
+                <button id="deleteTestOk" class="btn btn-primary">Delete</button>
             </div>
         </div>
         <input type="hidden" id="deleteTestHiddenId" value="" />
@@ -927,7 +926,7 @@
 <!-- 'Update Columns' Modal -->
 <div id="editColumnsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editColumnsLabel"
      aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -1008,7 +1007,7 @@
                 <form role="form">
                     <div class="form-group">
                         <label for="editCellValue">Change to</label>
-                        <textarea class="form-control" type="text" placeholder="Enter cell value here" id="editCellValue" rows="4"></textarea>
+                        <textarea class="form-control" placeholder="Enter cell value here" id="editCellValue" rows="4"></textarea>
                     </div>
 
                     <div class="form-group">
