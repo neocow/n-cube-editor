@@ -116,7 +116,7 @@ public class NCubeController extends BaseController
     {
         if (false)
         {   // permissions checks
-            markRequestFailed("You do not have permissions to update cells in " + appId.cacheKey(cubeName));
+            markRequestFailed("You do not have permissions to make changes in " + appId.cacheKey(cubeName));
             return false;
         }
 
@@ -1007,13 +1007,13 @@ public class NCubeController extends BaseController
         }
     }
 
-    public boolean clearCells(String app, String version, String status, String cubeName, Object[] ids)
+    public boolean clearCells(ApplicationID appId, String cubeName, Object[] ids)
     {
         try
         {
-            if (!isAllowed(app, version, cubeName))
+            appId = addTenant(appId);
+            if (!isAllowed(appId, cubeName))
             {
-                markRequestFailed("You do not have permissions to cut cells from cube: " + cubeName + " for app: " + app);
                 return false;
             }
 
@@ -1023,7 +1023,6 @@ public class NCubeController extends BaseController
                 return false;
             }
 
-            ApplicationID appId = new ApplicationID(ApplicationID. DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name());
             NCube ncube = getCube(appId, cubeName);
 
             for (Object id : ids)

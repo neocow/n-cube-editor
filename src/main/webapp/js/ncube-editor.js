@@ -388,7 +388,7 @@ $(function ()
         // Clear cells from database
         if (isCut)
         {
-            var result = call("ncubeController.clearCells", [_selectedApp, _selectedVersion, _selectedStatus, _selectedCubeName, cells]);
+            var result = call("ncubeController.clearCells", [getAppId(), _selectedCubeName, cells]);
             if (!result.status)
             {
                 _errorId = showNote('Error cutting cells:<hr class="hr-small"/>' + result.data);
@@ -3770,7 +3770,7 @@ $(function ()
     function editCellClear()
     {
         _editCellModal.modal('hide');
-        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, null]);
+        var result = call("ncubeController.updateCell", [getAppId(), _selectedCubeName, _cellId, null]);
 
         if (result.status === false)
         {
@@ -3799,7 +3799,7 @@ $(function ()
         cellInfo.isCached = _editCellCache.find('input').is(':checked');
         _editCellModal.modal('hide');
 
-        var result = call("ncubeController.updateCell", [_selectedCubeName, _selectedApp, _selectedVersion, _cellId, cellInfo]);
+        var result = call("ncubeController.updateCell", [getAppId(), _selectedCubeName, _cellId, cellInfo]);
 
         if (result.status === false)
         {
