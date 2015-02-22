@@ -7,6 +7,7 @@
 
 $(function ()
 {
+    var head = 'HEAD';
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
     var _cubeList = {};
     var _apps = [];
@@ -15,7 +16,16 @@ $(function ()
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
-    var _selectedBranch = localStorage[SELECTED_BRANCH] ? localStorage[SELECTED_BRANCH] : null;
+    var _selectedBranch;
+    if (localStorage.getItem(SELECTED_BRANCH) == null)
+    {
+        localStorage[SELECTED_BRANCH] = 'HEAD';
+        _selectedBranch = null;
+    }
+    else
+    {
+        _selectedBranch = localStorage[SELECTED_BRANCH];
+    }
     var _testSelectionAnchor = -1;
     var _testData = null;
     var _selectedStatus = "SNAPSHOT";
@@ -3821,6 +3831,7 @@ $(function ()
     }
 
     // =========================== Everything to do with Branching ===============================
+
     function addBranchListeners()
     {
         // Main menu options
@@ -3850,14 +3861,44 @@ $(function ()
 
     function showActiveBranch()
     {
-        var branchName = localStorage[SELECTED_BRANCH] ? localStorage[SELECTED_BRANCH] : 'HEAD';
-        $('#BranchMenu').html('Branch:&nbsp;<button class="btn-primary">&nbsp;' + branchName + '&nbsp;<b class="caret"></b></button>');
+        $('#BranchMenu').html('Branch:&nbsp;<button class="btn-primary">&nbsp;' + (localStorage[SELECTED_BRANCH] || head) + '&nbsp;<b class="caret"></b></button>');
     }
 
     function selectBranch()
     {
+        clearError();
         $('#newBranchName').val("");
         $('#branchNameWarning').hide();
+
+        var result = call("ncubeController.getBranches", [getAppId()]);
+
+        if (!result.status)
+        {
+            _errorId = showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        var branchNames = result.data;
+        var ul = $('#branchList');
+        ul.empty();
+
+        $.each(branchNames, function (name)
+        {
+            if (!name)
+            {
+                name = head;
+            }
+            var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
+            var anchor = $('<a href="#"/>');
+            anchor.html('<kbd> ' + name + ' </kbd>');
+            anchor.click(function ()
+            {
+                changeBranch(name);
+            });
+            li.append(anchor);
+            ul.append(li);
+        });
+
         _selectBranchModal.modal('show');
     }
 
@@ -3872,11 +3913,28 @@ $(function ()
             return;
         }
 
+        changeBranch(branchName);
+    }
+
+    function changeBranch(branchName)
+    {
+         if (head.toLowerCase() == branchName.toLowerCase())
+         {
+             branchName = null;
+         }
         _selectedBranch = branchName;
-        localStorage[SELECTED_BRANCH] = _selectedBranch;
+        if (_selectedBranch)
+        {
+            localStorage[SELECTED_BRANCH] = branchName;
+        }
+        else
+        {
+            localStorage.removeItem(SELECTED_BRANCH);
+
+        }
         _selectBranchModal.modal('hide');
         showActiveBranch();
-        _errorId = showNote('Active branch now: <kbd>' + _selectedBranch + '</kbd>', 'Note', 5000);
+        _errorId = showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 4000);
     }
 
     function commitBranch()
@@ -3890,6 +3948,7 @@ $(function ()
     }
 
     // ============================================ End Branching =============================================
+
     function buildDropDown(listId, inputId, list, callback)
     {
         var ul = $(listId);

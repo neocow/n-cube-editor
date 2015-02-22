@@ -112,17 +112,35 @@ public class NCubeController extends BaseController
         return user;
     }
 
+    private boolean isAllowed(ApplicationID appId, String cubeName)
+    {
+        if (false)
+        {   // permissions checks
+            markRequestFailed("You do not have permissions to update cells in " + appId.cacheKey(cubeName));
+            return false;
+        }
+
+        if (appId.isRelease())
+        {
+            markRequestFailed("Release cubes cannot be edited, cube: " + appId.cacheKey(cubeName));
+            return false;
+        }
+
+        if ("HEAD".equalsIgnoreCase(appId.getBranch()) || StringUtilities.isEmpty(appId.getBranch()))
+        {
+            markRequestFailed("A branch must be selected or created before you can edit, cube: " + appId.cacheKey(cubeName));
+            return false;
+        }
+        return true;
+    }
+
+    // TODO: Remove this method once all signatures are using ApplicationID
     private boolean isAllowed(String app, String version)
     {
         return true;
-//        String user = getUser();
-//        NCube adminCube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), "sys.admin.permissions");
-//        Map input = new HashMap();
-//        input.put("username", user);
-//        input.put("function", "admin");
-//        return (boolean) adminCube.getCell(input);
     }
 
+    // TODO: Remove this method once all signatures are using ApplicationID
     private boolean isAllowed(String app, String version, String cubeName)
     {
         return true;
@@ -216,13 +234,20 @@ public class NCubeController extends BaseController
 
     public void restoreCube(ApplicationID appId, Object[] cubeNames)
     {
-        if (StringUtilities.isEmpty(appId.getBranch()))
+        try
         {
-            markRequestFailed("A branch must be started to restore a cube.");
+            if (StringUtilities.isEmpty(appId.getBranch()))
+            {
+                markRequestFailed("A branch must be started to restore a cube.");
+            }
+            else
+            {
+                nCubeService.restoreCube(addTenant(appId), cubeNames, getUserForDatabase());
+            }
         }
-        else
+        catch (Exception e)
         {
-            nCubeService.restoreCube(appId, cubeNames, getUserForDatabase());
+            fail(e);
         }
     }
 
@@ -324,8 +349,7 @@ public class NCubeController extends BaseController
         }
         catch (Exception e)
         {
-            markRequestFailed(getCauses(e));
-            LOG.info(getCauses(e));
+            fail(e);
             return null;
         }
     }
@@ -931,17 +955,17 @@ public class NCubeController extends BaseController
     /**
      * In-place update of a cell.
      */
-    public boolean updateCell(String cubeName, String app, String version, Object[] ids, CellInfo cellInfo)
+    public boolean updateCell(ApplicationID appId, String cubeName, Object[] ids, CellInfo cellInfo)
     {
         try
         {
-            if (!isAllowed(app, version, cubeName))
+            appId = addTenant(appId);
+            if (!isAllowed(appId, cubeName))
             {
-                markRequestFailed("You do not have permissions to update cells in cube: " + cubeName + " for app: " + app);
                 return false;
             }
 
-            NCube ncube = getCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), cubeName);
+            NCube ncube = getCube(appId, cubeName);
             Set<Long> colIds = getCoordinate(ids);
 
             if (cellInfo == null)
@@ -1122,7 +1146,30 @@ public class NCubeController extends BaseController
     {
         try
         {
-            return nCubeService.getBranches(addTenant(appId));
+            List<String> branches = nCubeService.getBranches(addTenant(appId));
+            // Sort and convert here, outside database transaction
+            Collections.sort(branches, new Comparator<Object>()
+            {
+                public int compare(Object o1, Object o2)
+                {
+                    if (o1 == null || o2 == null)
+                    {
+                        if (o1 == null && o2 != null)
+                        {
+                            return -1;
+                        }
+                        else if (o1 != null)
+                        {
+                            return 1;
+                        }
+                        return 0;
+                    }
+                    String s1 = (String) o1;
+                    String s2 = (String) o2;
+                    return s1.compareToIgnoreCase(s2);
+                }
+            });
+            return branches.toArray();
         }
         catch (Exception e)
         {

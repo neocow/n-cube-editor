@@ -67,7 +67,7 @@ public class NCubeService
         return NCubeManager.getAppVersions(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, ApplicationID.DEFAULT_VERSION, status));
     }
 
-    public Object[] getBranches(ApplicationID appId)
+    public List<String> getBranches(ApplicationID appId)
     {
         return NCubeManager.getBranches(appId);
     }
