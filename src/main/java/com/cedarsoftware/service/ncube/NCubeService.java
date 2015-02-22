@@ -42,15 +42,14 @@ public class NCubeService
         return NCubeManager.getCubeRecordsFromDatabase(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), pattern);
     }
 
-    public Object[] getDeletedCubes(String pattern, String app, String version)
+    public Object[] getDeletedCubes(ApplicationID appId, String pattern)
     {
-        return NCubeManager.getDeletedCubesFromDatabase(
-                new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, ReleaseStatus.SNAPSHOT.name()), pattern);
+        return NCubeManager.getDeletedCubesFromDatabase(new ApplicationID(ApplicationID.DEFAULT_TENANT, appId.getApp(), appId.getVersion(), appId.getStatus(), appId.getBranch()), pattern);
     }
 
-    public void restoreCube(String app, String version, String status, Object[] cubeNames, String username)
+    public void restoreCube(ApplicationID appId, Object[] cubeNames, String username)
     {
-        NCubeManager.restoreCube(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), cubeNames, username);
+        NCubeManager.restoreCube(appId, cubeNames, username);
     }
 
     public Object[] getRevisionHistory(String cubeName, String app, String version, String status)
@@ -66,6 +65,11 @@ public class NCubeService
     public Object[] getAppVersions(String app, String status)
     {
         return NCubeManager.getAppVersions(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, ApplicationID.DEFAULT_VERSION, status));
+    }
+
+    public Object[] getBranches(ApplicationID appId)
+    {
+        return NCubeManager.getBranches(appId);
     }
 
     public void createCube(NCube ncube, String app, String version, String username)

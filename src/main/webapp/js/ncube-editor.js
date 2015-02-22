@@ -15,7 +15,7 @@ $(function ()
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
-    var _activeChangeSet = localStorage[SELECTED_CHANGESET] ? localStorage[SELECTED_CHANGESET] : null;
+    var _selectedBranch = localStorage[SELECTED_BRANCH] ? localStorage[SELECTED_BRANCH] : null;
     var _testSelectionAnchor = -1;
     var _testData = null;
     var _selectedStatus = "SNAPSHOT";
@@ -43,6 +43,7 @@ $(function ()
     var _renameTestModal = $('#renameTestModal');
     var _duplicateTestModal = $('#duplicateTestModal');
     var _deleteTestModal = $('#deleteTestmodal');
+    var _selectBranchModal = $('#selectBranchModal');
 
     //  locations
     var _testResultsDiv = $('#testResultsDiv');
@@ -53,7 +54,7 @@ $(function ()
 
     function initialize()
     {
-        showActiveChangeSet();
+        showActiveBranch();
         loadAppNames();
         loadVersions();
         loadNCubes();
@@ -210,7 +211,7 @@ $(function ()
 
     function editPaste()
     {
-        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        if (!ensureModifiable('Cannot paste cells.'))
         {
             return;
         }
@@ -336,7 +337,7 @@ $(function ()
 
     function editCutCopy(isCut)
     {
-        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
+        if (isCut && !ensureModifiable('Cannot cut / copy cells.'))
         {
             return;
         }
@@ -732,22 +733,7 @@ $(function ()
         {
             clearCache();
         });
-        $('#changeSetCreate').click(function()
-        {
-            newChangeSet();
-        });
-        $('#changeSetSwitch').click(function()
-        {
-            switchChangeSet();
-        });
-        $('#changeSetCommit').click(function()
-        {
-            commitChangeSet();
-        });
-        $('#changeSetRollback').click(function()
-        {
-            rollbackChangeSet();
-        });
+        addBranchListeners();
 
         //  Set focused field when dialog appears so user can just start typing.
         _addParameterModal.on('shown.bs.modal', function () {
@@ -916,26 +902,6 @@ $(function ()
             var isUrl = _editCellRadioURL.find('input').is(':checked');
             showHideCacheCheckbox(isUrl)
         });
-    }
-
-    function newChangeSet()
-    {
-        alert('Create new Change Set');
-    }
-
-    function switchChangeSet()
-    {
-        alert('Switch Change Set');
-    }
-
-    function commitChangeSet()
-    {
-        alert('Commit Change Set');
-    }
-
-    function rollbackChangeSet()
-    {
-        alert('Rollback Change Set');
     }
 
     function showHideCacheCheckbox(isUrl)
@@ -2213,12 +2179,6 @@ $(function ()
         return false;
     }
 
-    function showActiveChangeSet()
-    {
-        var changeSetName = localStorage[SELECTED_CHANGESET] ? localStorage[SELECTED_CHANGESET] : 'none';
-        $('#ChangeSetMenu').html('Change set:&nbsp;<button class="btn-primary">&nbsp;' + changeSetName + '&nbsp;<b class="caret"></b></button>');
-    }
-
     function loadAppNames()
     {
         _apps = [];
@@ -2379,6 +2339,7 @@ $(function ()
             return;
         }
 
+
         $('#deleteCubeLabel').html('Delete \'' + _selectedCubeName + '\' (' + _selectedVersion + ', ' + _selectedStatus + ') ?');
         $('#deleteCubeModal').modal();
     }
@@ -2408,15 +2369,21 @@ $(function ()
     function restoreCube()
     {
         clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
+        if (!_selectedApp || !_selectedVersion || !_selectedStatus)
         {
-            _errorId = showNote('No n-cube selected. No (inbound) references to show.');
+            _errorId = showNote('Need to have an application, version, and status selected first.');
             return;
         }
+        if (!_selectedBranch)
+        {
+            selectBranch();
+            return;
+        }
+
         var ul = $('#deletedCubeList');
         ul.empty();
         $('#restoreCubeLabel').html('Restore Cubes in ' + _selectedVersion + ', ' + _selectedStatus);
-        var result = call("ncubeController.getDeletedCubeList", ["", _selectedApp, _selectedVersion]);
+        var result = call("ncubeController.getDeletedCubeList", [getAppId(), ""]);
         if (result.status === true)
         {
             $.each(result.data, function (index, value)
@@ -2448,7 +2415,7 @@ $(function ()
             }
         });
 
-        var result = call("ncubeController.restoreCube", [_selectedApp, _selectedVersion, _selectedStatus, cubesToRestore]);
+        var result = call("ncubeController.restoreCube", [getAppId(), cubesToRestore]);
         if (result.status === true)
         {
             loadNCubes();
@@ -2478,7 +2445,7 @@ $(function ()
         {
             $.each(result.data, function (index, value)
             {
-                var li = $("<li/>").attr({'class': 'list-group-item'});
+                var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
                 var anchor = $('<a href="#"/>');
                 var date = '';
                 if (value.createDate != undefined)
@@ -2739,6 +2706,7 @@ $(function ()
 
     function dupeCubeCopy()
     {
+        // TODO: Need to determine if a branch is selected for the destination ApplicationID before allowing this
         $('#dupeCubeModal').modal('hide');
         var newName = $('#dupeCubeName').val();
         var newApp = $('#dupeCubeAppName').val();
@@ -2773,7 +2741,7 @@ $(function ()
             _errorId = showNote('No n-cube selected. No (inbound) references to show.');
             return;
         }
-        $('#showRefsToLabel').html('Inbound refs to \'' + _selectedCubeName + '\' (' + _selectedVersion + ', ' + _selectedStatus + ')');
+        $('#showRefsToLabel').html('Inbound refs to: ' + _selectedCubeName);
         var ul = $('#refsToCubeList');
         ul.empty();
         $('#showRefsToCubeModal').modal();
@@ -2782,7 +2750,7 @@ $(function ()
         {
             $.each(result.data, function (index, value)
             {
-                var li = $("<li/>").attr({'class': 'list-group-item'});
+                var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
                 var anchor = $('<a href="#"/>');
                 anchor.html(value);
                 anchor.click(function ()
@@ -2814,7 +2782,7 @@ $(function ()
             _errorId = showNote('No n-cube selected. No (outbound) references to show.');
             return;
         }
-        $('#showRefsFromLabel').html('Outbound refs of \'' + _selectedCubeName + '\' (' + _selectedVersion + ', ' + _selectedStatus + ')');
+        $('#showRefsFromLabel').html('Outbound refs of: ' + _selectedCubeName);
         var ul = $('#refsFromCubeList');
         ul.empty();
         $('#showRefsFromCubeModal').modal();
@@ -2823,7 +2791,7 @@ $(function ()
         {
             $.each(result.data, function (index, value)
             {
-                var li = $("<li/>").attr({'class': 'list-group-item'});
+                var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
                 var anchor = $('<a href="#"/>');
                 anchor.html(value);
                 anchor.click(function ()
@@ -2864,7 +2832,7 @@ $(function ()
         {
             $.each(result.data, function (index, value)
             {
-                var li = $("<li/>").attr({'class': 'list-group-item'});
+                var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
                 li.html(value);
                 ul.append(li);
             });
@@ -3477,6 +3445,12 @@ $(function ()
             _errorId = showNote(operation + ' Only a SNAPSHOT version can be modified.');
             return false;
         }
+        if (!_selectedBranch)
+        {
+            selectBranch();
+            return false;
+        }
+
         return true;
     }
 
@@ -3846,7 +3820,76 @@ $(function ()
         reloadCube();
     }
 
-    // --------------------------------------------------------------------------------------------
+    // =========================== Everything to do with Branching ===============================
+    function addBranchListeners()
+    {
+        // Main menu options
+        $('#branchSelect').click(function()
+        {
+            selectBranch();
+        });
+        $('#branchCommit').click(function()
+        {
+            commitBranch();
+        });
+        $('#branchRollback').click(function()
+        {
+            rollbackBranch();
+        });
+
+        // From 'Select / Create Branch' Modal
+        $('#createBranch').click(function()
+        {
+            createBranch();
+        });
+        $('#branchNameWarning').find('button').click(function()
+        {
+            $('#branchNameWarning').hide();
+        });
+    }
+
+    function showActiveBranch()
+    {
+        var branchName = localStorage[SELECTED_BRANCH] ? localStorage[SELECTED_BRANCH] : 'HEAD';
+        $('#BranchMenu').html('Branch:&nbsp;<button class="btn-primary">&nbsp;' + branchName + '&nbsp;<b class="caret"></b></button>');
+    }
+
+    function selectBranch()
+    {
+        $('#newBranchName').val("");
+        $('#branchNameWarning').hide();
+        _selectBranchModal.modal('show');
+    }
+
+    function createBranch()
+    {
+        var branchName = $('#newBranchName').val();
+        var validName = /^[a-zA-Z_][0-9a-zA-Z_.-]*$/i;
+
+        if (!validName.test(branchName))
+        {
+            $('#branchNameWarning').show();
+            return;
+        }
+
+        _selectedBranch = branchName;
+        localStorage[SELECTED_BRANCH] = _selectedBranch;
+        _selectBranchModal.modal('hide');
+        showActiveBranch();
+        _errorId = showNote('Active branch now: <kbd>' + _selectedBranch + '</kbd>', 'Note', 5000);
+    }
+
+    function commitBranch()
+    {
+        alert('Commit Branch');
+    }
+
+    function rollbackBranch()
+    {
+        alert('Rollback Branch');
+    }
+
+    // ============================================ End Branching =============================================
     function buildDropDown(listId, inputId, list, callback)
     {
         var ul = $(listId);
@@ -3880,13 +3923,14 @@ $(function ()
         return found;
     }
 
-    function showNote(msg, title)
+    function showNote(msg, title, seconds)
     {
         return $.gritter.add({
             title: (title || 'Note'),
             text: msg,
             image: './img/cube-logo.png',
-            sticky: true
+            sticky: !seconds,
+            time: (seconds || 0)
         });
     }
 
@@ -3921,5 +3965,20 @@ $(function ()
     function getUniqueId()
     {
         return _colIds--;
+    }
+
+    /**
+     * Get the ApplicationID based on the user's selections.  Tenant is sent not sent (server will fill
+     * that in based on authentication.
+     * @returns {app: *, version: *, status: string, branch: *}
+     */
+    function getAppId()
+    {
+        return {
+            'app':_selectedApp,
+            'version':_selectedVersion,
+            'status':_selectedStatus,
+            'branch':_selectedBranch
+        }
     }
 });

@@ -208,15 +208,22 @@ public class NCubeController extends BaseController
         }
     }
 
-    public Object[] getDeletedCubeList(String filter, String app, String version)
+    public Object[] getDeletedCubeList(ApplicationID appId, String filter)
     {
-        Object[] cubeInfos = nCubeService.getDeletedCubes(filter, app, version);
+        Object[] cubeInfos = nCubeService.getDeletedCubes(appId, filter);
         return cubeInfos;
     }
 
-    public void restoreCube(String app, String version, String status, Object[] cubeNames)
+    public void restoreCube(ApplicationID appId, Object[] cubeNames)
     {
-        nCubeService.restoreCube(app, version, status, cubeNames, getUserForDatabase());
+        if (StringUtilities.isEmpty(appId.getBranch()))
+        {
+            markRequestFailed("A branch must be started to restore a cube.");
+        }
+        else
+        {
+            nCubeService.restoreCube(appId, cubeNames, getUserForDatabase());
+        }
     }
 
     public Object[] getRevisionHistory(String cubeName, String app, String version, String status)
@@ -470,14 +477,15 @@ public class NCubeController extends BaseController
     {
         try
         {
+            ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status);
             Set<String> references = new CaseInsensitiveSet<>();
             Object[] ncubes = nCubeService.getNCubes("%", app, version, status);
 
             for (Object ncube : ncubes)
             {
                 NCubeInfoDto info = (NCubeInfoDto) ncube;
-                NCubeManager.getReferencedCubeNames(new ApplicationID(ApplicationID.DEFAULT_TENANT, app, version, status), info.name, references);
-                if (references.contains(name))
+                NCube loadedCube = NCubeManager.getCube(appId, ((NCubeInfoDto) ncube).name);
+                if (loadedCube.getReferencedCubeNames().contains(name))
                 {
                     references.add(info.name);
                 }
@@ -1110,6 +1118,19 @@ public class NCubeController extends BaseController
         }
     }
 
+    public Object[] getBranches(ApplicationID appId)
+    {
+        try
+        {
+            return nCubeService.getBranches(addTenant(appId));
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return null;
+        }
+    }
+
     public Object[] getDelta(String app, String version, String status, int rev, String app2, String version2, String status2, int rev2)
     {
         try
@@ -1228,4 +1249,8 @@ public class NCubeController extends BaseController
         return colIds;
     }
 
+    private ApplicationID addTenant(ApplicationID appId)
+    {
+        return new ApplicationID(ApplicationID.DEFAULT_TENANT, appId.getApp(), appId.getVersion(), appId.getStatus(), appId.getBranch());
+    }
 }

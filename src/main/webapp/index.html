@@ -57,13 +57,15 @@
                 <a id="picTab" href="#drillPic" data-toggle="tab">Picture</a>
             </li>
             <li class="dropdown">
-                <a id="ChangeSetMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Change set: </a>
+                <a id="BranchMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Branch: </a>
                 <ul class="dropdown-menu dropdown-menu-right">
-                    <li><a id="changeSetCreate" href="#">New...</a></li>
-                    <li><a id="changeSetSwitch" href="#">Switch...</a></li>
+                    <li><a id="branchSelect" href="#">Select/Create Branch...</a></li>
                     <li class="divider"></li>
-                    <li><a id="changeSetCommit" href="#">Commit...</a></li>
-                    <li><a id="changeSetRollback" href="#">Rollback...</a></li>
+                    <li><a id="branchUpdate" href="#">Update</a></li>
+                    <li><a id="branchPullRequest" href="#">Pull Request...</a></li>
+                    <li class="divider"></li>
+                    <li><a id="branchCommit" href="#">Commit...</a></li>
+                    <li><a id="branchRollback" href="#">Rollback...</a></li>
                 </ul>
             </li>
         </ul>
@@ -460,7 +462,7 @@
 <!-- Revision History Modal -->
 <div id="revisionHistoryModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="revisionHistoryLabel"
      aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -473,6 +475,64 @@
             <div class="modal-footer">
                 <!--<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>-->
                 <button id="revisionHistoryOk" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Select or Create Branch Modal -->
+<div id="selectBranchModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="chooseBranchLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="chooseBranchLabel" class="modal-title">Select or Create Branch</h3>
+            </div>
+            <div class="modal-body" style="overflow: auto;height:450px">
+
+                <form role="form">
+                    <div class="well well-sm">
+                        <span class="help-block">Before a change can be made, a <b>branch</b> must selected or created.</span>
+                    </div>
+                </form>
+
+                <form role="form">
+                    <div class="form-group">
+                        <div id="branchNameWarning" class="alert alert-warning alert-dismissible" role="alert">
+                            <button type="button" class="close" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            Name must contain only a-z, A-Z, 0-9, _ (underscope), - (dash), or . (dot)
+                        </div>
+                        <label for="newBranchName">New Branch Name</label>
+                        <div class="input-group">
+                            <input id="newBranchName" type="text" class="form-control">
+                            <span class="input-group-btn">
+                                <button id="createBranch" class="btn btn-default" type="button">Create</button>
+                            </span>
+                        </div>
+                    </div>
+                </form>
+
+                <form role="form">
+                    <div class="form-group">
+                        <label for="branchList">Select Existing Branch:</label>
+                        <ul id="branchList" class="list-group">
+                            <li class="list-group-item skinny-lr"><a href="#"><kbd>HEAD</kbd></a>
+                            <li class="list-group-item skinny-lr"><a href="#"><kbd>JIRA-555</kbd></a>
+                            </li>
+                            <li class="list-group-item skinny-lr"><a href="#"><kbd>JIRA-1212</kbd></a>
+                            </li>
+                            <li class="list-group-item skinny-lr"><a href="#"><kbd>JIRA-1979</kbd></a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
             </div>
         </div>
     </div>
@@ -675,7 +735,7 @@
 <!-- 'Show References to' Modal -->
 <div id="showRefsToCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsToLabel"
      aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -695,7 +755,7 @@
 <!-- 'Show References from' Modal -->
 <div id="showRefsFromCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsFromLabel"
      aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
