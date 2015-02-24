@@ -2110,7 +2110,7 @@ $(function ()
             _errorId = showNote('No Status selected, cannot load n-cubes.');
             return;
         }
-        var result = call("ncubeController.getCubeList", [getAppId(), '%']);
+        var result = call("ncubeController.getCubeList", [getAppId(), '*']);
         var first = null;
         if (result.status === true)
         {
