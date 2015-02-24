@@ -381,6 +381,7 @@ $(function ()
             }
         });
         clipData += '\n';
+        // TODO: Talk to Ryan, see if there is a non-JQuery way to put the clipData in the text area
         _clipboard.val(clipData);
         _clipboard.focusin();
         _clipboard.select();
@@ -2234,6 +2235,7 @@ $(function ()
         $('#newCubeAppName').val(_selectedApp);
         $('#newCubeStatus').val('SNAPSHOT');
         $('#newCubeVersion').val(_selectedVersion);
+        $('#newCubeName').val('');
         buildDropDown('#newCubeAppList', '#newCubeAppName', _apps, function (app)
         {
             var result = call("ncubeController.getAppVersions", [getAppId()]);
@@ -2260,7 +2262,9 @@ $(function ()
         var appName = $('#newCubeAppName').val();
         var cubeName = $('#newCubeName').val();
         var version = $('#newCubeVersion').val();
-        var result = call("ncubeController.createCube", [getAppId(), cubeName]);
+        var appId = getAppId();
+        appId.version = version;
+        var result = call("ncubeController.createCube", [appId, cubeName]);
         if (result.status === true)
         {
             _selectedCubeName = cubeName;
@@ -2573,7 +2577,7 @@ $(function ()
 
 
         $('#renameTestOldName').val(test);
-        $('#renameTestNewName').val("");
+        $('#renameTestNewName').val('');
         $('#renameTestLabel').html('Rename \'' + test + '\'?');
 
         _renameTestModal.modal({
@@ -2591,7 +2595,7 @@ $(function ()
         $('#renameCubeAppName').val(_selectedApp);
         $('#renameCubeVersion').val(_selectedVersion);
         $('#renameCubeName').val(_selectedCubeName);
-        $('#renameNewCubeName').val("");
+        $('#renameNewCubeName').val('');
         $('#renameCubeLabel').html('Rename');
         $('#renameCubeModal').modal();
     }
@@ -3223,7 +3227,7 @@ $(function ()
         }
         var isRule = axis.type.name == 'RULE';
         var isNearest = axis.type.name == 'NEAREST';
-        $('#updateAxisLabel').html("Update Axis: " + axisName);
+        $('#updateAxisLabel').html('Update Axis');
         $('#updateAxisName').val(axisName);
         $('#updateAxisTypeName').val(axis.type.name);
         $('#updateAxisValueTypeName').val(axis.valueType.name);

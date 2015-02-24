@@ -802,7 +802,7 @@
                     </div>
                     <div class="form-group">
                         <label for="releaseCubesVersion">New SNAPSHOT Version</label>
-                        <input class="form-control" type="text" placeholder="" id="releaseCubesVersion"/>
+                        <input class="form-control" type="text" placeholder="Enter version number n.n.n here" id="releaseCubesVersion"/>
                     </div>
                 </form>
             </div>
@@ -827,7 +827,7 @@
                 <form role="form">
                     <div class="form-group">
                         <label for="changeVerValue">Change to</label>
-                        <input class="form-control" type="text" placeholder="" id="changeVerValue"/>
+                        <input class="form-control" type="text" placeholder="Enter version number n.n.n here" id="changeVerValue"/>
                     </div>
                 </form>
             </div>
@@ -850,6 +850,9 @@
             </div>
             <div class="modal-body">
                 <form role="form">
+                    <div class="form-group alert alert-warning">
+                        <span class="help-block">Note: All cells will be cleared when an axis is added.</span>
+                    </div>
                     <div class="form-group">
                         <label for="addAxisName">Axis name</label>
                         <input class="form-control" type="text" placeholder="Axis name" id="addAxisName"/>
@@ -880,9 +883,6 @@
                             <input id="addAxisValueTypeName" type="text" class="form-control" value="STRING" readonly>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <span class="help-block">Note: All cells will be cleared when an axis is added.</span>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -904,13 +904,12 @@
             </div>
             <div class="modal-body">
                 <form role="form">
+                    <div class="form-group alert alert-warning">
+                        <span class="help-block">Note: All cells will be cleared when an axis is deleted.</span>
+                    </div>
                     <div class="form-group">
                         <label for="deleteAxisName">Axis to delete</label>
                         <input id="deleteAxisName" type="text" class="form-control" readonly>
-                    </div>
-                    <div class="form-group">
-                        <span class="help-block">Note: All cells will be cleared when an axis is deleted.</span>
-                        <span class="help-block">This operation cannot be undone.</span>
                     </div>
                 </form>
             </div>
