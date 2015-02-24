@@ -1,4 +1,6 @@
-package com.cedarsoftware.dto;
+package com.cedarsoftware.dto
+
+import groovy.transform.CompileStatic;
 
 /**
  * Per user options.
@@ -19,26 +21,9 @@ package com.cedarsoftware.dto;
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-public class UserOption
+@CompileStatic
+class UserOption
 {
-	private String key;
-	private String value;
-	
-	public UserOption()
-	{
-		super();
-	}
-	
-	public String getKey() {
-		return key;
-	}
-	public void setKey(String key) {
-		this.key = key;
-	}
-	public String getValue() {
-		return value;
-	}
-	public void setValue(String value) {
-		this.value = value;
-	}
+	String key
+	String value
 }

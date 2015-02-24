@@ -39,7 +39,7 @@
     p:password="puCupRaQaZe3"
     -->
 
-    <bean id="connectionProvider" class="com.cedarsoftware.SpringConnectionProvider">
+    <bean id="connectionProvider" class="com.cedarsoftware.util.SpringConnectionProvider">
         <constructor-arg ref="ncubeDataSource" />
     </bean>
 

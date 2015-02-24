@@ -1,10 +1,9 @@
-package com.cedarsoftware.util;
+package com.cedarsoftware.util
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import groovy.transform.CompileStatic
 
 /**
- * Thread-aware PrintStream.  Use to separate different threads output
+ * Thread-aware PrintStream.  Use to separate different threads' output
  * to System.output, System.err so that this output can be captured per
  * thread.
  *
@@ -12,7 +11,7 @@ import java.io.PrintStream;
  *         <br/>
  *         Copyright (c) Cedar Software LLC
  *         <br/><br/>
- *         Licensed under the Apache License, Version 2.0 (the "License");
+ *         Licensed under the Apache License, Version 2.0 (the "License")
  *         you may not use this file except in compliance with the License.
  *         You may obtain a copy of the License at
  *         <br/><br/>
@@ -24,35 +23,35 @@ import java.io.PrintStream;
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-public class ThreadAwarePrintStream extends PrintStream
+@CompileStatic
+class ThreadAwarePrintStream extends PrintStream
 {
-    private static final ThreadLocal<ByteArrayOutputStream> output = new ThreadLocal<ByteArrayOutputStream>()
-    {
+    private static final ThreadLocal<ByteArrayOutputStream> output = new ThreadLocal<ByteArrayOutputStream>() {
         public ByteArrayOutputStream initialValue()
         {
-            return new ByteArrayOutputStream();
+            return new ByteArrayOutputStream()
         }
-    };
-
-    public ThreadAwarePrintStream()
-    {
-        super(output.get());
     }
 
-    public void write(int b)
+    ThreadAwarePrintStream()
     {
-        output.get().write(b);
+        super(output.get())
     }
 
-    public void write(byte[] buf, int off, int len)
+    void write(int b)
     {
-        output.get().write(buf, off, len);
+        output.get().write(b)
     }
 
-    public static String getContent()
+    void write(byte[] buf, int off, int len)
     {
-        byte[] contents = output.get().toByteArray();
-        output.get().reset();
-        return StringUtilities.createString(contents, "UTF-8");
+        output.get().write(buf, off, len)
+    }
+
+    static String getContent()
+    {
+        byte[] contents = output.get().toByteArray()
+        output.get().reset()
+        return StringUtilities.createString(contents, "UTF-8")
     }
 }
