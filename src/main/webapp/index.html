@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-    <title>n-cube</title>
+    <title>z-cube</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="HTML 5 GUI Editor for building NCubes">
     <meta name="author" content="John DeRegnaucourt">
@@ -317,7 +317,25 @@
         </div>
 
         <div id="drillPic" class="tab-pane" style="height:100%;width:100%">
-            <svg id="visual" width="1000" height="800"></svg>
+            <!--<svg id="visual" width="1000" height="800"></svg>-->
+            <div id="viz"></div>
+            <script type="text/javascript">
+
+                var sampleSVG = d3.select("#viz")
+                        .append("svg")
+                        .attr("width", 100)
+                        .attr("height", 100);
+
+                sampleSVG.append("circle")
+                        .style("stroke", "black")
+                        .style("fill", "white")
+                        .attr("r", 40)
+                        .attr("cx", 50)
+                        .attr("cy", 50)
+                        .on("mouseover", function(){d3.select(this).style("fill", "aliceblue");})
+                        .on("mouseout", function(){d3.select(this).style("fill", "white");});
+
+            </script>
         </div>
 
     </div>

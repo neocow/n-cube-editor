@@ -86,8 +86,7 @@ class NCubeService
 
     void releaseCubes(ApplicationID appId, String newSnapVer)
     {
-        NCubeManager.releaseCubes(appId)
-        NCubeManager.createSnapshotCubes(appId, newSnapVer)
+        NCubeManager.releaseCubes(appId, newSnapVer)
     }
 
     void changeVersionValue(ApplicationID appId, String newSnapVer)

@@ -20,11 +20,11 @@ $(function ()
     if (localStorage.getItem(SELECTED_BRANCH) == null)
     {
         localStorage[SELECTED_BRANCH] = head;
-        _selectedBranch = null;
+        _selectedBranch = head;
     }
     else
     {
-        _selectedBranch = localStorage[SELECTED_BRANCH] == head ? null : localStorage[SELECTED_BRANCH];
+        _selectedBranch = localStorage[SELECTED_BRANCH];
     }
     var _testSelectionAnchor = -1;
     var _testData = null;
@@ -506,7 +506,7 @@ $(function ()
         saveButton.click(function()
         {
             clearError();
-            if (!_selectedBranch)
+            if (isHeadSelected())
             {
                 selectBranch();
                 return;
@@ -2225,7 +2225,7 @@ $(function ()
 
     function newCube()
     {
-        if (!_selectedBranch)
+        if (isHeadSelected())
         {
             selectBranch();
             return false;
@@ -2389,7 +2389,7 @@ $(function ()
             _errorId = showNote('Need to have an application, version, and status selected first.');
             return;
         }
-        if (!_selectedBranch)
+        if (isHeadSelected())
         {
             selectBranch();
             return;
@@ -2684,7 +2684,7 @@ $(function ()
             _errorId = showNote('No n-cube selected. Nothing to duplicate.');
             return;
         }
-        if (!_selectedBranch)
+        if (isHeadSelected())
         {
             selectBranch();
             return false;
@@ -3464,7 +3464,7 @@ $(function ()
             _errorId = showNote(operation + ' Only a SNAPSHOT version can be modified.');
             return false;
         }
-        if (!_selectedBranch)
+        if (isHeadSelected())
         {
             selectBranch();
             return false;
@@ -3929,18 +3929,10 @@ $(function ()
     {
          if (head.toLowerCase() == branchName.toLowerCase())
          {
-             branchName = null;
+             branchName = head;
          }
         _selectedBranch = branchName;
-        if (_selectedBranch)
-        {
-            localStorage[SELECTED_BRANCH] = branchName;
-        }
-        else
-        {
-            localStorage.removeItem(SELECTED_BRANCH);
-
-        }
+        localStorage[SELECTED_BRANCH] = branchName;
         _selectBranchModal.modal('hide');
         showActiveBranch();
         _errorId = showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 3000);
@@ -4035,6 +4027,10 @@ $(function ()
         return _colIds--;
     }
 
+    function isHeadSelected()
+    {
+        return head == _selectedBranch;
+    }
     /**
      * Get the ApplicationID based on the user's selections.  Tenant is sent not sent (server will fill
      * that in based on authentication.
