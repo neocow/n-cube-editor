@@ -529,7 +529,7 @@ $(function ()
         $('#ncubeTab').click(function ()
         {
             clearError();
-            $('#EditMenu').show();
+            $('#DataMenu').show();
             _activeTab = 'ncubeTab';
             loadCube();
         });
@@ -537,7 +537,7 @@ $(function ()
         $('#jsonTab').click(function ()
         {
             clearError();
-            $('#EditMenu').hide();
+            $('#DataMenu').hide();
             _activeTab = "jsonTab";
             loadCube();
         });
@@ -545,7 +545,7 @@ $(function ()
         $('#detailsTab').click(function ()
         {
             clearError();
-            $('#EditMenu').hide();
+            $('#DataMenu').hide();
             _activeTab = "detailsTab";
             loadCube();
         });
@@ -553,7 +553,7 @@ $(function ()
         $('#testTab').click(function()
         {
             clearError();
-            $('#EditMenu').hide();
+            $('#DataMenu').hide();
             _activeTab = "testTab";
             loadCube();
         });
@@ -561,7 +561,7 @@ $(function ()
         $('#picTab').click(function()
         {
             clearError();
-            $('#EditMenu').hide();
+            $('#DataMenu').hide();
             _activeTab = "picTab";
             loadCube();
         });
@@ -1918,10 +1918,8 @@ $(function ()
         deleteParamButton.append(glyph);
         deleteParamButton.click(deleteFunc);
 
-
         labelGroup.append(label);
         labelGroup.append(deleteParamButton);
-
 
         var inputGroupAddon = $("<span/>").attr({'class':'input-group-btn'});
         var controls = $("<div/>").attr({'class': 'controls'});
@@ -2013,50 +2011,91 @@ $(function ()
 
     function buildGraph()
     {
-        var width = 1000,
-            height = 800,
-            radius = Math.min(width, height) / 2;
-
-        var color = d3.scale.ordinal()
-            .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-
-        var arc = d3.svg.arc()
-            .outerRadius(radius - 10)
-            .innerRadius(radius - 70);
-
-        var pie = d3.layout.pie()
-            .sort(null)
-            .value(function (d) {
-                return d.totalCrimes;
-            });
-
-
-        var svg = d3.select("#visual")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-        var g = svg.selectAll(".arc")
-            .data(pie(getGraphData()))
-            .enter().append("g")
-            .attr("class", "arc");
-
-        g.append("path")
-            .attr("d", arc)
-            .style("fill", function (d) {
-                return color(d.data.crimeType);
-            });
-
-        g.append("text")
-            .attr("transform", function (d) {
-                return "translate(" + arc.centroid(d) + ")";
-            })
-            .attr("dy", ".35em")
-            .style("text-anchor", "middle")
-            .text(function (d) {
-                return d.data.crimeType;
-            });
+        var result = call("apollo.getCell", [{'state':'OH'}]);
+        console.log(result);
+        //var width = 1000,
+        //    height = 800,
+        //    radius = Math.min(width, height) / 2;
+        //
+        //var color = d3.scale.ordinal()
+        //    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+        //
+        //var arc = d3.svg.arc()
+        //    .outerRadius(radius - 10)
+        //    .innerRadius(radius - 150);
+        //
+        //var pie = d3.layout.pie()
+        //    .sort(null)
+        //    .value(function (d) {
+        //        return d.totalCrimes;
+        //    });
+        //
+        //
+        //var svg = d3.select("#visual")
+        //    .attr("width", width)
+        //    .attr("height", height)
+        //    .append("g")
+        //    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        //
+        //var g = svg.selectAll(".arc")
+        //    .data(pie(getGraphData()))
+        //    .enter().append("g")
+        //    .attr("class", "arc");
+        //
+        //g.append("path")
+        //    .attr("d", arc)
+        //    .style("fill", function (d) {
+        //        return color(d.data.crimeType);
+        //    });
+        //
+        //g.append("text")
+        //    .attr("transform", function (d) {
+        //        return "translate(" + arc.centroid(d) + ")";
+        //    })
+        //    .attr("dy", ".35em")
+        //    .style("text-anchor", "middle")
+        //    .text(function (d) {
+        //        return d.data.crimeType;
+        //    });
+        //
+        //
+        //var circleSelection = g.append("circle")
+        //                                  .attr("cx", 25)
+        //                                  .attr("cy", 25)
+        //                                  .attr("r", 25)
+        //                                  .style("fill", "red");
+        //
+        //var dataset = [],
+        //    tmpDataset = [],
+        //    i, j;
+        //
+        //for (i = 0; i < 5; i++)
+        //{
+        //    for (j = 0, tmpDataset = []; j < 3; j++)
+        //    {
+        //        tmpDataset.push("Row:"+i+",Col:"+j);
+        //    }
+        //    dataset.push(tmpDataset);
+        //}
+        //
+        //    circleSelection
+        //    .append("table")
+        //    //.style("border-collapse", "collapse")
+        //    .style("border", "2px black solid")
+        //
+        //    .selectAll("tr")
+        //    .data(dataset)
+        //    .enter().append("tr")
+        //
+        //    .selectAll("td")
+        //    .data(function(d){return d;})
+        //    .enter().append("td")
+        //    .style("border", "1px black solid")
+        //    .style("padding", "10px")
+        //    .on("mouseover", function(){d3.select(this).style("background-color", "orange")})
+        //    .on("mouseout", function(){d3.select(this).style("background-color", "green")})
+        //    .text(function(d){return d;})
+        //    .style("font-size", "12px");
     }
 
     /**
@@ -3916,9 +3955,16 @@ $(function ()
         var branchName = $('#newBranchName').val();
         var validName = /^[a-zA-Z_][0-9a-zA-Z_.-]*$/i;
 
-        if (!validName.test(branchName))
+        if (!branchName || !validName.test(branchName) || head.toLowerCase() == branchName.toLowerCase())
         {
             $('#branchNameWarning').show();
+            return;
+        }
+
+        var result = call("ncubeController.createBranch", [getAppId()]);
+        if (!result.status)
+        {
+            _errorId = showNote('Unable to create branches:<hr class="hr-small"/>' + result.data);
             return;
         }
 

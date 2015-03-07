@@ -64,6 +64,11 @@ class NCubeService
         return NCubeManager.getAppVersions(appId)
     }
 
+    void createBranch(ApplicationID applicationID)
+    {
+
+    }
+
     List<String> getBranches(ApplicationID appId)
     {
         return NCubeManager.getBranches(appId)
