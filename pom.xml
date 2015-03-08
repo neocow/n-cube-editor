@@ -35,8 +35,8 @@
     <properties>
         <version.java-util>1.18.0</version.java-util>
         <version.json-io>3.0.0</version.json-io>
-        <version.ncube>3.1.5-SNAPSHOT</version.ncube>
-        <version.json-command-servlet>1.2.2-SNAPSHOT</version.json-command-servlet>
+        <version.ncube>3.1.5</version.ncube>
+        <version.json-command-servlet>1.2.2</version.json-command-servlet>
         <version.log4j>2.1</version.log4j>
         <version.urlrewrite>4.0.4</version.urlrewrite>
         <version.groovy>2.4.1</version.groovy>

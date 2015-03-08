@@ -1160,7 +1160,7 @@ class NCubeController extends BaseController
         return headers
     }
 
-    void youtube()
+    void spider(String[] urls)
     {
         HttpServletRequest request = JsonCommandServlet.servletRequest.get()
         HttpServletResponse response = JsonCommandServlet.servletResponse.get()
