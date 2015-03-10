@@ -81,17 +81,20 @@ class NCubeService
 
     Map commitBranch(ApplicationID appId, Object[] infoDtos)
     {
-        return NCubeManager.commitBranch(appId, infoDtos);
+        return null
+//        return NCubeManager.commitBranch(appId, infoDtos);
     }
 
     int rollbackBranch(ApplicationID appId, Object[] infoDtos)
     {
-        return NCubeManager.rollbackBranch(appId, infoDtos);
+        return 0
+//        return NCubeManager.rollbackBranch(appId, infoDtos);
     }
 
     Object[] updateBranch(ApplicationID appId)
     {
-        return NCubeManager.updateBranch(appId);
+        return null
+//        return NCubeManager.updateBranch(appId);
     }
 
     void createCube(ApplicationID appId, NCube ncube, String username)
