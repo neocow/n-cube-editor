@@ -62,7 +62,7 @@
     -->
     <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
           p:driverClassName="oracle.jdbc.driver.OracleDriver"
-          p:url="jdbc:oracle:thin:@10.50.214.14:1526:uwdeskd"
+          p:url="jdbc:oracle:thin:@dm01np-scan.td.afg:1521:/app_udcubed.dev.gai.com"
           p:username="ra_desktop"
           p:password="p0rtal"
           p:initialSize="5"
