@@ -64,14 +64,34 @@ class NCubeService
         return NCubeManager.getAppVersions(appId)
     }
 
-    void createBranch(ApplicationID applicationID)
+    void createBranch(ApplicationID appId)
     {
-
+        NCubeManager.createBranch(appId);
     }
 
     List<String> getBranches(ApplicationID appId)
     {
         return NCubeManager.getBranches(appId)
+    }
+
+    Object[] getBranchChanges(ApplicationID appId)
+    {
+        return NCubeManager.getBranchChangesFromDatabase(appId);
+    }
+
+    Map commitBranch(ApplicationID appId, Object[] infoDtos)
+    {
+        return NCubeManager.commitBranch(appId, infoDtos);
+    }
+
+    int rollbackBranch(ApplicationID appId, Object[] infoDtos)
+    {
+        return NCubeManager.rollbackBranch(appId, infoDtos);
+    }
+
+    Object[] updateBranch(ApplicationID appId)
+    {
+        return NCubeManager.updateBranch(appId);
     }
 
     void createCube(ApplicationID appId, NCube ncube, String username)

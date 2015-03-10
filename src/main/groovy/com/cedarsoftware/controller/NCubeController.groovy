@@ -1109,7 +1109,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
+            if (!isAllowed(appId, null, Delta.Type.ADD))
             {
                 return
             }
@@ -1130,10 +1130,84 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            List<String> branches = nCubeService.getBranches(addTenant(appId))
+            List<String> branches = nCubeService.getBranches(appId)
             Object[] branchNames = branches.toArray()
             caseInsensitiveSort(branchNames)
             return branchNames;
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    Object[] getBranchChanges(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, null, null))
+            {
+                return null
+            }
+            Object[] branchChanges = nCubeService.getBranchChanges(appId)
+            return branchChanges
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    Map commitBranch(ApplicationID appId, Object[] infoDtos)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, null, Delta.Type.UPDATE))
+            {
+                return [:]
+            }
+            return nCubeService.commitBranch(appId, infoDtos)
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return [:]
+        }
+    }
+
+    int rollbackBranch(ApplicationID appId, Object[] infoDtos)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, null, Delta.Type.UPDATE))
+            {
+                return 0
+            }
+            return nCubeService.rollbackBranch(appId, infoDtos)
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return 0
+        }
+    }
+
+    Object[] updateBranch(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, null, null))
+            {
+                return null
+            }
+            Object[] branchUpdates = nCubeService.updateBranch(appId)
+            return branchUpdates
         }
         catch (Exception e)
         {

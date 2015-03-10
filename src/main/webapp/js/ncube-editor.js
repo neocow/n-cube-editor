@@ -3896,6 +3896,10 @@ $(function ()
         {
             rollbackBranch();
         });
+        $('#branchUpdate').click(function()
+        {
+            updateBranch();
+        });
 
         // From 'Select / Create Branch' Modal
         $('#createBranch').click(function()
@@ -3987,12 +3991,64 @@ $(function ()
 
     function commitBranch()
     {
-        alert('Commit Branch');
+        clearError();
+
+        var result = call("ncubeController.getBranchChanges", [getAppId()]);
+
+        if (!result.status)
+        {
+            _errorId = showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        $('#commitRollbackLabel').html('Commit Changes');
+        $('#branchRollbackOk').html('Commit');
+
+        var branchChanges = result.data;
+        var ul = $('#commitRollbackList');
+        ul.empty();
+
+        $.each(branchChanges, function (index, infoDto)
+        {
+            var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
+            var label = $('<label/>').prop({class: 'checkbox'}).text(infoDto.name);
+            var input = $('<input>').prop({class: 'restoreCheck', 'type': 'checkbox'});
+            input.prependTo(label); // <=== create input without the closing tag
+            li.append(label);
+            ul.append(li);
+            //
+            //
+            //
+            //var anchor = $('<a href="#"/>');
+            //anchor.html('<kbd> ' + name + ' </kbd>');
+            //anchor.click(function ()
+            //{
+            //    alert("click");
+            //});
+            //li.append(anchor);
+            //ul.append(li);
+        });
+
+        $('#commitRollbackModal').modal('show');
     }
 
     function rollbackBranch()
     {
-        alert('Rollback Branch');
+        $('#commitRollbackModal').modal('show');
+    }
+
+    function updateBranch()
+    {
+        clearError();
+
+        var result = call('ncubeController.updateBranch', [getAppId()]);
+        if (!result.status)
+        {
+            _errorId = showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        _errorId = showNote('Branch Updated');
     }
 
     // ============================================ End Branching =============================================
