@@ -1,7 +1,10 @@
-package com.cedarsoftware.security;
+package com.cedarsoftware.dto
+
+import groovy.transform.CompileStatic;
+
 
 /**
- * Security interface.  All security related questions use this API.
+ * Represents a logged in user.
  *
  * @author John DeRegnaucourt (jdereg@gmail.com)
  *         <br/>
@@ -19,13 +22,12 @@ package com.cedarsoftware.security;
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-public interface Security
+@CompileStatic
+class User
 {
-	public String getLoggedInUserName();
-	public String getHID();
-	public String getFirstName();
-	public String getLastName();
-	public boolean hasAccess(String action, String resource, String resAttrKey, String resAttrValue);
-	public boolean hasAccess(String action, String resource);
-	public boolean hasAccess(String action, String resource, Object[] resAttrEntry);
+	String hid
+	String userid
+	String password
+	String fname
+	String lname
 }

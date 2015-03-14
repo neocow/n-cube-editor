@@ -1,7 +1,10 @@
-package com.cedarsoftware.controller;
+package com.cedarsoftware.controller
+
+import com.cedarsoftware.dto.User
+import groovy.transform.CompileStatic
 
 /**
- * Common functionality for all Controllers.
+ * Interface for UserController.
  *
  * @author John DeRegnaucourt (jdereg@gmail.com)
  *         <br/>
@@ -19,10 +22,13 @@ package com.cedarsoftware.controller;
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-public class BaseController implements IBaseController
+@CompileStatic
+public interface IUserController extends IBaseController
 {
-	public void logout()
-	{
-	}
+	Object[] getUserOption(String key)
+
+	void setUserOption(String key, String value)
+
+	User getUser(String userId)
 
 }

@@ -1,8 +1,9 @@
-package com.cedarsoftware.dto;
+package com.cedarsoftware.controller;
 
+import groovy.transform.CompileStatic;
 
 /**
- * Represents a logged in user.
+ * Common functionality for all Controllers.
  *
  * @author John DeRegnaucourt (jdereg@gmail.com)
  *         <br/>
@@ -20,59 +21,11 @@ package com.cedarsoftware.dto;
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-public class User
+@CompileStatic
+public class BaseController implements IBaseController
 {
-	private String hid;
-	private String userid;
-	private String password;
-	private String fname;
-	private String lname;
-
-	public String getHid() {
-		return hid;
+	public void logout()
+	{
 	}
 
-	public void setHid(String hid) {
-		this.hid = hid;
-	}
-
-	public String getUserid()
-	{
-		return userid;
-	}
-	
-	public void setUserid(String id)
-	{
-		userid = id;
-	}
-	
-	public String getPassword()
-	{
-		return password;
-	}
-	
-	public void setPassword(String pwd)
-	{
-		password = pwd;
-	}
-	
-	public String getFname()
-	{
-		return fname;
-	}
-	
-	public void setFname(String name)
-	{
-		fname = name;
-	}
-	
-	public String getLname()
-	{
-		return lname;
-	}
-	
-	public void setLname(String name)
-	{
-		lname = name;
-	}
 }

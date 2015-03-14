@@ -7,11 +7,6 @@
     <display-name>NCubeEditor</display-name>
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
-        <welcome-file>index.htm</welcome-file>
-        <welcome-file>index.jsp</welcome-file>
-        <welcome-file>default.html</welcome-file>
-        <welcome-file>default.htm</welcome-file>
-        <welcome-file>default.jsp</welcome-file>
     </welcome-file-list>
 
     <!--<filter>-->
@@ -35,6 +30,14 @@
         <display-name>jsonServlet</display-name>
         <servlet-name>jsonServlet</servlet-name>
         <servlet-class>com.cedarsoftware.servlet.JsonCommandServlet</servlet-class>
+        <init-param>
+            <param-name>tenant</param-name>
+            <param-value>NONE</param-value>
+        </init-param>
+        <init-param>
+            <param-name>app</param-name>
+            <param-value>NCE</param-value>
+        </init-param>
     </servlet>
 
     <servlet-mapping>

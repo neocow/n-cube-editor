@@ -1,10 +1,11 @@
-package com.cedarsoftware;
+package com.cedarsoftware.util
 
-import com.cedarsoftware.ncube.JdbcConnectionProvider;
-import org.springframework.jdbc.datasource.DataSourceUtils;
+import com.cedarsoftware.ncube.JdbcConnectionProvider
+import groovy.transform.CompileStatic
+import org.springframework.jdbc.datasource.DataSourceUtils
 
-import javax.sql.DataSource;
-import java.sql.Connection;
+import javax.sql.DataSource
+import java.sql.Connection
 
 /**
  * Spring Transaction Based JDBC Connection Provider
@@ -25,23 +26,23 @@ import java.sql.Connection;
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-public class SpringConnectionProvider implements JdbcConnectionProvider
+@CompileStatic
+class SpringConnectionProvider implements JdbcConnectionProvider
 {
-    private DataSource dataSource;
+    DataSource dataSource
 
-   public SpringConnectionProvider(DataSource dataSource) {
-        this.dataSource = dataSource;
+    SpringConnectionProvider(DataSource dataSource)
+    {
+        this.dataSource = dataSource
     }
 
-    @Override
-    public Connection getConnection()
+    Connection getConnection()
     {
-        return DataSourceUtils.getConnection(dataSource);
+        return DataSourceUtils.getConnection(dataSource)
     }
 
-    @Override
-    public void releaseConnection(Connection c)
+    void releaseConnection(Connection c)
     {
-        DataSourceUtils.releaseConnection(c, dataSource);
+        DataSourceUtils.releaseConnection(c, dataSource)
     }
 }

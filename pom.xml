@@ -33,22 +33,27 @@
     </developers>
 
     <properties>
-        <version.json-io>2.9.3</version.json-io>
-        <version.java-util>1.16.1</version.java-util>
-        <version.json-command-servlet>1.2.0</version.json-command-servlet>
+        <version.java-util>1.18.0</version.java-util>
+        <version.json-io>3.0.0</version.json-io>
+        <version.ncube>3.1.5</version.ncube>
+        <version.json-command-servlet>1.2.2</version.json-command-servlet>
         <version.log4j>2.1</version.log4j>
         <version.urlrewrite>4.0.4</version.urlrewrite>
-        <version.ncube>3.1.4</version.ncube>
+        <version.groovy>2.4.1</version.groovy>
         <version.junit>4.11</version.junit>
         <version.spring>4.1.4.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>
+        <version.java>1.7</version.java>
         <version.plugin.compiler>3.2</version.plugin.compiler>
         <version.plugin.deploy>2.8.2</version.plugin.deploy>
         <version.plugin.source>2.4</version.plugin.source>
         <version.plugin.javadoc>2.10.1</version.plugin.javadoc>
         <version.plugin.gpg>1.5</version.plugin.gpg>
         <version.plugin.release>2.5.1</version.plugin.release>
-        <version.java>1.7</version.java>
+        <version.plugin.war>2.6</version.plugin.war>
+        <version.plugin.groovy.eclipse.compiler>2.9.1-01</version.plugin.groovy.eclipse.compiler>
+        <version.plugin.groovy.eclipse.batch>2.3.7-01</version.plugin.groovy.eclipse.batch>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <pluginRepositories>
@@ -80,6 +85,30 @@
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${version.plugin.compiler}</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <compilerId>groovy-eclipse-compiler</compilerId>
+                    <!-- <verbose>true</verbose> -->
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-eclipse-compiler</artifactId>
+                        <version>${version.plugin.groovy.eclipse.compiler}</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-eclipse-batch</artifactId>
+                        <version>${version.plugin.groovy.eclipse.batch}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -125,16 +154,6 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${version.plugin.compiler}</version>
-                <configuration>
-                    <source>${version.java}</source>
-                    <target>${version.java}</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>${version.plugin.release}</version>
                 <configuration>
@@ -145,6 +164,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
+                <version>2.6</version>
                 <configuration>
                     <packagingExcludes>**/*CprLocal.properties</packagingExcludes>
                     <archiveClasses>false</archiveClasses>
@@ -158,6 +178,11 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>${version.groovy}</version>
+        </dependency>
         <dependency>
             <groupId>com.cedarsoftware</groupId>
             <artifactId>n-cube</artifactId>
