@@ -3991,6 +3991,15 @@ $(function ()
         _selectBranchModal.modal('hide');
         showActiveBranch();
         _errorId = showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 3000);
+
+        loadAppNames();
+        loadVersions();
+        loadNCubes();
+        loadAppListView();
+        loadStatusListView();
+        loadVersionListView();
+        loadNCubeListView();
+        loadCube();
     }
 
     function commitBranch()

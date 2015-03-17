@@ -54,9 +54,9 @@ class NCubeService
         return NCubeManager.getRevisionHistory(appId, cubeName)
     }
 
-    Object[] getAppNames(String tenant)
+    Object[] getAppNames(ApplicationID appId)
     {
-        return NCubeManager.getAppNames(tenant)
+        return NCubeManager.getAppNames(appId)
     }
 
     Object[] getAppVersions(ApplicationID appId)

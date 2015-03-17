@@ -309,7 +309,7 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            Object[] appNames = nCubeService.getAppNames(appId.tenant)
+            Object[] appNames = nCubeService.getAppNames(appId)
             return appNames
         }
         catch (Exception e)
