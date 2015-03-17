@@ -69,7 +69,7 @@ class NCubeService
         NCubeManager.createBranch(appId);
     }
 
-    List<String> getBranches(ApplicationID appId)
+    Set<String> getBranches(ApplicationID appId)
     {
         return NCubeManager.getBranches(appId)
     }

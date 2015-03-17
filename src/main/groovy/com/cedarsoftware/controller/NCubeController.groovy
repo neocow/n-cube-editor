@@ -110,20 +110,20 @@ class NCubeController extends BaseController
             return false
         }
 
-        if (operation != null)
-        {
-            if (appId.isRelease())
-            {
-                markRequestFailed("Release cubes cannot be edited, cube: " + appId.cacheKey(cubeName))
-                return false
-            }
-
-            if ("HEAD".equalsIgnoreCase(appId.branch) || StringUtilities.isEmpty(appId.branch))
-            {
-                markRequestFailed("A branch must be selected or created before you can edit: " + appId.cacheKey(cubeName))
-                return false
-            }
-        }
+//        if (operation != null)
+//        {
+//            if (appId.isRelease())
+//            {
+//                markRequestFailed("Release cubes cannot be edited, cube: " + appId.cacheKey(cubeName))
+//                return false
+//            }
+//
+//            if ("HEAD".equalsIgnoreCase(appId.branch) || StringUtilities.isEmpty(appId.branch))
+//            {
+//                markRequestFailed("A branch must be selected or created before you can edit: " + appId.cacheKey(cubeName))
+//                return false
+//            }
+//        }
         return true
     }
 
@@ -1130,10 +1130,16 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            List<String> branches = nCubeService.getBranches(appId)
+            Set<String> branches = nCubeService.getBranches(appId)
+            if (branches == null && branches.isEmpty())
+            {
+                return [ApplicationID.HEAD] as Object[]
+            }
+            branches.remove(ApplicationID.HEAD);
             Object[] branchNames = branches.toArray()
             caseInsensitiveSort(branchNames)
-            return branchNames;
+            def head = ['HEAD'] as Object[]
+            return head.plus(branchNames)
         }
         catch (Exception e)
         {

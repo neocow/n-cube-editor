@@ -3935,7 +3935,7 @@ $(function ()
         var ul = $('#branchList');
         ul.empty();
 
-        $.each(branchNames, function (name)
+        $.each(branchNames, function (index, name)
         {
             if (!name)
             {
@@ -3957,6 +3957,8 @@ $(function ()
 
     function createBranch()
     {
+        clearError();
+
         var branchName = $('#newBranchName').val();
         var validName = /^[a-zA-Z_][0-9a-zA-Z_.-]*$/i;
 
@@ -3966,10 +3968,12 @@ $(function ()
             return;
         }
 
-        var result = call("ncubeController.createBranch", [getAppId()]);
+        var appId = getAppId();
+        appId.branch = branchName;
+        var result = call("ncubeController.createBranch", [appId]);
         if (!result.status)
         {
-            _errorId = showNote('Unable to create branches:<hr class="hr-small"/>' + result.data);
+            _errorId = showNote('Unable to create branch:<hr class="hr-small"/>' + result.data);
             return;
         }
 
