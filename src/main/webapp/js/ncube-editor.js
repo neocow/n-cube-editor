@@ -2138,17 +2138,17 @@ $(function ()
         clearError();
         if (!_selectedApp)
         {
-            _errorId = showNote('No App selected, cannot load n-cubes.');
+            //_errorId = showNote('No App selected, cannot load n-cubes.');
             return;
         }
         if (!_selectedVersion)
         {
-            _errorId = showNote('No Version selected, cannot load n-cubes.');
+            //_errorId = showNote('No Version selected, cannot load n-cubes.');
             return;
         }
         if (!_selectedStatus)
         {
-            _errorId = showNote('No Status selected, cannot load n-cubes.');
+            //_errorId = showNote('No Status selected, cannot load n-cubes.');
             return;
         }
         var result = call("ncubeController.getCubeList", [getAppId(), '*']);
@@ -2202,7 +2202,13 @@ $(function ()
             _errorId = showNote('Unable to load versions, no n-cube Status selected.');
             return;
         }
-        var result = call("ncubeController.getAppVersions", [getAppId()]);
+        if (!_selectedBranch)
+        {
+            _errorId = showNote('Unable to load versions, no branch selected.');
+            return;
+        }
+
+        var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus, _selectedBranch]);
         if (result.status === true)
         {
             $.each(result.data, function (index, value)
@@ -2236,7 +2242,7 @@ $(function ()
     {
         _apps = [];
         clearError();
-        var result = call("ncubeController.getAppNames", [getAppId()]);
+        var result = call("ncubeController.getAppNames", [_selectedStatus, _selectedBranch]);
         if (result.status === true)
         {
             $.each(result.data, function (index, value)
@@ -2302,18 +2308,23 @@ $(function ()
         var appName = $('#newCubeAppName').val();
         var cubeName = $('#newCubeName').val();
         var version = $('#newCubeVersion').val();
+        if (!version)
+        {
+            _errorId = showNote("Note", "Version must be x.y.z")
+            return;
+        }
         var appId = getAppId();
         appId.version = version;
         var result = call("ncubeController.createCube", [appId, cubeName]);
         if (result.status === true)
         {
+            console.log(_selectedStatus);
             _selectedCubeName = cubeName;
             loadAppNames();
             _selectedApp = appName;
             loadAppListView();
-            var saveSelectedVersion = _selectedVersion;
             loadVersions();
-            _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
+            _selectedVersion = appId.version;
             loadVersionListView();
             loadNCubes();
             loadNCubeListView();
@@ -3923,7 +3934,7 @@ $(function ()
         $('#newBranchName').val("");
         $('#branchNameWarning').hide();
 
-        var result = call("ncubeController.getBranches", [getAppId()]);
+        var result = call("ncubeController.getBranches", []);
 
         if (!result.status)
         {
@@ -3970,6 +3981,12 @@ $(function ()
 
         var appId = getAppId();
         appId.branch = branchName;
+        if (!_selectedApp || !_selectedVersion || !_selectedStatus)
+        {
+            changeBranch(branchName);
+            return;
+        }
+
         var result = call("ncubeController.createBranch", [appId]);
         if (!result.status)
         {
@@ -3990,7 +4007,6 @@ $(function ()
         localStorage[SELECTED_BRANCH] = branchName;
         _selectBranchModal.modal('hide');
         showActiveBranch();
-        _errorId = showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 3000);
 
         loadAppNames();
         loadVersions();
@@ -4000,6 +4016,8 @@ $(function ()
         loadVersionListView();
         loadNCubeListView();
         loadCube();
+
+        _errorId = showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 2000);
     }
 
     function commitBranch()
@@ -4087,6 +4105,10 @@ $(function ()
 
     function doesItemExist(item, list)
     {
+        if (!item)
+        {
+            return false;
+        }
         var found = false;
         $.each(list, function (index, value)
         {

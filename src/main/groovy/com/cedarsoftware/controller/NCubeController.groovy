@@ -300,16 +300,16 @@ class NCubeController extends BaseController
         }
     }
 
-    Object[] getAppNames(ApplicationID appId)
+    Object[] getAppNames(String status, String branch)
     {
         try
         {
-            appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
-            Object[] appNames = nCubeService.getAppNames(appId)
+            String tenant = getTenant()
+            ApplicationID.validateTenant(tenant)
+            ApplicationID.validateStatus(status)
+            ApplicationID.validateBranch(branch)
+            // TODO: Custom isAllowed() may ne needed
+            Object[] appNames = nCubeService.getAppNames(tenant, status, branch)
             return appNames
         }
         catch (Exception e)
@@ -319,16 +319,17 @@ class NCubeController extends BaseController
         }
     }
 
-    Object[] getAppVersions(ApplicationID appId)
+    Object[] getAppVersions(String app, String status, String branchName)
     {
         try
         {
-            appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
-            Object[] appVersions = nCubeService.getAppVersions(appId)
+            String tenant = getTenant();
+            ApplicationID.validateTenant(tenant);
+            ApplicationID.validateApp(app);
+            ApplicationID.validateStatus(status);
+            ApplicationID.validateBranch(branchName);
+            // TODO: Custom isAllowed() may be needed
+            Object[] appVersions = nCubeService.getAppVersions(tenant, app, status, branchName)
 
             // Sort by version number (1.1.0, 1.2.0, 1.12.0, ...) not String order (1.1.0, 1.12.0, 1.2.0, ...)
             Arrays.sort(appVersions, new Comparator<Object>() {
@@ -1121,16 +1122,14 @@ class NCubeController extends BaseController
         }
     }
 
-    Object[] getBranches(ApplicationID appId)
+    Object[] getBranches()
     {
         try
         {
-            appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
-            Set<String> branches = nCubeService.getBranches(appId)
+            // TODO: Snag tenant based on authentication
+            String tenant = "NONE";
+
+            Set<String> branches = nCubeService.getBranches(tenant)
             if (branches == null && branches.isEmpty())
             {
                 return [ApplicationID.HEAD] as Object[]
@@ -1176,7 +1175,7 @@ class NCubeController extends BaseController
             {
                 return [:]
             }
-            return nCubeService.commitBranch(appId, infoDtos)
+            return nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
         }
         catch (Exception e)
         {
@@ -1483,8 +1482,13 @@ class NCubeController extends BaseController
 
     private ApplicationID addTenant(ApplicationID appId)
     {
-        // TODO: Tenant will be available after authentication
-        return new ApplicationID(ApplicationID.DEFAULT_TENANT, appId.app, appId.version, appId.status, appId.branch)
+        String tenant = getTenant()
+        return new ApplicationID(tenant, appId.app, appId.version, appId.status, appId.branch)
+    }
+
+    private String getTenant()
+    {
+        return ApplicationID.DEFAULT_TENANT
     }
 
     private static Object[] caseInsensitiveSort(Object[] items)

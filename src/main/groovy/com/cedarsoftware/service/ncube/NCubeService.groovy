@@ -54,24 +54,24 @@ class NCubeService
         return NCubeManager.getRevisionHistory(appId, cubeName)
     }
 
-    Object[] getAppNames(ApplicationID appId)
+    Object[] getAppNames(String tenant, String status, String branch)
     {
-        return NCubeManager.getAppNames(appId)
+        return NCubeManager.getAppNames(tenant, status, branch)
     }
 
-    Object[] getAppVersions(ApplicationID appId)
+    Object[] getAppVersions(String tenant, String app, String status, String branch)
     {
-        return NCubeManager.getAppVersions(appId)
+        return NCubeManager.getAppVersions(tenant, app, status, branch)
     }
 
     void createBranch(ApplicationID appId)
     {
-        NCubeManager.createBranch(appId);
+        NCubeManager.createBranch(appId)
     }
 
-    Set<String> getBranches(ApplicationID appId)
+    Set<String> getBranches(String tenant)
     {
-        return NCubeManager.getBranches(appId)
+        return NCubeManager.getBranches(tenant)
     }
 
     Object[] getBranchChanges(ApplicationID appId)
@@ -79,16 +79,14 @@ class NCubeService
         return NCubeManager.getBranchChangesFromDatabase(appId);
     }
 
-    Map commitBranch(ApplicationID appId, Object[] infoDtos)
+    Map commitBranch(ApplicationID appId, Object[] infoDtos, String username)
     {
-        return null
-//        return NCubeManager.commitBranch(appId, infoDtos);
+        return NCubeManager.commitBranch(appId, infoDtos, username);
     }
 
     int rollbackBranch(ApplicationID appId, Object[] infoDtos)
     {
-        return 0
-//        return NCubeManager.rollbackBranch(appId, infoDtos);
+        return NCubeManager.rollbackBranch(appId, infoDtos);
     }
 
     Object[] updateBranch(ApplicationID appId)
