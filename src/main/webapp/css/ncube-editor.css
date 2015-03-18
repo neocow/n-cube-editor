@@ -45,7 +45,6 @@ a.ncube-notselected:hover {
 
 .panel {
     margin-bottom: 10px;
-    overflow: hidden;
 }
 
 div#testLayoutEast, div#west, div.panel {
@@ -55,6 +54,10 @@ div#testLayoutEast, div#west, div.panel {
 .panel-heading {
     padding: 5px;
     background-color: #D1C5B7;
+}
+
+.main-list {
+    padding: 5px;
 }
 
 div#west div.panel-body {

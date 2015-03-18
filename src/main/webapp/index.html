@@ -60,12 +60,6 @@
                 <a id="BranchMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Branch: </a>
                 <ul class="dropdown-menu dropdown-menu-right">
                     <li><a id="branchSelect" href="#">Select/Create Branch...</a></li>
-                    <li class="divider"></li>
-                    <li><a id="branchUpdate" href="#">Update</a></li>
-                    <li><a id="branchPullRequest" href="#">Pull Request...</a></li>
-                    <li class="divider"></li>
-                    <li><a id="branchCommit" href="#">Commit...</a></li>
-                    <li><a id="branchRollback" href="#">Rollback...</a></li>
                 </ul>
             </li>
         </ul>
@@ -85,10 +79,11 @@
 <div id="west" class="ui-layout-west noselect">
     <div id="app-list-div" class="panel">
         <div class="panel-heading">
-            <h4 class="panel-title">
-                <button type="button" class="btn btn-primary active">App</button>
-                <span id="appCount" class="badge pull-right"></span>
-            </h4>
+            <h4 class="panel-title"></h4>
+            <div class="btn-group">
+                <a class="btn-sm btn-primary dropdown-toggle" aria-haspopup="true" data-toggle="dropdown" role="button" href="#">App</a>
+            </div>
+            <span id="appCount" class="badge pull-right"></span>
         </div>
         <div class="panel-body">
             <ul class="nav nav-list" id="app-list">
@@ -100,10 +95,15 @@
         <div class="panel-heading">
             <h4 class="panel-title"></h4>
             <div class="btn-group">
-                <button type="button" class="btn-sm btn-primary dropdown-toggle" data-toggle="dropdown">
+                <a id="foo" href="#" class="btn-sm btn-primary dropdown-toggle" aria-haspopup="true" data-toggle="dropdown" role="button">
                     <span>Version</span><span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu">
+                </a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="foo">
+                    <li><a id="branchUpdate" href="#">Update</a></li>
+                    <li class="divider"></li>
+                    <li><a id="branchCommit" href="#">Commit...</a></li>
+                    <li><a id="branchRollback" href="#">Rollback...</a></li>
+                    <li class="divider"></li>
                     <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
                     <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
                 </ul>
@@ -117,7 +117,7 @@
     </div>
 
     <div id="status-list-div" class="panel">
-        <div class="panel-body">
+        <div class="main-list">
             <ul class="nav nav-list" id="status-list">
             </ul>
         </div>
@@ -127,9 +127,9 @@
         <div class="panel-heading">
             <h4 class="panel-title"></h4>
             <div class="btn-group">
-                <button type="button" class="btn-sm btn-primary dropdown-toggle" data-toggle="dropdown">
+                <a href="#" class="btn-sm btn-primary dropdown-toggle" aria-haspopup="true" data-toggle="dropdown" role="button">
                     <span>n-cubes</span><span class="caret"></span>
-                </button>
+                </a>
                 <ul class="dropdown-menu">
                     <li><a href="#" id="newCubeMenu">New</a></li>
                     <li><a href="#" id="renameCubeMenu">Rename</a></li>

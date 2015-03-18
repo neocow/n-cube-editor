@@ -100,7 +100,7 @@ $(function ()
         var west = $('#west');
         var appListDiv = $('#app-list-div');
         var appListPanel = appListDiv.find('> .panel-body');
-        appListPanel.height(75);
+        appListPanel.height(60);
 
         var statListDiv = $('#status-list-div');
         var statListPanel = statListDiv.find('> .panel-body');
@@ -181,13 +181,13 @@ $(function ()
             //,  west__onresize:		"secondaryLayout.resizeAll" // resize ALL visible layouts nested inside
             ,  west__onresize: function()
             {
-                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 93);
                 secondaryLayout.resizeAll();
                 //                _editor.resize();
             }
         });
 
-        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 110);
+        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 93);
         $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e)
         {
             secondaryLayout.resizeAll();
@@ -1763,6 +1763,11 @@ $(function ()
 
     function loadCubeDetails()
     {
+        if (!_cubeList || !_cubeList[_selectedCubeName])
+        {
+            return;
+        }
+
         var info = _cubeList[_selectedCubeName]['ncube'];
         if (!info)
         {
@@ -2315,18 +2320,19 @@ $(function ()
         }
         var appId = getAppId();
         appId.version = version;
+        appId.app = appName;
         var result = call("ncubeController.createCube", [appId, cubeName]);
         if (result.status === true)
         {
-            console.log(_selectedStatus);
+            _selectedApp = appName;
+            _selectedVersion = appId.version;
             _selectedCubeName = cubeName;
             loadAppNames();
-            _selectedApp = appName;
-            loadAppListView();
-            loadVersions();
-            _selectedVersion = appId.version;
-            loadVersionListView();
             loadNCubes();
+            loadVersions();
+            loadAppListView();
+            loadStatusListView();
+            loadVersionListView();
             loadNCubeListView();
             loadCube();
         }
@@ -2772,7 +2778,6 @@ $(function ()
 
     function dupeCubeCopy()
     {
-        // TODO: Need to determine if a branch is selected for the destination ApplicationID before allowing this
         $('#dupeCubeModal').modal('hide');
         var newName = $('#dupeCubeName').val();
         var newApp = $('#dupeCubeAppName').val();
