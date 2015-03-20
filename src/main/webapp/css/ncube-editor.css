@@ -26,6 +26,14 @@ body {
     user-select: none;
 }
 
+.no-margins {
+    margin: 0;
+}
+
+.no-padding {
+    padding: 0 !important;
+}
+
 #ncubeTabContent {
     border: none #dcdcdc;
     border-radius: 0;

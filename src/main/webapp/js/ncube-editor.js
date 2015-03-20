@@ -610,6 +610,14 @@ $(function ()
         {
             restoreCubeOk()
         });
+        $('#restoreSelectAll').click(function()
+        {
+            checkAll(true, 'input[type="checkbox"]')
+        });
+        $('#restoreSelectNone').click(function()
+        {
+            checkAll(false, 'input[type="checkbox"]')
+        });
         $('#revisionHistoryMenu').click(function ()
         {
             revisionHistory()
@@ -2460,10 +2468,14 @@ $(function ()
         {
             $.each(result.data, function (index, value)
             {
-                var label = $('<label/>').prop({class: 'checkbox'}).text(value.name);
-                var input = $('<input>').prop({class: 'restoreCheck', 'type': 'checkbox'});
-                input.prependTo(label); // <=== create input without the closing tag
-                ul.append(label);
+                var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
+                var div = $('<div/>').prop({class:'container-fluid'});
+                var checkbox = $('<input>').prop({class:'restoreCheck', type:'checkbox'});
+                var label = $('<label/>').prop({class: 'checkbox no-margins'}).text(value.name);
+                checkbox.prependTo(label); // <=== create input without the closing tag
+                div.append(label);
+                li.append(div);
+                ul.append(li);
             });
             $('#restoreCubeModal').modal();
         }
@@ -4029,9 +4041,15 @@ $(function ()
     {
         clearError();
 
+        if (isHeadSelected())
+        {
+            _errorId = showNote('You cannot commit directly to HEAD.');
+            return;
+        }
+
         var result = call("ncubeController.getBranchChanges", [getAppId()]);
 
-        if (!result.status)
+        if (!result.status || !result.data)
         {
             _errorId = showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
             return;
@@ -4040,36 +4058,64 @@ $(function ()
         $('#commitRollbackLabel').html('Commit Changes');
         $('#branchRollbackOk').html('Commit');
 
-        var branchChanges = result.data;
+        var branchChanges = result.data["@items"];
         var ul = $('#commitRollbackList');
         ul.empty();
 
         $.each(branchChanges, function (index, infoDto)
         {
-            var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
-            var label = $('<label/>').prop({class: 'checkbox'}).text(infoDto.name);
-            var input = $('<input>').prop({class: 'restoreCheck', 'type': 'checkbox'});
-            input.prependTo(label); // <=== create input without the closing tag
-            li.append(label);
+            var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
+            var div = $('<div/>').prop({class:'container-fluid'});
+            var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
+            var label = $('<label/>').prop({class: 'checkbox no-margins'}).text(infoDto.name);
+            checkbox.prependTo(label); // <=== create input without the closing tag
+            div.append(label);
+            li.append(div);
             ul.append(li);
-            //
-            //
-            //
-            //var anchor = $('<a href="#"/>');
-            //anchor.html('<kbd> ' + name + ' </kbd>');
-            //anchor.click(function ()
-            //{
-            //    alert("click");
-            //});
-            //li.append(anchor);
-            //ul.append(li);
         });
 
+        //TODO: Add listeners for select all, select none
+        //TODO: Default to select all initially
+        //TODO: Show Adds in green, changes in Blue, deletes in line thru, and restores as Gold?
+        //TODO: Call back-end API with the selected choices
+        //TODO: Break up this JS file into sections separated by functionality
+        //TODO: Kenny - restore should rollback to last positive rev.
+        //TODO: Commit - popup box for commit message
+        //TODO: Details - show note text
+        //TODO: Details - widen out field for cube name
+        //TODO: SHA1 - ncube - include cell info (cell type, for example, needs to be included in SHA1)
         $('#commitRollbackModal').modal('show');
     }
 
     function rollbackBranch()
     {
+        clearError();
+
+        if (isHeadSelected())
+        {
+            _errorId = showNote('You cannot rollback directly in HEAD.');
+            return;
+        }
+
+        var result = call("ncubeController.getBranchChanges", [getAppId()]);
+
+        if (!result.status || !result.data)
+        {
+            _errorId = showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        $('#commitRollbackLabel').html('Rollback Changes');
+        $('#branchRollbackOk').html('Rollback');
+
+        var branchChanges = result.data["@items"];
+        var ul = $('#commitRollbackList');
+        ul.empty();
+
+        $.each(branchChanges, function (index, infoDto)
+        {
+        });
+
         $('#commitRollbackModal').modal('show');
     }
 
@@ -4088,6 +4134,15 @@ $(function ()
     }
 
     // ============================================ End Branching =============================================
+
+    function checkAll(state, queryStr)
+    {
+        var input = $(queryStr);
+        $.each(input, function (index, btn)
+        {
+            $(this).prop('checked', state);
+        });
+    }
 
     function buildDropDown(listId, inputId, list, callback)
     {
@@ -4144,25 +4199,6 @@ $(function ()
             $.gritter.remove(_errorId);
             _errorId = null;
         }
-    }
-
-    function saveScroll()
-    {
-        var div = $('#ncubeTabContent');
-        var top = div.scrollTop();
-        console.log("saveScroll()");
-        console.log(top);
-        console.log(typeof top);
-        localStorage['top'] = top;
-    }
-
-    function loadScroll()
-    {
-        var div = $('#ncubeTabContent');
-        console.log("loadScroll()");
-        console.log(localStorage['top']);
-        console.log(typeof localStorage['top']);
-        div.scrollTop(localStorage['top']);
     }
 
     function getUniqueId()

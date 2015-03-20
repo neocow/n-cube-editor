@@ -441,19 +441,21 @@
 <!-- Restore Cube Modal -->
 <div id="restoreCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="restoreCubeLabel"
      aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="restoreCubeLabel" class="modal-title"></h3>
             </div>
             <div class="modal-body" style="overflow: auto;height:450px">
-                <ul id="deletedCubeList" class="list-group">
+                <ul id="deletedCubeList" class="list-group no-padding">
                 </ul>
             </div>
             <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't restore</button>
-                <button id="restoreCubeOk" class="btn btn-primary">Restore</button>
+                <button id="restoreSelectAll" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select All</button>
+                <button id="restoreSelectNone" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select None</button>
+                <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Don't restore</button>
+                <button id="restoreCubeOk" class="btn btn-primary btn-sm">Restore</button>
             </div>
         </div>
     </div>
@@ -475,6 +477,29 @@
             <div class="modal-footer">
                 <!--<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>-->
                 <button id="revisionHistoryOk" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commit / Rollback Modal -->
+<div id="commitRollbackModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="commitRollbackLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="commitRollbackLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body" style="overflow: auto;height:450px">
+                <ul id="commitRollbackList" class="list-group">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="commitRollbackSelectAll" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select All</button>
+                <button id="commitRollbackSelectNone" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select None</button>
+                <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <button id="commitRollbackOk" class="btn btn-primary btn-sm">OK</button>
             </div>
         </div>
     </div>
@@ -531,7 +556,7 @@
     </div>
 </div>
 
-<!-- Add Parameter Modal -->
+<!-- Add Input Variable Modal -->
 <div id="addParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addParameterTitle"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog">
@@ -543,7 +568,7 @@
             <div class="modal-body">
                 <form role="form">
                     <div class="form-group">
-                        <label for="addParameterField">Parameter Name</label>
+                        <label for="addParameterField">Input Name</label>
                         <input class="form-control" type="text" id="addParameterField" placeholder="Type Name Here"/>
                     </div>
                 </form>
@@ -1002,10 +1027,10 @@
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="editColSelectAll" type="button" class="btn btn-info btn-sm">Select All</button>
-                <button id="editColSelectNone" type="button" class="btn btn-info btn-sm">Select None</button>
-                <button id="editColUp" type="button" class="btn btn-info btn-sm">Up</button>
-                <button id="editColDown" type="button" class="btn btn-info btn-sm">Down</button>
+                <button id="editColSelectAll" type="button" class="btn btn-info btn-sm pull-left">Select All</button>
+                <button id="editColSelectNone" type="button" class="btn btn-info btn-sm pull-left">Select None</button>
+                <button id="editColUp" type="button" class="btn btn-info btn-sm pull-left">Up</button>
+                <button id="editColDown" type="button" class="btn btn-info btn-sm pull-left">Down</button>
                 <button id="editColAdd" type="button" class="btn btn-success btn-sm">Add</button>
                 <button id="editColDelete" type="button" class="btn btn-danger btn-sm">Delete</button>
                 <button id="editColumnsCancel" class="btn btn-default btn-sm">Don't save</button>
