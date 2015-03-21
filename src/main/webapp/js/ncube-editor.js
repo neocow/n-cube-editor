@@ -698,38 +698,6 @@ $(function ()
         {
             updateAxisOk()
         });
-        $('#editColSelectAll').click(function ()
-        {
-            editColSelect(true)
-        });
-        $('#editColSelectNone').click(function ()
-        {
-            editColSelect(false)
-        });
-        $('#editColAdd').click(function ()
-        {
-            editColAdd()
-        });
-        $('#editColDelete').click(function ()
-        {
-            editColDelete()
-        });
-        $('#editColUp').click(function ()
-        {
-            editColUp()
-        });
-        $('#editColDown').click(function ()
-        {
-            editColDown()
-        });
-        $('#editColumnsCancel').click(function ()
-        {
-            editColCancel()
-        });
-        $('#editColumnsSave').click(function ()
-        {
-            editColSave()
-        });
         $('#createTestsLink').click(function ()
         {
             createNewTestMenu();
@@ -741,18 +709,6 @@ $(function ()
                 loadTestListView("ncubeController.generateTests");
             }
         });
-        $('#editCellClear').click(function()
-        {
-            editCellClear();
-        });
-        $('#editCellCancel').click(function()
-        {
-            editCellCancel();
-        });
-        $('#editCellOk').click(function()
-        {
-            editCellOK();
-        });
         $('#dataChangeType').click(function()
         {
             changeType();
@@ -761,6 +717,8 @@ $(function ()
         {
             clearCache();
         });
+        addColumnEditListeners();
+        addEditCellListeners();
         addBranchListeners();
 
         //  Set focused field when dialog appears so user can just start typing.
@@ -1375,7 +1333,9 @@ $(function ()
         $.each(_cubeList, function (key, value)
         {
             var groupName = value['group'];
+            var infoDto = value['ncube'];
             var groupNode = $('#ac-' + groupName);
+
             if (groupNode.length == 0)
             {
                 groupNode = $('<div/>').attr({class: 'accordion-group', 'id': 'ac-' + groupName});
@@ -1396,7 +1356,9 @@ $(function ()
 
             var ul = groupNode.find('ul');
             var li = $('<li/>');
-            var a = $('<a/>').attr({class:'ncube-notselected', 'href':'#','itemName':value['ncube'].name}).html(getSmallCubeName(value));
+            var modified = '';
+            var a = $('<a/>').attr({class:'ncube-notselected', 'href':'#','itemName':infoDto.name}).html(getSmallCubeName(value));
+
             a.click(function ()
             {
                 clearError();
@@ -1406,15 +1368,25 @@ $(function ()
                 loadCube(); // load spreadsheet side
             });
             ul.append(li);
-            li.append(a);
-            if (value['ncube'].name == _selectedCubeName)
+            if (infoDto.name == _selectedCubeName)
             {
                 a.attr('class', 'ncube-selected');
             }
+            if (!infoDto.headSha1)
+            {
+                if (infoDto.sha1)
+                {
+                    a.addClass('cube-list-added');
+                }
+            }
             else
             {
-                a.attr('class', 'ncube-notselected');
+                if (infoDto.headSha1 != infoDto.sha1)
+                {
+                    a.addClass('cube-list-modified');
+                }
             }
+            li.append(a);
         });
     }
 
@@ -2128,11 +2100,15 @@ $(function ()
             if (itemName == text || itemName == elemName)
             {
                 saveSelected = anchor;
-                anchor.attr('class', 'ncube-selected');
+                anchor.removeClass('ncube-selected');
+                anchor.removeClass('ncube-notselected');
+                anchor.addClass('ncube-selected');
             }
             else
             {
-                anchor.attr('class', 'ncube-notselected');
+                anchor.removeClass('ncube-selected');
+                anchor.removeClass('ncube-notselected');
+                anchor.addClass('ncube-notselected');
             }
         });
 
@@ -3541,6 +3517,67 @@ $(function ()
         return true;
     }
 
+    function changeType()
+    {
+        if (!ensureModifiable('Cell types cannot be changed.'))
+        {
+            return;
+        }
+
+        // TODO: Turn off field value, then pop-up edit cell modal.
+        // Set flag in modal so that it handles OK differently, has no clear.
+        // In editCell() make sure to turn on appropriate fields.
+
+        alert('Change type not yet implemented.');
+    }
+
+    function clearCache()
+    {
+        var result = call("ncubeController.clearCache", [getAppId()]);
+
+        if (result.status === false)
+        {
+            _errorId = showNote('Unable to fetch the cell contents: ' + result.data);
+        }
+    }
+
+    // =========================== Everything to do with Column Editing ===============================
+    function addColumnEditListeners()
+    {
+        $('#editColSelectAll').click(function ()
+        {
+            checkAll(true, '.editColCheckBox')
+        });
+        $('#editColSelectNone').click(function ()
+        {
+            checkAll(false, '.editColCheckBox')
+        });
+        $('#editColAdd').click(function ()
+        {
+            editColAdd()
+        });
+        $('#editColDelete').click(function ()
+        {
+            editColDelete()
+        });
+        $('#editColUp').click(function ()
+        {
+            editColUp()
+        });
+        $('#editColDown').click(function ()
+        {
+            editColDown()
+        });
+        $('#editColumnsCancel').click(function ()
+        {
+            editColCancel()
+        });
+        $('#editColumnsSave').click(function ()
+        {
+            editColSave()
+        });
+    }
+
     function editColumns(axisName)
     {
         if (!ensureModifiable('Columns cannot be edited.'))
@@ -3593,16 +3630,6 @@ $(function ()
                 return a.displayOrder - b.displayOrder;
             });
         }
-    }
-
-    // Check all or uncheck all column check boxes
-    function editColSelect(state)
-    {
-        var input = $('.editColCheckBox');
-        $.each(input, function (index, btn)
-        {
-            $(this).prop('checked', state);
-        });
     }
 
     function editColAdd()
@@ -3771,28 +3798,22 @@ $(function ()
         reloadCube();
     }
 
-    function changeType()
+    // =========================== Everything to do with Cell Editing ===============================
+
+    function addEditCellListeners()
     {
-        if (!ensureModifiable('Cell types cannot be changed.'))
+        $('#editCellClear').click(function()
         {
-            return;
-        }
-
-        // TODO: Turn off field value, then pop-up edit cell modal.
-        // Set flag in modal so that it handles OK differently, has no clear.
-        // In editCell() make sure to turn on appropriate fields.
-
-        alert('Change type not yet implemented.');
-    }
-
-    function clearCache()
-    {
-        var result = call("ncubeController.clearCache", [getAppId()]);
-
-        if (result.status === false)
+            editCellClear();
+        });
+        $('#editCellCancel').click(function()
         {
-            _errorId = showNote('Unable to fetch the cell contents: ' + result.data);
-        }
+            editCellCancel();
+        });
+        $('#editCellOk').click(function()
+        {
+            editCellOK();
+        });
     }
 
     function editCell(value)
@@ -3920,6 +3941,14 @@ $(function ()
         {
             commitBranch();
         });
+        $('#commitRollbackSelectAll').click(function()
+        {
+            checkAll(true, 'input[type="checkbox"]')
+        });
+        $('#commitRollbackSelectNone').click(function()
+        {
+            checkAll(false, 'input[type="checkbox"]')
+        });
         $('#branchRollback').click(function()
         {
             rollbackBranch();
@@ -3928,7 +3957,6 @@ $(function ()
         {
             updateBranch();
         });
-
         // From 'Select / Create Branch' Modal
         $('#createBranch').click(function()
         {
@@ -4074,9 +4102,10 @@ $(function ()
             ul.append(li);
         });
 
-        //TODO: Add listeners for select all, select none
-        //TODO: Default to select all initially
+        checkAll(true, 'input[type="checkbox"]');
+
         //TODO: Show Adds in green, changes in Blue, deletes in line thru, and restores as Gold?
+        //TODO: When a cube is modified, make sure the cubeList cube name color reflects this (blue).
         //TODO: Call back-end API with the selected choices
         //TODO: Break up this JS file into sections separated by functionality
         //TODO: Kenny - restore should rollback to last positive rev.
