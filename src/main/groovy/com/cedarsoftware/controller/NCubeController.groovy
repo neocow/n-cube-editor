@@ -13,6 +13,7 @@ import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeTest
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.StringValuePair
+import com.cedarsoftware.ncube.exception.BranchMergeException
 import com.cedarsoftware.ncube.formatters.NCubeTestReader
 import com.cedarsoftware.ncube.formatters.NCubeTestWriter
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter
@@ -310,6 +311,7 @@ class NCubeController extends BaseController
             ApplicationID.validateBranch(branch)
             // TODO: Custom isAllowed() may ne needed
             Object[] appNames = nCubeService.getAppNames(tenant, status, branch)
+            Arrays.sort(appNames);
             return appNames
         }
         catch (Exception e)
@@ -1176,6 +1178,18 @@ class NCubeController extends BaseController
                 return [:]
             }
             return nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
+        }
+        catch (BranchMergeException e)
+        {
+            Map errors = e.errors
+            StringBuilder s = new StringBuilder(e.getMessage())
+            for (String error : errors.values())
+            {
+                s.append('<br>')
+                s.append(error)
+            }
+            markRequestFailed(s)
+            return [:]
         }
         catch (Exception e)
         {

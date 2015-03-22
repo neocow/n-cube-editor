@@ -137,12 +137,20 @@ div#editColumnsModal ul.list-group
     font-weight: bold;
 }
 
-.cube-list-modified {
+.cube-modified {
     color: blue !important;
 }
 
-.cube-list-added {
+.cube-added {
     color: green !important;
+}
+
+.cube-deleted {
+    text-decoration: line-through;
+}
+
+.cube-restored {
+    color: darkgoldenrod !important;
 }
 
 .skinny-lr {

@@ -54,6 +54,7 @@ $(function ()
     var _duplicateTestModal = $('#duplicateTestModal');
     var _deleteTestModal = $('#deleteTestmodal');
     var _selectBranchModal = $('#selectBranchModal');
+    var _commitModal = $('#commitRollbackModal');
 
     //  locations
     var _testResultsDiv = $('#testResultsDiv');
@@ -1376,14 +1377,22 @@ $(function ()
             {
                 if (infoDto.sha1)
                 {
-                    a.addClass('cube-list-added');
+                    a.addClass('cube-added');
+                }
+                else if (infoDto.changeType == 'R')
+                {
+                    a.addClass('cube-restored');
                 }
             }
             else
             {
                 if (infoDto.headSha1 != infoDto.sha1)
                 {
-                    a.addClass('cube-list-modified');
+                    a.addClass('cube-modified');
+                }
+                else if (infoDto.changeType == 'R')
+                {
+                    a.addClass('cube-restored');
                 }
             }
             li.append(a);
@@ -3445,7 +3454,7 @@ $(function ()
         _columnList.empty();
         _columnList.prop('model', axis);
         var displayOrder = 0;
-        $.each(axis.columns["@items"], function (key, item)
+        $.each(axisList, function (key, item)
         {
             if (!item.displayOrder || item.displayOrder < 2147483647)
             {   // Don't add default column in
@@ -3928,7 +3937,9 @@ $(function ()
         reloadCube();
     }
 
-    // =========================== Everything to do with Branching ===============================
+    // =============================================== End Cell Editing ================================================
+
+    // ======================================== Everything to do with Branching ========================================
 
     function addBranchListeners()
     {
@@ -3939,7 +3950,7 @@ $(function ()
         });
         $('#branchCommit').click(function()
         {
-            commitBranch();
+            commitBranch(true);
         });
         $('#commitRollbackSelectAll').click(function()
         {
@@ -3949,9 +3960,17 @@ $(function ()
         {
             checkAll(false, 'input[type="checkbox"]')
         });
+        $('#commitOk').click(function()
+        {
+            commitOk();
+        });
+        $('#rollbackOk').click(function()
+        {
+            rollbackOk();
+        });
         $('#branchRollback').click(function()
         {
-            rollbackBranch();
+            commitBranch(false);
         });
         $('#branchUpdate').click(function()
         {
@@ -4065,13 +4084,33 @@ $(function ()
         _errorId = showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 2000);
     }
 
-    function commitBranch()
+    function commitBranch(state)
     {
         clearError();
 
+        var errMsg;
+        var title;
+        var btnLabel;
+        if (state)
+        {
+            errMsg = 'commit to';
+            title = 'Commit changes';
+            btnLabel = 'Commit';
+            $('#commitOk').show();
+            $('#rollbackOk').hide();
+        }
+        else
+        {
+            errMsg = 'rollback in';
+            title = 'Rollback changes';
+            btnLabel = 'Rollback';
+            $('#commitOk').hide();
+            $('#rollbackOk').show();
+        }
+
         if (isHeadSelected())
         {
-            _errorId = showNote('You cannot commit directly to HEAD.');
+            _errorId = showNote('You cannot ' + errMsg + ' HEAD.');
             return;
         }
 
@@ -4083,10 +4122,12 @@ $(function ()
             return;
         }
 
-        $('#commitRollbackLabel').html('Commit Changes');
-        $('#branchRollbackOk').html('Commit');
+        $('#commitRollbackLabel').html(title);
+        $('#commitRollbackOk').text(btnLabel);
 
-        var branchChanges = result.data["@items"];
+        var branchChanges = result.data;
+
+        _commitModal.prop('changes', branchChanges);
         var ul = $('#commitRollbackList');
         ul.empty();
 
@@ -4096,6 +4137,40 @@ $(function ()
             var div = $('<div/>').prop({class:'container-fluid'});
             var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
             var label = $('<label/>').prop({class: 'checkbox no-margins'}).text(infoDto.name);
+
+            if (!infoDto.headSha1)
+            {
+                if (infoDto.sha1)
+                {
+                    label.addClass('cube-added');
+                }
+                else
+                {
+                    if (infoDto.changeType == 'D')
+                    {
+                        label.addClass('cube-deleted');
+                    }
+                    else if (infoDto.changeType == 'R')
+                    {
+                        label.addClass('cube-restored');
+                    }
+                }
+            }
+            else
+            {
+                if (infoDto.headSha1 != infoDto.sha1)
+                {
+                    label.addClass('cube-modified');
+                }
+                else if (infoDto.changeType == 'D')
+                {
+                    label.addClass('cube-deleted');
+                }
+                else if (infoDto.changeType == 'R')
+                {
+                    label.addClass('cube-restored');
+                }
+            }
             checkbox.prependTo(label); // <=== create input without the closing tag
             div.append(label);
             li.append(div);
@@ -4104,48 +4179,45 @@ $(function ()
 
         checkAll(true, 'input[type="checkbox"]');
 
-        //TODO: Show Adds in green, changes in Blue, deletes in line thru, and restores as Gold?
+        //TODO: Head should not show changes (ever)
         //TODO: When a cube is modified, make sure the cubeList cube name color reflects this (blue).
-        //TODO: Call back-end API with the selected choices
         //TODO: Break up this JS file into sections separated by functionality
-        //TODO: Kenny - restore should rollback to last positive rev.
         //TODO: Commit - popup box for commit message
         //TODO: Details - show note text
         //TODO: Details - widen out field for cube name
         //TODO: SHA1 - ncube - include cell info (cell type, for example, needs to be included in SHA1)
-        $('#commitRollbackModal').modal('show');
+        //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
+        _commitModal.modal('show');
     }
 
-    function rollbackBranch()
+    function commitOk()
     {
-        clearError();
-
-        if (isHeadSelected())
+        var branchChanges = _commitModal.prop('changes');
+        var input = $('.commitCheck');
+        var changes = [];
+        $.each(input, function (index, label)
         {
-            _errorId = showNote('You cannot rollback directly in HEAD.');
-            return;
-        }
-
-        var result = call("ncubeController.getBranchChanges", [getAppId()]);
-
-        if (!result.status || !result.data)
-        {
-            _errorId = showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        $('#commitRollbackLabel').html('Rollback Changes');
-        $('#branchRollbackOk').html('Rollback');
-
-        var branchChanges = result.data["@items"];
-        var ul = $('#commitRollbackList');
-        ul.empty();
-
-        $.each(branchChanges, function (index, infoDto)
-        {
+            if ($(this).is(':checked'))
+            {
+                changes.push(branchChanges[index]);
+            }
         });
 
-        $('#commitRollbackModal').modal('show');
+        _commitModal.modal('hide');
+        var result = call("ncubeController.commitBranch", [getAppId(), changes]);
+
+        if (result.status === false)
+        {
+            _cellId = null;
+            _errorId = showNote('Unable to commit changes:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        _errorId = showNote('Successfully committed ' + changes.length + ' cubes.', 'Note', 5000);
+    }
+
+    function rollbackOk()
+    {
+        alert('rollback');
     }
 
     function updateBranch()
