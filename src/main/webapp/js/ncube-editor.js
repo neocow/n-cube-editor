@@ -1373,26 +1373,29 @@ $(function ()
             {
                 a.attr('class', 'ncube-selected');
             }
-            if (!infoDto.headSha1)
+            if (!isHeadSelected())
             {
-                if (infoDto.sha1)
+                if (!infoDto.headSha1)
                 {
-                    a.addClass('cube-added');
+                    if (infoDto.sha1)
+                    {
+                        a.addClass('cube-added');
+                    }
+                    else if (infoDto.changeType == 'R')
+                    {
+                        a.addClass('cube-restored');
+                    }
                 }
-                else if (infoDto.changeType == 'R')
+                else
                 {
-                    a.addClass('cube-restored');
-                }
-            }
-            else
-            {
-                if (infoDto.headSha1 != infoDto.sha1)
-                {
-                    a.addClass('cube-modified');
-                }
-                else if (infoDto.changeType == 'R')
-                {
-                    a.addClass('cube-restored');
+                    if (infoDto.headSha1 != infoDto.sha1)
+                    {
+                        a.addClass('cube-modified');
+                    }
+                    else if (infoDto.changeType == 'R')
+                    {
+                        a.addClass('cube-restored');
+                    }
                 }
             }
             li.append(a);
@@ -4179,7 +4182,6 @@ $(function ()
 
         checkAll(true, 'input[type="checkbox"]');
 
-        //TODO: Head should not show changes (ever)
         //TODO: When a cube is modified, make sure the cubeList cube name color reflects this (blue).
         //TODO: Break up this JS file into sections separated by functionality
         //TODO: Commit - popup box for commit message
