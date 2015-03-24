@@ -4182,12 +4182,12 @@ $(function ()
 
         checkAll(true, 'input[type="checkbox"]');
 
-        //TODO: When a cube is modified, make sure the cubeList cube name color reflects this (blue).
+        //TODO: Make cube list load and repaint async.  Call this after cell is modified (and other places that re-load list).
+        //TODO: When a cube is modified, make sure the cubeList cube name color reflects this (blue).  Test this after above.
         //TODO: Break up this JS file into sections separated by functionality
         //TODO: Commit - popup box for commit message
         //TODO: Details - show note text
         //TODO: Details - widen out field for cube name
-        //TODO: SHA1 - ncube - include cell info (cell type, for example, needs to be included in SHA1)
         //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
         _commitModal.modal('show');
     }
@@ -4219,7 +4219,27 @@ $(function ()
 
     function rollbackOk()
     {
-        alert('rollback');
+        var branchChanges = _commitModal.prop('changes');
+        var input = $('.commitCheck');
+        var changes = [];
+        $.each(input, function (index, label)
+        {
+            if ($(this).is(':checked'))
+            {
+                changes.push(branchChanges[index]);
+            }
+        });
+
+        _commitModal.modal('hide');
+        var result = call("ncubeController.rollbackBranch", [getAppId(), changes]);
+
+        if (result.status === false)
+        {
+            _cellId = null;
+            _errorId = showNote('Unable to rollback cubes:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        _errorId = showNote('Successfully rolled back ' + changes.length + ' cubes.', 'Note', 5000);
     }
 
     function updateBranch()

@@ -1181,14 +1181,7 @@ class NCubeController extends BaseController
         }
         catch (BranchMergeException e)
         {
-            Map errors = e.errors
-            StringBuilder s = new StringBuilder(e.getMessage())
-            for (String error : errors.values())
-            {
-                s.append('<br>')
-                s.append(error)
-            }
-            markRequestFailed(s)
+            markRequestFailed(e.getMessage())
             return [:]
         }
         catch (Exception e)
