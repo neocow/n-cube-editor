@@ -148,22 +148,6 @@ $(function ()
             ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
             ,	livePaneResizing:			true
 
-            //	some resizing/toggling settings
-            //            ,	north__slidable:			false	// OVERRIDE the pane-default of 'slidable=true'
-            //            ,	north__togglerLength_closed: '100%'	// toggle-button is full-width of resizer-bar
-            //            ,	north__spacing_closed:		20		// big resizer-bar when open (zero height)
-            //            ,	south__resizable:			false	// OVERRIDE the pane-default of 'resizable=true'
-            //            ,	south__spacing_open:		0		// no resizer-bar when open (zero height)
-            //            ,	south__spacing_closed:		20		// big resizer-bar when open (zero height)
-
-            //	some pane-size settings
-            //,	west__minSize:				100
-            //            ,	east__size:					300
-            //            ,	east__minSize:				200
-            //            ,	east__maxSize:				.5 // 50% of layout width
-            // ,   center__paneSelector: "#center"
-            // ,   west__paneSelector: "#west"
-
             //	some pane animation settings
             ,	west__animatePaneSizing:	false
             ,   west__fxName_open:          "none"
@@ -171,8 +155,8 @@ $(function ()
             ,   spacing_open:         5
             ,   spacing_closed:       5
             ,   west__resizeable:           true
-            ,   west__size:                 "auto"
-            ,   west__minSize:              150
+            ,   west__size:                 250
+            ,   west__minSize:              140
             //	enable showOverflow on west-pane so CSS popups will overlap north pane
             ,	west__showOverflowOnHover:	true
             ,   center__triggerEventsOnLoad: true
@@ -182,13 +166,13 @@ $(function ()
             //,  west__onresize:		"secondaryLayout.resizeAll" // resize ALL visible layouts nested inside
             ,  west__onresize: function()
             {
-                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 93);
+                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 130);
                 secondaryLayout.resizeAll();
                 //                _editor.resize();
             }
         });
 
-        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 93);
+        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 130);
         $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e)
         {
             secondaryLayout.resizeAll();
@@ -525,6 +509,17 @@ $(function ()
             {
                 _errorId = showNote('Error saving JSON n-cube:<hr class="hr-small"/>' + result.data);
             }
+        });
+
+        var input = $('#cube-search');
+        input.keyup(function ()
+        {
+            filterCubeList($(this));
+        });
+        $('#cube-search-reset').click(function ()
+        {
+            input.val("");
+            filterCubeList(input);
         });
 
         $('#ncubeTab').click(function ()
@@ -889,6 +884,11 @@ $(function ()
             var isUrl = _editCellRadioURL.find('input').is(':checked');
             showHideCacheCheckbox(isUrl)
         });
+    }
+
+    function filterCubeList(input)
+    {
+        loadNCubeListView(input.val())
     }
 
     function showHideCacheCheckbox(isUrl)
@@ -1326,53 +1326,78 @@ $(function ()
         return newTest;
     }
 
-    function loadNCubeListView()
+
+    function loadNCubeListView(filter)
     {
-        $('#ncubeCount').html(Object.keys(_cubeList).length);
-        var groupList = $('#ncube-list');
-        groupList.empty();
-        $.each(_cubeList, function (key, value)
+        var list = $('#ncube-list');
+        list.empty();
+        var cubes = filter ? {} :_cubeList;
+        if (filter && filter.length > 0)
         {
-            var groupName = value['group'];
-            var infoDto = value['ncube'];
-            var groupNode = $('#ac-' + groupName);
-
-            if (groupNode.length == 0)
+            // Step 1. Filter all cubes and store into a Map keyed by match location (int) to list of cubes that matched starting at this location.
+            var matches = {};
+            $.each(_cubeList, function filterNames(key, infoDto)
             {
-                groupNode = $('<div/>').attr({class: 'accordion-group', 'id': 'ac-' + groupName});
-                var heading = $("<div/>").attr({class: 'accordion-heading'});
-                groupNode.append(heading);
-                var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open cube-list-font', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
-                anchor.html(groupName);
-                heading.append(anchor);
-                groupList.append(groupNode);
-                var accordionBody = $('<div/>').attr({class:'accordion-body collapse', 'id':'grp-' + groupName});
-                var bodyInner = $('<div/>').attr({class:'accordion-inner'});
-                var ul1 = $('<ul/>').attr({class:'nav nav-list'});
-                bodyInner.append(ul1);
-                accordionBody.append(bodyInner);
-                groupNode.append(accordionBody);
-                groupList.append(groupNode);
-            }
+                infoDto.pos = null;
+                var idx = infoDto.name.toLowerCase().indexOf(filter);
+                if (idx >= 0)
+                {
+                    if (!matches[idx])
+                    {
+                        matches[idx] = [];
+                    }
+                    matches[idx].push(infoDto);
+                }
+            });
 
-            var ul = groupNode.find('ul');
-            var li = $('<li/>');
-            var modified = '';
-            var a = $('<a/>').attr({class:'ncube-notselected', 'href':'#','itemName':infoDto.name}).html(getSmallCubeName(value));
-
-            a.click(function ()
+            // Step 2. Build linear cube list from separate lists above, thereby ordering left-most matches higher than middle or right
+            $.each(matches, function buildMatches(key, value)
             {
-                clearError();
-                var cubeName = a.attr('itemName');
-                localStorage[SELECTED_CUBE] = cubeName;
+                var pos = key;
+                $.each(value, function(index, cube)
+                {
+                    cubes[cube.name] = cube;
+                    cube.pos = parseInt(pos);
+                });
+            });
+        }
+        var count = 0;
+        $.each(cubes, function buildCubeList(cubeName, infoDto)
+        {
+            count++;
+            var li = $("<li/>");
+            var a = $('<a href="#"/>');
+            a.click(function clickAction()
+            {
+                setListSelectedStatus(cubeName, '#ncube-list');
                 _selectedCubeName = cubeName;
                 loadCube(); // load spreadsheet side
             });
-            ul.append(li);
-            if (infoDto.name == _selectedCubeName)
+            if (cubeName == _selectedCubeName)
             {
                 a.attr('class', 'ncube-selected');
             }
+            else
+            {
+                a.attr('class', 'ncube-notselected');
+            }
+            li.append(a);
+            list.append(li);
+
+            if (filter && infoDto.pos != null)
+            {
+                var nameHtml = cubeName.substring(0, infoDto.pos);
+                nameHtml += '<span class="search-hilite">';
+                nameHtml += cubeName.substring(infoDto.pos, infoDto.pos + filter.length);
+                nameHtml += '</span>';
+                nameHtml += cubeName.substring(infoDto.pos + filter.length);
+                a.html(nameHtml);
+            }
+            else
+            {
+                a.html(cubeName);
+            }
+
             if (!isHeadSelected())
             {
                 if (!infoDto.headSha1)
@@ -1398,15 +1423,92 @@ $(function ()
                     }
                 }
             }
-            li.append(a);
+
         });
+        $('#ncubeCount').html(count);
     }
 
-    function getSmallCubeName(cubeInfo)
-    {
-        var prefix = cubeInfo['prefix'];
-        return cubeInfo['ncube'].name.substring(prefix.length);
-    }
+    //function loadNCubeListView()
+    //{
+    //    $('#ncubeCount').html(Object.keys(_cubeList).length);
+    //    var groupList = $('#ncube-list');
+    //    groupList.empty();
+    //    $.each(_cubeList, function (key, value)
+    //    {
+    //        var groupName = value['group'];
+    //        var infoDto = value['ncube'];
+    //        var groupNode = $('#ac-' + groupName);
+    //
+    //        if (groupNode.length == 0)
+    //        {
+    //            groupNode = $('<div/>').attr({class: 'accordion-group', 'id': 'ac-' + groupName});
+    //            var heading = $("<div/>").attr({class: 'accordion-heading'});
+    //            groupNode.append(heading);
+    //            var anchor = $('<a/>').attr({class: 'accordion-toggle icon-folder-open cube-list-font', 'data-toggle': 'collapse', 'data-parent': 'ncube-list', 'href': '#grp-' + groupName});
+    //            anchor.html(groupName);
+    //            heading.append(anchor);
+    //            groupList.append(groupNode);
+    //            var accordionBody = $('<div/>').attr({class:'accordion-body collapse', 'id':'grp-' + groupName});
+    //            var bodyInner = $('<div/>').attr({class:'accordion-inner'});
+    //            var ul1 = $('<ul/>').attr({class:'nav nav-list'});
+    //            bodyInner.append(ul1);
+    //            accordionBody.append(bodyInner);
+    //            groupNode.append(accordionBody);
+    //            groupList.append(groupNode);
+    //        }
+    //
+    //        var ul = groupNode.find('ul');
+    //        var li = $('<li/>');
+    //        var modified = '';
+    //        var a = $('<a/>').attr({class:'ncube-notselected', 'href':'#','itemName':infoDto.name}).html(getSmallCubeName(value));
+    //
+    //        a.click(function ()
+    //        {
+    //            clearError();
+    //            var cubeName = a.attr('itemName');
+    //            localStorage[SELECTED_CUBE] = cubeName;
+    //            _selectedCubeName = cubeName;
+    //            loadCube(); // load spreadsheet side
+    //        });
+    //        ul.append(li);
+    //        if (infoDto.name == _selectedCubeName)
+    //        {
+    //            a.attr('class', 'ncube-selected');
+    //        }
+    //        if (!isHeadSelected())
+    //        {
+    //            if (!infoDto.headSha1)
+    //            {
+    //                if (infoDto.sha1)
+    //                {
+    //                    a.addClass('cube-added');
+    //                }
+    //                else if (infoDto.changeType == 'R')
+    //                {
+    //                    a.addClass('cube-restored');
+    //                }
+    //            }
+    //            else
+    //            {
+    //                if (infoDto.headSha1 != infoDto.sha1)
+    //                {
+    //                    a.addClass('cube-modified');
+    //                }
+    //                else if (infoDto.changeType == 'R')
+    //                {
+    //                    a.addClass('cube-restored');
+    //                }
+    //            }
+    //        }
+    //        li.append(a);
+    //    });
+    //}
+
+    //function getSmallCubeName(cubeInfo)
+    //{
+    //    var prefix = cubeInfo['prefix'];
+    //    return cubeInfo['ncube'].name.substring(prefix.length);
+    //}
 
     function loadCubeHtml()
     {
@@ -1760,7 +1862,7 @@ $(function ()
             return;
         }
 
-        var info = _cubeList[_selectedCubeName]['ncube'];
+        var info = _cubeList[_selectedCubeName];
         if (!info)
         {
             return;
@@ -2136,7 +2238,6 @@ $(function ()
     function loadNCubes()
     {
         _cubeList = {};
-        clearError();
         if (!_selectedApp)
         {
             //_errorId = showNote('No App selected, cannot load n-cubes.');
@@ -2158,7 +2259,7 @@ $(function ()
         {
             $.each(result.data, function (index, value)
             {
-                var name = value['ncube'].name;
+                var name = value.name;
                 _cubeList[name] = value;
                 if (!first)
                 {
@@ -2172,7 +2273,7 @@ $(function ()
         }
         if (!_selectedCubeName || !doesCubeExist())
         {
-            _selectedCubeName = (_cubeList && first) ? _cubeList[first]['ncube'].name : null;
+            _selectedCubeName = (_cubeList && first) ? _cubeList[first].name : null;
         }
     }
 
@@ -3799,11 +3900,7 @@ $(function ()
         axis.defaultCol = null;
         var result = call("ncubeController.updateAxisColumns", [getAppId(), _selectedCubeName, axis]);
 
-        if (result.status === true)
-        {
-            loadCube();
-        }
-        else
+        if (result.status !== true)
         {
             _errorId = showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
         }
@@ -4187,7 +4284,6 @@ $(function ()
         //TODO: Break up this JS file into sections separated by functionality
         //TODO: Commit - popup box for commit message
         //TODO: Details - show note text
-        //TODO: Details - widen out field for cube name
         //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
         _commitModal.modal('show');
     }
@@ -4214,7 +4310,11 @@ $(function ()
             _errorId = showNote('Unable to commit changes:<hr class="hr-small"/>' + result.data);
             return;
         }
-        _errorId = showNote('Successfully committed ' + changes.length + ' cubes.', 'Note', 5000);
+
+        _errorId = showNote('Successfully committed ' + changes.length + ' cube(s).', 'Note', 5000);
+        loadNCubes();
+        loadNCubeListView();
+        reloadCube();
     }
 
     function rollbackOk()
@@ -4239,7 +4339,11 @@ $(function ()
             _errorId = showNote('Unable to rollback cubes:<hr class="hr-small"/>' + result.data);
             return;
         }
-        _errorId = showNote('Successfully rolled back ' + changes.length + ' cubes.', 'Note', 5000);
+
+        _errorId = showNote('Successfully rolled back ' + changes.length + ' cube(s).', 'Note', 5000);
+        loadNCubes();
+        loadNCubeListView();
+        reloadCube();
     }
 
     function updateBranch()
@@ -4256,7 +4360,9 @@ $(function ()
         _errorId = showNote('Branch Updated');
     }
 
-    // ============================================ End Branching =============================================
+    // =============================================== End Branching ===================================================
+
+    // ============================================= General Utilities =================================================
 
     function checkAll(state, queryStr)
     {

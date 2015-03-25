@@ -138,8 +138,8 @@ function call(target, args, params)
 
     if (params != null)
     {
-        async = (params.callback != "undefined" && params.callback != null && typeof params.callback === "function");
-        if (params.timeout != "undefined" && params.timeout != null)
+        async = (params.callback && typeof params.callback === "function");
+        if (params.timeout)
         {
             timeout = params.timeout;
         }
@@ -166,7 +166,7 @@ function call(target, args, params)
                 }
                 else
                 {
-                    // resolveRefs(result.data);
+                    resolveRefs(result.data);
                     params.callback(result);
                 }
             }
@@ -196,6 +196,7 @@ function call(target, args, params)
             return {status:null,data:'Communications error.  Check your network connection.'};
         }
 
+        resolveRefs(result.data);
         return result;
     }
 }

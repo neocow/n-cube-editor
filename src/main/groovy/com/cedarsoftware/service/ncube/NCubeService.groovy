@@ -257,9 +257,9 @@ class NCubeService
         NCubeManager.updateCube(appId, ncube, username)
     }
 
-    boolean renameCube(ApplicationID appId, String oldName, String newName)
+    boolean renameCube(ApplicationID appId, String oldName, String newName, String username)
     {
-        return NCubeManager.renameCube(appId, oldName, newName)
+        return NCubeManager.renameCube(appId, oldName, newName, username)
     }
 
     /**

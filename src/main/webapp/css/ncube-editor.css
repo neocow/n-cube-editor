@@ -10,6 +10,10 @@ body {
     text-shadow: none !important;
 }
 
+.search-hilite {
+    background-color:rgba(61, 139, 202, 0.45);
+}
+
 .ncube-notselected {
     color: #444;
     background-color: white;
