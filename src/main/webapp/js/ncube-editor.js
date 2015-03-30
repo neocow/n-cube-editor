@@ -78,7 +78,30 @@ $(function ()
         loadStatusListView();
         loadVersionListView();
         loadNCubeListView();
-        loadCube();
+        clearSearch();
+
+        // Set up back/forward button support (base a page on a app, version, status, branch, and cube name)
+        $(window).on("popstate", function(e)
+        {
+            if (e.originalEvent.state !== null)
+            {
+                var state = e.originalEvent.state;
+                _selectedApp = state.app;
+                _selectedVersion = state.version;
+                _selectedStatus = state.status;
+                _selectedCubeName = state.cube;
+                _selectedBranch = state.branch;
+                showActiveBranch();
+                loadAppNames();
+                loadVersions();
+                loadNCubes();
+                loadAppListView();
+                loadStatusListView();
+                loadVersionListView();
+                //loadNCubeListView();
+                loadCube(false);
+            }
+        });
 
         $.fn.selectRange = function (start, end)
         {
@@ -188,7 +211,8 @@ $(function ()
         {
             var isModalDisplayed = $('body').hasClass('modal-open');
 
-            if (_activeTab == 'ncubeTab' && !isModalDisplayed)
+            var focus = $('input:focus');
+            if (_activeTab == 'ncubeTab' && !isModalDisplayed && focus && focus.attr('id') != 'cube-search')
             {
                 if (e.metaKey || e.ctrlKey)
                 {   // Control Key (command in the case of Mac)
@@ -457,10 +481,14 @@ $(function ()
         }
     }
 
-    function getDirtyStatus()
+
+    function clearSearch()
     {
-        var saveButton = $('#saveButton');
-        return !saveButton.prop('disabled');
+        _searchInput.val('');
+        loadFilteredCubeView(_cubeList);
+        setListSelectedStatus(_selectedCubeName, '#ncube-list');
+        loadCube(false); // load spreadsheet side
+        _searchInput.val('');
     }
 
     function addListeners()
@@ -505,11 +533,19 @@ $(function ()
         {
             _filterWorker.postMessage([_cubeList, _searchInput.val()])
         });
+        _searchInput.on('focusin', function(event)
+        {
+            _filterWorker.postMessage([_cubeList, _searchInput.val()])
+        });
+        _searchInput.click(function(event)
+        {
+            _filterWorker.postMessage([_cubeList, _searchInput.val()])
+        });
 
         _searchInput.keyup(function (e)
         {
             if (e.keyCode == 13)
-            {
+            {   // 'enter' key
                 var a = _listOfCubes.find('a[itemName]:first');
                 if (a)
                 {
@@ -520,19 +556,15 @@ $(function ()
                     loadCube(); // load spreadsheet side
                 }
             }
-        });
-
-        _searchInput.on('focusin', function(event)
-        {
-            _filterWorker.postMessage([_cubeList, _searchInput.val()])
+            else if (e.keyCode == 27)
+            {   // ESCape key
+                clearSearch();
+            }
         });
 
         $('#cube-search-reset').click(function()
         {
-            _searchInput.val('');
-            loadFilteredCubeView(_cubeList);
-            setListSelectedStatus(_selectedCubeName, '#ncube-list');
-            loadCube(); // load spreadsheet side
+            clearSearch();
         });
 
         $('#ncubeTab').click(function ()
@@ -940,6 +972,13 @@ $(function ()
             list.append(li);
         });
         setListSelectedStatus(_selectedApp, '#app-list');
+    }
+
+    function saveState()
+    {
+        var title = (_selectedCubeName ? _selectedCubeName : '') + ':' + (_selectedApp ? _selectedApp : '') + '/' + (_selectedVersion ? _selectedVersion : '') + '/' + (_selectedStatus ? _selectedStatus : '') + '/' + (_selectedBranch ? _selectedBranch : '');
+        document.title = title;
+        history.pushState({app: _selectedApp, version: _selectedVersion, status: _selectedStatus, branch: _selectedBranch, cube: _selectedCubeName}, title);
     }
 
     function loadTestListView(funcName)
@@ -1391,6 +1430,7 @@ $(function ()
                 _searchInput.val(cubeName);
                 _selectedCubeName = cubeName;
                 _listOfCubes.empty();
+                localStorage[SELECTED_CUBE] = cubeName;
                 loadCube(); // load spreadsheet side
             });
             if (cubeName == _selectedCubeName)
@@ -1996,8 +2036,12 @@ $(function ()
         return labelGroup;
     }
 
-    function loadCube()
+    function loadCube(pushState)
     {
+        if (false !== pushState)
+        {
+            saveState();
+        }
         if (_activeTab == 'ncubeTab')
         {
             loadCubeHtml();
@@ -2023,6 +2067,7 @@ $(function ()
             console.log('Unknown tab selected: ' + _activeTab);
         }
 
+        _searchInput.val(_selectedCubeName);
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
     }
 
@@ -4027,7 +4072,7 @@ $(function ()
 
     function showActiveBranch()
     {
-        $('#BranchMenu').html('Branch:&nbsp;<button class="btn-primary">&nbsp;' + (localStorage[SELECTED_BRANCH] || head) + '&nbsp;<b class="caret"></b></button>');
+        $('#BranchMenu').html('Branch:&nbsp;<button class="btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>');
     }
 
     function selectBranch()
@@ -4108,8 +4153,8 @@ $(function ()
         _selectedBranch = branchName;
         localStorage[SELECTED_BRANCH] = branchName;
         _selectBranchModal.modal('hide');
-        showActiveBranch();
 
+        showActiveBranch();
         loadAppNames();
         loadVersions();
         loadNCubes();
