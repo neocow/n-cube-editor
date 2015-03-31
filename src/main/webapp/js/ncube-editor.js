@@ -239,7 +239,6 @@ $(function ()
             _filterWorker = new Worker("js/loadCubeList.js");
             _filterWorker.onmessage = function(event)
             {
-                // TODO: allow ctrl-C, ctrl-X to work in search input control.
                 var list = event.data;
                 loadFilteredCubeView(list);
             };
@@ -491,6 +490,16 @@ $(function ()
         _searchInput.val('');
     }
 
+    function selectCubeByName(cubeName)
+    {
+        _searchInput.val(cubeName);
+        _selectedCubeName = cubeName;
+        _listOfCubes.empty();
+        localStorage[SELECTED_CUBE] = cubeName;
+        loadCube(); // load spreadsheet side
+        _cubeCount.html('1');
+    }
+
     function addListeners()
     {
         var editor = $('#jsoneditor');
@@ -550,10 +559,7 @@ $(function ()
                 if (a)
                 {
                     var cubeName = a.attr('itemName');
-                    _searchInput.val(cubeName);
-                    _selectedCubeName = cubeName;
-                    _listOfCubes.empty();
-                    loadCube(); // load spreadsheet side
+                    selectCubeByName(cubeName);
                 }
             }
             else if (e.keyCode == 27)
@@ -1427,11 +1433,7 @@ $(function ()
             var a = $('<a href="#"/>');
             a.click(function clickAction()
             {
-                _searchInput.val(cubeName);
-                _selectedCubeName = cubeName;
-                _listOfCubes.empty();
-                localStorage[SELECTED_CUBE] = cubeName;
-                loadCube(); // load spreadsheet side
+                selectCubeByName(cubeName);
             });
             if (cubeName == _selectedCubeName)
             {
