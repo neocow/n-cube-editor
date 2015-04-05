@@ -80,7 +80,7 @@ $(function ()
         loadNCubeListView();
         clearSearch();
 
-        // Set up back/forward button support (base a page on a app, version, status, branch, and cube name)
+        // Set up back button support (base a page on a app, version, status, branch, and cube name)
         $(window).on("popstate", function(e)
         {
             if (e.originalEvent.state !== null)
@@ -98,8 +98,7 @@ $(function ()
                 loadAppListView();
                 loadStatusListView();
                 loadVersionListView();
-                //loadNCubeListView();
-                loadCube(false);
+                selectCubeByName(_selectedCubeName, false);
             }
         });
 
@@ -158,6 +157,8 @@ $(function ()
             ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
             ,	livePaneResizing:			true
             ,	east__minSize:				170
+            ,   togglerLength_open:         60
+            ,   togglerLength_closed:       "100%"
             ,	spacing_open:			5  // ALL panes
             ,	spacing_closed:			5 // ALL panes
             //            ,	south__spacing_open:			5  // ALL panes
@@ -175,7 +176,8 @@ $(function ()
             ,	resizable:					true	// when open, pane can be resized
             ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
             ,	livePaneResizing:			true
-
+            ,   togglerLength_open:         60
+            ,   togglerLength_closed:       "100%"
             //	some pane animation settings
             ,	west__animatePaneSizing:	false
             ,   west__fxName_open:          "none"
@@ -488,15 +490,16 @@ $(function ()
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
         loadCube(false); // load spreadsheet side
         _searchInput.val('');
+        _cubeCount.html(Object.keys(_cubeList).length);
     }
 
-    function selectCubeByName(cubeName)
+    function selectCubeByName(cubeName, pushState)
     {
         _searchInput.val(cubeName);
         _selectedCubeName = cubeName;
         _listOfCubes.empty();
         localStorage[SELECTED_CUBE] = cubeName;
-        loadCube(); // load spreadsheet side
+        loadCube(pushState); // load spreadsheet side
         _cubeCount.html('1');
     }
 
@@ -578,7 +581,7 @@ $(function ()
             clearError();
             $('#DataMenu').show();
             _activeTab = 'ncubeTab';
-            loadCube();
+            loadCube(false);
         });
 
         $('#jsonTab').click(function ()
@@ -586,7 +589,7 @@ $(function ()
             clearError();
             $('#DataMenu').hide();
             _activeTab = "jsonTab";
-            loadCube();
+            loadCube(false);
         });
 
         $('#detailsTab').click(function ()
@@ -594,7 +597,7 @@ $(function ()
             clearError();
             $('#DataMenu').hide();
             _activeTab = "detailsTab";
-            loadCube();
+            loadCube(false);
         });
 
         $('#testTab').click(function()
@@ -602,7 +605,7 @@ $(function ()
             clearError();
             $('#DataMenu').hide();
             _activeTab = "testTab";
-            loadCube();
+            loadCube(false);
         });
 
         $('#picTab').click(function()
@@ -610,7 +613,7 @@ $(function ()
             clearError();
             $('#DataMenu').hide();
             _activeTab = "picTab";
-            loadCube();
+            loadCube(false);
         });
 
         $('#newCubeMenu').click(function ()
@@ -984,7 +987,15 @@ $(function ()
     {
         var title = (_selectedCubeName ? _selectedCubeName : '') + ':' + (_selectedApp ? _selectedApp : '') + '/' + (_selectedVersion ? _selectedVersion : '') + '/' + (_selectedStatus ? _selectedStatus : '') + '/' + (_selectedBranch ? _selectedBranch : '');
         document.title = title;
+        var state = history.state;
+        if (state && state.app == _selectedApp && state.version == _selectedVersion && state.status == _selectedStatus && state.branch == _selectedBranch && state.cube == _selectedCubeName)
+        {   // Don't save redundant selection
+            return;
+        }
         history.pushState({app: _selectedApp, version: _selectedVersion, status: _selectedStatus, branch: _selectedBranch, cube: _selectedCubeName}, title);
+
+        // TODO: Comment out for release (useful for debugging)
+        showNote("Saving state...", "Note", 2000);
     }
 
     function loadTestListView(funcName)
@@ -1487,7 +1498,15 @@ $(function ()
                 }
             }
         });
-        _cubeCount.html(count);
+
+        if (_searchInput.val() && _searchInput.val().length > 0 && count >= 100)
+        {
+            _cubeCount.html('100+');
+        }
+        else
+        {
+            _cubeCount.html(count);
+        }
     }
 
     function loadCubeHtml()
@@ -2408,15 +2427,13 @@ $(function ()
         {
             _selectedApp = appName;
             _selectedVersion = appId.version;
-            _selectedCubeName = cubeName;
             loadAppNames();
             loadNCubes();
             loadVersions();
             loadAppListView();
             loadStatusListView();
             loadVersionListView();
-            loadNCubeListView();
-            loadCube();
+            selectCubeByName(cubeName)
         }
         else
         {
@@ -2511,8 +2528,7 @@ $(function ()
         if (result.status === true)
         {
             loadNCubes();
-            loadNCubeListView();
-            loadCube();
+            selectCubeByName(_selectedCubeName);
         }
         else
         {
@@ -2577,8 +2593,12 @@ $(function ()
         if (result.status === true)
         {
             loadNCubes();
-            loadNCubeListView();
-            loadCube();
+            var cubeName = _selectedCubeName;
+            if (cubesToRestore.length == 1)
+            {
+                cubeName = cubesToRestore[0];
+            }
+            selectCubeByName(cubeName);
         }
         else
         {
@@ -2886,9 +2906,7 @@ $(function ()
             _selectedVersion = newVersion;
             loadVersionListView();
             loadNCubes();
-            _selectedCubeName = newName;
-            loadNCubeListView();
-            loadCube();
+            selectCubeByName(newName);
         }
         else
         {

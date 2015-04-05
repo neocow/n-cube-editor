@@ -121,8 +121,8 @@ body {
  *	TOGGLER-BUTTONS
  */
 .ui-layout-toggler {
-    border: 1px solid #BBB; /* match pane-border */
-    background-color: #BBB;
+    border: 1px solid #89C; /* match pane-border */
+    background-color: #ABF;
 }
 .ui-layout-resizer-hover .ui-layout-toggler {
     opacity: .60;

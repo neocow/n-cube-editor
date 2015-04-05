@@ -79,11 +79,10 @@ function buildJsonCmdUrl(target)
     var match = regexp.exec(location.pathname);
     if (match == null || match.length != 2)
     {
-        throw "Missing context in location.pathname";
+        return location.protocol + '//' + location.hostname + ":" + location.port + "/cmd/" + controller + "/" + method;
     }
     var ctx = match[1];
-    var url = location.protocol + '//' + location.hostname + ":" + location.port + "/" + ctx + "/cmd/" + controller + "/" + method;
-    return url;
+    return location.protocol + '//' + location.hostname + ":" + location.port + "/" + ctx + "/cmd/" + controller + "/" + method;
 }
 
 function buildJsonArgs(args)

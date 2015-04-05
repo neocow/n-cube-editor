@@ -24,6 +24,7 @@ onmessage = function(e)
 
         // Step 1. Filter all cubes and store into a Map keyed by match location (int) to list of cubes that matched starting at this location.
         var matches = {};
+        var count = 0;
         for (var key in cubeList)
         {
             if (cubeList.hasOwnProperty(key))
@@ -38,6 +39,11 @@ onmessage = function(e)
                         matches[idx] = [];
                     }
                     matches[idx].push(infoDto);
+                    count++;
+                    if (count >= 100)
+                    {
+                        break;
+                    }
                 }
             }
         }
