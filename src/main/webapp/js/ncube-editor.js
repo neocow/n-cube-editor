@@ -98,7 +98,7 @@ $(function ()
                 loadAppListView();
                 loadStatusListView();
                 loadVersionListView();
-                selectCubeByName(_selectedCubeName, false);
+                selectCubeByName(_selectedCubeName);
             }
         });
 
@@ -488,18 +488,18 @@ $(function ()
         _searchInput.val('');
         loadFilteredCubeView(_cubeList);
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
-        loadCube(false); // load spreadsheet side
+        loadCube(); // load spreadsheet side
         _searchInput.val('');
         _cubeCount.html(Object.keys(_cubeList).length);
     }
 
-    function selectCubeByName(cubeName, pushState)
+    function selectCubeByName(cubeName)
     {
         _searchInput.val(cubeName);
         _selectedCubeName = cubeName;
         _listOfCubes.empty();
         localStorage[SELECTED_CUBE] = cubeName;
-        loadCube(pushState); // load spreadsheet side
+        loadCube(); // load spreadsheet side
         _cubeCount.html('1');
     }
 
@@ -581,7 +581,7 @@ $(function ()
             clearError();
             $('#DataMenu').show();
             _activeTab = 'ncubeTab';
-            loadCube(false);
+            loadCube();
         });
 
         $('#jsonTab').click(function ()
@@ -589,7 +589,7 @@ $(function ()
             clearError();
             $('#DataMenu').hide();
             _activeTab = "jsonTab";
-            loadCube(false);
+            loadCube();
         });
 
         $('#detailsTab').click(function ()
@@ -597,7 +597,7 @@ $(function ()
             clearError();
             $('#DataMenu').hide();
             _activeTab = "detailsTab";
-            loadCube(false);
+            loadCube();
         });
 
         $('#testTab').click(function()
@@ -605,7 +605,7 @@ $(function ()
             clearError();
             $('#DataMenu').hide();
             _activeTab = "testTab";
-            loadCube(false);
+            loadCube();
         });
 
         $('#picTab').click(function()
@@ -613,7 +613,7 @@ $(function ()
             clearError();
             $('#DataMenu').hide();
             _activeTab = "picTab";
-            loadCube(false);
+            loadCube();
         });
 
         $('#newCubeMenu').click(function ()
@@ -2057,12 +2057,9 @@ $(function ()
         return labelGroup;
     }
 
-    function loadCube(pushState)
+    function loadCube()
     {
-        if (false !== pushState)
-        {
-            saveState();
-        }
+        saveState();
         if (_activeTab == 'ncubeTab')
         {
             loadCubeHtml();
@@ -2528,7 +2525,7 @@ $(function ()
         if (result.status === true)
         {
             loadNCubes();
-            selectCubeByName(_selectedCubeName);
+            clearSearch();
         }
         else
         {
@@ -2597,8 +2594,12 @@ $(function ()
             if (cubesToRestore.length == 1)
             {
                 cubeName = cubesToRestore[0];
+                selectCubeByName(cubeName);
             }
-            selectCubeByName(cubeName);
+            else
+            {
+                clearSearch();
+            }
         }
         else
         {

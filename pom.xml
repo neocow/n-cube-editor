@@ -44,6 +44,7 @@
         <version.spring>4.1.4.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>
         <version.java>1.7</version.java>
+        <version.mysql>5.1.35</version.mysql>
         <version.plugin.compiler>3.2</version.plugin.compiler>
         <version.plugin.deploy>2.8.2</version.plugin.deploy>
         <version.plugin.source>2.4</version.plugin.source>
@@ -178,6 +179,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${version.mysql}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy</artifactId>
