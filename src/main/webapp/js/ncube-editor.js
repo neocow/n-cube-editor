@@ -496,7 +496,7 @@ $(function ()
     function selectCubeByName(cubeName)
     {
         _searchInput.val(cubeName);
-        _selectedCubeName = cubeName;
+        _selectedCubeName = getProperCubeName(cubeName);
         _listOfCubes.empty();
         localStorage[SELECTED_CUBE] = cubeName;
         loadCube(); // load spreadsheet side
@@ -988,14 +988,19 @@ $(function ()
         var title = (_selectedCubeName ? _selectedCubeName : '') + ':' + (_selectedApp ? _selectedApp : '') + '/' + (_selectedVersion ? _selectedVersion : '') + '/' + (_selectedStatus ? _selectedStatus : '') + '/' + (_selectedBranch ? _selectedBranch : '');
         document.title = title;
         var state = history.state;
-        if (state && state.app == _selectedApp && state.version == _selectedVersion && state.status == _selectedStatus && state.branch == _selectedBranch && state.cube == _selectedCubeName)
+        if (state && state.app == _selectedApp &&
+            state.version == _selectedVersion &&
+            state.status == _selectedStatus &&
+            state.branch == _selectedBranch &&
+            state.cube == _selectedCubeName)
         {   // Don't save redundant selection
             return;
         }
-        history.pushState({app: _selectedApp, version: _selectedVersion, status: _selectedStatus, branch: _selectedBranch, cube: _selectedCubeName}, title);
-
-        // TODO: Comment out for release (useful for debugging)
-        showNote("Saving state...", "Note", 2000);
+        history.pushState({app: _selectedApp,
+            version: _selectedVersion,
+            status: _selectedStatus,
+            branch: _selectedBranch,
+            cube: _selectedCubeName}, title);
     }
 
     function loadTestListView(funcName)
@@ -1747,9 +1752,8 @@ $(function ()
         {
             if (key.length > 2)
             {   // Only support n-cube names with 3 or more characters in them (too many false replaces will occur otherwise)
-                var lowName = key.toLowerCase();
-                cubeLowerNames[lowName] = true;
-                s += word + lowName.replace('.', '\\.') + word + '|';
+                cubeLowerNames[key] = true;
+                s += word + key.replace('.', '\\.') + word + '|';
             }
         });
 
@@ -1806,22 +1810,29 @@ $(function ()
                 var cubeName = link.html().toLowerCase();
                 if (cubeLowerNames[cubeName])
                 {
-                    _selectedCubeName = link.html();
+                    _selectedCubeName = getProperCubeName(link.html());
                 }
                 else
                 {
                     if (cubeLowerNames['rpm.class.' + cubeName])
                     {
-                        _selectedCubeName = 'rpm.class.' + link.html();
+                        _selectedCubeName = getProperCubeName('rpm.class.' + link.html());
                     }
                     else if (cubeLowerNames['rpm.enum.' + cubeName])
                     {
-                        _selectedCubeName = 'rpm.enum.' + link.html();
+                        _selectedCubeName = getProperCubeName('rpm.enum.' + link.html());
                     }
                 }
                 loadCube();
             });
         });
+    }
+
+    function getProperCubeName(cubeName)
+    {
+        var nameToChk = (cubeName + '').toLowerCase();
+        var info = _cubeList[nameToChk];
+        return info ? info.name : null;
     }
 
     function loadCubeJson()
@@ -1856,12 +1867,12 @@ $(function ()
 
     function loadCubeDetails()
     {
-        if (!_cubeList || !_cubeList[_selectedCubeName])
+        if (!_cubeList || !doesCubeExist())
         {
             return;
         }
 
-        var info = _cubeList[_selectedCubeName];
+        var info = _cubeList[(_selectedCubeName + '').toLowerCase()];
         if (!info)
         {
             return;
@@ -2261,7 +2272,7 @@ $(function ()
             $.each(result.data, function (index, value)
             {
                 var name = value.name;
-                _cubeList[name] = value;
+                _cubeList[name.toLowerCase()] = value;
                 if (!first)
                 {
                     first = name;
@@ -2272,23 +2283,25 @@ $(function ()
         {
             _errorId = showNote('Unable to load n-cubes:<hr class="hr-small"/>' + result.data);
         }
+
+        // If there is no _selectedCubeName, establish one if possible (choose 1st cube in list)
         if (!_selectedCubeName || !doesCubeExist())
         {
-            _selectedCubeName = (_cubeList && first) ? _cubeList[first].name : null;
+            if (first)
+            {
+                _selectedCubeName = (_cubeList && first) ? _cubeList[first.toLowerCase()].name : null;
+            }
+            else
+            {
+                _selectedCubeName = null;
+            }
         }
     }
 
     function doesCubeExist()
     {
-        var found = false;
-        $.each(_cubeList, function(key, value)
-        {
-            if (key == _selectedCubeName)
-            {
-                found = true;
-            }
-        });
-        return found;
+        var nameToChk = (_selectedCubeName + '').toLowerCase();
+        return nameToChk in _cubeList;
     }
 
     function loadVersions()
@@ -2938,7 +2951,7 @@ $(function ()
                 anchor.click(function ()
                 {
                     showRefsToCubeClose();
-                    _selectedCubeName = value;
+                    _selectedCubeName = getProperCubeName(value);
                     loadCube();
                 });
                 li.append(anchor);
@@ -2979,7 +2992,7 @@ $(function ()
                 anchor.click(function ()
                 {
                     showRefsFromCubeClose();
-                    _selectedCubeName = value;
+                    _selectedCubeName = getProperCubeName(value);
                     loadCube();
                 });
                 li.append(anchor);
@@ -4286,8 +4299,6 @@ $(function ()
         //TODO: Make cube list load and repaint async.  Call this after cell is modified (and other places that re-load list).
         //TODO: When a cube is modified, make sure the cubeList cube name color reflects this (blue).  Test this after above.
         //TODO: Break up this JS file into sections separated by functionality
-        //TODO: Commit - popup box for commit message
-        //TODO: Details - show note text
         //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
         _commitModal.modal('show');
     }
