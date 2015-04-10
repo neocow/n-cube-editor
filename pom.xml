@@ -39,7 +39,7 @@
         <version.json-command-servlet>1.2.3</version.json-command-servlet>
         <version.log4j>2.1</version.log4j>
         <version.urlrewrite>4.0.4</version.urlrewrite>
-        <version.groovy>2.4.1</version.groovy>
+        <version.groovy>2.4.3</version.groovy>
         <version.junit>4.11</version.junit>
         <version.spring>4.1.4.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>
