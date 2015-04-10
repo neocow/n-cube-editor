@@ -58,7 +58,6 @@ import java.util.regex.Pattern
 @CompileStatic
 class NCubeController extends BaseController
 {
-    public static final String SYS_NCUBE_INFO = 'sys.groups'
     private static final Pattern VERSION_REGEX = ~/[.]/
     private static final Pattern IS_NUMBER_REGEX = ~/^[\d,.e+-]+$/
     private static final Pattern NO_QUOTES_REGEX = ~/"/
