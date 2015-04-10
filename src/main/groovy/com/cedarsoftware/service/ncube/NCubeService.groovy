@@ -76,23 +76,22 @@ class NCubeService
 
     Object[] getBranchChanges(ApplicationID appId)
     {
-        return NCubeManager.getBranchChangesFromDatabase(appId);
+        return NCubeManager.getBranchChangesFromDatabase(appId)
     }
 
-    Map commitBranch(ApplicationID appId, Object[] infoDtos, String username)
+    Object[] commitBranch(ApplicationID appId, Object[] infoDtos, String username)
     {
-        return NCubeManager.commitBranch(appId, infoDtos, username);
+        return NCubeManager.commitBranch(appId, infoDtos, username)
     }
 
     int rollbackBranch(ApplicationID appId, Object[] infoDtos)
     {
-        return NCubeManager.rollbackBranch(appId, infoDtos);
+        return NCubeManager.rollbackBranch(appId, infoDtos)
     }
 
-    Object[] updateBranch(ApplicationID appId)
+    Object[] updateBranch(ApplicationID appId, String username)
     {
-        return null
-//        return NCubeManager.updateBranch(appId);
+        return NCubeManager.updateBranch(appId, username)
     }
 
     void createCube(ApplicationID appId, NCube ncube, String username)
@@ -134,7 +133,7 @@ class NCubeService
         }
 
         long maxId = -1
-        Iterator<Axis> i = ncube.getAxes().iterator();
+        Iterator<Axis> i = ncube.getAxes().iterator()
         while (i.hasNext())
         {
             Axis axis = i.next()

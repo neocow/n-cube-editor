@@ -1196,26 +1196,26 @@ class NCubeController extends BaseController
         }
     }
 
-    Map commitBranch(ApplicationID appId, Object[] infoDtos)
+    Object[] commitBranch(ApplicationID appId, Object[] infoDtos)
     {
         try
         {
             appId = addTenant(appId)
             if (!isAllowed(appId, null, Delta.Type.UPDATE))
             {
-                return [:]
+                return [] as Object[]
             }
             return nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
         }
         catch (BranchMergeException e)
         {
             markRequestFailed(e.getMessage())
-            return [:]
+            return [] as Object[]
         }
         catch (Exception e)
         {
             fail(e)
-            return [:]
+            return [] as Object[]
         }
     }
 
@@ -1246,7 +1246,7 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            Object[] branchUpdates = nCubeService.updateBranch(appId)
+            Object[] branchUpdates = nCubeService.updateBranch(appId, getUserForDatabase())
             return branchUpdates
         }
         catch (Exception e)

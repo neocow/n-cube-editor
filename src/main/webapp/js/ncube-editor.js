@@ -1883,7 +1883,7 @@ $(function ()
         var date = '';
         if (info.createDate != undefined)
         {
-            date = new Date(info.createDate.value).format('yyyy-mm-dd HH:MM:ss');
+            date = new Date(info.createDate).format('yyyy-mm-dd HH:MM:ss');
         }
         $('#cube_createDate').val(date);
         $('#cube_createHid').val(info.createHid);
@@ -2642,7 +2642,7 @@ $(function ()
                 var date = '';
                 if (value.createDate != undefined)
                 {
-                    date = new Date(value.createDate.value).format('yyyy-mm-dd HH:MM:ss');
+                    date = new Date(value.createDate).format('yyyy-mm-dd HH:MM:ss');
                 }
                 anchor.html('rev: ' + value.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + value.createHid);
                 //anchor.click(function ()
@@ -4296,8 +4296,7 @@ $(function ()
 
         checkAll(true, 'input[type="checkbox"]');
 
-        //TODO: Make cube list load and repaint async.  Call this after cell is modified (and other places that re-load list).
-        //TODO: When a cube is modified, make sure the cubeList cube name color reflects this (blue).  Test this after above.
+        //TODO: After Axis, column, or cell modifications, mark _selectedCubeName as modified (blue)
         //TODO: Break up this JS file into sections separated by functionality
         //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
         _commitModal.modal('show');
@@ -4327,6 +4326,7 @@ $(function ()
         }
 
         _errorId = showNote('Successfully committed ' + changes.length + ' cube(s).', 'Note', 5000);
+        // TODO: Modify cubeList - don't call back to server for full list - use return value.
         loadNCubes();
         loadNCubeListView();
         reloadCube();
@@ -4373,6 +4373,9 @@ $(function ()
         }
 
         _errorId = showNote('Branch Updated');
+        loadNCubes();
+        loadNCubeListView();
+        reloadCube();
     }
 
     // =============================================== End Branching ===================================================
