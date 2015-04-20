@@ -1255,6 +1255,23 @@ class NCubeController extends BaseController
         }
     }
 
+    void deleteBranch(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId);
+            if (!isAllowed(appId, null, Delta.Type.DELETE))
+            {
+                return;
+            }
+            nCubeService.deleteBranch(appId);
+        }
+        catch(Exception e)
+        {
+            fail(e)
+        }
+    }
+
     /**
      * @return Map of HTTP headers for debugging display.
      */

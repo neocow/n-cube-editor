@@ -638,43 +638,43 @@ $(function ()
         });
         $('#dupeCubeMenu').click(function ()
         {
-            dupeCube()
+            dupeCube();
         });
         $('#dupeCubeCopy').click(function ()
         {
-            dupeCubeCopy()
+            dupeCubeCopy();
         });
         $('#deleteCubeMenu').click(function ()
         {
-            deleteCube()
+            deleteCube();
         });
         $('#deleteCubeOk').click(function ()
         {
-            deleteCubeOk()
+            deleteCubeOk();
         });
         $('#restoreCubeMenu').click(function ()
         {
-            restoreCube()
+            restoreCube();
         });
         $('#restoreCubeOk').click(function ()
         {
-            restoreCubeOk()
+            restoreCubeOk();
         });
         $('#restoreSelectAll').click(function()
         {
-            checkAll(true, 'input[type="checkbox"]')
+            checkAll(true, 'input[type="checkbox"]');
         });
         $('#restoreSelectNone').click(function()
         {
-            checkAll(false, 'input[type="checkbox"]')
+            checkAll(false, 'input[type="checkbox"]');
         });
         $('#revisionHistoryMenu').click(function ()
         {
-            revisionHistory()
+            revisionHistory();
         });
         $('#revisionHistoryOk').click(function ()
         {
-            revisionHistoryOk()
+            revisionHistoryOk();
         });
         $('#deleteParameterOk').click(function ()
         {
@@ -694,7 +694,7 @@ $(function ()
         });
         $('#showRefsToMenu').click(function ()
         {
-            showRefsToCube()
+            showRefsToCube();
         });
         $('#showRefsToClose').click(function ()
         {
@@ -4093,6 +4093,14 @@ $(function ()
         {
             updateBranch();
         });
+        $('#branchDelete').click(function()
+        {
+            deleteBranch();
+        });
+        $('#deleteBranchOk').click(function()
+        {
+            deleteBranchOk();
+        });
         // From 'Select / Create Branch' Modal
         $('#createBranch').click(function()
         {
@@ -4376,6 +4384,32 @@ $(function ()
         loadNCubes();
         loadNCubeListView();
         reloadCube();
+    }
+
+    function deleteBranch()
+    {
+        if (isHeadSelected())
+        {
+            _errorId = showNote('HEAD branch cannot be deleted.');
+            return;
+        }
+
+        $('#deleteBranchLabel').html("Delete '" + _selectedBranch + "' ?");
+        $('#deleteBranchModal').modal();
+    }
+
+    function deleteBranchOk()
+    {
+        $('#deleteBranchModal').modal('hide');
+        clearError();
+
+        var result = call('ncubeController.deleteBranch', [getAppId()]);
+        changeBranch(head);
+        if (!result.status)
+        {
+            _errorId = showNote('Unable to delete branch:<hr class="hr-small"/>' + result.data);
+            return;
+        }
     }
 
     // =============================================== End Branching ===================================================
