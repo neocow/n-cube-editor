@@ -4329,7 +4329,7 @@ $(function ()
         if (result.status === false)
         {
             _cellId = null;
-            _errorId = showNote('Unable to commit changes:<hr class="hr-small"/>' + result.data);
+            mergeBranch(result.data);
             return;
         }
 
@@ -4376,7 +4376,7 @@ $(function ()
         var result = call('ncubeController.updateBranch', [getAppId()]);
         if (!result.status)
         {
-            _errorId = showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
+            mergeBranch(result.data);
             return;
         }
 
@@ -4410,6 +4410,13 @@ $(function ()
             _errorId = showNote('Unable to delete branch:<hr class="hr-small"/>' + result.data);
             return;
         }
+    }
+
+    function mergeBranch(data)
+    {
+        var json = JSON.stringify(data);
+        alert(json);
+        $('#mergeBranchModal').modal('show');
     }
 
     // =============================================== End Branching ===================================================
