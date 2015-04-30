@@ -1195,7 +1195,7 @@ class NCubeController extends BaseController
         }
     }
 
-    Object[] commitBranch(ApplicationID appId, Object[] infoDtos)
+    Object commitBranch(ApplicationID appId, Object[] infoDtos)
     {
         try
         {
@@ -1209,12 +1209,12 @@ class NCubeController extends BaseController
         catch (BranchMergeException e)
         {
             markRequestFailed(e.getMessage())
-            return [] as Object[]
+            return e.getErrors()
         }
         catch (Exception e)
         {
             fail(e)
-            return [] as Object[]
+            return new HashMap()
         }
     }
 
