@@ -4141,7 +4141,7 @@ $(function ()
             {
                 name = head;
             }
-            var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
+            var li = $('<li/>').attr({'class': 'list-group-item skinny-lr'});
             var anchor = $('<a href="#"/>');
             anchor.html('<kbd> ' + name + ' </kbd>');
             anchor.click(function ()
@@ -4408,15 +4408,51 @@ $(function ()
         if (!result.status)
         {
             _errorId = showNote('Unable to delete branch:<hr class="hr-small"/>' + result.data);
-            return;
         }
     }
 
     function mergeBranch(data)
     {
-        var json = JSON.stringify(data);
-        alert(json);
+        var ul = $('#mergeList');
+        ul.empty();
+        data['alpha'] = 'Alphabetical';
+        data['beta'] = 'Betamax';
+        data['charlie'] = 'Charlie Hebdo';
+        data['delta'] = 'Delta wing';
+        data['echo'] = 'Echo Chamber';
+        data['foxtrot'] = 'Fox hole';
+        data['golf'] = 'Golf is hard';
+        data['hotel'] = 'Hotel California';
+        $.each(data, function(key, value)
+        {
+            if ('@type' != key)
+            {
+                var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
+                var div = $('<div/>').prop({class:'container-fluid'});
+                var checkbox = $('<input>').prop({type:'radio'});
+                checkbox.click(function ()
+                {
+                    markMutuallyExclusive(checkbox);
+                });
+                var label = $('<label/>').prop({class: 'radio no-margins'}).text(key);
+                checkbox.prependTo(label); // <=== create input without the closing tag
+                div.append(label);
+                li.append(div);
+                ul.append(li);
+
+            }
+        });
         $('#mergeBranchModal').modal('show');
+    }
+
+    function markMutuallyExclusive(checkbox)
+    {
+        var inputs = $('#mergeList').find('input');
+        $.each(inputs, function (key, value)
+        {
+            value.is(':checked', false);
+        });
+        checkbox.is(':checked', true );
     }
 
     // =============================================== End Branching ===================================================

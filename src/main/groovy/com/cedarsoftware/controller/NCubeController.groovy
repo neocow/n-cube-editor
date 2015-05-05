@@ -22,7 +22,6 @@ import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
 import com.cedarsoftware.util.CaseInsensitiveSet
 import com.cedarsoftware.util.DateUtilities
-import com.cedarsoftware.util.IOUtilities
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
@@ -33,7 +32,6 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
 import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import java.util.regex.Pattern
 
 /**
@@ -1290,24 +1288,6 @@ class NCubeController extends BaseController
         return headers
     }
 
-    void spider(String[] urls)
-    {
-        HttpServletRequest request = JsonCommandServlet.servletRequest.get()
-        HttpServletResponse response = JsonCommandServlet.servletResponse.get()
-
-        URL url = new URL("http://www.myotherdrive.com")
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection()
-        connection.allowUserInteraction = false
-        connection.requestMethod = "GET"
-        connection.doOutput = true
-        connection.doInput = true
-        connection.readTimeout = 20000
-        connection.connectTimeout = 10000
-
-        transferResponseHeaders(connection, response)
-        transferFromServer(connection, response)
-    }
-
     // ============================================= End API ===========================================================
 
     // ===================================== utility (non-API) methods =================================================
@@ -1316,40 +1296,6 @@ class NCubeController extends BaseController
     {
         JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_STATUS, false)
         JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_FAIL_MESSAGE, data)
-    }
-
-    private static void transferFromServer(URLConnection conn, HttpServletResponse response) throws IOException
-    {
-        InputStream input = null
-        OutputStream out = null
-        try
-        {
-            input = new BufferedInputStream(conn.inputStream, 32768)
-            out = response.outputStream
-            IOUtilities.transfer(input, out)
-        }
-        finally
-        {
-            IOUtilities.close(input)
-            IOUtilities.close(out)
-        }
-    }
-
-    private static void transferResponseHeaders(URLConnection c, HttpServletResponse response)
-    {
-        Map<String, List<String>> headerFields = c.headerFields
-        Set<Map.Entry<String, List<String>>> entries = headerFields.entrySet()
-
-        for (Map.Entry<String, List<String>> entry : entries)
-        {
-            if (entry.value != null && entry.key != null)
-            {
-                for (String s : entry.value)
-                {
-                    response.addHeader(entry.key, s)
-                }
-            }
-        }
     }
 
     /**
