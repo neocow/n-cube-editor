@@ -4415,14 +4415,7 @@ $(function ()
     {
         var ul = $('#mergeList');
         ul.empty();
-        data['alpha'] = 'Alphabetical';
-        data['beta'] = 'Betamax';
-        data['charlie'] = 'Charlie Hebdo';
-        data['delta'] = 'Delta wing';
-        data['echo'] = 'Echo Chamber';
-        data['foxtrot'] = 'Fox hole';
-        data['golf'] = 'Golf is hard';
-        data['hotel'] = 'Hotel California';
+        $('#deltaDesc').val('');
         $.each(data, function(key, value)
         {
             if ('@type' != key)
@@ -4433,6 +4426,20 @@ $(function ()
                 checkbox.click(function ()
                 {
                     markMutuallyExclusive(checkbox);
+                    var msg = data[key].message;
+                    var diff = data[key].diff;
+                    if (diff && diff['@items'] && diff['@items'].length > 0)
+                    {
+                        msg += '\n';
+                        var len = diff['@items'].length;
+                        for (var i=0; i < len; i++)
+                        {
+                            var delta = diff['@items'][i];
+
+                            msg += delta.loc.name + ' ' + delta.type.name + ': ' + delta.desc + '\n';
+                        }
+                    }
+                    $('#deltaDesc').val(msg);
                 });
                 var label = $('<label/>').prop({class: 'radio no-margins'}).text(key);
                 checkbox.prependTo(label); // <=== create input without the closing tag
@@ -4450,9 +4457,9 @@ $(function ()
         var inputs = $('#mergeList').find('input');
         $.each(inputs, function (key, value)
         {
-            value.is(':checked', false);
+            $(value).prop('checked', false);
         });
-        checkbox.is(':checked', true );
+        checkbox.prop('checked', true );
     }
 
     // =============================================== End Branching ===================================================
