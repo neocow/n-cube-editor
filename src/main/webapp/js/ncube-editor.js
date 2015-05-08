@@ -4436,7 +4436,7 @@ $(function ()
                         {
                             var delta = diff['@items'][i];
 
-                            msg += delta.loc.name + ' ' + delta.type.name + ': ' + delta.desc + '\n';
+                            msg += (i + 1) + ': ' + delta.loc.name + ' ' + delta.type.name + ': ' + delta.desc + '\n';
                         }
                     }
                     $('#deltaDesc').val(msg);
