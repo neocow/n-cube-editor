@@ -99,6 +99,16 @@ class NCubeService
         NCubeManager.deleteBranch(appId);
     }
 
+    void acceptTheirs(ApplicationID appId, String cubeName, String branchSha1, String username)
+    {
+        NCubeManager.mergeOverwriteBranchCube(appId, cubeName, branchSha1, username)
+    }
+
+    void acceptMine(ApplicationID appId, String cubeName, String headSha1, String username)
+    {
+        NCubeManager.mergeOverwriteHeadCube(appId, cubeName, headSha1, username)
+    }
+
     void createCube(ApplicationID appId, NCube ncube, String username)
     {
         NCubeManager.createCube(appId, ncube, username)

@@ -48,6 +48,9 @@ $(function ()
     var _searchInput = $('#cube-search');
     var _cubeCount = $('#ncubeCount');
     var _listOfCubes= $('#ncube-list');
+    var _mergeCubeName = null;
+    var _mergeSha1 = null;
+    var _mergeHeadSha1 = null;
 
     //  modal dialogs
     var _editCellModal = $('#editCellModal');
@@ -4110,6 +4113,14 @@ $(function ()
         {
             $('#branchNameWarning').hide();
         });
+        $('#acceptTheirs').click(function()
+        {
+            acceptTheirs();
+        });
+        $('#acceptMine').click(function()
+        {
+            acceptMine();
+        });
     }
 
     function showActiveBranch()
@@ -4428,14 +4439,18 @@ $(function ()
                     markMutuallyExclusive(checkbox);
                     var msg = data[key].message;
                     var diff = data[key].diff;
+                    _mergeCubeName = key;
+                    _mergeSha1 = data[key].sha1;
+                    _mergeHeadSha1 = data[key].headSha1;
+
                     if (diff && diff['@items'] && diff['@items'].length > 0)
                     {
                         msg += '\n';
                         var len = diff['@items'].length;
+
                         for (var i=0; i < len; i++)
                         {
                             var delta = diff['@items'][i];
-
                             msg += (i + 1) + ': ' + delta.loc.name + ' ' + delta.type.name + ': ' + delta.desc + '\n';
                         }
                     }
@@ -4460,6 +4475,52 @@ $(function ()
             $(value).prop('checked', false);
         });
         checkbox.prop('checked', true );
+    }
+
+    function acceptTheirs()
+    {
+        $('#mergeBranchModal').modal('hide');
+
+        if (_mergeCubeName == null)
+        {
+            _errorId = showNote('No cube selected, nothing to merge.');
+            return;
+        }
+        var result = call('ncubeController.acceptTheirs', [getAppId(), _mergeCubeName, _mergeSha1]);
+        if (result.status === true)
+        {
+            _errorId = showNote('Cube: ' + _mergeCubeName + ' updated in your branch with cube from HEAD');
+        }
+        else
+        {
+            _errorId = showNote('Unable to update your branch cube: ' + _mergeCubeName + ' with cube from HEAD:<hr class="hr-small"/>' + result.data);
+        }
+        _mergeCubeName = null;
+        _mergeSha1 = null;
+        _mergeHeadSha1 = null;
+    }
+
+    function acceptMine()
+    {
+        $('#mergeBranchModal').modal('hide');
+
+        if (_mergeCubeName == null)
+        {
+            _errorId = showNote('No cube selected, nothing to merge.');
+            return;
+        }
+        var result = call('ncubeController.acceptMine', [getAppId(), _mergeCubeName, _mergeHeadSha1]);
+        if (result.status === true)
+        {
+            _errorId = showNote('Cube: ' + _mergeCubeName + ' updated in HEAD with cube from your branch');
+        }
+        else
+        {
+            _errorId = showNote('Unable to update HEAD cube: ' + _mergeCubeName + ' with cube from your branch:<hr class="hr-small"/>' + result.data);
+        }
+        _mergeCubeName = null;
+        _mergeSha1 = null;
+        _mergeHeadSha1 = null;
     }
 
     // =============================================== End Branching ===================================================

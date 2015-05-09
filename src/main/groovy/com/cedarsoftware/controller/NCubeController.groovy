@@ -1270,6 +1270,40 @@ class NCubeController extends BaseController
         }
     }
 
+    void acceptTheirs(ApplicationID appId, String cubeName, String branchSha1)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
+            {
+                return
+            }
+            nCubeService.acceptTheirs(appId, cubeName, branchSha1, getUserForDatabase())
+        }
+        catch (Exception e)
+        {
+            fail(e)
+        }
+    }
+
+    void acceptMine(ApplicationID appId, String cubeName, String headSha1)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
+            {
+                return
+            }
+            nCubeService.acceptMine(appId, cubeName, headSha1, getUserForDatabase())
+        }
+        catch (Exception e)
+        {
+            fail(e)
+        }
+    }
+
     /**
      * @return Map of HTTP headers for debugging display.
      */
