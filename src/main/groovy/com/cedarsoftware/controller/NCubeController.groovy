@@ -1234,7 +1234,7 @@ class NCubeController extends BaseController
         }
     }
 
-    Object[] updateBranch(ApplicationID appId)
+    Object updateBranch(ApplicationID appId)
     {
         try
         {
@@ -1245,6 +1245,11 @@ class NCubeController extends BaseController
             }
             Object[] branchUpdates = nCubeService.updateBranch(appId, getUserForDatabase())
             return branchUpdates
+        }
+        catch (BranchMergeException e)
+        {
+            markRequestFailed(e.getMessage())
+            return e.getErrors()
         }
         catch (Exception e)
         {

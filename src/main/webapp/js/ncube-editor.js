@@ -4498,6 +4498,9 @@ $(function ()
         _mergeCubeName = null;
         _mergeSha1 = null;
         _mergeHeadSha1 = null;
+        loadNCubes();
+        loadNCubeListView();
+        reloadCube();
     }
 
     function acceptMine()
@@ -4521,6 +4524,9 @@ $(function ()
         _mergeCubeName = null;
         _mergeSha1 = null;
         _mergeHeadSha1 = null;
+        loadNCubes();
+        loadNCubeListView();
+        reloadCube();
     }
 
     // =============================================== End Branching ===================================================
