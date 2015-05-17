@@ -1891,6 +1891,9 @@ $(function ()
         $('#cube_createDate').val(date);
         $('#cube_createHid').val(info.createHid);
         $('#cube_notes').val(info.notes);
+        $('#cube_id').val(info.id);
+        $('#cube_sha1').val(info.sha1);
+        $('#cube_headSha1').val(info.headSha1);
     }
 
     function clearTestView() {
