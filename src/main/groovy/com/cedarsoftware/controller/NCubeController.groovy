@@ -126,6 +126,25 @@ class NCubeController extends BaseController
 
     // ============================================= Begin API =========================================================
 
+    Object[] search(ApplicationID appId, String cubeNamePattern, String content)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, null, null))
+            {
+                return null
+            }
+            Object[] cubeInfos = nCubeService.search(appId, cubeNamePattern, content)
+            return cubeInfos
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
     Object[] getDeletedCubeList(ApplicationID appId, String filter)
     {
         try

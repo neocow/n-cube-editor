@@ -45,7 +45,8 @@ $(function ()
     var _editCellValue = $('#editCellValue');
     var _editCellRadioURL = $('#editCellRadioURL');
     var _clipboard = $('#cell-clipboard');
-    var _searchInput = $('#cube-search');
+    var _searchNames = $('#cube-search');
+    var _searchContent = $('#cube-search-content');
     var _cubeCount = $('#ncubeCount');
     var _listOfCubes= $('#ncube-list');
     var _mergeCubeName = null;
@@ -485,20 +486,42 @@ $(function ()
         }
     }
 
-
-    function clearSearch()
+    function clearSearchNames()
     {
-        _searchInput.val('');
+        _searchNames.val('');
         loadFilteredCubeView(_cubeList);
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
         loadCube(); // load spreadsheet side
-        _searchInput.val('');
+        _searchNames.val('');
         _cubeCount.html(Object.keys(_cubeList).length);
     }
 
+    function clearSearchContent()
+    {
+        _searchContent.val('');
+        loadFilteredCubeView(_cubeList);
+        setListSelectedStatus(_selectedCubeName, '#ncube-list');
+        loadCube(); // load spreadsheet side
+        _searchContent.val('');
+        _cubeCount.html(Object.keys(_cubeList).length);
+    }
+
+    function clearSearch()
+    {
+        _searchNames.val('');
+        _searchContent.val('');
+        loadFilteredCubeView(_cubeList);
+        setListSelectedStatus(_selectedCubeName, '#ncube-list');
+        loadCube(); // load spreadsheet side
+        _searchNames.val('');
+        _searchContent.val('');
+        _cubeCount.html(Object.keys(_cubeList).length);
+    }
+
+
     function selectCubeByName(cubeName)
     {
-        _searchInput.val(cubeName);
+        _searchNames.val(cubeName);
         _selectedCubeName = getProperCubeName(cubeName);
         _listOfCubes.empty();
         localStorage[SELECTED_CUBE] = cubeName;
@@ -544,20 +567,20 @@ $(function ()
         });
 
         // Send to background Web Worker thread
-        _searchInput.on('input', function (event)
+        _searchNames.on('input', function (event)
         {
-            _filterWorker.postMessage([_cubeList, _searchInput.val()])
+            _filterWorker.postMessage([_cubeList, _searchNames.val()])
         });
-        _searchInput.on('focusin', function(event)
+        _searchNames.on('focusin', function(event)
         {
-            _filterWorker.postMessage([_cubeList, _searchInput.val()])
+            _filterWorker.postMessage([_cubeList, _searchNames.val()])
         });
-        _searchInput.click(function(event)
+        _searchNames.click(function(event)
         {
-            _filterWorker.postMessage([_cubeList, _searchInput.val()])
+            _filterWorker.postMessage([_cubeList, _searchNames.val()])
         });
 
-        _searchInput.keyup(function (e)
+        _searchNames.keyup(function (e)
         {
             if (e.keyCode == 13)
             {   // 'enter' key
@@ -570,13 +593,29 @@ $(function ()
             }
             else if (e.keyCode == 27)
             {   // ESCape key
-                clearSearch();
+                clearSearchNames();
+            }
+        });
+
+        _searchContent.keyup(function (e)
+        {
+            if (e.keyCode == 13)
+            {   // 'enter' key
+            }
+            else if (e.keyCode == 27)
+            {   // ESCape key
+                clearSearchContent();
             }
         });
 
         $('#cube-search-reset').click(function()
         {
-            clearSearch();
+            clearSearchNames();
+        });
+
+        $('#cube-search-reset2').click(function()
+        {
+            clearSearchContent();
         });
 
         $('#ncubeTab').click(function ()
@@ -1399,7 +1438,7 @@ $(function ()
 
     function loadNCubeListView()
     {
-        var filter = _searchInput.val();
+        var filter = _searchNames.val();
         var cubes = filterCubeList(filter);
         loadFilteredCubeView(cubes);
     }
@@ -1442,7 +1481,7 @@ $(function ()
 
     function loadFilteredCubeView(cubes)
     {
-        var filter = _searchInput.val();
+        var filter = _searchNames.val();
         _listOfCubes.empty();
         var count = 0;
         $.each(cubes, function buildCubeList(cubeName, infoDto)
@@ -1507,7 +1546,7 @@ $(function ()
             }
         });
 
-        if (_searchInput.val() && _searchInput.val().length > 0 && count >= 100)
+        if (_searchNames.val() && _searchNames.val().length > 0 && count >= 100)
         {
             _cubeCount.html('100+');
         }
@@ -1908,7 +1947,8 @@ $(function ()
         $('#testResults').empty();
     }
 
-    function loadTestView() {
+    function loadTestView()
+    {
         clearTestView();
 
         if (!_testData || _testData.length == 0 || _testSelectionAnchor >= _testData.length || _testSelectionAnchor < 0) {
@@ -2102,7 +2142,7 @@ $(function ()
             console.log('Unknown tab selected: ' + _activeTab);
         }
 
-        _searchInput.val(_selectedCubeName);
+        _searchNames.val(_selectedCubeName);
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
     }
 

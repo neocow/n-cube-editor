@@ -39,6 +39,11 @@ class NCubeService
         return NCubeManager.getCubeRecordsFromDatabase(appId, pattern)
     }
 
+    Object[] search(ApplicationID appId, String cubeNamePattern, String contentMatching)
+    {
+        return NCubeManager.search(appId, cubeNamePattern, contentMatching)
+    }
+
     Object[] getDeletedCubes(ApplicationID appId, String pattern)
     {
         return NCubeManager.getDeletedCubesFromDatabase(appId, pattern)
