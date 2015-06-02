@@ -63,5 +63,12 @@ onmessage = function(e)
             }
         }
     }
+
+    var req = new XMLHttpRequest();
+    req.open("GET","http://localhost:8080/mysql/cmd/ncubeController/getHeaders?json=[]", false);
+    req.send();
+    console.log(req.response);
+    var content = JSON.parse(req.response);
+    console.log(content);
     postMessage(cubes);
 }

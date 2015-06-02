@@ -601,6 +601,12 @@ $(function ()
         {
             if (e.keyCode == 13)
             {   // 'enter' key
+                var a = _listOfCubes.find('a[itemName]:first');
+                if (a)
+                {
+                    var cubeName = a.attr('itemName');
+                    selectCubeByName(cubeName);
+                }
             }
             else if (e.keyCode == 27)
             {   // ESCape key
