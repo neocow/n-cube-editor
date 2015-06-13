@@ -218,7 +218,7 @@ $(function ()
             var isModalDisplayed = $('body').hasClass('modal-open');
 
             var focus = $('input:focus');
-            if (_activeTab == 'ncubeTab' && !isModalDisplayed && focus && focus.attr('id') != 'cube-search')
+            if (_activeTab == 'ncubeTab' && !isModalDisplayed && focus && focus.attr('id') != 'cube-search' && focus.attr('id') != 'cube-search-content')
             {
                 if (e.metaKey || e.ctrlKey)
                 {   // Control Key (command in the case of Mac)
@@ -486,26 +486,6 @@ $(function ()
         }
     }
 
-    function clearSearchNames()
-    {
-        _searchNames.val('');
-        loadFilteredCubeView(_cubeList);
-        setListSelectedStatus(_selectedCubeName, '#ncube-list');
-        loadCube(); // load spreadsheet side
-        _searchNames.val('');
-        _cubeCount.html(Object.keys(_cubeList).length);
-    }
-
-    function clearSearchContent()
-    {
-        _searchContent.val('');
-        loadFilteredCubeView(_cubeList);
-        setListSelectedStatus(_selectedCubeName, '#ncube-list');
-        loadCube(); // load spreadsheet side
-        _searchContent.val('');
-        _cubeCount.html(Object.keys(_cubeList).length);
-    }
-
     function clearSearch()
     {
         _searchNames.val('');
@@ -593,7 +573,7 @@ $(function ()
             }
             else if (e.keyCode == 27)
             {   // ESCape key
-                clearSearchNames();
+                clearSearch();
             }
         });
 
@@ -610,18 +590,13 @@ $(function ()
             }
             else if (e.keyCode == 27)
             {   // ESCape key
-                clearSearchContent();
+                clearSearch();
             }
         });
 
         $('#cube-search-reset').click(function()
         {
-            clearSearchNames();
-        });
-
-        $('#cube-search-reset2').click(function()
-        {
-            clearSearchContent();
+            clearSearch();
         });
 
         $('#ncubeTab').click(function ()
