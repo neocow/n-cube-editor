@@ -200,13 +200,13 @@ $(function ()
             //,  west__onresize:		"secondaryLayout.resizeAll" // resize ALL visible layouts nested inside
             ,  west__onresize: function()
             {
-                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 125);
+                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 158);
                 secondaryLayout.resizeAll();
                 //                _editor.resize();
             }
         });
 
-        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 125);
+        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 158);
         $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e)
         {
             secondaryLayout.resizeAll();
