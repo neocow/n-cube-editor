@@ -16,6 +16,8 @@ onmessage = function(e)
     var args = e.data;
     var cubeList = args[0];
     var filter = args[1];
+    var content = args[2];
+    var appId = args[3];
     var hasFilter = filter && filter.length > 0;
     var cubes = hasFilter ? {} : cubeList;
     if (hasFilter)
@@ -65,10 +67,16 @@ onmessage = function(e)
     }
 
     var req = new XMLHttpRequest();
-    req.open("GET","http://localhost:8080/mysql/cmd/ncubeController/getHeaders?json=[]", false);
+    // http://localhost:8080/nce/cmd/ncubeController/search?json=[{%22app%22:%22riskrum%22,%22version%22:%221.0.0%22,%22status%22:%22SNAPSHOT%22,%22branch%22:%22john%22},%20%22a%22,%20%22fat%22]
+
+    var appIdString = JSON.stringify(appId);
+    console.log(appIdString);
+    req.open("GET",'http://localhost:8080/nce/cmd/ncubeController/search?json=[' + appIdString + ',"' + filter + '","' + content + '"]', false);
     req.send();
     console.log(req.response);
-    var content = JSON.parse(req.response);
-    console.log(content);
+    if (req.response)
+    {
+        var xyz = JSON.parse(req.response);
+    }
     postMessage(cubes);
 }

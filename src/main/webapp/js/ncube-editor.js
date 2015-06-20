@@ -549,15 +549,27 @@ $(function ()
         // Send to background Web Worker thread
         _searchNames.on('input', function (event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val()])
+            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}]);
         });
         _searchNames.on('focusin', function(event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val()])
+            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}])
         });
         _searchNames.click(function(event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val()])
+            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}])
+        });
+        _searchContent.on('input', function (event)
+        {
+            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}]);
+        });
+        _searchContent.on('focusin', function(event)
+        {
+            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}])
+        });
+        _searchContent.click(function(event)
+        {
+            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}])
         });
 
         _searchNames.keyup(function (e)
