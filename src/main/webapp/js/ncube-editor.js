@@ -509,6 +509,16 @@ $(function ()
         _cubeCount.html('1');
     }
 
+    function runSearch()
+    {
+        _filterWorker.postMessage(
+        [
+            _searchNames.val(),
+            _searchContent.val(),
+            {"app": _selectedApp, "version": _selectedVersion, "status": _selectedStatus, "branch": _selectedBranch}
+        ]);
+    }
+
     function addListeners()
     {
         var editor = $('#jsoneditor');
@@ -549,27 +559,27 @@ $(function ()
         // Send to background Web Worker thread
         _searchNames.on('input', function (event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}]);
+            runSearch();
         });
         _searchNames.on('focusin', function(event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}])
+            runSearch();
         });
         _searchNames.click(function(event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}])
+            runSearch();
         });
         _searchContent.on('input', function (event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}]);
+            runSearch();
         });
         _searchContent.on('focusin', function(event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}])
+            runSearch();
         });
         _searchContent.click(function(event)
         {
-            _filterWorker.postMessage([_cubeList, _searchNames.val(), _searchContent.val(), {"app":_selectedApp, "version":_selectedVersion, "status":_selectedStatus, "branch":_selectedBranch}])
+            runSearch();
         });
 
         _searchNames.keyup(function (e)

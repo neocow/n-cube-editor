@@ -14,69 +14,53 @@
 onmessage = function(e)
 {
     var args = e.data;
-    var cubeList = args[0];
-    var filter = args[1];
-    var content = args[2];
-    var appId = args[3];
+    var filter = args[0];
+    var content = args[1];
+    var appId = args[2];
     var hasFilter = filter && filter.length > 0;
-    var cubes = hasFilter ? {} : cubeList;
-    if (hasFilter)
+    var appIdString = JSON.stringify(appId);
+    var req = new XMLHttpRequest();
+
+    var regexp = /\/([^\/]+)\//g;
+    var match = regexp.exec(location.pathname);
+    var url;
+    if (match == null || match.length != 2)
     {
-        filter = filter.toLowerCase();
-
-        // Step 1. Filter all cubes and store into a Map keyed by match location (int) to list of cubes that matched starting at this location.
-        var matches = {};
-        var count = 0;
-        for (var key in cubeList)
-        {
-            if (cubeList.hasOwnProperty(key))
-            {
-                var infoDto = cubeList[key];
-                infoDto.pos = null;
-                var idx = infoDto.name.toLowerCase().indexOf(filter);
-                if (idx >= 0)
-                {
-                    if (!matches[idx])
-                    {
-                        matches[idx] = [];
-                    }
-                    matches[idx].push(infoDto);
-                    count++;
-                    if (count >= 100)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Step 2. Make one big list from lists above, recording start position in InfoDto
-        for (var pos in matches)
-        {
-            if (matches.hasOwnProperty(pos))
-            {
-                var list = matches[pos];
-                for (var i=0; i < list.length; i++)
-                {
-                    var infoDto1 = list[i];
-                    cubes[infoDto1.name] = infoDto1;
-                    infoDto1.pos = parseInt(pos);
-                }
-            }
-        }
+        url = location.protocol + '//' + location.hostname + ":" + location.port + "/cmd/ncubeController/search";
+    }
+    else
+    {
+        var ctx = match[1];
+        url = location.protocol + '//' + location.hostname + ":" + location.port + "/" + ctx + "/cmd/ncubeController/search";
     }
 
-    var req = new XMLHttpRequest();
-    // http://localhost:8080/nce/cmd/ncubeController/search?json=[{%22app%22:%22riskrum%22,%22version%22:%221.0.0%22,%22status%22:%22SNAPSHOT%22,%22branch%22:%22john%22},%20%22a%22,%20%22fat%22]
-
-    var appIdString = JSON.stringify(appId);
-    console.log(appIdString);
-    req.open("GET",'http://localhost:8080/nce/cmd/ncubeController/search?json=[' + appIdString + ',"' + filter + '","' + content + '"]', false);
+    console.log(url);
+    req.open("GET", url + '?json=[' + appIdString + ',"' + filter + '","' + content + '"]', false);
     req.send();
-    console.log(req.response);
+
     if (req.response)
     {
-        var xyz = JSON.parse(req.response);
+        var searchResults = JSON.parse(req.response);
+        if (searchResults.status === true)
+        {
+            var cubes = {};
+            var results = searchResults.data;
+            var len = results.length;
+            for (var i = 0; i < len; ++i)
+            {
+                var infoDto = results[i];
+                cubes[infoDto.name] = infoDto;
+                if (hasFilter)
+                {
+                    var idx = infoDto.name.toLowerCase().indexOf(filter);
+                    if (idx >= 0)
+                    {   // record starting location of cube name filter, so UI can display highlighted matching text
+                        infoDto.pos = idx;
+                    }
+                }
+            }
+
+            postMessage(cubes);
+        }
     }
-    postMessage(cubes);
 }
