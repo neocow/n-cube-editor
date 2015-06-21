@@ -8,7 +8,7 @@
 $(function ()
 {
     var head = 'HEAD';
-    var _filterWorker;
+    var _searchThread;
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
     var _cubeList = {};
     var _apps = [];
@@ -242,8 +242,8 @@ $(function ()
     {
         if (typeof(Worker) !== "undefined")
         {
-            _filterWorker = new Worker("js/loadCubeList.js");
-            _filterWorker.onmessage = function(event)
+            _searchThread = new Worker("js/loadCubeList.js");
+            _searchThread.onmessage = function(event)
             {
                 var list = event.data;
                 loadFilteredCubeView(list);
@@ -511,7 +511,7 @@ $(function ()
 
     function runSearch()
     {
-        _filterWorker.postMessage(
+        _searchThread.postMessage(
         [
             _searchNames.val(),
             _searchContent.val(),
