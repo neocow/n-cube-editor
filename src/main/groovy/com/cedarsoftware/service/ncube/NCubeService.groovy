@@ -85,7 +85,7 @@ class NCubeService
         return NCubeManager.getBranchChangesFromDatabase(appId)
     }
 
-    Object[] commitBranch(ApplicationID appId, Object[] infoDtos, String username)
+    List<NCubeInfoDto> commitBranch(ApplicationID appId, Object[] infoDtos, String username)
     {
         return NCubeManager.commitBranch(appId, infoDtos, username)
     }
@@ -95,7 +95,7 @@ class NCubeService
         return NCubeManager.rollbackBranch(appId, infoDtos)
     }
 
-    Object[] updateBranch(ApplicationID appId, String username)
+    List<NCubeInfoDto> updateBranch(ApplicationID appId, String username)
     {
         return NCubeManager.updateBranch(appId, username)
     }

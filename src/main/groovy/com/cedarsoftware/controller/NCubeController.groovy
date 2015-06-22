@@ -1143,7 +1143,8 @@ class NCubeController extends BaseController
             {
                 return [] as Object[]
             }
-            return nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
+            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
+            return committedCubes.toArray()
         }
         catch (BranchMergeException e)
         {
@@ -1184,8 +1185,8 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            Object[] branchUpdates = nCubeService.updateBranch(appId, getUserForDatabase())
-            return branchUpdates
+            List<NCubeInfoDto> updatedCubes = nCubeService.updateBranch(appId, getUserForDatabase())
+            return updatedCubes.toArray()
         }
         catch (BranchMergeException e)
         {
