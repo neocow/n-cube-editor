@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.AxisType
 import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.NCube
+import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.io.JsonObject
@@ -34,17 +35,17 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class NCubeService
 {
-    Object[] getNCubes(ApplicationID appId, String pattern)
+    List<NCubeInfoDto> getNCubes(ApplicationID appId, String pattern)
     {
         return NCubeManager.getCubeRecordsFromDatabase(appId, pattern)
     }
 
-    Object[] search(ApplicationID appId, String cubeNamePattern, String contentMatching)
+    List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching)
     {
         return NCubeManager.search(appId, cubeNamePattern, contentMatching)
     }
 
-    Object[] getDeletedCubes(ApplicationID appId, String pattern)
+    List<NCubeInfoDto> getDeletedCubes(ApplicationID appId, String pattern)
     {
         return NCubeManager.getDeletedCubesFromDatabase(appId, pattern)
     }
@@ -54,17 +55,17 @@ class NCubeService
         NCubeManager.restoreCube(appId, cubeNames, username)
     }
 
-    Object[] getRevisionHistory(ApplicationID appId, String cubeName)
+    List<NCubeInfoDto> getRevisionHistory(ApplicationID appId, String cubeName)
     {
         return NCubeManager.getRevisionHistory(appId, cubeName)
     }
 
-    Object[] getAppNames(String tenant, String status, String branch)
+    List<String> getAppNames(String tenant, String status, String branch)
     {
         return NCubeManager.getAppNames(tenant, status, branch)
     }
 
-    Object[] getAppVersions(String tenant, String app, String status, String branch)
+    List<String> getAppVersions(String tenant, String app, String status, String branch)
     {
         return NCubeManager.getAppVersions(tenant, app, status, branch)
     }
@@ -79,7 +80,7 @@ class NCubeService
         return NCubeManager.getBranches(tenant)
     }
 
-    Object[] getBranchChanges(ApplicationID appId)
+    List<NCubeInfoDto> getBranchChanges(ApplicationID appId)
     {
         return NCubeManager.getBranchChangesFromDatabase(appId)
     }

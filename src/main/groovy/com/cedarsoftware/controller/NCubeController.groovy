@@ -135,8 +135,8 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            Object[] cubeInfos = nCubeService.search(appId, cubeNamePattern, content)
-            return cubeInfos
+            List<NCubeInfoDto> cubeInfos = nCubeService.search(appId, cubeNamePattern, content)
+            return cubeInfos.toArray()
         }
         catch (Exception e)
         {
@@ -154,8 +154,8 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            Object[] cubeInfos = nCubeService.getDeletedCubes(appId, filter)
-            return cubeInfos
+            List<NCubeInfoDto> cubeInfos = nCubeService.getDeletedCubes(appId, filter)
+            return cubeInfos.toArray()
         }
         catch (Exception e)
         {
@@ -190,8 +190,8 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            Object[] cubeInfos = nCubeService.getRevisionHistory(appId, cubeName)
-            return cubeInfos;
+            List<NCubeInfoDto> cubeInfos = nCubeService.getRevisionHistory(appId, cubeName)
+            return cubeInfos.toArray()
         }
         catch (Exception e)
         {
@@ -209,18 +209,16 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            Object[] list = nCubeService.getNCubes(appId, filter)
+            List<NCubeInfoDto> list = nCubeService.getNCubes(appId, filter)
 
             // Sort by Group, then by n-cube name
-            Arrays.sort(list, new Comparator() {
-                public int compare(Object o1, Object o2)
+            Collections.sort(list, new Comparator<NCubeInfoDto>() {
+                public int compare(NCubeInfoDto info1, NCubeInfoDto info2)
                 {
-                    NCubeInfoDto info1 = (NCubeInfoDto) o1
-                    NCubeInfoDto info2 = (NCubeInfoDto) o2
                     return info1.name.compareToIgnoreCase(info2.name)
                 }
             })
-            return list
+            return list.toArray()
         }
         catch (Exception e)
         {
@@ -229,82 +227,6 @@ class NCubeController extends BaseController
         }
     }
 
-//    Object[] getCubeList(ApplicationID appId, String filter)
-//    {
-//        try
-//        {
-//            appId = addTenant(appId)
-//            if (!isAllowed(appId, null, null))
-//            {
-//                return null
-//            }
-//            NCube sysInfo = null
-//            try
-//            {
-//                sysInfo = nCubeService.getCube(appId, SYS_NCUBE_INFO)
-//            }
-//            catch (Exception e)
-//            {
-//                LOG.info("Failed to find 'sys.group' for app: " + appId)
-//            }
-//            Object[] list = nCubeService.getNCubes(appId, filter)
-//            List<Map<String, Object>> augmentedInfo = []
-//
-//            for (Object dto : list)
-//            {
-//                NCubeInfoDto infoDto = (NCubeInfoDto) dto;
-//                Map<String, Object> input = ['name':infoDto.name] as Map
-//                Map<String, Object> output = new CaseInsensitiveMap<>()
-//                Map<String, Object> augInfo
-//
-//                if (sysInfo == null)
-//                {
-//                    augInfo = makeGenericAugInfo()
-//                }
-//                else
-//                {
-//                    try
-//                    {
-//                        sysInfo.getCell(input, output)
-//                        augInfo = output.containsKey("info") ? (Map<String, Object>) output.info : makeGenericAugInfo()
-//                    }
-//                    catch (Exception ignored)
-//                    {   // Blew up on running the rules
-//                        augInfo = makeGenericAugInfo()
-//                    }
-//                }
-//
-//                augInfo.ncube = infoDto
-//                augmentedInfo.add(augInfo)
-//            }
-//
-//            // Sort by Group, then by n-cube name
-//            Collections.sort(augmentedInfo, new Comparator<Map>() {
-//                public int compare(Map o1, Map o2)
-//                {
-//                    String group1 = o1.group
-//                    String group2 = o2.group
-//                    if (group1.equalsIgnoreCase(group2))
-//                    {   // Secondary sort key - group names are the same, then use the n-cube name within the group.
-//                        NCubeInfoDto info1 = (NCubeInfoDto) o1.ncube
-//                        NCubeInfoDto info2 = (NCubeInfoDto) o2.ncube
-//                        return info1.name.compareToIgnoreCase(info2.name)
-//                    }
-//                    else
-//                    {
-//                        return group1.compareTo(group2)
-//                    }
-//                }
-//            })
-//            return augmentedInfo.toArray()
-//        }
-//        catch (Exception e)
-//        {
-//            fail(e)
-//            return null
-//        }
-//    }
-//
     String getHtml(ApplicationID appId, String cubeName)
     {
         try
@@ -354,9 +276,10 @@ class NCubeController extends BaseController
             ApplicationID.validateStatus(status)
             ApplicationID.validateBranch(branch)
             // TODO: Custom isAllowed() may ne needed
-            Object[] appNames = nCubeService.getAppNames(tenant, status, branch)
-            Arrays.sort(appNames);
-            return appNames
+            List<String> appNames = nCubeService.getAppNames(tenant, status, branch)
+            Object[] appNameArray = appNames.toArray()
+            caseInsensitiveSort(appNameArray)
+            return appNameArray
         }
         catch (Exception e)
         {
@@ -375,10 +298,10 @@ class NCubeController extends BaseController
             ApplicationID.validateStatus(status);
             ApplicationID.validateBranch(branchName);
             // TODO: Custom isAllowed() may be needed
-            Object[] appVersions = nCubeService.getAppVersions(tenant, app, status, branchName)
+            List<String> appVersions = nCubeService.getAppVersions(tenant, app, status, branchName)
 
             // Sort by version number (1.1.0, 1.2.0, 1.12.0, ...) not String order (1.1.0, 1.12.0, 1.2.0, ...)
-            Arrays.sort(appVersions, new Comparator<Object>() {
+            Collections.sort(appVersions, new Comparator<Object>() {
                 public int compare(Object o1, Object o2)
                 {
                     String s1 = (String) o1
@@ -399,7 +322,7 @@ class NCubeController extends BaseController
                     return major + minor + rev
                 }
             })
-            return appVersions
+            return appVersions.toArray()
         }
         catch (Exception e)
         {
@@ -497,12 +420,11 @@ class NCubeController extends BaseController
                 return null
             }
             Set<String> references = new CaseInsensitiveSet<>()
-            Object[] ncubes = nCubeService.getNCubes(appId, "%")
+            List<NCubeInfoDto> ncubes = nCubeService.getNCubes(appId, "*")
 
-            for (Object ncube : ncubes)
+            for (NCubeInfoDto info : ncubes)
             {
-                NCubeInfoDto info = (NCubeInfoDto) ncube;
-                NCube loadedCube = nCubeService.getCube(appId, ((NCubeInfoDto) ncube).name)
+                NCube loadedCube = nCubeService.getCube(appId, info.name)
                 if (loadedCube.getReferencedCubeNames().contains(cubeName))
                 {
                     references.add(info.name)
@@ -1202,8 +1124,8 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            Object[] branchChanges = nCubeService.getBranchChanges(appId)
-            return branchChanges
+            List<NCubeInfoDto> branchChanges = nCubeService.getBranchChanges(appId)
+            return branchChanges.toArray()
         }
         catch (Exception e)
         {
