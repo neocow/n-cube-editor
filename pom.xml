@@ -4,7 +4,7 @@
     <groupId>com.cedarsoftware</groupId>
     <artifactId>n-cube-editor</artifactId>
     <packaging>war</packaging>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <description>n-cube Web Editor / Manager</description>
     <url>https://github.com/jdereg/n-cube-editor</url>
 
@@ -20,7 +20,7 @@
         <url>https://github.com/jdereg/n-cube-editor</url>
         <connection>scm:git:git://github.com/jdereg/n-cube-editor.git</connection>
         <developerConnection>scm:git:git@github.com:jdereg/n-cube-editor.git</developerConnection>
-        <tag>0.1.0.201506220049</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
