@@ -367,6 +367,16 @@ class NCubeService
         return cube
     }
 
+    NCube getCubeRevision(ApplicationID appId, String name, long revision)
+    {
+        NCube cube = NCubeManager.getCubeRevision(appId, name, revision)
+        if (cube == null)
+        {
+            throw new IllegalArgumentException("Unable to load cube: " + name + ", app: " + appId + ", revision: " + revision)
+        }
+        return cube
+    }
+
     void getReferencedCubeNames(ApplicationID appId, String cubeName, Set<String> references)
     {
         NCubeManager.getReferencedCubeNames(appId, cubeName, references)

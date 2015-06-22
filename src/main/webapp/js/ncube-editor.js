@@ -2694,12 +2694,29 @@ $(function ()
                     date = new Date(value.createDate).format('yyyy-mm-dd HH:MM:ss');
                 }
                 anchor.html('rev: ' + value.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + value.createHid);
-                //anchor.click(function ()
-                //{
-                //    showRefsToCubeClose();
-                //    _selectedCubeName = value;
-                //    loadCube();
-                //});
+                anchor.click(function ()
+                {
+                    var title = value.name + '.rev.' + value.revision;
+                    var oldJson = window.open('', title + '.json');
+                    var prettyJsonReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "json-pretty"]);
+                    if (prettyJsonReq.status === true)
+                    {
+                        oldJson.document.removeChild(oldJson.document.documentElement);
+                        oldJson.document.write('<html><pre>');
+                        oldJson.document.write(prettyJsonReq.data);
+                        oldJson.document.write('</pre></html>');
+                        oldJson.document.title = title + '.json';
+                    }
+
+                    var oldHtml = window.open('', title + '.html');
+                    var htmlReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "html"]);
+                    if (htmlReq.status === true)
+                    {
+                        oldHtml.document.removeChild(oldHtml.document.documentElement);
+                        oldHtml.document.write(htmlReq.data);
+                        oldHtml.document.title = title + '.html';
+                    }
+                });
                 li.append(anchor);
                 ul.append(li);
             });
@@ -2713,23 +2730,6 @@ $(function ()
     function revisionHistoryOk()
     {
         $('#revisionHistoryModal').modal('hide');
-        //var result = call("ncubeController.restoreCube", [_selectedCubeName, _selectedApp, _selectedVersion]);
-        //if (result.status === true)
-        //{
-        //    loadAppNames();
-        //    loadAppListView();
-        //    var saveSelectedVersion = _selectedVersion;
-        //    loadVersions();
-        //    _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
-        //    loadVersionListView();
-        //    loadNCubes();
-        //    loadNCubeListView();
-        //    loadCube();
-        //}
-        //else
-        //{
-        //    _errorId = showNote("Unable to restore n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
-        //}
     }
 
     function deleteCurrentTestMenu()

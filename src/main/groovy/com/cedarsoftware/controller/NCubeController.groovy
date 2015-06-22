@@ -1251,6 +1251,35 @@ class NCubeController extends BaseController
         }
     }
 
+    String getCubeRevisionAs(ApplicationID appId, String cubeName, long revision, String mode)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, cubeName, null))
+            {
+                return
+            }
+            NCube ncube = nCubeService.getCubeRevision(appId, cubeName, revision)
+
+            switch(mode)
+            {
+                case "json":
+                    return ncube.toFormattedJson()
+                case "json-pretty":
+                    return JsonWriter.formatJson(ncube.toFormattedJson())
+                case "html":
+                    return ncube.toHtml()
+                default:
+                    throw new IllegalArgumentException("getCubeRevisionAs() - unknown mode: " + mode);
+            }
+        }
+        catch (Exception e)
+        {
+            fail(e)
+        }
+    }
+
     /**
      * @return Map of HTTP headers for debugging display.
      */
