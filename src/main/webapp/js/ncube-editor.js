@@ -52,6 +52,8 @@ $(function ()
     var _mergeCubeName = null;
     var _mergeSha1 = null;
     var _mergeHeadSha1 = null;
+    var _searchLastKeyTime = Date.now();
+    var _searchKeyPressed = false;
 
     //  modal dialogs
     var _editCellModal = $('#editCellModal');
@@ -83,6 +85,7 @@ $(function ()
         loadVersionListView();
         loadNCubeListView();
         clearSearch();
+        loop();
 
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
         $(window).on("popstate", function(e)
@@ -559,41 +562,18 @@ $(function ()
         // Send to background Web Worker thread
         _searchNames.on('input', function (event)
         {
-            runSearch();
-        });
-        _searchNames.on('focusin', function(event)
-        {
-            runSearch();
-        });
-        _searchNames.click(function(event)
-        {
-            runSearch();
+            _searchKeyPressed = true;
+            _searchLastKeyTime = Date.now();
         });
         _searchContent.on('input', function (event)
         {
-            runSearch();
-        });
-        _searchContent.on('focusin', function(event)
-        {
-            runSearch();
-        });
-        _searchContent.click(function(event)
-        {
-            runSearch();
+            _searchKeyPressed = true;
+            _searchLastKeyTime = Date.now();
         });
 
         _searchNames.keyup(function (e)
         {
-            if (e.keyCode == 13)
-            {   // 'enter' key
-                var a = _listOfCubes.find('a[itemName]:first');
-                if (a)
-                {
-                    var cubeName = a.attr('itemName');
-                    selectCubeByName(cubeName);
-                }
-            }
-            else if (e.keyCode == 27)
+            if (e.keyCode == 27)
             {   // ESCape key
                 clearSearch();
             }
@@ -601,16 +581,7 @@ $(function ()
 
         _searchContent.keyup(function (e)
         {
-            if (e.keyCode == 13)
-            {   // 'enter' key
-                var a = _listOfCubes.find('a[itemName]:first');
-                if (a)
-                {
-                    var cubeName = a.attr('itemName');
-                    selectCubeByName(cubeName);
-                }
-            }
-            else if (e.keyCode == 27)
+            if (e.keyCode == 27)
             {   // ESCape key
                 clearSearch();
             }
@@ -4578,6 +4549,18 @@ $(function ()
     // =============================================== End Branching ===================================================
 
     // ============================================= General Utilities =================================================
+    function loop()
+    {
+        setInterval(function()
+        {
+            var now = Date.now();
+            if (now - _searchLastKeyTime > 150 && _searchKeyPressed)
+            {
+                _searchKeyPressed = false;
+                runSearch();
+            }
+        }, 500);
+    }
 
     function checkAll(state, queryStr)
     {
