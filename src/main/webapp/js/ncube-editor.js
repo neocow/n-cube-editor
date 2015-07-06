@@ -504,12 +504,9 @@ $(function ()
 
     function selectCubeByName(cubeName)
     {
-        _searchNames.val(cubeName);
         _selectedCubeName = getProperCubeName(cubeName);
-        _listOfCubes.empty();
         localStorage[SELECTED_CUBE] = cubeName;
         loadCube(); // load spreadsheet side
-        _cubeCount.html('1');
     }
 
     function runSearch()
@@ -1520,14 +1517,7 @@ $(function ()
             }
         });
 
-        if (_searchNames.val() && _searchNames.val().length > 0 && count >= 100)
-        {
-            _cubeCount.html('100+');
-        }
-        else
-        {
-            _cubeCount.html(count);
-        }
+        _cubeCount.html(count);
     }
 
     function loadCubeHtml()
@@ -2116,7 +2106,6 @@ $(function ()
             console.log('Unknown tab selected: ' + _activeTab);
         }
 
-        _searchNames.val(_selectedCubeName);
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
     }
 

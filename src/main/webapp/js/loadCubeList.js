@@ -16,6 +16,7 @@ onmessage = function(e)
 {
     var args = e.data;
     var filter = args[0];
+    filter = filter ? filter.toLowerCase() : filter;
     var content = args[1];
     var appId = args[2];
     var hasFilter = filter && filter.length > 0;
