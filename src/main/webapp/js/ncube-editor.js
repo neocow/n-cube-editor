@@ -83,7 +83,6 @@ $(function ()
         loadAppListView();
         loadStatusListView();
         loadVersionListView();
-        loadNCubeListView();
         clearSearch();
         loop();
 
@@ -249,7 +248,7 @@ $(function ()
             _searchThread.onmessage = function(event)
             {
                 var list = event.data;
-                loadFilteredCubeView(list);
+                loadFilteredNCubeListView(list);
             };
         }
         else
@@ -493,7 +492,7 @@ $(function ()
     {
         _searchNames.val('');
         _searchContent.val('');
-        loadFilteredCubeView(_cubeList);
+        loadNCubeListView();
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
         loadCube(); // load spreadsheet side
         _searchNames.val('');
@@ -1409,62 +1408,25 @@ $(function ()
 
     function loadNCubeListView()
     {
-        var filter = _searchNames.val();
-        var cubes = filterCubeList(filter);
-        loadFilteredCubeView(cubes);
+        loadFilteredNCubeListView(_cubeList);
     }
 
-    function filterCubeList(filter)
-    {
-        var cubes = filter ? {} : _cubeList;
-        if (filter && filter.length > 0)
-        {
-            filter = filter.toLowerCase();
-            // Step 1. Filter all cubes and store into a Map keyed by match location (int) to list of cubes that matched starting at this location.
-            var matches = {};
-            $.each(_cubeList, function filterNames(key, infoDto)
-            {
-                infoDto.pos = null;
-                var idx = infoDto.name.toLowerCase().indexOf(filter);
-                if (idx >= 0)
-                {
-                    if (!matches[idx])
-                    {
-                        matches[idx] = [];
-                    }
-                    matches[idx].push(infoDto);
-                }
-            });
-
-            // Step 2. Build linear cube list from separate lists above, thereby ordering left-most matches higher than middle or right
-            $.each(matches, function buildMatches(key, value)
-            {
-                var pos = key;
-                $.each(value, function (index, cube)
-                {
-                    cubes[cube.name] = cube;
-                    cube.pos = parseInt(pos);
-                });
-            });
-        }
-        return cubes;
-    }
-
-    function loadFilteredCubeView(cubes)
+    function loadFilteredNCubeListView(cubes)
     {
         var filter = _searchNames.val();
         _listOfCubes.empty();
         var count = 0;
-        $.each(cubes, function buildCubeList(cubeName, infoDto)
+        $.each(cubes, function buildCubeList(loName, infoDto)
         {
             count++;
+            var cubeName = infoDto.name;
             var li = $("<li/>");
             var a = $('<a href="#"/>');
             a.click(function clickAction()
             {
-                selectCubeByName(cubeName);
+                selectCubeByName(loName);
             });
-            if (cubeName == _selectedCubeName)
+            if (_selectedCubeName == cubeName)
             {
                 a.attr('class', 'ncube-selected');
             }
@@ -1472,7 +1434,7 @@ $(function ()
             {
                 a.attr('class', 'ncube-notselected');
             }
-            a.attr('itemName', cubeName);
+            a.attr('itemName', loName);
             li.append(a);
             _listOfCubes.append(li);
 

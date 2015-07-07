@@ -37,7 +37,7 @@ onmessage = function(e)
             for (var i = 0; i < len; ++i)
             {
                 var infoDto = results[i];
-                cubes[infoDto.name] = infoDto;
+                cubes[infoDto.name.toLowerCase()] = infoDto;
                 if (hasFilter)
                 {
                     var idx = infoDto.name.toLowerCase().indexOf(filter);
