@@ -3016,8 +3016,9 @@ $(function ()
 
     function releaseCubes()
     {
-        if (!ensureModifiable('Release of SNAPSHOT cannot happen.'))
+        if (!isHeadSelected())
         {
+            _errorId = showNote('HEAD branch must be selected to release a version.');
             return;
         }
 
