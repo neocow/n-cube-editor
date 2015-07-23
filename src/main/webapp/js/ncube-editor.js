@@ -2223,17 +2223,14 @@ $(function ()
         _cubeList = {};
         if (!_selectedApp)
         {
-            //_errorId = showNote('No App selected, cannot load n-cubes.');
             return;
         }
         if (!_selectedVersion)
         {
-            //_errorId = showNote('No Version selected, cannot load n-cubes.');
             return;
         }
         if (!_selectedStatus)
         {
-            //_errorId = showNote('No Status selected, cannot load n-cubes.');
             return;
         }
         var result = call("ncubeController.getCubeList", [getAppId(), '*']);
