@@ -394,9 +394,7 @@ class NCubeController extends BaseController
                 return null
             }
             Set<String> references = new CaseInsensitiveSet<>()
-            List<NCubeInfoDto> ncubes = nCubeService.search(appId, "*", null,
-                    [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true,
-                     (NCubeManager.SEARCH_CACHE_RESULT):true])
+            List<NCubeInfoDto> ncubes = nCubeService.search(appId, "*", null, [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true])
 
             for (NCubeInfoDto info : ncubes)
             {
