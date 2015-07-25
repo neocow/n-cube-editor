@@ -2411,6 +2411,7 @@ $(function ()
             loadAppListView();
             loadStatusListView();
             loadVersionListView();
+            loadNCubeListView();
             selectCubeByName(cubeName)
         }
         else
@@ -2607,14 +2608,47 @@ $(function ()
             $.each(result.data, function (index, value)
             {
                 var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
-                var anchor = $('<a href="#"/>');
+                var anchorHtml = $('<a href="#"/>');
+                var anchorJson = $('<a href="#"/>');
+                var anchorDiff = $('<a href="#"/>');
+
+                var kbd1 = $('<kbd/>');
+                kbd1.html('HTML');
+                anchorHtml.append(kbd1);
+
+                var kbd2 = $('<kbd/>');
+                kbd2.html('JSON');
+                anchorJson.append(kbd2);
+
+                var kbd3 = $('<kbd/>');
+                kbd3.html('Compare');
+                anchorDiff.append(kbd3);
+
                 var date = '';
                 if (value.createDate != undefined)
                 {
                     date = new Date(value.createDate).format('yyyy-mm-dd HH:MM:ss');
                 }
-                anchor.html('rev: ' + value.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + value.createHid);
-                anchor.click(function ()
+                li.append(anchorHtml);
+                li.append('&nbsp;&nbsp;&nbsp;');
+                li.append(anchorJson);
+                li.append('&nbsp;&nbsp;&nbsp;');
+                li.append(anchorDiff);
+                li.append('&nbsp;&nbsp;&nbsp;');
+                li.append('rev: ' + value.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + value.createHid);
+                anchorHtml.click(function ()
+                {
+                    var title = value.name + '.rev.' + value.revision;
+                    var oldHtml = window.open('', title + '.html');
+                    var htmlReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "html"]);
+                    if (htmlReq.status === true)
+                    {
+                        oldHtml.document.removeChild(oldHtml.document.documentElement);
+                        oldHtml.document.write(htmlReq.data);
+                        oldHtml.document.title = title + '.html';
+                    }
+                });
+                anchorJson.click(function ()
                 {
                     var title = value.name + '.rev.' + value.revision;
                     var oldJson = window.open('', title + '.json');
@@ -2627,17 +2661,12 @@ $(function ()
                         oldJson.document.write('</pre></html>');
                         oldJson.document.title = title + '.json';
                     }
-
-                    var oldHtml = window.open('', title + '.html');
-                    var htmlReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "html"]);
-                    if (htmlReq.status === true)
-                    {
-                        oldHtml.document.removeChild(oldHtml.document.documentElement);
-                        oldHtml.document.write(htmlReq.data);
-                        oldHtml.document.title = title + '.html';
-                    }
                 });
-                li.append(anchor);
+                anchorDiff.click(function ()
+                {
+                    var title = value.name + '.rev.' + value.revision;
+                    window.open('http://www.prettydiff.com/', title);
+                });
                 ul.append(li);
             });
         }
