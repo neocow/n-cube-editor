@@ -2233,7 +2233,7 @@ $(function ()
         {
             return;
         }
-        var result = call("ncubeController.getCubeList", [getAppId(), '*']);
+        var result = call("ncubeController.search", [getAppId(), '*', null, true]);
         var first = null;
         if (result.status === true)
         {
@@ -2531,7 +2531,7 @@ $(function ()
         var ul = $('#deletedCubeList');
         ul.empty();
         $('#restoreCubeLabel').html('Restore Cubes in ' + _selectedVersion + ', ' + _selectedStatus);
-        var result = call("ncubeController.getDeletedCubeList", [getAppId(), ""]);
+        var result = call("ncubeController.search", [getAppId(), "*", null, false]);
         if (result.status === true)
         {
             $.each(result.data, function (index, value)
@@ -2571,6 +2571,7 @@ $(function ()
         if (result.status === true)
         {
             loadNCubes();
+            loadNCubeListView();
             var cubeName = _selectedCubeName;
             if (cubesToRestore.length == 1)
             {

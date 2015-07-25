@@ -23,7 +23,8 @@ onmessage = function(e)
     var appIdString = JSON.stringify(appId);
     var req = new XMLHttpRequest();
 
-    req.open("GET", getSearchUrl() + '?json=[' + appIdString + ',"' + filter + '","' + content + '"]', false);
+
+    req.open("GET", getSearchUrl() + '?json=[' + appIdString + ',"' + filter + '","' + content + '",true]', false);
     req.send();
 
     if (req.response)

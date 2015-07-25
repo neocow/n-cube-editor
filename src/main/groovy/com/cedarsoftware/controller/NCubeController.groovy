@@ -10,6 +10,7 @@ import com.cedarsoftware.ncube.Delta
 import com.cedarsoftware.ncube.GroovyExpression
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeInfoDto
+import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.NCubeTest
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.StringValuePair
@@ -126,7 +127,7 @@ class NCubeController extends BaseController
 
     // ============================================= Begin API =========================================================
 
-    Object[] search(ApplicationID appId, String cubeNamePattern, String content)
+    Object[] search(ApplicationID appId, String cubeNamePattern, String content, boolean active)
     {
         try
         {
@@ -135,7 +136,19 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            List<NCubeInfoDto> cubeInfos = nCubeService.search(appId, cubeNamePattern, content)
+
+            Map options = [:]
+            if (active)
+            {
+                options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
+            }
+            else
+            {
+                options[(NCubeManager.SEARCH_DELETED_RECORDS_ONLY)] = true
+            }
+
+            List<NCubeInfoDto> cubeInfos = nCubeService.search(appId, cubeNamePattern, content, options)
+
             Collections.sort(cubeInfos, new Comparator<NCubeInfoDto>() {
                 public int compare(NCubeInfoDto info1, NCubeInfoDto info2)
                 {
@@ -143,25 +156,6 @@ class NCubeController extends BaseController
                 }
             })
 
-            return cubeInfos.toArray()
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return null
-        }
-    }
-
-    Object[] getDeletedCubeList(ApplicationID appId, String filter)
-    {
-        try
-        {
-            appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
-            List<NCubeInfoDto> cubeInfos = nCubeService.getDeletedCubes(appId, filter)
             return cubeInfos.toArray()
         }
         catch (Exception e)
@@ -199,33 +193,6 @@ class NCubeController extends BaseController
             }
             List<NCubeInfoDto> cubeInfos = nCubeService.getRevisionHistory(appId, cubeName)
             return cubeInfos.toArray()
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return null
-        }
-    }
-
-    Object[] getCubeList(ApplicationID appId, String filter)
-    {
-        try
-        {
-            appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
-            List<NCubeInfoDto> list = nCubeService.getNCubes(appId, filter)
-
-            // Sort by Group, then by n-cube name
-            Collections.sort(list, new Comparator<NCubeInfoDto>() {
-                public int compare(NCubeInfoDto info1, NCubeInfoDto info2)
-                {
-                    return info1.name.compareToIgnoreCase(info2.name)
-                }
-            })
-            return list.toArray()
         }
         catch (Exception e)
         {
@@ -427,7 +394,9 @@ class NCubeController extends BaseController
                 return null
             }
             Set<String> references = new CaseInsensitiveSet<>()
-            List<NCubeInfoDto> ncubes = nCubeService.getNCubes(appId, "*")
+            List<NCubeInfoDto> ncubes = nCubeService.search(appId, "*", null,
+                    [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true,
+                     (NCubeManager.SEARCH_CACHE_RESULT):true])
 
             for (NCubeInfoDto info : ncubes)
             {

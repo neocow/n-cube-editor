@@ -35,19 +35,22 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class NCubeService
 {
-    List<NCubeInfoDto> getNCubes(ApplicationID appId, String pattern)
+    List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching, Map options)
     {
-        return NCubeManager.getCubeRecordsFromDatabase(appId, pattern)
-    }
+        if (!cubeNamePattern.startsWith('*'))
+        {
+            cubeNamePattern = '*' + cubeNamePattern
+        }
+        if (!cubeNamePattern.endsWith('*'))
+        {
+            cubeNamePattern = cubeNamePattern + '*'
+        }
 
-    List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching)
-    {
-        return NCubeManager.search(appId, cubeNamePattern, contentMatching)
-    }
-
-    List<NCubeInfoDto> getDeletedCubes(ApplicationID appId, String pattern)
-    {
-        return NCubeManager.getDeletedCubesFromDatabase(appId, pattern)
+        if (!options.containsKey(NCubeManager.SEARCH_CACHE_RESULT))
+        {   // Force caching of result unless otherwise specified.
+            options[(NCubeManager.SEARCH_CACHE_RESULT)] = true
+        }
+        return NCubeManager.search(appId, cubeNamePattern, contentMatching, options)
     }
 
     void restoreCube(ApplicationID appId, Object[] cubeNames, String username)
@@ -117,7 +120,7 @@ class NCubeService
 
     void createCube(ApplicationID appId, NCube ncube, String username)
     {
-        NCubeManager.createCube(appId, ncube, username)
+        NCubeManager.updateCube(appId, ncube, username)
     }
 
     boolean deleteCube(ApplicationID appId, String cubeName, String username)
@@ -316,14 +319,7 @@ class NCubeService
                     }
                 }
 
-                if (NCubeManager.doesCubeExist(appId, ncube.name))
-                {
-                    NCubeManager.updateCube(appId, ncube, username)
-                }
-                else
-                {
-                    NCubeManager.createCube(appId, ncube, username)
-                }
+                NCubeManager.updateCube(appId, ncube, username)
             }
             else
             {
