@@ -46,10 +46,6 @@ class NCubeService
             cubeNamePattern = cubeNamePattern + '*'
         }
 
-        if (!options.containsKey(NCubeManager.SEARCH_CACHE_RESULT))
-        {   // Force caching of result unless otherwise specified.
-            options[(NCubeManager.SEARCH_CACHE_RESULT)] = true
-        }
         return NCubeManager.search(appId, cubeNamePattern, contentMatching, options)
     }
 
