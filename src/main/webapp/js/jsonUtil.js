@@ -95,6 +95,12 @@ function buildJsonArgs(args)
     return JSON.stringify(args);
 }
 
+function exec(target, args, params)
+{
+    args.push(target);
+    return call("ncubeController.execute", args, params);
+}
+
 /**
  * Use this to make a RESTful server call.
  * 'target' identifies the server as a Controller and

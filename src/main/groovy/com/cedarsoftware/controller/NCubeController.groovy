@@ -1272,6 +1272,30 @@ class NCubeController extends BaseController
         return headers
     }
 
+    Object execute(ApplicationID appId, Map args, String command)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            int dot = command.indexOf('.')
+            def controller = command.substring(0, dot)
+            def method = command.substring(dot + 1)
+
+            if (!isAllowed(appId, controller, null))
+            {
+                return null
+            }
+            def coordinate = ['method' : method, 'args' : args, 'service': nCubeService]
+            NCube cube = nCubeService.getCube(appId, controller)
+            return cube.getCell(coordinate)
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
     // ============================================= End API ===========================================================
 
     // ===================================== utility (non-API) methods =================================================

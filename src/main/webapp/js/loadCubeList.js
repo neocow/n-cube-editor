@@ -16,13 +16,11 @@ onmessage = function(e)
 {
     var args = e.data;
     var filter = args[0];
-    filter = filter ? filter.toLowerCase() : filter;
     var content = args[1];
     var appId = args[2];
     var hasFilter = filter && filter.length > 0;
     var appIdString = JSON.stringify(appId);
     var req = new XMLHttpRequest();
-
 
     req.open("GET", getSearchUrl() + '?json=[' + appIdString + ',"' + filter + '","' + content + '",true]', false);
     req.send();
@@ -41,7 +39,7 @@ onmessage = function(e)
                 cubes[infoDto.name.toLowerCase()] = infoDto;
                 if (hasFilter)
                 {
-                    var idx = infoDto.name.toLowerCase().indexOf(filter);
+                    var idx = infoDto.name.toLowerCase().indexOf(filter.toLowerCase());
                     if (idx >= 0)
                     {   // record starting location of cube name filter, so UI can display highlighted matching text
                         infoDto.pos = idx;

@@ -3653,11 +3653,13 @@ $(function ()
             return;
         }
 
+        var x = exec('DetailsController.updateDefaultValue', [getAppId(), {defaultValue:'NONE'}]);
+        console.log(x);
         // TODO: Turn off field value, then pop-up edit cell modal.
         // Set flag in modal so that it handles OK differently, has no clear.
         // In editCell() make sure to turn on appropriate fields.
 
-        alert('Change type not yet implemented.');
+        //alert('Change type not yet implemented.');
     }
 
     function clearCache()
