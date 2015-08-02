@@ -1287,7 +1287,7 @@ class NCubeController extends BaseController
             }
             def coordinate = ['method' : method, 'args' : args, 'service': nCubeService]
             NCube cube = nCubeService.getCube(appId, controller)
-            return cube.getCell(coordinate)
+            return cube.getCell(coordinate, args)
         }
         catch (Exception e)
         {
