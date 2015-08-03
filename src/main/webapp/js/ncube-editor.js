@@ -244,7 +244,7 @@ $(function ()
     {
         if (typeof(Worker) !== "undefined")
         {
-            _searchThread = new Worker("js/loadCubeList.js");
+            _searchThread = new Worker("js/loadCubeList.js?v1");
             _searchThread.onmessage = function(event)
             {
                 var list = event.data;
