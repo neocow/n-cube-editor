@@ -84,6 +84,7 @@ $(function ()
         loadStatusListView();
         loadVersionListView();
         clearSearch();
+        //buildMenu();
         loop();
 
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
@@ -244,7 +245,7 @@ $(function ()
     {
         if (typeof(Worker) !== "undefined")
         {
-            _searchThread = new Worker("js/loadCubeList.js?v1");
+            _searchThread = new Worker("js/loadCubeList.js");
             _searchThread.onmessage = function(event)
             {
                 var list = event.data;
@@ -255,6 +256,52 @@ $(function ()
         {
             alert('Sorry! No Web Worker support. Try using the Chrome browser.');
         }
+    }
+
+    function buildMenu()
+    {
+        var result = call('ncubeController.getMenu',[getAppId()])
+        if (result.status !== true)
+        {
+            _errorId = showNote('Unable to load menu.' + result.data);
+            return;
+        }
+        var menu = result.data;
+        $('#appTitle').html(menu['~Title']);
+        var ul = $('#menuList');
+        $.each(menu, function (key, value)
+        {
+            if (!key.startsWith('~') && !key.startsWith('@'))
+            {
+                var li = $('<li/>');
+                var a = $('<a/>').prop({'id': value['menuId'], 'href': '#' + value['pageId']});
+                a.attr({'data-toggle':'tab'});
+                a.html(key);
+                li.append(a);
+                ul.append(li);
+
+                var tabContentDiv = $('#ncubeTabContent');
+                if (value['pageId'] == 'garbage')
+                {
+                    var div = $('<div/>').prop({class:'tab-pane', id:value['pageId']});
+                    div.attr({style:'overflow:hidden;height:100%'});
+                    tabContentDiv.append(div);
+
+                    var iframeId = 'iframe' + value['pageId'];
+                    var iframe = $('<iframe id="' + iframeId + '"/>');
+                    div.append(iframe);
+
+                    iframe.attr({style:'position:relative;height:100%;width:100%', src:value['html'] + '?appId=' + JSON.stringify(getAppId())});
+
+                    $('#' + value['menuId']).click(function ()
+                    {
+                        clearError();
+                        _activeTab = value['menuId'];
+                        loadCube();
+                    });
+                }
+            }
+        });
     }
 
     function editPaste()
@@ -2059,126 +2106,12 @@ $(function ()
         {
             loadTestListView("ncubeController.getTests");
         }
-        else if (_activeTab == 'picTab')
-        {
-            buildGraph();
-        }
         else
         {
             console.log('Unknown tab selected: ' + _activeTab);
         }
 
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
-    }
-
-    function getGraphData()
-    {
-        return [{"crimeType": "mip", "totalCrimes": 24}, {
-            "crimeType": "theft",
-            "totalCrimes": 558
-        }, {"crimeType": "drugs", "totalCrimes": 81}, {"crimeType": "arson", "totalCrimes": 3}, {
-            "crimeType": "assault",
-            "totalCrimes": 80
-        }, {"crimeType": "burglary", "totalCrimes": 49}, {
-            "crimeType": "disorderlyConduct",
-            "totalCrimes": 63
-        }, {"crimeType": "mischief", "totalCrimes": 189}, {
-            "crimeType": "dui",
-            "totalCrimes": 107
-        }, {"crimeType": "resistingArrest", "totalCrimes": 11}, {
-            "crimeType": "sexCrimes",
-            "totalCrimes": 24
-        }, {"crimeType": "other", "totalCrimes": 58}];
-    }
-
-    function buildGraph()
-    {
-        var result = call("apollo.getCell", [{'state':'OH'}]);
-        console.log(result);
-
-        var width = 1000,
-            height = 800,
-            radius = Math.min(width, height) / 2;
-
-        var color = d3.scale.ordinal()
-            .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-
-        var arc = d3.svg.arc()
-            .outerRadius(radius - 10)
-            .innerRadius(radius - 150);
-
-        var pie = d3.layout.pie()
-            .sort(null)
-            .value(function (d) {
-                return d.totalCrimes;
-            });
-
-
-        var svg = d3.select("#visual")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-        var g = svg.selectAll(".arc")
-            .data(pie(getGraphData()))
-            .enter().append("g")
-            .attr("class", "arc");
-
-        g.append("path")
-            .attr("d", arc)
-            .style("fill", function (d) {
-                return color(d.data.crimeType);
-            });
-
-        g.append("text")
-            .attr("transform", function (d) {
-                return "translate(" + arc.centroid(d) + ")";
-            })
-            .attr("dy", ".35em")
-            .style("text-anchor", "middle")
-            .text(function (d) {
-                return d.data.crimeType;
-            });
-
-
-        var circleSelection = g.append("circle")
-                                          .attr("cx", 25)
-                                          .attr("cy", 25)
-                                          .attr("r", 25)
-                                          .style("fill", "red");
-
-        var dataset = [],
-            tmpDataset = [],
-            i, j;
-
-        for (i = 0; i < 5; i++)
-        {
-            for (j = 0, tmpDataset = []; j < 3; j++)
-            {
-                tmpDataset.push("Row:"+i+",Col:"+j);
-            }
-            dataset.push(tmpDataset);
-        }
-
-            circleSelection
-            .append("table")
-            //.style("border-collapse", "collapse")
-            .style("border", "2px black solid")
-
-            .selectAll("tr")
-            .data(dataset)
-            .enter().append("tr")
-
-            .selectAll("td")
-            .data(function(d){return d;})
-            .enter().append("td")
-            .style("border", "1px black solid")
-            .style("padding", "10px")
-            .on("mouseover", function(){d3.select(this).style("background-color", "orange")})
-            .on("mouseout", function(){d3.select(this).style("background-color", "green")})
-            .text(function(d){return d;})
-            .style("font-size", "12px");
     }
 
     /**
@@ -3653,13 +3586,11 @@ $(function ()
             return;
         }
 
-        var x = exec('DetailsController.updateDefaultValue', [getAppId(), {defaultValue:'NONE'}]);
-        console.log(x);
         // TODO: Turn off field value, then pop-up edit cell modal.
         // Set flag in modal so that it handles OK differently, has no clear.
         // In editCell() make sure to turn on appropriate fields.
 
-        //alert('Change type not yet implemented.');
+        alert('Change type not yet implemented.');
     }
 
     function clearCache()

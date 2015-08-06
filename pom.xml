@@ -34,7 +34,7 @@
     <properties>
         <version.java-util>1.19.3</version.java-util>
         <version.json-io>4.1.6</version.json-io>
-        <version.ncube>3.3.6-SNAPSHOT</version.ncube>
+        <version.ncube>3.3.6</version.ncube>
         <version.json-command-servlet>1.2.5</version.json-command-servlet>
         <version.log4j>2.1</version.log4j>
         <version.urlrewrite>4.0.4</version.urlrewrite>
@@ -44,6 +44,7 @@
         <version.servlet>3.0.1</version.servlet>
         <version.java>1.7</version.java>
         <version.mysql>5.1.35</version.mysql>
+        <version.tuckey>4.0.4</version.tuckey>
         <version.plugin.compiler>3.2</version.plugin.compiler>
         <version.plugin.deploy>2.8.2</version.plugin.deploy>
         <version.plugin.source>2.4</version.plugin.source>
@@ -178,6 +179,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.tuckey</groupId>
+            <artifactId>urlrewritefilter</artifactId>
+            <version>${version.tuckey}</version>
+        </dependency>
+
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>

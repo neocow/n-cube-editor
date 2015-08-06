@@ -45,6 +45,16 @@
         <url-pattern>/cmd/*</url-pattern>
     </servlet-mapping>
 
+    <!-- URL Rewrite Filter  - must be defined prior to RA Front Filter -->
+    <filter>
+        <filter-name>URL Rewrite Filter</filter-name>
+        <filter-class>org.tuckey.web.filters.urlrewrite.UrlRewriteFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>URL Rewrite Filter</filter-name>
+        <url-pattern>/sys/*</url-pattern>
+    </filter-mapping>
+
     <session-config>
         <session-timeout>60</session-timeout>
     </session-config>

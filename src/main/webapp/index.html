@@ -37,10 +37,10 @@
         <button class="navbar-toggle collapsed" type="button" data-toggle="collapse">
         </button>
         <!--suppress CheckImageSize -->
-        <img height="40" src="img/cube-logo.png"/><a class="navbar-brand" href="#">Configuration Editor</a>
+        <img height="40" src="img/cube-logo.png"/><a id="appTitle" class="navbar-brand" href="#">Insurance Authoring App</a>
     </div>
     <nav class="navbar-collapse collapse" role="navigation" style="height: 1px;">
-        <ul class="nav navbar-nav">
+        <ul id="menuList" class="nav navbar-nav">
             <li>
                 <a id="ncubeTab" href="#ncube" data-toggle="tab">n-cube</a>
             </li>
@@ -53,8 +53,15 @@
             <li>
                 <a id="testTab" href="#tests" data-toggle="tab">Run</a>
             </li>
-            <li>
-                <a id="picTab" href="#drillPic" data-toggle="tab">Product Editor</a>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+                <a id="DataMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Data <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li><a id="dataChangeType" href="#">Change type...</a></li>
+                    <li class="divider"></li>
+                    <li><a id="clearCache" href="#">Clear Cache</a></li>
+                </ul>
             </li>
             <li class="dropdown">
                 <a id="BranchMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Branch: </a>
@@ -65,16 +72,6 @@
                     <li class="divider"></li>
                     <li><a id="branchCommit" href="#">Commit...</a></li>
                     <li><a id="branchRollback" href="#">Rollback...</a></li>
-                </ul>
-            </li>
-        </ul>
-        <ul class="nav navbar-nav navbar-right">
-            <li class="dropdown">
-                <a id="DataMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Data <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                    <li><a id="dataChangeType" href="#">Change type...</a></li>
-                    <li class="divider"></li>
-                    <li><a id="clearCache" href="#">Clear Cache</a></li>
                 </ul>
             </li>
         </ul>
@@ -342,10 +339,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div id="drillPic" class="tab-pane" style="height:100%;width:100%">
-            <svg id="visual" width="1000" height="800"></svg>
         </div>
 
     </div>
@@ -1242,7 +1235,6 @@
 <script type="text/javascript" src="js/mitDate.js"></script>
 <script type="text/javascript" src="js/jsonUtil.js"></script>
 <script type="text/javascript" src="js/constants.js"></script>
-<script type="text/javascript" src="js/d3.min.js"></script>
 <script type="text/javascript" src="js/ncube-editor.js"></script>
 
 </body>
