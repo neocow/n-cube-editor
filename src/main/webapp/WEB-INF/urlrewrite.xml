@@ -5,10 +5,10 @@
 <urlrewrite>
     <rule match-type="regex">
         <note>
-            Redirect inbound requests for static content to n-cube which will
-            serve the requests from internal CDN.
+            Redirect inbound requests using n-cube's sys.classpath
         </note>
         <from>^/sys/[^/]+/.*$</from>
+        <set name="ctx">sys</set>
         <run class="com.cedarsoftware.util.ProxyRouter" method="route" />
         <to>null</to>
     </rule>

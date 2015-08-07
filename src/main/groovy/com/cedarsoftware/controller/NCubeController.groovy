@@ -6,7 +6,6 @@ import com.cedarsoftware.ncube.AxisType
 import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.CellInfo
 import com.cedarsoftware.ncube.Column
-import com.cedarsoftware.ncube.CommandCell
 import com.cedarsoftware.ncube.Delta
 import com.cedarsoftware.ncube.GroovyExpression
 import com.cedarsoftware.ncube.NCube
@@ -14,7 +13,6 @@ import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.NCubeTest
 import com.cedarsoftware.ncube.RuleInfo
-import com.cedarsoftware.ncube.StringUrlCmd
 import com.cedarsoftware.ncube.StringValuePair
 import com.cedarsoftware.ncube.exception.BranchMergeException
 import com.cedarsoftware.ncube.formatters.NCubeTestReader
@@ -25,11 +23,9 @@ import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
 import com.cedarsoftware.util.CaseInsensitiveSet
 import com.cedarsoftware.util.DateUtilities
-import com.cedarsoftware.util.IOUtilities
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
-import com.cedarsoftware.util.UrlUtilities
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import groovy.transform.CompileStatic
@@ -218,43 +214,6 @@ class NCubeController extends BaseController
             // The Strings below are hints to n-cube to tell it which axis to place on top
             String html = ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns')
             return html;
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return null
-        }
-    }
-
-    String getContent(ApplicationID appId, String url)
-    {
-        try
-        {
-            appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
-
-            if (url.toLowerCase().startsWith("http"))
-            {
-                return UrlUtilities.getContentFromUrlAsString(new URL(url), true);
-            }
-            else if (url.startsWith("system/"))
-            {
-                String[] pieces = url.split('system/')
-                return new String(IOUtilities.inputStreamToBytes(JsonCommandServlet.servletRequest.get().getServletContext().getResourceAsStream(pieces[1])));
-            }
-            else
-            {   // use n-cube
-                NCube finder = new NCube('finder')
-                finder.setApplicationID(appId)
-                Axis find = new Axis('dontcare', AxisType.DISCRETE, AxisValueType.STRING, true, Axis.DISPLAY, 1)
-                finder.addAxis(find)
-                CommandCell cmd = new StringUrlCmd(url, false)
-                finder.setCell(cmd, [dontcare:null])
-                return finder.getCell([:])
-            }
         }
         catch (Exception e)
         {

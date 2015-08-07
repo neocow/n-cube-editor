@@ -84,7 +84,7 @@ $(function ()
         loadStatusListView();
         loadVersionListView();
         clearSearch();
-        //buildMenu();
+        buildMenu();
         loop();
 
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
@@ -281,25 +281,29 @@ $(function ()
                 ul.append(li);
 
                 var tabContentDiv = $('#ncubeTabContent');
-                if (value['pageId'] == 'garbage')
+                var div = $('<div/>').prop({class:'tab-pane', id:value['pageId']});
+                div.attr({style:'overflow:hidden;height:100%'});
+                tabContentDiv.append(div);
+
+                var iframeId = 'iframe' + value['pageId'];
+                var iframe = $('<iframe id="' + iframeId + '"/>');
+                div.append(iframe);
+
+                var html = value['html'];
+                if (!html.startsWith('http:') && !html.startsWith('https:'))
                 {
-                    var div = $('<div/>').prop({class:'tab-pane', id:value['pageId']});
-                    div.attr({style:'overflow:hidden;height:100%'});
-                    tabContentDiv.append(div);
-
-                    var iframeId = 'iframe' + value['pageId'];
-                    var iframe = $('<iframe id="' + iframeId + '"/>');
-                    div.append(iframe);
-
-                    iframe.attr({style:'position:relative;height:100%;width:100%', src:value['html'] + '?appId=' + JSON.stringify(getAppId())});
-
-                    $('#' + value['menuId']).click(function ()
-                    {
-                        clearError();
-                        _activeTab = value['menuId'];
-                        loadCube();
-                    });
+                    html += '?appId=' + JSON.stringify(getAppId());
                 }
+                iframe.attr({style:'position:relative;height:100%;width:100%', src:html});
+
+                $('#' + value['menuId']).click(function ()
+                {
+                    clearError();
+                    _activeTab = value['menuId'];
+                    loadCube();
+
+                    document.getElementById(iframeId).contentWindow.tabActivated(_cubeList, _selectedCubeName);
+                });
             }
         });
     }
@@ -633,46 +637,6 @@ $(function ()
         $('#cube-search-reset').click(function()
         {
             clearSearch();
-        });
-
-        $('#ncubeTab').click(function ()
-        {
-            clearError();
-            $('#DataMenu').show();
-            _activeTab = 'ncubeTab';
-            loadCube();
-        });
-
-        $('#jsonTab').click(function ()
-        {
-            clearError();
-            $('#DataMenu').hide();
-            _activeTab = "jsonTab";
-            loadCube();
-        });
-
-        $('#detailsTab').click(function ()
-        {
-            clearError();
-            $('#DataMenu').hide();
-            _activeTab = "detailsTab";
-            loadCube();
-        });
-
-        $('#testTab').click(function()
-        {
-            clearError();
-            $('#DataMenu').hide();
-            _activeTab = "testTab";
-            loadCube();
-        });
-
-        $('#picTab').click(function()
-        {
-            clearError();
-            $('#DataMenu').hide();
-            _activeTab = "picTab";
-            loadCube();
         });
 
         $('#newCubeMenu').click(function ()

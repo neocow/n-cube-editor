@@ -7,6 +7,7 @@ import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.CommandCell
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.StringUrlCmd
+import com.cedarsoftware.ncube.util.CdnRouter
 import com.cedarsoftware.util.io.JsonReader
 import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
@@ -51,20 +52,22 @@ class ProxyRouter
             LOG.error(msg)
             throw new IllegalArgumentException(msg)
         }
+
         try
         {
-            Map<String, String> appParam = JsonReader.jsonToMaps(requestParams.appId[0])
-            ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, (String)appParam.app, (String)appParam.version, (String) appParam.status, (String) appParam.branch)
+            // TODO: Should we attempt to route to http:// URLs here too, to get the advantage of the allowAllCerts?
+            // Does www.google.com protect itself from running in an iframe on the Javascript side?
+            ApplicationID appId = buildAppId(requestParams)
             NCube finder = new NCube('router')
             finder.setApplicationID(appId)
             Axis find = new Axis('dontcare', AxisType.DISCRETE, AxisValueType.STRING, true, Axis.DISPLAY, 1)
             finder.addAxis(find)
-            // What URL goes here?
-            String url = request.getRequestURL().toString()
-            CommandCell cmd = new StringUrlCmd(url, false)
-            finder.setCell(cmd, [dontcare: null])
-            finder.getCell([:])
-
+            String sysPath = request.getAttribute('ctx')
+            String servletPath = request.getServletPath()
+            CommandCell cmd = new StringUrlCmd(servletPath.substring(sysPath.length() + 2), false)  // +2 = leading and trailing slash
+            Map input = [(CdnRouter.HTTP_REQUEST):request, (CdnRouter.HTTP_RESPONSE):response]
+            finder.setCell(cmd, [:])
+            finder.getCell(input)
         }
         catch (Exception e)
         {
@@ -72,7 +75,11 @@ class ProxyRouter
             LOG.error(msg, e)
             throw new IllegalArgumentException(msg, e)
         }
+    }
 
-
+    private ApplicationID buildAppId(Map<String, String[]> requestParams)
+    {
+        Map<String, String> appParam = JsonReader.jsonToMaps(requestParams.appId[0])
+        new ApplicationID(ApplicationID.DEFAULT_TENANT, (String) appParam.app, (String) appParam.version, (String) appParam.status, (String) appParam.branch)
     }
 }
