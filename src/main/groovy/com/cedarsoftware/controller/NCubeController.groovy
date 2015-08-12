@@ -1312,8 +1312,13 @@ class NCubeController extends BaseController
         }
         catch (Exception e)
         {
-            fail(e)
-            return null
+            LOG.error("Unable to load sys.menu", e)
+            return ['~Title':'Title Goes Here',
+                    'n-cube':[menuId:'ncubeTab',pageId:'ncube',html:'html/ncube.html'],
+                    JSON:[menuId:'jsonTab', pageId:'json', html:'html/json.html'],
+                    Details:[menuId:'detailsTab', pageId:'details',html:'html/details.html'],
+                    Test:[menuId:'testTab',pageId:'tests',html:'html/test.html']
+            ]
         }
     }
 

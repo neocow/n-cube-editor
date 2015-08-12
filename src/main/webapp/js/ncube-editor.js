@@ -302,7 +302,14 @@ $(function ()
                     _activeTab = value['menuId'];
                     loadCube();
 
-                    document.getElementById(iframeId).contentWindow.tabActivated(_cubeList, _selectedCubeName);
+                    try
+                    {
+                        document.getElementById(iframeId).contentWindow.tabActivated(_cubeList, _selectedCubeName);
+                    }
+                    catch (e)
+                    {
+                        console.log(e);
+                    }
                 });
             }
         });

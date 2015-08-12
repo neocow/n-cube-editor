@@ -8,7 +8,7 @@
             Redirect inbound requests using n-cube's sys.classpath
         </note>
         <from>^/sys/[^/]+/.*$</from>
-        <set name="ctx">sys</set>
+        <set name="sys.classpath.prefix">sys</set>
         <run class="com.cedarsoftware.util.ProxyRouter" method="route" />
         <to>null</to>
     </rule>
