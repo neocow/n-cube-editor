@@ -1312,13 +1312,35 @@ class NCubeController extends BaseController
         }
         catch (Exception e)
         {
-            LOG.error("Unable to load sys.menu", e)
+            LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage())
             return ['~Title':'Title Goes Here',
                     'n-cube':[menuId:'ncubeTab',pageId:'ncube',html:'html/ncube.html'],
                     JSON:[menuId:'jsonTab', pageId:'json', html:'html/json.html'],
                     Details:[menuId:'detailsTab', pageId:'details',html:'html/details.html'],
                     Test:[menuId:'testTab',pageId:'tests',html:'html/test.html']
             ]
+        }
+    }
+
+    Object getDefaultCell(ApplicationID appId, String cubeName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+
+            if (!isAllowed(appId, cubeName, null))
+            {
+                return null
+            }
+            NCube menuCube = nCubeService.getCube(appId, cubeName)
+            CellInfo cellInfo = new CellInfo(menuCube.getDefaultCellValue())
+            cellInfo.collapseToUiSupportedTypes()
+            return cellInfo
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
         }
     }
 
@@ -1500,15 +1522,6 @@ class NCubeController extends BaseController
             colIds.add(Long.parseLong((String)id))
         }
         return colIds;
-    }
-
-    /**
-     * Build out General Group
-     * @return [group:'General', prefix: ""]
-     */
-    private static Map<String, Object> makeGenericAugInfo()
-    {
-        return [group:'General',prefix:""]
     }
 
     private ApplicationID addTenant(ApplicationID appId)

@@ -117,18 +117,6 @@ div#editColumnsModal ul.list-group
     color: white;
 }
 
-.json-div {
-    height: 100%;
-    width: 100%;
-    overflow: hidden !important;
-}
-
-.json-textarea {
-    height: 100%;
-    width: 100%;
-    overflow: hidden !important;
-}
-
 .hr-small
 {
     margin-top: 2px;

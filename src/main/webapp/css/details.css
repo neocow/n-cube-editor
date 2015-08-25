@@ -1,0 +1,18 @@
+#mainBody {
+    color:black;
+    background:#D1C5B7;
+    padding:0
+}
+
+.top-buffer  {
+    margin-top:10px;
+}
+
+.top-buffer-2x  {
+    margin-top:20px;
+}
+
+.disabled {
+    color: lightgrey;
+    background-color: white;
+}
