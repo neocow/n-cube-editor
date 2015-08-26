@@ -3727,7 +3727,7 @@ $(function ()
         });
     }
 
-    function editCell(value)
+    function editCell()
     {
         if (!ensureModifiable('Cell cannot be updated.'))
         {

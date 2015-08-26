@@ -33,14 +33,36 @@ $(function ()
 
     $('#defaultCellClear').click(function()
     {
-        // TODO: call server.
-        console.log('clear');
+        $('#cube_defValue').val('');
+        _isUrl.find('input').attr('checked', false);
+        _isCached.find('input').attr('checked', false);
+        _urlDropdown.toggle(false);
+        _valueDropdown.toggle(true);
+        var result = nce().call("ncubeController.clearDefaultCell", [nce().getAppId(), nce().getSelectedCubeName()]);
+        if (result.status !== true)
+        {
+            nce().showNote('Unable to clear default cell:<hr class="hr-small"/>' + result.data);
+        }
     });
 
     $('#defaultCellUpdate').click(function()
     {
-        // TODO: call server
-        console.log('update');
+        var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
+        cellInfo.isUrl = _isUrl.find('input').is(':checked');
+        cellInfo.value = _defCellValue.val();
+        cellInfo.dataType = cellInfo.isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        cellInfo.isCached = _isCached.find('input').is(':checked');
+
+        var result = nce().call("ncubeController.updateDefaultCell", [nce().getAppId(), nce().getSelectedCubeName(), cellInfo]);
+
+        if (result.status === true)
+        {
+            nce().showNote('Default cell updated successfully');
+        }
+        else
+        {
+            nce().showNote('Unable to update default cell:<hr class="hr-small"/>' + result.data);
+        }
     });
 
     function isUrlChecked()

@@ -1344,6 +1344,55 @@ class NCubeController extends BaseController
         }
     }
 
+    boolean clearDefaultCell(ApplicationID appId, String cubeName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+
+            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
+            {
+                return false
+            }
+            NCube ncube = nCubeService.getCube(appId, cubeName)
+            ncube.setDefaultCellValue(null)
+            nCubeService.updateNCube(ncube, getUserForDatabase())
+            return true
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return false
+        }
+    }
+
+    boolean updateDefaultCell(ApplicationID appId, String cubeName, CellInfo cellInfo)
+    {
+        try
+        {
+            appId = addTenant(appId)
+
+            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
+            {
+                return false
+            }
+
+            Object cellValue = cellInfo.isUrl ?
+                    CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
+                    CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false)
+
+            NCube ncube = nCubeService.getCube(appId, cubeName)
+            ncube.setDefaultCellValue(cellValue)
+            nCubeService.updateNCube(ncube, getUserForDatabase())
+            return true
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return false
+        }
+    }
+
     // ============================================= End API ===========================================================
 
     // ===================================== utility (non-API) methods =================================================
