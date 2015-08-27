@@ -33,13 +33,17 @@ $(function ()
 
     $('#defaultCellClear').click(function()
     {
-        $('#cube_defValue').val('');
-        _isUrl.find('input').attr('checked', false);
-        _isCached.find('input').attr('checked', false);
-        _urlDropdown.toggle(false);
-        _valueDropdown.toggle(true);
         var result = nce().call("ncubeController.clearDefaultCell", [nce().getAppId(), nce().getSelectedCubeName()]);
-        if (result.status !== true)
+        if (result.status === true)
+        {
+            $('#cube_defValue').val('');
+            _isUrl.find('input').attr('checked', false);
+            _isCached.find('input').attr('checked', false);
+            _urlDropdown.toggle(false);
+            _valueDropdown.toggle(true);
+            nce().showNote('Default cell cleared.');
+        }
+        else
         {
             nce().showNote('Unable to clear default cell:<hr class="hr-small"/>' + result.data);
         }
@@ -57,7 +61,7 @@ $(function ()
 
         if (result.status === true)
         {
-            nce().showNote('Default cell updated successfully');
+            nce().showNote('Default cell updated successfully.');
         }
         else
         {
