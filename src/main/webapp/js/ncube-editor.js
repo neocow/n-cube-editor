@@ -909,20 +909,49 @@ $(function ()
             var isUrl = _editCellRadioURL.find('input').is(':checked');
             _urlDropdown.toggle(isUrl);
             _valueDropdown.toggle(!isUrl);
-            showHideCacheCheckbox(isUrl);
         });
 
         _urlDropdown.change(function()
         {
-            var isUrl = _editCellRadioURL.find('input').is(':checked');
-            showHideCacheCheckbox(isUrl)
+            enabledDisableCheckBoxes()
+        });
+
+        _valueDropdown.change(function()
+        {
+            enabledDisableCheckBoxes()
         });
     }
 
-    function showHideCacheCheckbox(isUrl)
+    function enabledDisableCheckBoxes()
     {
-        var selDataType = _urlDropdown.val();
-        _editCellCache.toggle(isUrl);
+        var isUrl = _editCellRadioURL.find('input').is(':checked');
+        var selDataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        var urlEnabled = selDataType == 'string' || selDataType == 'binary' || selDataType == 'exp' || selDataType == 'method' || selDataType == 'template';
+        var cacheEnabled = selDataType == 'string' || selDataType == 'binary' || selDataType == 'exp' || selDataType == 'method' || selDataType == 'template';
+
+        // Enable / Disable [x] URL
+        _editCellRadioURL.find('input').prop("disabled", !urlEnabled);
+
+        if (urlEnabled)
+        {
+            _editCellRadioURL.removeClass('disabled');
+        }
+        else
+        {
+            _editCellRadioURL.addClass('disabled');
+        }
+
+        // Enable / Disable [x] Cache
+        _editCellCache.find('input').prop("disabled", !cacheEnabled);
+
+        if (cacheEnabled)
+        {
+            _editCellCache.removeClass('disabled');
+        }
+        else
+        {
+            _editCellCache.addClass('disabled');
+        }
     }
 
     function loadAppListView()
@@ -1525,7 +1554,7 @@ $(function ()
             });
         });
 
-        $('.cmd-url').each(function()
+        $('.cell-url a, .column-url a').each(function()
         {
             var anchor = $(this);
             anchor.click(function()
@@ -3765,9 +3794,6 @@ $(function ()
 
         // Set the URL check box
         _editCellRadioURL.find('input').prop('checked', cellInfo.isUrl);
-
-        // Show/Hide the Cache check box
-        _editCellCache.toggle(cellInfo.isUrl);
 
         // Set the Cache check box state
         _editCellCache.find('input').prop('checked', cellInfo.isCached);

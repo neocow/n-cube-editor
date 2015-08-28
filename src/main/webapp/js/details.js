@@ -18,7 +18,6 @@ $(function ()
         var isUrl = isUrlChecked();
         _urlDropdown.toggle(isUrl);
         _valueDropdown.toggle(!isUrl);
-        enableDisableCheckboxes();
     });
 
     _urlDropdown.change(function()
@@ -174,6 +173,11 @@ function nce()
 {
     return $.info.fn;
 }
+
+// TODO: cubeSelected(info) - implement
+// TODO: versionSelected(info) - implement
+// TODO: appSelected(info) - implement
+// TODO: statusSelected(info) - implement
 
 function tabActivated(info)
 {

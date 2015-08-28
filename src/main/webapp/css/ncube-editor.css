@@ -72,6 +72,11 @@ div#testLayoutEast, div#west, div.panel {
     padding: 5px;
 }
 
+.disabled {
+    color: lightgrey;
+    background-color: white;
+}
+
 div#west div.panel-body {
     padding: 10px 5px;
     overflow: auto;
