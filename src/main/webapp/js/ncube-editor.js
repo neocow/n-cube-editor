@@ -1633,7 +1633,6 @@ $(function ()
                 }
             });
 
-            // Add ability for user to double-click and get the edit cell modal
             cell.dblclick(function ()
             {   // On double click open Edit Cell modal
                 _uiCellId = cell;
@@ -3824,10 +3823,7 @@ $(function ()
         }
         else if (cellInfo.dataType == "exp" || cellInfo.dataType == "method")
         {
-            var pre2 = $('<pre/>').attr({'class':'ncube-pre'});
-            pre2.html(cellInfo.value);
-            _uiCellId.html('');
-            _uiCellId.append(pre2);
+            _uiCellId.html(cellInfo.value);
             _uiCellId.attr({'class':'cell cell-code'});
         }
         else

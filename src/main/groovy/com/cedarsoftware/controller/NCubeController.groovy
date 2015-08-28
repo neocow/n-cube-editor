@@ -883,7 +883,7 @@ class NCubeController extends BaseController
             {
                 Object cellValue = cellInfo.isUrl ?
                         CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
-                        CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false)
+                        CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, cellInfo.isCached)
                 ncube.setCellById(cellValue, colIds)
             }
             nCubeService.updateNCube(ncube, getUserForDatabase())
@@ -1379,7 +1379,7 @@ class NCubeController extends BaseController
 
             Object cellValue = cellInfo.isUrl ?
                     CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
-                    CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, false)
+                    CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, cellInfo.isCached)
 
             NCube ncube = nCubeService.getCube(appId, cubeName)
             ncube.setDefaultCellValue(cellValue)

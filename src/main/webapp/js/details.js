@@ -41,7 +41,7 @@ $(function ()
             _isCached.find('input').attr('checked', false);
             _urlDropdown.toggle(false);
             _valueDropdown.toggle(true);
-            nce().showNote('Default cell cleared.');
+            nce().showNote('Default cell cleared.', 'Note', 2000);
         }
         else
         {
@@ -61,7 +61,7 @@ $(function ()
 
         if (result.status === true)
         {
-            nce().showNote('Default cell updated successfully.');
+            nce().showNote('Default cell updated successfully.', 'Note', 2000);
         }
         else
         {
