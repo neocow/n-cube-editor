@@ -16,3 +16,8 @@
     color: lightgrey;
     background-color: white;
 }
+
+.no-lr-margin {
+    margin-left: 0;
+    margin-right: 0;
+}

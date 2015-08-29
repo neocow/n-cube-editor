@@ -35,7 +35,7 @@ $(function ()
             return;
         }
 
-        var secondaryLayout = $('div#testTab').layout({
+        var secondaryLayout = $('#testBody').layout({
             name: "secondaryLayout"
             ,   closable:					true	// pane can open & close
             ,	resizable:					true	// when open, pane can be resized
@@ -54,7 +54,7 @@ $(function ()
             }
         });
 
-        //secondaryLayout.resizeAll();
+        secondaryLayout.resizeAll();
         calculateTestPanelSize();
     };
 

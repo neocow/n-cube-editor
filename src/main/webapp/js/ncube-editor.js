@@ -186,13 +186,13 @@ $(function ()
             //	enable showOverflow on west-pane so CSS popups will overlap north pane
             ,	west__showOverflowOnHover:	true
             ,   center__triggerEventsOnLoad: true
+            ,   center__maskContents:       true
             //	enable state management
             ,	stateManagement__enabled:	false // automatic cookie load & save enabled by default
-            //           ,	showDebugMessages:			true // log and/or display messages from debugging & testing code
-            ,  west__onresize: function()
+            ,	showDebugMessages:			false // log and/or display messages from debugging & testing code
+            ,   west__onresize: function()
             {
                 ncubeListPanel.height(west.height() - hApp - hStat - hVer - 158);
-                //secondaryLayout.resizeAll();
             }
         });
 
