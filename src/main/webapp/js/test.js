@@ -530,11 +530,11 @@ $(function ()
         {
             if (list.length == 0)
             {
-                showNote('No test is currently selected. Select a test to delete.');
+                nce().showNote('No test is currently selected. Select a test to delete.');
             }
             else
             {
-                showNote('More than one test is selected. There can only be one test selected to delete.');
+                nce().showNote('More than one test is selected. There can only be one test selected to delete.');
             }
             return;
         }
@@ -577,11 +577,11 @@ $(function ()
         {
             if (list.length == 0)
             {
-                showNote('No test is currently selected. Select a test to duplicate.');
+                nce().showNote('No test is currently selected. Select a test to duplicate.');
             }
             else
             {
-                showNote('More than one test is selected. There can only be one test selected to duplicate.');
+                nce().showNote('More than one test is selected. There can only be one test selected to duplicate.');
             }
             return;
         }
@@ -655,8 +655,7 @@ $(function ()
         var test = _testData[_testSelectionAnchor];
         test["name"] = newName;
 
-        // change in our list.
-        refreshTestList();
+        saveAllTests(false);
     }
 
     function addParameterMenu()
@@ -723,7 +722,7 @@ $(function ()
 
         if (_testData == null || _testSelectionAnchor == -1)
         {
-            showNote('No test selected.  Test cannot be run.');
+            nce().showNote('No test selected.  Test cannot be run.');
             return;
         }
 
@@ -778,7 +777,8 @@ $(function ()
             return;
         }
 
-        if (!modelIsUpToDate) {
+        if (!modelIsUpToDate)
+        {
             var test = getActiveTest();
 
             //  If a test is currently selected
@@ -792,7 +792,7 @@ $(function ()
 
         if (!result.status)
         {
-            showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
+            nce().showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -1005,7 +1005,7 @@ $(function ()
             {
                 msg += (':<hr class="hr-small"/>' + result.data);
             }
-            showNote(msg);
+            nce().showNote(msg);
         }
     }
 
@@ -1020,7 +1020,7 @@ $(function ()
 
         if (!nce().getSelectedCubeName())
         {
-            showNote('No n-cube is currently selected. Cannot duplicate a test.');
+            nce().showNote('No n-cube is currently selected. Cannot duplicate a test.');
             return;
         }
 
@@ -1030,11 +1030,11 @@ $(function ()
         {
             if (list.length == 0)
             {
-                showNote('No test is currently selected. Select a test to duplicate.');
+                nce().showNote('No test is currently selected. Select a test to duplicate.');
             }
             else
             {
-                showNote('More than one test is selected. There can only be one test selected to duplicate.');
+                nce().showNote('More than one test is selected. There can only be one test selected to duplicate.');
             }
             return;
         }
@@ -1234,8 +1234,8 @@ $(function ()
         });
 
         secondaryLayout.resizeAll();
-        calculateTestPanelSize();
         loadTestListView("ncubeController.getTests");
+        calculateTestPanelSize();
     };
 
     function calculateTestPanelSize()
