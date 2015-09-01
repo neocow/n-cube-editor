@@ -59,7 +59,7 @@ a.ncube-notselected:hover {
     margin-bottom: 10px;
 }
 
-div#testLayoutEast, div#west, div.panel {
+div#west, div.panel {
     border: none !important;
 }
 
@@ -203,22 +203,6 @@ div#editColumnsModal ul.list-group
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.65) 39%, rgba(0, 0, 0, 1) 90%); /* W3C */
 }
 
-
-#testLayoutEast {
-    height:100%;
-    width: 100%;
-    text-align: left;
-    font-family: "arial","helvetica", sans-serif;
-    font-size: small;
-    font-weight: normal;
-    margin: 0;
-    padding: 0 6px;
-    background: #b5bdc8;
-    border: none;
-    border-radius: 0;
-    overflow: hidden;
-}
-
 #west > a.accordion-toggle {
     font-size: larger;
 }
@@ -237,35 +221,6 @@ div#editColumnsModal ul.list-group
 
 #ncube-list-div {
     margin-bottom: 0px;
-}
-
-#testLayoutCenter {
-    padding: 0 !important;
-    overflow: auto !important;
-    background:transparent;
-    border: none #dcdcdc;
-    border-radius: 0;
-}
-
-#testLayoutCenter > .well {
-    border: none white;
-    border-radius: 0;
-    margin-bottom: 0;
-    height: 100%;
-    overflow: auto;
-
-
-    background: black;
-    background: rgba(0, 0, 0, .80);
-
-    background-repeat: repeat-x;
-    background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzAwMDAwMCIgc3RvcC1vcGFjaXR5PSIwLjMiLz4KICAgIDxzdG9wIG9mZnNldD0iMjclIiBzdG9wLWNvbG9yPSIjMDAwMDAwIiBzdG9wLW9wYWNpdHk9IjAuNSIvPgogICAgPHN0b3Agb2Zmc2V0PSI2NSUiIHN0b3AtY29sb3I9IiMwMDAwMDAiIHN0b3Atb3BhY2l0eT0iMC43NSIvPgogICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDAwMDAwIiBzdG9wLW9wYWNpdHk9IjAuODUiLz4KICA8L2xpbmVhckdyYWRpZW50PgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InVybCgjZ3JhZC11Y2dnLWdlbmVyYXRlZCkiIC8+Cjwvc3ZnPg==);
-    background: -moz-linear-gradient(top,  rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 27%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0.8) 90%); /* FF3.6+ */
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.3)), color-stop(27%,rgba(0,0,0,0.5)), color-stop(65%,rgba(0,0,0,0.7)), color-stop(90%,rgba(0,0,0,0.8))); /* Chrome,Safari4+ */
-    background: -webkit-linear-gradient(top,  rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.5) 27%,rgba(0,0,0,0.7) 65%,rgba(0,0,0,0.8) 90%); /* Chrome10+,Safari5.1+ */
-    background: -o-linear-gradient(top,  rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.5) 27%,rgba(0,0,0,0.7) 65%,rgba(0,0,0,0.8) 90%); /* Opera 11.10+ */
-    background: -ms-linear-gradient(top,  rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.5) 27%,rgba(0,0,0,0.7) 65%,rgba(0,0,0,0.8) 90%); /* IE10+ */
-    background: linear-gradient(to bottom,  rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.5) 27%,rgba(0,0,0,0.7) 65%,rgba(0,0,0,0.8) 90%); /* W3C */
 }
 
 #ncube > .well {
@@ -291,41 +246,7 @@ div#editColumnsModal ul.list-group
     background: linear-gradient(to bottom,  rgba(0,0,0,0.4) 0%,rgba(0,0,0,1) 90%); /* W3C */
 }
 
-#testParameters > .panel-body {
-    padding: 15px;
-}
-
-#testParameters div.form-group, #testAssertions div.form-group {
-    margin-bottom: 10px;
-    margin-top: 10px;
-}
-
-#testParameters div.form-group:last-child, #testAssertions div.form-group:last-child {
-    margin-bottom: 10px;
-}
-
-#testParametersDiv {
-    overflow: visible;
-}
-
-div#testLayoutCenter div.well {
-    padding: 10px;
-}
-
-#testLayoutEast {
-    margin: 0;
-    padding: 0;
-}
-
-#testListWarning {
-    margin: 5px 5px 0 5px;
-}
-
-#testListItems {
-    margin-bottom: 0;
-}
-
-#tests, #ncube {
+#ncube {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -334,20 +255,7 @@ div#testLayoutCenter div.well {
     position: relative;
 }
 
-#testResult {
-    margin-top: 20px;
-}
-
-#testLayoutSouth {
-    margin: 0;
-    padding: 0;
-}
-
 .top-buffer { margin-top:20px; }
-
-#testView {
-    min-width: 740px;
-}
 
 #selectedTestName {
     color: white;
@@ -355,36 +263,6 @@ div#testLayoutCenter div.well {
     margin-bottom: 15px;
     font-weight: bold;
     font-family: 'Open Sans', sans-serif;
-}
-
-#testLayoutEast div#testList {
-    margin-bottom: 0;
-    border-radius: 0;
-}
-
-#testList div.panel-body {
-    padding: 0;
-    margin: 0;
-    overflow: auto;
-}
-
-#testListItems a.selected {
-    background: rgb(217, 237, 247); /* fallback */
-    background: rgba(61, 139, 202, .25);
-}
-
-#testListItems {
-    box-shadow: none;
-    -webkit-box-shadow: none;
-}
-
-#testListItems a.list-group-item {
-    padding: 3px;
-    border: 1px solid #FAF0E6;
-}
-
-#testAssertionsDiv, #testResultsDiv {
-    margin-top: 10px;
 }
 
 .navbar-custom {

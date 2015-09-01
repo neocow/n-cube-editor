@@ -7,7 +7,7 @@
     <title>Testing</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="n-cube test panel">
-    <meta name="author" content="John DeRegnaucourt">
+    <meta name="author" content="Ken Partlow">
 
     <link href="css/jquery.layout-1.4.4.css" rel="stylesheet"/>
     <link href="css/jquery-ui-1.11.0.min.css" rel="stylesheet"/>
@@ -29,6 +29,7 @@
 
 </head>
 <body id="testBody">
+
 <div id="testLayoutCenter" class="pane ui-layout-center center-bkgnd">
     <div id="testButtonGroupDiv" class="btn-group">
         <button id="runTestButton" class="btn btn-default" type="button"><span class="glyphicon glyphicon-play" style="color:green"></span>&nbsp;Run</button>
@@ -82,6 +83,7 @@
         </div>
     </div>
 </div>
+
 <div id="testLayoutEast" class="pane ui-layout-east" title="Tests" aria-disabled="false">
     <div id="testList" class="panel">
         <div class="panel-heading">
@@ -105,7 +107,7 @@
             </div>
             <span id="testCount" class="badge pull-right">4</span>
         </div>
-        <div class="panel-body" style="height: 100%;">
+        <div class="panel-body" style="height:100%">
             <ul class="list-group" id="testListItems">
             </ul>
         </div>
@@ -121,5 +123,175 @@
         </div>
     </div>
 </div>
+
+<!-- Add Input Variable Modal -->
+<div id="addParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addParameterTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="addParameterTitle" class="modal-title">Add Input</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="addParameterField">Input Name</label>
+                        <input class="form-control" type="text" id="addParameterField" placeholder="Type Name Here"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't create</button>
+                <button id="addParameterOk" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create New Test Modal -->
+<div id="createNewTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="createNewTestTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="createNewTestTitle" class="modal-title">Create New Test</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="addParameterField">New Test Name</label>
+                        <input class="form-control" type="text" id="createNewTestField" placeholder="Type New Test Name Here"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't create</button>
+                <button id="createNewTestOk" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete All Tests Modal -->
+<div id="deleteAllTestsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteAllTestsTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="deleteAllTestsTitle" class="modal-title">Delete All Tests?</h3>
+            </div>
+            <div class="modal-body">
+                <p class="text-warning"><span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;Are you sure you want to delete all tests?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
+                <button id="deleteAllTestsOk" class="btn btn-primary">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Duplicate Test Modal -->
+<div id="duplicateTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="duplicateTestTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="duplicateTestTitle" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="duplicateTestNameField">New Test Name</label>
+                        <input class="form-control" type="text" id="duplicateTestNameField"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't Duplicate</button>
+                <button id="duplicateCurrentTestOk" class="btn btn-primary">Duplicate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Parameter Modal -->
+<div id="deleteParameterModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteParameterLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="deleteParameterTitle"></h3>
+            </div>
+            <div class="modal-body">
+                <h4 id="deleteParameterLabel"></h4>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
+                <button id="deleteParameterOk" class="btn btn-primary">Delete</button>
+            </div>
+        </div>
+        <input type="hidden" id="deleteParameterHiddenId" value="" />
+    </div>
+</div>
+
+<!-- Delete Test Modal -->
+<div id="deleteTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteTestTitle"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 class="modal-title" id="deleteTestTitle"></h3>
+            </div>
+            <div class="modal-body">
+                <h4 id="deleteTestLabel"></h4>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
+                <button id="deleteTestOk" class="btn btn-primary">Delete</button>
+            </div>
+        </div>
+        <input type="hidden" id="deleteTestHiddenId" value="" />
+    </div>
+</div>
+
+<!-- Rename Test Cube Modal -->
+<div id="renameTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="renameTestModal"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="renameTestLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="renameTestOldName">Old Test Name</label>
+                        <input id="renameTestOldName" type="text" class="form-control" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="renameTestNewName">New Test Name</label>
+                        <input class="form-control" type="text" id="renameTestNewName" placeholder="Type new name here"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Don't rename</button>
+                <button id="renameTestOk" class="btn btn-primary">Rename</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 </body>
 </html>
