@@ -30,7 +30,10 @@ $(function ()
     var _createNewTestModal = $('#createNewTestModal');
     var _renameTestModal = $('#renameTestModal');
     var _testResultsDiv = $('#testResultsDiv');
+    var _testList = $('#testList');
     var _testListWarning = $('#testListWarning');
+    var _testListItems = $('#testListItems');
+
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
 
     $('#renameTestOk').click(function ()
@@ -255,14 +258,12 @@ $(function ()
 
     function refreshTestList()
     {
-        var testListItems = $('#testListItems');
-        testListItems.empty();
+        _testListItems.empty();
 
-        if (_testData != null && _testData.length > 0)
+        var hasTests = _testData != null && _testData.length > 0;
+        if (hasTests)
         {
-            _testListWarning.hide();
             $("#testCount").html(_testData.length);
-
             $.each(_testData, function (index, value)
             {
                 var anchor = $("<a/>").attr({'class': 'list-group-item'});
@@ -282,17 +283,21 @@ $(function ()
                     enableTestItems();
                     loadTestView();
                 });
-                testListItems.append(anchor);
+                _testListItems.append(anchor);
             });
-            $('#testList').fadeIn("fast");
-        }
-        else
-        {
-            $('#testList').hide();
-            _testListWarning.fadeIn("fast");
         }
         loadTestView();
         enableTestItems();
+        if (hasTests)
+        {
+            _testListWarning.addClass('hide');
+            _testList.removeClass('hide');
+        }
+        else
+        {
+            _testListWarning.removeClass('hide');
+            _testList.addClass('hide');
+        }
     }
 
     function clearTestView()
@@ -497,7 +502,7 @@ $(function ()
 
     function enableTestItems()
     {
-        var count = $("#testListItems").find("a.selected").length;
+        var count = _testListItems.find("a.selected").length;
 
         $("#renameCurrentTestMenu").parent().toggleClass('disabled', count != 1);
         $("#runCurrentTestMenu").parent().toggleClass('disabled', count != 1);
@@ -994,8 +999,8 @@ $(function ()
 
             _createNewTestModal.modal('hide');
 
-            $('#testList div.panel-body').animate({
-                scrollTop: $('#testListItems a.selected').offset().top
+            _testList.find('div.panel-body').animate({
+                scrollTop: _testListItems.find('a.selected').offset().top
             }, 200);
         }
         else
@@ -1046,7 +1051,7 @@ $(function ()
 
     function getSelectedTestList()
     {
-        return $("#testListItems a.selected");
+        return _testListItems.find('a.selected');
     }
 
     function getSelectedTestCount()
@@ -1081,8 +1086,8 @@ $(function ()
         refreshTestList();
         saveAllTests(true);
 
-        $('#testList').find('div.panel-body').animate({
-            scrollTop: $('#testListItems').find('a.selected').offset().top
+        _testList.find('div.panel-body').animate({
+            scrollTop: _testListItems.find('a.selected').offset().top
         }, 200);
     }
 
@@ -1233,15 +1238,15 @@ $(function ()
             }
         });
 
-        secondaryLayout.resizeAll();
         loadTestListView("ncubeController.getTests");
         calculateTestPanelSize();
+        secondaryLayout.resizeAll();
     };
 
     function calculateTestPanelSize()
     {
         var east = $('#testLayoutEast');
-        var testList = $('#testList').find('> .panel-body');
+        var testList = _testList.find('> .panel-body');
         testList.height(east.height() - 47);
     }
 });

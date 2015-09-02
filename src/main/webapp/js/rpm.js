@@ -17,10 +17,32 @@
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
-
 $(function ()
 {
     $.info = {};
+
+    $('#demo-button').click(function(e)
+    {
+        e.preventDefault();
+        var cmd = 'RpmController.';
+        cmd += $('#method-name').val();
+        var result = nce().exec(cmd, [nce().getAppId(), {}]);
+        if (result.status === false)
+        {
+            nce().showNote(result.data);
+            return;
+        }
+
+        //$('#demo-result').html(result.data.output);
+        console.log(result.data);
+        var value = result.data.value;
+        if (typeof value != "string")
+        {
+            value = JSON.stringify(value);
+        }
+        $('#demo-result').html(value);
+        console.log(result.data.output);
+    });
 
     $.loadData = function()
     {
@@ -34,7 +56,6 @@ $(function ()
         {
             return;
         }
-
     };
 
 });
@@ -46,6 +67,7 @@ function nce()
 
 function tabActivated(info)
 {
+    console.log(info);
     try
     {
         $.info = info;

@@ -40,8 +40,6 @@ $(function ()
     {
         _selectedBranch = localStorage[SELECTED_BRANCH];
     }
-    var _testSelectionAnchor = -1;
-    var _testData = null;
     var _selectedStatus = "SNAPSHOT";
     var _axisName;
     var _errorId = null;
