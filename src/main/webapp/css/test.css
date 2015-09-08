@@ -100,15 +100,14 @@
     background: rgba(61, 139, 202, .25);
 }
 
-#testListItems a.list-group-item {
+#testListItems a {
     padding: 3px;
-    border: 1px solid #FAF0E6;
 }
 
 #testList div.panel-body {
     padding: 0;
     margin: 0;
-    overflow: auto;
+    overflow: visible;
 }
 
 #testResult {

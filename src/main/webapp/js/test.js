@@ -33,7 +33,6 @@ $(function ()
     var _testList = $('#testList');
     var _testListWarning = $('#testListWarning');
     var _testListItems = $('#testListItems');
-
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
 
     $('#renameTestOk').click(function (e)
@@ -255,15 +254,15 @@ $(function ()
     function refreshTestList()
     {
         _testListItems.empty();
-
         var hasTests = _testData != null && _testData.length > 0;
+
         if (hasTests)
         {
             $("#testCount").html(_testData.length);
             $.each(_testData, function (index, value)
             {
-                var anchor = $("<a/>").attr({'class': 'list-group-item'});
-                anchor.html('<span class="glyphicon" style="vertical-align: -1px;"></span>&nbsp;&nbsp;' + value['name']);
+                var anchor = $('<a/>');
+                anchor.html(value['name']);
 
                 if (index == _testSelectionAnchor)
                 {
@@ -279,11 +278,16 @@ $(function ()
                     enableTestItems();
                     loadTestView();
                 });
-                _testListItems.append(anchor);
+
+                var li = $("<li/>");
+                li.append(anchor);
+                _testListItems.append(li);
             });
         }
-        loadTestView();
+
         enableTestItems();
+        loadTestView();
+
         if (hasTests)
         {
             _testListWarning.addClass('hide');
@@ -351,7 +355,6 @@ $(function ()
                 {
                     var isUrl = value['isUrl'] == null ? null : value['isUrl'];
                     var v = value.value == null ? null : value.value;
-                    var dataType = value.dataType == null ? null : value.dataType;
                     testAssertions.append(buildParameter(index + 1, "exp", isUrl, v, false, true, deleteAssertion));
                 });
             }
@@ -498,7 +501,7 @@ $(function ()
 
     function enableTestItems()
     {
-        var count = _testListItems.find("a.selected").length;
+        var count = getSelectedTestList().length;
 
         $("#renameCurrentTestMenu").parent().toggleClass('disabled', count != 1);
         $("#runCurrentTestMenu").parent().toggleClass('disabled', count != 1);
@@ -525,7 +528,7 @@ $(function ()
             return;
         }
 
-        var list = $("#testListItems a.selected");
+        var list = getSelectedTestList();
 
         if (list.length != 1)
         {
@@ -572,7 +575,7 @@ $(function ()
             return;
         }
 
-        var list = $("#testListItems a.selected");
+        var list = getSelectedTestList();
 
         if (list.length != 1)
         {
@@ -880,7 +883,7 @@ $(function ()
 
     function clearTestSelection()
     {
-        $("#testListItems").find("a.selected").each(function (index, elem)
+        getSelectedTestList().each(function (index, elem)
         {
             $(elem).removeClass("selected");
         });
@@ -889,7 +892,7 @@ $(function ()
 
     function selectAllTests()
     {
-        $("#testListItems").find("a").each(function (index, elem)
+        _testListItems.find("a").each(function (index, elem)
         {
             var a = $(elem);
             var span = a.find("span");
@@ -991,7 +994,7 @@ $(function ()
             _createNewTestModal.modal('hide');
 
             _testList.find('div.panel-body').animate({
-                scrollTop: _testListItems.find('a.selected').offset().top
+                scrollTop: getSelectedTestList().offset().top
             }, 200);
         }
         else
@@ -1042,7 +1045,7 @@ $(function ()
 
     function getSelectedTestList()
     {
-        return _testListItems.find('a.selected');
+        return _testListItems.find("a.selected");
     }
 
     function getSelectedTestCount()
@@ -1078,7 +1081,7 @@ $(function ()
         saveAllTests(true);
 
         _testList.find('div.panel-body').animate({
-            scrollTop: _testListItems.find('a.selected').offset().top
+            scrollTop: getSelectedTestList().offset().top
         }, 200);
     }
 
