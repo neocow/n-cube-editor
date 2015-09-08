@@ -39,13 +39,8 @@
         <ul class="dropdown-menu" role="menu">
             <li><a id="runTestMenu" href="#">Run</a></li>
             <li class="divider" ></li>
-            <li><a id="renameTestMenu" href="#">Rename</a></li>
-            <li><a id="deleteTestMenu" href="#">Delete</a></li>
-            <li class="divider" ></li>
             <li><a id="addParameterMenu" href="#">Add Input</a></li>
             <li><a id="addAssertionMenu" href="#">Add Assertion</a></li>
-            <li class="divider" ></li>
-            <li><a id="duplicateTestMenu" href="#">Duplicate</a></li>
         </ul>
     </div>
     <div id="testNameDiv">
@@ -85,7 +80,7 @@
 </div>
 
 <div id="testLayoutEast" class="pane ui-layout-east" title="Tests" aria-disabled="false">
-    <div id="testList" class="panel">
+    <div id="testList" class="panel" style="height:100%">
         <div class="panel-heading">
             <div class="btn-group">
                 <a id="runAllTestsButton" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-play" style="color:white"></span>&nbsp;Run All</a>
@@ -94,7 +89,6 @@
                     <span class="sr-only">Toggle Dropdown</span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a id="runAllTestsMenu" href="#">Run All</a></li>
                     <li><a id="runCurrentTestMenu">Run Selected</a></li>
                     <li class="divider"></li>
                     <li><a id="renameCurrentTestMenu">Rename Test</a></li>
@@ -107,7 +101,7 @@
             </div>
             <span id="testCount" class="badge pull-right">4</span>
         </div>
-        <div class="panel-body" style="height:100%">
+        <div class="panel-body">
             <ul class="list-group" id="testListItems">
             </ul>
         </div>

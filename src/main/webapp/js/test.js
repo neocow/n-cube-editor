@@ -36,24 +36,29 @@ $(function ()
 
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
 
-    $('#renameTestOk').click(function ()
+    $('#renameTestOk').click(function (e)
     {
+        e.preventDefault();
         renameTestOk();
     });
-    $('#deleteParameterOk').click(function ()
+    $('#deleteParameterOk').click(function (e)
     {
+        e.preventDefault();
         deleteParameterOk();
     });
-    $('#addParameterMenu').click(function ()
+    $('#addParameterMenu').click(function (e)
     {
+        e.preventDefault();
         addParameterMenu();
     });
-    $('#addAssertionMenu').click(function ()
+    $('#addAssertionMenu').click(function (e)
     {
+        e.preventDefault();
         addNewAssertion();
     });
-    $('#addParameterOk').click(function ()
+    $('#addParameterOk').click(function (e)
     {
+        e.preventDefault();
         addParameterOk();
     });
     $('#createTestsLink').click(function (e)
@@ -129,98 +134,89 @@ $(function ()
         }
     });
 
-    $('#runAllTestsMenu').click(function ()
+    $('#runAllTestsButton').click(function (e)
     {
+        e.preventDefault();
         $(this).css({'cursor':'wait'});
         runAllTests();
         $(this).css({'cursor':'default'})
     });
 
-    $('#runAllTestsButton').click(function ()
+    $('#runCurrentTestMenu').click(function (e)
     {
-        $(this).css({'cursor':'wait'});
-        runAllTests();
-        $(this).css({'cursor':'default'})
-    });
-
-    $('#runCurrentTestMenu').click(function ()
-    {
+        e.preventDefault();
         $(this).css({'cursor':'wait'});
         runCurrentTest();
         $(this).css({'cursor':'default'})
     });
 
-    $('#runTestButton').click(function ()
+    $('#runTestButton').click(function (e)
     {
+        e.preventDefault();
         $(this).css({'cursor':'wait'});
         runCurrentTest();
         $(this).css({'cursor':'default'})
     });
 
-    $('#runTestMenu').click(function ()
+    $('#runTestMenu').click(function (e)
     {
+        e.preventDefault();
         $(this).css({'cursor':'wait'});
         runCurrentTest();
         $(this).css({'cursor':'default'})
     });
 
-    $('#renameCurrentTestMenu').click(function ()
+    $('#renameCurrentTestMenu').click(function (e)
     {
+        e.preventDefault();
         renameCurrentTestMenu();
     });
 
-    $('#renameTestMenu').click(function ()
+    $('#deleteCurrentTestMenu').click(function (e)
     {
-        renameCurrentTestMenu();
-    });
-
-    $('#deleteCurrentTestMenu').click(function ()
-    {
+        e.preventDefault();
         deleteCurrentTestMenu();
     });
 
-    $('#deleteTestMenu').click(function ()
-    {
-        deleteCurrentTestMenu();
-    });
-
-    $('#deleteTestOk').click(function ()
+    $('#deleteTestOk').click(function (e)
     {
         deleteTestOk();
+        e.preventDefault();
     });
 
-    $('#createNewTestMenu').click(function ()
+    $('#createNewTestMenu').click(function (e)
     {
+        e.preventDefault();
         createNewTestMenu();
     });
 
-    $('#createNewTestOk').click(function ()
+    $('#createNewTestOk').click(function (e)
     {
+        e.preventDefault();
         createNewTestOk();
     });
 
-    $('#duplicateCurrentTestMenu').click(function ()
+    $('#duplicateCurrentTestMenu').click(function (e)
     {
+        e.preventDefault();
         duplicateCurrentTestMenu();
     });
 
-    $('#duplicateTestMenu').click(function ()
+    $("#duplicateCurrentTestOk").click(function (e)
     {
-        duplicateCurrentTestMenu();
-    });
-
-    $("#duplicateCurrentTestOk").click(function ()
-    {
+        e.preventDefault();
         duplicateCurrentTestOk();
     });
 
-    $('#deleteAllTestsMenu').click(function ()
+    $('#deleteAllTestsMenu').click(function (e)
     {
+        e.preventDefault();
         deleteAllTestsMenu();
     });
 
-    $('#deleteAllTestsOk').click(function ()
+    $('#deleteAllTestsOk').click(function (e)
     {
+        e.preventDefault();
         deleteAllTestsOk();
     });
 
@@ -762,11 +758,6 @@ $(function ()
         {
             nce().showNote("Could not run cube test:<hr class=\"hr-small\"/>" + e.message);
         }
-    }
-
-    function runAllTests()
-    {
-        nce().showNote('Functionality not implemented yet.');
     }
 
     function saveAllTests(modelIsUpToDate)
