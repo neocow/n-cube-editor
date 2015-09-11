@@ -1,4 +1,7 @@
-.center-bkgnd {
+#rpmBody {
+    color:black;
     background:#D1C5B7;
-    border:0;
+    padding:0
 }
+
+.top-buffer { margin-top:10px; }
