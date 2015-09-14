@@ -18,76 +18,84 @@
  *         limitations under the License.
  */
 
-$(function ()
+var DetailEditor = (function ($)
 {
-    $.info = {};
+    var nce = null;
     var _urlDropdown = $('#datatypes-url');
     var _valueDropdown = $('#datatypes-value');
     var _isUrl = $('#isURL');
     var _isCached = $('#isCached');
     var _defCellValue = $('#cube_defValue');
 
-    _isUrl.change(function()
+    var init = function(info)
     {
-        var isUrl = isUrlChecked();
-        _urlDropdown.toggle(isUrl);
-        _valueDropdown.toggle(!isUrl);
-    });
-
-    _urlDropdown.change(function()
-    {
-        enableDisableCheckboxes();
-    });
-
-    _valueDropdown.change(function()
-    {
-        enableDisableCheckboxes();
-    });
-
-    $('#defaultCellClear').click(function()
-    {
-        var result = nce().call("ncubeController.clearDefaultCell", [nce().getAppId(), nce().getSelectedCubeName()]);
-        if (result.status === true)
+        if (!nce)
         {
-            $('#cube_defValue').val('');
-            _isUrl.find('input').attr('checked', false);
-            _isCached.find('input').attr('checked', false);
-            _urlDropdown.toggle(false);
-            _valueDropdown.toggle(true);
-            nce().showNote('Default cell cleared.', 'Note', 2000);
-        }
-        else
-        {
-            nce().showNote('Unable to clear default cell:<hr class="hr-small"/>' + result.data);
-        }
-    });
+            nce = info.fn;
 
-    $('#defaultCellUpdate').click(function()
-    {
-        var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
-        cellInfo.isUrl = _isUrl.find('input').is(':checked');
-        cellInfo.value = _defCellValue.val();
-        cellInfo.dataType = cellInfo.isUrl ? _urlDropdown.val() : _valueDropdown.val();
-        cellInfo.isCached = _isCached.find('input').is(':checked');
+            _isUrl.change(function()
+            {
+                var isUrl = isUrlChecked();
+                _urlDropdown.toggle(isUrl);
+                _valueDropdown.toggle(!isUrl);
+            });
 
-        var result = nce().call("ncubeController.updateDefaultCell", [nce().getAppId(), nce().getSelectedCubeName(), cellInfo]);
+            _urlDropdown.change(function()
+            {
+                enableDisableCheckboxes();
+            });
 
-        if (result.status === true)
-        {
-            nce().showNote('Default cell updated successfully.', 'Note', 2000);
+            _valueDropdown.change(function()
+            {
+                enableDisableCheckboxes();
+            });
+
+            $('#defaultCellClear').click(function()
+            {
+                var result = nce.call("ncubeController.clearDefaultCell", [nce.getAppId(), nce.getSelectedCubeName()]);
+                if (result.status === true)
+                {
+                    $('#cube_defValue').val('');
+                    _isUrl.find('input').attr('checked', false);
+                    _isCached.find('input').attr('checked', false);
+                    _urlDropdown.toggle(false);
+                    _valueDropdown.toggle(true);
+                    nce.showNote('Default cell cleared.', 'Note', 2000);
+                }
+                else
+                {
+                    nce.showNote('Unable to clear default cell:<hr class="hr-small"/>' + result.data);
+                }
+            });
+
+            $('#defaultCellUpdate').click(function()
+            {
+                var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
+                cellInfo.isUrl = _isUrl.find('input').is(':checked');
+                cellInfo.value = _defCellValue.val();
+                cellInfo.dataType = cellInfo.isUrl ? _urlDropdown.val() : _valueDropdown.val();
+                cellInfo.isCached = _isCached.find('input').is(':checked');
+
+                var result = nce.call("ncubeController.updateDefaultCell", [nce.getAppId(), nce.getSelectedCubeName(), cellInfo]);
+
+                if (result.status === true)
+                {
+                    nce.showNote('Default cell updated successfully.', 'Note', 2000);
+                }
+                else
+                {
+                    nce.showNote('Unable to update default cell:<hr class="hr-small"/>' + result.data);
+                }
+            });
         }
-        else
-        {
-            nce().showNote('Unable to update default cell:<hr class="hr-small"/>' + result.data);
-        }
-    });
+    };
 
-    function isUrlChecked()
+    var isUrlChecked = function()
     {
         return _isUrl.find('input').is(':checked');
-    }
+    };
 
-    function enableDisableCheckboxes()
+    var enableDisableCheckboxes = function()
     {
         var selDataType = isUrlChecked() ? _urlDropdown.val() : _valueDropdown.val();
         var urlEnabled = selDataType == 'string' || selDataType == 'binary' || selDataType == 'exp' || selDataType == 'method' || selDataType == 'template';
@@ -116,16 +124,16 @@ $(function ()
         {
             _isCached.addClass('disabled');
         }
-    }
+    };
 
-    $.loadDetails = function()
+    var load = function()
     {
-        if (!nce().getCubeMap() || !nce().doesCubeExist())
+        if (!nce.getCubeMap() || !nce.doesCubeExist())
         {
             return;
         }
 
-        var info = nce().getCubeMap()[(nce().getSelectedCubeName() + '').toLowerCase()];
+        var info = nce.getCubeMap()[(nce.getSelectedCubeName() + '').toLowerCase()];
         if (!info)
         {
             return;
@@ -145,11 +153,11 @@ $(function ()
         $('#cube_sha1').val(info.sha1);
         $('#cube_headSha1').val(info.headSha1);
 
-        var result = nce().call("ncubeController.getDefaultCell", [nce().getAppId(), nce().getSelectedCubeName()]);
+        var result = nce.call("ncubeController.getDefaultCell", [nce.getAppId(), nce.getSelectedCubeName()]);
 
         if (result.status === false)
         {
-            nce().showNote('Unable to fetch default cell information: ' + result.data);
+            nce.showNote('Unable to fetch default cell information: ' + result.data);
             return;
         }
 
@@ -181,27 +189,27 @@ $(function ()
         // Set the Cache check box state
         _isCached.find('input').prop('checked', cellInfo.isCached);
     };
-});
 
-function nce()
-{
-    return $.info.fn;
-}
-
-// TODO: cubeSelected(info) - implement
-// TODO: versionSelected(info) - implement
-// TODO: appSelected(info) - implement
-// TODO: statusSelected(info) - implement
-
-function tabActivated(info)
-{
-    try
+    var handleCubeSelected = function()
     {
-        $.info = info;
-        $.loadDetails();
-    }
-    catch (e)
-    {
-        console.log(e);
-    }
-}
+        load();
+    };
+
+    return {
+        init: init,
+        handleCubeSelected: handleCubeSelected,
+        load: load
+    };
+
+})(jQuery);
+
+var tabActivated = function tabActivated(info)
+{
+    DetailEditor.init(info);
+    DetailEditor.load();
+};
+
+var cubeSelected = function cubeSelected()
+{
+    DetailEditor.handleCubeSelected();
+};

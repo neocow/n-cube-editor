@@ -63,6 +63,7 @@ $(function ()
     var _mergeHeadSha1 = null;
     var _searchLastKeyTime = Date.now();
     var _searchKeyPressed = false;
+    var _mainTabPanel = $('#ncubeTabContent');
 
     //  modal dialogs
     var _editCellModal = $('#editCellModal');
@@ -253,10 +254,9 @@ $(function ()
                 li.append(a);
                 ul.append(li);
 
-                var tabContentDiv = $('#ncubeTabContent');
                 var div = $('<div/>').prop({class:'tab-pane', id:pageId});
                 div.attr({style:'overflow:hidden;height:100%'});
-                tabContentDiv.append(div);
+                _mainTabPanel.append(div);
 
                 var iframeId = 'iframe_' + pageId;
                 var iframe = $('<iframe id="' + iframeId + '"/>');
@@ -866,11 +866,17 @@ $(function ()
         loadFilteredNCubeListView(_cubeList);
     }
 
+    function getActiveTab()
+    {
+        return _mainTabPanel.find('div.active iframe');
+    }
+
     function loadFilteredNCubeListView(cubes)
     {
         var filter = _searchNames.val();
         _listOfCubes.empty();
         var count = 0;
+
         $.each(cubes, function buildCubeList(loName, infoDto)
         {
             count++;
@@ -880,7 +886,19 @@ $(function ()
             a.click(function clickAction()
             {
                 selectCubeByName(loName);
+
+                try
+                {
+                    var activeTab = getActiveTab();
+                    activeTab[0].contentWindow.cubeSelected();
+                }
+                catch (e)
+                {
+                    console.log(e);
+                }
+
             });
+
             if (_selectedCubeName == cubeName)
             {
                 a.attr('class', 'ncube-selected');
@@ -889,6 +907,7 @@ $(function ()
             {
                 a.attr('class', 'ncube-notselected');
             }
+
             a.attr('itemName', loName);
             li.append(a);
             _listOfCubes.append(li);

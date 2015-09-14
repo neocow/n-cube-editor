@@ -18,116 +18,159 @@
  *         limitations under the License.
  */
 
-RpmEditor = (function($)
+var RpmEditor = (function($)
 {
-    $.info = {};
     var hot = null;
+    var nce = null;
 
-    $.loadData = function()
+    $(window).resize(function ()
     {
-        if (!nce().getCubeMap() || !nce().doesCubeExist())
+        RpmEditor.render();
+    });
+
+    var showRpmError = function(msg)
+    {
+        $('#rpmErrorPanel').removeAttr('hidden');
+        $('#viewRpmInfo').attr('hidden', true);
+        $('#rpmErrorMsg').html(msg);
+    };
+
+    var clearRpmError = function()
+    {
+        $('#rpmErrorPanel').attr('hidden', true);
+        $('#viewRpmInfo').removeAttr('hidden');
+    };
+
+    var init = function()
+    {
+        nce = $.info.fn;
+        if (!nce.getCubeMap() || !nce.doesCubeExist())
         {
+            showRpmError('No cubes available.');
             return;
         }
 
-        var info = nce().getCubeMap()[(nce().getSelectedCubeName() + '').toLowerCase()];
+        var info = nce.getCubeMap()[(nce.getSelectedCubeName() + '').toLowerCase()];
         if (!info)
         {
+            showRpmError('No cube selected.');
             return;
         }
+
+        var loName = nce.getSelectedCubeName().toLowerCase();
+
+        if (loName.indexOf('rpm.class') != 0 && loName.indexOf('rpm.enum') != 0)
+        {
+            showRpmError(nce.getSelectedCubeName() + ' is not an RPM Class.');
+            return;
+        }
+
+        clearRpmError();
+
+        // 1. Call server to fetch Rpm Class data in JSON format.
+        // 2. Build out table
+        // 3. Plop in links
+        var fieldNames = [];
+        for (var i=0; i < 50; i++)
+        {
+            fieldNames.push('field' + (i + 1));
+        }
+        var data1 = [
+                ['', 'Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford'],
+                ['2012', 10, 11, 12, 13, 15, 16],
+                ['2013', 10, 11, 12, 13, 15, 16],
+                ['2014', 10, 11, 12, 13, 15, 16],
+                ['2015', 10, 11, 12, 13, 15, 16],
+                ['2016', 10, 11, 12, 13, 15, 16],
+                ['2017', 10, 11, 12, 13, 15, 16],
+                ['2018', 10, 11, 12, 13, 15, 16],
+                ['2019', 10, 11, 12, 13, 15, 16],
+                ['2020', 10, 11, 12, 13, 15, 16],
+                ['2021', 10, 11, 12, 13, 15, 16],
+                ['2022', 10, 11, 12, 13, 15, 16],
+                ['2023', 10, 11, 12, 13, 15, 16],
+                ['2024', 10, 11, 12, 13, 15, 16],
+                ['2025', 10, 11, 12, 13, 15, 16],
+                ['2026', 10, 11, 12, 13, 15, 16],
+                ['2027', 10, 11, 12, 13, 15, 16],
+                ['2028', 10, 11, 12, 13, 15, 16],
+                ['2029', 10, 11, 12, 13, 15, 16],
+                ['2030', 10, 11, 12, 13, 15, 16],
+                ['2031', 10, 11, 12, 13, 15, 16],
+                ['2032', 10, 11, 12, 13, 15, 16],
+                ['2033', 10, 11, 12, 13, 15, 16],
+                ['2034', 10, 11, 12, 13, 15, 16],
+                ['2035', 10, 11, 12, 13, 15, 16],
+                ['2036', 10, 11, 12, 13, 15, 16],
+                ['2037', 10, 11, 12, 13, 15, 16],
+                ['2038', 10, 11, 12, 13, 15, 16],
+                ['2039', 10, 11, 12, 13, 15, 16],
+                ['2040', 10, 11, 12, 13, 15, 16],
+                ['2041', 10, 11, 12, 13, 15, 16],
+                ['2042', 10, 11, 12, 13, 15, 16],
+                ['2043', 10, 11, 12, 13, 15, 16],
+                ['2044', 10, 11, 12, 13, 15, 16],
+                ['2045', 10, 11, 12, 13, 15, 16],
+                ['2046', 10, 11, 12, 13, 15, 16],
+                ['2047', 10, 11, 12, 13, 15, 16],
+                ['2048', 10, 11, 12, 13, 15, 16],
+                ['2049', 10, 11, 12, 13, 15, 16],
+                ['2050', 10, 11, 12, 13, 15, 16],
+                ['2051', 10, 11, 12, 13, 15, 16],
+                ['2052', 10, 11, 12, 13, 15, 16],
+                ['2053', 10, 11, 12, 13, 15, 16],
+                ['2054', 10, 11, 12, 13, 15, 16],
+                ['2055', 10, 11, 12, 13, 15, 16],
+                ['2056', 10, 11, 12, 13, 15, 16],
+                ['2057', 10, 11, 12, 13, 15, 16],
+                ['2058', 10, 11, 12, 13, 15, 16],
+                ['2059', 10, 11, 12, 13, 15, 16]
+            ],
+            container = document.getElementById('rpmTable'),
+            settings = {
+                data: data1,
+                colHeaders: true,
+                rowHeaders: fieldNames,
+                //contextMenu: true,
+                manualColumnResize: true,
+                height:500
+            };
+
+        hot = new Handsontable(container, settings);
+        hot.render();
+    };
+
+    var render = function()
+    {
+        if (!hot)
+        {
+            return;
+        }
+        hot.render();
+    };
+
+    var handleCubeSelected = function()
+    {
+        init();
     };
 
     return {
-        init: function()
-        {
-            var fieldNames = [];
-            for (var i=0; i < 50; i++)
-            {
-                fieldNames.push('field' + (i + 1));
-            }
-            var data1 = [
-                    ['', 'Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford'],
-                    ['2012', 10, 11, 12, 13, 15, 16],
-                    ['2013', 10, 11, 12, 13, 15, 16],
-                    ['2014', 10, 11, 12, 13, 15, 16],
-                    ['2015', 10, 11, 12, 13, 15, 16],
-                    ['2016', 10, 11, 12, 13, 15, 16],
-                    ['2017', 10, 11, 12, 13, 15, 16],
-                    ['2018', 10, 11, 12, 13, 15, 16],
-                    ['2019', 10, 11, 12, 13, 15, 16],
-                    ['2020', 10, 11, 12, 13, 15, 16],
-                    ['2021', 10, 11, 12, 13, 15, 16],
-                    ['2022', 10, 11, 12, 13, 15, 16],
-                    ['2023', 10, 11, 12, 13, 15, 16],
-                    ['2024', 10, 11, 12, 13, 15, 16],
-                    ['2025', 10, 11, 12, 13, 15, 16],
-                    ['2026', 10, 11, 12, 13, 15, 16],
-                    ['2027', 10, 11, 12, 13, 15, 16],
-                    ['2028', 10, 11, 12, 13, 15, 16],
-                    ['2029', 10, 11, 12, 13, 15, 16],
-                    ['2030', 10, 11, 12, 13, 15, 16],
-                    ['2031', 10, 11, 12, 13, 15, 16],
-                    ['2032', 10, 11, 12, 13, 15, 16],
-                    ['2033', 10, 11, 12, 13, 15, 16],
-                    ['2034', 10, 11, 12, 13, 15, 16],
-                    ['2035', 10, 11, 12, 13, 15, 16],
-                    ['2036', 10, 11, 12, 13, 15, 16],
-                    ['2037', 10, 11, 12, 13, 15, 16],
-                    ['2038', 10, 11, 12, 13, 15, 16],
-                    ['2039', 10, 11, 12, 13, 15, 16],
-                    ['2040', 10, 11, 12, 13, 15, 16],
-                    ['2041', 10, 11, 12, 13, 15, 16],
-                    ['2042', 10, 11, 12, 13, 15, 16],
-                    ['2043', 10, 11, 12, 13, 15, 16],
-                    ['2044', 10, 11, 12, 13, 15, 16],
-                    ['2045', 10, 11, 12, 13, 15, 16],
-                    ['2046', 10, 11, 12, 13, 15, 16],
-                    ['2047', 10, 11, 12, 13, 15, 16],
-                    ['2048', 10, 11, 12, 13, 15, 16],
-                    ['2049', 10, 11, 12, 13, 15, 16],
-                    ['2050', 10, 11, 12, 13, 15, 16],
-                    ['2051', 10, 11, 12, 13, 15, 16],
-                    ['2052', 10, 11, 12, 13, 15, 16],
-                    ['2053', 10, 11, 12, 13, 15, 16],
-                    ['2054', 10, 11, 12, 13, 15, 16],
-                    ['2055', 10, 11, 12, 13, 15, 16],
-                    ['2056', 10, 11, 12, 13, 15, 16],
-                    ['2057', 10, 11, 12, 13, 15, 16],
-                    ['2058', 10, 11, 12, 13, 15, 16],
-                    ['2059', 10, 11, 12, 13, 15, 16]
-                ],
-                container = document.getElementById('example'),
-                settings = {
-                    data: data1,
-                    colHeaders: ['name', 'type', 'default value'],
-                    rowHeaders: fieldNames
-                };
-
-            hot = new Handsontable(container, settings);
-            hot.render();
-        }
+        init: init,
+        render: render,
+        handleCubeSelected: handleCubeSelected
     };
+
 })(jQuery);
 
-$(function()
+
+// Event handlers for events from NCE Frame
+var tabActivated = function tabActivated(info)
 {
+    $.info = info;
     RpmEditor.init();
-});
+};
 
-function nce()
+var cubeSelected = function cubeSelected()
 {
-    return $.info.fn;
-}
-
-function tabActivated(info)
-{
-    try
-    {
-        $.info = info;
-        $.loadData();
-    }
-    catch (e)
-    {
-        console.log(e);
-    }
-}
+    RpmEditor.handleCubeSelected();
+};

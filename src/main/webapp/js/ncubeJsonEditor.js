@@ -5,31 +5,33 @@
  * @author John DeRegnaucourt
  */
 
-$(function ()
+var NCubeJsonEditor = (function ($)
 {
-    $.info = {};
-    var _editor;
+    var nce = null;
+    var _editor = null;
 
-    initJsonEditor();
-
-    function initJsonEditor()
+    var init = function(info)
     {
-        var container = document.getElementById('jsoneditor');
-        var options =
-        {
-            mode: 'code',
-            change: function ()
-            {
-                updateDirtyStatus();
-            }
-        };
-
         // Create JSON Editor (http://jsoneditoronline.org/downloads/)
-        _editor = new JSONEditor(container, options);
-        addSaveButton();
-    }
+        if (!nce)
+        {
+            nce = info.fn;
+            var container = document.getElementById('jsoneditor');
+            var options =
+            {
+                mode: 'code',
+                change: function ()
+                {
+                    updateDirtyStatus();
+                }
+            };
 
-    function addSaveButton()
+            _editor = new JSONEditor(container, options);
+            addSaveButton();
+        }
+    };
+
+    var addSaveButton = function()
     {
         var editCtrl = $('#jsoneditor');
         var menu = editCtrl.find('.menu');
@@ -45,33 +47,33 @@ $(function ()
         // Attach listener
         $('#saveButton').click(function ()
         {
-            nce().clearError();
-            if (nce().isHeadSelected())
+            nce.clearError();
+            if (nce.isHeadSelected())
             {
-                nce().selectBranch();
+                nce.selectBranch();
                 return;
             }
 
             clearDirtyStatus();
             updateDirtyStatus();
-            var result = nce().call("ncubeController.saveJson", [nce().getAppId(), nce().getSelectedCubeName(), _editor.getText()]);
+            var result = nce.call("ncubeController.saveJson", [nce.getAppId(), nce.getSelectedCubeName(), _editor.getText()]);
             if (result.status !== true)
             {
-                nce().showNote('Error saving JSON n-cube:<hr class="hr-small"/>' + result.data);
+                nce.showNote('Error saving JSON n-cube:<hr class="hr-small"/>' + result.data);
             }
         });
-    }
+    };
 
-    function isDirty()
+    var isDirty = function()
     {
         if (_editor.editor)
         {
             return !_editor.editor.getSession().getUndoManager().isClean();
         }
         return false;
-    }
+    };
 
-    function clearDirtyStatus()
+    var clearDirtyStatus = function()
     {
         if (_editor.editor)
         {
@@ -79,9 +81,9 @@ $(function ()
             undoMgr.reset();
             undoMgr.markClean();
         }
-    }
+    };
 
-    function updateDirtyStatus()
+    var updateDirtyStatus = function()
     {
         var saveButton = $('#saveButton');
         if (saveButton.length == 0)
@@ -96,18 +98,18 @@ $(function ()
             text += '*';
         }
         saveButton.html(text);
-    }
+    };
 
-    $.loadCubeJson = function()
+    var load = function()
     {
-        if (!nce().getSelectedCubeName() || !nce().getSelectedApp() || !nce().getSelectedVersion() || !nce().getSelectedStatus())
+        if (!nce.getSelectedCubeName() || !nce.getSelectedApp() || !nce.getSelectedVersion() || !nce.getSelectedStatus())
         {
             _editor.setText('No n-cube to load');
             clearDirtyStatus();
             updateDirtyStatus();
             return;
         }
-        var result = nce().call("ncubeController.getJson", [nce().getAppId(), nce().getSelectedCubeName()]);
+        var result = nce.call("ncubeController.getJson", [nce.getAppId(), nce.getSelectedCubeName()]);
         if (result.status === true)
         {
             _editor.setText(result.data);
@@ -115,28 +117,33 @@ $(function ()
         }
         else
         {
-            _editor.setText("Unable to load '" + nce().getSelectedCubeName() + "'. " + result.data);
+            _editor.setText("Unable to load '" + nce.getSelectedCubeName() + "'. " + result.data);
         }
 
         clearDirtyStatus();
         updateDirtyStatus();
-    }
-});
+    };
 
-function nce()
-{
-    return $.info.fn;
-}
+    var handleCubeSelected = function()
+    {
+        load();
+    };
 
-function tabActivated(info)
+    return {
+        init: init,
+        handleCubeSelected: handleCubeSelected,
+        load: load
+    };
+
+})(jQuery);
+
+var tabActivated = function tabActivated(info)
 {
-    try
-    {
-        $.info = info;
-        $.loadCubeJson();
-    }
-    catch (e)
-    {
-        console.log(e);
-    }
-}
+    NCubeJsonEditor.init(info);
+    NCubeJsonEditor.load();
+};
+
+var cubeSelected = function cubeSelected()
+{
+    NCubeJsonEditor.handleCubeSelected();
+};

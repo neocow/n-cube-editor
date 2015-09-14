@@ -18,9 +18,9 @@
  *         limitations under the License.
  */
 
-$(function ()
+var TestEditor = (function ($)
 {
-    $.info = {};
+    var nce = null;
     var _testData = null;
     var _testSelectionAnchor = -1;
     var _duplicateTestModal = $('#duplicateTestModal');
@@ -34,6 +34,34 @@ $(function ()
     var _testListWarning = $('#testListWarning');
     var _testListItems = $('#testListItems');
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
+
+    var init = function(info)
+    {
+        if (!nce)
+        {
+            nce = info.fn;
+            var secondaryLayout = $('#testBody').layout({
+                name: "secondaryLayout"
+                ,   closable:					true	// pane can open & close
+                ,	resizable:					true	// when open, pane can be resized
+                ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
+                ,	livePaneResizing:			true
+                ,	east__minSize:				170
+                ,   togglerLength_open:         60
+                ,   togglerLength_closed:       "100%"
+                ,	spacing_open:			5  // ALL panes
+                ,	spacing_closed:			5 // ALL panes
+                //            ,	south__spacing_open:			5  // ALL panes
+                //,	south__spacing_closed:			5 // ALL panes
+                ,  east__onresize: function()
+                {
+                    calculateTestPanelSize();
+                }
+            });
+
+            secondaryLayout.resizeAll();
+        }
+    };
 
     $('#renameTestOk').click(function (e)
     {
@@ -68,7 +96,7 @@ $(function ()
     $('#generateTestsLink').click(function (e)
     {
         e.preventDefault();
-        if (nce().ensureModifiable("Unable to generate tests."))
+        if (nce.ensureModifiable("Unable to generate tests."))
         {
             loadTestListView("ncubeController.generateTests");
         }
@@ -221,7 +249,7 @@ $(function ()
 
     function loadTestListView(funcName)
     {
-        if (!nce().getSelectedCubeName())
+        if (!nce.getSelectedCubeName())
         {
             $('#selectedTestName').html('No n-cube selected.');
             return false;
@@ -232,7 +260,7 @@ $(function ()
 
         enableTestItems();
 
-        var testListResult = nce().call(funcName, [nce().getAppId(), nce().getSelectedCubeName()]);
+        var testListResult = nce.call(funcName, [nce.getAppId(), nce.getSelectedCubeName()]);
 
         if (testListResult.status === true)
         {
@@ -242,12 +270,12 @@ $(function ()
         }
         else
         {
-            var msg = 'Error fetching test data for: ' + nce().getSelectedCubeName();
+            var msg = 'Error fetching test data for: ' + nce.getSelectedCubeName();
             if (testListResult.data != null)
             {
                 msg += (':<hr class="hr-small"/>' + testListResult.data);
             }
-            nce().showNote(msg);
+            nce.showNote(msg);
         }
     }
 
@@ -362,7 +390,7 @@ $(function ()
         catch (e)
         {
             console.log(e);
-            nce().showNote('Unable to load test view:<hr class="hr-small"/>' + e.message);
+            nce.showNote('Unable to load test view:<hr class="hr-small"/>' + e.message);
         }
 
         $('#testParametersDiv').fadeIn('fast');
@@ -467,10 +495,10 @@ $(function ()
 
     function deleteTestItem(title, label, isRenumberable, paramId)
     {
-        nce().clearError();
-        if (!nce().getSelectedCubeName())
+        nce.clearError();
+        if (!nce.getSelectedCubeName())
         {
-            nce().showNote('No n-cube selected. Nothing to delete.');
+            nce.showNote('No n-cube selected. Nothing to delete.');
             return;
         }
 
@@ -521,10 +549,10 @@ $(function ()
 
     function deleteCurrentTestMenu()
     {
-        nce().clearError();
-        if (!nce().getSelectedCubeName())
+        nce.clearError();
+        if (!nce.getSelectedCubeName())
         {
-            nce().showNote('No n-cube is currently selected. There are not tests to delete.');
+            nce.showNote('No n-cube is currently selected. There are not tests to delete.');
             return;
         }
 
@@ -534,11 +562,11 @@ $(function ()
         {
             if (list.length == 0)
             {
-                nce().showNote('No test is currently selected. Select a test to delete.');
+                nce.showNote('No test is currently selected. Select a test to delete.');
             }
             else
             {
-                nce().showNote('More than one test is selected. There can only be one test selected to delete.');
+                nce.showNote('More than one test is selected. There can only be one test selected to delete.');
             }
             return;
         }
@@ -555,7 +583,7 @@ $(function ()
 
     function deleteTestOk()
     {
-        nce().clearError();
+        nce.clearError();
 
         $('#deleteTestModal').modal('hide');
 
@@ -568,10 +596,10 @@ $(function ()
 
     function renameCurrentTestMenu()
     {
-        nce().clearError();
-        if (!nce().getSelectedCubeName())
+        nce.clearError();
+        if (!nce.getSelectedCubeName())
         {
-            nce().showNote('No n-cube is currently selected. Cannot rename test.');
+            nce.showNote('No n-cube is currently selected. Cannot rename test.');
             return;
         }
 
@@ -581,11 +609,11 @@ $(function ()
         {
             if (list.length == 0)
             {
-                nce().showNote('No test is currently selected. Select a test to duplicate.');
+                nce.showNote('No test is currently selected. Select a test to duplicate.');
             }
             else
             {
-                nce().showNote('More than one test is selected. There can only be one test selected to duplicate.');
+                nce.showNote('More than one test is selected. There can only be one test selected to duplicate.');
             }
             return;
         }
@@ -626,13 +654,13 @@ $(function ()
 
         if (!nameRegex.test(name))
         {
-            nce().showNote("Test name is invalid. Test names can only contain letters, numbers, and, ., and -");
+            nce.showNote("Test name is invalid. Test names can only contain letters, numbers, and, ., and -");
             return false;
         }
 
         if (testNameAlreadyExists(name))
         {
-            nce().showNote("There is already a test with that name.  Please rename and try again.");
+            nce.showNote("There is already a test with that name.  Please rename and try again.");
             return false;
         }
 
@@ -641,7 +669,7 @@ $(function ()
 
     function renameTestOk()
     {
-        nce().clearError();
+        nce.clearError();
         //var oldName = $('#renameTestOldName').val();
         var newName = $('#renameTestNewName').val();
 
@@ -664,10 +692,10 @@ $(function ()
 
     function addParameterMenu()
     {
-        nce().clearError();
-        if (!nce().getSelectedCubeName())
+        nce.clearError();
+        if (!nce.getSelectedCubeName())
         {
-            nce().showNote('No n-cube selected. Cannot add test parameter.');
+            nce.showNote('No n-cube selected. Cannot add test parameter.');
             return;
         }
 
@@ -717,16 +745,16 @@ $(function ()
 
     function runCurrentTest()
     {
-        nce().clearError();
-        if (!nce().getSelectedCubeName())
+        nce.clearError();
+        if (!nce.getSelectedCubeName())
         {
-            nce().showNote('No n-cube selected. Test cannot be run.');
+            nce.showNote('No n-cube selected. Test cannot be run.');
             return;
         }
 
         if (_testData == null || _testSelectionAnchor == -1)
         {
-            nce().showNote('No test selected.  Test cannot be run.');
+            nce.showNote('No test selected.  Test cannot be run.');
             return;
         }
 
@@ -735,7 +763,7 @@ $(function ()
             var test = getActiveTest();
             _testData[_testSelectionAnchor] = test;
 
-            var result = nce().call("ncubeController.runTest", [nce().getAppId(), nce().getSelectedCubeName(), test]);
+            var result = nce.call("ncubeController.runTest", [nce.getAppId(), nce.getSelectedCubeName(), test]);
             saveAllTests(true);
 
             if (result.status != true)
@@ -759,20 +787,20 @@ $(function ()
         }
         catch (e)
         {
-            nce().showNote("Could not run cube test:<hr class=\"hr-small\"/>" + e.message);
+            nce.showNote("Could not run cube test:<hr class=\"hr-small\"/>" + e.message);
         }
     }
 
     function saveAllTests(modelIsUpToDate)
     {
-        if (!nce().ensureModifiable("Unable to save all tests."))
+        if (!nce.ensureModifiable("Unable to save all tests."))
         {
             return;
         }
 
         if (_testData == null)
         {
-            nce().showNote('No test selected.  There are no tests to save.');
+            nce.showNote('No test selected.  There are no tests to save.');
             return;
         }
 
@@ -787,11 +815,11 @@ $(function ()
             }
         }
 
-        var result = nce().call("ncubeController.saveTests", [nce().getAppId(), nce().getSelectedCubeName(), _testData]);
+        var result = nce.call("ncubeController.saveTests", [nce.getAppId(), nce.getSelectedCubeName(), _testData]);
 
         if (!result.status)
         {
-            nce().showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -920,7 +948,7 @@ $(function ()
 
     function createNewTestMenu()
     {
-        if (!nce().ensureModifiable("Unable to create a test."))
+        if (!nce.ensureModifiable("Unable to create a test."))
         {
             return;
         }
@@ -938,16 +966,16 @@ $(function ()
 
     function deleteAllTestsMenu()
     {
-        nce().clearError();
+        nce.clearError();
 
         if ($('#deleteAllTestsMenu').parent().hasClass('disabled'))
         {
             return;
         }
 
-        if (!nce().getSelectedCubeName())
+        if (!nce.getSelectedCubeName())
         {
-            nce().showNote('No n-cube is currently selected. You cannot delete all tests.');
+            nce.showNote('No n-cube is currently selected. You cannot delete all tests.');
             return;
         }
 
@@ -973,11 +1001,11 @@ $(function ()
 
         if (findTestByName(newName) != null)
         {
-            nce().showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
+            nce.showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
             return;
         }
 
-        var result = nce().call("ncubeController.createNewTest", [nce().getAppId(), nce().getSelectedCubeName(), newName]);
+        var result = nce.call("ncubeController.createNewTest", [nce.getAppId(), nce.getSelectedCubeName(), newName]);
 
         if (result.status === true)
         {
@@ -999,27 +1027,27 @@ $(function ()
         }
         else
         {
-            var msg = 'Error creating new test for ' + nce().getSelectedCubeName();
+            var msg = 'Error creating new test for ' + nce.getSelectedCubeName();
             if (result.data != null)
             {
                 msg += (':<hr class="hr-small"/>' + result.data);
             }
-            nce().showNote(msg);
+            nce.showNote(msg);
         }
     }
 
     function duplicateCurrentTestMenu()
     {
-        nce().clearError();
+        nce.clearError();
 
         if ($('#duplicateCurrentTestMenu').parent().hasClass('disabled'))
         {
             return;
         }
 
-        if (!nce().getSelectedCubeName())
+        if (!nce.getSelectedCubeName())
         {
-            nce().showNote('No n-cube is currently selected. Cannot duplicate a test.');
+            nce.showNote('No n-cube is currently selected. Cannot duplicate a test.');
             return;
         }
 
@@ -1029,11 +1057,11 @@ $(function ()
         {
             if (list.length == 0)
             {
-                nce().showNote('No test is currently selected. Select a test to duplicate.');
+                nce.showNote('No test is currently selected. Select a test to duplicate.');
             }
             else
             {
-                nce().showNote('More than one test is selected. There can only be one test selected to duplicate.');
+                nce.showNote('More than one test is selected. There can only be one test selected to duplicate.');
             }
             return;
         }
@@ -1066,7 +1094,7 @@ $(function ()
 
         if (findTestByName(newName) != null)
         {
-            nce().showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
+            nce.showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
             return;
         }
 
@@ -1200,41 +1228,23 @@ $(function ()
         return leftPad(Math.random().toString(36).substring(7), 11);
     }
 
-    $.loadData = function()
+    var load = function()
     {
-        if (!nce().getCubeMap() || !nce().doesCubeExist())
+        if (!nce.getCubeMap() || !nce.doesCubeExist())
         {
             return;
         }
 
-        var info = nce().getCubeMap()[(nce().getSelectedCubeName() + '').toLowerCase()];
+        var info = nce.getCubeMap()[(nce.getSelectedCubeName() + '').toLowerCase()];
         if (!info)
         {
             return;
         }
 
-        var secondaryLayout = $('#testBody').layout({
-            name: "secondaryLayout"
-            ,   closable:					true	// pane can open & close
-            ,	resizable:					true	// when open, pane can be resized
-            ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
-            ,	livePaneResizing:			true
-            ,	east__minSize:				170
-            ,   togglerLength_open:         60
-            ,   togglerLength_closed:       "100%"
-            ,	spacing_open:			5  // ALL panes
-            ,	spacing_closed:			5 // ALL panes
-            //            ,	south__spacing_open:			5  // ALL panes
-            //,	south__spacing_closed:			5 // ALL panes
-            ,  east__onresize: function()
-            {
-                calculateTestPanelSize();
-            }
-        });
 
         loadTestListView("ncubeController.getTests");
         calculateTestPanelSize();
-        secondaryLayout.resizeAll();
+        //secondaryLayout.resizeAll();
     };
 
     function calculateTestPanelSize()
@@ -1243,22 +1253,27 @@ $(function ()
         var testList = _testList.find('> .panel-body');
         testList.height(east.height() - 47);
     }
-});
 
-function nce()
-{
-    return $.info.fn;
-}
+    var handleCubeSelected = function()
+    {
+        load();
+    };
 
-function tabActivated(info)
+    return {
+        init: init,
+        load: load,
+        handleCubeSelected: handleCubeSelected
+    };
+
+})(jQuery);
+
+var tabActivated = function tabActivated(info)
 {
-    try
-    {
-        $.info = info;
-        $.loadData();
-    }
-    catch (e)
-    {
-        console.log(e);
-    }
-}
+    TestEditor.init(info);
+    TestEditor.load();
+};
+
+var cubeSelected = function cubeSelected()
+{
+    TestEditor.handleCubeSelected();
+};

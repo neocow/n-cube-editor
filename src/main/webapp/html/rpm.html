@@ -27,78 +27,130 @@
     <script src="js/mitDate.js"></script>
     <script src="js/rpm.js"></script>
 
-    <link href="http://handsontable.com//styles/main.css" rel="stylesheet">
-    <link href="http://handsontable.com//bower_components/handsontable/dist/handsontable.full.min.css" rel="stylesheet">
-    <script src="http://handsontable.com//bower_components/handsontable/dist/handsontable.full.min.js"></script>
+    <link href="http://handsontable.com/styles/main.css" rel="stylesheet">
+    <link href="http://handsontable.com/bower_components/handsontable/dist/handsontable.full.min.css" rel="stylesheet">
+    <script src="http://handsontable.com/bower_components/handsontable/dist/handsontable.full.min.js"></script>
 </head>
 
 <body id="rpmBody">
-<div>
-    <div>
-        <div class="row">
-            <div class="col-md-2 top-buffer">RPM Class:</div>
-            <a class="col-md-10 top-buffer" href="#">coverage.FloorPlan</a>
-        </div>
 
-        <div class="row">
-            <div class="col-md-2">Parent(s):</div>
-            <div class="col-md-10">
-                <a>coverage.PremiumBearing</a>, <a>coverage.BaseCoverage</a>
+<div id="rpmErrorPanel">
+    <label id="rpmErrorMsg" style="padding:10px">Oh Snap!</label>
+</div>
+
+<div id="viewRpmInfo">
+    <div class="control-group">
+        <label for="scopeDropDown">Scope</label>
+
+        <div class="dropdown" id="scopeDropDown">
+            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="dropdownMenu1"
+                    data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="true">
+                Choose
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                <li><a href="#">AK_2010</a></li>
+                <li><a href="#">OH_2014</a></li>
+                <li><a href="#">OH_2015</a></li>
+                <li><a href="#">TX_2011</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label for="displayMode">Show</label>
+
+        <div id="displayMode">
+            <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-sm btn-primary active">
+                    <input type="checkbox" autocomplete="off" checked>Formulas
+                </label>
+                <label class="btn btn-sm btn-primary">
+                    <input type="checkbox" autocomplete="off">Values
+                </label>
             </div>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="col-md-2 top-buffer">Scope:</div>
-            <div class="dropdown col-md-10 top-buffer">
-                <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                    Choose
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                    <li><a href="#">AK_2010</a></li>
-                    <li><a href="#">OH_2014</a></li>
-                    <li><a href="#">OH_2015</a></li>
-                    <li><a href="#">TX_2011</a></li>
-                </ul>
+    <div class="control-group">
+        <label for="traitFilter">Trait Filter</label>
+
+        <div id="traitFilter">
+            <div class="btn-group btn-group-sm" data-toggle="buttons">
+                <label class="btn btn-primary active">
+                    <input type="checkbox" autocomplete="off" checked> Built-In
+                </label>
+                <label class="btn btn-primary">
+                    <input type="checkbox" autocomplete="off"> UI
+                </label>
+                <label class="btn btn-primary">
+                    <input type="checkbox" autocomplete="off"> CXML
+                </label>
+                <label class="btn btn-primary">
+                    <input type="checkbox" autocomplete="off"> OUDXML
+                </label>
             </div>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="col-md-2 top-buffer">Show:</div>
-            <div class="col-md-10 top-buffer">
-                <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-primary active">
-                        <input type="checkbox" autocomplete="off" checked>Formulas
-                    </label>
-                    <label class="btn btn-primary">
-                        <input type="checkbox" autocomplete="off">Values
-                    </label>
-                </div>
-            </div>
+    <div style="clear:both"></div>
+
+    <div class="panel panel-primary main-panel">
+        <div class="panel-heading" role="tab" id="heading1">
+            <h4 class="panel-title no-vmargins">
+                <a class="white-text" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse1"
+                   aria-expanded="true" aria-controls="collapse1">coverage.FloorPlan</a>
+            </h4>
         </div>
-
-        <div class="row">
-            <div class="col-md-2 top-buffer">Trait Filter:</div>
-            <div class="col-md-10 top-buffer">
-                <div class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-primary active">
-                        <input type="checkbox" autocomplete="off" checked> Built-In
-                    </label>
-                    <label class="btn btn-primary">
-                        <input type="checkbox" autocomplete="off"> UI
-                    </label>
-                    <label class="btn btn-primary">
-                        <input type="checkbox" autocomplete="off"> CXML
-                    </label>
-                    <label class="btn btn-primary">
-                        <input type="checkbox" autocomplete="off"> OUDXML
-                    </label>
+        <div id="collapse1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading1">
+            <div class="panel-body" style="width:100%;overflow:auto;padding:0">
+                <div id="rpmTable">
                 </div>
             </div>
         </div>
     </div>
-    <div id="example" class="top-buffer">
+
+    <div class="panel panel-primary main-panel">
+        <div class="panel-heading" role="tab" id="heading2">
+            <h4 class="panel-title no-vmargins">
+                <a class="white-text collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse2"
+                   aria-expanded="false" aria-controls="collapse2">Parent(s)</a>
+            </h4>
+        </div>
+        <div id="collapse2" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading2">
+            <div class="panel-body">Parent Class 1, Parent Class 2, ...</div>
+        </div>
     </div>
+
+    <div class="panel panel-primary main-panel">
+        <div class="panel-heading" role="tab" id="heading3">
+            <h4 class="panel-title no-vmargins">
+                <a class="white-text collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse3"
+                   aria-expanded="false" aria-controls="collapse3">Children</a>
+            </h4>
+        </div>
+        <div id="collapse3" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading3">
+            <div class="panel-body">
+                Class 1, Class 2, ...
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-primary main-panel">
+        <div class="panel-heading" role="tab" id="heading4">
+            <h4 class="panel-title no-vmargins">
+                <a class="white-text collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse4"
+                   aria-expanded="false" aria-controls="collapse4">Classes referencing this RPM Class</a>
+            </h4>
+        </div>
+        <div id="collapse4" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading4">
+            <div class="panel-body">
+                RPM Class Foo.field1, Bar.fieldX, Baz.field3, Qux.fieldY
+            </div>
+        </div>
+    </div>
+
 </div>
 </body>
 </html>
