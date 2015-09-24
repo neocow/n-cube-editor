@@ -74,22 +74,15 @@
     </div>
 
     <div class="control-group">
-        <label for="traitFilter">Trait Filter</label>
+        <div>
+            <label for="traitFilter" class="pull-left">Trait Filter</label>
+            <div class="pull-right" style="background-color:#D1C5B7;font-size:13px;">
+                <a id="selectAll" href="#">all</a>&nbsp;&nbsp;<a id="selectNone" href="#">none</a>
+            </div>
+        </div>
 
-        <div id="traitFilter">
-            <div class="btn-group btn-group-sm" data-toggle="buttons">
-                <label class="btn btn-primary active">
-                    <input type="checkbox" autocomplete="off" checked> Built-In
-                </label>
-                <label class="btn btn-primary">
-                    <input type="checkbox" autocomplete="off"> UI
-                </label>
-                <label class="btn btn-primary">
-                    <input type="checkbox" autocomplete="off"> CXML
-                </label>
-                <label class="btn btn-primary">
-                    <input type="checkbox" autocomplete="off"> OUDXML
-                </label>
+        <div style="clear:left">
+            <div id="traitFilter" class="btn-group btn-group-sm" data-toggle="buttons">
             </div>
         </div>
     </div>

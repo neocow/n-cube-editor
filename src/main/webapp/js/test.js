@@ -23,23 +23,24 @@ var TestEditor = (function ($)
     var nce = null;
     var _testData = null;
     var _testSelectionAnchor = -1;
-    var _duplicateTestModal = $('#duplicateTestModal');
-    var _deleteTestModal = $('#deleteTestmodal');
-    var _addParameterModal = $('#addParameterModal');
-    var _deleteParameterModal = $('#deleteParameterModal');
-    var _createNewTestModal = $('#createNewTestModal');
-    var _renameTestModal = $('#renameTestModal');
-    var _testResultsDiv = $('#testResultsDiv');
-    var _testList = $('#testList');
-    var _testListWarning = $('#testListWarning');
-    var _testListItems = $('#testListItems');
+    var _duplicateTestModal = null;
+    var _deleteTestModal = null;
+    var _addParameterModal = null;
+    var _deleteParameterModal = null;
+    var _createNewTestModal = null;
+    var _renameTestModal = null;
+    var _testResultsDiv = null;
+    var _testList = null;
+    var _testListWarning = null;
+    var _testListItems = null;
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
 
     var init = function(info)
     {
         if (!nce)
-        {
+        {   // One-time initialization code.
             nce = info.fn;
+
             var secondaryLayout = $('#testBody').layout({
                 name: "secondaryLayout"
                 ,   closable:					true	// pane can open & close
@@ -59,195 +60,197 @@ var TestEditor = (function ($)
                 }
             });
 
+            _duplicateTestModal = $('#duplicateTestModal');
+            _deleteTestModal = $('#deleteTestmodal');
+            _addParameterModal = $('#addParameterModal');
+            _deleteParameterModal = $('#deleteParameterModal');
+            _createNewTestModal = $('#createNewTestModal');
+            _renameTestModal = $('#renameTestModal');
+            _testResultsDiv = $('#testResultsDiv');
+            _testList = $('#testList');
+            _testListWarning = $('#testListWarning');
+            _testListItems = $('#testListItems');
             secondaryLayout.resizeAll();
+
+            $('#renameTestOk').click(function (e)
+            {
+                e.preventDefault();
+                renameTestOk();
+            });
+            $('#deleteParameterOk').click(function (e)
+            {
+                e.preventDefault();
+                deleteParameterOk();
+            });
+            $('#addParameterMenu').click(function (e)
+            {
+                e.preventDefault();
+                addParameterMenu();
+            });
+            $('#addAssertionMenu').click(function (e)
+            {
+                e.preventDefault();
+                addNewAssertion();
+            });
+            $('#addParameterOk').click(function (e)
+            {
+                e.preventDefault();
+                addParameterOk();
+            });
+            $('#createTestsLink').click(function (e)
+            {
+                e.preventDefault();
+                createNewTestMenu();
+            });
+            $('#generateTestsLink').click(function (e)
+            {
+                e.preventDefault();
+                if (nce.ensureModifiable("Unable to generate tests."))
+                {
+                    loadTestListView("ncubeController.generateTests");
+                }
+            });
+            //  Set focused field when dialog appears so user can just start typing.
+            _addParameterModal.on('shown.bs.modal', function () {
+                $('#addParameterField').focus();
+            });
+
+            _createNewTestModal.on('shown.bs.modal', function () {
+                $('#createNewTestField').focus();
+            });
+
+            _renameTestModal.on('shown.bs.modal', function () {
+                $('#renameTestNewName').focus();
+            });
+
+            _duplicateTestModal.on('shown.bs.modal', function () {
+                $('#duplicateTestNameField').focus();
+            });
+
+            //  Set default button clicked when <enter> is hit.
+            _addParameterModal.on( 'keypress', function( e ) {
+                if( e.keyCode === 13 ) {
+                    e.preventDefault();
+                    $('#addParameterOk').click();
+                }
+            });
+
+            _renameTestModal.on( 'keypress', function( e ) {
+                if( e.keyCode === 13 ) {
+                    e.preventDefault();
+                    $('#renameTestOk').click();
+                }
+            });
+
+            _deleteParameterModal.on( 'keypress', function( e ) {
+                if( e.keyCode === 13 ) {
+                    e.preventDefault();
+                    $('#deleteParameterOk').click();
+                }
+            });
+
+            _duplicateTestModal.on( 'keypress', function( e ) {
+                if( e.keyCode === 13 ) {
+                    e.preventDefault();
+                    $('#duplicateCurrentTestOk').click();
+                }
+            });
+
+            _deleteTestModal.on( 'keypress', function( e ) {
+                if( e.keyCode === 13 ) {
+                    e.preventDefault();
+                    $('#deleteTestOk').click();
+                }
+            });
+
+            _createNewTestModal.on( 'keypress', function( e ) {
+                if( e.keyCode === 13 ) {
+                    e.preventDefault();
+                    $('#addParameterOk').click();
+                }
+            });
+
+            $('#runCurrentTestMenu').click(function (e)
+            {
+                e.preventDefault();
+                $(this).css({'cursor':'wait'});
+                runCurrentTest();
+                $(this).css({'cursor':'default'})
+            });
+
+            $('#runTestButton').click(function (e)
+            {
+                e.preventDefault();
+                $(this).css({'cursor':'wait'});
+                runCurrentTest();
+                $(this).css({'cursor':'default'})
+            });
+
+            $('#runTestMenu').click(function (e)
+            {
+                e.preventDefault();
+                $(this).css({'cursor':'wait'});
+                runCurrentTest();
+                $(this).css({'cursor':'default'})
+            });
+
+            $('#renameCurrentTestMenu').click(function (e)
+            {
+                e.preventDefault();
+                renameCurrentTestMenu();
+            });
+
+            $('#deleteCurrentTestMenu').click(function (e)
+            {
+                e.preventDefault();
+                deleteCurrentTestMenu();
+            });
+
+            $('#deleteTestOk').click(function (e)
+            {
+                deleteTestOk();
+                e.preventDefault();
+            });
+
+            $('#createNewTestMenu').click(function (e)
+            {
+                e.preventDefault();
+                createNewTestMenu();
+            });
+
+            $('#createNewTestOk').click(function (e)
+            {
+                e.preventDefault();
+                createNewTestOk();
+            });
+
+            $('#duplicateCurrentTestMenu').click(function (e)
+            {
+                e.preventDefault();
+                duplicateCurrentTestMenu();
+            });
+
+            $("#duplicateCurrentTestOk").click(function (e)
+            {
+                e.preventDefault();
+                duplicateCurrentTestOk();
+            });
+
+            $('#deleteAllTestsMenu').click(function (e)
+            {
+                e.preventDefault();
+                deleteAllTestsMenu();
+            });
+
+            $('#deleteAllTestsOk').click(function (e)
+            {
+                e.preventDefault();
+                deleteAllTestsOk();
+            });
         }
     };
 
-    $('#renameTestOk').click(function (e)
-    {
-        e.preventDefault();
-        renameTestOk();
-    });
-    $('#deleteParameterOk').click(function (e)
-    {
-        e.preventDefault();
-        deleteParameterOk();
-    });
-    $('#addParameterMenu').click(function (e)
-    {
-        e.preventDefault();
-        addParameterMenu();
-    });
-    $('#addAssertionMenu').click(function (e)
-    {
-        e.preventDefault();
-        addNewAssertion();
-    });
-    $('#addParameterOk').click(function (e)
-    {
-        e.preventDefault();
-        addParameterOk();
-    });
-    $('#createTestsLink').click(function (e)
-    {
-        e.preventDefault();
-        createNewTestMenu();
-    });
-    $('#generateTestsLink').click(function (e)
-    {
-        e.preventDefault();
-        if (nce.ensureModifiable("Unable to generate tests."))
-        {
-            loadTestListView("ncubeController.generateTests");
-        }
-    });
-    //  Set focused field when dialog appears so user can just start typing.
-    _addParameterModal.on('shown.bs.modal', function () {
-        $('#addParameterField').focus();
-    });
-
-    _createNewTestModal.on('shown.bs.modal', function () {
-        $('#createNewTestField').focus();
-    });
-
-    _renameTestModal.on('shown.bs.modal', function () {
-        $('#renameTestNewName').focus();
-    });
-
-    _duplicateTestModal.on('shown.bs.modal', function () {
-        $('#duplicateTestNameField').focus();
-    });
-
-    //  Set default button clicked when <enter> is hit.
-    _addParameterModal.on( 'keypress', function( e ) {
-        if( e.keyCode === 13 ) {
-            e.preventDefault();
-            $('#addParameterOk').click();
-        }
-    });
-
-    _renameTestModal.on( 'keypress', function( e ) {
-        if( e.keyCode === 13 ) {
-            e.preventDefault();
-            $('#renameTestOk').click();
-        }
-    });
-
-    _deleteParameterModal.on( 'keypress', function( e ) {
-        if( e.keyCode === 13 ) {
-            e.preventDefault();
-            $('#deleteParameterOk').click();
-        }
-    });
-
-    _duplicateTestModal.on( 'keypress', function( e ) {
-        if( e.keyCode === 13 ) {
-            e.preventDefault();
-            $('#duplicateCurrentTestOk').click();
-        }
-    });
-
-    _deleteTestModal.on( 'keypress', function( e ) {
-        if( e.keyCode === 13 ) {
-            e.preventDefault();
-            $('#deleteTestOk').click();
-        }
-    });
-
-    _createNewTestModal.on( 'keypress', function( e ) {
-        if( e.keyCode === 13 ) {
-            e.preventDefault();
-            $('#addParameterOk').click();
-        }
-    });
-
-    $('#runAllTestsButton').click(function (e)
-    {
-        e.preventDefault();
-        $(this).css({'cursor':'wait'});
-        runAllTests();
-        $(this).css({'cursor':'default'})
-    });
-
-    $('#runCurrentTestMenu').click(function (e)
-    {
-        e.preventDefault();
-        $(this).css({'cursor':'wait'});
-        runCurrentTest();
-        $(this).css({'cursor':'default'})
-    });
-
-    $('#runTestButton').click(function (e)
-    {
-        e.preventDefault();
-        $(this).css({'cursor':'wait'});
-        runCurrentTest();
-        $(this).css({'cursor':'default'})
-    });
-
-    $('#runTestMenu').click(function (e)
-    {
-        e.preventDefault();
-        $(this).css({'cursor':'wait'});
-        runCurrentTest();
-        $(this).css({'cursor':'default'})
-    });
-
-    $('#renameCurrentTestMenu').click(function (e)
-    {
-        e.preventDefault();
-        renameCurrentTestMenu();
-    });
-
-    $('#deleteCurrentTestMenu').click(function (e)
-    {
-        e.preventDefault();
-        deleteCurrentTestMenu();
-    });
-
-    $('#deleteTestOk').click(function (e)
-    {
-        deleteTestOk();
-        e.preventDefault();
-    });
-
-    $('#createNewTestMenu').click(function (e)
-    {
-        e.preventDefault();
-        createNewTestMenu();
-    });
-
-    $('#createNewTestOk').click(function (e)
-    {
-        e.preventDefault();
-        createNewTestOk();
-    });
-
-    $('#duplicateCurrentTestMenu').click(function (e)
-    {
-        e.preventDefault();
-        duplicateCurrentTestMenu();
-    });
-
-    $("#duplicateCurrentTestOk").click(function (e)
-    {
-        e.preventDefault();
-        duplicateCurrentTestOk();
-    });
-
-    $('#deleteAllTestsMenu').click(function (e)
-    {
-        e.preventDefault();
-        deleteAllTestsMenu();
-    });
-
-    $('#deleteAllTestsOk').click(function (e)
-    {
-        e.preventDefault();
-        deleteAllTestsOk();
-    });
-
-    function loadTestListView(funcName)
+    var loadTestListView = function(funcName)
     {
         if (!nce.getSelectedCubeName())
         {
@@ -277,9 +280,9 @@ var TestEditor = (function ($)
             }
             nce.showNote(msg);
         }
-    }
+    };
 
-    function refreshTestList()
+    var refreshTestList = function()
     {
         _testListItems.empty();
         var hasTests = _testData != null && _testData.length > 0;
@@ -318,17 +321,17 @@ var TestEditor = (function ($)
 
         if (hasTests)
         {
-            _testListWarning.addClass('hide');
-            _testList.removeClass('hide');
+            _testListWarning.attr('hidden', true);
+            _testList.removeAttr('hidden');
         }
         else
         {
-            _testListWarning.removeClass('hide');
-            _testList.addClass('hide');
+            _testListWarning.removeAttr('hidden');
+            _testList.attr('hidden', true);
         }
-    }
+    };
 
-    function clearTestView()
+    var clearTestView = function()
     {
         $('#testParametersDiv').hide();
         $('#testAssertionsDiv').hide();
@@ -339,9 +342,9 @@ var TestEditor = (function ($)
         $('#testParameters').empty();
         $('#testAssertions').empty();
         $('#testResults').empty();
-    }
+    };
 
-    function loadTestView()
+    var loadTestView = function()
     {
         clearTestView();
 
@@ -397,9 +400,9 @@ var TestEditor = (function ($)
         $('#testAssertionsDiv').fadeIn('fast');
         $('#testNameDiv').fadeIn('fast');
         $('#testButtonGroupDiv').fadeIn('fast');
-    }
+    };
 
-    function buildParameter(labelText, type, isUrl, value, hasSelector, isRenumberable, deleteFunc)
+    var buildParameter = function(labelText, type, isUrl, value, hasSelector, isRenumberable, deleteFunc)
     {
         var ident = generateRandomId();
         var labelGroup = $("<div/>").attr({'class': 'form-group', 'parameter-id':labelText, 'id':ident});
@@ -456,9 +459,9 @@ var TestEditor = (function ($)
         labelGroup.append(controls);
 
         return labelGroup;
-    }
+    };
 
-    function renameAssertions()
+    var renameAssertions = function()
     {
         $("#testAssertions .form-group").each(function (index, value)
         {
@@ -468,9 +471,9 @@ var TestEditor = (function ($)
             v.find('label.control-label').html("" + count + ".");
             v.find('a[parameter-id]').attr('parameter-id', count);
         });
-    }
+    };
 
-    function deleteParameter(e)
+    var deleteParameter = function(e)
     {
         var parent = $(e.currentTarget).parent("div.form-group");
         var param = parent.attr('parameter-id');
@@ -480,9 +483,9 @@ var TestEditor = (function ($)
         var label = "Delete parameter '" + param + "' from '" + test + "'?";
 
         deleteTestItem(title, label, false, parent.attr('id'));
-    }
+    };
 
-    function deleteAssertion(e)
+    var deleteAssertion = function(e)
     {
         var parent = $(e.currentTarget).parent("div.form-group");
         var param = parent.attr('parameter-id');
@@ -491,9 +494,9 @@ var TestEditor = (function ($)
         var label = "Delete assertion '" + param + "' from '" + test + "'?";
 
         deleteTestItem(title, label, true, parent.attr('id'));
-    }
+    };
 
-    function deleteTestItem(title, label, isRenumberable, paramId)
+    var deleteTestItem = function(title, label, isRenumberable, paramId)
     {
         nce.clearError();
         if (!nce.getSelectedCubeName())
@@ -509,9 +512,9 @@ var TestEditor = (function ($)
         _deleteParameterModal.modal({
             keyboard: true
         });
-    }
+    };
 
-    function deleteParameterOk()
+    var deleteParameterOk = function()
     {
         _deleteParameterModal.modal('hide');
 
@@ -525,9 +528,9 @@ var TestEditor = (function ($)
         }
 
         saveAllTests(false);
-    }
+    };
 
-    function enableTestItems()
+    var enableTestItems = function()
     {
         var count = getSelectedTestList().length;
 
@@ -545,9 +548,9 @@ var TestEditor = (function ($)
         {
             clearTestView();
         }
-    }
+    };
 
-    function deleteCurrentTestMenu()
+    var deleteCurrentTestMenu = function()
     {
         nce.clearError();
         if (!nce.getSelectedCubeName())
@@ -579,9 +582,9 @@ var TestEditor = (function ($)
             keyboard: true
         });
 
-    }
+    };
 
-    function deleteTestOk()
+    var deleteTestOk = function()
     {
         nce.clearError();
 
@@ -592,9 +595,9 @@ var TestEditor = (function ($)
 
         refreshTestList();
         saveAllTests(true);
-    }
+    };
 
-    function renameCurrentTestMenu()
+    var renameCurrentTestMenu = function()
     {
         nce.clearError();
         if (!nce.getSelectedCubeName())
@@ -627,9 +630,9 @@ var TestEditor = (function ($)
         _renameTestModal.modal({
             keyboard: true
         });
-    }
+    };
 
-    function testNameAlreadyExists(name)
+    var testNameAlreadyExists = function(name)
     {
         if (_testData == null)
         {
@@ -646,9 +649,9 @@ var TestEditor = (function ($)
         });
 
         return found;
-    }
+    };
 
-    function validateTestName(name)
+    var validateTestName = function(name)
     {
         var nameRegex = /^([A-Za-z0-9-.]{3,64})$/g;
 
@@ -665,9 +668,9 @@ var TestEditor = (function ($)
         }
 
         return true;
-    }
+    };
 
-    function renameTestOk()
+    var renameTestOk = function()
     {
         nce.clearError();
         //var oldName = $('#renameTestOldName').val();
@@ -688,9 +691,9 @@ var TestEditor = (function ($)
         test["name"] = newName;
 
         saveAllTests(false);
-    }
+    };
 
-    function addParameterMenu()
+    var addParameterMenu = function()
     {
         nce.clearError();
         if (!nce.getSelectedCubeName())
@@ -704,9 +707,9 @@ var TestEditor = (function ($)
         _addParameterModal.modal({
             keyboard: true
         });
-    }
+    };
 
-    function addParameterOk()
+    var addParameterOk = function()
     {
         _addParameterModal.modal('hide');
         var id = $('#addParameterField').val();
@@ -724,9 +727,9 @@ var TestEditor = (function ($)
         }
 
         saveAllTests(false);
-    }
+    };
 
-    function addNewAssertion()
+    var addNewAssertion = function()
     {
         var count = $('#testAssertions .form-group').length;
         var param = buildParameter(count+1, "exp", false, 'output.return', false, true, deleteAssertion);
@@ -741,9 +744,9 @@ var TestEditor = (function ($)
         }
 
         saveAllTests(false);
-    }
+    };
 
-    function runCurrentTest()
+    var runCurrentTest = function()
     {
         nce.clearError();
         if (!nce.getSelectedCubeName())
@@ -789,9 +792,9 @@ var TestEditor = (function ($)
         {
             nce.showNote("Could not run cube test:<hr class=\"hr-small\"/>" + e.message);
         }
-    }
+    };
 
-    function saveAllTests(modelIsUpToDate)
+    var saveAllTests = function(modelIsUpToDate)
     {
         if (!nce.ensureModifiable("Unable to save all tests."))
         {
@@ -821,9 +824,9 @@ var TestEditor = (function ($)
         {
             nce.showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
         }
-    }
+    };
 
-    function getActiveTest()
+    var getActiveTest = function()
     {
         var test = {};
         var name = $("#selectedTestName").html();
@@ -838,9 +841,9 @@ var TestEditor = (function ($)
         test["coord"] = retrieveParameters();
         test["expected"] = retrieveAssertions();
         return test;
-    }
+    };
 
-    function retrieveParameters()
+    var retrieveParameters = function()
     {
         var parameters = $("#testParameters > div[parameter-id]");
         var coord = new Array(parameters.length);
@@ -855,9 +858,9 @@ var TestEditor = (function ($)
         });
 
         return coord;
-    }
+    };
 
-    function retrieveAssertions()
+    var retrieveAssertions = function()
     {
         var assertions = $('#testAssertions > div[parameter-id]');
         var array = new Array(assertions.length);
@@ -867,9 +870,9 @@ var TestEditor = (function ($)
         });
 
         return array;
-    }
+    };
 
-    function retrieveCellInfo(group, hasSelector)
+    var retrieveCellInfo = function(group, hasSelector)
     {
         var cell = {"@type":"com.cedarsoftware.ncube.CellInfo"};
 
@@ -886,9 +889,9 @@ var TestEditor = (function ($)
         }
 
         return cell;
-    }
+    };
 
-    function showTestResult(success, message)
+    var showTestResult = function(success, message)
     {
         _testResultsDiv.hide();
         var testResults = $('#testResults');
@@ -907,18 +910,18 @@ var TestEditor = (function ($)
 
         testResults.html(message);
         _testResultsDiv.fadeIn("fast");
-    }
+    };
 
-    function clearTestSelection()
+    var clearTestSelection = function()
     {
         getSelectedTestList().each(function (index, elem)
         {
             $(elem).removeClass("selected");
         });
         enableTestItems();
-    }
+    };
 
-    function selectAllTests()
+    var selectAllTests = function()
     {
         _testListItems.find("a").each(function (index, elem)
         {
@@ -927,9 +930,9 @@ var TestEditor = (function ($)
             a.addClass("selected");
         });
         enableTestItems();
-    }
+    };
 
-    function findTestByName(name)
+    var findTestByName = function(name)
     {
         if (_testData == null)
         {
@@ -944,9 +947,9 @@ var TestEditor = (function ($)
             }
         }
         return null;
-    }
+    };
 
-    function createNewTestMenu()
+    var createNewTestMenu = function()
     {
         if (!nce.ensureModifiable("Unable to create a test."))
         {
@@ -962,9 +965,9 @@ var TestEditor = (function ($)
         _createNewTestModal.modal({
             keyboard: true
         });
-    }
+    };
 
-    function deleteAllTestsMenu()
+    var deleteAllTestsMenu = function()
     {
         nce.clearError();
 
@@ -982,9 +985,9 @@ var TestEditor = (function ($)
         $('#deleteAllTestsModal').modal({
             keyboard: true
         });
-    }
+    };
 
-    function deleteAllTestsOk()
+    var deleteAllTestsOk = function()
     {
         $('#deleteAllTestsModal').modal('hide');
 
@@ -993,9 +996,9 @@ var TestEditor = (function ($)
 
         saveAllTests(true);
         refreshTestList();
-    }
+    };
 
-    function createNewTestOk()
+    var createNewTestOk = function()
     {
         var newName = $('#createNewTestField').val().trim();
 
@@ -1034,9 +1037,9 @@ var TestEditor = (function ($)
             }
             nce.showNote(msg);
         }
-    }
+    };
 
-    function duplicateCurrentTestMenu()
+    var duplicateCurrentTestMenu = function()
     {
         nce.clearError();
 
@@ -1069,25 +1072,25 @@ var TestEditor = (function ($)
         $('#duplicateTestTitle').html('Duplicate \'' + $(list[0]).text().trim() + '\' ?');
         $('#duplicateTestNameField').val('');
         $('#duplicateTestModal').modal();
-    }
+    };
 
-    function getSelectedTestList()
+    var getSelectedTestList = function()
     {
         return _testListItems.find("a.selected");
-    }
+    };
 
-    function getSelectedTestCount()
+    var getSelectedTestCount = function()
     {
         return getSelectedTestList().length;
-    }
+    };
 
-    function getSelectedTestFromModel()
+    var getSelectedTestFromModel = function()
     {
         var list = getSelectedTestList();
         return findTestByName($(list[0]).text().trim());
-    }
+    };
 
-    function duplicateCurrentTestOk()
+    var duplicateCurrentTestOk = function()
     {
         // see if name already exists in tests?
         var newName = $('#duplicateTestNameField').val().trim();
@@ -1111,9 +1114,9 @@ var TestEditor = (function ($)
         _testList.find('div.panel-body').animate({
             scrollTop: getSelectedTestList().offset().top
         }, 200);
-    }
+    };
 
-    function duplicateTest(test, newTestName)
+    var duplicateTest = function(test, newTestName)
     {
         var newTest = {};
         newTest["@type"] = "com.cedarsoftware.ncube.NCubeTest";
@@ -1164,9 +1167,9 @@ var TestEditor = (function ($)
 
         newTest["expected"] = result;
         return newTest;
-    }
+    };
 
-    function createTypeSelector(typeStr, url)
+    var createTypeSelector = function(typeStr, url)
     {
         if (typeStr == null)
         {
@@ -1174,9 +1177,9 @@ var TestEditor = (function ($)
         }
         var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow', 'data-width':'auto', 'data-style': 'btn-default'});
         return fillTypeSelector(selector, typeStr, url);
-    }
+    };
 
-    function fillTypeSelector(selector, typeStr, url)
+    var fillTypeSelector = function(selector, typeStr, url)
     {
         if (selector == null)
         {
@@ -1209,9 +1212,9 @@ var TestEditor = (function ($)
         });
 
         return selector;
-    }
+    };
 
-    function leftPad (str, length)
+    var leftPad = function(str, length)
     {
         var pad = length - str.length;
 
@@ -1220,13 +1223,13 @@ var TestEditor = (function ($)
         }
 
         return _padding[pad] + str;
-    }
+    };
 
     // these are just temporary to use as an id
-    function generateRandomId()
+    var generateRandomId = function()
     {
         return leftPad(Math.random().toString(36).substring(7), 11);
-    }
+    };
 
     var load = function()
     {
@@ -1247,12 +1250,12 @@ var TestEditor = (function ($)
         //secondaryLayout.resizeAll();
     };
 
-    function calculateTestPanelSize()
+    var calculateTestPanelSize = function()
     {
         var east = $('#testLayoutEast');
         var testList = _testList.find('> .panel-body');
         testList.height(east.height() - 47);
-    }
+    };
 
     var handleCubeSelected = function()
     {

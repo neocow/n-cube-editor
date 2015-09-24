@@ -23,10 +23,62 @@ var RpmEditor = (function($)
     var hot = null;
     var nce = null;
 
-    $(window).resize(function ()
+    var init = function(info)
     {
-        RpmEditor.render();
-    });
+        if (!nce)
+        {
+            nce = info.fn;
+
+            $(window).resize(function ()
+            {
+                RpmEditor.render();
+            });
+
+            buildTraitButtons();
+        }
+    };
+
+    var buildTraitButtons = function()
+    {
+        var div = $('#traitFilter');
+        div.empty();
+        var result = nce.exec('RpmController.getTraitCategories', [nce.getAppId(), {}]);
+        if (result.status === false)
+        {
+            showRpmError('Unable to fetch rpm.meta.traits n-cube.');
+            return;
+        }
+        var traitList = result.data.return['@items'];
+        var i = 0;
+        $.each(traitList, function(index, item)
+        {
+            console.log(item);
+            var label = $('<label/>').attr({class:'btn'});
+            if (i == 0)
+            {
+                label.addClass('active');
+            }
+            label.attr({style:'border-color:#999;color:' + item.metaProps['css:color'] + ';background-color:' + item.metaProps['css:background-color'] + ' !important'});
+            var input = $('<input>').attr({type:'checkbox', autocomplete:'off'});
+            i++;
+            label.append(input);
+            var btnText = item.metaProps['shortDesc'] || item.value;
+            label.append(' ' + btnText);
+            div.append(label);
+        });
+
+        $('#selectAll').click(function(e)
+        {
+            e.preventDefault();
+            console.log('all');
+        });
+
+        $('#selectNone').click(function(e)
+        {
+            e.preventDefault();
+            console.log('none');
+        });
+    };
 
     var showRpmError = function(msg)
     {
@@ -41,9 +93,8 @@ var RpmEditor = (function($)
         $('#viewRpmInfo').removeAttr('hidden');
     };
 
-    var init = function()
+    var load = function()
     {
-        nce = $.info.fn;
         if (!nce.getCubeMap() || !nce.doesCubeExist())
         {
             showRpmError('No cubes available.');
@@ -61,75 +112,24 @@ var RpmEditor = (function($)
 
         if (loName.indexOf('rpm.class') != 0 && loName.indexOf('rpm.enum') != 0)
         {
-            showRpmError(nce.getSelectedCubeName() + ' is not an RPM Class.');
+            showRpmError('<b>' + info.name + '</b> is not an RPM Class.');
             return;
         }
 
         clearRpmError();
 
+        //var input = {'method':'getTraits'};
+        //var result = nce.exec('RpmController.getTraits', [nce.getAppId(), input]);
+        //console.log(result);
         // 1. Call server to fetch Rpm Class data in JSON format.
         // 2. Build out table
         // 3. Plop in links
-        var fieldNames = [];
-        for (var i=0; i < 50; i++)
-        {
-            fieldNames.push('field' + (i + 1));
-        }
-        var data1 = [
-                ['', 'Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford','Kia', 'Nissan', 'Toyota', 'Honda', 'Mazda', 'Ford'],
-                ['2012', 10, 11, 12, 13, 15, 16],
-                ['2013', 10, 11, 12, 13, 15, 16],
-                ['2014', 10, 11, 12, 13, 15, 16],
-                ['2015', 10, 11, 12, 13, 15, 16],
-                ['2016', 10, 11, 12, 13, 15, 16],
-                ['2017', 10, 11, 12, 13, 15, 16],
-                ['2018', 10, 11, 12, 13, 15, 16],
-                ['2019', 10, 11, 12, 13, 15, 16],
-                ['2020', 10, 11, 12, 13, 15, 16],
-                ['2021', 10, 11, 12, 13, 15, 16],
-                ['2022', 10, 11, 12, 13, 15, 16],
-                ['2023', 10, 11, 12, 13, 15, 16],
-                ['2024', 10, 11, 12, 13, 15, 16],
-                ['2025', 10, 11, 12, 13, 15, 16],
-                ['2026', 10, 11, 12, 13, 15, 16],
-                ['2027', 10, 11, 12, 13, 15, 16],
-                ['2028', 10, 11, 12, 13, 15, 16],
-                ['2029', 10, 11, 12, 13, 15, 16],
-                ['2030', 10, 11, 12, 13, 15, 16],
-                ['2031', 10, 11, 12, 13, 15, 16],
-                ['2032', 10, 11, 12, 13, 15, 16],
-                ['2033', 10, 11, 12, 13, 15, 16],
-                ['2034', 10, 11, 12, 13, 15, 16],
-                ['2035', 10, 11, 12, 13, 15, 16],
-                ['2036', 10, 11, 12, 13, 15, 16],
-                ['2037', 10, 11, 12, 13, 15, 16],
-                ['2038', 10, 11, 12, 13, 15, 16],
-                ['2039', 10, 11, 12, 13, 15, 16],
-                ['2040', 10, 11, 12, 13, 15, 16],
-                ['2041', 10, 11, 12, 13, 15, 16],
-                ['2042', 10, 11, 12, 13, 15, 16],
-                ['2043', 10, 11, 12, 13, 15, 16],
-                ['2044', 10, 11, 12, 13, 15, 16],
-                ['2045', 10, 11, 12, 13, 15, 16],
-                ['2046', 10, 11, 12, 13, 15, 16],
-                ['2047', 10, 11, 12, 13, 15, 16],
-                ['2048', 10, 11, 12, 13, 15, 16],
-                ['2049', 10, 11, 12, 13, 15, 16],
-                ['2050', 10, 11, 12, 13, 15, 16],
-                ['2051', 10, 11, 12, 13, 15, 16],
-                ['2052', 10, 11, 12, 13, 15, 16],
-                ['2053', 10, 11, 12, 13, 15, 16],
-                ['2054', 10, 11, 12, 13, 15, 16],
-                ['2055', 10, 11, 12, 13, 15, 16],
-                ['2056', 10, 11, 12, 13, 15, 16],
-                ['2057', 10, 11, 12, 13, 15, 16],
-                ['2058', 10, 11, 12, 13, 15, 16],
-                ['2059', 10, 11, 12, 13, 15, 16]
-            ],
-            container = document.getElementById('rpmTable'),
+        var colHeaders = ['a', 'b', 'c'];
+        var fieldNames = [1, 2, 3];
+        var container = document.getElementById('rpmTable'),
             settings = {
-                data: data1,
-                colHeaders: true,
+                //data: data1,
+                colHeaders: colHeaders,
                 rowHeaders: fieldNames,
                 //contextMenu: true,
                 manualColumnResize: true,
@@ -151,11 +151,12 @@ var RpmEditor = (function($)
 
     var handleCubeSelected = function()
     {
-        init();
+        load();
     };
 
     return {
         init: init,
+        load: load,
         render: render,
         handleCubeSelected: handleCubeSelected
     };
@@ -166,8 +167,8 @@ var RpmEditor = (function($)
 // Event handlers for events from NCE Frame
 var tabActivated = function tabActivated(info)
 {
-    $.info = info;
-    RpmEditor.init();
+    RpmEditor.init(info);
+    RpmEditor.load();
 };
 
 var cubeSelected = function cubeSelected()

@@ -1285,10 +1285,12 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            def coordinate = ['method' : method, 'args' : args, 'service': nCubeService]
+            def coordinate = ['method' : method, 'input' : args, 'service': nCubeService]
             NCube cube = nCubeService.getCube(appId, controller)
             Map output = [:]
-            return [value: cube.getCell(coordinate, output), output: output]
+            cube.getCell(coordinate, output)    // return value is set on 'return' key of output Map
+            output.remove('_rule')  // remove execution meta information (too big to send - add special API if needed)
+            return output
         }
         catch (Exception e)
         {
