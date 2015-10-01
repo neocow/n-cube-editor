@@ -1278,14 +1278,15 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             int dot = command.indexOf('.')
-            def controller = command.substring(0, dot)
-            def method = command.substring(dot + 1)
+            String controller = command.substring(0, dot)
+            String method = command.substring(dot + 1)
 
             if (!isAllowed(appId, controller, null))
             {
                 return null
             }
-            def coordinate = ['method' : method, 'input' : args, 'service': nCubeService]
+            Map coordinate = ['method' : method, 'service': nCubeService]
+            coordinate.putAll(args);
             NCube cube = nCubeService.getCube(appId, controller)
             Map output = [:]
             cube.getCell(coordinate, output)    // return value is set on 'return' key of output Map

@@ -21,23 +21,6 @@ body {
     text-shadow: none !important;
 }
 
-.noselect {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-.no-margins {
-    margin: 0;
-}
-
-.no-padding {
-    padding: 0 !important;
-}
-
 #ncubeTabContent {
     border: none #dcdcdc;
     border-radius: 0;

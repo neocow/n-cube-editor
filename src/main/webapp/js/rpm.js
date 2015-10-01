@@ -22,6 +22,9 @@ var RpmEditor = (function($)
 {
     var hot = null;
     var nce = null;
+    var traitMetaInfo = null;
+    var traitTable = null;
+    var fieldNames = null;
 
     var init = function(info)
     {
@@ -34,8 +37,21 @@ var RpmEditor = (function($)
                 RpmEditor.render();
             });
 
+            loadTraitMetaInfo();
             buildTraitButtons();
         }
+    };
+
+    var loadTraitMetaInfo = function()
+    {
+        var result = nce.exec('RpmController.getTraitCategoriesDeep', [nce.getAppId(), {}]);
+        if (result.status === false || !result.data.return)
+        {
+            showRpmError('Unable to fetch trait categories for all traits.  The rpm.meta.traits cubes are not loading:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        traitMetaInfo = result.data.return;
     };
 
     var buildTraitButtons = function()
@@ -52,31 +68,46 @@ var RpmEditor = (function($)
         var i = 0;
         $.each(traitList, function(index, item)
         {
-            console.log(item);
-            var label = $('<label/>').attr({class:'btn'});
+            var label = $('<label/>');
+            label.attr({class:'btn'});
             if (i == 0)
             {
                 label.addClass('active');
             }
             label.attr({style:'border-color:#999;color:' + item.metaProps['css:color'] + ';background-color:' + item.metaProps['css:background-color'] + ' !important'});
+            label.attr({'data-cat': item.value, 'data-toggle': "buttons"});
             var input = $('<input>').attr({type:'checkbox', autocomplete:'off'});
             i++;
             label.append(input);
             var btnText = item.metaProps['shortDesc'] || item.value;
             label.append(' ' + btnText);
+            label.click(function(e)
+            {
+                e.preventDefault();
+                label.toggleClass('active');
+                load();
+            });
             div.append(label);
         });
 
         $('#selectAll').click(function(e)
         {
             e.preventDefault();
-            console.log('all');
+            $('#traitFilter').find('label').each(function()
+            {
+                $(this).addClass('active');
+            });
+            load();
         });
 
         $('#selectNone').click(function(e)
         {
             e.preventDefault();
-            console.log('none');
+            $('#traitFilter').find('label').each(function()
+            {
+                $(this).removeClass('active');
+            });
+            load();
         });
     };
 
@@ -93,8 +124,56 @@ var RpmEditor = (function($)
         $('#viewRpmInfo').removeAttr('hidden');
     };
 
+    var buildTraitTable = function()
+    {
+        traitTable = {names:[], back:[], fore:[]};
+        var i = 0;
+        traitTable.names[i] = 'Traits >';
+        traitTable.back[i] = '#777';
+        traitTable.fore[i] = '#fff';
+        i++;
+        $('#traitFilter').find('label').each(function(index, element)
+        {
+            var elem = $(element);
+
+            if (elem.hasClass('active'))
+            {
+                var category = elem.attr('data-cat');
+                var catInfo = traitMetaInfo[category];
+
+                $.each(catInfo.traits['@items'], function(key1, val1)
+                {
+                    traitTable.names[i] = val1.value;
+                    traitTable.fore[i] = '#111';
+                    traitTable.back[i] = '#fff';
+
+                    if (catInfo.info.metaProps)
+                    {
+                        var fore = catInfo.info.metaProps['css:color'];
+                        var back = catInfo.info.metaProps['css:background-color'];
+                        if (fore)
+                        {
+                            traitTable.fore[i] = fore;
+                        }
+                        if (back)
+                        {
+                            traitTable.back[i] = back;
+                        }
+                    }
+                    i++;
+                });
+            }
+        });
+    };
+
     var load = function()
     {
+        if (hot)
+        {
+            hot.destroy();
+            hot = null;
+        }
+
         if (!nce.getCubeMap() || !nce.doesCubeExist())
         {
             showRpmError('No cubes available.');
@@ -116,28 +195,84 @@ var RpmEditor = (function($)
             return;
         }
 
+        var result = nce.exec('RpmController.getFields', [nce.getAppId(), {'cube':nce.getSelectedCubeName()}]);
+        if (result.status === false || !result.data.return || !result.data.return['@items'])
+        {
+            showRpmError('<b>' + info.name + '</b> is not an RPM Class.');
+            return;
+        }
+
+        var rpmClassName;
+        if (nce.getSelectedCubeName().startsWith('rpm.class'))
+        {
+            rpmClassName = nce.getSelectedCubeName().replace(/^rpm.class./, '');
+        }
+        else if (nce.getSelectedCubeName().startsWith('rpm.enum'))
+        {
+            rpmClassName = nce.getSelectedCubeName().replace(/^rpm.enum./, '');
+        }
+        else
+        {
+            showRpmError('<b>' + info.name + '</b> is not an RPM Class.');
+            return;
+        }
+        buildTraitTable();
+
+        $('#rpmClassName').html(rpmClassName);
+        var rpmClass = result.data.return['@items'];
+        fieldNames = [];
+        var rowNums = [];
+        var row = 0;
+        $.each(rpmClass, function(index, col)
+        {
+            fieldNames.push(col.value);
+            rowNums.push(row++);
+        });
+
         clearRpmError();
 
-        //var input = {'method':'getTraits'};
-        //var result = nce.exec('RpmController.getTraits', [nce.getAppId(), input]);
-        //console.log(result);
-        // 1. Call server to fetch Rpm Class data in JSON format.
-        // 2. Build out table
-        // 3. Plop in links
-        var colHeaders = ['a', 'b', 'c'];
-        var fieldNames = [1, 2, 3];
         var container = document.getElementById('rpmTable'),
             settings = {
-                //data: data1,
-                colHeaders: colHeaders,
-                rowHeaders: fieldNames,
-                //contextMenu: true,
+                autoColumnSize: true,
+                enterBeginsEditing: false,
+                enterMoves: {row: 1, col: 0},
+                tabMoves : {row: 0, col: 1},
+                colHeaders: traitTable.names,
+                rowHeaders: rowNums,
+                startCols: traitTable.names.length,
+                startRows: rowNums.length,
+                contextMenu: true,
                 manualColumnResize: true,
-                height:500
+                manualRowResize: true,
+                fixedColumnsLeft: 1,
+                height:500,
+                cells: function (row, col, prop) {
+                    var cellProperties = {};
+                    cellProperties.renderer = categoryRenderer;
+                    return cellProperties;
+                }
             };
 
         hot = new Handsontable(container, settings);
         hot.render();
+    };
+
+    var categoryRenderer = function(instance, td, row, col, prop, value, cellProperties)
+    {
+        Handsontable.renderers.TextRenderer.apply(this, arguments);
+        if (col == 0)
+        {
+            td.style.fontWeight = 'normal';
+            td.style.color = traitTable.fore[col];
+            td.style.background = traitTable.back[col];
+            td.innerHTML = '<html>' + fieldNames[row] + '</html>';
+        }
+        else
+        {
+            td.style.fontWeight = 'normal';
+            td.style.color = traitTable.fore[col];
+            td.style.background = traitTable.back[col];
+        }
     };
 
     var render = function()
