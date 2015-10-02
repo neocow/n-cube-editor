@@ -126,12 +126,12 @@ var RpmEditor = (function($)
 
     var buildTraitTable = function()
     {
-        traitTable = {names:[], back:[], fore:[]};
-        var i = 0;
-        traitTable.names[i] = 'Traits >';
-        traitTable.back[i] = '#777';
-        traitTable.fore[i] = '#fff';
-        i++;
+        traitTable = {names:['Traits >']};
+        traitTable['css:color'] = ['#fff'];
+        traitTable['css:background-color'] = ['#777'];
+
+        var i = 1;
+
         $('#traitFilter').find('label').each(function(index, element)
         {
             var elem = $(element);
@@ -140,26 +140,54 @@ var RpmEditor = (function($)
             {
                 var category = elem.attr('data-cat');
                 var catInfo = traitMetaInfo[category];
+                var catMeta = catInfo.info.metaProps;
+
+                if (!catMeta)
+                {   // No meta props for trait category, create empty map.
+                    catMeta = {};
+                }
 
                 $.each(catInfo.traits['@items'], function(key1, val1)
                 {
                     traitTable.names[i] = val1.value;
-                    traitTable.fore[i] = '#111';
-                    traitTable.back[i] = '#fff';
 
-                    if (catInfo.info.metaProps)
+                    // Blast all category level CSS metaProperties onto traitTable.
+                    $.each(catMeta, function(key)
                     {
-                        var fore = catInfo.info.metaProps['css:color'];
-                        var back = catInfo.info.metaProps['css:background-color'];
-                        if (fore)
+                        if (key.startsWith('css:'))
                         {
-                            traitTable.fore[i] = fore;
+                            traitTable[key][i] = catMeta[key];
                         }
-                        if (back)
-                        {
-                            traitTable.back[i] = back;
-                        }
+                    });
+
+                    // Blast all trait level CSS metaProperties onto traitTable (these override category level settings)
+                    if (!val1.metaProps)
+                    {   // No meta props for specific trait within trait category, create empty map.
+                        val1.metaProps = {};
                     }
+
+                    $.each(val1.metaProps, function(key, value)
+                    {
+                        if (key.startsWith('css:'))
+                        {
+                            if (!traitTable[key])
+                            {   // First time this specific CSS trait is seen, make space for it.
+                                traitTable[key] = [];
+                            }
+                            traitTable[key][i] = value;
+                        }
+                    });
+
+                    if (!traitTable['css:color'][i])
+                    {   // Color not set on trait category, default to dark gray.
+                        traitTable['css:color'][i] = ['#444'];
+                    }
+
+                    if (!traitTable['css:background-color'][i])
+                    {   // Background color not set on trait category, default to white.
+                        traitTable['css:background-color'][i] = ['#fff'];
+                    }
+
                     i++;
                 });
             }
@@ -226,7 +254,7 @@ var RpmEditor = (function($)
         $.each(rpmClass, function(index, col)
         {
             fieldNames.push(col.value);
-            rowNums.push(row++);
+            rowNums.push(++row);
         });
 
         clearRpmError();
@@ -241,7 +269,7 @@ var RpmEditor = (function($)
                 rowHeaders: rowNums,
                 startCols: traitTable.names.length,
                 startRows: rowNums.length,
-                contextMenu: true,
+                //contextMenu: true,
                 manualColumnResize: true,
                 manualRowResize: true,
                 fixedColumnsLeft: 1,
@@ -262,17 +290,17 @@ var RpmEditor = (function($)
         Handsontable.renderers.TextRenderer.apply(this, arguments);
         if (col == 0)
         {
-            td.style.fontWeight = 'normal';
-            td.style.color = traitTable.fore[col];
-            td.style.background = traitTable.back[col];
-            td.innerHTML = '<html>' + fieldNames[row] + '</html>';
+            td.innerHTML = fieldNames[row];
         }
-        else
+
+        $.each(traitTable, function(item)
         {
-            td.style.fontWeight = 'normal';
-            td.style.color = traitTable.fore[col];
-            td.style.background = traitTable.back[col];
-        }
+            if (item.startsWith('css:') && traitTable[item][col])
+            {
+                var style = item.replace(/^css:/, '');
+                td.style[style] = traitTable[item][col];
+            }
+        });
     };
 
     var render = function()
