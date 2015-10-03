@@ -1,31 +1,13 @@
 package com.cedarsoftware.controller
 
-import com.cedarsoftware.ncube.ApplicationID
-import com.cedarsoftware.ncube.Axis
-import com.cedarsoftware.ncube.AxisType
-import com.cedarsoftware.ncube.AxisValueType
-import com.cedarsoftware.ncube.CellInfo
-import com.cedarsoftware.ncube.Column
-import com.cedarsoftware.ncube.Delta
-import com.cedarsoftware.ncube.GroovyExpression
-import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeInfoDto
-import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.ncube.NCubeTest
-import com.cedarsoftware.ncube.RuleInfo
-import com.cedarsoftware.ncube.StringValuePair
+import com.cedarsoftware.ncube.*
 import com.cedarsoftware.ncube.exception.BranchMergeException
 import com.cedarsoftware.ncube.formatters.NCubeTestReader
 import com.cedarsoftware.ncube.formatters.NCubeTestWriter
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter
 import com.cedarsoftware.service.ncube.NCubeService
 import com.cedarsoftware.servlet.JsonCommandServlet
-import com.cedarsoftware.util.ArrayUtilities
-import com.cedarsoftware.util.CaseInsensitiveSet
-import com.cedarsoftware.util.DateUtilities
-import com.cedarsoftware.util.StringUtilities
-import com.cedarsoftware.util.ThreadAwarePrintStream
-import com.cedarsoftware.util.ThreadAwarePrintStreamErr
+import com.cedarsoftware.util.*
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import groovy.transform.CompileStatic
@@ -696,19 +678,36 @@ class NCubeController extends BaseController
                 return null
             }
             NCube ncube = nCubeService.getCube(appId, cubeName)
-            Map coord = test.createCoord()
+            Map<String, Object> coord = test.createCoord()
+            boolean success = true
             Map output = new LinkedHashMap()
+            Map args = [input:coord, output:output, ncube:ncube]
+            Map<String, Object> copy = new LinkedHashMap(coord)
+
+            // If any of the inputs are an Expression, then execute them (they have no input, as they are the input).
+            // This allows a URL: to shared code to be re-used for an input.
+            copy.each { key, value ->
+                if (value instanceof GroovyExpression)
+                {
+                    GroovyExpression exp = (GroovyExpression) value
+                    coord[key] = exp.execute(args)
+                }
+                else if (value instanceof GroovyTemplate)
+                {
+                    GroovyTemplate exp = (GroovyTemplate) value
+                    coord[key] = exp.execute(args)
+                }
+            }
+
+            Set<String> errors = new LinkedHashSet<>()
             ncube.getCell(coord, output)               // Execute test case
 
             RuleInfo ruleInfoMain = (RuleInfo) output[(NCube.RULE_EXEC_INFO)]
             ruleInfoMain.setSystemOut(ThreadAwarePrintStream.getContent())
             ruleInfoMain.setSystemErr(ThreadAwarePrintStreamErr.getContent())
 
-            Map args = [input:coord, output:output, ncube:ncube]
             List<GroovyExpression> assertions = test.createAssertions()
-            boolean success = true
             int i = 0;
-            Set<String> errors = new LinkedHashSet<>()
 
             for (GroovyExpression exp : assertions)
             {

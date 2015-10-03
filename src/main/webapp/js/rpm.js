@@ -226,7 +226,7 @@ var RpmEditor = (function($)
         var result = nce.exec('RpmController.getFields', [nce.getAppId(), {'cube':nce.getSelectedCubeName()}]);
         if (result.status === false || !result.data.return || !result.data.return['@items'])
         {
-            showRpmError('<b>' + info.name + '</b> is not an RPM Class.');
+            showRpmError('<b>' + info.name + '</b> is not an RPM Class:<hr class="hr-small"/>' + result.data);
             return;
         }
 
@@ -274,10 +274,9 @@ var RpmEditor = (function($)
                 manualRowResize: true,
                 fixedColumnsLeft: 1,
                 height:500,
-                cells: function (row, col, prop) {
-                    var cellProperties = {};
-                    cellProperties.renderer = categoryRenderer;
-                    return cellProperties;
+                cells: function (row, col, prop)
+                {
+                    return {renderer:categoryRenderer};
                 }
             };
 

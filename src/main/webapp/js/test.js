@@ -363,7 +363,7 @@ var TestEditor = (function ($)
             $('#selectedTestName').html(testData['name']);
             var coordinate = testData['coord'];
 
-            if (coordinate != null  && coordinate)
+            if (coordinate)
             {
                 $.each(coordinate, function (index, item)
                 {
@@ -380,7 +380,7 @@ var TestEditor = (function ($)
             }
 
             var assertions = testData['expected'];
-            if (assertions != null  && assertions)
+            if (assertions)
             {
                 $.each(assertions, function (index, value)
                 {
@@ -433,14 +433,26 @@ var TestEditor = (function ($)
 
         urlButton.click(function ()
         {
+            var isValue;
             var txt = urlButton.text();
             if (txt == "Value")
             {
                 urlButton.html("&nbsp;URL&nbsp;");
+                isValue = false;
             }
             else
             {
                 urlButton.html("Value");
+                isValue = true;
+            }
+
+            if (hasSelector)
+            {
+                var selector = createTypeSelector(type, !isValue);
+                inputGroup.find("select").remove();
+                inputGroup.find("div").remove();
+                inputGroup.append(selector);
+                selector.selectpicker();
             }
         });
 

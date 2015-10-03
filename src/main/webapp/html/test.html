@@ -287,6 +287,29 @@
     </div>
 </div>
 
+<div>
+    <select id="datatypes-value" class="form-control">
+        <option id="dt-string" value="string">String</option>
+        <option id="dt-integer" value="long">Integer (64-bit)</option>
+        <option id="dt-date" value="date">Date</option>
+        <option id="dt-boolean" value="boolean">Boolean (true / false)</option>
+        <option id="dt-bigdecimal" value="bigdec">Decimal Financial (unlimited size)</option>
+        <option id="dt-double" value="double">Decimal Engineering (64-bit double precision)</option>
+        <option id="dt-exp" value="exp">Expression (Groovy language)</option>
+        <option id="dt-template" value="template">Groovy Template</option>
+        <option id="dt-binary" value="binary">Binary (byte[])</option>
+        <option id="dt-latlon" value="latlon">Lat / Lon (lat, lon)</option>
+        <option id="dt-point2d" value="point2d">2D point (x, y)</option>
+        <option id="dt-point3d" value="point3d">3D point (x, y, z)</option>
+    </select>
+    <select id="datatypes-url" class="form-control" style="display:none">
+        <option id="dt-url-exp" value="exp">Expression (Groovy language)</option>
+        <option id="dt-url-method" value="method">Method (Groovy language)</option>
+        <option id="dt-url-string" value="string">String</option>
+        <option id="dt-url-binary" value="binary">Binary (byte[])</option>
+        <option id="dt-url-template" value="template">Template</option>
+    </select>
+</div>
 
 </body>
 </html>
