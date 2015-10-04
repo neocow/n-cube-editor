@@ -14,3 +14,8 @@
 .no-padding {
     padding: 0 !important;
 }
+
+.panel-heading {
+    padding: 5px;
+    background-color: #D1C5B7;
+}

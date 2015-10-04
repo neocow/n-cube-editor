@@ -33,6 +33,9 @@ var TestEditor = (function ($)
     var _testList = null;
     var _testListWarning = null;
     var _testListItems = null;
+    var _testLayoutCenter = null;
+    var _testParameters = null;
+    var _testAssertions = null;
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
 
     var init = function(info)
@@ -70,6 +73,9 @@ var TestEditor = (function ($)
             _testList = $('#testList');
             _testListWarning = $('#testListWarning');
             _testListItems = $('#testListItems');
+            _testLayoutCenter = $('#testLayoutCenter');
+            _testParameters = $('#testParameters');
+            _testAssertions = $('#testAssertions');
             secondaryLayout.resizeAll();
 
             $('#renameTestOk').click(function (e)
@@ -339,8 +345,8 @@ var TestEditor = (function ($)
         $('#testButtonGroupDiv').hide();
         _testResultsDiv.hide();
 
-        $('#testParameters').empty();
-        $('#testAssertions').empty();
+        _testParameters.empty();
+        _testAssertions.empty();
         $('#testResults').empty();
     };
 
@@ -355,8 +361,7 @@ var TestEditor = (function ($)
         }
 
         var testData = _testData[_testSelectionAnchor];
-        var testParameters = $('#testParameters');
-        var testAssertions = $('#testAssertions');
+        var testParameters = _testParameters;
 
         try
         {
@@ -386,7 +391,7 @@ var TestEditor = (function ($)
                 {
                     var isUrl = value['isUrl'] == null ? null : value['isUrl'];
                     var v = value.value == null ? null : value.value;
-                    testAssertions.append(buildParameter(index + 1, "exp", isUrl, v, false, true, deleteAssertion));
+                    _testAssertions.append(buildParameter(index + 1, "exp", isUrl, v, false, true, deleteAssertion));
                 });
             }
         }
@@ -475,7 +480,7 @@ var TestEditor = (function ($)
 
     var renameAssertions = function()
     {
-        $("#testAssertions .form-group").each(function (index, value)
+        $("#testAssertions").find(".form-group").each(function (index, value)
         {
             var v = $(value);
             var count = index + 1;
@@ -531,7 +536,7 @@ var TestEditor = (function ($)
         _deleteParameterModal.modal('hide');
 
         var id = $('#deleteParameterHiddenId').val();
-        var isRenumberable = $('#deleteParameterOk').attr('isRenumberable')
+        var isRenumberable = $('#deleteParameterOk').attr('isRenumberable');
 
         $('#' + id).remove();
 
@@ -685,7 +690,6 @@ var TestEditor = (function ($)
     var renameTestOk = function()
     {
         nce.clearError();
-        //var oldName = $('#renameTestOldName').val();
         var newName = $('#renameTestNewName').val();
 
         if (!validateTestName(newName))
@@ -730,13 +734,13 @@ var TestEditor = (function ($)
         // check to see if parameter already exists in parameter-key of #testAssertions .form-group
         var param = buildParameter(id, "string", false, '', true, false, deleteParameter);
 
-        if ($('#testParameters .form-group').length > 0)
+        if (_testParameters.find('.form-group').length > 0)
         {
             param.insertAfter('#testParameters .form-group:last');
         }
         else
         {
-            $('#testParameters').append(param);
+            _testParameters.append(param);
         }
 
         saveAllTests(false);
@@ -744,7 +748,7 @@ var TestEditor = (function ($)
 
     var addNewAssertion = function()
     {
-        var count = $('#testAssertions .form-group').length;
+        var count = _testAssertions.find('.form-group').length;
         var param = buildParameter(count+1, "exp", false, 'output.return', false, true, deleteAssertion);
 
         if (count > 0)
@@ -753,7 +757,7 @@ var TestEditor = (function ($)
         }
         else
         {
-            $('#testAssertions').append(param);
+            _testAssertions.append(param);
         }
 
         saveAllTests(false);
@@ -786,7 +790,7 @@ var TestEditor = (function ($)
             {
                 showTestResult(false, "Could not run test:  " + result.data);
 
-                $('#testLayoutCenter > .well').animate({
+                _testLayoutCenter.find('> .well').animate({
                     scrollTop: _testResultsDiv.offset().top
                 }, 200);
 
@@ -795,8 +799,7 @@ var TestEditor = (function ($)
 
             showTestResult(result.data["_result"], result.data["_message"]);
 
-
-            $('#testLayoutCenter > .well').animate({
+            _testLayoutCenter.find('> .well').animate({
                 scrollTop: _testResultsDiv.offset().top
             }, 200);
 
@@ -835,7 +838,7 @@ var TestEditor = (function ($)
 
         if (!result.status)
         {
-            nce.showNote("Unable to save TestData:<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Unable to save tests:<hr class=\"hr-small\"/>" + result.data);
         }
     };
 
@@ -858,7 +861,7 @@ var TestEditor = (function ($)
 
     var retrieveParameters = function()
     {
-        var parameters = $("#testParameters > div[parameter-id]");
+        var parameters = _testParameters.find("> div[parameter-id]");
         var coord = new Array(parameters.length);
 
         $.each(parameters, function (index, value)
@@ -875,7 +878,7 @@ var TestEditor = (function ($)
 
     var retrieveAssertions = function()
     {
-        var assertions = $('#testAssertions > div[parameter-id]');
+        var assertions = _testAssertions.find('> div[parameter-id]');
         var array = new Array(assertions.length);
 
         $.each(assertions, function(index, value) {
@@ -930,17 +933,6 @@ var TestEditor = (function ($)
         getSelectedTestList().each(function (index, elem)
         {
             $(elem).removeClass("selected");
-        });
-        enableTestItems();
-    };
-
-    var selectAllTests = function()
-    {
-        _testListItems.find("a").each(function (index, elem)
-        {
-            var a = $(elem);
-            var span = a.find("span");
-            a.addClass("selected");
         });
         enableTestItems();
     };
