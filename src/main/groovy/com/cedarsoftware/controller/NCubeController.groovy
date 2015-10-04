@@ -684,18 +684,13 @@ class NCubeController extends BaseController
             Map args = [input:coord, output:output, ncube:ncube]
             Map<String, Object> copy = new LinkedHashMap(coord)
 
-            // If any of the inputs are an Expression, then execute them (they have no input, as they are the input).
-            // This allows a URL: to shared code to be re-used for an input.
+            // If any of the input values are a CommandCell, execute them.  Use the fellow (same) input as input.
+            // In other words, other key/value pairs on the input map can be referenced in a CommandCell.
             copy.each { key, value ->
-                if (value instanceof GroovyExpression)
+                if (value instanceof CommandCell)
                 {
-                    GroovyExpression exp = (GroovyExpression) value
-                    coord[key] = exp.execute(args)
-                }
-                else if (value instanceof GroovyTemplate)
-                {
-                    GroovyTemplate exp = (GroovyTemplate) value
-                    coord[key] = exp.execute(args)
+                    CommandCell cmd = (CommandCell) value
+                    coord[key] = cmd.execute(args)
                 }
             }
 

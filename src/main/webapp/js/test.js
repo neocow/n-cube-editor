@@ -696,6 +696,7 @@ var TestEditor = (function ($)
         _renameTestModal.modal('hide');
 
         // change name of selected test
+        $('#testListItems').find('li').find('a.selected').html(newName);
         $('#selectedTestName').html(newName);
 
         // change currently selected model item
