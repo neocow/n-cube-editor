@@ -182,11 +182,11 @@ $(function ()
             ,	showDebugMessages:			false // log and/or display messages from debugging & testing code
             ,   west__onresize: function()
             {
-                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 158);
+                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 143);
             }
         });
 
-        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 158);
+        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 143);
 
         $(document).keydown(function(e)
         {
