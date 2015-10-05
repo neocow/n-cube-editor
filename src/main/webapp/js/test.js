@@ -50,11 +50,11 @@ var TestEditor = (function ($)
                 ,	resizable:					true	// when open, pane can be resized
                 ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
                 ,	livePaneResizing:			true
-                ,	east__minSize:				170
+                ,	east__minSize:				110
                 ,   east__resizeable:           true
-                ,   east__size:                 250
-                ,   east__triggerEventsOnLoad: true
-                ,   east__maskContents:       true
+                ,   east__size:                 140
+                ,   east__triggerEventsOnLoad:  true
+                ,   east__maskContents:         true
                 ,   center__triggerEventsOnLoad: true
                 ,   center__maskContents:       true
                 ,   togglerLength_open:         60
@@ -279,7 +279,7 @@ var TestEditor = (function ($)
 
         if (testListResult.status === true)
         {
-            if (testListResult.data.length > 0)
+            if (testListResult.data && testListResult.data.length > 0)
             {
                 _testData = testListResult.data;
                 _testSelectionAnchor = 0;
