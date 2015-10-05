@@ -51,6 +51,12 @@ var TestEditor = (function ($)
                 ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
                 ,	livePaneResizing:			true
                 ,	east__minSize:				170
+                ,   east__resizeable:           true
+                ,   east__size:                 250
+                ,   east__triggerEventsOnLoad: true
+                ,   east__maskContents:       true
+                ,   center__triggerEventsOnLoad: true
+                ,   center__maskContents:       true
                 ,   togglerLength_open:         60
                 ,   togglerLength_closed:       "100%"
                 ,	spacing_open:			5  // ALL panes
@@ -113,7 +119,7 @@ var TestEditor = (function ($)
                 e.preventDefault();
                 if (nce.ensureModifiable("Unable to generate tests."))
                 {
-                    loadTestListView("ncubeController.generateTests");
+                    loadTestListView("ncubeController.generateTests", true);
                 }
             });
             //  Set focused field when dialog appears so user can just start typing.
@@ -256,7 +262,7 @@ var TestEditor = (function ($)
         }
     };
 
-    var loadTestListView = function(funcName)
+    var loadTestListView = function(funcName, genTests)
     {
         if (!nce.getSelectedCubeName())
         {
@@ -273,8 +279,15 @@ var TestEditor = (function ($)
 
         if (testListResult.status === true)
         {
-            _testData = testListResult.data;
-            _testSelectionAnchor = 0;
+            if (testListResult.data.length > 0)
+            {
+                _testData = testListResult.data;
+                _testSelectionAnchor = 0;
+            }
+            else if (genTests)
+            {
+                nce.showNote('The cube is empty, no test input generated.  Create a single test.');
+            }
             refreshTestList();
         }
         else
@@ -1250,9 +1263,8 @@ var TestEditor = (function ($)
         }
 
 
-        loadTestListView("ncubeController.getTests");
+        loadTestListView("ncubeController.getTests", false);
         calculateTestPanelSize();
-        //secondaryLayout.resizeAll();
     };
 
     var calculateTestPanelSize = function()
