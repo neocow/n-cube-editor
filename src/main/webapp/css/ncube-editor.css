@@ -10,6 +10,13 @@ body {
     text-shadow: none !important;
 }
 
+.ncube-notselected {
+    color: #444;
+    background-color: white;
+    padding: 0 5px 0 5px !important;
+    text-shadow: none !important;
+}
+
 .search-hilite {
     background-color:rgba(61, 139, 202, 0.45);
 }
@@ -22,11 +29,8 @@ body {
     border-radius: 0;
 }
 
-.ncube-notselected {
-    color: #444;
-    background-color: white;
-    padding: 0 5px 0 5px !important;
-    text-shadow: none !important;
+#cube-search-reset {
+    border-radius: 0;
 }
 
 #ncubeTabContent {
@@ -66,6 +70,10 @@ div#west, div.panel {
 div#west div.panel-body {
     padding: 5px;
     overflow: auto;
+}
+
+#ncube-list-div div.panel-body {
+    height:calc(100% - 96px);
 }
 
 div#east div.panel-body {
@@ -133,10 +141,7 @@ div#editColumnsModal ul.list-group
 }
 
 .skinny-lr {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding: 5px 15px;
 }
 
 #nce-clipboard-container {
@@ -164,10 +169,7 @@ div#editColumnsModal ul.list-group
     font-size: small;
     font-weight: normal;
     margin: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-right: 5px;
-    padding-left: 5px;
+    padding: 0 5px;
     border: none;
     border-radius: 0;
     overflow:hidden;
@@ -187,11 +189,11 @@ div#editColumnsModal ul.list-group
 }
 
 #app-list-div {
-    margin-top: 8px;
+    margin-top: 7px;
 }
 
 #ncube-list-div {
-    margin-bottom: 0px;
+    margin-bottom: 0;
 }
 
 #ncube > .well {

@@ -147,12 +147,6 @@ $(function ()
         var verListPanel = verListDiv.find('> .panel-body');
         verListPanel.height(60);
 
-        var ncubeListPanel = $('#ncube-list-div').find('> .panel-body');
-
-        var hApp = appListDiv.height();
-        var hStat = statListDiv.height();
-        var hVer = verListDiv.height();
-
         addListeners();
 
         var myLayout = $('body').layout({
@@ -180,13 +174,7 @@ $(function ()
             //	enable state management
             ,	stateManagement__enabled:	false // automatic cookie load & save enabled by default
             ,	showDebugMessages:			false // log and/or display messages from debugging & testing code
-            ,   west__onresize: function()
-            {
-                ncubeListPanel.height(west.height() - hApp - hStat - hVer - 143);
-            }
         });
-
-        ncubeListPanel.height(west.height() - hApp - hStat - hVer - 143);
 
         $(document).keydown(function(e)
         {
@@ -3330,3 +3318,8 @@ function tabActivated(_cubeList, _selectedCubeName)
 {
     console.log('tabActivated on index.html');
 }
+
+var cubeSelected = function cubeSelected()
+{
+    console.log('cubeSelected on index.html');
+};
