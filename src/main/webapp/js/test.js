@@ -61,12 +61,6 @@ var TestEditor = (function ($)
                 ,   togglerLength_closed:       "100%"
                 ,	spacing_open:			5  // ALL panes
                 ,	spacing_closed:			5 // ALL panes
-                //            ,	south__spacing_open:			5  // ALL panes
-                //,	south__spacing_closed:			5 // ALL panes
-                ,  east__onresize: function()
-                {
-                    calculateTestPanelSize();
-                }
             });
 
             _duplicateTestModal = $('#duplicateTestModal');
@@ -1265,13 +1259,6 @@ var TestEditor = (function ($)
 
         loadTestListView("ncubeController.getTests", false);
         calculateTestPanelSize();
-    };
-
-    var calculateTestPanelSize = function()
-    {
-        var east = $('#testLayoutEast');
-        var testList = _testList.find('> .panel-body');
-        testList.height(east.height() - 47);
     };
 
     var handleCubeSelected = function()

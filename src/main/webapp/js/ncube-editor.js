@@ -261,7 +261,6 @@ $(function ()
                 {
                     clearError();
                     _activeTab = menuId;
-                    //loadCube();
 
                     try
                     {
