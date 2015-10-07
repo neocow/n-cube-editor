@@ -22,15 +22,15 @@
 }(this, function (jQuery) {
 
 (function ($) {
-  $.fn.selectpicker.defaults = {
-    noneSelectedText: '沒有選取任何項目',
-    noneResultsText: '沒有找到符合的結果',
-    countSelectedText: '已經選取{0}個項目',
-    maxOptionsText: ['超過限制 (最多選擇{n}項)', '超過限制(最多選擇{n}組)'],
-    selectAllText: '選取全部',
-    deselectAllText: '全部取消',
-    multipleSeparator: ', '
-  };
+    $.fn.selectpicker.defaults = {
+        noneSelectedText: 'چیزی انتخاب نشده است',
+        noneResultsText: 'هیج مشابهی برای {0} پیدا نشد',
+        countSelectedText: "{0} از {1} مورد انتخاب شده",
+        maxOptionsText: ['بیشتر ممکن نیست {حداکثر {n} عدد}', 'بیشتر ممکن نیست {حداکثر {n} عدد}'],
+        selectAllText: 'انتخاب همه',
+        deselectAllText: 'انتخاب هیچ کدام',
+        multipleSeparator: ', '
+    };
 })(jQuery);
 
 

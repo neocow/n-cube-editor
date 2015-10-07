@@ -1,7 +1,7 @@
 /**
  * Test Panel for N-Cube Editor
  *
- * @author Ken Partlow (kpartlow@gmail.com)
+ * @author Ken Partlow (kpartlow@gmail.com) / John DeRegnaucourt (jdereg@gmail.com)
  *         <br>
  *         Copyright (c) Cedar Software LLC
  *         <br><br>

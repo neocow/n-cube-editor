@@ -2782,7 +2782,7 @@ $(function ()
 
     function showActiveBranch()
     {
-        $('#BranchMenu').html('Branch:&nbsp;<button class="btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>');
+        $('#BranchMenu').html('Branch:&nbsp;<button class="btn-sm btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>');
     }
 
     function selectBranch()

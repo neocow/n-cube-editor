@@ -1,5 +1,5 @@
 body {
-    padding-top: 50px; /* to make the container go all the way to the bottom of the top navbar */
+    padding-top: 39px; /* to make the container go all the way to the bottom of the top navbar */
     background-color: #FAF0E6;
 }
 
@@ -96,11 +96,6 @@ div#editColumnsModal ul.list-group
 {
     padding-left: 20px;
     padding-right: 20px;
-}
-
-#BranchMenu {
-    padding-top:11px;
-    padding-bottom:9px;
 }
 
 .modal-header {
@@ -231,9 +226,14 @@ div#editColumnsModal ul.list-group
     border-color: #1f639c;
     padding-right: 40px;
     margin-bottom: 0;
+    min-height: 40px;
+    height: 40px;
 }
 .navbar-custom .navbar-brand {
     color: #ffffff;
+    line-height: 40px;
+    font-size: 16px;
+    padding: 0 12px;
 }
 .navbar-custom .navbar-brand:hover,
 .navbar-custom .navbar-brand:focus {
@@ -245,6 +245,9 @@ div#editColumnsModal ul.list-group
 }
 .navbar-custom .navbar-nav > li > a {
     color: #ffffff;
+    line-height:40px;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 .navbar-custom .navbar-nav > li > a:hover,
 .navbar-custom .navbar-nav > li > a:focus {
@@ -326,7 +329,6 @@ div#editColumnsModal ul.list-group
 .navbar-custom .navbar-link:hover {
     color: #a0d0ff;
 }
-
 /*
  Main color palette:
  #D1C587 - tan

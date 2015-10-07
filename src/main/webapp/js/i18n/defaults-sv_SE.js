@@ -23,12 +23,19 @@
 
 (function ($) {
   $.fn.selectpicker.defaults = {
-    noneSelectedText: '沒有選取任何項目',
-    noneResultsText: '沒有找到符合的結果',
-    countSelectedText: '已經選取{0}個項目',
-    maxOptionsText: ['超過限制 (最多選擇{n}項)', '超過限制(最多選擇{n}組)'],
-    selectAllText: '選取全部',
-    deselectAllText: '全部取消',
+    noneSelectedText: 'Inget valt',
+    noneResultsText: 'Inget sökresultat matchar {0}',
+    countSelectedText: function (numSelected, numTotal) {
+      return (numSelected === 1) ? "{0} alternativ valt" : "{0} alternativ valda";
+    },
+    maxOptionsText: function (numAll, numGroup) {
+      return [
+        'Gräns uppnåd (max {n} alternativ)',
+        'Gräns uppnåd (max {n} gruppalternativ)'
+      ];
+    },
+    selectAllText: 'Markera alla',
+    deselectAllText: 'Avmarkera alla',
     multipleSeparator: ', '
   };
 })(jQuery);

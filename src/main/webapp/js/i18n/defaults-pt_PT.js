@@ -22,15 +22,13 @@
 }(this, function (jQuery) {
 
 (function ($) {
-  $.fn.selectpicker.defaults = {
-    noneSelectedText: '沒有選取任何項目',
-    noneResultsText: '沒有找到符合的結果',
-    countSelectedText: '已經選取{0}個項目',
-    maxOptionsText: ['超過限制 (最多選擇{n}項)', '超過限制(最多選擇{n}組)'],
-    selectAllText: '選取全部',
-    deselectAllText: '全部取消',
-    multipleSeparator: ', '
-  };
+$.fn.selectpicker.defaults = {
+noneSelectedText: 'Nenhum seleccionado',
+noneResultsText: 'Sem resultados contendo {0}',
+countSelectedText: 'Selecionado {0} de {1}',
+maxOptionsText: ['Limite ultrapassado (máx. {n} {var})', 'Limite de seleções ultrapassado (máx. {n} {var})', ['itens', 'item']],
+multipleSeparator: ', '
+};
 })(jQuery);
 
 
