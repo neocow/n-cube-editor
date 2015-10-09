@@ -316,6 +316,7 @@ var RpmEditor = (function($)
         load();
     };
 
+    // API
     return {
         init: init,
         load: load,
@@ -324,7 +325,6 @@ var RpmEditor = (function($)
     };
 
 })(jQuery);
-
 
 // Event handlers for events from NCE Frame
 var tabActivated = function tabActivated(info)

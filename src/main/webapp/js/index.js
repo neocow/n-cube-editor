@@ -19,7 +19,7 @@
  *         limitations under the License.
  */
 
-$(function ()
+var NCE = (function ($)
 {
     var head = 'HEAD';
     var _searchThread;
@@ -45,7 +45,7 @@ $(function ()
     var _errorId = null;
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
     var _columnList = $('#editColumnsList');
-    var _activeTab = 'ncubeTab';
+    var _activeTab = 'n-cubeTab';
     var _cellId = null;
     var _uiCellId = null;
     var _urlDropdown = $('#datatypes-url');
@@ -66,7 +66,6 @@ $(function ()
     var _mainTabPanel = $('#ncubeTabContent');
 
     //  modal dialogs
-    var _editCellModal = $('#editCellModal');
     var _selectBranchModal = $('#selectBranchModal');
     var _commitModal = $('#commitRollbackModal');
 
@@ -85,8 +84,8 @@ $(function ()
         loadAppListView();
         loadStatusListView();
         loadVersionListView();
-        clearSearch();
         buildMenu();
+        clearSearch();
         loop();
 
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
@@ -134,7 +133,6 @@ $(function ()
                 }
             });
         };
-        var west = $('#west');
         var appListDiv = $('#app-list-div');
         var appListPanel = appListDiv.find('> .panel-body');
         appListPanel.height(60);
@@ -181,7 +179,7 @@ $(function ()
             var isModalDisplayed = $('body').hasClass('modal-open');
 
             var focus = $('input:focus');
-            if (_activeTab == 'ncubeTab' && !isModalDisplayed && focus && focus.attr('id') != 'cube-search' && focus.attr('id') != 'cube-search-content')
+            if (_activeTab == 'n-cubeTab' && !isModalDisplayed && focus && focus.attr('id') != 'cube-search' && focus.attr('id') != 'cube-search-content')
             {
                 if (e.metaKey || e.ctrlKey)
                 {   // Control Key (command in the case of Mac)
@@ -196,9 +194,6 @@ $(function ()
                 }
             }
         });
-
-        myLayout.resizeAll();
-        buildNCubeEditMenu();
     }
 
     function startWorker()
@@ -229,6 +224,7 @@ $(function ()
         var menu = result.data;
         $('#appTitle').html(menu['~Title']);
         var ul = $('#menuList');
+
         $.each(menu, function (key, value)
         {
             if (!key.startsWith('~') && !key.startsWith('@') && !key.startsWith('#'))
@@ -481,11 +477,6 @@ $(function ()
         }
     }
 
-    function buildNCubeEditMenu()
-    {
-        // TODO: Add when we can invoke cut, copy, and paste from the drop down
-    }
-
     function clearSearch()
     {
         _searchNames.val('');
@@ -666,8 +657,7 @@ $(function ()
         {
             clearCache();
         });
-        addColumnEditListeners();
-        addEditCellListeners();
+
         addBranchListeners();
 
         _editCellRadioURL.change(function()
@@ -869,17 +859,6 @@ $(function ()
             a.click(function clickAction()
             {
                 selectCubeByName(loName);
-
-                try
-                {
-                    var activeTab = getActiveTab();
-                    activeTab[0].contentWindow.cubeSelected();
-                }
-                catch (e)
-                {
-                    console.log(e);
-                }
-
             });
 
             if (_selectedCubeName == cubeName)
@@ -939,319 +918,6 @@ $(function ()
         _cubeCount.html(count);
     }
 
-    function loadCubeHtml()
-    {
-        if (!_selectedCubeName || !_selectedApp || !_selectedVersion || !_selectedStatus)
-        {
-            $('#ncube-content').html('No n-cubes to load');
-            return;
-        }
-        var result = call("ncubeController.getHtml", [getAppId(), _selectedCubeName]);
-        if (result.status === true)
-        {
-            $('#ncube-content').html(result.data);
-
-            // Disallow any selecting within the table
-            var table = $('table');
-            table.addClass('noselect');
-
-            $(".axis-menu").each(function ()
-            {
-                var element = $(this);
-                var axisName = element.attr('data-id');
-                var ul = $('<ul/>').prop({'class': 'dropdown-menu', 'role': 'menu'});
-                var li = $('<li/>');
-                var an = $('<a href="#">');
-                an.html("Update Axis...");
-                an.click(function ()
-                {
-                    updateAxis(axisName)
-                });
-                li.append(an);
-                ul.append(li);
-                li = $('<li/>');
-                an = $('<a href="#">');
-                an.html("Add Axis...");
-                an.click(function ()
-                {
-                    addAxis();
-                });
-                li.append(an);
-                ul.append(li);
-                li = $('<li/>');
-                an = $('<a href="#">');
-                an.html("Delete Axis...");
-                an.click(function ()
-                {
-                    deleteAxis(axisName)
-                });
-                li.append(an);
-                ul.append(li);
-                li = $('<div/>').prop({'class': 'divider'});
-                ul.append(li);
-                li = $('<li/>');
-                an = $('<a href="#">');
-                an.html("Edit " + axisName + " columns...");
-                an.click(function ()
-                {
-                    editColumns(axisName)
-                });
-                li.append(an);
-                ul.append(li);
-                element.append(ul);
-            });
-        }
-        else
-        {
-            $('#ncube-content').empty();
-            showNote('Unable to load ' + _selectedCubeName + ':<hr class="hr-small"/>' + result.data);
-        }
-
-        $('.column').each(function ()
-        {
-            $(this).dblclick(function()
-            {   // On double click, bring up column value editor modal
-                var col = $(this);
-                editColumns(col.attr('data-axis'));
-            });
-        });
-
-        $('.cell-url a, .column-url a').each(function()
-        {
-            var anchor = $(this);
-            anchor.click(function()
-            {
-                clearError();
-                var link = anchor.html();
-                if (link.indexOf('http:') == 0 || link.indexOf('https:') == 0 || link.indexOf('file:') == 0)
-                {
-                    window.open(link);
-                }
-                else
-                {
-                    var result = call("ncubeController.resolveRelativeUrl", [getAppId(), link]);
-                    if (result.status === true && result.data)
-                    {
-                        link = result.data;
-                        window.open(link);
-                    }
-                    else
-                    {
-                        var msg = result.data ? result.data : "Unable to resolve relative URL against entries in sys.classpath";
-                        showNote('Unable to open ' + link + ':<hr class="hr-small"/>' + msg);
-                    }
-                }
-            });
-        });
-        processCellClicks();
-        buildCubeNameLinks();
-    }
-
-    function processCellClicks()
-    {
-        // Add ability for the user to double-click axis and pop-up the 'Update Axis' modal
-        $('.ncube-head').each(function()
-        {
-            $(this).dblclick(function()
-            {
-                var div = $(this).find('div');
-                var axisName = div.attr('data-id');
-                updateAxis(axisName);
-            });
-        });
-
-        // Add support for individual and shift-selection of cells within the table cell area
-        $('td.cell').each(function ()
-        {
-            var cell = $(this);
-            cell.click(function (event)
-            {
-                if (event.shiftKey || event.ctrlKey)
-                {
-                    var selectedCell = $('td.cell-selected');
-                    if (!selectedCell || selectedCell.length == 0)
-                    {
-                        clearSelectedCells();
-                        cell.addClass('cell-selected');
-                        cell.children().addClass('cell-selected');
-                    }
-                    else
-                    {
-                        var table = $(".table-ncube")[0];
-                        var minRow = 10000000000;
-                        var minCol = 10000000000;
-                        var maxRow = -1;
-                        var maxCol = -1;
-                        var tableRows = table.rows;
-
-                        selectedCell.each(function()
-                        {
-                            var iCell = $(this);
-                            var iRow = getRow(iCell);
-                            var iCol = getCol(iCell) - countTH(tableRows[iRow].cells);
-                            if (iRow < minRow) minRow = iRow;
-                            if (iRow > maxRow) maxRow = iRow;
-                            if (iCol < minCol) minCol = iCol;
-                            if (iCol > maxCol) maxCol = iCol;
-                        });
-                        var aRow = getRow(cell);
-                        var aCol = getCol(cell) - countTH(tableRows[aRow].cells);
-
-                        // Ensure that the rectangle goes from top left to lower right
-                        if (aCol > maxCol) maxCol = aCol;
-                        if (aCol < minCol) minCol = aCol;
-                        if (aRow > maxRow) maxRow = aRow;
-                        if (aRow < minRow) minRow = aRow;
-
-                        for (var column = minCol; column <= maxCol; column++)
-                        {
-                            for (var row = minRow; row <= maxRow; row++)
-                            {
-                                var numTH = countTH(tableRows[row].cells);
-                                var domCell = tableRows[row].cells[column + numTH]; // This is a DOM "TD" element
-                                var jqCell = $(domCell);                             // Now it's a jQuery object.
-                                jqCell.addClass('cell-selected');
-                                jqCell.children().addClass('cell-selected');
-                            }
-                        }
-                    }
-                }
-                else
-                {   // On a straight-up click, nuke any existing selection.
-                    clearSelectedCells();
-                    cell.addClass('cell-selected');
-                    cell.children().addClass('cell-selected');
-                }
-            });
-
-            cell.dblclick(function ()
-            {   // On double click open Edit Cell modal
-                _uiCellId = cell;
-                _cellId = _uiCellId.attr('data-id').split("_");
-                editCell();
-            });
-        });
-    }
-
-    function countTH(row)
-    {
-        var count = 0;
-        for (var i=0; i < row.length; i++)
-        {
-            if (row[i].tagName == "TH")
-            {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    function getCol(cell)
-    {
-        var col = cell.parent().children().index(cell);
-        return col;
-    }
-
-    function getRow(cell)
-    {
-        var row = cell.parent().parent().children().index(cell.parent());
-        return row;
-    }
-
-    function clearSelectedCells()
-    {
-        $(".cell-selected").each(function()
-        {
-            $(this).removeClass('cell-selected');
-        });
-    }
-
-    function buildCubeNameLinks()
-    {
-        // Build cube list names
-        var cubeLowerNames = {};
-        var s = "";
-        var word = '(\\b)';
-        $.each(_cubeList, function (key)
-        {
-            if (key.length > 2)
-            {   // Only support n-cube names with 3 or more characters in them (too many false replaces will occur otherwise)
-                cubeLowerNames[key] = true;
-                s += word + key.replace('.', '\\.') + word + '|';
-            }
-        });
-
-        if (s.length > 0)
-        {
-            s = s.substring(0, s.length - 1);
-        }
-
-        var failedCheck = {};
-        var regex = new RegExp(s, "gi");
-
-        $('.column, .cell').each(function ()
-        {
-            var cell = $(this);
-            var html = cell.html();
-            if (html && html.length > 2)
-            {
-                var found = false;
-
-                html = html.replace(regex, function (matched)
-                {
-                    found = true;
-                    return '<a class="ncube-anchor" href="#">' + matched + '</a>';
-                });
-
-                if (found)
-                {   // substitute new text with anchor tag
-                    cell.html(html);
-                }
-                else
-                {
-                    var loHtml = html.toLowerCase();
-                    if (!failedCheck[html] && (cubeLowerNames['rpm.class.' + loHtml] || cubeLowerNames['rpm.enum.' + loHtml]))
-                    {
-                        html = '<a class="ncube-anchor" href="#">' + html + '</a>';
-                        cell.html(html);
-                    }
-                    else
-                    {
-                        failedCheck[html] = true;
-                    }
-                }
-            }
-        });
-
-        failedCheck = null;
-
-        // Add click handler that opens clicked cube names
-        $('.ncube-anchor').each(function ()
-        {
-            var link = $(this);
-            link.click(function ()
-            {
-                var cubeName = link.html().toLowerCase();
-                if (cubeLowerNames[cubeName])
-                {
-                    _selectedCubeName = getProperCubeName(link.html());
-                }
-                else
-                {
-                    if (cubeLowerNames['rpm.class.' + cubeName])
-                    {
-                        _selectedCubeName = getProperCubeName('rpm.class.' + link.html());
-                    }
-                    else if (cubeLowerNames['rpm.enum.' + cubeName])
-                    {
-                        _selectedCubeName = getProperCubeName('rpm.enum.' + link.html());
-                    }
-                }
-                loadCube();
-            });
-        });
-    }
-
     function getProperCubeName(cubeName)
     {
         var nameToChk = (cubeName + '').toLowerCase();
@@ -1259,13 +925,20 @@ $(function ()
         return info ? info.name : null;
     }
 
-    // TODO: This function must be refactored out.
     function loadCube()
     {
         saveState();
-        if (_activeTab == 'ncubeTab')
+        try
         {
-            loadCubeHtml();
+            var activeTab = getActiveTab();
+            if (activeTab && activeTab[0])
+            {
+                activeTab[0].contentWindow.cubeSelected();
+            }
+        }
+        catch (e)
+        {
+            console.log(e);
         }
 
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
@@ -1991,320 +1664,6 @@ $(function ()
         }
     }
 
-    function addAxis()
-    {
-        if (!ensureModifiable('Axis cannot be added.'))
-        {
-            return;
-        }
-
-        var generalTypes = ['STRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
-        var ruleTypes = ['EXPRESSION'];
-        buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected)
-        {
-            if ("RULE" == selected)
-            {
-                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function () { });
-                $('#addAxisValueTypeName').val('EXPRESSION');
-            }
-            else
-            {
-                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
-                $('#addAxisValueTypeName').val('STRING');
-            }
-        });
-        buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
-        $('#addAxisName').val('');
-        $('#addAxisModal').modal();
-    }
-
-    function addAxisOk()
-    {
-        $('#addAxisModal').modal('hide');
-        var axisName = $('#addAxisName').val();
-        var axisType = $('#addAxisTypeName').val();
-        var axisValueType = $('#addAxisValueTypeName').val();
-        var result = call("ncubeController.addAxis", [getAppId(), _selectedCubeName, axisName, axisType, axisValueType]);
-        if (result.status === true)
-        {
-            loadCube();
-        }
-        else
-        {
-            showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
-        }
-    }
-
-    function deleteAxis(axisName)
-    {
-        if (!ensureModifiable('Axis cannot be deleted.'))
-        {
-            return;
-        }
-
-        $('#deleteAxisName').val(axisName);
-        $('#deleteAxisModal').modal();
-    }
-
-    function deleteAxisOk()
-    {
-        $('#deleteAxisModal').modal('hide');
-        var axisName = $('#deleteAxisName').val();
-        var result = call("ncubeController.deleteAxis", [getAppId(), _selectedCubeName, axisName]);
-        if (result.status === true)
-        {
-            loadCube();
-        }
-        else
-        {
-            showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
-        }
-    }
-
-    function updateAxis(axisName)
-    {
-        if (!ensureModifiable('Axis cannot be updated.'))
-        {
-            return false;
-        }
-
-        var result = call("ncubeController.getAxis", [getAppId(), _selectedCubeName, axisName]);
-        var axis;
-        if (result.status === true)
-        {
-            axis = result.data;
-        }
-        else
-        {
-            showNote("Could not retrieve axes for ncube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
-            return;
-        }
-        var isRule = axis.type.name == 'RULE';
-        var isNearest = axis.type.name == 'NEAREST';
-        $('#updateAxisLabel').html('Update Axis');
-        $('#updateAxisName').val(axisName);
-        $('#updateAxisTypeName').val(axis.type.name);
-        $('#updateAxisValueTypeName').val(axis.valueType.name);
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null});
-        if (isRule)
-        {
-            hideAxisSortOption();
-            showAxisDefaultColumnOption(axis);
-            showAxisFireAllOption(axis);
-        }
-        else if (isNearest)
-        {
-            hideAxisSortOption();
-            hideAxisDefaultColumnOption();
-            hideAxisFireAllOption();
-        }
-        else
-        {
-            showAxisSortOption(axis);
-            showAxisDefaultColumnOption(axis);
-            hideAxisFireAllOption();
-        }
-        _axisName = axisName;
-        $('#updateAxisModal').modal({
-            keyboard: true
-        });
-    }
-
-    function showAxisSortOption(axis)
-    {
-        $('#updateAxisSortOrderRow').show();
-        $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
-    }
-
-    function hideAxisSortOption()
-    {
-        $('#updateAxisSortOrderRow').hide();
-    }
-
-    function showAxisDefaultColumnOption(axis)
-    {
-        $('#updateAxisDefaultColRow').show();
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null, 'disabled': false});
-    }
-
-    function hideAxisDefaultColumnOption()
-    {
-        $('#updateAxisDefaultColRow').hide();
-    }
-
-    function showAxisFireAllOption(axis)
-    {
-        $('#updateAxisFireAllRow').show();
-        $('#updateAxisFireAll').prop({'checked': axis.fireAll == true, 'disabled': false});
-    }
-
-    function hideAxisFireAllOption()
-    {
-        $('#updateAxisFireAllRow').hide();
-    }
-
-    function updateAxisOk()
-    {
-        $('#updateAxisModal').modal('hide');
-        var axisName = $('#updateAxisName').val();
-        var hasDefault = $('#updateAxisDefaultCol').prop('checked');
-        var sortOrder = $('#updateAxisSortOrder').prop('checked');
-        var fireAll = $('#updateAxisFireAll').prop('checked');
-        var result = call("ncubeController.updateAxis", [getAppId(), _selectedCubeName, _axisName, axisName, hasDefault, sortOrder, fireAll]);
-        if (result.status === true)
-        {
-            loadCube();
-        }
-        else
-        {
-            showNote("Unable to update axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
-        }
-    }
-
-    function loadColumns(axis)
-    {
-        var insTitle = $('#editColInstTitle');
-        var inst = $('#editColInstructions');
-        if ('DISCRETE' == axis.type.name)
-        {
-            insTitle.html('Instructions - Discrete Column');
-            inst.html("<i>Discrete</i> column has a single value per column. Values are matched with '='. \
-            Strings are matched case-sensitively.  Look ups are indexed and run \
-            in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
-        <ul><li>Examples: \
-        <ul> \
-        <li>Enter string values as is, no quotes: <code>OH</code></li> \
-        <li>Valid number: <code>42</code></li> \
-        <li>Valid date: <code>2015/02/14</code> (or <code>14 Feb 2015</code>, <code>Feb 14, 2015</code>, <code>February 14th, 2015</code>, <code>2015-02-14</code>)</li> \
-        <li>Do not use mm/dd/yyyy or dd/mm/yyyy. \
-        </li></ul></li></ul>");
-        }
-        else if ('RANGE' == axis.type.name)
-        {
-            insTitle.html('Instructions - Range Column');
-            inst.html("A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
-            <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Look ups are indexed \
-            and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <ul><li>Enter low value, high value. Treated [inclusive, exclusive).</li> \
-        <li>Examples: \
-        <ul> \
-        <li><i>Number range</i>: <code>25, 75</code> (meaning x >= 25 AND x < 75)</li> \
-        <li><i>Number range</i>: <code>[100, 1000]</code> (brackets optional)</li> \
-        <li><i>Date range</i>: <code>2015/01/01, 2017-01-01</code> (date >= 2015-01-01 AND date < 2017-01-01) \
-        </li></ul></li></ul>");
-        }
-        else if ('SET' == axis.type.name)
-        {
-            insTitle.html('Instructions - Set Column');
-            inst.html("A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
-            match with '=' and ranges match when value is within the range [inclusive, exclusive).  Overlapping\
-            ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis.\
-            Look ups are indexed and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <ul><li>Examples: \
-        <ul> \
-        <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
-        <li><i>Strings</i>: <code>TX, OH, GA</code></li> \
-        <li><i>Strings (3) with spaces</i>: <code>brown fox, jumps honey badger, is eaten</code></li> \
-        <li><i>Date range</i>: <code>[2010/01/01, 2012/12/31]</code></li> \
-        <li><i>Date ranges</i>: <code>[2015-01-01, 2016-12-31], [2019/01/01, 2020/12/31]</code> \
-        </li></ul></li></ul>");
-        }
-        else if ('NEAREST' == axis.type.name)
-        {
-            insTitle.html('Instructions - Nearest Column');
-            inst.html("A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
-            axis to the passed in value is matched.  Strings are compared similar to spell-check \
-            (See <a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm). \
-            Lat/Lon's column values are compared using earth curvature in distance calculation \
-            (See <a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla). \
-            Numbers compared using abs(column - value).  Look ups scan all columns and run in \
-            <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
-        <ul><li>Examples: \
-        <ul> \
-        <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> <code>alfa</code> will match column <code>Alpha</code>.  It has the closest 'edit' distance.</li> \
-        <li>With columns <code>1, 10, 100, 1000</code>, <i>value</i> <code>400</code> will match column <code>100</code>. (Distance of 300 is smallest).</li> \
-        <li>Dates are entered in the same formats in Discrete column instructions (many formats supported).</li> \
-        <li>Do not use mm/dd/yyyy or dd/mm/yyyy for dates.</li></ul></li></ul>");
-        }
-        else if ('RULE' == axis.type.name)
-        {
-            insTitle.html('Instructions - Rule Column');
-            inst.html("A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
-            that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> \
-            conditions will fire. (See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>). \
-            The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, \
-            if the name of a rule is bound to the rule axis, execution will start on the named rule.  A rule axis can \
-            have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, \
-            otherwise a CoordinateNotFound exception will be thrown.  Look ups scan all columns (except when fire once is indicated) \
-            and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
-        <ul><li>Notes: \
-        <ul> \
-        <li>Enter the [optional] rule name in the top line (no quotes).</li> \
-        <li>Enter <i>condition</i> in <a href=\"http://groovy.codehaus.org/\" target=\"_blank\">Groovy</a> on the second line.</li> \
-        <li>The <i>input</i> and <i>output</i> Maps and <i>ncube</i> are available in the condition and statements (cells).</li> \
-        <li><i>Example condition</i>: <code>input.state == 'OH'</code></li> \
-        </ul></li></ul>");
-        }
-        else
-        {
-            insTitle.html('Instructions');
-            inst.html('Unknown axis type');
-        }
-
-        var axisList = axis.columns['@items'];
-        _columnList.empty();
-        _columnList.prop('model', axis);
-        var displayOrder = 0;
-        $.each(axisList, function (key, item)
-        {
-            if (!item.displayOrder || item.displayOrder < 2147483647)
-            {   // Don't add default column in
-                item.displayOrder = displayOrder++;
-                var rowDiv = $('<div/>').prop({class: "row", "model": item});
-                var div = $('<div/>').prop({class: "input-group"});
-                var span = $('<span/>').prop({class: "input-group-addon"});
-                var inputBtn = $('<input/>').prop({class: "editColCheckBox", "type": "checkbox"});
-                if (item.checked === true)
-                {
-                    inputBtn[0].checked = true;
-                }
-
-                if (axis.type.name == 'RULE')
-                {
-                    if (!item.metaProps)
-                    {
-                        item.metaProps = {"name": "Condition " + displayOrder};
-                    }
-                    var inputName = $('<input/>').prop({class: "form-control", "type": "text"});
-                    inputName.attr({"data-type": "name"});
-                    inputName.blur(function ()
-                    {
-                        item.metaProps.name = inputName.val();
-                    });
-                    inputName.val(item.metaProps.name);
-                }
-
-                var inputText = $('<input/>').prop({class: "form-control", "type": "text"});
-                inputText.attr({"data-type":"cond"});
-                inputText.blur(function()
-                {
-                    item.value = inputText.val();
-                });
-
-                inputText.val(item.value);
-                span.append(inputBtn);
-                div.append(span);
-                if (axis.type.name == 'RULE')
-                {
-                    div.append(inputName);
-                }
-                div.append(inputText);
-                rowDiv.append(div);
-                _columnList.append(rowDiv);
-            }
-        });
-    }
-
     function ensureModifiable(operation)
     {
         clearError();
@@ -2336,385 +1695,6 @@ $(function ()
             showNote('Unable to fetch the cell contents: ' + result.data);
         }
     }
-
-    // =========================== Everything to do with Column Editing ===============================
-    function addColumnEditListeners()
-    {
-        $('#editColSelectAll').click(function ()
-        {
-            checkAll(true, '.editColCheckBox')
-        });
-        $('#editColSelectNone').click(function ()
-        {
-            checkAll(false, '.editColCheckBox')
-        });
-        $('#editColAdd').click(function ()
-        {
-            editColAdd()
-        });
-        $('#editColDelete').click(function ()
-        {
-            editColDelete()
-        });
-        $('#editColUp').click(function ()
-        {
-            editColUp()
-        });
-        $('#editColDown').click(function ()
-        {
-            editColDown()
-        });
-        $('#editColumnsCancel').click(function ()
-        {
-            editColCancel()
-        });
-        $('#editColumnsSave').click(function ()
-        {
-            editColSave()
-        });
-    }
-
-    function editColumns(axisName)
-    {
-        if (!ensureModifiable('Columns cannot be edited.'))
-        {
-            return false;
-        }
-
-        var result = call("ncubeController.getAxis", [getAppId(), _selectedCubeName, axisName]);
-        var axis;
-        if (result.status === true)
-        {
-            axis = result.data;
-            if (!axis.columns['@items'])
-            {
-                axis.columns['@items'] = [];
-            }
-            if (axis.defaultCol)
-            {   // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
-                axis.columns["@items"].splice(axis.columns["@items"].length - 1, 1);
-            }
-        }
-        else
-        {
-            showNote("Could not retrieve axes for n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
-            return;
-        }
-        sortColumns(axis);
-        loadColumns(axis);
-        var moveBtnAvail = axis.preferredOrder == 1;
-        if (moveBtnAvail === true)
-        {
-            $('#editColUp').show();
-            $('#editColDown').show();
-        }
-        else
-        {
-            $('#editColUp').hide();
-            $('#editColDown').hide();
-        }
-        $('#editColumnsLabel').html('Edit ' + axisName);
-        $('#editColumnsModal').modal();
-    }
-
-    function sortColumns(axis)
-    {
-        if (axis.preferredOrder == 1)
-        {
-            axis.columns['@items'].sort(function(a, b)
-            {
-                return a.displayOrder - b.displayOrder;
-            });
-        }
-    }
-
-    function editColAdd()
-    {
-        var input = $('.editColCheckBox');
-        var loc = -1;
-        $.each(input, function (index, btn)
-        {
-            if ($(this).prop('checked'))
-            {
-                loc = index;
-            }
-        });
-        var axis = _columnList.prop('model');
-        var newCol = {
-            '@type': 'com.cedarsoftware.ncube.Column',
-            'value': 'newValue',
-            'id': getUniqueId()
-        };
-
-        if (loc == -1 || axis.preferredOrder == 0)
-        {
-            axis.columns['@items'].push(newCol);
-            loc = input.length - 1;
-        }
-        else
-        {
-            axis.columns['@items'].splice(loc + 1, 0, newCol);
-        }
-        loadColumns(axis);
-
-        // Select newly added column name, so user can just type over it.
-        input = _columnList.find('.form-control');
-        input[loc + 1].select();
-    }
-
-    function editColDelete()
-    {
-        var axis = _columnList.prop('model');
-        var input = $('.editColCheckBox');
-        var cols = axis.columns['@items'];
-        var colsToDelete = [];
-        $.each(input, function (index, btn)
-        {
-            if ($(this).prop('checked'))
-            {
-                colsToDelete.push(index);
-            }
-        });
-
-        // Walk through in reverse order, deleting from back to front so that
-        // the correct elements are deleted.
-        for (var i=colsToDelete.length - 1; i >= 0; i--)
-        {
-            cols.splice(colsToDelete[i], 1);
-        }
-        loadColumns(axis);
-    }
-
-    function editColUp()
-    {
-        var axis = _columnList.prop('model');
-        var cols = axis.columns['@items'];
-        var input = $('.editColCheckBox');
-
-        if (cols && cols.length > 0 && input[0].checked)
-        {   // Top one checked, cannot move any items up
-            return;
-        }
-
-        for (var i=0; i < input.length - 1; i++)
-        {
-            var tag = input[i];
-            cols[i].checked = tag.checked;
-            if (!tag.checked)
-            {
-                var nextTag = input[i + 1];
-                cols[i + 1].checked = nextTag.checked;
-                if (nextTag.checked)
-                {
-                    tag.checked = true;
-                    nextTag.checked = false;
-
-                    var temp = cols[i];
-                    cols[i] = cols[i + 1];
-                    cols[i + 1] = temp;
-
-                    cols[i].checked = true;
-                    cols[i + 1].checked = false;
-                }
-            }
-        }
-
-        loadColumns(axis);
-    }
-
-    function editColDown()
-    {
-        var axis = _columnList.prop('model');
-        var cols = axis.columns['@items'];
-        var input = $('.editColCheckBox');
-
-        if (cols && cols.length > 0 && input[cols.length - 1].checked)
-        {   // Bottom one checked, cannot move any items down
-            return;
-        }
-
-        for (var i=input.length - 1; i > 0; i--)
-        {
-            var tag = input[i];
-            cols[i].checked = tag.checked;
-            if (!tag.checked)
-            {
-                var nextTag = input[i - 1];
-                cols[i - 1].checked = nextTag.checked;
-                if (nextTag.checked)
-                {
-                    tag.checked = true;
-                    nextTag.checked = false;
-
-                    var temp = cols[i];
-                    cols[i] = cols[i - 1];
-                    cols[i - 1] = temp;
-
-                    cols[i].checked = true;
-                    cols[i - 1].checked = false;
-                }
-            }
-        }
-
-        loadColumns(axis);
-    }
-
-    function editColCancel()
-    {
-        $('#editColumnsModal').modal('hide');
-    }
-
-    function editColSave()
-    {
-        var axis = _columnList.prop('model');
-        _columnList.find('input[data-type=cond]').each(function(index, elem)
-        {
-            axis.columns['@items'][index].value = elem.value;
-        });
-        _columnList.find('input[data-type=name]').each(function(index, elem)
-        {
-            var col = axis.columns['@items'][index];
-            if (col.metaProp)
-            {
-                col.metaProp.name = elem.value;
-            }
-        });
-        $('#editColumnsModal').modal('hide');
-        axis.defaultCol = null;
-        var result = call("ncubeController.updateAxisColumns", [getAppId(), _selectedCubeName, axis]);
-
-        if (result.status !== true)
-        {
-            showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
-        }
-        reloadCube();
-    }
-
-    // =========================== Everything to do with Cell Editing ===============================
-
-    function addEditCellListeners()
-    {
-        $('#editCellClear').click(function()
-        {
-            editCellClear();
-        });
-        $('#editCellCancel').click(function()
-        {
-            editCellCancel();
-        });
-        $('#editCellOk').click(function()
-        {
-            editCellOK();
-        });
-    }
-
-    function editCell()
-    {
-        if (!ensureModifiable('Cell cannot be updated.'))
-        {
-            return;
-        }
-
-        var result = call("ncubeController.getCellNoExecute", [getAppId(), _selectedCubeName, _cellId]);
-
-        if (result.status === false)
-        {
-            showNote('Unable to fetch the cell contents: ' + result.data);
-            return;
-        }
-
-        var cellInfo = result.data;
-        // Set the cell value (String)
-        _editCellValue.val(cellInfo.value ? cellInfo.value : "");
-        if (cellInfo.dataType == "null" || !cellInfo.dataType)
-        {
-            cellInfo.dataType = "string";
-        }
-
-        // Set the correct entry in the drop-down
-        if (cellInfo.isUrl)
-        {
-            _urlDropdown.val(cellInfo.dataType);
-        }
-        else
-        {
-            _valueDropdown.val(cellInfo.dataType);
-        }
-
-        // Choose the correct data type drop-down (show/hide the other)
-        _urlDropdown.toggle(cellInfo.isUrl);
-        _valueDropdown.toggle(!cellInfo.isUrl);
-
-        // Set the URL check box
-        _editCellRadioURL.find('input').prop('checked', cellInfo.isUrl);
-
-        // Set the Cache check box state
-        _editCellCache.find('input').prop('checked', cellInfo.isCached);
-
-        _editCellModal.modal('show');
-    }
-
-    function editCellClear()
-    {
-        _editCellModal.modal('hide');
-        var result = call("ncubeController.updateCell", [getAppId(), _selectedCubeName, _cellId, null]);
-
-        if (result.status === false)
-        {
-            _cellId = null;
-            showNote('Unable to clear cell:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        _uiCellId.html('');
-        _uiCellId.attr({'class':'cell'});
-        _cellId = null;
-    }
-
-    function editCellCancel()
-    {
-        _cellId = null;
-        _editCellModal.modal('hide');
-    }
-
-    function editCellOK()
-    {
-        var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
-        cellInfo.isUrl = _editCellRadioURL.find('input').is(':checked');
-        cellInfo.value = _editCellValue.val();
-        cellInfo.dataType = cellInfo.isUrl ? _urlDropdown.val() : _valueDropdown.val();
-        cellInfo.isCached = _editCellCache.find('input').is(':checked');
-        _editCellModal.modal('hide');
-
-        var result = call("ncubeController.updateCell", [getAppId(), _selectedCubeName, _cellId, cellInfo]);
-
-        if (result.status === false)
-        {
-            _cellId = null;
-            showNote('Unable to update cell:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        if (cellInfo.isUrl)
-        {
-            _uiCellId.html(cellInfo.value);
-            _uiCellId.attr({'class':'cell cell-url'});
-        }
-        else if (cellInfo.dataType == "exp" || cellInfo.dataType == "method")
-        {
-            _uiCellId.html(cellInfo.value);
-            _uiCellId.attr({'class':'cell cell-code'});
-        }
-        else
-        {
-            _uiCellId.html(cellInfo.value);
-            _uiCellId.attr({'class':'cell'});
-        }
-        _cellId = null;
-        reloadCube();
-    }
-
-    // =============================================== End Cell Editing ================================================
 
     // ======================================== Everything to do with Branching ========================================
 
@@ -3307,18 +2287,19 @@ $(function ()
         return _selectedVersion;
     }
 
-    function getSelectedStatus()
+    var getSelectedStatus = function()
     {
         return _selectedStatus;
+    };
+
+    // API
+    return {
+        getSelectedStatus: getSelectedStatus
     }
-});
 
-function tabActivated(_cubeList, _selectedCubeName)
+})(jQuery);
+
+function frameLoaded()
 {
-    console.log('tabActivated on index.html');
+    $('#menuList').find(':first-child').find('a').click();
 }
-
-var cubeSelected = function cubeSelected()
-{
-    console.log('cubeSelected on index.html');
-};

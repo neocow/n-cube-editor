@@ -1258,7 +1258,6 @@ var TestEditor = (function ($)
 
 
         loadTestListView("ncubeController.getTests", false);
-        calculateTestPanelSize();
     };
 
     var handleCubeSelected = function()
