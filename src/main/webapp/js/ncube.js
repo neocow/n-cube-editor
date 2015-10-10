@@ -21,7 +21,17 @@
 var NCubeEditor = (function ($)
 {
     var nce = null;
-    var _editCellModal = $('#editCellModal');
+    var _columnList = $('#editColumnsList');
+    var _editCellModal = $('#');
+    var _editCellValue = $('#editCellValue');
+    var _editCellCache = $('#editCellCache');
+    var _editCellRadioURL = $('#editCellRadioURL');
+    var _valueDropdown = $('#datatypes-value');
+    var _urlDropdown = $('#datatypes-url');
+    var _axisName;
+    var _cellId = null; // TODO: Needs to be resettable from index.js
+    var _uiCellId = null;
+    var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
 
     var init = function(info)
     {
@@ -30,6 +40,24 @@ var NCubeEditor = (function ($)
             nce = info.fn;
             addColumnEditListeners();
             addEditCellListeners();
+
+            _editCellRadioURL.change(function()
+            {
+                var isUrl = _editCellRadioURL.find('input').is(':checked');
+                _urlDropdown.toggle(isUrl);
+                _valueDropdown.toggle(!isUrl);
+            });
+
+            _urlDropdown.change(function()
+            {
+                enabledDisableCheckBoxes()
+            });
+
+            _valueDropdown.change(function()
+            {
+                enabledDisableCheckBoxes()
+            });
+
         }
     };
 
@@ -234,8 +262,10 @@ var NCubeEditor = (function ($)
                 }
             });
 
-            cell.dblclick(function ()
+            cell.dblclick(function (e)
             {   // On double click open Edit Cell modal
+                e.preventDefault();
+                // TODO: Double click doing nothing!
                 _uiCellId = cell;
                 _cellId = _uiCellId.attr('data-id').split("_");
                 editCell();
@@ -278,16 +308,19 @@ var NCubeEditor = (function ($)
 
     var buildCubeNameLinks = function()
     {
-        // Build cube list names
-        var cubeLowerNames = {};
+        // Build cube list names string for pattern matching
         var s = "";
         var word = '(\\b)';
-        $.each(_cubeList, function (key)
+        var word1 = word + '|';
+
+        $.each(nce.getCubeMap(), function (key)
         {
             if (key.length > 2)
-            {   // Only support n-cube names with 3 or more characters in them (too many false replaces will occur otherwise)
-                cubeLowerNames[key] = true;
-                s += word + key.replace('.', '\\.') + word + '|';
+            {   // 1. Only support n-cube names with 3 or more characters in them (too many false replaces will occur otherwise)
+                // 2. Reverse the cube list order (comes from server alphabetically case-insensitively sorted) to match
+                // longer strings before shorter strings.
+                // 3. Replace '.' with '\.' so that they are only matched againsts dots (period), not any character.
+                s = word + key.replace(/\./g, '\\.') + word1 + s;
             }
         });
 
@@ -297,7 +330,7 @@ var NCubeEditor = (function ($)
         }
 
         var failedCheck = {};
-        var regex = new RegExp(s, "gi");
+        var regex = new RegExp(s, "i");
 
         $('.column, .cell').each(function ()
         {
@@ -320,7 +353,7 @@ var NCubeEditor = (function ($)
                 else
                 {
                     var loHtml = html.toLowerCase();
-                    if (!failedCheck[html] && (cubeLowerNames['rpm.class.' + loHtml] || cubeLowerNames['rpm.enum.' + loHtml]))
+                    if (!failedCheck[html] && (nce.getCubeMap()['rpm.class.' + loHtml] || nce.getCubeMap()['rpm.enum.' + loHtml]))
                     {
                         html = '<a class="ncube-anchor" href="#">' + html + '</a>';
                         cell.html(html);
@@ -339,25 +372,25 @@ var NCubeEditor = (function ($)
         $('.ncube-anchor').each(function ()
         {
             var link = $(this);
-            link.click(function ()
+            link.click(function (e)
             {
+                e.preventDefault();
                 var cubeName = link.html().toLowerCase();
-                if (cubeLowerNames[cubeName])
+                if (nce.getCubeMap()[cubeName])
                 {
-                    nce.setSelectedCubeName(getProperCubeName(link.html()));
+                    nce.selectCubeByName(nce.getProperCubeName(link.html()));
                 }
                 else
                 {
-                    if (cubeLowerNames['rpm.class.' + cubeName])
+                    if (nce.getCubeMap()['rpm.class.' + cubeName])
                     {
-                        nce.setSelectedCubeName(getProperCubeName('rpm.class.' + link.html()));
+                        nce.selectCubeByName(nce.getProperCubeName('rpm.class.' + link.html()));
                     }
-                    else if (cubeLowerNames['rpm.enum.' + cubeName])
+                    else if (nce.getCubeMap()['rpm.enum.' + cubeName])
                     {
-                        nce.setSelectedCubeName(getProperCubeName('rpm.enum.' + link.html()));
+                        nce.selectCubeByName(nce.getProperCubeName('rpm.enum.' + link.html()));
                     }
                 }
-                loadCube();
             });
         });
     };
@@ -767,6 +800,11 @@ var NCubeEditor = (function ($)
         }
     };
 
+    var getUniqueId = function()
+    {
+        return _colIds--;
+    };
+
     var editColAdd = function()
     {
         var input = $('.editColCheckBox');
@@ -1053,6 +1091,38 @@ var NCubeEditor = (function ($)
         }
         _cellId = null;
         reloadCube();
+    };
+
+    var enabledDisableCheckBoxes = function()
+    {
+        var isUrl = _editCellRadioURL.find('input').is(':checked');
+        var selDataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        var urlEnabled = selDataType == 'string' || selDataType == 'binary' || selDataType == 'exp' || selDataType == 'method' || selDataType == 'template';
+        var cacheEnabled = selDataType == 'string' || selDataType == 'binary' || selDataType == 'exp' || selDataType == 'method' || selDataType == 'template';
+
+        // Enable / Disable [x] URL
+        _editCellRadioURL.find('input').prop("disabled", !urlEnabled);
+
+        if (urlEnabled)
+        {
+            _editCellRadioURL.removeClass('disabled');
+        }
+        else
+        {
+            _editCellRadioURL.addClass('disabled');
+        }
+
+        // Enable / Disable [x] Cache
+        _editCellCache.find('input').prop("disabled", !cacheEnabled);
+
+        if (cacheEnabled)
+        {
+            _editCellCache.removeClass('disabled');
+        }
+        else
+        {
+            _editCellCache.addClass('disabled');
+        }
     };
 
     // =============================================== End Cell Editing ================================================

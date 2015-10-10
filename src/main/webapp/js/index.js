@@ -41,18 +41,9 @@ var NCE = (function ($)
         _selectedBranch = localStorage[SELECTED_BRANCH];
     }
     var _selectedStatus = "SNAPSHOT";
-    var _axisName;
     var _errorId = null;
-    var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
-    var _columnList = $('#editColumnsList');
     var _activeTab = 'n-cubeTab';
     var _cellId = null;
-    var _uiCellId = null;
-    var _urlDropdown = $('#datatypes-url');
-    var _valueDropdown = $('#datatypes-value');
-    var _editCellCache = $('#editCellCache');
-    var _editCellValue = $('#editCellValue');
-    var _editCellRadioURL = $('#editCellRadioURL');
     var _clipboard = $('#cell-clipboard');
     var _searchNames = $('#cube-search');
     var _searchContent = $('#cube-search-content');
@@ -288,12 +279,14 @@ var NCE = (function ($)
                 exec: exec,
                 getAppId: getAppId,
                 getCubeMap: getCubeMap,
+                getProperCubeName: getProperCubeName,
                 getSelectedCubeName: getSelectedCubeName,
                 getSelectedApp: getSelectedApp,
                 getSelectedVersion: getSelectedVersion,
                 getSelectedStatus: getSelectedStatus,
                 isHeadSelected: isHeadSelected,
                 selectBranch: selectBranch,
+                selectCubeByName: selectCubeByName,
                 showNote: showNote
             }
         };
@@ -659,55 +652,6 @@ var NCE = (function ($)
         });
 
         addBranchListeners();
-
-        _editCellRadioURL.change(function()
-        {
-            var isUrl = _editCellRadioURL.find('input').is(':checked');
-            _urlDropdown.toggle(isUrl);
-            _valueDropdown.toggle(!isUrl);
-        });
-
-        _urlDropdown.change(function()
-        {
-            enabledDisableCheckBoxes()
-        });
-
-        _valueDropdown.change(function()
-        {
-            enabledDisableCheckBoxes()
-        });
-    }
-
-    function enabledDisableCheckBoxes()
-    {
-        var isUrl = _editCellRadioURL.find('input').is(':checked');
-        var selDataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
-        var urlEnabled = selDataType == 'string' || selDataType == 'binary' || selDataType == 'exp' || selDataType == 'method' || selDataType == 'template';
-        var cacheEnabled = selDataType == 'string' || selDataType == 'binary' || selDataType == 'exp' || selDataType == 'method' || selDataType == 'template';
-
-        // Enable / Disable [x] URL
-        _editCellRadioURL.find('input').prop("disabled", !urlEnabled);
-
-        if (urlEnabled)
-        {
-            _editCellRadioURL.removeClass('disabled');
-        }
-        else
-        {
-            _editCellRadioURL.addClass('disabled');
-        }
-
-        // Enable / Disable [x] Cache
-        _editCellCache.find('input').prop("disabled", !cacheEnabled);
-
-        if (cacheEnabled)
-        {
-            _editCellCache.removeClass('disabled');
-        }
-        else
-        {
-            _editCellCache.addClass('disabled');
-        }
     }
 
     function loadAppListView()
@@ -1953,7 +1897,6 @@ var NCE = (function ($)
         checkAll(true, 'input[type="checkbox"]');
 
         //TODO: After Axis, column, or cell modifications, mark _selectedCubeName as modified (blue)
-        //TODO: Break up this JS file into sections separated by functionality
         //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
         _commitModal.modal('show');
     }
@@ -2246,11 +2189,6 @@ var NCE = (function ($)
             $.gritter.remove(_errorId);
             _errorId = null;
         }
-    }
-
-    function getUniqueId()
-    {
-        return _colIds--;
     }
 
     function isHeadSelected()
