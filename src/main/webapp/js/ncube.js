@@ -37,7 +37,7 @@ var NCubeEditor = (function ($)
     {
         if (!nce)
         {
-            nce = info.fn;
+            nce = info;
 
             _columnList = $('#editColumnsList');
             _editCellModal = $('#editCellModal');
@@ -66,7 +66,22 @@ var NCubeEditor = (function ($)
             {
                 enabledDisableCheckBoxes()
             });
-
+            $('#addAxisOk').click(function ()
+            {
+                addAxisOk()
+            });
+            $('#deleteAxisOk').click(function ()
+            {
+                deleteAxisOk()
+            });
+            $('#updateAxisMenu').click(function ()
+            {
+                updateAxis()
+            });
+            $('#updateAxisOk').click(function ()
+            {
+                updateAxisOk()
+            });
         }
     };
 
@@ -421,20 +436,20 @@ var NCubeEditor = (function ($)
 
         var generalTypes = ['STRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
         var ruleTypes = ['EXPRESSION'];
-        buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected)
+        nce.buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected)
         {
             if ("RULE" == selected)
             {
-                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function () { });
+                nce.buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function () { });
                 $('#addAxisValueTypeName').val('EXPRESSION');
             }
             else
             {
-                buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
+                nce.buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
                 $('#addAxisValueTypeName').val('STRING');
             }
         });
-        buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
+        nce.buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
         $('#addAxisName').val('');
         $('#addAxisModal').modal();
     };
@@ -448,7 +463,7 @@ var NCubeEditor = (function ($)
         var result = nce.call("ncubeController.addAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName, axisType, axisValueType]);
         if (result.status === true)
         {
-            loadCube();
+            nce.loadCube();
         }
         else
         {
@@ -474,7 +489,7 @@ var NCubeEditor = (function ($)
         var result = nce.call("ncubeController.deleteAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
         if (result.status === true)
         {
-            loadCube();
+            nce.loadCube();
         }
         else
         {
@@ -574,7 +589,7 @@ var NCubeEditor = (function ($)
         var result = nce.call("ncubeController.updateAxis", [nce.getAppId(), nce.getSelectedCubeName(), _axisName, axisName, hasDefault, sortOrder, fireAll]);
         if (result.status === true)
         {
-            loadCube();
+            nce.loadCube();
         }
         else
         {
@@ -981,7 +996,7 @@ var NCubeEditor = (function ($)
         {
             nce.showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
         }
-        reloadCube();
+        nce.reloadCube();
     };
 
     // =============================================== End Column Editing ==============================================
@@ -1106,8 +1121,8 @@ var NCubeEditor = (function ($)
             _uiCellId.attr({'class':'cell'});
         }
         _cellId = null;
-        // TODO: Need to make this accessible
-        reloadCube();
+
+        nce.reloadCube();
     };
 
     var enabledDisableCheckBoxes = function()

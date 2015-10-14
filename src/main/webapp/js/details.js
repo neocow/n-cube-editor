@@ -31,7 +31,7 @@ var DetailEditor = (function ($)
     {
         if (!nce)
         {
-            nce = info.fn;
+            nce = info;
 
             _isUrl.change(function()
             {

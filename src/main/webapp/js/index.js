@@ -270,25 +270,25 @@ var NCE = (function ($)
     function buildAppState()
     {
         return {
-            fn:
-            {
-                call: call,
-                clearError: clearError,
-                doesCubeExist: doesCubeExist,
-                ensureModifiable: ensureModifiable,
-                exec: exec,
-                getAppId: getAppId,
-                getCubeMap: getCubeMap,
-                getProperCubeName: getProperCubeName,
-                getSelectedCubeName: getSelectedCubeName,
-                getSelectedApp: getSelectedApp,
-                getSelectedVersion: getSelectedVersion,
-                getSelectedStatus: getSelectedStatus,
-                isHeadSelected: isHeadSelected,
-                selectBranch: selectBranch,
-                selectCubeByName: selectCubeByName,
-                showNote: showNote
-            }
+            buildDropDown: buildDropDown,
+            call: call,
+            clearError: clearError,
+            doesCubeExist: doesCubeExist,
+            ensureModifiable: ensureModifiable,
+            exec: exec,
+            getAppId: getAppId,
+            getCubeMap: getCubeMap,
+            getProperCubeName: getProperCubeName,
+            getSelectedCubeName: getSelectedCubeName,
+            getSelectedApp: getSelectedApp,
+            getSelectedVersion: getSelectedVersion,
+            getSelectedStatus: getSelectedStatus,
+            isHeadSelected: isHeadSelected,
+            loadCube: loadCube,
+            reloadCube: reloadCube,
+            selectBranch: selectBranch,
+            selectCubeByName: selectCubeByName,
+            showNote: showNote
         };
     }
 
@@ -629,22 +629,6 @@ var NCE = (function ($)
         $('#changeVerOk').click(function ()
         {
             changeVersionOk()
-        });
-        $('#addAxisOk').click(function ()
-        {
-            addAxisOk()
-        });
-        $('#deleteAxisOk').click(function ()
-        {
-            deleteAxisOk()
-        });
-        $('#updateAxisMenu').click(function ()
-        {
-            updateAxis()
-        });
-        $('#updateAxisOk').click(function ()
-        {
-            updateAxisOk()
         });
         $('#clearCache').click(function()
         {

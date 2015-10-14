@@ -15,7 +15,7 @@ var NCubeJsonEditor = (function ($)
         // Create JSON Editor (http://jsoneditoronline.org/downloads/)
         if (!nce)
         {
-            nce = info.fn;
+            nce = info;
             var container = document.getElementById('jsoneditor');
             var options =
             {

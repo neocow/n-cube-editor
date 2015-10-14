@@ -30,7 +30,7 @@ var RpmEditor = (function($)
     {
         if (!nce)
         {
-            nce = info.fn;
+            nce = info;
 
             $(window).resize(function ()
             {
