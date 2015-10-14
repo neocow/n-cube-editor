@@ -98,15 +98,6 @@ div#editColumnsModal ul.list-group
     padding-right: 20px;
 }
 
-.modal-header {
-    padding:9px 15px;
-    border-bottom:1px solid #eee;
-    background-color: #0480be;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-    color: white;
-}
-
 .hr-small
 {
     margin-top: 2px;

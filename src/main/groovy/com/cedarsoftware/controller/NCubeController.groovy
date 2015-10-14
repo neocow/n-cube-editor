@@ -1390,6 +1390,21 @@ class NCubeController extends BaseController
         }
     }
 
+    boolean skipLinks(ApplicationID appId, String cubeName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            NCube ncube = nCubeService.getCube(appId, cubeName)
+            return ncube.getMetaProperties().containsKey('ERNE')
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return false
+        }
+    }
+
     // ============================================= End API ===========================================================
 
     // ===================================== utility (non-API) methods =================================================

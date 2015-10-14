@@ -21,13 +21,13 @@
 var NCubeEditor = (function ($)
 {
     var nce = null;
-    var _columnList = $('#editColumnsList');
-    var _editCellModal = $('#');
-    var _editCellValue = $('#editCellValue');
-    var _editCellCache = $('#editCellCache');
-    var _editCellRadioURL = $('#editCellRadioURL');
-    var _valueDropdown = $('#datatypes-value');
-    var _urlDropdown = $('#datatypes-url');
+    var _columnList = null;
+    var _editCellModal = null;
+    var _editCellValue = null;
+    var _editCellCache = null;
+    var _editCellRadioURL = null;
+    var _valueDropdown = null;
+    var _urlDropdown = null;
     var _axisName;
     var _cellId = null; // TODO: Needs to be resettable from index.js
     var _uiCellId = null;
@@ -38,6 +38,15 @@ var NCubeEditor = (function ($)
         if (!nce)
         {
             nce = info.fn;
+
+            _columnList = $('#editColumnsList');
+            _editCellModal = $('#editCellModal');
+            _editCellValue = $('#editCellValue');
+            _editCellCache = $('#editCellCache');
+            _editCellRadioURL = $('#editCellRadioURL');
+            _valueDropdown = $('#datatypes-value');
+            _urlDropdown = $('#datatypes-url');
+
             addColumnEditListeners();
             addEditCellListeners();
 
@@ -101,8 +110,9 @@ var NCubeEditor = (function ($)
                 var li = $('<li/>');
                 var an = $('<a href="#">');
                 an.html("Update Axis...");
-                an.click(function ()
+                an.click(function (e)
                 {
+                    e.preventDefault();
                     updateAxis(axisName)
                 });
                 li.append(an);
@@ -110,8 +120,9 @@ var NCubeEditor = (function ($)
                 li = $('<li/>');
                 an = $('<a href="#">');
                 an.html("Add Axis...");
-                an.click(function ()
+                an.click(function (e)
                 {
+                    e.preventDefault();
                     addAxis();
                 });
                 li.append(an);
@@ -119,8 +130,9 @@ var NCubeEditor = (function ($)
                 li = $('<li/>');
                 an = $('<a href="#">');
                 an.html("Delete Axis...");
-                an.click(function ()
+                an.click(function (e)
                 {
+                    e.preventDefault();
                     deleteAxis(axisName)
                 });
                 li.append(an);
@@ -130,8 +142,9 @@ var NCubeEditor = (function ($)
                 li = $('<li/>');
                 an = $('<a href="#">');
                 an.html("Edit " + axisName + " columns...");
-                an.click(function ()
+                an.click(function (e)
                 {
+                    e.preventDefault();
                     editColumns(axisName)
                 });
                 li.append(an);
@@ -182,7 +195,13 @@ var NCubeEditor = (function ($)
             });
         });
         processCellClicks();
-        buildCubeNameLinks();
+
+        // Temporary until faster method of placing links into page is available (Handsontable)
+        var result = nce.call('ncubeController.skipLinks', [nce.getAppId(), nce.getSelectedCubeName()]);
+        if (result.status === true && result.data === false)
+        {
+            buildCubeNameLinks();
+        }
     };
 
     var processCellClicks = function()
@@ -264,8 +283,6 @@ var NCubeEditor = (function ($)
 
             cell.dblclick(function (e)
             {   // On double click open Edit Cell modal
-                e.preventDefault();
-                // TODO: Double click doing nothing!
                 _uiCellId = cell;
                 _cellId = _uiCellId.attr('data-id').split("_");
                 editCell();
@@ -1030,6 +1047,7 @@ var NCubeEditor = (function ($)
         // Set the Cache check box state
         _editCellCache.find('input').prop('checked', cellInfo.isCached);
 
+        //_editCellModal.modal('show');
         _editCellModal.modal('show');
     };
 
@@ -1074,22 +1092,21 @@ var NCubeEditor = (function ($)
             return;
         }
 
+        _uiCellId.text(cellInfo.value);
         if (cellInfo.isUrl)
         {
-            _uiCellId.html(cellInfo.value);
             _uiCellId.attr({'class':'cell cell-url'});
         }
         else if (cellInfo.dataType == "exp" || cellInfo.dataType == "method")
         {
-            _uiCellId.html(cellInfo.value);
             _uiCellId.attr({'class':'cell cell-code'});
         }
         else
         {
-            _uiCellId.html(cellInfo.value);
             _uiCellId.attr({'class':'cell'});
         }
         _cellId = null;
+        // TODO: Need to make this accessible
         reloadCube();
     };
 
