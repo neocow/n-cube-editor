@@ -209,7 +209,7 @@ var NCubeEditor = (function ($)
         $('.cell-url a, .column-url a').each(function()
         {
             var anchor = $(this);
-            anchor.click(function()
+            anchor.click(function(event)
             {
                 nce.clearError();
                 var link = anchor.html();
@@ -231,6 +231,7 @@ var NCubeEditor = (function ($)
                         nce.showNote('Unable to open ' + link + ':<hr class="hr-small"/>' + msg);
                     }
                 }
+                event.preventDefault();
             });
         });
         processCellClicks();
