@@ -367,17 +367,26 @@ var NCubeEditor = (function ($)
     {
         // Build cube list names string for pattern matching
         var s = "";
-        var word = '(\\b)';
-        var word1 = word + '|';
+        var prefixes = ['rpm.class.', 'rpm.enum.', ''];
+        var cubeMap = nce.getCubeMap();
 
-        $.each(nce.getCubeMap(), function (key)
+        $.each(cubeMap, function (key)
         {
             if (key.length > 2)
             {   // 1. Only support n-cube names with 3 or more characters in them (too many false replaces will occur otherwise)
-                // 2. Reverse the cube list order (comes from server alphabetically case-insensitively sorted) to match
+                // 2. Chop off accepted prefixes.
+                for (var i=0; i < prefixes.length; i++)
+                {
+                    if (key.indexOf(prefixes[i]) == 0)
+                    {
+                        key = key.replace(prefixes[i], '');
+                        break;
+                    }
+                }
+                // 3. Reverse the cube list order (comes from server alphabetically case-insensitively sorted) to match
                 // longer strings before shorter strings.
-                // 3. Replace '.' with '\.' so that they are only matched againsts dots (period), not any character.
-                s = word + key.replace(/\./g, '\\.') + word1 + s;
+                // 4. Replace '.' with '\.' so that they are only matched against dots (period), not any character.
+                s = key.replace(/\./g, '\\.') + '|' + s;
             }
         });
 
@@ -385,8 +394,8 @@ var NCubeEditor = (function ($)
         {
             s = s.substring(0, s.length - 1);
         }
+        s = '\\b(' + s + ')\\b';
 
-        var failedCheck = {};
         var regex = new RegExp(s, "i");
 
         $('.column, .cell').each(function ()
@@ -407,23 +416,8 @@ var NCubeEditor = (function ($)
                 {   // substitute new text with anchor tag
                     cell.html(html);
                 }
-                else
-                {
-                    var loHtml = html.toLowerCase();
-                    if (!failedCheck[html] && (nce.getCubeMap()['rpm.class.' + loHtml] || nce.getCubeMap()['rpm.enum.' + loHtml]))
-                    {
-                        html = '<a class="ncube-anchor" href="#">' + html + '</a>';
-                        cell.html(html);
-                    }
-                    else
-                    {
-                        failedCheck[html] = true;
-                    }
-                }
             }
         });
-
-        failedCheck = null;
 
         // Add click handler that opens clicked cube names
         $('.ncube-anchor').each(function ()
@@ -433,19 +427,13 @@ var NCubeEditor = (function ($)
             {
                 e.preventDefault();
                 var cubeName = link.html().toLowerCase();
-                if (nce.getCubeMap()[cubeName])
+
+                for (var i=0; i < prefixes.length; i++)
                 {
-                    nce.selectCubeByName(nce.getProperCubeName(link.html()));
-                }
-                else
-                {
-                    if (nce.getCubeMap()['rpm.class.' + cubeName])
+                    if (cubeMap[prefixes[i] + cubeName])
                     {
-                        nce.selectCubeByName(nce.getProperCubeName('rpm.class.' + link.html()));
-                    }
-                    else if (nce.getCubeMap()['rpm.enum.' + cubeName])
-                    {
-                        nce.selectCubeByName(nce.getProperCubeName('rpm.enum.' + link.html()));
+                        nce.selectCubeByName(nce.getProperCubeName(prefixes[i] + link.html()));
+                        break;
                     }
                 }
             });
