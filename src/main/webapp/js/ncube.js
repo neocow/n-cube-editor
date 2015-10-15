@@ -236,7 +236,7 @@ var NCubeEditor = (function ($)
         processCellClicks();
 
         // Temporary until faster method of placing links into page is available (Handsontable)
-        var result = nce.call('ncubeController.skipLinks', [nce.getAppId(), nce.getSelectedCubeName()]);
+        var result = nce.call('ncubeController.canSkipLinks', [nce.getAppId(), nce.getSelectedCubeName()]);
         if (result.status === true && result.data === false)
         {
             buildCubeNameLinks();

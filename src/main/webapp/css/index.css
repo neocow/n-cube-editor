@@ -81,18 +81,7 @@ div#east div.panel-body {
     height: 100%;
 }
 
-div#editColumnsModal div.panel-group
-{
-    margin-bottom: 0;
-}
-
 div#restoreCubeModal ul.list-group
-{
-    padding-left: 20px;
-    padding-right: 20px;
-}
-
-div#editColumnsModal ul.list-group
 {
     padding-left: 20px;
     padding-right: 20px;
@@ -130,12 +119,6 @@ div#editColumnsModal ul.list-group
     padding: 5px 15px;
 }
 
-#cell-clipboard {
-    width: 1px;
-    height: 1px;
-    padding: 0;
-}
-
 #west {
     height:100%;
     width: 100%;
@@ -171,35 +154,7 @@ div#editColumnsModal ul.list-group
     margin-bottom: 0;
 }
 
-#ncube > .well {
-    margin-bottom: 0;
-    height: 100%;
-    width: 100%;
-    overflow: auto;
-    padding: 0;
-    border: none white;
-    border-radius: 0;
-    background: #4D4D4D;
-}
-
-#ncube {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    position: relative;
-}
-
 .top-buffer { margin-top:20px; }
-
-#selectedTestName {
-    color: white;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    font-weight: bold;
-    font-family: 'Open Sans', sans-serif;
-}
 
 .navbar-custom {
     background-color: #2474b8;

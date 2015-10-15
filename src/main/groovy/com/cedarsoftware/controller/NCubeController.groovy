@@ -1390,7 +1390,7 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean skipLinks(ApplicationID appId, String cubeName)
+    boolean canSkipLinks(ApplicationID appId, String cubeName)
     {
         try
         {
