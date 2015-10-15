@@ -1390,19 +1390,10 @@ class NCubeController extends BaseController
         }
     }
 
+    // TODO: Remove this - it is no longer used.
     boolean canSkipLinks(ApplicationID appId, String cubeName)
     {
-        try
-        {
-            appId = addTenant(appId)
-            NCube ncube = nCubeService.getCube(appId, cubeName)
-            return ncube.getMetaProperties().containsKey('ERNE')
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return false
-        }
+        return false
     }
 
     // ============================================= End API ===========================================================

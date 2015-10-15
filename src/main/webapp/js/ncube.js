@@ -135,7 +135,7 @@ var NCubeEditor = (function ($)
         var result = nce.call("ncubeController.getHtml", [nce.getAppId(), nce.getSelectedCubeName()]);
         if (result.status === true)
         {
-            $('#ncube-content').html(result.data);
+            $('#ncube-content')[0].innerHTML = result.data;
 
             // Disallow any selecting within the table
             var table = $('table');
@@ -235,13 +235,7 @@ var NCubeEditor = (function ($)
             });
         });
         processCellClicks();
-
-        // Temporary until faster method of placing links into page is available (Handsontable)
-        var result = nce.call('ncubeController.canSkipLinks', [nce.getAppId(), nce.getSelectedCubeName()]);
-        if (result.status === true && result.data === false)
-        {
-            buildCubeNameLinks();
-        }
+        buildCubeNameLinks();
     };
 
     var processCellClicks = function()
@@ -365,7 +359,7 @@ var NCubeEditor = (function ($)
 
     var buildCubeNameLinks = function()
     {
-        // Build cube list names string for pattern matching
+        // Step 1: Build giant cube list names string for pattern matching
         var s = "";
         var prefixes = ['rpm.class.', 'rpm.enum.', ''];
         var cubeMap = nce.getCubeMap();
@@ -395,14 +389,15 @@ var NCubeEditor = (function ($)
             s = s.substring(0, s.length - 1);
         }
         s = '\\b(' + s + ')\\b';
-
         var regex = new RegExp(s, "i");
+
+        // Step 2: Iterator through all columns and cells, replace matches with anchor tags
 
         $('.column, .cell').each(function ()
         {
             var cell = $(this);
-            var html = cell.html();
-            if (html && html.length > 2)
+            var html = cell[0].textContent;  // WAY faster than JQuery .html() or .text()
+            if (html && html.length > 2 && !cell.hasClass('cell-url'))
             {
                 var found = false;
 
@@ -414,29 +409,29 @@ var NCubeEditor = (function ($)
 
                 if (found)
                 {   // substitute new text with anchor tag
-                    cell.html(html);
+                    cell[0].innerHTML = html;       // Much faster than JQuery .html('') or .text('')
+
+                    // Add click handler that opens clicked cube names
+                    cell.find('a').each(function ()
+                    {
+                        var link = $(this);
+                        link.click(function (e)
+                        {
+                            e.preventDefault();
+                            var cubeName = link[0].textContent.toLowerCase();
+
+                            for (var i=0; i < prefixes.length; i++)
+                            {
+                                if (cubeMap[prefixes[i] + cubeName])
+                                {
+                                    nce.selectCubeByName(nce.getProperCubeName(prefixes[i] + link[0].textContent));
+                                    break;
+                                }
+                            }
+                        });
+                    });
                 }
             }
-        });
-
-        // Add click handler that opens clicked cube names
-        $('.ncube-anchor').each(function ()
-        {
-            var link = $(this);
-            link.click(function (e)
-            {
-                e.preventDefault();
-                var cubeName = link.html().toLowerCase();
-
-                for (var i=0; i < prefixes.length; i++)
-                {
-                    if (cubeMap[prefixes[i] + cubeName])
-                    {
-                        nce.selectCubeByName(nce.getProperCubeName(prefixes[i] + link.html()));
-                        break;
-                    }
-                }
-            });
         });
     };
 
@@ -1204,7 +1199,7 @@ var NCubeEditor = (function ($)
                 if (lastRow != -1) clipData += '\n';
                 lastRow = cellRow;
             }
-            clipData = clipData + cell.text();
+            clipData = clipData + cell[0].innerText;
             var cellId = getCellId(cell);
             if (cellId)
             {
