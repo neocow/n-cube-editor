@@ -99,22 +99,6 @@ div#restoreCubeModal ul.list-group
     font-weight: bold;
 }
 
-.cube-modified {
-    color: blue !important;
-}
-
-.cube-added {
-    color: green !important;
-}
-
-.cube-deleted {
-    text-decoration: line-through;
-}
-
-.cube-restored {
-    color: darkgoldenrod !important;
-}
-
 .skinny-lr {
     padding: 5px 15px;
 }
@@ -152,6 +136,22 @@ div#restoreCubeModal ul.list-group
 
 #ncube-list-div {
     margin-bottom: 0;
+}
+
+.cube-modified {
+    color: blue !important;
+}
+
+.cube-added {
+    color: green !important;
+}
+
+.cube-deleted {
+    text-decoration: line-through;
+}
+
+.cube-restored {
+    color: darkgoldenrod !important;
 }
 
 .top-buffer { margin-top:20px; }

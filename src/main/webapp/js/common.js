@@ -17,3 +17,47 @@ function buildDropDown(listId, inputId, list, callback)
         ul.append(li);
     });
 }
+
+/**
+ * Convert strings containing DOS-style '*' or '?' to a regex String.
+ */
+function wildcardToRegexString(wildcard)
+{
+    var s = '';
+
+    for (var i = 0, is = wildcard.length; i < is; i++)
+    {
+        var c = wildcard.charAt(i);
+        switch (c)
+        {
+            case '*':
+                s += '.*?';
+                break;
+
+            case '?':
+                s += '.';
+                break;
+
+            // escape special regexp-characters
+            case '(':
+            case ')':
+            case '[':
+            case ']':
+            case '$':
+            case '^':
+            case '.':
+            case '{':
+            case '}':
+            case '|':
+            case '\\':
+                s += '\\';
+                s += c;
+                break;
+
+            default:
+                s += c;
+                break;
+        }
+    }
+    return s;
+}

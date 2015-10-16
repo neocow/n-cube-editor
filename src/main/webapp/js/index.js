@@ -133,7 +133,7 @@ var NCE = (function ($)
 
         addListeners();
 
-        var myLayout = $('body').layout({
+        $('body').layout({
             name:   "BodyLayout"
             //	reference only - these options are NOT required because 'true' is the default
             ,   closable:					true	// pane can open & close
@@ -161,6 +161,10 @@ var NCE = (function ($)
         });
     }
 
+    /**
+     * Background worker thread that will send search filter text asynchronously to server,
+     * fetch the results, and ship to main thread (which will be updated to the filtered list).
+     */
     function startWorker()
     {
         if (typeof(Worker) !== "undefined")
@@ -295,12 +299,70 @@ var NCE = (function ($)
 
     function runSearch()
     {
-        _searchThread.postMessage(
-        [
-            _searchNames.val(),
-            _searchContent.val(),
-            {"app": _selectedApp, "version": _selectedVersion, "status": _selectedStatus, "branch": _selectedBranch}
-        ]);
+        if (!_searchContent.val() || _searchContent.val() == '')
+        {   // Perform filter client-side only (no server call)
+            var mainList = _cubeList;
+            if (_searchNames.val() && _searchNames.val() != '')
+            {   // If there is content to filter by, then use it.
+                var nameFilter = _searchNames.val();
+                var list = [];
+                var pattern = wildcardToRegexString(nameFilter);
+                var regex = new RegExp(pattern, "i");
+
+                $.each(_cubeList, function (key, value)
+                {
+                    var array = regex.exec(key);
+                    if (array)
+                    {
+                        var loKey = key.toLowerCase();
+                        var info = _cubeList[loKey];
+                        info.pos = array.index;
+                        info.endPos = array.index + array[0].length;
+                        list.push(info);
+                    }
+                });
+
+                list.sort(function (a, b)
+                {
+                    if (a.pos < b.pos)
+                        return -1;
+                    if (a.pos > b.pos)
+                        return 1;
+
+                    var aLo = a.name.toLowerCase();
+                    var bLo = b.name.toLowerCase();
+                    if (aLo < bLo)
+                        return -1;
+                    else if (aLo > bLo)
+                        return 1;
+
+                    return 0;
+                });
+
+                mainList = {};
+                for (var i = 0; i < list.length; i++)
+                {
+                    var info = list[i];
+                    mainList[info.name.toLowerCase()] = info;
+                }
+                list = [];
+            }
+            loadFilteredNCubeListView(mainList);
+        }
+        else
+        {   // Do server side search as content was specified
+            _searchThread.postMessage(
+                [
+                    _searchNames.val(),
+                    _searchContent.val(),
+                    {
+                        "app": _selectedApp,
+                        "version": _selectedVersion,
+                        "status": _selectedStatus,
+                        "branch": _selectedBranch
+                    }
+                ]);
+        }
     }
 
     function addListeners()
@@ -462,16 +524,9 @@ var NCE = (function ($)
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
+                runSearch();
             });
             anchor.html(value);
-            if (value == _selectedApp)
-            {
-                anchor.attr('class', 'ncube-selected');
-            }
-            else
-            {
-                anchor.attr('class', 'ncube-notselected');
-            }
             li.append(anchor);
             list.append(li);
         });
@@ -516,16 +571,9 @@ var NCE = (function ($)
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
+                runSearch();
             });
             anchor.html(value);
-            if (value == _selectedStatus)
-            {
-                anchor.attr('class', 'ncube-selected');
-            }
-            else
-            {
-                anchor.attr('class', 'ncube-notselected');
-            }
             li.append(anchor);
             list.append(li);
         });
@@ -550,30 +598,23 @@ var NCE = (function ($)
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
+                runSearch();
             });
             anchor.html(value);
-            if (value == _selectedVersion)
-            {
-                anchor.attr('class', 'ncube-selected');
-            }
-            else
-            {
-                anchor.attr('class', 'ncube-notselected');
-            }
             li.append(anchor);
             list.append(li);
         });
         setListSelectedStatus(_selectedVersion, '#version-list');
     }
 
-    function loadNCubeListView()
-    {
-        loadFilteredNCubeListView(_cubeList);
-    }
-
     function getActiveTab()
     {
         return _mainTabPanel.find('div.active iframe');
+    }
+
+    function loadNCubeListView()
+    {
+        loadFilteredNCubeListView(_cubeList);
     }
 
     function loadFilteredNCubeListView(cubes)
@@ -586,20 +627,20 @@ var NCE = (function ($)
         {
             count++;
             var cubeName = infoDto.name;
-            var li = $("<li/>");
+            var li = $('<li/>');
             var a = $('<a href="#"/>');
-            a.click(function clickAction()
+            a.click(function()
             {
                 selectCubeByName(loName);
             });
 
             if (_selectedCubeName == cubeName)
             {
-                a.attr('class', 'ncube-selected');
+                a.addClass('ncube-selected').removeClass('ncube-notselected');
             }
             else
             {
-                a.attr('class', 'ncube-notselected');
+                a.addClass('ncube-notselected').removeClass('ncube-selected');
             }
 
             a.attr('itemName', loName);
@@ -610,9 +651,9 @@ var NCE = (function ($)
             {
                 var nameHtml = cubeName.substring(0, infoDto.pos);
                 nameHtml += '<span class="search-hilite">';
-                nameHtml += cubeName.substring(infoDto.pos, infoDto.pos + filter.length);
+                nameHtml += cubeName.substring(infoDto.pos, infoDto.endPos);
                 nameHtml += '</span>';
-                nameHtml += cubeName.substring(infoDto.pos + filter.length);
+                nameHtml += cubeName.substring(infoDto.endPos);
                 a.html(nameHtml);
             }
             else
@@ -664,7 +705,7 @@ var NCE = (function ($)
         {
             var activeTab = getActiveTab();
             if (activeTab && activeTab[0])
-            {
+            {   // Indicate to the active iFrame that a cube selection event has occurred.
                 activeTab[0].contentWindow.cubeSelected();
             }
         }
@@ -684,23 +725,21 @@ var NCE = (function ($)
     {
         var items = $(listId).find('li a');
         var saveSelected = null;
+        var loItemName = itemName.toLowerCase();
+
         $.each(items, function (index, value)
         {
             var anchor = $(value);
             var text = anchor.html();
             var elemName = anchor.attr('itemName');
-            if (itemName == text || itemName == elemName)
+            if (loItemName == elemName || itemName == text)
             {
                 saveSelected = anchor;
-                anchor.removeClass('ncube-selected');
-                anchor.removeClass('ncube-notselected');
-                anchor.addClass('ncube-selected');
+                anchor.removeClass('ncube-notselected').addClass('ncube-selected');
             }
             else
             {
-                anchor.removeClass('ncube-selected');
-                anchor.removeClass('ncube-notselected');
-                anchor.addClass('ncube-notselected');
+                anchor.removeClass('ncube-selected').addClass('ncube-notselected');
             }
         });
 
@@ -907,7 +946,8 @@ var NCE = (function ($)
             loadStatusListView();
             loadVersionListView();
             loadNCubeListView();
-            selectCubeByName(cubeName)
+            clearSearch();
+            selectCubeByName(cubeName);
         }
         else
         {
@@ -933,7 +973,7 @@ var NCE = (function ($)
         if (result.status === true)
         {
             loadNCubes();
-            clearSearch();
+            runSearch();
         }
         else
         {
@@ -1005,10 +1045,7 @@ var NCE = (function ($)
                 cubeName = cubesToRestore[0];
                 selectCubeByName(cubeName);
             }
-            else
-            {
-                clearSearch();
-            }
+            clearSearch();
         }
         else
         {
@@ -1134,6 +1171,7 @@ var NCE = (function ($)
             _selectedCubeName = newName;
             loadNCubeListView();
             loadCube();
+            runSearch();
         }
         else
         {
@@ -1208,6 +1246,7 @@ var NCE = (function ($)
             _selectedVersion = newVersion;
             loadVersionListView();
             loadNCubes();
+            clearSearch();
             selectCubeByName(newName);
         }
         else
@@ -1358,6 +1397,8 @@ var NCE = (function ($)
             loadNCubes();
             loadNCubeListView();
             loadCube();
+            runSearch();
+
         }
         else
         {
@@ -1389,6 +1430,7 @@ var NCE = (function ($)
             loadNCubes();
             loadNCubeListView();
             loadCube();
+            runSearch();
         }
         else
         {
@@ -1585,7 +1627,7 @@ var NCE = (function ($)
         loadVersionListView();
         loadNCubeListView();
         loadCube();
-
+        runSearch();
         showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 2000);
     }
 
@@ -1712,10 +1754,11 @@ var NCE = (function ($)
         }
 
         showNote('Successfully committed ' + changes.length + ' cube(s).', 'Note', 5000);
-        // TODO: Modify cubeList - don't call back to server for full list - use return value.
+
         loadNCubes();
         loadNCubeListView();
         reloadCube();
+        runSearch();
     }
 
     function rollbackOk()
@@ -1744,6 +1787,7 @@ var NCE = (function ($)
         loadNCubes();
         loadNCubeListView();
         reloadCube();
+        runSearch();
     }
 
     function updateBranch()
@@ -1761,6 +1805,7 @@ var NCE = (function ($)
         loadNCubes();
         loadNCubeListView();
         reloadCube();
+        runSearch();
     }
 
     function deleteBranch()
@@ -1867,6 +1912,7 @@ var NCE = (function ($)
         loadNCubes();
         loadNCubeListView();
         reloadCube();
+        runSearch();
     }
 
     function acceptMine()
@@ -1893,6 +1939,7 @@ var NCE = (function ($)
         loadNCubes();
         loadNCubeListView();
         reloadCube();
+        runSearch();
     }
 
     // =============================================== End Branching ===================================================
