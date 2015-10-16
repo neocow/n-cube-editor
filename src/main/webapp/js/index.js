@@ -309,13 +309,11 @@ var NCE = (function ($)
                 var pattern = wildcardToRegexString(nameFilter);
                 var regex = new RegExp(pattern, "i");
 
-                $.each(_cubeList, function (key, value)
+                $.each(_cubeList, function (key, info)
                 {
                     var array = regex.exec(key);
                     if (array)
                     {
-                        var loKey = key.toLowerCase();
-                        var info = _cubeList[loKey];
                         info.pos = array.index;
                         info.endPos = array.index + array[0].length;
                         list.push(info);
@@ -329,14 +327,7 @@ var NCE = (function ($)
                     if (a.pos > b.pos)
                         return 1;
 
-                    var aLo = a.name.toLowerCase();
-                    var bLo = b.name.toLowerCase();
-                    if (aLo < bLo)
-                        return -1;
-                    else if (aLo > bLo)
-                        return 1;
-
-                    return 0;
+                    return a.name.localeCompare(b.name);
                 });
 
                 mainList = {};
