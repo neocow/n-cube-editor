@@ -393,7 +393,7 @@ var NCubeEditor = (function ($)
 
         // Step 2: Iterator through all columns and cells, replace matches with anchor tags
 
-        $('.column:not(.column-url), .cell:not(.cell-url)').each(function ()
+        $('.column:not(.column-url, .column-code), .cell:not(.cell-url)').each(function ()
         {
             var cell = $(this);
             var html = cell[0].textContent;  // WAY faster than JQuery .html() or .text()
