@@ -37,7 +37,6 @@
         <version.ncube>3.3.7</version.ncube>
         <version.json-command-servlet>1.2.5</version.json-command-servlet>
         <version.log4j>2.1</version.log4j>
-        <version.urlrewrite>4.0.4</version.urlrewrite>
         <version.groovy>2.4.4</version.groovy>
         <version.junit>4.11</version.junit>
         <version.spring>4.1.6.RELEASE</version.spring>
@@ -205,11 +204,6 @@
             <groupId>com.cedarsoftware</groupId>
             <artifactId>json-command-servlet</artifactId>
             <version>${version.json-command-servlet}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.tuckey</groupId>
-            <artifactId>urlrewritefilter</artifactId>
-            <version>${version.urlrewrite}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
