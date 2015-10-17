@@ -132,10 +132,11 @@ var NCubeEditor = (function ($)
             $('#ncube-content').html('No n-cubes to load');
             return;
         }
+
         var result = nce.call("ncubeController.getHtml", [nce.getAppId(), nce.getSelectedCubeName()]);
         if (result.status === true)
         {
-            $('#ncube-content')[0].innerHTML = result.data;
+            document.getElementById('ncube-content').innerHTML = result.data;
 
             // Disallow any selecting within the table
             var table = $('table');
@@ -234,8 +235,12 @@ var NCubeEditor = (function ($)
                 event.preventDefault();
             });
         });
+
         processCellClicks();
-        buildCubeNameLinks();
+        if (nce.getSelectedCubeName().indexOf('erne.') != 0)
+        {
+            buildCubeNameLinks();
+        }
     };
 
     var processCellClicks = function()
@@ -391,12 +396,20 @@ var NCubeEditor = (function ($)
         s = '\\b(' + s + ')\\b';
         var regex = new RegExp(s, "i");
 
-        // Step 2: Iterator through all columns and cells, replace matches with anchor tags
+        // Step 2: Iterate through all columns and cells, replace matches with anchor tags
 
-        $('.column:not(.column-url, .column-code), .cell:not(.cell-url)').each(function ()
+        $('.column:not(.column-url), .cell:not(.cell-url, .cell-code-def, .cell-def)').each(function ()
         {
             var cell = $(this);
-            var html = cell[0].textContent;  // WAY faster than JQuery .html() or .text()
+            var html;
+            if (cell.hasClass('column-code'))
+            {
+                html = cell[0].innerHTML;
+            }
+            else
+            {
+                html = cell[0].textContent;  // WAY faster than JQuery .html() or .text()
+            }
             if (html && html.length > 2)
             {
                 var found = false;
