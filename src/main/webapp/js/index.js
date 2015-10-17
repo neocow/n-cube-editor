@@ -1744,8 +1744,7 @@ var NCE = (function ($)
             return;
         }
 
-        showNote('Successfully committed ' + changes.length + ' cube(s).', 'Note', 5000);
-
+        showNote('Successfully committed ' + changes.length + ' cube(s).');
         loadNCubes();
         loadNCubeListView();
         reloadCube();
@@ -1788,11 +1787,40 @@ var NCE = (function ($)
         var result = call('ncubeController.updateBranch', [getAppId()]);
         if (!result.status)
         {
-            mergeBranch(result.data);
+            showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
             return;
         }
 
-        showNote('Branch Updated');
+        var map = result.data;
+        var updateMap = map['updates'];
+        var mergeMap = map['merges'];
+        var conflictMap = map['conflicts'];
+        var updates = 0;
+        var merges = 0;
+        var conflicts = 0;
+
+        if (updateMap && updateMap['@items'])
+        {
+            updates = updateMap['@items'].length;
+        }
+        if (mergeMap && mergeMap['@items'])
+        {
+            merges = mergeMap['@items'].length;
+        }
+        if (conflictMap)
+        {
+            delete conflictMap['@type'];
+            conflicts = countKeys(conflictMap);
+        }
+
+        showNote('Branch Updated:<hr class="hr-small"/>' + updates + ' cubes updated<br>' + merges + ' cubes merged<br>' + conflicts + ' cubes in conflict');
+
+        if (conflicts > 0)
+        {
+            mergeBranch(conflictMap);
+            return;
+        }
+
         loadNCubes();
         loadNCubeListView();
         reloadCube();

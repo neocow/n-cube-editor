@@ -19,6 +19,22 @@ function buildDropDown(listId, inputId, list, callback)
 }
 
 /**
+ * return number of 'own' keys in object
+ */
+function countKeys(object)
+{
+    var count = 0;
+    for (var key in object)
+    {
+        if (object.hasOwnProperty(key))
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
+/**
  * Convert strings containing DOS-style '*' or '?' to a regex String.
  */
 function wildcardToRegexString(wildcard)

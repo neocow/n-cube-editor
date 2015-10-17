@@ -94,7 +94,7 @@ class NCubeService
         return NCubeManager.rollbackBranch(appId, infoDtos)
     }
 
-    List<NCubeInfoDto> updateBranch(ApplicationID appId, String username)
+    Map<String, Object> updateBranch(ApplicationID appId, String username)
     {
         return NCubeManager.updateBranch(appId, username)
     }

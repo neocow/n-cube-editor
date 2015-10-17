@@ -1153,13 +1153,8 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            List<NCubeInfoDto> updatedCubes = nCubeService.updateBranch(appId, getUserForDatabase())
-            return updatedCubes.toArray()
-        }
-        catch (BranchMergeException e)
-        {
-            markRequestFailed(e.getMessage())
-            return e.getErrors()
+            Map<String, Object> result = nCubeService.updateBranch(appId, getUserForDatabase())
+            return result
         }
         catch (Exception e)
         {

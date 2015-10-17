@@ -713,6 +713,7 @@ var NCubeEditor = (function ($)
                     inputBtn[0].checked = true;
                 }
 
+                // For rules with URL to conditions, support URL: (or url:) in front of URL - then store as URL
                 if (axis.type.name == 'RULE')
                 {
                     if (!item.metaProps)
