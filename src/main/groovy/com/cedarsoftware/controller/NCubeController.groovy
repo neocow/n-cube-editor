@@ -1521,21 +1521,21 @@ class NCubeController extends BaseController
         Map axisConverted = JsonReader.jsonToMaps(json)
         Map cols = (Map) axisConverted.columns
         Object[] items = (Object[]) cols["@items"]
-        if (items != null)
+        for (Object item : items)
         {
-            for (Object item : items)
+            Map col = (Map) item
+            Column actualCol = axis.getColumnById((Long)col.id)
+            col.id = String.valueOf(col.id) // Stringify Long ID (Javascript safe if quoted)
+            CellInfo cellInfo = new CellInfo(actualCol.getValue())
+            String value = cellInfo.value
+            if (axis.valueType == AxisValueType.DATE)
             {
-                Map col = (Map) item
-                Column actualCol= axis.getColumnById((Long)col.id)
-                col.id = String.valueOf(col.id)
-                String value = new CellInfo(actualCol.getValue()).value
-
-                if (axis.valueType == AxisValueType.DATE)
-                {
-                    value = NO_QUOTES_REGEX.matcher(value).replaceAll("")
-                }
-                col.value = value
+                value = NO_QUOTES_REGEX.matcher(value).replaceAll("")
             }
+            col.value = value   // String version for Discrete, Range, or Set support
+            col.isUrl = cellInfo.isUrl
+            col.dataType = cellInfo.dataType
+            col.isCached = cellInfo.isCached
         }
         return axisConverted
     }

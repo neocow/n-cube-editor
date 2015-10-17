@@ -736,7 +736,17 @@ var NCubeEditor = (function ($)
                     item.value = inputText.val();
                 });
 
-                inputText.val(item.value);
+                var prefix = '';
+                if (item.isUrl)
+                {
+                    prefix += 'url|';
+                }
+                if (item.isCached)
+                {
+                    prefix += 'cache|';
+                }
+
+                inputText.val(prefix + item.value);
                 span.append(inputBtn);
                 div.append(span);
                 if (axis.type.name == 'RULE')
