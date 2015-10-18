@@ -77,22 +77,34 @@ var NCE = (function ($)
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
         $(window).on("popstate", function(e)
         {
-            if (e.originalEvent.state !== null)
+            var state = e.originalEvent.state;
+
+            if (state)
             {
-                var state = e.originalEvent.state;
-                _selectedApp = state.app;
-                _selectedVersion = state.version;
-                _selectedStatus = state.status;
                 _selectedCubeName = state.cube;
-                _selectedBranch = state.branch;
-                showActiveBranch();
-                loadAppNames();
-                loadVersions();
-                loadNCubes();
-                loadAppListView();
-                loadStatusListView();
-                loadVersionListView();
-                selectCubeByName(_selectedCubeName);
+                if (_selectedApp == state.app &&
+                    _selectedVersion == state.version &&
+                    _selectedStatus == state.status &&
+                    _selectedBranch == state.branch)
+                {   // Make Back button WAY faster when only cube name changes - no need to reload other lists.
+                    selectCubeByName(_selectedCubeName);
+                }
+                else
+                {
+                    _selectedApp = state.app;
+                    _selectedVersion = state.version;
+                    _selectedStatus = state.status;
+                    _selectedCubeName = state.cube;
+                    _selectedBranch = state.branch;
+                    showActiveBranch();
+                    loadAppNames();
+                    loadVersions();
+                    loadNCubes();
+                    loadAppListView();
+                    loadStatusListView();
+                    loadVersionListView();
+                    selectCubeByName(_selectedCubeName);
+                }
             }
         });
 
