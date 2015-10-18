@@ -17,19 +17,6 @@
     <link href="css/common.css" rel="stylesheet"/>
     <link href="css/index.css" rel="stylesheet"/>
     <link rel="shortcut icon" href="favicon.ico">
-
-    <!-- jsoneditor -->
-    <link rel="stylesheet" type="text/css" href="jsoneditor/jsoneditor.min.css">
-    <script src="jsoneditor/jsoneditor.min.js"></script>
-
-    <!-- ace code editor -->
-    <script src="jsoneditor/asset/ace/ace.js"></script>
-    <script src="jsoneditor/asset/ace/mode-json.js"></script>
-    <script src="jsoneditor/asset/ace/theme-textmate.js"></script>
-    <script src="jsoneditor/asset/ace/theme-jsoneditor.js"></script>
-
-    <!-- json lint -->
-    <script src="jsoneditor/asset/jsonlint/jsonlint.js"></script>
 </head>
 
 <body>
@@ -71,14 +58,13 @@
     <div id="app-list-div" class="panel">
         <div class="panel-heading">
             <div class="btn-group">
-                <a class="btn-sm btn-primary dropdown-toggle" aria-haspopup="true" data-toggle="dropdown" role="button" href="#">App</a>
+                <a class="btn-sm btn-primary" href="#">Application</a>
             </div>
             <span id="appCount" class="badge pull-right"></span>
         </div>
-        <div class="panel-body">
-            <ul class="nav nav-list" id="app-list">
-            </ul>
-        </div>
+        <select id="app-list" class="form-control">
+            <option>Loading applications...</option>
+        </select>
     </div>
 
     <div id="version-list-div" class="panel">
@@ -94,20 +80,22 @@
             </div>
             <span id="verCount" class="badge pull-right"></span>
         </div>
-        <div class="panel-body">
-            <ul class="nav nav-list" id="version-list">
-            </ul>
-        </div>
+        <select id="version-list" class="form-control">
+            <option>Loading versions...</option>
+        </select>
     </div>
 
     <div id="status-list-div" class="panel">
         <div class="main-list">
             <ul class="nav nav-list" id="status-list">
+                <li>
+                    <a>Loading status...</a>
+                </li>
             </ul>
         </div>
     </div>
 
-    <div id="ncube-list-div" class="panel" style="height:calc(100% - 284px)">
+    <div id="ncube-list-div" class="panel" style="height:calc(100% - 210px)">
         <div class="panel-heading">
             <div class="btn-group">
                 <a href="#" class="btn-sm btn-primary dropdown-toggle" aria-haspopup="true" data-toggle="dropdown"
@@ -140,6 +128,7 @@
         <input id="cube-search-content" style="font-size:12px" type="text" class="form-control" placeholder="Cubes containing...">
         <div class="panel-body">
             <ul class="nav nav-list" id="ncube-list">
+                <a>Loading n-cubes...</a>
             </ul>
         </div>
     </div>
