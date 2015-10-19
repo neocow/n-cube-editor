@@ -385,7 +385,7 @@ var NCubeEditor = (function ($)
                 // 3. Reverse the cube list order (comes from server alphabetically case-insensitively sorted) to match
                 // longer strings before shorter strings.
                 // 4. Replace '.' with '\.' so that they are only matched against dots (period), not any character.
-                s = key.replace(/\./g, '\\.') + '|' + s;
+                s = escapeRegExp(key) + '|' + s;
             }
         });
 
@@ -394,7 +394,7 @@ var NCubeEditor = (function ($)
             s = s.substring(0, s.length - 1);
         }
         s = '\\b(' + s + ')\\b';
-        var regex = new RegExp(s, "i");
+        var regex = new RegExp(s, 'gi');
 
         // Step 2: Iterate through all columns and cells, replace matches with anchor tags
 
@@ -414,6 +414,7 @@ var NCubeEditor = (function ($)
             {
                 var found = false;
 
+                // TODO: Replace all occurrences, not just first.
                 html = html.replace(regex, function (matched)
                 {
                     found = true;
