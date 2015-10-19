@@ -84,11 +84,6 @@ function escapeRegExp(string)
     return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
-function replaceAll(string, find, replace)
-{
-    return string.replace(new RegExp(escapeRegExp(find), 'g'), replace);
-}
-
 /**
  * Fill the list identified by listId, with items from the list 'list',
  * where the list is an array of Strings.  A click listener will be
