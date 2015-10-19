@@ -414,11 +414,10 @@ var NCubeEditor = (function ($)
             {
                 var found = false;
 
-                // TODO: Replace all occurrences, not just first.
                 html = html.replace(regex, function (matched)
                 {
                     found = true;
-                    return '<a class="ncube-anchor" href="#">' + matched + '</a>';
+                    return '<a class="nc-anc">' + matched + '</a>';
                 });
 
                 if (found)
