@@ -195,7 +195,7 @@ class NCubeController extends BaseController
             NCube ncube = nCubeService.getCube(appId, cubeName)
             // The Strings below are hints to n-cube to tell it which axis to place on top
             String html = ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns')
-            return html;
+            return html
         }
         catch (Exception e)
         {

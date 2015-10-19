@@ -34,7 +34,7 @@
     <properties>
         <version.java-util>1.19.3</version.java-util>
         <version.json-io>4.1.6</version.json-io>
-        <version.ncube>3.3.8</version.ncube>
+        <version.ncube>3.3.9</version.ncube>
         <version.json-command-servlet>1.2.5</version.json-command-servlet>
         <version.log4j>2.1</version.log4j>
         <version.groovy>2.4.4</version.groovy>

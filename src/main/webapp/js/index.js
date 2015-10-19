@@ -62,107 +62,65 @@ var NCE = (function ($)
 
     function initialize()
     {
-        startWorker();
-        showActiveBranch();
-        loadAppNames();
-        loadVersions();
-        loadNCubes();
-        loadAppListView();
-        loadStatusListView();
-        loadVersionListView();
-        buildMenu();
-        clearSearch();
-        loop();
-
-        // Set up back button support (base a page on a app, version, status, branch, and cube name)
-        $(window).on("popstate", function(e)
+        try
         {
-            var state = e.originalEvent.state;
+            setupMainSplitter();
+            startWorker();
+            showActiveBranch();
+            loadAppNames();
+            loadVersions();
+            loadNCubes();
+            loadAppListView();
+            loadStatusListView();
+            loadVersionListView();
+            buildMenu();
+            clearSearch();
+            loop();
 
-            if (state)
-            {
-                _selectedCubeName = state.cube;
-                if (_selectedApp == state.app &&
-                    _selectedVersion == state.version &&
-                    _selectedStatus == state.status &&
-                    _selectedBranch == state.branch)
-                {   // Make Back button WAY faster when only cube name changes - no need to reload other lists.
-                    selectCubeByName(_selectedCubeName);
-                }
-                else
-                {
-                    _selectedApp = state.app;
-                    _selectedVersion = state.version;
-                    _selectedStatus = state.status;
-                    _selectedCubeName = state.cube;
-                    _selectedBranch = state.branch;
-                    showActiveBranch();
-                    loadAppNames();
-                    loadVersions();
-                    loadNCubes();
-                    loadAppListView();
-                    loadStatusListView();
-                    loadVersionListView();
-                    selectCubeByName(_selectedCubeName);
-                }
-            }
+            var statListDiv = $('#status-list-div');
+            var statListPanel = statListDiv.find('> .panel-body');
+            statListPanel.height(36);
+
+            addListeners();
+        }
+        catch (e)
+        {
+            console.log(e);
+        }
+
+        $('#fadeMe2').remove();
+        $('#fadeMe1').fadeOut(500, function()
+        {
+            $('#fadeMe1').remove();
         });
+    }
 
-        $.fn.selectRange = function (start, end)
-        {
-            if (!end)
-            {
-                end = start;
-            }
-            return this.each(function ()
-            {
-                if (this.setSelectionRange)
-                {
-                    this.focus();
-                    this.setSelectionRange(start, end);
-                }
-                else if (this.createTextRange)
-                {
-                    var range = this.createTextRange();
-                    range.collapse(true);
-                    range.moveEnd('character', end);
-                    range.moveStart('character', start);
-                    range.select();
-                }
-            });
-        };
-
-        var statListDiv = $('#status-list-div');
-        var statListPanel = statListDiv.find('> .panel-body');
-        statListPanel.height(36);
-
-        addListeners();
-
+    function setupMainSplitter() {
         $('body').layout({
-            name:   "BodyLayout"
+            name: "BodyLayout"
             //	reference only - these options are NOT required because 'true' is the default
-            ,   closable:					true	// pane can open & close
-            ,	resizable:					true	// when open, pane can be resized
-            ,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
-            ,	livePaneResizing:			true
-            ,   togglerLength_open:         60
-            ,   togglerLength_closed:       "100%"
+            , closable: true	// pane can open & close
+            , resizable: true	// when open, pane can be resized
+            , slidable: true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
+            , livePaneResizing: true
+            , togglerLength_open: 60
+            , togglerLength_closed: "100%"
             //	some pane animation settings
-            ,	west__animatePaneSizing:	false
-            ,   west__fxName_open:          "none"
-            ,	west__fxName_close:			"none"	// NO animation when closing west-pane
-            ,   spacing_open:         5
-            ,   spacing_closed:       5
-            ,   west__resizeable:           true
-            ,   west__size:                 250
-            ,   west__minSize:              140
+            , west__animatePaneSizing: false
+            , west__fxName_open: "none"
+            , west__fxName_close: "none"	// NO animation when closing west-pane
+            , spacing_open: 5
+            , spacing_closed: 5
+            , west__resizeable: true
+            , west__size: 250
+            , west__minSize: 140
             //	enable showOverflow on west-pane so CSS popups will overlap north pane
-            ,	west__showOverflowOnHover:	true
-            ,   center__triggerEventsOnLoad: true
-            ,   center__maskContents:       true
+            , west__showOverflowOnHover: true
+            , center__triggerEventsOnLoad: true
+            , center__maskContents: true
             //	enable state management
-            ,	stateManagement__enabled:	false // automatic cookie load & save enabled by default
-            ,	showDebugMessages:			false // log and/or display messages from debugging & testing code
+            , stateManagement__enabled: false // automatic cookie load & save enabled by default
+            , showDebugMessages: false // log and/or display messages from debugging & testing code
         });
     }
 
@@ -447,6 +405,65 @@ var NCE = (function ($)
                 runSearch();
             }, 250);
         });
+
+        // Set up back button support (base a page on a app, version, status, branch, and cube name)
+        $(window).on("popstate", function(e)
+        {
+            var state = e.originalEvent.state;
+
+            if (state)
+            {
+                _selectedCubeName = state.cube;
+                if (_selectedApp == state.app &&
+                    _selectedVersion == state.version &&
+                    _selectedStatus == state.status &&
+                    _selectedBranch == state.branch)
+                {   // Make Back button WAY faster when only cube name changes - no need to reload other lists.
+                    selectCubeByName(_selectedCubeName);
+                }
+                else
+                {
+                    _selectedApp = state.app;
+                    _selectedVersion = state.version;
+                    _selectedStatus = state.status;
+                    _selectedCubeName = state.cube;
+                    _selectedBranch = state.branch;
+                    showActiveBranch();
+                    loadAppNames();
+                    loadVersions();
+                    loadNCubes();
+                    loadAppListView();
+                    loadStatusListView();
+                    loadVersionListView();
+                    selectCubeByName(_selectedCubeName);
+                }
+            }
+        });
+
+        // Support selecting ranges, helps with cut/copy/paste
+        $.fn.selectRange = function (start, end)
+        {
+            if (!end)
+            {
+                end = start;
+            }
+            return this.each(function ()
+            {
+                if (this.setSelectionRange)
+                {
+                    this.focus();
+                    this.setSelectionRange(start, end);
+                }
+                else if (this.createTextRange)
+                {
+                    var range = this.createTextRange();
+                    range.collapse(true);
+                    range.moveEnd('character', end);
+                    range.moveStart('character', start);
+                    range.select();
+                }
+            });
+        };
 
         $('#cube-search-reset').click(function()
         {
