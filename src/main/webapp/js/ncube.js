@@ -133,7 +133,7 @@ var NCubeEditor = (function ($)
             return;
         }
 
-        var result = nce.call("ncubeController.getHtml", [nce.getAppId(), nce.getSelectedCubeName()]);
+        var result = nce.call("ncubeController.getHtml", [nce.getAppId(), nce.getSelectedCubeName()], {'noResolveRefs':true});
         if (result.status === true)
         {
             document.getElementById('ncube-content').innerHTML = result.data;

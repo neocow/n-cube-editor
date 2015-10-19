@@ -141,13 +141,21 @@ function call(target, args, params)
     var async = false;
     var timeout = 60000;
 
-    if (params != null)
+    if (params)
     {
-        async = (params.callback && typeof params.callback === "function");
+        async = (params.callback && typeof params.callback === "function") ? true : false;
         if (params.timeout)
         {
             timeout = params.timeout;
         }
+    }
+    else
+    {
+        params = {};
+    }
+    if (!params.hasOwnProperty('noResolveRefs'))
+    {
+        params.noResolveRefs = false;
     }
 
     $.ajax({
@@ -171,7 +179,10 @@ function call(target, args, params)
                 }
                 else
                 {
-                    resolveRefs(result.data);
+                    if (params.noResolveRefs == false)
+                    {
+                        resolveRefs(result.data);
+                    }
                     params.callback(result);
                 }
             }
@@ -201,7 +212,10 @@ function call(target, args, params)
             return {status:null,data:'Communications error.  Check your network connection.'};
         }
 
-        resolveRefs(result.data);
+        if (params.noResolveRefs == false)
+        {
+            resolveRefs(result.data);
+        }
         return result;
     }
 }
