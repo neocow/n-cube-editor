@@ -127,7 +127,21 @@ function exec(target, args, params)
  */
 function call(target, args, params)
 {
- 	var url = buildJsonCmdUrl(target);
+    if (!params)
+    {   // Create an empty params object
+        params = {};
+    }
+    if (!params.hasOwnProperty('timeout'))
+    {
+        params.timeout = 60000;
+    }
+    if (!params.hasOwnProperty('noResolveRefs'))
+    {
+        params.noResolveRefs = false;
+    }
+    var async = params.hasOwnProperty('callback');
+
+    var url = buildJsonCmdUrl(target);
     var json;
     try
     {
@@ -138,25 +152,6 @@ function call(target, args, params)
         return {status:null,data:"Arguments could not be converted to JSON string."};
     }
     var result = null;
-    var async = false;
-    var timeout = 60000;
-
-    if (params)
-    {
-        async = (params.callback && typeof params.callback === "function") ? true : false;
-        if (params.timeout)
-        {
-            timeout = params.timeout;
-        }
-    }
-    else
-    {
-        params = {};
-    }
-    if (!params.hasOwnProperty('noResolveRefs'))
-    {
-        params.noResolveRefs = false;
-    }
 
     $.ajax({
         type : "POST",
@@ -166,7 +161,7 @@ function call(target, args, params)
         data : json,
         dataType : "json",
         contentType: "application/json",
-        timeout : timeout,
+        timeout : params.timeout,
         success : function(data, textStatus)
         {
             result = data;

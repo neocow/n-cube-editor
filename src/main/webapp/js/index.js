@@ -88,7 +88,7 @@ var NCE = (function ($)
             console.log(e);
         }
 
-        $('#fadeMe2').remove();
+        $('.fadeMe2').remove();
         $('#fadeMe1').fadeOut(500, function()
         {
             $('#fadeMe1').remove();
@@ -1155,7 +1155,7 @@ var NCE = (function ($)
                 {
                     var title = value.name + '.rev.' + value.revision;
                     var oldHtml = window.open('', title + '.html');
-                    var htmlReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "html"]);
+                    var htmlReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "html"], {noResolveRefs:true});
                     if (htmlReq.status === true)
                     {
                         oldHtml.document.removeChild(oldHtml.document.documentElement);
@@ -1167,7 +1167,7 @@ var NCE = (function ($)
                 {
                     var title = value.name + '.rev.' + value.revision;
                     var oldJson = window.open('', title + '.json');
-                    var prettyJsonReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "json-pretty"]);
+                    var prettyJsonReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "json-pretty"], {noResolveRefs:true});
                     if (prettyJsonReq.status === true)
                     {
                         oldJson.document.removeChild(oldJson.document.documentElement);
@@ -2036,15 +2036,6 @@ var NCE = (function ($)
                 runSearch();
             }
         }, 500);
-    }
-
-    function checkAll(state, queryStr)
-    {
-        var input = $(queryStr);
-        $.each(input, function (index, btn)
-        {
-            $(this).prop('checked', state);
-        });
     }
 
     function doesItemExist(item, list)

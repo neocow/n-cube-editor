@@ -133,7 +133,7 @@ var NCubeEditor = (function ($)
             return;
         }
 
-        var result = nce.call("ncubeController.getHtml", [nce.getAppId(), nce.getSelectedCubeName()], {'noResolveRefs':true});
+        var result = nce.call("ncubeController.getHtml", [nce.getAppId(), nce.getSelectedCubeName()], {noResolveRefs:true});
         if (result.status === true)
         {
             document.getElementById('ncube-content').innerHTML = result.data;
@@ -198,15 +198,6 @@ var NCubeEditor = (function ($)
             nce.showNote('Unable to load ' + nce.getSelectedCubeName() + ':<hr class="hr-small"/>' + result.data);
         }
 
-        $('.column').each(function ()
-        {
-            $(this).dblclick(function()
-            {   // On double click, bring up column value editor modal
-                var col = $(this);
-                editColumns(col.attr('data-axis'));
-            });
-        });
-
         $('.cell-url a, .column-url a').each(function()
         {
             var anchor = $(this);
@@ -220,7 +211,7 @@ var NCubeEditor = (function ($)
                 }
                 else
                 {
-                    var result = nce.call("ncubeController.resolveRelativeUrl", [nce.getAppId(), link]);
+                    var result = nce.call("ncubeController.resolveRelativeUrl", [nce.getAppId(), link], {noResolveRefs:true});
                     if (result.status === true && result.data)
                     {
                         link = result.data;
@@ -245,86 +236,103 @@ var NCubeEditor = (function ($)
 
     var processCellClicks = function()
     {
+        var ncubeTable = $('.table-ncube');
+
+        // Install double-click handler on columns for easy access to 'edit columns' modal.
+        ncubeTable.on('dblclick', 'th', function (e)
+        {
+            var col = $(e.target);
+            if (col.hasClass('column'))
+            {
+                editColumns(col.attr('data-axis'));
+            }
+        });
+
+        // Install double-click handle on the td tags for pop-up cell editing
+        ncubeTable.on('dblclick', 'td', function (e)
+        {
+            _uiCellId = $(e.target);
+            if (_uiCellId.hasClass('cell'))
+            {
+                _cellId = _uiCellId.attr('data-id').split("_");
+                editCell();
+            }
+        });
+
+        // Install click handler for selection rectangle support
+        ncubeTable.on('click', 'td', function (e)
+        {
+            var cell = $(e.target);
+            if (!cell.hasClass('cell')) {
+                return;
+            }
+
+            if (event.shiftKey || event.ctrlKey)
+            {
+                var selectedCell = $('td.cell-selected');
+                if (!selectedCell || selectedCell.length == 0)
+                {
+                    clearSelectedCells();
+                    cell.addClass('cell-selected');
+                    cell.children().addClass('cell-selected');
+                }
+                else
+                {
+                    var table = $(".table-ncube")[0];
+                    var minRow = 10000000000;
+                    var minCol = 10000000000;
+                    var maxRow = -1;
+                    var maxCol = -1;
+                    var tableRows = table.rows;
+
+                    selectedCell.each(function()
+                    {
+                        var iCell = $(this);
+                        var iRow = getRow(iCell);
+                        var iCol = getCol(iCell) - countTH(tableRows[iRow].cells);
+                        if (iRow < minRow) minRow = iRow;
+                        if (iRow > maxRow) maxRow = iRow;
+                        if (iCol < minCol) minCol = iCol;
+                        if (iCol > maxCol) maxCol = iCol;
+                    });
+                    var aRow = getRow(cell);
+                    var aCol = getCol(cell) - countTH(tableRows[aRow].cells);
+
+                    // Ensure that the rectangle goes from top left to lower right
+                    if (aCol > maxCol) maxCol = aCol;
+                    if (aCol < minCol) minCol = aCol;
+                    if (aRow > maxRow) maxRow = aRow;
+                    if (aRow < minRow) minRow = aRow;
+
+                    for (var column = minCol; column <= maxCol; column++)
+                    {
+                        for (var row = minRow; row <= maxRow; row++)
+                        {
+                            var numTH = countTH(tableRows[row].cells);
+                            var domCell = tableRows[row].cells[column + numTH]; // This is a DOM "TD" element
+                            var jqCell = $(domCell);                             // Now it's a jQuery object.
+                            jqCell.addClass('cell-selected');
+                            jqCell.children().addClass('cell-selected');
+                        }
+                    }
+                }
+            }
+            else
+            {   // On a straight-up click, nuke any existing selection.
+                clearSelectedCells();
+                cell.addClass('cell-selected');
+                cell.children().addClass('cell-selected');
+            }
+        });
+
         // Add ability for the user to double-click axis and pop-up the 'Update Axis' modal
         $('.ncube-head').each(function()
-        {
+        {   // Only 1 per dimension, so no big deal adding listener this way.
             $(this).dblclick(function()
             {
                 var div = $(this).find('div');
                 var axisName = div.attr('data-id');
                 updateAxis(axisName);
-            });
-        });
-
-        // Add support for individual and shift-selection of cells within the table cell area
-        $('td.cell').each(function ()
-        {
-            var cell = $(this);
-            cell.click(function (event)
-            {
-                if (event.shiftKey || event.ctrlKey)
-                {
-                    var selectedCell = $('td.cell-selected');
-                    if (!selectedCell || selectedCell.length == 0)
-                    {
-                        clearSelectedCells();
-                        cell.addClass('cell-selected');
-                        cell.children().addClass('cell-selected');
-                    }
-                    else
-                    {
-                        var table = $(".table-ncube")[0];
-                        var minRow = 10000000000;
-                        var minCol = 10000000000;
-                        var maxRow = -1;
-                        var maxCol = -1;
-                        var tableRows = table.rows;
-
-                        selectedCell.each(function()
-                        {
-                            var iCell = $(this);
-                            var iRow = getRow(iCell);
-                            var iCol = getCol(iCell) - countTH(tableRows[iRow].cells);
-                            if (iRow < minRow) minRow = iRow;
-                            if (iRow > maxRow) maxRow = iRow;
-                            if (iCol < minCol) minCol = iCol;
-                            if (iCol > maxCol) maxCol = iCol;
-                        });
-                        var aRow = getRow(cell);
-                        var aCol = getCol(cell) - countTH(tableRows[aRow].cells);
-
-                        // Ensure that the rectangle goes from top left to lower right
-                        if (aCol > maxCol) maxCol = aCol;
-                        if (aCol < minCol) minCol = aCol;
-                        if (aRow > maxRow) maxRow = aRow;
-                        if (aRow < minRow) minRow = aRow;
-
-                        for (var column = minCol; column <= maxCol; column++)
-                        {
-                            for (var row = minRow; row <= maxRow; row++)
-                            {
-                                var numTH = countTH(tableRows[row].cells);
-                                var domCell = tableRows[row].cells[column + numTH]; // This is a DOM "TD" element
-                                var jqCell = $(domCell);                             // Now it's a jQuery object.
-                                jqCell.addClass('cell-selected');
-                                jqCell.children().addClass('cell-selected');
-                            }
-                        }
-                    }
-                }
-                else
-                {   // On a straight-up click, nuke any existing selection.
-                    clearSelectedCells();
-                    cell.addClass('cell-selected');
-                    cell.children().addClass('cell-selected');
-                }
-            });
-
-            cell.dblclick(function (e)
-            {   // On double click open Edit Cell modal
-                _uiCellId = cell;
-                _cellId = _uiCellId.attr('data-id').split("_");
-                editCell();
             });
         });
     };

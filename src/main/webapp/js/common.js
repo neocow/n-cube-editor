@@ -79,9 +79,24 @@ function wildcardToRegexString(wildcard)
     return s;
 }
 
+/**
+ * Escape regex characters in source String.  For example, period (.) becomes \.
+ */
 function escapeRegExp(string)
 {
     return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}
+
+/**
+ * Check all the inputs in a list.
+ */
+function checkAll(state, queryStr)
+{
+    var input = $(queryStr);
+    $.each(input, function (index, btn)
+    {
+        $(this).prop('checked', state);
+    });
 }
 
 /**
