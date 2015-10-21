@@ -624,6 +624,19 @@ class NCubeController extends BaseController
                 return
             }
 
+            List<Column> cols = updatedAxis.getColumns()
+            if (cols != null)
+            {
+                cols.each {
+                    Column column ->
+                        Object value = column.value
+                        if (value == null || "".equals(value))
+                        {
+                            throw new IllegalArgumentException('Column cannot have empty value, n-cube: ' + cubeName + ', axis: ' + updatedAxis.name)
+                        }
+                }
+            }
+
             NCube ncube = nCubeService.getCube(appId, cubeName)
             ncube.updateColumns(updatedAxis)
             nCubeService.updateNCube(ncube, getUserForDatabase())
@@ -1206,7 +1219,7 @@ class NCubeController extends BaseController
             {
                 return
             }
-            nCubeService.acceptMine(appId, cubeName, headSha1, getUserForDatabase())
+            nCubeService.acceptMine(appId, cubeName, getUserForDatabase())
         }
         catch (Exception e)
         {

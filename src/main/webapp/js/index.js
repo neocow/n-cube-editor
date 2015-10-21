@@ -87,12 +87,6 @@ var NCE = (function ($)
         {
             console.log(e);
         }
-
-        $('.fadeMe2').remove();
-        $('#fadeMe1').fadeOut(500, function()
-        {
-            $('#fadeMe1').remove();
-        });
     }
 
     function setupMainSplitter() {
@@ -528,7 +522,8 @@ var NCE = (function ($)
         });
         $('#showRefsToMenu').click(function ()
         {
-            showRefsToCube();
+            setTimeout(function() { showRefsToCube(); }, 300);
+            showNote('Calculating inbound references from other n-cubes to this n-cube.');
         });
         $('#showRefsToClose').click(function ()
         {
@@ -740,6 +735,14 @@ var NCE = (function ($)
             }
         });
 
+        if (keyCount(cubes) < 1)
+        {   // Special case: 0 cubes
+            var activeTab = getActiveTab();
+            if (activeTab && activeTab[0])
+            {   // Indicate to the active iFrame that a cube selection event has occurred.
+                activeTab[0].contentWindow.cubeSelected();
+            }
+        }
         _cubeCount.html(count);
     }
 
@@ -775,6 +778,10 @@ var NCE = (function ($)
      */
     function setListSelectedStatus(itemName, listId)
     {
+        if (itemName == null)
+        {
+            return;
+        }
         var items = $(listId).find('li a');
         var saveSelected = null;
         var loItemName = itemName.toLowerCase();
@@ -1024,7 +1031,13 @@ var NCE = (function ($)
         var result = call("ncubeController.deleteCube", [getAppId(), _selectedCubeName]);
         if (result.status === true)
         {
-            loadNCubes();
+            delete _cubeList[_selectedCubeName.toLowerCase()];
+            _selectedCubeName = null;
+            if (keyCount(_cubeList) > 0)
+            {
+                _selectedCubeName = Object.keys(_cubeList)[0];
+                loadCube();
+            }
             runSearch();
         }
         else
@@ -1529,11 +1542,13 @@ var NCE = (function ($)
         // Main menu options
         $('#branchSelect').click(function()
         {
-            selectBranch();
+            setTimeout(function() { selectBranch(); }, 300);
+            showNote('Getting list of branches...');
         });
         $('#branchCommit').click(function()
         {
-            commitBranch(true);
+            setTimeout(function() { commitBranch(true); }, 300);
+            showNote('Processing commit request...');
         });
         $('#commitRollbackSelectAll').click(function()
         {
@@ -1553,11 +1568,13 @@ var NCE = (function ($)
         });
         $('#branchRollback').click(function()
         {
-            commitBranch(false);
+            setTimeout(function() { commitBranch(false); }, 300);
+            showNote('Processing rollback request...');
         });
         $('#branchUpdate').click(function()
         {
-            updateBranch();
+            setTimeout(function() { updateBranch(); }, 300);
+            showNote('Updating branch...');
         });
         $('#branchDelete').click(function()
         {
@@ -1801,7 +1818,7 @@ var NCE = (function ($)
 
         if (result.status === false)
         {
-            mergeBranch(result.data);
+            showNote('You have conflicts with the HEAD branch.  Update Branch first, then re-attempt branch commit.');
             return;
         }
 
@@ -2007,11 +2024,11 @@ var NCE = (function ($)
         var result = call('ncubeController.acceptMine', [getAppId(), _mergeCubeName, _mergeHeadSha1]);
         if (result.status === true)
         {
-            showNote('Cube: ' + _mergeCubeName + ' updated in HEAD with cube from your branch');
+            showNote('Cube: ' + _mergeCubeName + ' updated to overwrite-on-commit.');
         }
         else
         {
-            showNote('Unable to update HEAD cube: ' + _mergeCubeName + ' with cube from your branch:<hr class="hr-small"/>' + result.data);
+            showNote('Unable to update your branch cube: ' + _mergeCubeName + ' to overwrite-on-commit:<hr class="hr-small"/>' + result.data);
         }
         _mergeCubeName = null;
         _mergeSha1 = null;
@@ -2125,4 +2142,10 @@ var NCE = (function ($)
 function frameLoaded()
 {
     $('#menuList').find(':first-child').find('a').click();
+    $('.fadeMe2').fadeOut(800); // Time in milliseconds.
+    $('#fadeMe1').fadeOut(500, function()
+    {
+        $('#fadeMe1').remove();
+    });
+
 }

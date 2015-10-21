@@ -6,7 +6,7 @@ n-cube-editor is a web-based GUI editor for editing and managing n-cubes.
 <dependency>
   <groupId>com.cedarsoftware</groupId>
   <artifactId>n-cube</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 Like **n-cube-editor** and find it useful? Donate some **Bitcoin**: 1MJFgxTVFZZ3EkmdPabsQ5UremUg2HHPe7
@@ -27,6 +27,14 @@ innovative and intelligent tools for profiling Java and .NET applications.
 ![Alt text](https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcS-ZOCfy4ezfTmbGat9NYuyfe-aMwbo3Czx3-kUfKreRKche2f8fg "IntellijIDEA")
 ___
 ### Version History
+* 0.4.0
+ * 10x speed up in loading the cube HTML.  No longer sending String return values to resolveRefs (5x) and adding single listener to table instead of a listener-per-cell (5x).
+ * Enhancement: 'Processing...' (toast) messages pop up now for menu items that generally take a bit of time to execute.  This allows the menu click to be processed, the 'toast' to be displayed, and then the toast clears and the appropriate modal displays.
+ * Bug fix: NPE was occuring when scanning GroovyTemplate cells (that were empty) for cube name references (invoked from 'Show Inbound References' menu).  Fixed.
+ * Bug fix: NPE was occurring on the back-end because the front-end was allowing "" for column values which is illegal. Fixed.  
+ * Bug fix: Update branch 'accept mine' was merging the branch cube into HEAD.  Instead it should have updated the headSha1 of the branch cube to match the HEAD cube so that it was prepared-to-overwrite when committed.
+ * Bug fix: When there is no cube in the HEAD and cube is created/deleted/restored, it was throwing an error.  Instead, this should be treated as a create to HEAD on commit.
+ * Fancy splash screen logo added to application start-up.
 * 0.3.0
  * Update Branch - Before it was operating transactionally, meaning that no cubes were updated if there were any merge conflict.  Now, Update branch makes all possible updates (commits them) and then shows the number of updates, merges, and conflicts.  If there are any conflicts, a merge conflict window will pop-up to allow the conflict to be resolved.
  * Search now only searches locally in memory unless the 'contains' field has content.  This dramatically speeds up search and reduces a lot of database server load.

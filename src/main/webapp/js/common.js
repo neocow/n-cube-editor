@@ -99,6 +99,19 @@ function checkAll(state, queryStr)
     });
 }
 
+function keyCount(obj)
+{
+    var size = 0, key;
+    for (key in obj)
+    {
+        if (obj.hasOwnProperty(key))
+        {
+            size++;
+        }
+    }
+    return size;
+}
+
 /**
  * Fill the list identified by listId, with items from the list 'list',
  * where the list is an array of Strings.  A click listener will be

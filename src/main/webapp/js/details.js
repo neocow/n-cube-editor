@@ -146,12 +146,14 @@ var DetailEditor = (function ($)
     {
         if (!nce.getCubeMap() || !nce.doesCubeExist())
         {
+            clearFields();
             return;
         }
 
         var info = nce.getCubeMap()[(nce.getSelectedCubeName() + '').toLowerCase()];
         if (!info)
         {
+            clearFields();
             return;
         }
 
@@ -204,6 +206,18 @@ var DetailEditor = (function ($)
 
         // Set the Cache check box state
         _isCached.find('input').prop('checked', cellInfo.isCached);
+    };
+
+    var clearFields = function()
+    {
+        $('#cube_name').val('');
+        $('#cube_revision').val('');
+        $('#cube_createDate').val('');
+        $('#cube_createHid').val('');
+        $('#cube_notes').val('');
+        $('#cube_id').val('');
+        $('#cube_sha1').val('');
+        $('#cube_headSha1').val('');
     };
 
     var handleCubeSelected = function()

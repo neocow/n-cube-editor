@@ -113,12 +113,14 @@ var NCubeEditor = (function ($)
     {
         if (!nce.getCubeMap() || !nce.doesCubeExist())
         {
+            $('#ncube-content').innerHTML = '';
             return;
         }
 
         var info = nce.getCubeMap()[(nce.getSelectedCubeName() + '').toLowerCase()];
         if (!info)
         {
+            $('#ncube-content').innerHTML = '';
             return;
         }
 
