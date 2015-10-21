@@ -34,6 +34,8 @@ ___
  * Bug fix: NPE was occurring on the back-end because the front-end was allowing "" for column values which is illegal. Fixed.  
  * Bug fix: Update branch 'accept mine' was merging the branch cube into HEAD.  Instead it should have updated the headSha1 of the branch cube to match the HEAD cube so that it was prepared-to-overwrite when committed.
  * Bug fix: When there is no cube in the HEAD and cube is created/deleted/restored, it was throwing an error.  Instead, this should be treated as a create to HEAD on commit.
+ * Bug fix: When duplicating an n-cube, there was an error being displayed about NCE unable to call getAppNames(), caused by parameter mismatch in Ajax function call. Fixed.
+ * Clean up: When you switch applications, versions, or branch, the menu is rebuilt, because sys.menu may be different per anyone of these selectors. 
  * Clean up: All tabs now have intelligent displays when there are 0 cubes available in the selected App.
  * Fancy splash screen logo added to application start-up.
 * 0.3.0

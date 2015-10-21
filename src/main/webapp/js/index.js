@@ -150,7 +150,7 @@ var NCE = (function ($)
         var menu = result.data;
         $('#appTitle').html(menu['~Title']);
         var ul = $('#menuList');
-
+        ul.empty();
         $.each(menu, function (key, value)
         {
             if (!key.startsWith('~') && !key.startsWith('@') && !key.startsWith('#'))
@@ -379,7 +379,8 @@ var NCE = (function ($)
                 loadNCubeListView();
                 loadCube();
                 runSearch();
-            }, 250);
+                buildMenu();
+            }, PROGRESS_DELAY);
         });
 
         // Selection listener for version number change
@@ -397,7 +398,8 @@ var NCE = (function ($)
                 loadNCubeListView();
                 loadCube();
                 runSearch();
-            }, 250);
+                buildMenu();
+            }, PROGRESS_DELAY);
         });
 
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
@@ -430,6 +432,7 @@ var NCE = (function ($)
                     loadStatusListView();
                     loadVersionListView();
                     selectCubeByName(_selectedCubeName);
+                    buildMenu();
                 }
             }
         });
@@ -522,7 +525,7 @@ var NCE = (function ($)
         });
         $('#showRefsToMenu').click(function ()
         {
-            setTimeout(function() { showRefsToCube(); }, 300);
+            setTimeout(function() { showRefsToCube(); }, PROGRESS_DELAY);
             showNote('Calculating inbound references from other n-cubes to this n-cube.');
         });
         $('#showRefsToClose').click(function ()
@@ -627,6 +630,7 @@ var NCE = (function ($)
                 loadNCubeListView();
                 loadCube();
                 runSearch();
+                buildMenu();
             });
             anchor.html(value);
             li.append(anchor);
@@ -1269,7 +1273,7 @@ var NCE = (function ($)
                 'status':'SNAPSHOT',
                 'branch':_selectedBranch
             };
-            var result = call("ncubeController.getAppVersions", [appId]);
+            var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus, _selectedBranch]);
             if (result.status === true)
             {
                 buildDropDown('#dupeCubeVersionList', '#dupeCubeVersion', result.data, function ()
@@ -1542,12 +1546,12 @@ var NCE = (function ($)
         // Main menu options
         $('#branchSelect').click(function()
         {
-            setTimeout(function() { selectBranch(); }, 300);
+            setTimeout(function() { selectBranch(); }, PROGRESS_DELAY);
             showNote('Getting list of branches...');
         });
         $('#branchCommit').click(function()
         {
-            setTimeout(function() { commitBranch(true); }, 300);
+            setTimeout(function() { commitBranch(true); }, PROGRESS_DELAY);
             showNote('Processing commit request...');
         });
         $('#commitRollbackSelectAll').click(function()
@@ -1568,12 +1572,12 @@ var NCE = (function ($)
         });
         $('#branchRollback').click(function()
         {
-            setTimeout(function() { commitBranch(false); }, 300);
+            setTimeout(function() { commitBranch(false); }, PROGRESS_DELAY);
             showNote('Processing rollback request...');
         });
         $('#branchUpdate').click(function()
         {
-            setTimeout(function() { updateBranch(); }, 300);
+            setTimeout(function() { updateBranch(); }, PROGRESS_DELAY);
             showNote('Updating branch...');
         });
         $('#branchDelete').click(function()
@@ -1593,12 +1597,14 @@ var NCE = (function ($)
         {
             $('#branchNameWarning').hide();
         });
-        $('#acceptTheirs').click(function()
+        $('#acceptTheirs').click(function(e)
         {
+            e.preventDefault();
             acceptTheirs();
         });
-        $('#acceptMine').click(function()
+        $('#acceptMine').click(function(e)
         {
+            e.preventDefault();
             acceptMine();
         });
     }
@@ -1697,6 +1703,7 @@ var NCE = (function ($)
         loadNCubeListView();
         loadCube();
         runSearch();
+        buildMenu();
         showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 2000);
     }
 
