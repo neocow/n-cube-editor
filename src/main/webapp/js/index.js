@@ -1801,9 +1801,6 @@ var NCE = (function ($)
         });
 
         checkAll(true, 'input[type="checkbox"]');
-
-        //TODO: After Axis, column, or cell modifications, mark _selectedCubeName as modified (blue)
-        //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
         _commitModal.modal('show');
     }
 
@@ -1828,6 +1825,9 @@ var NCE = (function ($)
             showNote('You have conflicts with the HEAD branch.  Update Branch first, then re-attempt branch commit.');
             return;
         }
+
+        //TODO: After Axis, column, or cell modifications, mark _selectedCubeName as modified (blue)
+        //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
 
         showNote('Successfully committed ' + changes.length + ' cube(s).');
         loadNCubes();
@@ -1858,7 +1858,7 @@ var NCE = (function ($)
             return;
         }
 
-        showNote('Successfully rolled back ' + changes.length + ' cube(s).', 'Note', 5000);
+        showNote('Successfully rolled back ' + changes.length + ' cube(s).');
         loadNCubes();
         loadNCubeListView();
         reloadCube();
