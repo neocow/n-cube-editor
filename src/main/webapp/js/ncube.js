@@ -85,6 +85,10 @@ var NCubeEditor = (function ($)
             {
                 updateAxisOk()
             });
+            _editCellModal.on('shown.bs.modal', function ()
+            {
+                $('#editCellValue').focus();
+            });
 
             $(document).keydown(function(e)
             {
