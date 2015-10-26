@@ -182,15 +182,6 @@ var NCE = (function ($)
                 $('#' + menuId).click(function ()
                 {
                     clearError();
-                    showNote('This is a long message.  Because it is long, it should cause the gritter control to wrap the text.  ' +
-                        'The goal here is to determine if the gritter control can handle a huge amount of text.<hr/>' +
-                        'What happens when I use a Horizontal Rule?  Does it cause the new text below the Horizontal' +
-                        'Rule to at least start at the left, allowing the display of more text?<hr/>' +
-                        '2nd time: What happens when I use a Horizontal Rule?  Does it cause the new text below the Horizontal' +
-                        'Rule to at least start at the left, allowing the display of more text?<hr/>' +
-                        '3rd time: What happens when I use a Horizontal Rule?  Does it cause the new text below the Horizontal' +
-                        'Rule to at least start at the left, allowing the display of more text?');
-
                     _activeTab = menuId;
 
                     try
