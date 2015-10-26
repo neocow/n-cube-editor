@@ -30,7 +30,7 @@
     position:absolute;
     top:5px;
     left:5px;
-    background:url(../images/gritter.png) no-repeat left top;
+    background:url(../img/gritter.png) no-repeat left top;
     cursor:pointer;
     width:30px;
     height:30px;
@@ -42,7 +42,7 @@
     color: white;
     padding:0 0 7px 0;
     display:block;
-    text-shadow:1px 1px 0 #000; /* Not supported by IE :( */
+    text-shadow:1px 1px 0 #000;
 }
 .gritter-image {
     width:48px;

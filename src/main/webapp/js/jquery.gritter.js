@@ -64,8 +64,7 @@
     };
 
     /**
-     * Big fat Gritter object
-     * @constructor (not really since its object literal)
+     * @constructor
      */
     var Gritter = {
 
@@ -132,7 +131,7 @@
             this._custom_timer = 0;
 
             // A custom fade time set
-            if(time_alive)
+            if (time_alive)
             {
                 this._custom_timer = time_alive;
             }
@@ -149,7 +148,7 @@
             );
 
             // If it's false, don't show another gritter message
-            if(this['_before_open_' + number]() === false)
+            if (this['_before_open_' + number]() === false)
             {
                 return false;
             }
@@ -188,7 +187,7 @@
                 Gritter._hoverState($(this), event.type);
             });
 
-            // Clicking (X) makes the perdy thing close
+            // Clicking (X) makes it close
             $(item).find('.gritter-close').click(function()
             {
                 Gritter.removeSpecific(number, {}, null, true);
