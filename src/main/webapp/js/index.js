@@ -2094,7 +2094,7 @@ var NCE = (function ($)
         _errorId = $.gritter.add({
             title: (title || 'Note'),
             text: msg,
-            //image: './img/cube-logo.png',
+            image: './img/cube-logo.png',
             sticky: !millis,
             time: (millis || 0)
         });
