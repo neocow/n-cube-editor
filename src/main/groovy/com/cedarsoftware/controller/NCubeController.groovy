@@ -24,6 +24,7 @@ import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
 import com.cedarsoftware.util.CaseInsensitiveSet
 import com.cedarsoftware.util.DateUtilities
+import com.cedarsoftware.util.InetAddressUtilities
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
@@ -1481,7 +1482,8 @@ class NCubeController extends BaseController
         putIfNotNull(results, 'serverInfo', getAttribute(mbs, 'Catalina:type=Server', 'serverInfo'))
         putIfNotNull(results, 'jvmRoute', getAttribute(mbs, 'Catalina:type=Engine', 'jvmRoute'))
 
-        putIfNotNull(results, 'host', JsonCommandServlet.servletRequest.get().getServerName())
+//        putIfNotNull(results, 'host', JsonCommandServlet.servletRequest.get().getServerName())
+        putIfNotNull(results, 'host', InetAddressUtilities.getHostName())
         putIfNotNull(results, 'context', JsonCommandServlet.servletRequest.get().getContextPath())
         putIfNotNull(results, 'activeSessions', getAttribute(mbs, 'Catalina:type=Manager,host=' + results.host + ',context=' + results.context, 'activeSessions'))
         putIfNotNull(results, 'peakSessions', getAttribute(mbs, 'Catalina:type=Manager,host=' + results.host + ',context=' + results.context, 'maxActive'))
@@ -1516,14 +1518,14 @@ class NCubeController extends BaseController
             ObjectName objectName = new ObjectName(beanName)
             mbs.getAttribute(objectName, attribute)
         }
-        catch (Exception e)
+        catch (Exception ignored)
         {
-            LOG.warn('Error fetching attribute: ' + attribute + ' from mbean: ' + beanName, e)
+            LOG.warn('Error fetching attribute: ' + attribute + ' from mbean: ' + beanName)
             null
         }
     }
 
-    private void putIfNotNull(Map map, String key, Object value)
+    private static void putIfNotNull(Map map, String key, Object value)
     {
         if (value)
         {
