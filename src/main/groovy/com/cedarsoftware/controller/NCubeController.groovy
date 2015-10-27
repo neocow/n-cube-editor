@@ -29,12 +29,17 @@ import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
 import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
+import javax.management.MBeanServer
+import javax.management.ObjectName
 import javax.servlet.http.HttpServletRequest
+import java.lang.management.ManagementFactory
 import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentMap
 import java.util.regex.Pattern
 
 /**
@@ -59,11 +64,15 @@ import java.util.regex.Pattern
 @CompileStatic
 class NCubeController extends BaseController
 {
+    private static final Logger LOG = LogManager.getLogger(NCubeController.class)
     private static final Pattern VERSION_REGEX = ~/[.]/
     private static final Pattern IS_NUMBER_REGEX = ~/^[\d,.e+-]+$/
     private static final Pattern NO_QUOTES_REGEX = ~/"/
     private NCubeService nCubeService;
-    private static final Logger LOG = LogManager.getLogger(NCubeController.class)
+    // Bind to ConcurrentLinkedHashMap because some plugins will need it.
+    private ConcurrentMap<String, Object> futureCache = new ConcurrentLinkedHashMap.Builder<String, Object>()
+            .maximumWeightedCapacity(100)
+            .build();
 
     NCubeController(NCubeService service)
     {
@@ -1450,10 +1459,44 @@ class NCubeController extends BaseController
         }
     }
 
-    // TODO: Remove this - it is no longer used.
-    boolean canSkipLinks(ApplicationID appId, String cubeName)
+    Map heartBeat()
     {
-        return false
+        // Force session creation / update
+        JsonCommandServlet.servletRequest.get().getSession()
+
+        // If remotely accessing server, use the following to get the MBeanServerConnection...
+//        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:/jmxrmi")
+//        JMXConnector jmxc = JMXConnectorFactory.connect(url, null)
+//
+//        MBeanServerConnection conn = jmxc.getMBeanServerConnection()
+//        String[] domains = conn.getDomains()
+//        Set result = conn.queryMBeans(null, "Catalina:type=DataSource,path=/appdb,host=localhost,class=javax.sql.DataSource");
+//        jmxc.close();
+
+
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+
+        // App server name and version
+        Map results = [:]
+        putIfNotNull(results, 'serverInfo', getAttribute(mbs, 'Catalina:type=Server', 'serverInfo'))
+        putIfNotNull(results, 'jvmRoute', getAttribute(mbs, 'Catalina:type=Engine', 'jvmRoute'))
+
+        putIfNotNull(results, 'host', JsonCommandServlet.servletRequest.get().getServerName())
+        putIfNotNull(results, 'context', JsonCommandServlet.servletRequest.get().getContextPath())
+        putIfNotNull(results, 'activeSessions', getAttribute(mbs, 'Catalina:type=Manager,host=' + results.host + ',context=' + results.context, 'activeSessions'))
+        putIfNotNull(results, 'peakSessions', getAttribute(mbs, 'Catalina:type=Manager,host=' + results.host + ',context=' + results.context, 'maxActive'))
+
+        // JVM
+        putIfNotNull(results, 'loadedClassCount', getAttribute(mbs, 'java.lang:type=ClassLoading', 'LoadedClassCount'))
+
+        putIfNotNull(results, 'jvmVersion', getAttribute(mbs, 'JMImplementation:type=MBeanServerDelegate', 'ImplementationVersion'))
+
+        // OS
+        putIfNotNull(results, 'os', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Name'))
+        putIfNotNull(results, 'osVersion', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Version'))
+        putIfNotNull(results, 'cpu', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Arch'))
+
+        return results
     }
 
     // ============================================= End API ===========================================================
@@ -1464,6 +1507,32 @@ class NCubeController extends BaseController
     {
         JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_STATUS, false)
         JsonCommandServlet.servletRequest.get().setAttribute(JsonCommandServlet.ATTRIBUTE_FAIL_MESSAGE, data)
+    }
+
+    private static Object getAttribute(MBeanServer mbs, String beanName, String attribute)
+    {
+        try
+        {
+            ObjectName objectName = new ObjectName(beanName)
+            mbs.getAttribute(objectName, attribute)
+        }
+        catch (Exception e)
+        {
+            LOG.warn('Error fetching attribute: ' + attribute + ' from mbean: ' + beanName, e)
+            null
+        }
+    }
+
+    private void putIfNotNull(Map map, String key, Object value)
+    {
+        if (value)
+        {
+            if (value instanceof Number)
+            {
+                value = value.longValue()
+            }
+            map[key] = value
+        }
     }
 
     /**

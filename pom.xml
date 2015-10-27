@@ -44,6 +44,7 @@
         <version.java>1.7</version.java>
         <version.mysql>5.1.35</version.mysql>
         <version.tuckey>4.0.4</version.tuckey>
+        <version.concurrent.linked.hashmap.lru>1.4.2</version.concurrent.linked.hashmap.lru>
         <version.plugin.compiler>3.2</version.plugin.compiler>
         <version.plugin.nexus>1.6.6</version.plugin.nexus>
         <version.plugin.deploy>2.8.2</version.plugin.deploy>
@@ -186,6 +187,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+            <artifactId>concurrentlinkedhashmap-lru</artifactId>
+            <version>${version.concurrent.linked.hashmap.lru}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.tuckey</groupId>
             <artifactId>urlrewritefilter</artifactId>

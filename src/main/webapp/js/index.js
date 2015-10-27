@@ -76,6 +76,7 @@ var NCE = (function ($)
             buildMenu();
             clearSearch();
             loop();
+            heartBeat();
 
             var statListDiv = $('#status-list-div');
             var statListPanel = statListDiv.find('> .panel-body');
@@ -2060,6 +2061,14 @@ var NCE = (function ($)
                 runSearch();
             }
         }, 500);
+    }
+
+    function heartBeat()
+    {
+        setInterval(function()
+        {
+            call("ncubeController.heartBeat", []);
+        }, 60000);
     }
 
     function doesItemExist(item, list)
