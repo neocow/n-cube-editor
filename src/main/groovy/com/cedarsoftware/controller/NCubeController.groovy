@@ -1477,13 +1477,19 @@ class NCubeController extends BaseController
 
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 
+        LOG.info("DEBUG info...")
+        Set<ObjectName> set = mbs.queryNames(new ObjectName('Catalina:type=Manager,host=*,context=/*'), null)
+        set.each { ObjectName name -> LOG.info('    ' + name.getKeyPropertyListString()); }
+
         // App server name and version
         Map results = [:]
         putIfNotNull(results, 'serverInfo', getAttribute(mbs, 'Catalina:type=Server', 'serverInfo'))
         putIfNotNull(results, 'jvmRoute', getAttribute(mbs, 'Catalina:type=Engine', 'jvmRoute'))
 
-//        putIfNotNull(results, 'host', JsonCommandServlet.servletRequest.get().getServerName())
+        putIfNotNull(results, 'host', JsonCommandServlet.servletRequest.get().getServerName())
         putIfNotNull(results, 'host', InetAddressUtilities.getHostName())
+        LOG.info('    servletRequest.getServerName()=' + JsonCommandServlet.servletRequest.get().getServerName())
+        LOG.info('    InedAddressUtilities.getHostName()=' + InetAddressUtilities.getHostName())
         putIfNotNull(results, 'context', JsonCommandServlet.servletRequest.get().getContextPath())
         putIfNotNull(results, 'activeSessions', getAttribute(mbs, 'Catalina:type=Manager,host=' + results.host + ',context=' + results.context, 'activeSessions'))
         putIfNotNull(results, 'peakSessions', getAttribute(mbs, 'Catalina:type=Manager,host=' + results.host + ',context=' + results.context, 'maxActive'))
