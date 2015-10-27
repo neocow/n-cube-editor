@@ -269,11 +269,57 @@ var NCubeEditor = (function ($)
         ncubeTable.on('click', 'td', function (e)
         {
             var cell = $(e.target);
-            if (!cell.hasClass('cell')) {
+            if (!cell.hasClass('cell'))
+            {
                 return;
             }
 
-            if (event.shiftKey || event.ctrlKey)
+            if (event.altKey)
+            {
+                _uiCellId = $(e.target);
+                _cellId = _uiCellId.attr('data-id').split("_");
+                var result = nce.call("ncubeController.getCellCoordinate", [nce.getAppId(), nce.getSelectedCubeName(), _cellId]);
+                if (result.status === true)
+                {
+                    var map = result.data;
+                    delete map['@type'];
+                    var msg = '';
+                    var maxValLen = 0;
+
+                    for (var key in map)
+                    {
+                        if (map.hasOwnProperty(key))
+                        {
+                            var val = '' + map[key];
+                            if (val.length > 50)
+                            {
+                                val = val.substring(0, 5) + '...' + val.substr(-44);
+                            }
+                            msg += '<dt>' + key + '</dt>';
+                            msg += '<dd>' + val + '</dd>';
+
+                            if (val.length > maxValLen)
+                            {
+                                maxValLen = val.length;
+                            }
+                        }
+                    }
+
+                    if (maxValLen > 25)
+                    {
+                        msg = '<dl>' + msg;
+                    }
+                    else
+                    {
+                        msg = '<dl class="dl-horizontal">' + msg;
+                    }
+                    msg += '</dl>';
+
+                    nce.clearError();
+                    nce.showNote(msg, 'Coordinate');
+                }
+            }
+            else if (event.shiftKey || event.ctrlKey)
             {
                 var selectedCell = $('td.cell-selected');
                 if (!selectedCell || selectedCell.length == 0)

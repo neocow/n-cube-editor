@@ -16,7 +16,7 @@
 .gritter-item {
     display:block;
     color:#eee;
-    padding:2px 11px 8px 11px;
+    padding:2px 11px 6px 5px;
     font-size: 11px;
     font-family:verdana,arial,helvetica,sans-serif;
 }
@@ -29,7 +29,7 @@
     display:none;
     position:absolute;
     top:5px;
-    left:5px;
+    right:5px;
     background:url(../img/gritter.png) no-repeat left top;
     cursor:pointer;
     width:30px;
@@ -54,6 +54,9 @@
     padding:0;
 }
 .gritter-with-image {
-    width:320px;
+    width:325px;
     float:right;
+}
+.gritter-item dl {
+    margin-bottom: 0;
 }

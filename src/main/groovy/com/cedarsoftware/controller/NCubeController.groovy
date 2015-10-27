@@ -1,13 +1,32 @@
 package com.cedarsoftware.controller
 
-import com.cedarsoftware.ncube.*
+import com.cedarsoftware.ncube.ApplicationID
+import com.cedarsoftware.ncube.Axis
+import com.cedarsoftware.ncube.AxisType
+import com.cedarsoftware.ncube.AxisValueType
+import com.cedarsoftware.ncube.CellInfo
+import com.cedarsoftware.ncube.Column
+import com.cedarsoftware.ncube.CommandCell
+import com.cedarsoftware.ncube.Delta
+import com.cedarsoftware.ncube.GroovyExpression
+import com.cedarsoftware.ncube.NCube
+import com.cedarsoftware.ncube.NCubeInfoDto
+import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.NCubeTest
+import com.cedarsoftware.ncube.RuleInfo
+import com.cedarsoftware.ncube.StringValuePair
 import com.cedarsoftware.ncube.exception.BranchMergeException
 import com.cedarsoftware.ncube.formatters.NCubeTestReader
 import com.cedarsoftware.ncube.formatters.NCubeTestWriter
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter
 import com.cedarsoftware.service.ncube.NCubeService
 import com.cedarsoftware.servlet.JsonCommandServlet
-import com.cedarsoftware.util.*
+import com.cedarsoftware.util.ArrayUtilities
+import com.cedarsoftware.util.CaseInsensitiveSet
+import com.cedarsoftware.util.DateUtilities
+import com.cedarsoftware.util.StringUtilities
+import com.cedarsoftware.util.ThreadAwarePrintStream
+import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import groovy.transform.CompileStatic
@@ -15,6 +34,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
 import javax.servlet.http.HttpServletRequest
+import java.lang.reflect.Method
 import java.util.regex.Pattern
 
 /**
@@ -915,9 +935,41 @@ class NCubeController extends BaseController
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Set<Long> colIds = getCoordinate(ids)
             Object cell = ncube.getCellByIdNoExecute(colIds)
+
             CellInfo cellInfo = new CellInfo(cell)
             cellInfo.collapseToUiSupportedTypes()
             return cellInfo
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    Map getCellCoordinate(ApplicationID appId, String cubeName, Object[] ids)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (!isAllowed(appId, cubeName, null))
+            {
+                return null
+            }
+            NCube ncube = nCubeService.getCube(appId, cubeName)
+            Set<Long> colIds = getCoordinate(ids)
+
+            // TODO: Call method directly once ncube 3.3.12 is released.
+            Method method = NCube.class.getDeclaredMethod('getCoordinateFromColumnIds', Collection.class)
+            method.setAccessible(true)
+            Map<String, Comparable> coord = (Map<String, Comparable>) method.invoke(ncube, colIds);
+
+            Map<String, Comparable> niceCoord = [:]
+            coord.each {
+                k, v ->
+                    niceCoord[k] = CellInfo.formatForDisplay(v)
+            }
+            return niceCoord
         }
         catch (Exception e)
         {
@@ -1575,7 +1627,7 @@ class NCubeController extends BaseController
 
     private static Set<Long> getCoordinate(Object[] ids)
     {
-        // 3. Locate columns on each axis
+        // Convert String column IDs to Longs
         Set<Long> colIds = new HashSet<>()
         for (Object id : ids)
         {
