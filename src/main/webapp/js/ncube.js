@@ -281,44 +281,8 @@ var NCubeEditor = (function ($)
                 var result = nce.call("ncubeController.getCellCoordinate", [nce.getAppId(), nce.getSelectedCubeName(), _cellId]);
                 if (result.status === true)
                 {
-                    var map = result.data;
-                    delete map['@type'];
-                    var msg = '';
-                    var maxValLen = 0;
-                    var rows = 0;
-
-                    for (var key in map)
-                    {
-                        if (map.hasOwnProperty(key))
-                        {
-                            rows++;
-                            var val = '' + map[key];
-                            if (val.length > 50)
-                            {   // Hard-coded to size of current (330px) gritter text area (reduced by gritter-image size)
-                                val = val.substring(0, 5) + '...' + val.substr(-44);
-                            }
-                            msg += '<dt>' + key + '</dt>';
-                            msg += '<dd>' + val + '</dd>';
-
-                            if (val.length > maxValLen)
-                            {
-                                maxValLen = val.length;
-                            }
-                        }
-                    }
-
-                    if (maxValLen > 25 || rows == 1)
-                    {
-                        msg = '<dl>' + msg;
-                    }
-                    else
-                    {
-                        msg = '<dl class="dl-horizontal">' + msg;
-                    }
-                    msg += '</dl>';
-
                     nce.clearError();
-                    nce.showNote(msg, 'Coordinate');
+                    nce.displayMap(result.data, 'Coordinate');
                 }
             }
             else if (event.shiftKey || event.ctrlKey)

@@ -70,6 +70,9 @@ class NCubeController extends BaseController
     private static final Pattern IS_NUMBER_REGEX = ~/^[\d,.e+-]+$/
     private static final Pattern NO_QUOTES_REGEX = ~/"/
     private NCubeService nCubeService;
+    private static String servletHostname = null
+    private static String inetHostname = null
+
     // Bind to ConcurrentLinkedHashMap because some plugins will need it.
     private ConcurrentMap<String, Object> futureCache = new ConcurrentLinkedHashMap.Builder<String, Object>()
             .maximumWeightedCapacity(100)
@@ -1462,9 +1465,6 @@ class NCubeController extends BaseController
 
     Map heartBeat()
     {
-        // Force session creation / update
-        JsonCommandServlet.servletRequest.get().getSession()
-
         // If remotely accessing server, use the following to get the MBeanServerConnection...
 //        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:/jmxrmi")
 //        JMXConnector jmxc = JMXConnectorFactory.connect(url, null)
@@ -1474,35 +1474,58 @@ class NCubeController extends BaseController
 //        Set result = conn.queryMBeans(null, "Catalina:type=DataSource,path=/appdb,host=localhost,class=javax.sql.DataSource");
 //        jmxc.close();
 
+        // Force session creation / update
+        JsonCommandServlet.servletRequest.get().getSession()
 
+        // Snag the platform mbean server (singleton)
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-
-        LOG.info("DEBUG info...")
-        Set<ObjectName> set = mbs.queryNames(new ObjectName('Catalina:type=Manager,host=*,context=/*'), null)
-        set.each { ObjectName name -> LOG.info('    ' + name.getKeyPropertyListString()); }
 
         // App server name and version
         Map results = [:]
-        putIfNotNull(results, 'serverInfo', getAttribute(mbs, 'Catalina:type=Server', 'serverInfo'))
-        putIfNotNull(results, 'jvmRoute', getAttribute(mbs, 'Catalina:type=Engine', 'jvmRoute'))
+        putIfNotNull(results, 'Server Info', getAttribute(mbs, 'Catalina:type=Server', 'serverInfo'))
+        putIfNotNull(results, 'JVM Route', getAttribute(mbs, 'Catalina:type=Engine', 'jvmRoute'))
 
-        putIfNotNull(results, 'host', JsonCommandServlet.servletRequest.get().getServerName())
-        putIfNotNull(results, 'host', InetAddressUtilities.getHostName())
-        LOG.info('    servletRequest.getServerName()=' + JsonCommandServlet.servletRequest.get().getServerName())
-        LOG.info('    InedAddressUtilities.getHostName()=' + InetAddressUtilities.getHostName())
-        putIfNotNull(results, 'context', JsonCommandServlet.servletRequest.get().getContextPath())
-        putIfNotNull(results, 'activeSessions', getAttribute(mbs, 'Catalina:type=Manager,host=' + results.host + ',context=' + results.context, 'activeSessions'))
-        putIfNotNull(results, 'peakSessions', getAttribute(mbs, 'Catalina:type=Manager,host=' + results.host + ',context=' + results.context, 'maxActive'))
+        putIfNotNull(results, 'hostname, servlet', getServletHostname())
+        putIfNotNull(results, 'hostname, OS', getInetHostname())
+        putIfNotNull(results, 'Context', JsonCommandServlet.servletRequest.get().getContextPath())
+        putIfNotNull(results, 'Sessions, active', getAttribute(mbs, 'Catalina:type=Manager,host=localhost,context=' + results.Context, 'activeSessions'))
+        putIfNotNull(results, 'Sessions, peak', getAttribute(mbs, 'Catalina:type=Manager,host=localhost,context=' + results.Context, 'maxActive'))
 
-        // JVM
-        putIfNotNull(results, 'loadedClassCount', getAttribute(mbs, 'java.lang:type=ClassLoading', 'LoadedClassCount'))
+        Set<ObjectName> set = mbs.queryNames(new ObjectName('Catalina:type=ThreadPool,name=*'), null)
+        Set<String> connectors = [] as LinkedHashSet
+        set.each {
+            ObjectName objName ->
+                connectors << objName.getKeyProperty('name')
+        }
 
-        putIfNotNull(results, 'jvmVersion', getAttribute(mbs, 'JMImplementation:type=MBeanServerDelegate', 'ImplementationVersion'))
+        // TODO: Remove cleanKey() when json-io fixed to handle " in key
+        for (String conn : connectors)
+        {
+            String cleanKey = cleanKey(conn)
+            putIfNotNull(results, cleanKey + ' t-pool max', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxThreads'))
+            putIfNotNull(results, cleanKey + ' t-pool cur', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadCount'))
+            putIfNotNull(results, cleanKey + ' busy thread', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadsBusy'))
+            putIfNotNull(results, cleanKey + ' max conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxConnections'))
+            putIfNotNull(results, cleanKey + ' curr conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'connectionCount'))
+        }
 
         // OS
-        putIfNotNull(results, 'os', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Name'))
-        putIfNotNull(results, 'osVersion', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Version'))
-        putIfNotNull(results, 'cpu', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Arch'))
+        putIfNotNull(results, 'OS', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Name'))
+        putIfNotNull(results, 'OS version', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Version'))
+        putIfNotNull(results, 'CPU', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Arch'))
+
+        // JVM
+        putIfNotNull(results, 'Java version', getAttribute(mbs, 'JMImplementation:type=MBeanServerDelegate', 'ImplementationVersion'))
+        putIfNotNull(results, 'Loaded class count', getAttribute(mbs, 'java.lang:type=ClassLoading', 'LoadedClassCount'))
+
+        // JVM Memory
+        Runtime rt = Runtime.getRuntime()
+        long maxMem = rt.maxMemory()
+        long freeMem = rt.freeMemory()
+        long usedMem = maxMem - freeMem
+        putIfNotNull(results, 'Heap size (-Xmx)', ((long) (maxMem / 1000000L)) + ' MB')
+        putIfNotNull(results, 'Used memory', ((long) (usedMem / 1000000L)) + ' MB')
+        putIfNotNull(results, 'Free memory', ((long) (freeMem / 1000000L)) + ' MB')
 
         return results
     }
@@ -1510,6 +1533,11 @@ class NCubeController extends BaseController
     // ============================================= End API ===========================================================
 
     // ===================================== utility (non-API) methods =================================================
+
+    private String cleanKey(String key)
+    {
+        return key.replace('"','')
+    }
 
     private static void markRequestFailed(Object data)
     {
@@ -1533,7 +1561,7 @@ class NCubeController extends BaseController
 
     private static void putIfNotNull(Map map, String key, Object value)
     {
-        if (value)
+        if (value != null)
         {
             if (value instanceof Number)
             {
@@ -1733,5 +1761,23 @@ class NCubeController extends BaseController
             }
         })
         return items
+    }
+
+    private static String getInetHostname()
+    {
+        if (inetHostname == null)
+        {
+            inetHostname = InetAddressUtilities.getHostName()
+        }
+        return inetHostname
+    }
+
+    private static String getServletHostname()
+    {
+        if (servletHostname == null)
+        {
+            servletHostname = JsonCommandServlet.servletRequest.get().getServerName()
+        }
+        return servletHostname
     }
 }

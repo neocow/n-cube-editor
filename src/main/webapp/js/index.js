@@ -208,6 +208,7 @@ var NCE = (function ($)
         return {
             call: call,
             clearError: clearError,
+            displayMap: displayMap,
             doesCubeExist: doesCubeExist,
             ensureModifiable: ensureModifiable,
             exec: exec,
@@ -568,6 +569,14 @@ var NCE = (function ($)
         $('#clearCache').click(function()
         {
             clearCache();
+        });
+        $('#serverStats').click(function()
+        {
+            serverStats();
+        });
+        $('#httpHeaders').click(function()
+        {
+            httpHeaders();
         });
 
         addBranchListeners();
@@ -1536,8 +1545,74 @@ var NCE = (function ($)
 
         if (result.status === false)
         {
-            showNote('Unable to fetch the cell contents: ' + result.data);
+            showNote('Unable to clear cache:<hr class="hr-small"/>' + result.data);
         }
+    }
+
+    function serverStats()
+    {
+        var result = call("ncubeController.heartBeat", []);
+
+        if (result.status === false)
+        {
+            showNote('Unable to fetch server statistics:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        clearError();
+        displayMap(result.data, 'Server Statistics');
+    }
+
+    function httpHeaders()
+    {
+        var result = call("ncubeController.getHeaders", []);
+
+        if (result.status === false)
+        {
+            showNote('Unable to fetch HTTP headers:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        clearError();
+        displayMap(result.data, 'HTTP Headers');
+    }
+
+    function displayMap(map, title)
+    {
+        delete map['@type'];
+        var msg = '';
+        var maxValLen = 0;
+        var rows = 0;
+
+        for (var key in map)
+        {
+            if (map.hasOwnProperty(key))
+            {
+                rows++;
+                var val = '' + map[key];
+                if (val.length > 50)
+                {   // Hard-coded to size of current (330px) gritter text area (reduced by gritter-image size)
+                    val = val.substring(0, 5) + '...' + val.substr(-44);
+                }
+                msg += '<dt>' + key + '</dt>';
+                msg += '<dd>' + val + '</dd>';
+
+                if (val.length > maxValLen)
+                {
+                    maxValLen = val.length;
+                }
+            }
+        }
+
+        if (maxValLen > 25 || rows == 1)
+        {
+            msg = '<dl>' + msg;
+        }
+        else
+        {
+            msg = '<dl class="dl-horizontal">' + msg;
+        }
+        msg += '</dl>';
+
+        showNote(msg, title);
     }
 
     // ======================================== Everything to do with Branching ========================================
