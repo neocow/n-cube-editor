@@ -5,6 +5,7 @@
     width:401px;
     z-index:9999;
     max-height: calc(100% - 65px);
+    overflow-x:hidden;
     overflow-y:auto;
 }
 .gritter-item-wrapper {
