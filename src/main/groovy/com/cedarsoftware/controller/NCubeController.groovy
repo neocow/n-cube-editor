@@ -1498,15 +1498,13 @@ class NCubeController extends BaseController
                 connectors << objName.getKeyProperty('name')
         }
 
-        // TODO: Remove cleanKey() when json-io fixed to handle " in key
         for (String conn : connectors)
         {
-            String cleanKey = cleanKey(conn)
-            putIfNotNull(results, cleanKey + ' t-pool max', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxThreads'))
-            putIfNotNull(results, cleanKey + ' t-pool cur', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadCount'))
-            putIfNotNull(results, cleanKey + ' busy thread', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadsBusy'))
-            putIfNotNull(results, cleanKey + ' max conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxConnections'))
-            putIfNotNull(results, cleanKey + ' curr conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'connectionCount'))
+            putIfNotNull(results, conn + ' t-pool max', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxThreads'))
+            putIfNotNull(results, conn + ' t-pool cur', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadCount'))
+            putIfNotNull(results, conn + ' busy thread', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadsBusy'))
+            putIfNotNull(results, conn + ' max conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxConnections'))
+            putIfNotNull(results, conn + ' curr conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'connectionCount'))
         }
 
         // OS
