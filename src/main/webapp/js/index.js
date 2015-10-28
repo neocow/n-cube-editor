@@ -1590,7 +1590,7 @@ var NCE = (function ($)
                 var val = '' + map[key];
                 if (val.length > 50)
                 {   // Hard-coded to size of current (330px) gritter text area (reduced by gritter-image size)
-                    val = val.substring(0, 5) + '...' + val.substr(-44);
+                    val = val.substring(0, 5) + '...' + val.substr(-54);
                 }
                 msg += '<dt>' + key + '</dt>';
                 msg += '<dd>' + val + '</dd>';
@@ -1602,7 +1602,7 @@ var NCE = (function ($)
             }
         }
 
-        if (maxValLen > 25 || rows == 1)
+        if (maxValLen > 32 || rows == 1)
         {
             msg = '<dl>' + msg;
         }

@@ -22,7 +22,7 @@
         position: '',
         class_name: '', // set on the gritter-item
         fade_in_speed: 'medium', // how fast notifications fade in
-        fade_out_speed: 1000, // how fast the notices fade out
+        fade_out_speed: 800, // how fast the notices fade out
         time: 6000 // hang on the screen for...
     };
 
@@ -80,13 +80,13 @@
         _is_setup: 0,
         _tpl_close: '<a class="gritter-close" href="#" tabindex="1">Close Notification</a>',
         _tpl_title: '<span class="gritter-title">[[title]]</span>',
-        _tpl_item: '<div id="gritter-item-[[number]]" class="gritter-item-wrapper [[item_class]]" style="display:none" role="alert"><div class="gritter-item">[[close]][[image]]<div class="[[class_name]]">[[title]][[text]]</div><div style="clear:both"></div></div></div>',
+        _tpl_item: '<div id="gritter-item-[[number]]" class="gritter-item-wrapper [[item_class]]" role="alert"><div class="gritter-item">[[close]][[image]][[title]][[text]]<div style="clear:both"></div></div></div>',
         _tpl_wrap: '<div id="gritter-notice-wrapper"></div>',
 
         /**
          * Add a gritter notification to the screen
          * @param {Object} params The object that contains all the options for drawing the notification
-         * @return {Integer} The specific numeric id to that gritter notification
+         * @return {int} The specific numeric id to that gritter notification
          */
         add: function(params)
         {
@@ -136,15 +136,14 @@
                 this._custom_timer = time_alive;
             }
 
-            var image_str = (image != '') ? '<img src="' + image + '" class="gritter-image" />' : '',
-                class_name = (image != '') ? 'gritter-with-image' : 'gritter-without-image';
+            var image_str = (image != '') ? '<img src="' + image + '" class="gritter-image" />' : '';
 
             // String replacements on the template
             title = title ? this._str_replace('[[title]]', title, this._tpl_title) : '';
 
             tmp = this._str_replace(
                 ['[[title]]', '[[text]]', '[[close]]', '[[image]]', '[[number]]', '[[class_name]]', '[[item_class]]'],
-                [title, text, this._tpl_close, image_str, this._item_count, class_name, item_class], tmp
+                [title, text, this._tpl_close, image_str, this._item_count, '', item_class], tmp
             );
 
             // If it's false, don't show another gritter message
@@ -201,7 +200,7 @@
         /**
          * If we don't have any more gritter notifications, get rid of the wrapper using this check
          * @private
-         * @param {Integer} unique_id The ID of the element that was just deleted, use it for a callback
+         * @param {int} unique_id The ID of the element that was just deleted, use it for a callback
          * @param {Object} e The jQuery element that we're going to perform the remove() action on
          * @param {Boolean} manual_close Did we close the gritter dialog with the (X) button
          */
@@ -223,13 +222,13 @@
          * Fade out an element after it's been on the screen for x amount of time
          * @private
          * @param {Object} e The jQuery element to get rid of
-         * @param {Integer} unique_id The id of the element to remove
+         * @param {int} unique_id The id of the element to remove
          * @param {Object} params An optional list of params to set fade speeds etc.
          * @param {Boolean} unbind_events Unbind the mouseenter/mouseleave events if they click (X)
          */
         _fade: function(e, unique_id, params, unbind_events)
         {
-            var params = params || {},
+            params = params || {},
                 fade = (typeof(params.fade) != 'undefined') ? params.fade : true,
                 fade_out_speed = params.speed || this.fade_out_speed,
                 manual_close = unbind_events;
@@ -299,7 +298,7 @@
         {
             if (!e)
             {
-                var e = $('#gritter-item-' + unique_id);
+                e = $('#gritter-item-' + unique_id);
             }
 
             // We set the fourth param to let the _fade function know to
@@ -310,8 +309,8 @@
         /**
          * If the item is fading out and we hover over it, restore it!
          * @private
-         * @param {Object} e The HTML element to remove
-         * @param {Integer} unique_id The ID of the element
+         * @param e The HTML element to remove
+         * @param unique_id The ID of the element
          */
         _restoreItemIfFading: function(e, unique_id)
         {
@@ -337,8 +336,8 @@
         /**
          * Set the notification to fade out after a certain amount of time
          * @private
-         * @param {Object} item The HTML element we're dealing with
-         * @param {Integer} unique_id The ID of the element
+         * @param e The HTML element we're dealing with
+         * @param unique_id The ID of the element
          */
         _setFadeTimer: function(e, unique_id)
         {

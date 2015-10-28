@@ -4,6 +4,8 @@
     right:20px;
     width:401px;
     z-index:9999;
+    max-height: calc(100% - 65px);
+    overflow-y:auto;
 }
 .gritter-item-wrapper {
     position:relative;
@@ -16,7 +18,7 @@
 .gritter-item {
     display:block;
     color:#eee;
-    padding:2px 11px 6px 5px;
+    padding:3px 11px 6px 8px;
     font-size: 11px;
     font-family:verdana,arial,helvetica,sans-serif;
 }
@@ -43,19 +45,14 @@
     padding:0 0 7px 0;
     display:block;
     text-shadow:1px 1px 0 #000;
+    margin-top:5px;
+    margin-left:38px;
+    margin-bottom:5px
 }
 .gritter-image {
-    width:48px;
-    height:48px;
+    width:32px;
+    height:32px;
     float:left;
-}
-.gritter-with-image,
-.gritter-without-image {
-    padding:0;
-}
-.gritter-with-image {
-    width:325px;
-    float:right;
 }
 .gritter-item dl {
     margin-bottom: 0;

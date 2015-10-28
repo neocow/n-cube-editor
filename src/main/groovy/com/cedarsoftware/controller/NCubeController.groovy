@@ -1513,6 +1513,15 @@ class NCubeController extends BaseController
         putIfNotNull(results, 'OS', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Name'))
         putIfNotNull(results, 'OS version', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Version'))
         putIfNotNull(results, 'CPU', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Arch'))
+        putIfNotNull(results, 'CPU Process Load', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'ProcessCpuLoad'))
+        putIfNotNull(results, 'CPU System Load', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'SystemCpuLoad'))
+        putIfNotNull(results, 'CPU Cores', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'AvailableProcessors'))
+        double machMem = (long) getAttribute(mbs, 'java.lang:type=OperatingSystem', 'TotalPhysicalMemorySize')
+        long K = 1024L
+        long MB = K * 1024L
+        long GB = MB * 1024L
+        machMem = machMem / GB
+        putIfNotNull(results, 'Physical Memory', (machMem.round(2)) + ' GB')
 
         // JVM
         putIfNotNull(results, 'Java version', getAttribute(mbs, 'JMImplementation:type=MBeanServerDelegate', 'ImplementationVersion'))
@@ -1520,12 +1529,12 @@ class NCubeController extends BaseController
 
         // JVM Memory
         Runtime rt = Runtime.getRuntime()
-        long maxMem = rt.maxMemory()
-        long freeMem = rt.freeMemory()
-        long usedMem = maxMem - freeMem
-        putIfNotNull(results, 'Heap size (-Xmx)', ((long) (maxMem / 1000000L)) + ' MB')
-        putIfNotNull(results, 'Used memory', ((long) (usedMem / 1000000L)) + ' MB')
-        putIfNotNull(results, 'Free memory', ((long) (freeMem / 1000000L)) + ' MB')
+        double maxMem = rt.maxMemory() / MB
+        double freeMem = rt.freeMemory() / MB
+        double usedMem = maxMem - freeMem
+        putIfNotNull(results, 'Heap size (-Xmx)', (maxMem.round(1)) + ' MB')
+        putIfNotNull(results, 'Used memory', (usedMem.round(1)) + ' MB')
+        putIfNotNull(results, 'Free memory', (freeMem.round(1)) + ' MB')
 
         return results
     }
@@ -1554,7 +1563,7 @@ class NCubeController extends BaseController
         }
         catch (Exception ignored)
         {
-            LOG.warn('Error fetching attribute: ' + attribute + ' from mbean: ' + beanName)
+            LOG.info('Unable to fetch attribute: ' + attribute + ' from mbean: ' + beanName)
             null
         }
     }
