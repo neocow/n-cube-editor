@@ -528,7 +528,7 @@ var NCE = (function ($)
         $('#showRefsToMenu').click(function ()
         {
             setTimeout(function() { showRefsToCube(); }, PROGRESS_DELAY);
-            showNote('Calculating inbound references from other n-cubes to this n-cube.');
+            showNote('Calculating inbound references from other n-cubes to this n-cube...', 'Please wait...');
         });
         $('#showRefsToClose').click(function ()
         {
@@ -1749,14 +1749,18 @@ var NCE = (function ($)
             return;
         }
 
-        var result = call("ncubeController.createBranch", [appId]);
-        if (!result.status)
-        {
-            showNote('Unable to create branch:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        changeBranch(branchName);
+        setTimeout(function() {
+            var result = call("ncubeController.createBranch", [appId]);
+            if (!result.status)
+            {
+                clearError();
+                showNote('Unable to create branch:<hr class="hr-small"/>' + result.data);
+                return;
+            }
+            changeBranch(branchName);
+        }, PROGRESS_DELAY);
+        _selectBranchModal.modal('hide');
+        showNote('Creating branch: ' + branchName, 'Creating...');
     }
 
     function changeBranch(branchName)
@@ -1769,18 +1773,23 @@ var NCE = (function ($)
         localStorage[SELECTED_BRANCH] = branchName;
         _selectBranchModal.modal('hide');
 
-        showActiveBranch();
-        loadAppNames();
-        loadVersions();
-        loadNCubes();
-        loadAppListView();
-        loadStatusListView();
-        loadVersionListView();
-        loadNCubeListView();
-        loadCube();
-        runSearch();
-        buildMenu();
-        showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 2000);
+        setTimeout(function() {
+            showActiveBranch();
+            loadAppNames();
+            loadVersions();
+            loadNCubes();
+            loadAppListView();
+            loadStatusListView();
+            loadVersionListView();
+            loadNCubeListView();
+            loadCube();
+            runSearch();
+            buildMenu();
+            clearError();
+            showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 3000);
+        }, PROGRESS_DELAY);
+        clearError();
+        showNote('Changing branch to: ' + branchName, 'Please wait...');
     }
 
     function commitBranch(state)
@@ -1894,22 +1903,26 @@ var NCE = (function ($)
         });
 
         _commitModal.modal('hide');
-        var result = call("ncubeController.commitBranch", [getAppId(), changes]);
 
-        if (result.status === false)
-        {
-            showNote('You have conflicts with the HEAD branch.  Update Branch first, then re-attempt branch commit.');
-            return;
-        }
+        setTimeout(function() {
+            var result = call("ncubeController.commitBranch", [getAppId(), changes]);
+            clearError();
+            if (result.status === false)
+            {
+                showNote('You have conflicts with the HEAD branch.  Update Branch first, then re-attempt branch commit.');
+                return;
+            }
 
-        //TODO: After Axis, column, or cell modifications, mark _selectedCubeName as modified (blue)
-        //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
+            //TODO: After Axis, column, or cell modifications, mark _selectedCubeName as modified (blue)
+            //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
 
-        showNote('Successfully committed ' + changes.length + ' cube(s).');
-        loadNCubes();
-        loadNCubeListView();
-        reloadCube();
-        runSearch();
+            loadNCubes();
+            loadNCubeListView();
+            reloadCube();
+            runSearch();
+            showNote('Successfully committed ' + changes.length + ' cube(s).');
+        }, PROGRESS_DELAY);
+        showNote('Committing changes on selected cubes...', 'Please wait...');
     }
 
     function rollbackOk()
@@ -1926,19 +1939,23 @@ var NCE = (function ($)
         });
 
         _commitModal.modal('hide');
-        var result = call("ncubeController.rollbackBranch", [getAppId(), changes]);
+        setTimeout(function(){
+            var result = call("ncubeController.rollbackBranch", [getAppId(), changes]);
+            clearError();
 
-        if (result.status === false)
-        {
-            showNote('Unable to rollback cubes:<hr class="hr-small"/>' + result.data);
-            return;
-        }
+            if (result.status === false)
+            {
+                showNote('Unable to rollback cubes:<hr class="hr-small"/>' + result.data);
+                return;
+            }
 
-        showNote('Successfully rolled back ' + changes.length + ' cube(s).');
-        loadNCubes();
-        loadNCubeListView();
-        reloadCube();
-        runSearch();
+            loadNCubes();
+            loadNCubeListView();
+            reloadCube();
+            runSearch();
+            showNote('Successfully rolled back ' + changes.length + ' cube(s).');
+        }, PROGRESS_DELAY);
+        showNote('Rolling back changes on selected cubes...', 'Please wait...');
     }
 
     function updateBranch()
