@@ -9,7 +9,7 @@ n-cube-editor is a web-based GUI editor for editing and managing n-cubes.
   <version>0.4.0</version>
 </dependency>
 ```
-Like **n-cube-editor** and find it useful? Donate some **Bitcoin**: 1MJFgxTVFZZ3EkmdPabsQ5UremUg2HHPe7
+Like **n-cube-editor** and find it useful? Donate some **Bitcoin**: 1MeozsfDpUALpnu3DntHWXxoPJXvSAXmQA
 
 #### Licensing
 Copyright 2012-2015 Cedar Software, LLC
