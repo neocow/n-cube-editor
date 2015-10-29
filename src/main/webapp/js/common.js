@@ -99,6 +99,81 @@ function checkAll(state, queryStr)
     });
 }
 
+function diffFile()
+{
+    var outputDiv = $('#diffOutput');
+    outputDiv.empty();
+    var base = [
+        'The quick brown fox jumps over the lazy dog.',
+        'This one is the same',
+        'This one also is the same',
+        'This one also again is the same',
+        'This one was deleted',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line'
+    ];
+    var newtxt = [
+        'The kiwk brown focks jumps over the lazy dawg.',
+        'This one is the same',
+        'This line was added',
+        'This one also is the same',
+        'This one also again is the same',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line',
+        'Another same line'
+    ];
+
+    // create a SequenceMatcher instance that diffs the two sets of lines
+    var sm = new difflib.SequenceMatcher(base, newtxt);
+
+    // get the opcodes from the SequenceMatcher instance
+    // opcodes is a list of 3-tuples describing what changes should be made to the base text
+    // in order to yield the new text
+    var opcodes = sm.get_opcodes();
+    var contextSize = $("contextSize").value;
+    contextSize = contextSize ? contextSize : null;
+
+    // build the diff view and add it to the current DOM
+    outputDiv[0].appendChild(diffview.buildView({
+        baseTextLines: base,
+        newTextLines: newtxt,
+        opcodes: opcodes,
+        // set the display titles for each resource
+        baseTextName: "Base Text",
+        newTextName: "New Text",
+        contextSize: contextSize,
+        viewType: 0
+    }));
+    $('#diffOutput .author').remove();
+    $('#diffOutputModal').css('display', 'block');
+
+    // TODO:
+    // 1. Trap keyboard (escape = close)
+    // 2. Set title bar to cube name
+    // 3. Set 'HEAD' on left and 'branch name' on right
+}
+
 function keyCount(obj)
 {
     var size = 0, key;

@@ -14,6 +14,7 @@
     <link href="css/bootstrap.min.css" rel="stylesheet"/>
     <link href="css/bootstrap-theme.min.css" rel="stylesheet"/>
     <link href="css/bootstrap-select.min.css" rel="stylesheet"/>
+    <link href="css/diffview.css" rel="stylesheet"/>
     <link href="css/common.css" rel="stylesheet"/>
     <link href="css/index.css" rel="stylesheet"/>
     <link rel="shortcut icon" href="favicon.ico?v2">
@@ -23,6 +24,24 @@
     <div id="fadeMe1"></div>
     <img height="270" class="fadeMe2" src="img/splash.jpg"/>
     <h3 class="fadeMe2">N-Cube Editor Loading...</h3>
+    <div id="diffOutputModal">
+        <div class="modal-header">
+            <h3 class="modal-title">Compare N-Cubes</h3>
+        </div>
+        <div class="modal-body">
+            <form role="form">
+                <div class="form-group">
+                    <div id="diffOutput"></div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button id="diffDesc" type="button" class="btn btn-info btn-sm pull-left">Descriptive</button>
+            <button id="diffSide" type="button" class="btn btn-info btn-sm pull-left">Side-by-side</button>
+            <button id="diffInline" type="button" class="btn btn-info btn-sm pull-left">Inline</button>
+            <button id="diffModalClose" class="btn btn-primary">Close</button>
+        </div>
+    </div>
 
 <header class="navbar navbar-custom navbar-fixed-top noselect" role="banner">
     <div class="navbar-header">
@@ -318,6 +337,7 @@
             <div class="modal-footer">
                 <button id="commitRollbackSelectAll" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select All</button>
                 <button id="commitRollbackSelectNone" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select None</button>
+                <button id="diffFile" class="btn btn-info btn-sm pull-left" aria-hidden="true">Diff</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
                 <button id="commitOk" class="btn btn-primary btn-sm">Commit</button>
                 <button id="rollbackOk" class="btn btn-primary btn-sm">Rollback</button>
@@ -624,6 +644,8 @@
 <script src="js/mitDate.js"></script>
 <script src="js/jsonUtil.js"></script>
 <script src="js/constants.js"></script>
+<script src="js/jsdifflib.js"></script>
+<script src="js/jsdiffview.js"></script>
 <script src="js/common.js"></script>
 <script src="js/index.js"></script>
 

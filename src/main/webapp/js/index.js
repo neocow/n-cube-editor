@@ -77,11 +77,6 @@ var NCE = (function ($)
             clearSearch();
             loop();
             heartBeat();
-
-            var statListDiv = $('#status-list-div');
-            var statListPanel = statListDiv.find('> .panel-body');
-            statListPanel.height(36);
-
             addListeners();
         }
         catch (e)
@@ -335,6 +330,11 @@ var NCE = (function ($)
 
     function addListeners()
     {
+        // 'Close' for the Diff Modal
+        $('#diffModalClose').click(function() {
+            $('#diffOutputModal').css('display', 'none');
+        });
+
         // Send to background Web Worker thread
         _searchNames.on('input', function (event)
         {
@@ -1638,6 +1638,10 @@ var NCE = (function ($)
         {
             checkAll(false, 'input[type="checkbox"]')
         });
+        $('#diffFile').click(function()
+        {
+            diffFile();
+        });
         $('#commitOk').click(function()
         {
             commitOk();
@@ -2250,7 +2254,10 @@ var NCE = (function ($)
 function frameLoaded()
 {
     $('#menuList').find(':first-child').find('a').click();
-    $('.fadeMe2').fadeOut(800); // Time in milliseconds.
+    $('.fadeMe2').fadeOut(800, function()
+    {
+        $('.fadeMe2').remove();
+    });
     $('#fadeMe1').fadeOut(500, function()
     {
         $('#fadeMe1').remove();
