@@ -53,6 +53,8 @@ var NCE = (function ($)
     var _searchLastKeyTime = Date.now();
     var _searchKeyPressed = false;
     var _mainTabPanel = $('#ncubeTabContent');
+    var _diffLastCubeInfo = null;
+    var _diffLastResult = null;
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -333,6 +335,16 @@ var NCE = (function ($)
         // 'Close' for the Diff Modal
         $('#diffModalClose').click(function() {
             $('#diffOutputModal').css('display', 'none');
+        });
+
+        $('#diffDesc').click(function() {
+            diffCube(null, DIFF_DESCRIPTIVE)
+        });
+        $('#diffSide').click(function() {
+            diffCube(null, DIFF_SIDE_BY_SIDE)
+        });
+        $('#diffInline').click(function() {
+            diffCube(null, DIFF_INLINE)
         });
 
         // Send to background Web Worker thread
@@ -1638,10 +1650,6 @@ var NCE = (function ($)
         {
             checkAll(false, 'input[type="checkbox"]')
         });
-        $('#diffFile').click(function()
-        {
-            diffFile();
-        });
         $('#commitOk').click(function()
         {
             commitOk();
@@ -1845,12 +1853,32 @@ var NCE = (function ($)
 
         $.each(branchChanges, function (index, infoDto)
         {
-            var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
+            var li = $('<li/>').prop({class: 'list-group-item skinny-lr no-margins'});
+            li.css('padding-left', 0);
+
+            var anchorDiff = $('<a href="#"/>');
+            anchorDiff.click(function(e) {
+                e.preventDefault();
+                diffCube(infoDto, DIFF_SIDE_BY_SIDE);
+            });
+            var kbd = $('<kbd/>');
+            kbd.html('Compare');
+            anchorDiff.append(kbd);
+            var labelB = $('<label/>').prop({class: 'col-xs-1', style:'margin:0;margin-right:20px'});
+            labelB.css('padding', 0);
+            labelB.css('margin', 0);
+            labelB.css('margin-right', '10px');
+            labelB.append(anchorDiff);
+
             var div = $('<div/>').prop({class:'container-fluid'});
             var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
-            var label = $('<label/>').prop({class: 'checkbox no-margins'}).text(infoDto.name);
+            var label = $('<label/>').prop({class: 'checkbox no-margins col-xs-10'}).text(infoDto.name);
 
-            if (!infoDto.headSha1)
+            if (infoDto.revision < 0)
+            {
+                label.addClass('cube-deleted');
+            }
+            else if (!infoDto.headSha1)
             {
                 if (infoDto.sha1)
                 {
@@ -1884,6 +1912,7 @@ var NCE = (function ($)
                 }
             }
             checkbox.prependTo(label); // <=== create input without the closing tag
+            div.append(labelB);
             div.append(label);
             li.append(div);
             ul.append(li);
@@ -2144,6 +2173,68 @@ var NCE = (function ($)
     }
 
     // =============================================== End Branching ===================================================
+
+    // ============================================== Cube Comparison ==================================================
+    function diffCube(infoDto, viewType)
+    {
+        if (infoDto)
+        {
+            _diffLastCubeInfo = infoDto;
+            clearError();
+
+            var result = call('ncubeController.fetchDiffs', [getAppId(), infoDto]);
+            if (result.status !== true)
+            {
+                showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
+                return;
+            }
+            _diffLastResult = result.data;
+        }
+        else
+        {
+            infoDto = _diffLastCubeInfo;
+        }
+        var outputDiv = $('#diffOutput');
+        outputDiv.empty();
+
+        var map = _diffLastResult;
+        var headJson = map.head['@items'];
+        var branchJson = map.branch['@items'];
+
+        if (viewType == DIFF_INLINE || viewType == DIFF_SIDE_BY_SIDE)
+        {
+            // create a SequenceMatcher instance that diffs the two sets of lines
+            var sm = new difflib.SequenceMatcher(headJson, branchJson);
+
+            // get the opcodes from the SequenceMatcher instance
+            // opcodes is a list of 3-tuples describing what changes should be made to the base text
+            // in order to yield the new text
+            var opcodes = sm.get_opcodes();
+
+            // build the diff view and add it to the current DOM
+            outputDiv[0].appendChild(diffview.buildView({
+                baseTextLines: headJson,
+                newTextLines: branchJson,
+                opcodes: opcodes,
+                // set the display titles for each resource
+                baseTextName: 'HEAD',
+                newTextName: _selectedBranch,
+                contextSize: 3,
+                viewType: viewType
+            }));
+            $('#diffOutput .author').remove();
+            $('#diffTitle').html('Compare ' + infoDto.name + ' to HEAD');
+        }
+        else
+        {
+            var textArea = $('<textarea style="width:100%;height:100%;box-sizing:border-box;" />');
+            textArea.html(map.delta);
+            outputDiv.append(textArea);
+        }
+        $('#diffOutputModal').css('display', 'block');
+    }
+
+    // ============================================ End Cube Comparison ================================================
 
     // ============================================= General Utilities =================================================
     function loop()

@@ -1463,6 +1463,64 @@ class NCubeController extends BaseController
         }
     }
 
+    Map<String, Object> fetchDiffs(ApplicationID appId, NCubeInfoDto infoDto)
+    {
+        try
+        {
+            appId = addTenant(appId)
+
+            if (!isAllowed(appId, infoDto.name, null))
+            {
+                return [:]
+            }
+
+            if (ApplicationID.HEAD.equalsIgnoreCase(appId.getBranch()))
+            {
+                throw new IllegalArgumentException("Only branch cubes can be compared to HEAD cube.")
+            }
+
+            Map<String, Object> ret = ['head':[''], branch:[''], delta:'']
+            NCube headCube = null
+            NCube branchCube = null
+            try
+            {
+                branchCube = nCubeService.getCube(appId, infoDto.name)
+                ret.branch = branchCube ? jsonToLines(branchCube.toFormattedJson()) : ['']
+            }
+            catch (Exception ignored) { }
+
+            try
+            {
+                headCube = nCubeService.getCube(appId.asHead(), infoDto.name)
+                ret['head'] = jsonToLines(headCube.toFormattedJson())
+            }
+            catch (Exception ignored) { }
+
+            if (headCube && branchCube)
+            {
+                List<Delta> delta = branchCube.getDeltaDescription(headCube)
+                StringBuilder s = new StringBuilder()
+                delta.each {
+                    Delta d ->
+                        s.append(d.description)
+                        s.append('\n')
+                }
+                ret.delta = s.toString()
+            }
+            return ret
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return [:]
+        }
+    }
+
+    List<String> jsonToLines(String json)
+    {
+        JsonWriter.formatJson(json).readLines()
+    }
+
     Map heartBeat()
     {
         // If remotely accessing server, use the following to get the MBeanServerConnection...
