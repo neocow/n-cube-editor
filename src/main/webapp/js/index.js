@@ -2201,7 +2201,7 @@ var NCE = (function ($)
         _diffLastResult = result.data;
         _diffLeftName = 'HEAD';
         _diffRightName = _selectedBranch;
-        diffLoad(DIFF_SIDE_BY_SIDE);
+        diffLoad(DIFF_DESCRIPTIVE);
 
         // Display Diff Modal
         _diffModal.css('display', 'block');
