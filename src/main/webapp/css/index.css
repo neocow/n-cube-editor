@@ -87,6 +87,15 @@ div#restoreCubeModal ul.list-group
     padding-right: 20px;
 }
 
+.innerL {
+    position: absolute;
+}
+.innerR {
+    position: absolute;
+    opacity: 0.75;
+    mix-blend-mode: difference;
+}
+
 .hr-small
 {
     margin-top: 2px;

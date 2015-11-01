@@ -227,7 +227,7 @@ class NCubeController extends BaseController
             }
             NCube ncube = nCubeService.getCube(appId, cubeName)
             // The Strings below are hints to n-cube to tell it which axis to place on top
-            String html = ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns')
+            String html = toHtmlWithColumnHints(ncube)
             return html
         }
         catch (Exception e)
@@ -235,6 +235,11 @@ class NCubeController extends BaseController
             fail(e)
             return null
         }
+    }
+
+    private String toHtmlWithColumnHints(NCube ncube)
+    {
+        ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns')
     }
 
     String getJson(ApplicationID appId, String cubeName)
@@ -1463,42 +1468,46 @@ class NCubeController extends BaseController
         }
     }
 
-    Map<String, Object> fetchDiffs(ApplicationID appId, NCubeInfoDto infoDto)
+    Map<String, Object> fetchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
     {
         try
         {
-            appId = addTenant(appId)
+            ApplicationID leftAppId = addTenant(leftInfoDto.applicationID)
 
-            if (!isAllowed(appId, infoDto.name, null))
+            if (!isAllowed(leftAppId, leftInfoDto.name, null))
             {
                 return [:]
             }
 
-            if (ApplicationID.HEAD.equalsIgnoreCase(appId.getBranch()))
+            ApplicationID rightAppId = addTenant(rightInfoDto.applicationID)
+            if (!isAllowed(rightAppId, rightInfoDto.name, null))
             {
-                throw new IllegalArgumentException("Only branch cubes can be compared to HEAD cube.")
+                return [:]
             }
 
-            Map<String, Object> ret = ['head':[''], branch:[''], delta:'']
-            NCube headCube = null
-            NCube branchCube = null
+            Map<String, Object> ret = [left:[''], right:[''], leftHtml: '', rightHtml: '', delta:'']
+            NCube leftCube = null
             try
             {
-                branchCube = nCubeService.getCube(appId, infoDto.name)
-                ret.branch = branchCube ? jsonToLines(branchCube.toFormattedJson()) : ['']
+                leftCube = nCubeService.getCube(leftAppId, leftInfoDto.name)
+                ret.left = jsonToLines(leftCube.toFormattedJson())
+                ret.leftHtml = toHtmlWithColumnHints(leftCube)
             }
             catch (Exception ignored) { }
 
+            NCube rightCube = null
             try
             {
-                headCube = nCubeService.getCube(appId.asHead(), infoDto.name)
-                ret['head'] = jsonToLines(headCube.toFormattedJson())
+                rightCube = nCubeService.getCube(rightAppId, rightInfoDto.name)
+                ret.right = jsonToLines(rightCube.toFormattedJson())
+                ret.rightHtml = toHtmlWithColumnHints(rightCube)
             }
             catch (Exception ignored) { }
 
-            if (headCube && branchCube)
+
+            if (leftCube && rightCube)
             {
-                List<Delta> delta = branchCube.getDeltaDescription(headCube)
+                List<Delta> delta = rightCube.getDeltaDescription(leftCube)
                 StringBuilder s = new StringBuilder()
                 delta.each {
                     Delta d ->

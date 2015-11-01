@@ -47,18 +47,21 @@ var NCE = (function ($)
     var _searchContent = $('#cube-search-content');
     var _cubeCount = $('#ncubeCount');
     var _listOfCubes= $('#ncube-list');
+    var _mainTabPanel = $('#ncubeTabContent');
+    var _diffOutput = $('#diffOutput');
     var _mergeCubeName = null;
     var _mergeSha1 = null;
     var _mergeHeadSha1 = null;
     var _searchLastKeyTime = Date.now();
     var _searchKeyPressed = false;
-    var _mainTabPanel = $('#ncubeTabContent');
-    var _diffLastCubeInfo = null;
     var _diffLastResult = null;
+    var _diffLeftName = '';
+    var _diffRightName = '';
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
     var _commitModal = $('#commitRollbackModal');
+    var _diffModal = $('#diffOutputModal')
 
     initialize();
 
@@ -334,17 +337,20 @@ var NCE = (function ($)
     {
         // 'Close' for the Diff Modal
         $('#diffModalClose').click(function() {
-            $('#diffOutputModal').css('display', 'none');
+            _diffModal.css('display', 'none');
         });
 
         $('#diffDesc').click(function() {
-            diffCube(null, DIFF_DESCRIPTIVE)
+            diffLoad(DIFF_DESCRIPTIVE)
+        });
+        $('#diffVisual').click(function() {
+            diffLoad(DIFF_VISUAL)
         });
         $('#diffSide').click(function() {
-            diffCube(null, DIFF_SIDE_BY_SIDE)
+            diffLoad(DIFF_SIDE_BY_SIDE)
         });
         $('#diffInline').click(function() {
-            diffCube(null, DIFF_INLINE)
+            diffLoad(DIFF_INLINE)
         });
 
         // Send to background Web Worker thread
@@ -1857,9 +1863,11 @@ var NCE = (function ($)
             li.css('padding-left', 0);
 
             var anchorDiff = $('<a href="#"/>');
-            anchorDiff.click(function(e) {
-                e.preventDefault();
-                diffCube(infoDto, DIFF_SIDE_BY_SIDE);
+            anchorDiff.click(function(e)
+            {
+                var leftInfoDto = $.extend(true, {}, infoDto);
+                leftInfoDto.branch = 'HEAD';
+                diffCubeWithHead(leftInfoDto, infoDto);
             });
             var kbd = $('<kbd/>');
             kbd.html('Compare');
@@ -2175,36 +2183,38 @@ var NCE = (function ($)
     // =============================================== End Branching ===================================================
 
     // ============================================== Cube Comparison ==================================================
-    function diffCube(infoDto, viewType)
+    function diffCubeWithHead(leftCubeInfo, rightCubeInfo)
     {
-        if (infoDto)
-        {
-            _diffLastCubeInfo = infoDto;
-            clearError();
+        clearError();
 
-            var result = call('ncubeController.fetchDiffs', [getAppId(), infoDto]);
-            if (result.status !== true)
-            {
-                showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
-                return;
-            }
-            _diffLastResult = result.data;
-        }
-        else
+        var result = call('ncubeController.fetchDiffs', [leftCubeInfo, rightCubeInfo]);
+        if (result.status !== true)
         {
-            infoDto = _diffLastCubeInfo;
+            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
+            return;
         }
-        var outputDiv = $('#diffOutput');
-        outputDiv.empty();
 
-        var map = _diffLastResult;
-        var headJson = map.head['@items'];
-        var branchJson = map.branch['@items'];
+        var titleElem = $('#diffTitle');
+        titleElem.html(rightCubeInfo.name + ' changes');
+        _diffLastResult = result.data;
+        _diffLeftName = 'HEAD';
+        _diffRightName = _selectedBranch;
+        diffLoad(DIFF_SIDE_BY_SIDE);
+
+        // Display Diff Modal
+        _diffModal.css('display', 'block');
+    }
+
+    function diffLoad(viewType)
+    {
+        _diffOutput.empty();
+        var leftJson = _diffLastResult.left['@items'];
+        var rightJson = _diffLastResult.right['@items'];
 
         if (viewType == DIFF_INLINE || viewType == DIFF_SIDE_BY_SIDE)
         {
             // create a SequenceMatcher instance that diffs the two sets of lines
-            var sm = new difflib.SequenceMatcher(headJson, branchJson);
+            var sm = new difflib.SequenceMatcher(leftJson, rightJson);
 
             // get the opcodes from the SequenceMatcher instance
             // opcodes is a list of 3-tuples describing what changes should be made to the base text
@@ -2212,26 +2222,39 @@ var NCE = (function ($)
             var opcodes = sm.get_opcodes();
 
             // build the diff view and add it to the current DOM
-            outputDiv[0].appendChild(diffview.buildView({
-                baseTextLines: headJson,
-                newTextLines: branchJson,
+            _diffOutput[0].appendChild(diffview.buildView({
+                baseTextLines: leftJson,
+                newTextLines: rightJson,
                 opcodes: opcodes,
                 // set the display titles for each resource
-                baseTextName: 'HEAD',
-                newTextName: _selectedBranch,
+                baseTextName: _diffLeftName,
+                newTextName: _diffRightName,
                 contextSize: 3,
                 viewType: viewType
             }));
-            $('#diffOutput .author').remove();
-            $('#diffTitle').html('Compare ' + infoDto.name + ' to HEAD');
+            _diffOutput.find('.author').remove();
+        }
+        else if (viewType == DIFF_DESCRIPTIVE)
+        {
+            var textArea = $('<textarea style="width:100%;height:100%;box-sizing:border-box;" />');
+            textArea.html(_diffLastResult.delta);
+            _diffOutput.append(textArea);
+        }
+        else if (viewType == DIFF_VISUAL)
+        {
+            var div = $('<div style="width:100%;height:100%;box-sizing:border-box;" />');
+            var divLeft = $('<div class="innerL"/>');
+            var divRight = $('<div class="innerR"/>');
+            divLeft.html(_diffLastResult.leftHtml);
+            divRight.html(_diffLastResult.rightHtml);
+            div.append(divLeft);
+            div.append(divRight);
+            _diffOutput.append(div);
         }
         else
         {
-            var textArea = $('<textarea style="width:100%;height:100%;box-sizing:border-box;" />');
-            textArea.html(map.delta);
-            outputDiv.append(textArea);
+            console.log('Error -> Unknown DIFF type');
         }
-        $('#diffOutputModal').css('display', 'block');
     }
 
     // ============================================ End Cube Comparison ================================================
