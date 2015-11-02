@@ -726,6 +726,7 @@ var NCE = (function ($)
             li.append(a);
             _listOfCubes.append(li);
 
+
             if (filter && infoDto.pos != null)
             {
                 var nameHtml = cubeName.substring(0, infoDto.pos);
@@ -744,13 +745,13 @@ var NCE = (function ($)
             {
                 if (!infoDto.headSha1)
                 {
-                    if (infoDto.sha1)
-                    {
-                        a.addClass('cube-added');
-                    }
-                    else if (infoDto.changeType == 'R')
+                    if (infoDto.changeType == 'R')
                     {
                         a.addClass('cube-restored');
+                    }
+                    else if (infoDto.sha1)
+                    {
+                        a.addClass('cube-added');
                     }
                 }
                 else
@@ -1470,6 +1471,7 @@ var NCE = (function ($)
 
     function releaseCubes()
     {
+        clearError();
         if (!isHeadSelected())
         {
             showNote('HEAD branch must be selected to release a version.');
@@ -1483,29 +1485,32 @@ var NCE = (function ($)
 
     function releaseCubesOk()
     {
-        $('#releaseCubesModal').modal('hide');
-        var newSnapVer = $('#releaseCubesVersion').val();
-        var result = call("ncubeController.releaseCubes", [getAppId(), newSnapVer]);
-        if (result.status === true)
-        {
-            var saveSelectedVersion = _selectedVersion;
-            loadVersions();
-            _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
-            loadVersionListView();
-            loadNCubes();
-            loadNCubeListView();
-            loadCube();
-            runSearch();
+        setTimeout(function() {
+            $('#releaseCubesModal').modal('hide');
+            var newSnapVer = $('#releaseCubesVersion').val();
+            var result = call("ncubeController.releaseCubes", [getAppId(), newSnapVer]);
+            if (result.status === true)
+            {
+                var saveSelectedVersion = _selectedVersion;
+                loadVersions();
+                _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
+                loadVersionListView();
+                loadNCubes();
+                loadNCubeListView();
+                loadCube();
+                runSearch();
 
-        }
-        else
-        {
-            showNote("Unable to release version '" + _selectedVersion + "':<hr class=\"hr-small\"/>" + result.data);
-        }
+            }
+            else
+            {
+                showNote("Unable to release version '" + _selectedVersion + "':<hr class=\"hr-small\"/>" + result.data);
+            }
+        }, PROGRESS_DELAY);
     }
 
     function changeVersion()
     {
+        clearError();
         if (!ensureModifiable('Version cannot be changed.'))
         {
             return;
@@ -1517,23 +1522,25 @@ var NCE = (function ($)
 
     function changeVersionOk()
     {
-        $('#changeVerModal').modal('hide');
-        var newSnapVer = $('#changeVerValue').val();
-        var result = call("ncubeController.changeVersionValue", [getAppId(), newSnapVer]);
-        if (result.status === true)
-        {
-            loadVersions();
-            _selectedVersion = doesItemExist(newSnapVer, _versions) ? newSnapVer : _selectedVersion;
-            loadVersionListView();
-            loadNCubes();
-            loadNCubeListView();
-            loadCube();
-            runSearch();
-        }
-        else
-        {
-            showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
-        }
+        setTimeout(function() {
+            $('#changeVerModal').modal('hide');
+            var newSnapVer = $('#changeVerValue').val();
+            var result = call("ncubeController.changeVersionValue", [getAppId(), newSnapVer]);
+            if (result.status === true)
+            {
+                loadVersions();
+                _selectedVersion = doesItemExist(newSnapVer, _versions) ? newSnapVer : _selectedVersion;
+                loadVersionListView();
+                loadNCubes();
+                loadNCubeListView();
+                loadCube();
+                runSearch();
+            }
+            else
+            {
+                showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
+            }
+        }, PROGRESS_DELAY);
     }
 
     function ensureModifiable(operation)
@@ -2189,7 +2196,7 @@ var NCE = (function ($)
     {
         clearError();
 
-        var result = call('ncubeController.fetchDiffs', [leftCubeInfo, rightCubeInfo]);
+        var result = call('ncubeController.fetchDiffs', [leftCubeInfo, rightCubeInfo], {noResolveRefs:true});
         if (result.status !== true)
         {
             showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);

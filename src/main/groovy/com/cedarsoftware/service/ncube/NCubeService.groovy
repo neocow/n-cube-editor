@@ -89,9 +89,18 @@ class NCubeService
         return NCubeManager.commitBranch(appId, infoDtos, username)
     }
 
-    int rollbackBranch(ApplicationID appId, Object[] infoDtos)
+    int rollbackBranch(ApplicationID appId, Object[] infoDtos, String username)
     {
-        return NCubeManager.rollbackBranch(appId, infoDtos)
+        int count = 0;
+        for (Object dto : infoDtos)
+        {
+            NCubeInfoDto info = (NCubeInfoDto)dto;
+            if (NCubeManager.rollbackCube(appId, info.name, username))
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     Map<String, Object> updateBranch(ApplicationID appId, String username)

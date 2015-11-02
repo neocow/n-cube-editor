@@ -39,7 +39,6 @@ import javax.management.MBeanServer
 import javax.management.ObjectName
 import javax.servlet.http.HttpServletRequest
 import java.lang.management.ManagementFactory
-import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentMap
 import java.util.regex.Pattern
 
@@ -117,26 +116,33 @@ class NCubeController extends BaseController
     // TODO: This API will look into sys.permissions cube for determination of access
     private static boolean isAllowed(ApplicationID appId, String cubeName, Delta.Type operation)
     {
+        String action = operation != null ? operation.toString() : 'read'
         if (false)
         {   // permissions checks
-            markRequestFailed("You do not have permissions to make changes in " + appId.cacheKey(cubeName))
-            return false
+            String msg = 'You do not have ' + action + ' access'
+            if (StringUtilities.hasContent(cubeName) && appId != null)
+            {
+                msg += ' to ' + appId.cacheKey(cubeName)
+            }
+            else
+            {
+                if (appId)
+                {
+                    msg += ' to ' + appId
+                }
+                else if (cubeName)
+                {
+                    msg += ' to ' + cubeName
+                }
+                else
+                {
+                    msg += '.'
+                }
+            }
+            markRequestFailed(msg)
+            throw new SecurityException(msg)
         }
 
-//        if (operation != null)
-//        {
-//            if (appId.isRelease())
-//            {
-//                markRequestFailed("Release cubes cannot be edited, cube: " + appId.cacheKey(cubeName))
-//                return false
-//            }
-//
-//            if ("HEAD".equalsIgnoreCase(appId.branch) || StringUtilities.isEmpty(appId.branch))
-//            {
-//                markRequestFailed("A branch must be selected or created before you can edit: " + appId.cacheKey(cubeName))
-//                return false
-//            }
-//        }
         return true
     }
 
@@ -147,11 +153,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
-
+            isAllowed(appId, cubeNamePattern, null)
             Map options = [:]
             if (active)
             {
@@ -185,10 +187,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, Delta.Type.ADD))
-            {
-                return
-            }
+            isAllowed(appId, null, Delta.Type.ADD)
             nCubeService.restoreCube(appId, cubeNames, getUserForDatabase())
         }
         catch (Exception e)
@@ -202,10 +201,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             List<NCubeInfoDto> cubeInfos = nCubeService.getRevisionHistory(appId, cubeName)
             return cubeInfos.toArray()
         }
@@ -221,10 +217,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             // The Strings below are hints to n-cube to tell it which axis to place on top
             String html = toHtmlWithColumnHints(ncube)
@@ -247,10 +240,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             return ncube.toFormattedJson()
         }
@@ -269,7 +259,7 @@ class NCubeController extends BaseController
             ApplicationID.validateTenant(tenant)
             ApplicationID.validateStatus(status)
             ApplicationID.validateBranch(branch)
-            // TODO: Custom isAllowed() may ne needed
+            // TODO: Filter APP names
             List<String> appNames = nCubeService.getAppNames(tenant, status, branch)
             Object[] appNameArray = appNames.toArray()
             caseInsensitiveSort(appNameArray)
@@ -333,10 +323,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.ADD))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, Delta.Type.ADD)
 
             NCube ncube = new NCube(cubeName)
             Axis cols = new Axis("Column", AxisType.DISCRETE, AxisValueType.STRING, false, Axis.DISPLAY, 1)
@@ -380,10 +367,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.DELETE))
-            {
-                return false
-            }
+            isAllowed(appId, cubeName, Delta.Type.DELETE)
 
             if (!nCubeService.deleteCube(appId, cubeName, getUserForDatabase()))
             {
@@ -409,10 +393,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             Set<String> references = new CaseInsensitiveSet<>()
             List<NCubeInfoDto> ncubes = nCubeService.search(appId, "*", null, [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true])
 
@@ -446,10 +427,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             Set<String> references = new CaseInsensitiveSet<>()
             nCubeService.getReferencedCubeNames(appId, cubeName, references)
             Object[] refs = references.toArray()
@@ -473,10 +451,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
 
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Set<String> refs = ncube.getRequiredScope()
@@ -501,14 +476,8 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             destAppId = addTenant(destAppId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return
-            }
-            if (!isAllowed(destAppId, newName, Delta.Type.ADD))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, null)
+            isAllowed(destAppId, newName, Delta.Type.ADD)
             nCubeService.duplicateCube(appId, destAppId, cubeName, newName, getUserForDatabase())
         }
         catch (Exception e)
@@ -527,10 +496,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, Delta.Type.UPDATE))
-            {
-                return
-            }
+            isAllowed(appId, null, Delta.Type.UPDATE)
             nCubeService.releaseCubes(appId, newSnapVer)
         }
         catch (Exception e)
@@ -547,10 +513,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, Delta.Type.UPDATE))
-            {
-                return
-            }
+            isAllowed(appId, null, Delta.Type.UPDATE)
             nCubeService.changeVersionValue(appId, newSnapVer)
         }
         catch (Exception e)
@@ -567,10 +530,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.ADD))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, Delta.Type.ADD)
             nCubeService.addAxis(appId, cubeName, axisName, type, valueType, getUserForDatabase())
         }
         catch (Exception e)
@@ -595,10 +555,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Axis axis = ncube.getAxis(axisName)
             return convertAxis(axis)
@@ -618,10 +575,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.DELETE))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, Delta.Type.DELETE)
             nCubeService.deleteAxis(appId, cubeName, axisName, getUserForDatabase())
         }
         catch (Exception e)
@@ -635,11 +589,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return
-            }
-
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
             nCubeService.updateAxis(appId, cubeName, origAxisName, axisName, hasDefault, isSorted, fireAll, getUserForDatabase())
         }
         catch (Exception e)
@@ -657,10 +607,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
 
             List<Column> cols = updatedAxis.getColumns()
             if (cols != null)
@@ -690,10 +637,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, oldName, Delta.Type.UPDATE))
-            {
-                return
-            }
+            isAllowed(appId, oldName, Delta.Type.UPDATE)
             nCubeService.renameCube(appId, oldName, newName, getUserForDatabase())
         }
         catch(Exception e)
@@ -707,10 +651,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
             nCubeService.updateCube(appId, cubeName, json, getUserForDatabase())
         }
         catch (Exception e)
@@ -724,10 +665,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Map<String, Object> coord = test.createCoord()
             boolean success = true
@@ -798,10 +736,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             String s = nCubeService.getTestData(appId, cubeName)
             if (StringUtilities.isEmpty(s))
             {
@@ -821,10 +756,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
             String data = new NCubeTestWriter().format(tests)
             nCubeService.updateTestData(appId, cubeName, data)
         }
@@ -843,10 +775,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Object[] list = ncube.generateNCubeTests().toArray()
             nCubeService.updateTestData(appId, cubeName, new NCubeTestWriter().format(list))
@@ -868,10 +797,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.ADD))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, Delta.Type.ADD)
 
             NCube ncube = nCubeService.getCube(appId, cubeName)
 
@@ -912,10 +838,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return false
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
 
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Set<Long> colIds = getCoordinate(ids)
@@ -946,10 +869,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Set<Long> colIds = getCoordinate(ids)
             Object cell = ncube.getCellByIdNoExecute(colIds)
@@ -970,18 +890,10 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
+            isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Set<Long> colIds = getCoordinate(ids)
-
-            // TODO: Call method directly once ncube 3.3.12 is released.
-            Method method = NCube.class.getDeclaredMethod('getCoordinateFromColumnIds', Collection.class)
-            method.setAccessible(true)
-            Map<String, Comparable> coord = (Map<String, Comparable>) method.invoke(ncube, colIds);
-
+            Map<String, Comparable> coord = ncube.getCoordinateFromColumnIds(colIds)
             Map<String, Comparable> niceCoord = [:]
             coord.each {
                 k, v ->
@@ -1001,10 +913,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return false
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
 
             if (ids == null || ids.length == 0)
             {
@@ -1038,10 +947,7 @@ class NCubeController extends BaseController
     {
         try
         {
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return false
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
 
             if (values == null || values.length == 0 || coords == null || coords.length == 0)
             {
@@ -1093,10 +999,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
+            isAllowed(appId, null, null)
             String absUrl = nCubeService.resolveRelativeUrl(appId, relativeUrl)
             return absUrl
         }
@@ -1112,10 +1015,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return
-            }
+            isAllowed(appId, null, null)
             nCubeService.clearCache(appId)
         }
         catch (Exception e)
@@ -1129,10 +1029,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, Delta.Type.ADD))
-            {
-                return
-            }
+            isAllowed(appId, null, Delta.Type.ADD)
             nCubeService.createBranch(appId)
         }
         catch (Exception e)
@@ -1171,10 +1068,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
+            isAllowed(appId, null, null)
             List<NCubeInfoDto> branchChanges = nCubeService.getBranchChanges(appId)
             return branchChanges.toArray()
         }
@@ -1190,10 +1084,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, Delta.Type.UPDATE))
-            {
-                return [] as Object[]
-            }
+            isAllowed(appId, null, Delta.Type.UPDATE)
             List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
             return committedCubes.toArray()
         }
@@ -1205,7 +1096,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return new HashMap()
+            return [:]
         }
     }
 
@@ -1214,11 +1105,8 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, Delta.Type.UPDATE))
-            {
-                return 0
-            }
-            return nCubeService.rollbackBranch(appId, infoDtos)
+            isAllowed(appId, null, Delta.Type.UPDATE)
+            return nCubeService.rollbackBranch(appId, infoDtos, getUserForDatabase())
         }
         catch (Exception e)
         {
@@ -1232,10 +1120,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, null, null))
-            {
-                return null
-            }
+            isAllowed(appId, null, null)
             Map<String, Object> result = nCubeService.updateBranch(appId, getUserForDatabase())
             return result
         }
@@ -1251,10 +1136,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId);
-            if (!isAllowed(appId, null, Delta.Type.DELETE))
-            {
-                return;
-            }
+            isAllowed(appId, null, Delta.Type.DELETE)
             nCubeService.deleteBranch(appId);
         }
         catch(Exception e)
@@ -1268,10 +1150,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
             nCubeService.acceptTheirs(appId, cubeName, branchSha1, getUserForDatabase())
         }
         catch (Exception e)
@@ -1285,10 +1164,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
             nCubeService.acceptMine(appId, cubeName, getUserForDatabase())
         }
         catch (Exception e)
@@ -1302,10 +1178,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return
-            }
+            isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.getCubeRevision(appId, cubeName, revision)
 
             switch(mode)
@@ -1352,11 +1225,8 @@ class NCubeController extends BaseController
             int dot = command.indexOf('.')
             String controller = command.substring(0, dot)
             String method = command.substring(dot + 1)
+            isAllowed(appId, controller, null)
 
-            if (!isAllowed(appId, controller, null))
-            {
-                return null
-            }
             Map coordinate = ['method' : method, 'service': nCubeService]
             coordinate.putAll(args);
             NCube cube = nCubeService.getCube(appId, controller)
@@ -1377,13 +1247,13 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-
-            if (!isAllowed(appId, 'sys.menu', null))
-            {
-                return null
-            }
+            isAllowed(appId, 'sys.menu', null)
             NCube menuCube = nCubeService.getCube(appId, 'sys.menu')
             return menuCube.getCell([:])
+        }
+        catch (SecurityException e)
+        {
+            return null
         }
         catch (Exception e)
         {
@@ -1402,11 +1272,8 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
+            isAllowed(appId, cubeName, null)
 
-            if (!isAllowed(appId, cubeName, null))
-            {
-                return null
-            }
             NCube menuCube = nCubeService.getCube(appId, cubeName)
             CellInfo cellInfo = new CellInfo(menuCube.getDefaultCellValue())
             cellInfo.collapseToUiSupportedTypes()
@@ -1424,11 +1291,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return false
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             ncube.setDefaultCellValue(null)
             nCubeService.updateNCube(ncube, getUserForDatabase())
@@ -1446,11 +1309,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-
-            if (!isAllowed(appId, cubeName, Delta.Type.UPDATE))
-            {
-                return false
-            }
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
 
             Object cellValue = cellInfo.isUrl ?
                     CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
@@ -1473,17 +1332,9 @@ class NCubeController extends BaseController
         try
         {
             ApplicationID leftAppId = addTenant(leftInfoDto.applicationID)
-
-            if (!isAllowed(leftAppId, leftInfoDto.name, null))
-            {
-                return [:]
-            }
-
+            isAllowed(leftAppId, leftInfoDto.name, null)
             ApplicationID rightAppId = addTenant(rightInfoDto.applicationID)
-            if (!isAllowed(rightAppId, rightInfoDto.name, null))
-            {
-                return [:]
-            }
+            isAllowed(rightAppId, rightInfoDto.name, null)
 
             Map<String, Object> ret = [left:[''], right:[''], leftHtml: '', rightHtml: '', delta:'']
             NCube leftCube = null
@@ -1521,7 +1372,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return [:]
+            return null
         }
     }
 
@@ -1565,7 +1416,6 @@ class NCubeController extends BaseController
                 connectors << objName.getKeyProperty('name')
         }
 
-        // TODO: Remove cleanKey once n-cube 3.3.12 is consumed
         for (String conn : connectors)
         {
             String cleanKey = cleanKey(conn)
@@ -1656,7 +1506,7 @@ class NCubeController extends BaseController
     private static void fail(Exception e)
     {
         markRequestFailed(getCauses(e))
-        LOG.warn("error occurred", e)
+        LOG.info("error occurred", e)
     }
 
     private static String getCauses(Throwable t)
