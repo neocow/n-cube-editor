@@ -92,7 +92,7 @@ div#restoreCubeModal ul.list-group
 }
 .innerR {
     position: absolute;
-    opacity: 0.75;
+    opacity: 0.70;
     mix-blend-mode: difference;
 }
 

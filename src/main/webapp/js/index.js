@@ -745,25 +745,11 @@ var NCE = (function ($)
             {
                 if (!infoDto.headSha1)
                 {
-                    if (infoDto.changeType == 'R')
-                    {
-                        a.addClass('cube-restored');
-                    }
-                    else if (infoDto.sha1)
-                    {
-                        a.addClass('cube-added');
-                    }
+                    a.addClass('cube-added');
                 }
-                else
+                else if (infoDto.headSha1 != infoDto.sha1)
                 {
-                    if (infoDto.headSha1 != infoDto.sha1)
-                    {
-                        a.addClass('cube-modified');
-                    }
-                    else if (infoDto.changeType == 'R')
-                    {
-                        a.addClass('cube-restored');
-                    }
+                    a.addClass('cube-modified');
                 }
             }
         });
