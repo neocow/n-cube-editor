@@ -1393,7 +1393,7 @@ class NCubeController extends BaseController
 //        Set result = conn.queryMBeans(null, "Catalina:type=DataSource,path=/appdb,host=localhost,class=javax.sql.DataSource");
 //        jmxc.close();
 
-        // Force session creation / update
+        // Force session creation / update (only for statistics - we do NOT want to use a session - must...remain...stateless)
         JsonCommandServlet.servletRequest.get().getSession()
 
         // Snag the platform mbean server (singleton)
@@ -1461,7 +1461,7 @@ class NCubeController extends BaseController
 
     // ===================================== utility (non-API) methods =================================================
 
-    private String cleanKey(String key)
+    private static String cleanKey(String key)
     {
         return key.replace('"','')
     }
@@ -1481,7 +1481,7 @@ class NCubeController extends BaseController
         }
         catch (Exception ignored)
         {
-            LOG.info('Unable to fetch attribute: ' + attribute + ' from mbean: ' + beanName)
+//            LOG.info('Unable to fetch attribute: ' + attribute + ' from mbean: ' + beanName)
             null
         }
     }
