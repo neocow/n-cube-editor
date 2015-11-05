@@ -19,6 +19,7 @@
  *         limitations under the License.
  */
 
+// TODO: After cube is changed (Edit Columns, Update Axis, Edit Cell) - need to fetch latest n-cubeInfo DTO and update client-side cache.
 var NCE = (function ($)
 {
     var head = 'HEAD';
@@ -1947,9 +1948,6 @@ var NCE = (function ($)
                 showNote('You have conflicts with the HEAD branch.  Update Branch first, then re-attempt branch commit.');
                 return;
             }
-
-            //TODO: After Axis, column, or cell modifications, mark _selectedCubeName as modified (blue)
-            //TODO: Eliminate scan through cubes 2nd time to set selected / not-selected (remember selected?)
 
             loadNCubes();
             loadNCubeListView();
