@@ -373,12 +373,12 @@ class NCubeService
         return cube
     }
 
-    NCube getCubeRevision(ApplicationID appId, String name, long revision)
+    NCube getCubeById(NCubeInfoDto infoDto)
     {
-        NCube cube = NCubeManager.getCubeRevision(appId, name, revision)
+        NCube cube = NCubeManager.getCubeById(infoDto)
         if (cube == null)
         {
-            throw new IllegalArgumentException("Unable to load cube: " + name + ", app: " + appId + ", revision: " + revision)
+            throw new IllegalArgumentException("Unable to load cube: " + infoDto)
         }
         return cube
     }

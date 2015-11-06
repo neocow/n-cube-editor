@@ -1174,13 +1174,14 @@ class NCubeController extends BaseController
         }
     }
 
-    String getCubeRevisionAs(ApplicationID appId, String cubeName, long revision, String mode)
+    String getCubeById(NCubeInfoDto infoDto, String mode)
     {
         try
         {
+            ApplicationID appId = infoDto.getApplicationID()
             appId = addTenant(appId)
-            isAllowed(appId, cubeName, null)
-            NCube ncube = nCubeService.getCubeRevision(appId, cubeName, revision)
+            isAllowed(appId, infoDto.name, null)
+            NCube ncube = nCubeService.getCubeById(infoDto)
 
             switch(mode)
             {

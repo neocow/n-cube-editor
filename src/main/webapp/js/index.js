@@ -1189,7 +1189,7 @@ var NCE = (function ($)
                 {
                     var title = value.name + '.rev.' + value.revision;
                     var oldHtml = window.open('', title + '.html');
-                    var htmlReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "html"], {noResolveRefs:true});
+                    var htmlReq = call("ncubeController.getCubeById", [value, "html"], {noResolveRefs:true});
                     if (htmlReq.status === true)
                     {
                         oldHtml.document.removeChild(oldHtml.document.documentElement);
@@ -1201,7 +1201,7 @@ var NCE = (function ($)
                 {
                     var title = value.name + '.rev.' + value.revision;
                     var oldJson = window.open('', title + '.json');
-                    var prettyJsonReq = call("ncubeController.getCubeRevisionAs", [getAppId(), _selectedCubeName, value.revision, "json-pretty"], {noResolveRefs:true});
+                    var prettyJsonReq = call("ncubeController.getCubeById", [value, "json-pretty"], {noResolveRefs:true});
                     if (prettyJsonReq.status === true)
                     {
                         oldJson.document.removeChild(oldJson.document.documentElement);
