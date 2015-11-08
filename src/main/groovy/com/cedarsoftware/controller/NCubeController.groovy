@@ -218,7 +218,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             isAllowed(appId, cubeName, null)
-            NCube ncube = nCubeService.getCube(appId, cubeName)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
             // The Strings below are hints to n-cube to tell it which axis to place on top
             String html = toHtmlWithColumnHints(ncube)
             return html
@@ -241,7 +241,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             isAllowed(appId, cubeName, null)
-            NCube ncube = nCubeService.getCube(appId, cubeName)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
             return ncube.toFormattedJson()
         }
         catch (Exception e)
@@ -556,7 +556,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             isAllowed(appId, cubeName, null)
-            NCube ncube = nCubeService.getCube(appId, cubeName)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
             Axis axis = ncube.getAxis(axisName)
             return convertAxis(axis)
         }
@@ -622,7 +622,7 @@ class NCubeController extends BaseController
                 }
             }
 
-            NCube ncube = nCubeService.getCube(appId, cubeName)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
             ncube.updateColumns(updatedAxis)
             nCubeService.updateNCube(ncube, getUserForDatabase())
         }
@@ -921,7 +921,7 @@ class NCubeController extends BaseController
                 return false
             }
 
-            NCube ncube = nCubeService.getCube(appId, cubeName)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
 
             for (Object id : ids)
             {
@@ -955,7 +955,7 @@ class NCubeController extends BaseController
                 return false
             }
 
-            NCube ncube = nCubeService.getCube(appId, cubeName)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
             if (ncube == null)
             {
                 markRequestFailed("Cube: " + cubeName + " not found for app: " + appId)
@@ -1174,14 +1174,14 @@ class NCubeController extends BaseController
         }
     }
 
-    String getCubeById(NCubeInfoDto infoDto, String mode)
+    String loadCubeById(NCubeInfoDto infoDto, String mode)
     {
         try
         {
             ApplicationID appId = infoDto.getApplicationID()
             appId = addTenant(appId)
             isAllowed(appId, infoDto.name, null)
-            NCube ncube = nCubeService.getCubeById(infoDto)
+            NCube ncube = nCubeService.loadCubeById(infoDto)
 
             switch(mode)
             {
@@ -1333,16 +1333,18 @@ class NCubeController extends BaseController
     {
         try
         {
-            ApplicationID leftAppId = addTenant(leftInfoDto.applicationID)
+            leftInfoDto.tenant = getTenant()
+            rightInfoDto.tenant = getTenant()
+            ApplicationID leftAppId = leftInfoDto.applicationID
             isAllowed(leftAppId, leftInfoDto.name, null)
-            ApplicationID rightAppId = addTenant(rightInfoDto.applicationID)
+            ApplicationID rightAppId = rightInfoDto.applicationID
             isAllowed(rightAppId, rightInfoDto.name, null)
 
             Map<String, Object> ret = [left:[''], right:[''], leftHtml: '', rightHtml: '', delta:'']
             NCube leftCube = null
             try
             {
-                leftCube = nCubeService.getCube(leftAppId, leftInfoDto.name)
+                leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
                 ret.left = jsonToLines(leftCube.toFormattedJson())
                 ret.leftHtml = toHtmlWithColumnHints(leftCube)
             }
@@ -1351,7 +1353,7 @@ class NCubeController extends BaseController
             NCube rightCube = null
             try
             {
-                rightCube = nCubeService.getCube(rightAppId, rightInfoDto.name)
+                rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
                 ret.right = jsonToLines(rightCube.toFormattedJson())
                 ret.rightHtml = toHtmlWithColumnHints(rightCube)
             }

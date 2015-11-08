@@ -1189,7 +1189,7 @@ var NCE = (function ($)
                 {
                     var title = value.name + '.rev.' + value.revision;
                     var oldHtml = window.open('', title + '.html');
-                    var htmlReq = call("ncubeController.getCubeById", [value, "html"], {noResolveRefs:true});
+                    var htmlReq = call("ncubeController.loadCubeById", [value, "html"], {noResolveRefs:true});
                     if (htmlReq.status === true)
                     {
                         oldHtml.document.removeChild(oldHtml.document.documentElement);
@@ -1201,7 +1201,7 @@ var NCE = (function ($)
                 {
                     var title = value.name + '.rev.' + value.revision;
                     var oldJson = window.open('', title + '.json');
-                    var prettyJsonReq = call("ncubeController.getCubeById", [value, "json-pretty"], {noResolveRefs:true});
+                    var prettyJsonReq = call("ncubeController.loadCubeById", [value, "json-pretty"], {noResolveRefs:true});
                     if (prettyJsonReq.status === true)
                     {
                         oldJson.document.removeChild(oldJson.document.documentElement);
@@ -1686,15 +1686,27 @@ var NCE = (function ($)
         {
             $('#branchNameWarning').hide();
         });
+        $('#compareCubes').click(function(e)
+        {
+            diffConflicts();
+        });
         $('#acceptTheirs').click(function(e)
         {
-            e.preventDefault();
             acceptTheirs();
         });
         $('#acceptMine').click(function(e)
         {
-            e.preventDefault();
             acceptMine();
+        });
+        $('#mergeClose').click(function(e)
+        {
+            setTimeout(function() {
+                loadNCubes();
+                loadNCubeListView();
+                reloadCube();
+                runSearch();
+            }, PROGRESS_DELAY);
+            showNote('Closing merge window, reloading cubes...', 'Note', 2000);
         });
     }
 
@@ -1953,7 +1965,14 @@ var NCE = (function ($)
             loadNCubeListView();
             reloadCube();
             runSearch();
-            showNote('Successfully committed ' + changes.length + ' cube(s).');
+
+            var note = 'Successfully committed ' + changes.length + ' cube(s).<hr class="hr-small"/>';
+            note += '<b style="color:cornflowerblue">Committed cubes:</b><br>';
+            $.each(result.data, function(idx, infoDto)
+            {
+                note += infoDto.name + '<br>';
+            });
+            showNote(note);
         }, PROGRESS_DELAY);
         showNote('Committing changes on selected cubes...', 'Please wait...');
     }
@@ -1986,7 +2005,14 @@ var NCE = (function ($)
             loadNCubeListView();
             reloadCube();
             runSearch();
-            showNote('Successfully rolled back ' + changes.length + ' cube(s).');
+
+            var note = 'Successfully rolled back ' + changes.length + ' cube(s).<hr class="hr-small"/>';
+            note += '<b style="color:cornflowerblue">Rolled back cubes:</b><br>';
+            $.each(changes, function(idx, infoDto)
+            {
+                note += infoDto.name + '<br>';
+            });
+            showNote(note);
         }, PROGRESS_DELAY);
         showNote('Rolling back changes on selected cubes...', 'Please wait...');
     }
@@ -2028,7 +2054,7 @@ var NCE = (function ($)
         var i;
         if (updates > 0)
         {
-            note += '<hr class="hr-small"/><b>Updated cube names:</b><br>';
+            note += '<hr class="hr-small"/><b style="color:cornflowerblue">Updated cube names:</b><br>';
             for (i = 0; i < updates; i++)
             {
                 note += updateMap['@items'][i].name + '<br>';
@@ -2036,7 +2062,7 @@ var NCE = (function ($)
         }
         if (merges > 0)
         {
-            note += '<hr class="hr-small"/><b>Merged cube names:</b><br>';
+            note += '<hr class="hr-small"/><b style="color:#D4AF37">Merged cube names:</b><br>';
             for (i=0; i < merges; i++)
             {
                 note += mergeMap['@items'][i].name + '<br>';
@@ -2044,7 +2070,7 @@ var NCE = (function ($)
         }
         if (conflicts > 0)
         {
-            note += '<hr class="hr-small"/><b>Cubes in conflict:</b><br>';
+            note += '<hr class="hr-small"/><b style="color:#F08080">Cubes in conflict:</b><br>';
             $.each(conflictMap, function(key, value)
             {
                 note += key + '<br>';
@@ -2089,48 +2115,29 @@ var NCE = (function ($)
         }
     }
 
-    function mergeBranch(data)
+    function mergeBranch(conflictMap)
     {
+        delete conflictMap['@type'];
         var ul = $('#mergeList');
         ul.empty();
-        $('#deltaDesc').val('');
-        $.each(data, function(key, value)
+        $.each(conflictMap, function(key, value)
         {
-            if ('@type' != key)
+            var li = $('<li style="border:none"/>').prop({class: 'list-group-item skinny-lr'});
+            var div = $('<div/>').prop({class:'container-fluid'});
+            var checkbox = $('<input>').prop({type:'radio'});
+            checkbox.click(function ()
             {
-                var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
-                var div = $('<div/>').prop({class:'container-fluid'});
-                var checkbox = $('<input>').prop({type:'radio'});
-                checkbox.click(function ()
-                {
-                    markMutuallyExclusive(checkbox);
-                    var msg = data[key].message;
-                    var diff = data[key].diff;
-                    _mergeCubeName = key;
-                    _mergeSha1 = data[key].sha1;
-                    _mergeHeadSha1 = data[key].headSha1;
-
-                    if (diff && diff['@items'] && diff['@items'].length > 0)
-                    {
-                        msg += '\n';
-                        var len = diff['@items'].length;
-
-                        for (var i=0; i < len; i++)
-                        {
-                            var delta = diff['@items'][i];
-                            msg += (i + 1) + ': ' + delta.loc.name + ' ' + delta.type.name + ': ' + delta.desc + '\n';
-                        }
-                    }
-                    $('#deltaDesc').val(msg);
-                });
-                var label = $('<label/>').prop({class: 'radio no-margins'});
-                label[0].textContent = key;
-                checkbox.prependTo(label); // <=== create input without the closing tag
-                div.append(label);
-                li.append(div);
-                ul.append(li);
-
-            }
+                markMutuallyExclusive(checkbox);
+                _mergeCubeName = key;
+                _mergeSha1 = conflictMap[key].sha1;
+                _mergeHeadSha1 = conflictMap[key].headSha1;
+            });
+            var label = $('<label/>').prop({class: 'radio no-margins'});
+            label[0].textContent = key;
+            checkbox.prependTo(label); // <=== create input without the closing tag
+            div.append(label);
+            li.append(div);
+            ul.append(li);
         });
         $('#mergeBranchModal').modal('show');
     }
@@ -2145,19 +2152,50 @@ var NCE = (function ($)
         checkbox.prop('checked', true );
     }
 
-    function acceptTheirs()
+    function getSelectedConflict()
     {
-        $('#mergeBranchModal').modal('hide');
-
-        if (_mergeCubeName == null)
+        var checkedInput = $('#mergeList').find('input:checked');
+        if (checkedInput.length == 0)
         {
-            showNote('No cube selected, nothing to merge.');
+            showNote('Select a cube', 'Note', 3000);
+            return null;
+        }
+        return checkedInput.parent()[0].textContent;
+    }
+
+    function diffConflicts()
+    {
+        var conflictedCube = getSelectedConflict();
+        if (!conflictedCube)
+        {
             return;
         }
+        var appId = getAppId();
+        var infoDto = {
+            name: conflictedCube,
+            app: appId.app,
+            version: appId.version,
+            status: appId.status,
+            branch: appId.branch
+        };
+        var leftInfoDto = $.extend(true, {}, infoDto);
+        leftInfoDto.branch = 'HEAD';
+        diffCubeWithHead(leftInfoDto, infoDto);
+    }
+
+    function acceptTheirs()
+    {
+        var conflictedCube = getSelectedConflict();
+        if (!conflictedCube)
+        {
+            return;
+        }
+
         var result = call('ncubeController.acceptTheirs', [getAppId(), _mergeCubeName, _mergeSha1]);
         if (result.status === true)
         {
-            showNote('Cube: ' + _mergeCubeName + ' updated in your branch with cube from HEAD');
+            showNote('Cube: ' + _mergeCubeName + ' updated in your branch with cube from HEAD', 'Note', 5000);
+            $('#mergeList').find('input:checked').parent().parent().parent().remove();
         }
         else
         {
@@ -2166,25 +2204,21 @@ var NCE = (function ($)
         _mergeCubeName = null;
         _mergeSha1 = null;
         _mergeHeadSha1 = null;
-        loadNCubes();
-        loadNCubeListView();
-        reloadCube();
-        runSearch();
     }
 
     function acceptMine()
     {
-        $('#mergeBranchModal').modal('hide');
-
-        if (_mergeCubeName == null)
+        var conflictedCube = getSelectedConflict();
+        if (!conflictedCube)
         {
-            showNote('No cube selected, nothing to merge.');
             return;
         }
+
         var result = call('ncubeController.acceptMine', [getAppId(), _mergeCubeName, _mergeHeadSha1]);
         if (result.status === true)
         {
-            showNote('Cube: ' + _mergeCubeName + ' updated to overwrite-on-commit.');
+            showNote('Cube: ' + _mergeCubeName + ' updated to overwrite-on-commit.', 'Note', 5000);
+            $('#mergeList').find('input:checked').parent().parent().parent().remove();
         }
         else
         {
@@ -2193,10 +2227,6 @@ var NCE = (function ($)
         _mergeCubeName = null;
         _mergeSha1 = null;
         _mergeHeadSha1 = null;
-        loadNCubes();
-        loadNCubeListView();
-        reloadCube();
-        runSearch();
     }
 
     // =============================================== End Branching ===================================================
@@ -2255,7 +2285,7 @@ var NCE = (function ($)
         }
         else if (viewType == DIFF_DESCRIPTIVE)
         {
-            var textArea = $('<textarea style="width:100%;height:100%;box-sizing:border-box;" />');
+            var textArea = $('<textarea style="width:100%;height:100%;box-sizing:border-box" ondblclick="this.focus();this.select()" readonly/>');
             textArea[0].innerHTML = _diffLastResult.delta;
             _diffOutput.append(textArea);
         }

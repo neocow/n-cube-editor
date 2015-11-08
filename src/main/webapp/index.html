@@ -436,20 +436,6 @@
 
                 <form role="form">
                     <div class="form-group">
-                        <label for="newBranchName">Conflict description:</label>
-                        <textarea id="deltaDesc" class="form-control" rows="5"></textarea>
-                    </div>
-                </form>
-
-                <form role="form">
-                    <div class="form-group">
-                        <button id="acceptMine" class="btn btn-primary btn-sm">Accept Mine</button>
-                        <button id="acceptTheirs" class="btn btn-primary btn-sm">Accept Theirs</button>
-                    </div>
-                </form>
-
-                <form role="form">
-                    <div class="form-group">
                         <label for="mergeList">Select conflicting cube:</label>
                         <ul id="mergeList" class="list-group">
                         </ul>
@@ -458,7 +444,10 @@
 
             </div>
             <div class="modal-footer">
-                <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
+                <button id="compareCubes" class="btn btn-primary btn-sm pull-left">Compare</button>
+                <button id="acceptMine" class="btn btn-primary btn-sm pull-left">Accept Mine</button>
+                <button id="acceptTheirs" class="btn btn-primary btn-sm pull-left">Accept Theirs</button>
+                <button id="mergeClose" class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
             </div>
         </div>
     </div>

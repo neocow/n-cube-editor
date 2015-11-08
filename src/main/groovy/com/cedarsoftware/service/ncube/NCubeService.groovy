@@ -373,9 +373,19 @@ class NCubeService
         return cube
     }
 
-    NCube getCubeById(NCubeInfoDto infoDto)
+    NCube loadCube(ApplicationID appId, String name)
     {
-        NCube cube = NCubeManager.getCubeById(infoDto)
+        NCube cube = NCubeManager.loadCube(appId, name)
+        if (cube == null)
+        {
+            throw new IllegalArgumentException("Unable to load cube: " + name + " for app: " + appId)
+        }
+        return cube
+    }
+
+    NCube loadCubeById(NCubeInfoDto infoDto)
+    {
+        NCube cube = NCubeManager.loadCubeById(infoDto)
         if (cube == null)
         {
             throw new IllegalArgumentException("Unable to load cube: " + infoDto)
