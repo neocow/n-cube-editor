@@ -2024,7 +2024,33 @@ var NCE = (function ($)
             conflicts = countKeys(conflictMap);
         }
 
-        showNote('Branch Updated:<hr class="hr-small"/>' + updates + ' cubes updated<br>' + merges + ' cubes merged<br>' + conflicts + ' cubes in conflict');
+        var note = '<b>Branch Updated:</b><hr class="hr-small"/>' + updates + ' cubes <b>updated</b><br>' + merges + ' cubes <b>merged</b><br>' + conflicts + ' cubes in <b>conflict</b>';
+        var i;
+        if (updates > 0)
+        {
+            note += '<hr class="hr-small"/><b>Updated cube names:</b><br>';
+            for (i = 0; i < updates; i++)
+            {
+                note += updateMap['@items'][i].name + '<br>';
+            }
+        }
+        if (merges > 0)
+        {
+            note += '<hr class="hr-small"/><b>Merged cube names:</b><br>';
+            for (i=0; i < merges; i++)
+            {
+                note += mergeMap['@items'][i].name + '<br>';
+            }
+        }
+        if (conflicts > 0)
+        {
+            note += '<hr class="hr-small"/><b>Cubes in conflict:</b><br>';
+            $.each(conflictMap, function(key, value)
+            {
+                note += key + '<br>';
+            });
+        }
+        showNote(note);
 
         if (conflicts > 0)
         {
