@@ -35,11 +35,6 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class NCubeService
 {
-    long fixSha1s()
-    {
-        return NCubeManager.fixSha1s()
-    }
-
     List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching, Map options)
     {
         if (!cubeNamePattern.startsWith('*'))
