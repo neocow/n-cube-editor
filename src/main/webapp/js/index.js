@@ -2355,6 +2355,7 @@ var NCE = (function ($)
             text: msg,
             image: './img/cube-logo.png',
             sticky: !millis,
+            append: false,
             time: (millis || 0)
         });
     }
