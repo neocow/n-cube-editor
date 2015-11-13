@@ -728,7 +728,7 @@ var NCE = (function ($)
             _listOfCubes.append(li);
 
 
-            if (filter && infoDto.pos != null)
+            if (filter && infoDto.pos != null && infoDto.endPos != null)
             {
                 var nameHtml = cubeName.substring(0, infoDto.pos);
                 nameHtml += '<span class="search-hilite">';
