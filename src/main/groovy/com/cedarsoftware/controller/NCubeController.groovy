@@ -15,7 +15,12 @@ import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.NCubeTest
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.StringValuePair
+import com.cedarsoftware.ncube.exception.AxisOverlapException
 import com.cedarsoftware.ncube.exception.BranchMergeException
+import com.cedarsoftware.ncube.exception.CommandCellException
+import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
+import com.cedarsoftware.ncube.exception.RuleJump
+import com.cedarsoftware.ncube.exception.RuleStop
 import com.cedarsoftware.ncube.formatters.NCubeTestReader
 import com.cedarsoftware.ncube.formatters.NCubeTestWriter
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter
@@ -719,8 +724,7 @@ class NCubeController extends BaseController
             }
 
             ruleInfoMain.setAssertionFailures(errors)
-            ['_message': new TestResultsFormatter(output).format(),
-             '_result' : success]
+            return ['_message': new TestResultsFormatter(output).format(), '_result' : success]
         }
         catch(Exception e)
         {
@@ -1510,7 +1514,29 @@ class NCubeController extends BaseController
     private static void fail(Exception e)
     {
         markRequestFailed(getCauses(e))
-        LOG.info("error occurred", e)
+        if (e instanceof AxisOverlapException ||
+            e instanceof BranchMergeException ||
+            e instanceof CommandCellException ||
+            e instanceof CoordinateNotFoundException ||
+            e instanceof RuleJump ||
+            e instanceof RuleStop)
+        {
+            Throwable t = e
+            while (t.getCause() != null)
+            {
+                t = t.getCause()
+            }
+            String msg = t.message
+            if (StringUtilities.isEmpty(msg))
+            {
+                msg = t.getClass().getName()
+            }
+            LOG.info('user runtime error: ' + msg)
+        }
+        else
+        {
+            LOG.warn("error occurred", e)
+        }
     }
 
     private static String getCauses(Throwable t)
@@ -1529,7 +1555,7 @@ class NCubeController extends BaseController
             t = t.cause
             if (t != null)
             {
-                s.append("<hr class=\"hr-small\"/>")
+                s.append('<hr style="border-top: 1px solid #aaa;margin:8px">')
             }
         }
 
