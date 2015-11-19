@@ -28,7 +28,7 @@ import com.cedarsoftware.service.ncube.NCubeService
 import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
 import com.cedarsoftware.util.CaseInsensitiveSet
-import com.cedarsoftware.util.DateUtilities
+import com.cedarsoftware.util.Converter
 import com.cedarsoftware.util.InetAddressUtilities
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
@@ -76,6 +76,9 @@ class NCubeController extends BaseController
     private NCubeService nCubeService;
     private static String servletHostname = null
     private static String inetHostname = null
+    private static final char SEP_FIELD = '\u2618'
+    private static final char SEP_COL = '\u261E'
+    private static final char SEP_ROW = '\u261F'
 
     // Bind to ConcurrentLinkedHashMap because some plugins will need it.
     private ConcurrentMap<String, Object> futureCache = new ConcurrentLinkedHashMap.Builder<String, Object>()
@@ -912,12 +915,12 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean clearCells(ApplicationID appId, String cubeName, Object[] ids)
+    String copyCells(ApplicationID appId, String cubeName, Object[] ids, boolean isCut)
     {
         try
         {
             appId = addTenant(appId)
-            isAllowed(appId, cubeName, Delta.Type.UPDATE)
+            isAllowed(appId, cubeName, isCut ? Delta.Type.UPDATE : null)
 
             if (ids == null || ids.length == 0)
             {
@@ -926,6 +929,7 @@ class NCubeController extends BaseController
             }
 
             NCube ncube = nCubeService.loadCube(appId, cubeName)
+            List<CellInfo> cells = new ArrayList<>()
 
             for (Object id : ids)
             {
@@ -935,15 +939,22 @@ class NCubeController extends BaseController
                     continue;
                 }
                 Set<Long> colIds = getCoordinate(cellId)
-                ncube.removeCellById(colIds)
+                Object content = ncube.getCellByIdNoExecute(colIds)
+                cells.add(new CellInfo(content))
+
+                if (isCut)
+                {
+                    ncube.removeCellById(colIds)
+                }
             }
+
             nCubeService.updateNCube(ncube, getUserForDatabase())
-            return true
+            return JsonWriter.objectToJson(cells, [(JsonWriter.TYPE):false as Object])
         }
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -955,14 +966,14 @@ class NCubeController extends BaseController
 
             if (values == null || values.length == 0 || coords == null || coords.length == 0)
             {
-                markRequestFailed("Values and coordinates must not be empty or length of 0.")
+                markRequestFailed("Could not paste cells, values and coordinates must not be empty or length of 0.")
                 return false
             }
 
             NCube ncube = nCubeService.loadCube(appId, cubeName)
             if (ncube == null)
             {
-                markRequestFailed("Cube: " + cubeName + " not found for app: " + appId)
+                markRequestFailed("Could not paste cells, cube: " + cubeName + " not found for app: " + appId)
                 return false
             }
             for (int i=0; i < coords.length; i++)
@@ -1333,7 +1344,52 @@ class NCubeController extends BaseController
         }
     }
 
-    Map<String, Object> fetchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
+    Map<String, Object> fetchDiffs(long cubeId1, long cubeId2)
+    {
+        try
+        {
+            Map<String, Object> ret = [left:[''], right:[''], leftHtml: '', rightHtml: '', delta:'']
+            NCube leftCube = null
+            try
+            {
+                leftCube = nCubeService.loadCubeById(cubeId1);
+                ret.left = jsonToLines(leftCube.toFormattedJson())
+                ret.leftHtml = toHtmlWithColumnHints(leftCube)
+            }
+            catch (Exception ignored) { }
+
+            NCube rightCube = null
+            try
+            {
+                rightCube = nCubeService.loadCubeById(cubeId2)
+                ret.right = jsonToLines(rightCube.toFormattedJson())
+                ret.rightHtml = toHtmlWithColumnHints(rightCube)
+            }
+            catch (Exception ignored) { }
+
+
+            if (leftCube && rightCube)
+            {
+                List<Delta> delta = rightCube.getDeltaDescription(leftCube)
+                StringBuilder s = new StringBuilder()
+                delta.each {
+                    Delta d ->
+                        s.append(d.description)
+                        s.append('\n')
+                }
+                ret.delta = s.toString()
+            }
+            return ret
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+
+    }
+
+    Map<String, Object> fetchDiffsx(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
     {
         try
         {
@@ -1613,7 +1669,7 @@ class NCubeController extends BaseController
             {
                 try
                 {
-                    return Long.parseLong(value)
+                    return Converter.convert(value, Long.class)
                 }
                 catch (Exception ignored) { }
             }
@@ -1628,7 +1684,7 @@ class NCubeController extends BaseController
         // Try as a date (the code below supports numerous different date formats)
         try
         {
-            return DateUtilities.parseDate(value)
+            return Converter.convert(value, Date.class);
         }
         catch (Exception ignored) { }
 
@@ -1692,7 +1748,7 @@ class NCubeController extends BaseController
         Set<Long> colIds = new HashSet<>()
         for (Object id : ids)
         {
-            colIds.add(Long.parseLong((String)id))
+            colIds.add((Long)Converter.convert(id, Long.class))
         }
         return colIds;
     }

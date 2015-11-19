@@ -597,6 +597,10 @@ var NCE = (function ($)
         {
             httpHeaders();
         });
+        $('#compareRevs').click(function()
+        {
+            compareRevisions();
+        });
 
         addBranchListeners();
     }
@@ -1151,15 +1155,16 @@ var NCE = (function ($)
         ul.empty();
         $('#revisionHistoryLabel')[0].textContent = 'Revision History for ' + _selectedCubeName;
         $('#revisionHistoryModal').modal();
+
         var result = call("ncubeController.getRevisionHistory", [getAppId(), _selectedCubeName]);
+
         if (result.status === true)
         {
-            $.each(result.data, function (index, value)
+            $.each(result.data, function (index, infoDto)
             {
                 var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
-                var anchorHtml = $('<a href="#"/>');
-                var anchorJson = $('<a href="#"/>');
-                var anchorDiff = $('<a href="#"/>');
+                var anchorHtml = $('<a href="#" style="margin:0 10px 0 0"/>');
+                var anchorJson = $('<a href="#" style="margin:0 10px 0 0"/>');
 
                 var kbd1 = $('<kbd/>');
                 kbd1[0].textContent = 'HTML';
@@ -1169,27 +1174,38 @@ var NCE = (function ($)
                 kbd2[0].textContent = 'JSON';
                 anchorJson.append(kbd2);
 
-                var kbd3 = $('<kbd/>');
-                kbd3[0].textContent = 'Compare';
-                anchorDiff.append(kbd3);
-
                 var date = '';
-                if (value.createDate != undefined)
+                if (infoDto.createDate != undefined)
                 {
-                    date = new Date(value.createDate).format('yyyy-mm-dd HH:MM:ss');
+                    date = new Date(infoDto.createDate).format('yyyy-mm-dd HH:MM:ss');
                 }
                 li.append(anchorHtml);
-                li.append('&nbsp;&nbsp;&nbsp;');
                 li.append(anchorJson);
-                li.append('&nbsp;&nbsp;&nbsp;');
-                li.append(anchorDiff);
-                li.append('&nbsp;&nbsp;&nbsp;');
-                li.append('rev: ' + value.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + value.createHid);
+
+                var labelB = $('<label/>').prop({class: 'col-xs-1'});
+                labelB.css('padding', 0);
+                labelB.css('margin', 0);
+                labelB.css('margin-right', '10px');
+                labelB.css('width', '12%');
+                labelB.append(anchorHtml);
+                labelB.append(anchorJson);
+
+                var div = $('<div/>').prop({class: 'container-fluid'});
+                var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
+                checkbox.attr('data-cube-id', infoDto.id);
+                var label = $('<label/>').prop({class: 'checkbox no-margins col-xs-10'});
+                label[0].innerHTML = 'rev: ' + infoDto.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + infoDto.createHid;
+
+                checkbox.prependTo(label);
+                div.append(labelB);
+                div.append(label);
+                li.append(div);
+
                 anchorHtml.click(function ()
                 {
-                    var title = value.name + '.rev.' + value.revision;
+                    var title = infoDto.name + '.rev.' + infoDto.revision;
                     var oldHtml = window.open('', title + '.html');
-                    var htmlReq = call("ncubeController.loadCubeById", [value, "html"], {noResolveRefs:true});
+                    var htmlReq = call("ncubeController.loadCubeById", [infoDto, "html"], {noResolveRefs:true});
                     if (htmlReq.status === true)
                     {
                         oldHtml.document.removeChild(oldHtml.document.documentElement);
@@ -1199,9 +1215,9 @@ var NCE = (function ($)
                 });
                 anchorJson.click(function ()
                 {
-                    var title = value.name + '.rev.' + value.revision;
+                    var title = infoDto.name + '.rev.' + infoDto.revision;
                     var oldJson = window.open('', title + '.json');
-                    var prettyJsonReq = call("ncubeController.loadCubeById", [value, "json-pretty"], {noResolveRefs:true});
+                    var prettyJsonReq = call("ncubeController.loadCubeById", [infoDto, "json-pretty"], {noResolveRefs:true});
                     if (prettyJsonReq.status === true)
                     {
                         oldJson.document.removeChild(oldJson.document.documentElement);
@@ -1211,11 +1227,6 @@ var NCE = (function ($)
                         oldJson.document.title = title + '.json';
                     }
                 });
-                anchorDiff.click(function ()
-                {
-                    var title = value.name + '.rev.' + value.revision;
-                    window.open('http://www.prettydiff.com/', title);
-                });
                 ul.append(li);
             });
         }
@@ -1223,6 +1234,17 @@ var NCE = (function ($)
         {
             showNote('Error fetching revision history (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
         }
+    }
+
+    function compareRevisions()
+    {
+        var cubeIds = [];
+        $.each($('#revisionHistoryList').find('.commitCheck:checked'), function()
+        {
+            cubeIds.push($(this).attr('data-cube-id'))
+        });
+        console.log(cubeIds);
+        diffCubeWithHead(cubeIds[0], cubeIds[1])
     }
 
     function revisionHistoryOk()
@@ -2232,7 +2254,30 @@ var NCE = (function ($)
     // =============================================== End Branching ===================================================
 
     // ============================================== Cube Comparison ==================================================
-    function diffCubeWithHead(leftCubeInfo, rightCubeInfo)
+    function diffCubeWithHead(id1, id2)
+    {
+        clearError();
+
+        var result = call('ncubeController.fetchDiffs', [id1, id2], {noResolveRefs:true});
+        if (result.status !== true)
+        {
+            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        var titleElem = $('#diffTitle');
+        // TODO: Need cube name
+        titleElem[0].textContent = 'BLAH   ' + ' changes';
+        _diffLastResult = result.data;
+        _diffLeftName = 'HEAD';
+        _diffRightName = _selectedBranch;
+        diffLoad(DIFF_DESCRIPTIVE);
+
+        // Display Diff Modal
+        _diffModal.css('display', 'block');
+    }
+
+    function diffCubeWithHeadx(leftCubeInfo, rightCubeInfo)
     {
         clearError();
 
