@@ -1344,18 +1344,18 @@ class NCubeController extends BaseController
         }
     }
 
-    Map<String, Object> fetchDiffs(ApplicationID appId, long cubeId1, long cubeId2)
+    Map<String, Object> fetchRevDiffs(long cubeId1, long cubeId2)
     {
         try
         {
-            appId = addTenant(appId)
-            isAllowed(appId, null, null)
-
             Map<String, Object> ret = [left:[''], right:[''], leftHtml: '', rightHtml: '', delta:'']
             NCube leftCube = null
             try
             {
                 leftCube = nCubeService.loadCubeById(cubeId1);
+                ApplicationID appId = leftCube.getApplicationID()
+                appId = addTenant(appId)
+                isAllowed(appId, leftCube.name, null)
                 ret.left = jsonToLines(leftCube.toFormattedJson())
                 ret.leftHtml = toHtmlWithColumnHints(leftCube)
             }
@@ -1365,6 +1365,9 @@ class NCubeController extends BaseController
             try
             {
                 rightCube = nCubeService.loadCubeById(cubeId2)
+                ApplicationID appId = rightCube.getApplicationID()
+                appId = addTenant(appId)
+                isAllowed(appId, rightCube.name, null)
                 ret.right = jsonToLines(rightCube.toFormattedJson())
                 ret.rightHtml = toHtmlWithColumnHints(rightCube)
             }
@@ -1389,10 +1392,9 @@ class NCubeController extends BaseController
             fail(e)
             return null
         }
-
     }
 
-    Map<String, Object> fetchDiffsx(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
+    Map<String, Object> fetchBranchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
     {
         try
         {

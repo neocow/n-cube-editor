@@ -1263,7 +1263,7 @@ var NCE = (function ($)
             var loIdx = 1;
             var hiIdx = 0;
         }
-        diffCubes(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], revIds[loIdx] + ' vs ' + revIds[hiIdx]);
+        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], revIds[loIdx] + ' vs. ' + revIds[hiIdx]);
     }
 
     function revisionHistoryOk()
@@ -1914,7 +1914,7 @@ var NCE = (function ($)
             {
                 var leftInfoDto = $.extend(true, {}, infoDto);
                 leftInfoDto.branch = 'HEAD';
-                diffCubes(leftInfoDto.id, infoDto.id, 'HEAD', _selectedBranch, infoDto.name);
+                diffCubes(leftInfoDto, infoDto, infoDto.name);
             });
             var kbd = $('<kbd/>');
             kbd[0].textContent = 'Compare';
@@ -2221,7 +2221,7 @@ var NCE = (function ($)
         };
         var leftInfoDto = $.extend(true, {}, infoDto);
         leftInfoDto.branch = 'HEAD';
-        diffCubes(leftInfoDto, infoDto, 'HEAD', _selectedBranch, conflictedCube);
+        diffCubes(leftInfoDto, infoDto, conflictedCube);
     }
 
     function acceptTheirs()
@@ -2273,21 +2273,40 @@ var NCE = (function ($)
     // =============================================== End Branching ===================================================
 
     // ============================================== Cube Comparison ==================================================
-    function diffCubes(id1, id2, leftName, rightName, title)
+    function diffCubes(leftInfo, rightInfo, title)
     {
         clearError();
 
-        var result = call('ncubeController.fetchDiffs', [getAppId(), id1, id2], {noResolveRefs:true});
+        var result = call('ncubeController.fetchBranchDiffs', [leftInfo, rightInfo], {noResolveRefs:true});
         if (result.status !== true)
         {
             showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
             return;
         }
 
+        setupDiff(result.data, leftInfo.branch, rightInfo.branch, title);
+    }
+
+    function diffCubeRevs(id1, id2, leftName, rightName, title)
+    {
+        clearError();
+
+        var result = call('ncubeController.fetchRevDiffs', [id1, id2], {noResolveRefs:true});
+        if (result.status !== true)
+        {
+            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        setupDiff(result.data, leftName, rightName, title);
+    }
+
+    function setupDiff(diffResult, leftName, rightName, title)
+    {
         var titleElem = $('#diffTitle');
 
         titleElem[0].innerHTML = title;
-        _diffLastResult = result.data;
+        _diffLastResult = diffResult;
         _diffLeftName = leftName;
         _diffRightName = rightName;
         diffLoad(DIFF_DESCRIPTIVE);
