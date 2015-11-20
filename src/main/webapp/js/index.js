@@ -601,6 +601,10 @@ var NCE = (function ($)
         {
             compareRevisions();
         });
+        $('#clearRevSelection').click(function()
+        {
+            clearRevSelection();
+        });
 
         addBranchListeners();
     }
@@ -1264,6 +1268,11 @@ var NCE = (function ($)
             var hiIdx = 0;
         }
         diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], revIds[loIdx] + ' vs. ' + revIds[hiIdx]);
+    }
+
+    function clearRevSelection()
+    {
+        // TODO: Clear the selection check boxes.
     }
 
     function revisionHistoryOk()
