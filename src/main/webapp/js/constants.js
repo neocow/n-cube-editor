@@ -7,5 +7,4 @@ var DIFF_SIDE_BY_SIDE = 0;
 var DIFF_INLINE = 1;
 var DIFF_DESCRIPTIVE = 2;
 var DIFF_VISUAL = 3;
-var CLIP_COL_SEP = '\uFEFF\t';
-var CLIP_ROW_SEP = '\u00a3\n';
+var CLIP_NCE = '~NCE~';

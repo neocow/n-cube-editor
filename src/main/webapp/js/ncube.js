@@ -94,7 +94,6 @@ var NCubeEditor = (function ($)
                 var isModalDisplayed = $('body').hasClass('modal-open');
                 var focus = $(':focus');
 
-                console.log(focus.attr('id'));
                 if (!isModalDisplayed && focus && focus.attr('id') != 'cube-search' && focus.attr('id') != 'cube-search-content')
                 {
                     if (e.metaKey || e.ctrlKey)
@@ -1235,38 +1234,27 @@ var NCubeEditor = (function ($)
 
         var cells = [];
         var lastRow = -1;
-        var row = 0;
-        var col = 0;
 
         $('td.cell-selected').each(function ()
         {   // Visit selected cells in spreadsheet
             var cell = $(this);
             var cellRow = getRow(cell);
-            if (lastRow == cellRow)
-            {
-                col++;
-            }
-            else
+            if (lastRow != cellRow)
             {
                 if (lastRow != -1)
                 {
-                    row++;
-                    col = 0;
+                    cells.push(null);   // Mark end of line
                 }
                 lastRow = cellRow;
             }
             var cellId = getCellId(cell);
             if (cellId)
             {
-                var cellInfo = {
-                    'id': cellId,
-                    'row':row,
-                    'col':col};
                 cells.push(cellId);
-            }
-            if (isCut)
-            {
-                cell[0].textContent = '';
+                if (isCut)
+                {
+                    cell[0].textContent = '';
+                }
             }
         });
 
@@ -1276,16 +1264,11 @@ var NCubeEditor = (function ($)
         {
             nce.showNote('Error cutting cells:<hr class="hr-small"/>' + result.data);
         }
-        else
-        {
-            nce.showNote(result.data);
-        }
 
-        var clipData = '1\t2\t\n';  // Get from server
-        _clipboard.val(clipData);
+        var clipData = result.data;
+        _clipboard.val(CLIP_NCE + clipData);
         _clipboard.focusin();
         _clipboard.select();
-
     };
 
     var editPaste = function()
@@ -1329,75 +1312,125 @@ var NCubeEditor = (function ($)
             // Parse the clipboard content and build-up coordinates where this content will be pasted.
             var values = [];
             var coords = [];
+            var rowCoords = [];
             var firstRow = row;
-            var colSep = '\t';
-            var lineSep = '\n';
+            var numTH, colIdx, domCell, jqCell, result, r, c = null;
 
-            if (content.indexOf(CLIP_COL_SEP) != -1 || content.indexOf(CLIP_ROW_SEP) != -1)
-            {   // NCE mode
-                //content = content.substr(1);
-                colSep = CLIP_COL_SEP;
-                lineSep = CLIP_ROW_SEP;
-            }
-            //if (content.charAt(0) == '\uc2a4')
-            //{   // NCE mode
-            //    content = content.substr(1);
-            //    colSep = '\uc2a2';
-            //    lineSep = '\uc2a3';
-            //}
-            var lines = content.split(lineSep);
+            if (content.indexOf(CLIP_NCE) == 0)
+            {   // NCE clipboard data (allows us to handle all cell types)
+                content = content.slice(CLIP_NCE.length);
+                var clipboard = JSON.parse(content);
+                var colNum = 0;
 
-            for (var i = 0; i < lines.length; i++)
-            {
-                if (lines[i] != null && typeof lines[i] != 'undefined')
+                // If more than one cell is selected, create coords for all selected cells.
+                // Server will repeat values, properly throughout the selected 'clip' region.
+                if (onlyOneCellSelected)
                 {
-                    var strValues = lines[i].split(colSep);
-                    values.push(strValues);
-                    var rowCoords = [];
-                    for (var j = 0; j < strValues.length; j++)
+                    for (var line=0; line < clipboard.length; line++)
                     {
-                        var numTH = countTH(tableRows[row].cells);
-                        var colIdx = col + j + numTH;
-                        if (colIdx < tableRows[row].cells.length)
-                        {   // Do attempt to read past edge of 2D grid
-                            var domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
-                            var jqCell = $(domCell);                    // Now it's a jQuery object.
-                            rowCoords[j] = getCellId(jqCell);
+                        var cols = clipboard[line];
+                        if (cols == null)
+                        {
+                            row++;
+                            colNum = 0;
+                        }
+                        else
+                        {
+                            numTH = countTH(tableRows[row].cells);
+                            colIdx = col + colNum + numTH;
+                            if (colIdx < tableRows[row].cells.length)
+                            {   // Do attempt to read past edge of 2D grid
+                                domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
+                                jqCell = $(domCell);                    // Now it's a jQuery object.
+                                cols.push(getCellId(jqCell));
+                            }
+                            colNum++;
+                        }
+                        if (row >= tableRows.length)
+                        {   // Do not go past bottom of grid
+                            break;
                         }
                     }
-                    coords.push(rowCoords);
-                    row++;
-
-                    if (row >= tableRows.length)
-                    {   // Do not go past bottom of grid
-                        break;
-                    }
                 }
-            }
-
-            // If more than one cell is selected, create coords for all selected cells.
-            // Server will repeat values, properly throughout the selected 'clip' region.
-            if (!onlyOneCellSelected)
-            {
-                coords = [];
-                row = firstRow;
-                for (var r = firstRow; r <= lastRow; r++)
-                {
-                    rowCoords = [];
-                    for (var c = col; c <= lastCol; c++)
+                else
+                {   // Multiple cells are selected when PASTE invoked, clip pasting to selected range.
+                    coords = [];
+                    row = firstRow;
+                    for (r = firstRow; r <= lastRow; r++)
                     {
-                        numTH = countTH(tableRows[row].cells);
-                        domCell = tableRows[row].cells[c + numTH]; // This is a DOM "TD" element
-                        jqCell = $(domCell);                    // Now it's a jQuery object.
-                        rowCoords[c - col] = getCellId(jqCell);
+                        rowCoords = [];
+                        for (c = col; c <= lastCol; c++)
+                        {
+                            numTH = countTH(tableRows[row].cells);
+                            domCell = tableRows[row].cells[c + numTH]; // This is a DOM "TD" element
+                            jqCell = $(domCell);                    // Now it's a jQuery object.
+                            rowCoords[c - col] = getCellId(jqCell);
+                        }
+                        coords.push(rowCoords);
+                        row++;
                     }
-                    coords.push(rowCoords);
-                    row++;
                 }
+                // Paste cells from database
+                result = nce.call("ncubeController.pasteCellsNce", [nce.getAppId(), nce.getSelectedCubeName(), clipboard]);
             }
+            else
+            {   // Normal clipboard data, from Excel, for example
+                var colSep = '\t';
+                var lineSep = '\n';
+                var lines = content.split(lineSep);
 
-            // Paste cells from database
-            var result = nce.call("ncubeController.pasteCells", [nce.getAppId(), nce.getSelectedCubeName(), values, coords]);
+                // If more than one cell is selected, create coords for all selected cells.
+                // Server will repeat values, properly throughout the selected 'clip' region.
+                for (var i = 0; i < lines.length; i++)
+                {
+                    if (lines[i] != null && (typeof lines[i] != 'undefined'))
+                    {
+                        var strValues = lines[i].split(colSep);
+                        values.push(strValues);
+                        rowCoords = [];
+                        for (var j = 0; j < strValues.length; j++)
+                        {
+                            numTH = countTH(tableRows[row].cells);
+                            colIdx = col + j + numTH;
+                            if (colIdx < tableRows[row].cells.length)
+                            {   // Do attempt to read past edge of 2D grid
+                                domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
+                                jqCell = $(domCell);                    // Now it's a jQuery object.
+                                rowCoords[j] = getCellId(jqCell);
+                            }
+                        }
+                        coords.push(rowCoords);
+                        row++;
+
+                        if (row >= tableRows.length)
+                        {   // Do not go past bottom of grid
+                            break;
+                        }
+                    }
+                }
+
+                if (!onlyOneCellSelected)
+                {   // Multiple cells are selected when PASTE invoked, clip pasting to selected range.
+                    coords = [];
+                    row = firstRow;
+                    for (r = firstRow; r <= lastRow; r++)
+                    {
+                        rowCoords = [];
+                        for (c = col; c <= lastCol; c++)
+                        {
+                            numTH = countTH(tableRows[row].cells);
+                            domCell = tableRows[row].cells[c + numTH]; // This is a DOM "TD" element
+                            jqCell = $(domCell);                    // Now it's a jQuery object.
+                            rowCoords[c - col] = getCellId(jqCell);
+                        }
+                        coords.push(rowCoords);
+                        row++;
+                    }
+                }
+
+                // Paste cells from database
+                result = nce.call("ncubeController.pasteCells", [nce.getAppId(), nce.getSelectedCubeName(), values, coords]);
+            }
 
             if (result.status)
             {

@@ -1,5 +1,4 @@
 package com.cedarsoftware.controller
-
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.AxisType
@@ -46,7 +45,6 @@ import javax.servlet.http.HttpServletRequest
 import java.lang.management.ManagementFactory
 import java.util.concurrent.ConcurrentMap
 import java.util.regex.Pattern
-
 /**
  * NCubeController API.
  *
@@ -925,22 +923,24 @@ class NCubeController extends BaseController
             if (ids == null || ids.length == 0)
             {
                 markRequestFailed("No IDs of cells to cut/clear were given.")
-                return false
+                return null
             }
 
             NCube ncube = nCubeService.loadCube(appId, cubeName)
-            List<CellInfo> cells = new ArrayList<>()
+            List<Object[]> cells = new ArrayList<>()
 
             for (Object id : ids)
             {
                 Object[] cellId = (Object[]) id;
                 if (ArrayUtilities.isEmpty(cellId))
                 {
+                    cells.add(null)
                     continue;
                 }
                 Set<Long> colIds = getCoordinate(cellId)
                 Object content = ncube.getCellByIdNoExecute(colIds)
-                cells.add(new CellInfo(content))
+                CellInfo cellInfo = new CellInfo(content)
+                cells.add([cellInfo.value, cellInfo.dataType, cellInfo.isUrl, cellInfo.isCached] as Object[])
 
                 if (isCut)
                 {
@@ -949,12 +949,67 @@ class NCubeController extends BaseController
             }
 
             nCubeService.updateNCube(ncube, getUserForDatabase())
-            return JsonWriter.objectToJson(cells, [(JsonWriter.TYPE):false as Object])
+            return JsonWriter.objectToJson(cells.toArray())
         }
         catch (Exception e)
         {
             fail(e)
             return null
+        }
+    }
+
+    boolean pasteCellsNce(ApplicationID appId, String cubeName, Object[] clipboard)
+    {
+        try
+        {
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
+            if (ArrayUtilities.isEmpty(clipboard))
+            {
+                markRequestFailed("Could not paste cells, no data available on clipboard.")
+                return false
+            }
+
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
+            if (ncube == null)
+            {
+                markRequestFailed("Could not paste cells, cube: " + cubeName + " not found for app: " + appId)
+                return false
+            }
+
+            int len = clipboard.length;
+            for (int i=0; i < len; i++)
+            {
+                Object[] cell = clipboard[i] as Object[]
+                if (ArrayUtilities.isEmpty(cell))
+                {   // null is EOL marker
+                    continue
+                }
+
+                Object lastElem = cell[cell.length - 1]
+
+                if (lastElem instanceof Object[])
+                {   // If last element is an Object[], we have a coordinate (destination cell)
+                    Object[] ids = lastElem as Object[]
+                    Set<Long> cellId = getCoordinate(ids)
+                    CellInfo info = new CellInfo(cell[1] as String, cell[0] as String, cell[2], cell[3])
+                    Object value = info.recreate()
+                    if (value == null)
+                    {
+                        ncube.removeCellById(cellId)
+                    }
+                    else
+                    {
+                        ncube.setCellById(value, cellId)
+                    }
+                }
+            }
+            nCubeService.updateNCube(ncube, getUserForDatabase())
+            return true
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return false
         }
     }
 
@@ -976,6 +1031,7 @@ class NCubeController extends BaseController
                 markRequestFailed("Could not paste cells, cube: " + cubeName + " not found for app: " + appId)
                 return false
             }
+
             for (int i=0; i < coords.length; i++)
             {
                 Object[] row = (Object[]) coords[i]
@@ -1373,19 +1429,7 @@ class NCubeController extends BaseController
             }
             catch (Exception ignored) { }
 
-
-            if (leftCube && rightCube)
-            {
-                List<Delta> delta = rightCube.getDeltaDescription(leftCube)
-                StringBuilder s = new StringBuilder()
-                delta.each {
-                    Delta d ->
-                        s.append(d.description)
-                        s.append('\n')
-                }
-                ret.delta = s.toString()
-            }
-            return ret
+            return addDeltaDescription(leftCube, rightCube, ret)
         }
         catch (Exception e)
         {
@@ -1424,25 +1468,32 @@ class NCubeController extends BaseController
             }
             catch (Exception ignored) { }
 
-
-            if (leftCube && rightCube)
-            {
-                List<Delta> delta = rightCube.getDeltaDescription(leftCube)
-                StringBuilder s = new StringBuilder()
-                delta.each {
-                    Delta d ->
-                        s.append(d.description)
-                        s.append('\n')
-                }
-                ret.delta = s.toString()
-            }
-            return ret
+            return addDeltaDescription(leftCube, rightCube, ret)
         }
         catch (Exception e)
         {
             fail(e)
             return null
         }
+    }
+
+    /**
+     * Add the n-cube delta description between the two passed in cubes to the passed in Map.
+     */
+    private static LinkedHashMap<String, Object> addDeltaDescription(NCube leftCube, NCube rightCube, LinkedHashMap<String, Object> ret)
+    {
+        if (leftCube && rightCube)
+        {
+            List<Delta> delta = rightCube.getDeltaDescription(leftCube)
+            StringBuilder s = new StringBuilder()
+            delta.each {
+                Delta d ->
+                    s.append(d.description)
+                    s.append('\n')
+            }
+            ret.delta = s.toString()
+        }
+        return ret
     }
 
     List<String> jsonToLines(String json)
