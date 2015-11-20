@@ -380,29 +380,10 @@ class NCubeService
 
     NCube loadCubeById(long id)
     {
-        NCubeInfoDto dto = new NCubeInfoDto()
-        dto.tenant = 'NONE'
-        dto.app = ApplicationID.DEFAULT_APP
-        dto.status = 'SNAPSHOT'
-        dto.version = '1.0.0'
-        dto.branch = 'HEAD'
-        dto.name = 'xyz'
-        dto.id = id
-
-        NCube cube = NCubeManager.loadCubeById(dto)
+        NCube cube = NCubeManager.loadCubeById(id)
         if (cube == null)
         {
             throw new IllegalArgumentException('Unable to load cube by id: ' + id)
-        }
-        return cube
-    }
-
-    NCube loadCubeById(NCubeInfoDto infoDto)
-    {
-        NCube cube = NCubeManager.loadCubeById(infoDto)
-        if (cube == null)
-        {
-            throw new IllegalArgumentException("Unable to load cube: " + infoDto)
         }
         return cube
     }

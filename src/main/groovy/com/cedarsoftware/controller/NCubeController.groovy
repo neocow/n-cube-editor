@@ -1189,14 +1189,14 @@ class NCubeController extends BaseController
         }
     }
 
-    String loadCubeById(NCubeInfoDto infoDto, String mode)
+    String loadCubeById(ApplicationID appId, long id, String mode)
     {
         try
         {
-            ApplicationID appId = infoDto.getApplicationID()
             appId = addTenant(appId)
-            isAllowed(appId, infoDto.name, null)
-            NCube ncube = nCubeService.loadCubeById(infoDto)
+            isAllowed(appId, null, null)
+
+            NCube ncube = nCubeService.loadCubeById(id)
 
             switch(mode)
             {
@@ -1344,10 +1344,13 @@ class NCubeController extends BaseController
         }
     }
 
-    Map<String, Object> fetchDiffs(long cubeId1, long cubeId2)
+    Map<String, Object> fetchDiffs(ApplicationID appId, long cubeId1, long cubeId2)
     {
         try
         {
+            appId = addTenant(appId)
+            isAllowed(appId, null, null)
+
             Map<String, Object> ret = [left:[''], right:[''], leftHtml: '', rightHtml: '', delta:'']
             NCube leftCube = null
             try

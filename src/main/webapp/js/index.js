@@ -1193,6 +1193,7 @@ var NCE = (function ($)
                 var div = $('<div/>').prop({class: 'container-fluid'});
                 var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
                 checkbox.attr('data-cube-id', infoDto.id);
+                checkbox.attr('data-rev-id', infoDto.revision);
                 var label = $('<label/>').prop({class: 'checkbox no-margins col-xs-10'});
                 label[0].innerHTML = 'rev: ' + infoDto.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + infoDto.createHid;
 
@@ -1205,7 +1206,7 @@ var NCE = (function ($)
                 {
                     var title = infoDto.name + '.rev.' + infoDto.revision;
                     var oldHtml = window.open('', title + '.html');
-                    var htmlReq = call("ncubeController.loadCubeById", [infoDto, "html"], {noResolveRefs:true});
+                    var htmlReq = call("ncubeController.loadCubeById", [getAppId(), infoDto.id, "html"], {noResolveRefs:true});
                     if (htmlReq.status === true)
                     {
                         oldHtml.document.removeChild(oldHtml.document.documentElement);
@@ -1217,7 +1218,7 @@ var NCE = (function ($)
                 {
                     var title = infoDto.name + '.rev.' + infoDto.revision;
                     var oldJson = window.open('', title + '.json');
-                    var prettyJsonReq = call("ncubeController.loadCubeById", [infoDto, "json-pretty"], {noResolveRefs:true});
+                    var prettyJsonReq = call("ncubeController.loadCubeById", [getAppId(), infoDto.id, "json-pretty"], {noResolveRefs:true});
                     if (prettyJsonReq.status === true)
                     {
                         oldJson.document.removeChild(oldJson.document.documentElement);
@@ -1239,12 +1240,30 @@ var NCE = (function ($)
     function compareRevisions()
     {
         var cubeIds = [];
+        var revIds = [];
         $.each($('#revisionHistoryList').find('.commitCheck:checked'), function()
         {
-            cubeIds.push($(this).attr('data-cube-id'))
+            cubeIds.push($(this).attr('data-cube-id'));
+            revIds.push($(this).attr('data-rev-id'))
         });
-        console.log(cubeIds);
-        diffCubeWithHead(cubeIds[0], cubeIds[1])
+
+        if (revIds.length != 2)
+        {
+            showNote('Must select exactly 2 for comparison', 'Note', 2500);
+            return;
+        }
+
+        if (revIds[0] < revIds[1])
+        {
+            var loIdx = 0;
+            var hiIdx = 1;
+        }
+        else
+        {
+            var loIdx = 1;
+            var hiIdx = 0;
+        }
+        diffCubes(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx]);
     }
 
     function revisionHistoryOk()
@@ -1895,7 +1914,7 @@ var NCE = (function ($)
             {
                 var leftInfoDto = $.extend(true, {}, infoDto);
                 leftInfoDto.branch = 'HEAD';
-                diffCubeWithHead(leftInfoDto, infoDto);
+                diffCubes(leftInfoDto.id, infoDto.id, 'HEAD', _selectedBranch);
             });
             var kbd = $('<kbd/>');
             kbd[0].textContent = 'Compare';
@@ -2202,7 +2221,7 @@ var NCE = (function ($)
         };
         var leftInfoDto = $.extend(true, {}, infoDto);
         leftInfoDto.branch = 'HEAD';
-        diffCubeWithHead(leftInfoDto, infoDto);
+        diffCubes(leftInfoDto, infoDto, 'HEAD', _selectedBranch);
     }
 
     function acceptTheirs()
@@ -2254,11 +2273,11 @@ var NCE = (function ($)
     // =============================================== End Branching ===================================================
 
     // ============================================== Cube Comparison ==================================================
-    function diffCubeWithHead(id1, id2)
+    function diffCubes(id1, id2, leftName, rightName, title)
     {
         clearError();
 
-        var result = call('ncubeController.fetchDiffs', [id1, id2], {noResolveRefs:true});
+        var result = call('ncubeController.fetchDiffs', [getAppId(), id1, id2], {noResolveRefs:true});
         if (result.status !== true)
         {
             showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
@@ -2266,33 +2285,11 @@ var NCE = (function ($)
         }
 
         var titleElem = $('#diffTitle');
-        // TODO: Need cube name
-        titleElem[0].textContent = 'BLAH   ' + ' changes';
+
+        titleElem[0].innerHTML = leftName + ' vs ' + rightName;
         _diffLastResult = result.data;
-        _diffLeftName = 'HEAD';
-        _diffRightName = _selectedBranch;
-        diffLoad(DIFF_DESCRIPTIVE);
-
-        // Display Diff Modal
-        _diffModal.css('display', 'block');
-    }
-
-    function diffCubeWithHeadx(leftCubeInfo, rightCubeInfo)
-    {
-        clearError();
-
-        var result = call('ncubeController.fetchDiffs', [leftCubeInfo, rightCubeInfo], {noResolveRefs:true});
-        if (result.status !== true)
-        {
-            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        var titleElem = $('#diffTitle');
-        titleElem[0].textContent = rightCubeInfo.name + ' changes';
-        _diffLastResult = result.data;
-        _diffLeftName = 'HEAD';
-        _diffRightName = _selectedBranch;
+        _diffLeftName = leftName;
+        _diffRightName = rightName;
         diffLoad(DIFF_DESCRIPTIVE);
 
         // Display Diff Modal
