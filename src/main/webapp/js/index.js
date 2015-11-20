@@ -1263,7 +1263,7 @@ var NCE = (function ($)
             var loIdx = 1;
             var hiIdx = 0;
         }
-        diffCubes(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx]);
+        diffCubes(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], revIds[loIdx] + ' vs ' + revIds[hiIdx]);
     }
 
     function revisionHistoryOk()
@@ -1914,7 +1914,7 @@ var NCE = (function ($)
             {
                 var leftInfoDto = $.extend(true, {}, infoDto);
                 leftInfoDto.branch = 'HEAD';
-                diffCubes(leftInfoDto.id, infoDto.id, 'HEAD', _selectedBranch);
+                diffCubes(leftInfoDto.id, infoDto.id, 'HEAD', _selectedBranch, infoDto.name);
             });
             var kbd = $('<kbd/>');
             kbd[0].textContent = 'Compare';
@@ -2221,7 +2221,7 @@ var NCE = (function ($)
         };
         var leftInfoDto = $.extend(true, {}, infoDto);
         leftInfoDto.branch = 'HEAD';
-        diffCubes(leftInfoDto, infoDto, 'HEAD', _selectedBranch);
+        diffCubes(leftInfoDto, infoDto, 'HEAD', _selectedBranch, conflictedCube);
     }
 
     function acceptTheirs()
@@ -2286,7 +2286,7 @@ var NCE = (function ($)
 
         var titleElem = $('#diffTitle');
 
-        titleElem[0].innerHTML = leftName + ' vs ' + rightName;
+        titleElem[0].innerHTML = title;
         _diffLastResult = result.data;
         _diffLeftName = leftName;
         _diffRightName = rightName;
