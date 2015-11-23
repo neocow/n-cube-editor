@@ -33,6 +33,7 @@ var NCubeEditor = (function ($)
     var _uiCellId = null;
     var _clipboard = null;
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
+    var _clipFormat = CLIP_NCE;
 
     var init = function(info)
     {
@@ -98,9 +99,33 @@ var NCubeEditor = (function ($)
                 {
                     if (e.metaKey || e.ctrlKey)
                     {   // Control Key (command in the case of Mac)
-                        if (e.keyCode == 88 || e.keyCode == 67)
+                        if (e.keyCode == 88)
+                        {
+                            editCutCopy(true);  // true = isCut
+                        }
+                        else if (e.keyCode == 67)
                         {   // Ctrl-C or Ctrl-X
-                            editCutCopy(e.keyCode == 88);
+                            if (CLIP_NCE == _clipFormat)
+                            {   // NCE
+                                editCutCopy(false); // false = copy
+                            }
+                            else
+                            {   // Excel
+                                excelCopy();
+                            }
+                        }
+                        else if (e.keyCode == 75)
+                        {   // Toggle clipboard format to copy (NCE versus Excel)
+                            if (CLIP_NCE == _clipFormat)
+                            {
+                                _clipFormat = 'EXCEL';
+                                nce.showNote('Use generic format (Excel support)', 'Note', 2000);
+                            }
+                            else
+                            {
+                                _clipFormat = CLIP_NCE;
+                                nce.showNote('Use N-Cube Editor format (NCE support)', 'Note', 2000);
+                            }
                         }
                         else if (e.keyCode == 86)
                         {   // Ctrl-V
@@ -875,7 +900,7 @@ var NCubeEditor = (function ($)
             $('#editColUp').hide();
             $('#editColDown').hide();
         }
-        $('#editColumnsLabel')[0].textContent = 'Edit ' + axisName;
+        $('#editColumnsLabel')[0].innerHTML = 'Edit ' + axisName;
         $('#editColumnsModal').modal();
     };
 
@@ -1225,6 +1250,37 @@ var NCubeEditor = (function ($)
         return null;
     };
 
+    var excelCopy = function()
+    {
+        var lastRow = -1;
+        var clipData = "";
+
+        $('td.cell-selected').each(function ()
+        {   // Visit selected cells in spreadsheet
+            var cell = $(this);
+            var cellRow = getRow(cell);
+            if (lastRow == cellRow)
+            {
+                clipData += '\t';
+            }
+            else
+            {
+                if (lastRow != -1)
+                {
+                    clipData += '\n';
+                }
+                lastRow = cellRow;
+            }
+            var content = cell[0].textContent;
+            // Must escape quotes in any text content
+            clipData = clipData + '"' + content.replace(/"/g, '""') + '"';
+        });
+        clipData += '\n';
+        _clipboard.val(clipData);
+        _clipboard.focusin();
+        _clipboard.select();
+    };
+
     var editCutCopy = function(isCut)
     {
         if (isCut && !nce.ensureModifiable('Cannot cut / copy cells.'))
@@ -1262,7 +1318,7 @@ var NCubeEditor = (function ($)
         var result = nce.call("ncubeController.copyCells", [nce.getAppId(), nce.getSelectedCubeName(), cells, isCut]);
         if (!result.status)
         {
-            nce.showNote('Error cutting cells:<hr class="hr-small"/>' + result.data);
+            nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
         }
 
         var clipData = result.data;
@@ -1397,9 +1453,7 @@ var NCubeEditor = (function ($)
             }
             else
             {   // Normal clipboard data, from Excel, for example
-                var colSep = '\t';
-                var lineSep = '\n';
-                var lines = content.split(lineSep);
+                var lines = parseExcelClipboard(content);
                 var coords = [];
                 var rowCoords = [];
 
@@ -1407,29 +1461,26 @@ var NCubeEditor = (function ($)
                 // Server will repeat values, properly throughout the selected 'clip' region.
                 for (var i = 0; i < lines.length; i++)
                 {
-                    if (lines[i] != null && (typeof lines[i] != 'undefined'))
-                    {
-                        var strValues = lines[i].split(colSep);
-                        values.push(strValues);
-                        rowCoords = [];
-                        for (var j = 0; j < strValues.length; j++)
-                        {
-                            numTH = countTH(tableRows[row].cells);
-                            colIdx = col + j + numTH;
-                            if (colIdx < tableRows[row].cells.length)
-                            {   // Do attempt to read past edge of 2D grid
-                                domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
-                                jqCell = $(domCell);                    // Now it's a jQuery object.
-                                rowCoords[j] = getCellId(jqCell);
-                            }
-                        }
-                        coords.push(rowCoords);
-                        row++;
+                    rowCoords = [];
+                    values.push(lines[i]);  // push a whole line of values at once.
 
-                        if (row >= tableRows.length)
-                        {   // Do not go past bottom of grid
-                            break;
+                    for (var j=0; j < lines[i].length; j++)
+                    {
+                        numTH = countTH(tableRows[row].cells);
+                        colIdx = col + j + numTH;
+                        if (colIdx < tableRows[row].cells.length)
+                        {   // Do attempt to read past edge of 2D grid
+                            domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
+                            jqCell = $(domCell);                    // Now it's a jQuery object.
+                            rowCoords[j] = getCellId(jqCell);
                         }
+                    }
+                    coords.push(rowCoords);
+                    row++;
+
+                    if (row >= tableRows.length)
+                    {   // Do not go past bottom of grid
+                        break;
                     }
                 }
 
