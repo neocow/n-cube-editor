@@ -1250,6 +1250,16 @@ var NCubeEditor = (function ($)
         return null;
     };
 
+    var getDomCellId = function(cell)
+    {
+        var cellId = cell.getAttribute('data-id');
+        if (cellId)
+        {
+            return cellId.split("_");
+        }
+        return null;
+    };
+
     var excelCopy = function()
     {
         var lastRow = -1;
@@ -1375,7 +1385,7 @@ var NCubeEditor = (function ($)
             // Parse the clipboard content and build-up coordinates where this content will be pasted.
             var values = [];
             var firstRow = row;
-            var numTH, colIdx, domCell, jqCell, result, r, c = null;
+            var numTH, colIdx, domCell, result, r, c = null;
 
             if (content.indexOf(CLIP_NCE) == 0)
             {   // NCE clipboard data (allows us to handle all cell types)
@@ -1400,8 +1410,7 @@ var NCubeEditor = (function ($)
                             if (colIdx < tableRows[row].cells.length)
                             {   // Do attempt to read past edge of 2D grid
                                 domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
-                                jqCell = $(domCell);                    // Now it's a jQuery object.
-                                cellInfo.push(getCellId(jqCell));
+                                cellInfo.push(getDomCellId(domCell));
                             }
                             colNum++;
                         }
@@ -1444,11 +1453,9 @@ var NCubeEditor = (function ($)
                         {
                             numTH = countTH(tableRows[row].cells);
                             domCell = tableRows[row].cells[c + numTH]; // This is a DOM "TD" element
-                            jqCell = $(domCell);                    // Now it's a jQuery object.
-
                             var info = clipRect[(r - firstRow) % clipRow][(c - col) % clipCol];
                             var cloneCellInfo = info.slice(0);
-                            cloneCellInfo.push(getCellId(jqCell));
+                            cloneCellInfo.push(getDomCellId(domCell));
                             clipboard2.push(cloneCellInfo);
                         }
                         row++;
@@ -1478,8 +1485,7 @@ var NCubeEditor = (function ($)
                         if (colIdx < tableRows[row].cells.length)
                         {   // Do attempt to read past edge of 2D grid
                             domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
-                            jqCell = $(domCell);                    // Now it's a jQuery object.
-                            rowCoords.push(getCellId(jqCell));
+                            rowCoords.push(getDomCellId(domCell));
                         }
                     }
                     coords.push(rowCoords);
@@ -1502,8 +1508,7 @@ var NCubeEditor = (function ($)
                         {
                             numTH = countTH(tableRows[row].cells);
                             domCell = tableRows[row].cells[c + numTH]; // This is a DOM "TD" element
-                            jqCell = $(domCell);                    // Now it's a jQuery object.
-                            rowCoords.push(getCellId(jqCell));
+                            rowCoords.push(getDomCellId(domCell));
                         }
                         coords.push(rowCoords);
                         row++;
