@@ -458,36 +458,10 @@ var NCE = (function ($)
             }
         });
 
-        // Support selecting ranges, helps with cut/copy/paste
-        $.fn.selectRange = function (start, end)
-        {
-            if (!end)
-            {
-                end = start;
-            }
-            return this.each(function ()
-            {
-                if (this.setSelectionRange)
-                {
-                    this.focus();
-                    this.setSelectionRange(start, end);
-                }
-                else if (this.createTextRange)
-                {
-                    var range = this.createTextRange();
-                    range.collapse(true);
-                    range.moveEnd('character', end);
-                    range.moveStart('character', start);
-                    range.select();
-                }
-            });
-        };
-
         $('#cube-search-reset').click(function()
         {
             clearSearch();
         });
-
         $('#newCubeMenu').click(function ()
         {
             newCube()

@@ -854,10 +854,7 @@ class NCubeController extends BaseController
             }
             else
             {
-                Object cellValue = cellInfo.isUrl ?
-                        CellInfo.parseJsonValue(null, cellInfo.value, cellInfo.dataType, cellInfo.isCached) :
-                        CellInfo.parseJsonValue(cellInfo.value, null, cellInfo.dataType, cellInfo.isCached)
-                ncube.setCellById(cellValue, colIds)
+                ncube.setCellById(cellInfo.recreate(), colIds)
             }
             nCubeService.updateNCube(ncube, getUserForDatabase())
             return true
