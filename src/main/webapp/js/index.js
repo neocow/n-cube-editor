@@ -2078,26 +2078,47 @@ var NCE = (function ($)
         var i;
         if (updates > 0)
         {
+            var upMap = updateMap['@items'];
             note += '<hr class="hr-small"/><b style="color:cornflowerblue">Updated cube names:</b><br>';
+            upMap.sort(function(a, b)
+            {   // sort case-insensitively, use client-side CPU
+                var lowA = a.name.toLowerCase();
+                var lowB = b.name.toLowerCase();
+                return lowA.localeCompare(lowB);
+            });
             for (i = 0; i < updates; i++)
             {
-                note += updateMap['@items'][i].name + '<br>';
+                note += upMap[i].name + '<br>';
             }
         }
         if (merges > 0)
         {
+            var mMap = mergeMap['@iitems'];
             note += '<hr class="hr-small"/><b style="color:#D4AF37">Merged cube names:</b><br>';
+            mMap.sort(function(a, b)
+            {   // sort case-insensitively, use client-side CPU
+                var lowA = a.name.toLowerCase();
+                var lowB = b.name.toLowerCase();
+                return lowA.localeCompare(lowB);
+            });
             for (i=0; i < merges; i++)
             {
-                note += mergeMap['@items'][i].name + '<br>';
+                note += mMap[i].name + '<br>';
             }
         }
         if (conflicts > 0)
         {
             note += '<hr class="hr-small"/><b style="color:#F08080">Cubes in conflict:</b><br>';
-            $.each(conflictMap, function(key, value)
+            var names = Object.keys(conflictMap);
+            names.sort(function(a, b)
+            {   // sort case-insensitively, use client-side CPU
+                var lowA = a.toLowerCase();
+                var lowB = b.toLowerCase();
+                return lowA.localeCompare(lowB);
+            });
+            $.each(names, function(index, value)
             {
-                note += key + '<br>';
+                note += value + '<br>';
             });
         }
         showNote(note);
@@ -2144,7 +2165,18 @@ var NCE = (function ($)
         delete conflictMap['@type'];
         var ul = $('#mergeList');
         ul.empty();
-        $.each(conflictMap, function(key, value)
+
+        // Sort keys of Map
+        var keys = Object.keys(conflictMap);
+        keys.sort(function(a, b)
+        {
+            var lowA = a.toLowerCase();
+            var lowB = b.toLowerCase();
+            return lowA.localeCompare(lowB);
+        });
+
+        // Walk sorted keys, indexing into Map
+        $.each(keys, function(index, cubeName)
         {
             var li = $('<li style="border:none"/>').prop({class: 'list-group-item skinny-lr'});
             var div = $('<div/>').prop({class:'container-fluid'});
@@ -2152,12 +2184,12 @@ var NCE = (function ($)
             checkbox.click(function ()
             {
                 markMutuallyExclusive(checkbox);
-                _mergeCubeName = key;
-                _mergeSha1 = conflictMap[key].sha1;
-                _mergeHeadSha1 = conflictMap[key].headSha1;
+                _mergeCubeName = cubeName;
+                _mergeSha1 = conflictMap[cubeName].sha1;
+                _mergeHeadSha1 = conflictMap[cubeName].headSha1;
             });
             var label = $('<label/>').prop({class: 'radio no-margins'});
-            label[0].textContent = key;
+            label[0].textContent = cubeName;
             checkbox.prependTo(label); // <=== create input without the closing tag
             div.append(label);
             li.append(div);
