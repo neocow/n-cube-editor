@@ -1479,7 +1479,7 @@ var NCubeEditor = (function ($)
                         {   // Do attempt to read past edge of 2D grid
                             domCell = tableRows[row].cells[colIdx]; // This is a DOM "TD" element
                             jqCell = $(domCell);                    // Now it's a jQuery object.
-                            rowCoords[j] = getCellId(jqCell);
+                            rowCoords.push(getCellId(jqCell));
                         }
                     }
                     coords.push(rowCoords);
@@ -1503,7 +1503,7 @@ var NCubeEditor = (function ($)
                             numTH = countTH(tableRows[row].cells);
                             domCell = tableRows[row].cells[c + numTH]; // This is a DOM "TD" element
                             jqCell = $(domCell);                    // Now it's a jQuery object.
-                            rowCoords[c - col] = getCellId(jqCell);
+                            rowCoords.push(getCellId(jqCell));
                         }
                         coords.push(rowCoords);
                         row++;
