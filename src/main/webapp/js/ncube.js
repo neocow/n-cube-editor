@@ -1272,8 +1272,15 @@ var NCubeEditor = (function ($)
                 lastRow = cellRow;
             }
             var content = cell[0].textContent;
-            // Must escape quotes in any text content
-            clipData = clipData + '"' + content.replace(/"/g, '""') + '"';
+
+            if (content.indexOf('\n') > -1)
+            {   // Must quote if newline (and double any quotes inside)
+                clipData = clipData + '"' + content.replace(/"/g, '""') + '"';
+            }
+            else
+            {
+                clipData = clipData + content;
+            }
         });
         clipData += '\n';
         _clipboard.val(clipData);
