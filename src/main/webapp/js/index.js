@@ -1246,7 +1246,10 @@ var NCE = (function ($)
 
     function clearRevSelection()
     {
-        // TODO: Clear the selection check boxes.
+       $.each($('#revisionHistoryList').find('.commitCheck:checked'), function()
+        {
+            $(this).removeAttr("checked");
+        });
     }
 
     function revisionHistoryOk()
