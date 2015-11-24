@@ -36,13 +36,13 @@
         <version.json-io>4.1.9</version.json-io>
         <version.ncube>3.4.3</version.ncube>
         <version.json-command-servlet>1.3.0</version.json-command-servlet>
-        <version.log4j>2.1</version.log4j>
-        <version.groovy>2.4.4</version.groovy>
+        <version.log4j>2.4.1</version.log4j>
+        <version.groovy>2.4.5</version.groovy>
         <version.junit>4.11</version.junit>
         <version.spring>4.2.2.RELEASE</version.spring>
         <version.servlet>3.0.1</version.servlet>
         <version.java>1.7</version.java>
-        <version.mysql>5.1.35</version.mysql>
+        <version.mysql>5.1.37</version.mysql>
         <version.tuckey>4.0.4</version.tuckey>
         <version.concurrent.linked.hashmap.lru>1.4.2</version.concurrent.linked.hashmap.lru>
         <version.plugin.compiler>3.2</version.plugin.compiler>
