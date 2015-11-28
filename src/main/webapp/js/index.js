@@ -1152,11 +1152,6 @@ var NCE = (function ($)
                 kbd2[0].textContent = 'JSON';
                 anchorJson.append(kbd2);
 
-                var date = '';
-                if (infoDto.createDate != undefined)
-                {
-                    date = new Date(infoDto.createDate).format('yyyy-mm-dd HH:MM:ss');
-                }
                 li.append(anchorHtml);
                 li.append(anchorJson);
 
@@ -1173,8 +1168,21 @@ var NCE = (function ($)
                 checkbox.attr('data-cube-id', infoDto.id);
                 checkbox.attr('data-rev-id', infoDto.revision);
                 var label = $('<label/>').prop({class: 'checkbox no-margins col-xs-10'});
-                label[0].innerHTML = 'rev: ' + infoDto.revision + '&nbsp;&nbsp;&nbsp;' + date + '&nbsp;&nbsp;&nbsp;' + infoDto.createHid;
-
+                var text = 'rev: ' + infoDto.revision + '&nbsp;&nbsp;&nbsp;';
+                if (infoDto.notes && infoDto.notes != "")
+                {
+                    text += infoDto.notes;
+                }
+                else
+                {
+                    var date = '';
+                    if (infoDto.createDate != undefined)
+                    {
+                        date = new Date(infoDto.createDate).format('yyyy-mm-dd HH:MM:ss');
+                    }
+                    text += date + '&nbsp;&nbsp;&nbsp;' + infoDto.createHid;
+                }
+                label[0].innerHTML = text;
                 checkbox.prependTo(label);
                 div.append(labelB);
                 div.append(label);
@@ -1850,12 +1858,10 @@ var NCE = (function ($)
 
         var errMsg;
         var title;
-        var btnLabel;
         if (state)
         {
             errMsg = 'commit to';
             title = 'Commit changes';
-            btnLabel = 'Commit';
             $('#commitOk').show();
             $('#rollbackOk').hide();
         }
@@ -1863,7 +1869,6 @@ var NCE = (function ($)
         {
             errMsg = 'rollback in';
             title = 'Rollback changes';
-            btnLabel = 'Rollback';
             $('#commitOk').hide();
             $('#rollbackOk').show();
         }
@@ -1967,8 +1972,9 @@ var NCE = (function ($)
     function commitOk()
     {
         var branchChanges = _commitModal.prop('changes');
-        var input = $('.commitCheck');
+        var input = $('#commitRollbackList').find('.commitCheck');
         var changes = [];
+
         $.each(input, function (index, label)
         {
             if ($(this).is(':checked'))
@@ -2007,7 +2013,7 @@ var NCE = (function ($)
     function rollbackOk()
     {
         var branchChanges = _commitModal.prop('changes');
-        var input = $('.commitCheck');
+        var input = $('#commitRollbackList').find('.commitCheck');
         var changes = [];
         $.each(input, function (index, label)
         {
