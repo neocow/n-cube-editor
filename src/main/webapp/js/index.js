@@ -2107,7 +2107,7 @@ var NCE = (function ($)
         }
         if (merges > 0)
         {
-            var mMap = mergeMap['@iitems'];
+            var mMap = mergeMap['@items'];
             note += '<hr class="hr-small"/><b style="color:#D4AF37">Merged cube names:</b><br>';
             mMap.sort(function(a, b)
             {   // sort case-insensitively, use client-side CPU
