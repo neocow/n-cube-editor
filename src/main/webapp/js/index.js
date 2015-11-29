@@ -1102,7 +1102,7 @@ var NCE = (function ($)
             }
         });
 
-        var result = call("ncubeController.restoreCube", [getAppId(), cubesToRestore]);
+        var result = call("ncubeController.restoreCubes", [getAppId(), cubesToRestore]);
         if (result.status === true)
         {
             loadNCubes();
@@ -1117,7 +1117,7 @@ var NCE = (function ($)
         }
         else
         {
-            showNote("Unable to restore n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
+            showNote("Unable to restore cubes':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 

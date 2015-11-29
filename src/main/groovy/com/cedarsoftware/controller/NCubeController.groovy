@@ -188,13 +188,13 @@ class NCubeController extends BaseController
         }
     }
 
-    void restoreCube(ApplicationID appId, Object[] cubeNames)
+    void restoreCubes(ApplicationID appId, Object[] cubeNames)
     {
         try
         {
             appId = addTenant(appId)
             isAllowed(appId, null, Delta.Type.ADD)
-            nCubeService.restoreCube(appId, cubeNames, getUserForDatabase())
+            nCubeService.restoreCubes(appId, cubeNames, getUserForDatabase())
         }
         catch (Exception e)
         {
@@ -1175,7 +1175,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             isAllowed(appId, null, Delta.Type.UPDATE)
-            return nCubeService.rollbackBranch(appId, infoDtos, getUserForDatabase())
+            return nCubeService.rollbackCubes(appId, infoDtos, getUserForDatabase())
         }
         catch (Exception e)
         {

@@ -49,9 +49,9 @@ class NCubeService
         return NCubeManager.search(appId, cubeNamePattern, contentMatching, options)
     }
 
-    void restoreCube(ApplicationID appId, Object[] cubeNames, String username)
+    void restoreCubes(ApplicationID appId, Object[] cubeNames, String username)
     {
-        NCubeManager.restoreCube(appId, cubeNames, username)
+        NCubeManager.restoreCubes(appId, cubeNames, username)
     }
 
     List<NCubeInfoDto> getRevisionHistory(ApplicationID appId, String cubeName)
@@ -89,18 +89,9 @@ class NCubeService
         return NCubeManager.commitBranch(appId, infoDtos, username)
     }
 
-    int rollbackBranch(ApplicationID appId, Object[] infoDtos, String username)
+    int rollbackCubes(ApplicationID appId, Object[] infoDtos, String username)
     {
-        int count = 0;
-        for (Object dto : infoDtos)
-        {
-            NCubeInfoDto info = (NCubeInfoDto)dto;
-            if (NCubeManager.rollbackCube(appId, info.name, username))
-            {
-                count++;
-            }
-        }
-        return count;
+        NCubeManager.rollbackCubes(appId, infoDtos, username)
     }
 
     Map<String, Object> updateBranch(ApplicationID appId, String username)
