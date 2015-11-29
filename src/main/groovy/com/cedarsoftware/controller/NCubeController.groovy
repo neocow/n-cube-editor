@@ -81,7 +81,7 @@ class NCubeController extends BaseController
     // Bind to ConcurrentLinkedHashMap because some plugins will need it.
     private ConcurrentMap<String, Object> futureCache = new ConcurrentLinkedHashMap.Builder<String, Object>()
             .maximumWeightedCapacity(100)
-            .build();
+            .build()
 
     NCubeController(NCubeService service)
     {
@@ -282,11 +282,11 @@ class NCubeController extends BaseController
     {
         try
         {
-            String tenant = getTenant();
-            ApplicationID.validateTenant(tenant);
-            ApplicationID.validateApp(app);
-            ApplicationID.validateStatus(status);
-            ApplicationID.validateBranch(branchName);
+            String tenant = getTenant()
+            ApplicationID.validateTenant(tenant)
+            ApplicationID.validateApp(app)
+            ApplicationID.validateStatus(status)
+            ApplicationID.validateBranch(branchName)
             // TODO: Custom isAllowed() may be needed
             List<String> appVersions = nCubeService.getAppVersions(tenant, app, status, branchName)
 
@@ -368,14 +368,21 @@ class NCubeController extends BaseController
      * Delete an n-cube (SNAPSHOT only).
      * @return boolean true if successful, otherwise a String error message.
      */
-    boolean deleteCube(ApplicationID appId, String cubeName)
+    boolean deleteCubes(ApplicationID appId, Object[] cubeNames)
     {
         try
         {
+            if (ArrayUtilities.isEmpty(cubeNames))
+            {
+                throw new IllegalArgumentException('Must send at least one cube name')
+            }
             appId = addTenant(appId)
-            isAllowed(appId, cubeName, Delta.Type.DELETE)
+            for (int i=0; i < cubeNames.length; i++)
+            {
+                isAllowed(appId, (String)cubeNames[i], Delta.Type.DELETE)
+            }
 
-            if (!nCubeService.deleteCube(appId, cubeName, getUserForDatabase()))
+            if (!nCubeService.deleteCube(appId, cubeNames, getUserForDatabase()))
             {
                 markRequestFailed("Cannot delete RELEASE n-cube.")
             }
@@ -1119,7 +1126,7 @@ class NCubeController extends BaseController
             {
                 return [ApplicationID.HEAD] as Object[]
             }
-            branches.remove(ApplicationID.HEAD);
+            branches.remove(ApplicationID.HEAD)
             Object[] branchNames = branches.toArray()
             caseInsensitiveSort(branchNames)
             def head = ['HEAD'] as Object[]
@@ -1169,13 +1176,13 @@ class NCubeController extends BaseController
         }
     }
 
-    int rollbackBranch(ApplicationID appId, Object[] infoDtos)
+    int rollbackBranch(ApplicationID appId, Object[] cubeNames)
     {
         try
         {
             appId = addTenant(appId)
             isAllowed(appId, null, Delta.Type.UPDATE)
-            return nCubeService.rollbackCubes(appId, infoDtos, getUserForDatabase())
+            return nCubeService.rollbackCubes(appId, cubeNames, getUserForDatabase())
         }
         catch (Exception e)
         {
@@ -1204,9 +1211,9 @@ class NCubeController extends BaseController
     {
         try
         {
-            appId = addTenant(appId);
+            appId = addTenant(appId)
             isAllowed(appId, null, Delta.Type.DELETE)
-            nCubeService.deleteBranch(appId);
+            nCubeService.deleteBranch(appId)
         }
         catch(Exception e)
         {
@@ -1260,7 +1267,7 @@ class NCubeController extends BaseController
                 case "html":
                     return ncube.toHtml()
                 default:
-                    throw new IllegalArgumentException("getCubeRevisionAs() - unknown mode: " + mode);
+                    throw new IllegalArgumentException("getCubeRevisionAs() - unknown mode: " + mode)
             }
         }
         catch (Exception e)
@@ -1298,7 +1305,7 @@ class NCubeController extends BaseController
             isAllowed(appId, controller, null)
 
             Map coordinate = ['method' : method, 'service': nCubeService]
-            coordinate.putAll(args);
+            coordinate.putAll(args)
             NCube cube = nCubeService.getCube(appId, controller)
             Map output = [:]
             cube.getCell(coordinate, output)    // return value is set on 'return' key of output Map
@@ -1405,7 +1412,7 @@ class NCubeController extends BaseController
             NCube leftCube = null
             try
             {
-                leftCube = nCubeService.loadCubeById(cubeId1);
+                leftCube = nCubeService.loadCubeById(cubeId1)
                 ApplicationID appId = leftCube.getApplicationID()
                 appId = addTenant(appId)
                 isAllowed(appId, leftCube.name, null)
@@ -1506,14 +1513,14 @@ class NCubeController extends BaseController
 //
 //        MBeanServerConnection conn = jmxc.getMBeanServerConnection()
 //        String[] domains = conn.getDomains()
-//        Set result = conn.queryMBeans(null, "Catalina:type=DataSource,path=/appdb,host=localhost,class=javax.sql.DataSource");
-//        jmxc.close();
+//        Set result = conn.queryMBeans(null, "Catalina:type=DataSource,path=/appdb,host=localhost,class=javax.sql.DataSource")
+//        jmxc.close()
 
         // Force session creation / update (only for statistics - we do NOT want to use a session - must...remain...stateless)
         JsonCommandServlet.servletRequest.get().getSession()
 
         // Snag the platform mbean server (singleton)
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer()
 
         // App server name and version
         Map results = [:]
@@ -1737,7 +1744,7 @@ class NCubeController extends BaseController
         // Try as a date (the code below supports numerous different date formats)
         try
         {
-            return Converter.convert(value, Date.class);
+            return Converter.convert(value, Date.class)
         }
         catch (Exception ignored) { }
 

@@ -89,9 +89,9 @@ class NCubeService
         return NCubeManager.commitBranch(appId, infoDtos, username)
     }
 
-    int rollbackCubes(ApplicationID appId, Object[] infoDtos, String username)
+    int rollbackCubes(ApplicationID appId, Object[] cubeNames, String username)
     {
-        NCubeManager.rollbackCubes(appId, infoDtos, username)
+        NCubeManager.rollbackCubes(appId, cubeNames, username)
     }
 
     Map<String, Object> updateBranch(ApplicationID appId, String username)
@@ -119,9 +119,9 @@ class NCubeService
         NCubeManager.updateCube(appId, ncube, username)
     }
 
-    boolean deleteCube(ApplicationID appId, String cubeName, String username)
+    boolean deleteCube(ApplicationID appId, Object[] cubeNames, String username)
     {
-        return NCubeManager.deleteCube(appId, cubeName, username)
+        return NCubeManager.deleteCubes(appId, cubeNames, username)
     }
 
     void duplicateCube(ApplicationID appId, ApplicationID destAppId, String cubeName, String newName, String username)
@@ -304,30 +304,16 @@ class NCubeService
 
         for (Object object : cubes)
         {
-            if (object instanceof NCube)
+            NCube ncube = (NCube) object
+            if (checkName)
             {
-                NCube ncube = (NCube) object
-                if (checkName)
+                if (!StringUtilities.equalsIgnoreCase(name, ncube.name))
                 {
-                    if (!StringUtilities.equalsIgnoreCase(name, ncube.name))
-                    {
-                        throw new IllegalArgumentException("The n-cube name cannot be different than selected n-cube.  Use Rename n-cube option from n-cube menu to rename the cube.")
-                    }
-                }
-
-                NCubeManager.updateCube(appId, ncube, username)
-            }
-            else
-            {
-                JsonObject map = (JsonObject) object
-                String cubeName = (String) map.ncube
-                String cmd = (String) map.action
-
-                if ("delete".equalsIgnoreCase(cmd))
-                {
-                    NCubeManager.deleteCube(appId, cubeName, username)
+                    throw new IllegalArgumentException("The n-cube name cannot be different than selected n-cube.  Use Rename n-cube option from n-cube menu to rename the cube.")
                 }
             }
+
+            NCubeManager.updateCube(appId, ncube, username)
         }
     }
 

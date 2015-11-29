@@ -1030,7 +1030,7 @@ var NCE = (function ($)
     function deleteCubeOk()
     {
         $('#deleteCubeModal').modal('hide');
-        var result = call("ncubeController.deleteCube", [getAppId(), _selectedCubeName]);
+        var result = call("ncubeController.deleteCubes", [getAppId(), [_selectedCubeName]]);
         if (result.status === true)
         {
             delete _cubeList[_selectedCubeName.toLowerCase()];
@@ -2025,7 +2025,12 @@ var NCE = (function ($)
 
         _commitModal.modal('hide');
         setTimeout(function(){
-            var result = call("ncubeController.rollbackBranch", [getAppId(), changes]);
+            var names = []
+            for (var i=0; i < changes.length; i++)
+            {
+                names.push(changes[i].name)
+            }
+            var result = call("ncubeController.rollbackBranch", [getAppId(), names]);
             clearError();
 
             if (result.status === false)
