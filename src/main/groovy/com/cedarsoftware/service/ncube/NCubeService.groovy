@@ -51,7 +51,7 @@ class NCubeService
 
     void restoreCubes(ApplicationID appId, Object[] cubeNames, String username)
     {
-        NCubeManager.restoreCubes(appId, cubeNames, username)
+        NCubeManager.restoreCube(appId, cubeNames, username)
     }
 
     List<NCubeInfoDto> getRevisionHistory(ApplicationID appId, String cubeName)
@@ -91,7 +91,10 @@ class NCubeService
 
     int rollbackCubes(ApplicationID appId, Object[] cubeNames, String username)
     {
-        NCubeManager.rollbackCubes(appId, cubeNames, username)
+        for (int i = 0; cubeNames.length; i++)
+        {
+            NCubeManager.rollbackCube(appId, (String)cubeNames[i], username)
+        }
     }
 
     Map<String, Object> updateBranch(ApplicationID appId, String username)
@@ -119,9 +122,13 @@ class NCubeService
         NCubeManager.updateCube(appId, ncube, username)
     }
 
-    boolean deleteCube(ApplicationID appId, Object[] cubeNames, String username)
+    boolean deleteCubes(ApplicationID appId, Object[] cubeNames, String username)
     {
-        return NCubeManager.deleteCubes(appId, cubeNames, username)
+        for (int i=0; i < cubeNames.length; i++)
+        {
+            NCubeManager.deleteCube(appId, (String) cubeNames[i], username)
+        }
+        return true
     }
 
     void duplicateCube(ApplicationID appId, ApplicationID destAppId, String cubeName, String newName, String username)

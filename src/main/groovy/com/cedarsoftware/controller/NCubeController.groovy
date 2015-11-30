@@ -382,7 +382,7 @@ class NCubeController extends BaseController
                 isAllowed(appId, (String)cubeNames[i], Delta.Type.DELETE)
             }
 
-            if (!nCubeService.deleteCube(appId, cubeNames, getUserForDatabase()))
+            if (!nCubeService.deleteCubes(appId, cubeNames, getUserForDatabase()))
             {
                 markRequestFailed("Cannot delete RELEASE n-cube.")
             }
