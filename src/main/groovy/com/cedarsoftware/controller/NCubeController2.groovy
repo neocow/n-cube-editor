@@ -1,37 +1,13 @@
 package com.cedarsoftware.controller
-import com.cedarsoftware.ncube.ApplicationID
-import com.cedarsoftware.ncube.Axis
-import com.cedarsoftware.ncube.AxisType
-import com.cedarsoftware.ncube.AxisValueType
-import com.cedarsoftware.ncube.CellInfo
-import com.cedarsoftware.ncube.Column
-import com.cedarsoftware.ncube.CommandCell
-import com.cedarsoftware.ncube.Delta
-import com.cedarsoftware.ncube.GroovyExpression
-import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeInfoDto
-import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.ncube.NCubeTest
-import com.cedarsoftware.ncube.RuleInfo
-import com.cedarsoftware.ncube.StringValuePair
-import com.cedarsoftware.ncube.exception.AxisOverlapException
-import com.cedarsoftware.ncube.exception.BranchMergeException
-import com.cedarsoftware.ncube.exception.CommandCellException
-import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
-import com.cedarsoftware.ncube.exception.RuleJump
-import com.cedarsoftware.ncube.exception.RuleStop
+
+import com.cedarsoftware.ncube.*
+import com.cedarsoftware.ncube.exception.*
 import com.cedarsoftware.ncube.formatters.NCubeTestReader
 import com.cedarsoftware.ncube.formatters.NCubeTestWriter
 import com.cedarsoftware.ncube.formatters.TestResultsFormatter
 import com.cedarsoftware.service.ncube.NCubeService
 import com.cedarsoftware.servlet.JsonCommandServlet
-import com.cedarsoftware.util.ArrayUtilities
-import com.cedarsoftware.util.CaseInsensitiveSet
-import com.cedarsoftware.util.Converter
-import com.cedarsoftware.util.InetAddressUtilities
-import com.cedarsoftware.util.StringUtilities
-import com.cedarsoftware.util.ThreadAwarePrintStream
-import com.cedarsoftware.util.ThreadAwarePrintStreamErr
+import com.cedarsoftware.util.*
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
@@ -45,27 +21,9 @@ import javax.servlet.http.HttpServletRequest
 import java.lang.management.ManagementFactory
 import java.util.concurrent.ConcurrentMap
 import java.util.regex.Pattern
-/**
- * NCubeController API.
- *
- * @author John DeRegnaucourt (jdereg@gmail.com)
- *         <br/>
- *         Copyright (c) Cedar Software LLC
- *         <br/><br/>
- *         Licensed under the Apache License, Version 2.0 (the "License")
- *         you may not use this file except in compliance with the License.
- *         You may obtain a copy of the License at
- *         <br/><br/>
- *         http://www.apache.org/licenses/LICENSE-2.0
- *         <br/><br/>
- *         Unless required by applicable law or agreed to in writing, software
- *         distributed under the License is distributed on an "AS IS" BASIS,
- *         WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *         See the License for the specific language governing permissions and
- *         limitations under the License.
- */
+
 @CompileStatic
-class NCubeController extends BaseController
+class NCubeController2 extends BaseController
 {
     private static final Logger LOG = LogManager.getLogger(NCubeController.class)
     private static final Pattern VERSION_REGEX = ~/[.]/
@@ -83,8 +41,7 @@ class NCubeController extends BaseController
             .maximumWeightedCapacity(100)
             .build()
 
-    NCubeController(NCubeService service)
-    {
+    NCubeController2(NCubeService service) {
         nCubeService = service;
         System.err = new ThreadAwarePrintStreamErr()
         System.out = new ThreadAwarePrintStream()
@@ -1632,11 +1589,10 @@ class NCubeController extends BaseController
     {
         markRequestFailed(getCauses(e))
         if (e instanceof AxisOverlapException ||
-            e instanceof BranchMergeException ||
-            e instanceof CommandCellException ||
-            e instanceof CoordinateNotFoundException ||
-            e instanceof RuleJump ||
-            e instanceof RuleStop)
+                e instanceof BranchMergeException ||
+                e instanceof CoordinateNotFoundException ||
+                e instanceof RuleJump ||
+                e instanceof RuleStop)
         {
             Throwable t = e
             while (t.getCause() != null)

@@ -16,6 +16,12 @@
         </constructor-arg>
     </bean>
 
+    <bean name="ncubeController2" class="com.cedarsoftware.controller.NCubeController2">
+        <constructor-arg>
+            <bean class="com.cedarsoftware.service.ncube.NCubeService" />
+        </constructor-arg>
+    </bean>
+
 
     <bean id="ncubeTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="ncubeDataSource" />
