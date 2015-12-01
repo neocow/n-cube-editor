@@ -23,99 +23,158 @@ var NCubeEditor2 = (function ($)
     var nce = null;
     var hot = null;
     var fieldNames = null;
+    var traits = null;
+    var rowNums = null;
+    var data = null;
 
-    var init = function(info)
-    {
-        if (!nce)
-        {
+    var init = function(info) {
+        if (!nce) {
             nce = info;
 
-            $(window).resize(function ()
-            {
+            $(window).resize(function () {
                 NCubeEditor2.render();
             });
 
         }
     };
 
-    var load = function()
-    {
-        if (hot)
-        {
+    var load = function() {
+        if (hot) {
             hot.destroy();
             hot = null;
         }
 
-        if (!nce.getCubeMap() || !nce.doesCubeExist())
-        {
+        if (!nce.getCubeMap() || !nce.doesCubeExist()) {
             $('#ncube-content')[0].innerHTML = '';
             return;
         }
 
         var info = nce.getCubeMap()[(nce.getSelectedCubeName() + '').toLowerCase()];
-        if (!info)
-        {
+        if (!info) {
             $('#ncube-content')[0].innerHTML = '';
             return;
         }
 
-        var result = nce.call("ncubeController2.getJson", [nce.getAppId(), nce.getSelectedCubeName()], {noResolveRefs:true});
+        var result = nce.call("ncubeController.getJson", [nce.getAppId(), nce.getSelectedCubeName()], {noResolveRefs:true});
         if (result.status === false) {
             return;
         }
-        var cubeData = JSON.parse(result.data);
+
+        handleCubeData(JSON.parse(result.data));
+
+        hot = new Handsontable(document.getElementById('ncube-content'), getHotSettings());
+        hot.render();
+    };
+
+    var handleCubeData = function(cubeData) {
+        var handleCellData = function(cells) {
+            for (var i = 0; i < cells.length; i++) {
+                var cell = cells[i];
+                var cellLocationInfo = getLogicalNamesFromCoordinates(cell);
+
+                var dataRow = findRowFromHeaders(cellLocationInfo.row);
+                if (!dataRow) {
+                    dataRow = initRow(cellLocationInfo.row);
+                    data.push(dataRow);
+                }
+
+                dataRow[cellLocationInfo.trait] = cell.value;
+            }
+        };
+
+        var findRowFromHeaders = function(rowHeader) {
+            for (var r = 0; r < data.length; r++) {
+                if (data[r].rowId === rowHeader) {
+                    return data[r];
+                }
+            }
+            return null;
+        };
+
+        var getLogicalNamesFromCoordinates = function(cell) {
+            var rowHeader;
+            var traitHeader;
+            for (var i = 0; i < cell.id.length; i++) {
+                var curId = cell.id[i];
+                if (traitMap.hasOwnProperty(curId)) {
+                    traitHeader = traitMap[curId];
+                } else if (rowMap.hasOwnProperty(curId)) {
+                    rowHeader = rowMap[curId];
+                }
+            }
+
+            return {row:rowHeader, trait:traitHeader};
+        };
+
+        // creates a new row with blank columns
+        var initRow = function(rowId) {
+            var row = {rowId:rowId};
+            for (var i = 0; i < traits.length; i++) {
+                row[traits[i]] = '';
+            }
+            return row;
+        };
+
         var cubeName = cubeData.ncube;
         var axes = cubeData.axes;
+        var numAxes = axes.length - 1;
 
-        var traits = [];
+        traits = [];
         fieldNames = [];
-        var rowNums = [];
-        var row = 0;
+        rowNums = [];
+        data = [];
 
-        // TODO - remove this for n-dimensional cubes
-        var columns = axes[0].columns;
-        for (var i = 0; i < columns.length; i++) {
-            fieldNames.push(columns[i].value);
-            rowNums.push(++row);
-        }
+        var traitMap = {};
+        var rowMap = {};
+        var row = 0;
 
         for (var i = 0; i < axes.length; i++) {
             var axis = axes[i];
             if (axis.name.toLowerCase() === 'trait') {
                 var traitCols = axis.columns;
                 for (var x = 0; x < traitCols.length; x++) {
-                    traits.push(traitCols[x].value);
+                    var trait = traitCols[x];
+                    traits.push(trait.value);
+                    traitMap[trait.id] = trait.value;
                 }
             } else {
-                //TODO -- handle n-dimensional cubes here
+                // TODO - change this for n-dimensional cubes
+                traits.unshift(''); // blank for row header(s)
+                var columns = axis.columns;
+                for (var x = 0; x < columns.length; x++) {
+                    var column = columns[x];
+                    fieldNames.push(column.value);
+                    rowNums.push(++row);
+                    rowMap[column.id] = column.value;
+                }
             }
         }
 
-        var container = document.getElementById('ncube-content'),
-            settings = {
-                autoColumnSize: true,
-                enterBeginsEditing: false,
-                enterMoves: {row: 1, col: 0},
-                tabMoves : {row: 0, col: 1},
-                //colHeaders: traitTable.names,
-                colHeaders: traits,
-                //rowHeaders: rowNums,
-                //startCols: traitTable.names.length,
-                startCols: traits.length,
-                startRows: rowNums.length,
-                contextMenu: true,
-                manualColumnResize: true,
-                manualRowResize: true,
-                fixedColumnsLeft: 1,
-                //height:500,
-                cells: function (row, col, prop)
-                {
-                    return {renderer:categoryRenderer};
-                }
-            };
+        handleCellData(cubeData.cells);
+    };
 
-        hot = new Handsontable(container, settings);
-        hot.render();
+    var getHotSettings = function() {
+        return {
+            data: data,
+            autoColumnSize: true,
+            enterBeginsEditing: false,
+            enterMoves: {row: 1, col: 0},
+            tabMoves : {row: 0, col: 1},
+            //colHeaders: traitTable.names,
+            colHeaders: traits,
+            //rowHeaders: rowNums,
+            //startCols: traitTable.names.length,
+            startCols: traits.length,
+            startRows: rowNums.length,
+            contextMenu: true,
+            manualColumnResize: true,
+            manualRowResize: true,
+            fixedColumnsLeft: 1,
+            height:500,
+            cells: function (row, col, prop) {
+                return {renderer:categoryRenderer};
+            }
+        };
     };
 
     var categoryRenderer = function(instance, td, row, col, prop, value, cellProperties)
