@@ -1091,7 +1091,6 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             isAllowed(appId, null, null)
-//            nCubeService.fixSha1s()
             nCubeService.clearCache(appId)
         }
         catch (Exception e)
