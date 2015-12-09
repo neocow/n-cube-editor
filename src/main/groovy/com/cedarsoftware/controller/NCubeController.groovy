@@ -1336,6 +1336,7 @@ class NCubeController extends BaseController
             LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage())
             return ['~Title':'Title Goes Here',
                     'n-cube':[html:'html/ncube.html'],
+                    'n-twobe':[html:'html/ntwobe.html'],
                     JSON:[html:'html/jsonEditor.html'],
                     Details:[html:'html/details.html'],
                     Test:[html:'html/test.html']
