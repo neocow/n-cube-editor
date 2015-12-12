@@ -243,12 +243,32 @@ class NCubeController extends BaseController
 
     String getJson(ApplicationID appId, String cubeName)
     {
+        return getJson(appId, cubeName, [mode:"json-index"])
+    }
+
+    String getJson(ApplicationID appId, String cubeName, Map options)
+    {
         try
         {
             appId = addTenant(appId)
             isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.loadCube(appId, cubeName)
-            return ncube.toFormattedJson()
+            String mode = options.mode
+            switch(mode)
+            {
+                case "json":
+                    return ncube.toFormattedJson()
+                case "json-pretty":
+                    return JsonWriter.formatJson(ncube.toFormattedJson())
+                case "json-index":
+                    return ncube.toFormattedJson([indexFormat:true] as Map)
+                case "json-index-pretty":
+                    return JsonWriter.formatJson(ncube.toFormattedJson([indexFormat:true] as Map))
+                case "html":
+                    return ncube.toHtml()
+                default:
+                    throw new IllegalArgumentException("getJson() - unknown mode: " + mode)
+            }
         }
         catch (Exception e)
         {
@@ -1263,10 +1283,14 @@ class NCubeController extends BaseController
                     return ncube.toFormattedJson()
                 case "json-pretty":
                     return JsonWriter.formatJson(ncube.toFormattedJson())
+                case "json-index":
+                    return ncube.toFormattedJson([indexFormat:true] as Map)
+                case "json-index-pretty":
+                    return JsonWriter.formatJson(ncube.toFormattedJson([indexFormat:true] as Map))
                 case "html":
                     return ncube.toHtml()
                 default:
-                    throw new IllegalArgumentException("getCubeRevisionAs() - unknown mode: " + mode)
+                    throw new IllegalArgumentException("loadCubeById() - unknown mode: " + mode)
             }
         }
         catch (Exception e)
