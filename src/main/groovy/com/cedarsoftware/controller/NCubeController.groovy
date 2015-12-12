@@ -1336,7 +1336,7 @@ class NCubeController extends BaseController
             LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage())
             return ['~Title':'Title Goes Here',
                     'n-cube':[html:'html/ncube.html'],
-                    'n-twobe':[html:'html/ntwobe.html'],
+                    'n-cube2':[html:'html/ntwobe.html'],
                     JSON:[html:'html/jsonEditor.html'],
                     Details:[html:'html/details.html'],
                     Test:[html:'html/test.html']
@@ -1759,18 +1759,20 @@ class NCubeController extends BaseController
      */
     static Map convertAxis(Axis axis) throws IOException
     {
-        String json = JsonWriter.objectToJson(axis)
+        String json = JsonWriter.objectToJson(axis, [(JsonWriter.TYPE): false] as Map)
         Map axisConverted = JsonReader.jsonToMaps(json)
-        Map cols = (Map) axisConverted.columns
-        Object[] items = (Object[]) cols["@items"]
-        for (Object item : items)
+        axisConverted.'@type' = axis.getClass().getName()
+        Object[] cols = (Object[]) axisConverted.columns
+
+        for (Object item : cols)
         {
             Map col = (Map) item
+            col.'@type' = Column.class.getName()
             Column actualCol = axis.getColumnById((Long)col.id)
             col.id = String.valueOf(col.id) // Stringify Long ID (Javascript safe if quoted)
             CellInfo cellInfo = new CellInfo(actualCol.getValue())
             String value = cellInfo.value
-            if (axis.valueType == AxisValueType.DATE)
+            if (axis.valueType == AxisValueType.DATE && axis.type != AxisType.SET)
             {
                 value = NO_QUOTES_REGEX.matcher(value).replaceAll("")
             }
