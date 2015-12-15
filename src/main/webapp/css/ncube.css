@@ -41,9 +41,17 @@ div#editColumnsModal div.panel-group
     cursor: pointer;
 }
 
-.handsonCurrentRow, .handsonCurrentCol {
-    opacity: .75;
+#hot-container {
+    top: 40px;
+    position: fixed;
 }
+
+#coordinate-bar {
+    position: fixed;
+    white-space: nowrap;
+    overflow-x: scroll;
+}
+
 .handsontable table.htCore {
     background-color: #BEEEEF;
 }
@@ -51,4 +59,13 @@ div#editColumnsModal div.panel-group
 .handsontable th {
     background-color: #929292 !important;
     color: white !important;
+}
+
+.handsontable th.handsonCurrentRow, .handsonTableHeader.handsonCurrentRow {
+    opacity: .75;
+}
+
+.handsontable th, .handsontable td {
+    border-top: 1px solid #CCC;
+    border-bottom: none !important;
 }
