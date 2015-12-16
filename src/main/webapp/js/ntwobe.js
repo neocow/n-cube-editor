@@ -16,10 +16,12 @@ var NCubeEditor2 = (function ($)
             nce = info;
 
             $(window).resize(function () {
-                hot.updateSettings({
-                    height: $(this).height() - $('#hot-container').offset().top,
-                    width: $(this).width()
-                });
+                if (hot) {
+                    hot.updateSettings({
+                        height: $(this).height() - $('#hot-container').offset().top,
+                        width: $(this).width()
+                    });
+                }
 
                 NCubeEditor2.render();
 
@@ -322,7 +324,7 @@ var NCubeEditor2 = (function ($)
 
         cache = {};
         data = cubeData;
-        determineAxesOrder();
+        determineAxesOrder(data.axes);
         setUpDataTable();
     };
 
@@ -462,8 +464,6 @@ var NCubeEditor2 = (function ($)
             }
         }
     };
-
-    // =============================================== End Cell Editing ================================================
 
     var render = function() {
         if (!hot) {
