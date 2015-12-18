@@ -21,3 +21,6 @@ var COLOR_WHITE = '#FFFFFF';
 var CLASS_HANDSON_TABLE_HEADER = 'handsonTableHeader';
 var CLASS_HANDSON_CURRENT_ROW = 'handsonCurrentRow';
 var NONE = 'none';
+
+URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
+CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];

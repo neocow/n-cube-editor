@@ -10,10 +10,61 @@ var NCubeEditor2 = (function ($)
     var colOffset = null;
     var data = null;
     var cache = null;
+    var _cellId = null;
+    var _tableCellId = null;
+    var _columnList = null;
+    var _editCellModal = null;
+    var _editCellValue = null;
+    var _editCellCache = null;
+    var _editCellRadioURL = null;
+    var _valueDropdown = null;
+    var _urlDropdown = null;
+    var _clipboard = null;
+    var _clipFormat = CLIP_NCE;
 
     var init = function(info) {
         if (!nce) {
             nce = info;
+
+            _columnList = $('#editColumnsList');
+            _editCellModal = $('#editCellModal');
+            _editCellValue = $('#editCellValue');
+            _editCellCache = $('#editCellCache');
+            _editCellRadioURL = $('#editCellRadioURL');
+            _valueDropdown = $('#datatypes-value');
+            _urlDropdown = $('#datatypes-url');
+            _clipboard = $('#cell-clipboard');
+
+            addEditCellListeners();
+
+            _editCellRadioURL.change(function() {
+                var isUrl = _editCellRadioURL.find('input').is(':checked');
+                _urlDropdown.toggle(isUrl);
+                _valueDropdown.toggle(!isUrl);
+            });
+
+            _urlDropdown.change(function() {
+                enabledDisableCheckBoxes()
+            });
+
+            _valueDropdown.change(function() {
+                enabledDisableCheckBoxes()
+            });
+            $('#addAxisOk').click(function () {
+                addAxisOk()
+            });
+            $('#deleteAxisOk').click(function () {
+                deleteAxisOk()
+            });
+            $('#updateAxisMenu').click(function () {
+                updateAxis()
+            });
+            $('#updateAxisOk').click(function () {
+                updateAxisOk()
+            });
+            _editCellModal.on('shown.bs.modal', function () {
+                $('#editCellValue').focus();
+            });
 
             $(window).resize(function () {
                 if (hot) {
@@ -29,13 +80,15 @@ var NCubeEditor2 = (function ($)
             });
 
         }
+
+        setCoordinateBarListeners();
     };
 
     var load = function() {
+        resetCoordinateBar();
         if (hot) {
             hot.destroy();
             hot = null;
-            document.getElementById('coordinate-bar').innerHTML = 'Axis Coordinates: [ ]';
         }
 
         if (!nce.getCubeMap() || !nce.doesCubeExist()) {
@@ -182,7 +235,7 @@ var NCubeEditor2 = (function ($)
         cache[valType][coord] = value;
     };
 
-    var getCellData = function(row, col) {
+    var getCellId = function(row, col) {
         var cellId = '';
         var headerInfo = [];
 
@@ -203,9 +256,12 @@ var NCubeEditor2 = (function ($)
         } else {
             cellId = getRowHeaderId(row, 0);
         }
-        var cell = data.cells[cellId];
 
-        return cell;
+        return cellId;
+    };
+
+    var getCellData = function(row, col) {
+        return data.cells[getCellId(row, col)];
     };
 
     var handleCubeData = function(cubeData) {
@@ -331,7 +387,7 @@ var NCubeEditor2 = (function ($)
             cells: function (row, col, prop) {
                 return {renderer:categoryRenderer};
             },
-            afterSelectionEnd: function(r, c, r2, c2) {
+            afterSelection: function(r, c, r2, c2) {
                 var display = '';
                 if (c >= colOffset) {
                     if (r === 1) {
@@ -356,7 +412,8 @@ var NCubeEditor2 = (function ($)
                 else if (r > 1) {
                     display = '<strong>Axis</strong>: ' + axes[c].name + ', <strong>Column</strong>:' + getRowHeaderValue(r, c);
                 }
-                document.getElementById('coordinate-bar').innerHTML = display;
+
+                resetCoordinateBar(display);
             }
         };
     };
@@ -368,6 +425,7 @@ var NCubeEditor2 = (function ($)
         if (row === 0 && (col < colOffset || col === 0)) {
             if (col === 0) {
                 td.innerHTML = cubeName;
+                td.style.overflow = 'visible';
             }
             td.style.background = BACKGROUND_CUBE_NAME;
             td.style.color = COLOR_WHITE;
@@ -382,6 +440,7 @@ var NCubeEditor2 = (function ($)
         else if (row === 0) {
             if (axes.length > 1 && col === colOffset) {
                 td.innerHTML = axes[colOffset].name;
+                td.style.overflow = 'visible';
             }
             td.style.background = BACKGROUND_AXIS_INFO;
             td.style.color = COLOR_WHITE;
@@ -416,7 +475,7 @@ var NCubeEditor2 = (function ($)
         // row headaers
         else if (col === 0 || col < colOffset) {
             var val = getRowHeaderValue(row, col);
-            if (row > 2 && val === getRowHeaderValue(row - 1, col) && col != colOffset - 1) {
+            if (row > 2 && getColumnLength(axes[col]) > 1 && val === getRowHeaderValue(row - 1, col)) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = val;
@@ -430,8 +489,13 @@ var NCubeEditor2 = (function ($)
         else {
             var cellData = getCellData(row, col);
             if (cellData) {
-                td.innerHTML = cellData.value || cellData.url;
+                td.innerHTML = cellData.value == null ? cellData.url : cellData.value;
+            } else if (data.defaultCellValue) {
+                td.innerHTML = data.defaultCellValue;
+                td.className = 'tableDefault';
             }
+
+            cellProperties.editor = CellEditor;
 
             // odd row style
             if (row % 2 != 0) {
@@ -439,6 +503,202 @@ var NCubeEditor2 = (function ($)
             }
         }
     };
+
+    var getDomCoordinateBar = function() {
+        return document.getElementById('coordinate-bar');
+    };
+
+    var curDown = false;
+    var curPos = 0;
+    var resetCoordinateBar = function(displayText) {
+        var bar = getDomCoordinateBar();
+        curDown = false;
+        curPos = 0;
+        bar.scrollLeft = 0;
+        bar.innerHTML = displayText || '<strong>Axis Coordinates</strong>: [ ]';
+    };
+
+    var setCoordinateBarListeners = function() {
+        var coordBar = getDomCoordinateBar();
+
+        coordBar.addEventListener('mousedown', function (e) {
+            curDown = true;
+            curPos = e.pageX;
+        });
+
+        coordBar.addEventListener('mouseup', function(e) {
+            curDown = false;
+        });
+
+        coordBar.addEventListener('mousemove', function(e) {
+            if (curDown) {
+                coordBar.scrollLeft = coordBar.scrollLeft + curPos - e.pageX;
+            }
+        });
+
+        coordBar.addEventListener('mouseout', function(e) {
+            curDown = false;
+        });
+    };
+
+    // ==================================== Everything to do with Cell Editing =========================================
+
+    var onBeforeKeyDown = function(event) {
+        event.isImmediatePropagationEnabled = false;
+        event.cancelBubble = true;
+    };
+
+    var CellEditor = Handsontable.editors.TextEditor.prototype.extend();
+    CellEditor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
+        Handsontable.editors.BaseEditor.prototype.prepare.apply(this, arguments);
+    };
+    CellEditor.prototype.open = function() {
+        this.instance.addHook('beforeKeyDown', onBeforeKeyDown);
+
+        _tableCellId = getCellId(this.row, this.col);
+        _cellId = _tableCellId.split('_');
+        editCell();
+    };
+    CellEditor.prototype.isOpened = function() {
+        return $(_editCellModal).hasClass('in');
+    };
+    CellEditor.prototype.finishEditing = function(restoreOriginalValue, ctrlDown, callback, forceClose) {
+        if (!this.isOpened()) {
+            if (forceClose) {
+                this.state = Handsontable.EditorState.EDITING; // needed to override finish editing
+            }
+            Handsontable.editors.BaseEditor.prototype.finishEditing.apply(this, arguments);
+        }
+    };
+    CellEditor.prototype.close = function() {
+        this.instance.removeHook('beforeKeyDown', onBeforeKeyDown);
+    };
+
+    var destroyEditor = function() {
+        hot.getActiveEditor().finishEditing(null, null, null, true);
+    };
+
+    var addEditCellListeners = function() {
+        $('#editCellClear').click(function() {
+            editCellClear();
+        });
+        $('#editCellCancel').click(function() {
+            editCellCancel();
+        });
+        $('#editCellOk').click(function() {
+            editCellOK();
+        });
+    };
+
+    var editCell = function() {
+        if (!nce.ensureModifiable('Cell cannot be updated.')) {
+            return;
+        }
+
+        var result = nce.call("ncubeController.getCellNoExecute", [nce.getAppId(), nce.getSelectedCubeName(), _cellId]);
+
+        if (result.status === false) {
+            nce.showNote('Unable to fetch the cell contents: ' + result.data);
+            return;
+        }
+
+        var cellInfo = result.data;
+        // Set the cell value (String)
+        _editCellValue.val(cellInfo.value ? cellInfo.value : "");
+        if (cellInfo.dataType == "null" || !cellInfo.dataType) {
+            cellInfo.dataType = "string";
+        }
+
+        // Set the correct entry in the drop-down
+        if (cellInfo.isUrl) {
+            _urlDropdown.val(cellInfo.dataType);
+        } else {
+            _valueDropdown.val(cellInfo.dataType);
+        }
+
+        // Choose the correct data type drop-down (show/hide the other)
+        _urlDropdown.toggle(cellInfo.isUrl);
+        _valueDropdown.toggle(!cellInfo.isUrl);
+
+        // Set the URL check box
+        _editCellRadioURL.find('input').prop('checked', cellInfo.isUrl);
+
+        // Set the Cache check box state
+        _editCellCache.find('input').prop('checked', cellInfo.isCached);
+
+        enabledDisableCheckBoxes(); // reset for form
+        _editCellModal.modal('show');
+    };
+
+    var editCellClear = function() {
+        _editCellModal.modal('hide');
+        var result = nce.call("ncubeController.updateCell", [nce.getAppId(), nce.getSelectedCubeName(), _cellId, null]);
+
+        if (result.status === false) {
+            _cellId = null;
+            nce.showNote('Unable to clear cell:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        delete data.cells[_tableCellId];
+        _cellId = null;
+        destroyEditor();
+    };
+
+    var editCellCancel = function() {
+        _cellId = null;
+        _editCellModal.modal('hide');
+        destroyEditor();
+    };
+
+    var editCellOK = function() {
+        var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
+        cellInfo.isUrl = _editCellRadioURL.find('input').prop('checked');
+        cellInfo.value = _editCellValue.val();
+        cellInfo.dataType = cellInfo.isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        cellInfo.isCached = _editCellCache.find('input').prop('checked');
+        _editCellModal.modal('hide');
+
+        var result = nce.call("ncubeController.updateCell", [nce.getAppId(), nce.getSelectedCubeName(), _cellId, cellInfo]);
+
+        if (result.status === false) {
+            _cellId = null;
+            nce.showNote('Unable to update cell:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        data.cells[_tableCellId] = {value:cellInfo.value};
+        _cellId = null;
+        destroyEditor();
+    };
+
+    var enabledDisableCheckBoxes = function() {
+        var isUrl = _editCellRadioURL.find('input').is(':checked');
+        var selDataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
+        var urlEnabled = URL_ENABLED_LIST.indexOf(selDataType) > -1;
+        var cacheEnabled = CACHE_ENABLED_LIST.indexOf(selDataType) > -1;
+
+        // Enable / Disable [x] URL
+        _editCellRadioURL.find('input').prop("disabled", !urlEnabled);
+
+        if (urlEnabled) {
+            _editCellRadioURL.removeClass('disabled');
+        } else {
+            _editCellRadioURL.addClass('disabled');
+        }
+
+        // Enable / Disable [x] Cache
+        _editCellCache.find('input').prop("disabled", !cacheEnabled);
+
+        if (cacheEnabled) {
+            _editCellCache.removeClass('disabled');
+        } else {
+            _editCellCache.addClass('disabled');
+        }
+    };
+
+    // =============================================== End Cell Editing ================================================
+
 
     var render = function() {
         if (!hot) {

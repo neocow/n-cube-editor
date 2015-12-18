@@ -42,7 +42,7 @@ div#editColumnsModal div.panel-group
 }
 
 #hot-container {
-    top: 40px;
+    top: 20px;
     position: fixed;
 }
 
@@ -50,6 +50,11 @@ div#editColumnsModal div.panel-group
     position: fixed;
     white-space: nowrap;
     overflow-x: scroll;
+    cursor: ew-resize;
+}
+
+#coordinate-bar::-webkit-scrollbar {
+    display:none;
 }
 
 .handsontable table.htCore {
@@ -69,4 +74,8 @@ div#editColumnsModal div.panel-group
     border-top: 1px solid #CCC;
     border-bottom: none !important;
     white-space: nowrap !important;
+}
+
+.handsontable .tableDefault {
+    color: #CCC;
 }
