@@ -204,7 +204,26 @@ var NCubeEditor2 = (function ($)
     };
 
     var getRowHeaderValue = function(row, col) {
-        return getRowHeader(row, col).value;
+        var rowHeader = getRowHeader(row, col);
+        var rule = '';
+        if (axes[col].type.toLowerCase() === 'rule' && rowHeader.name !== undefined) {
+            rule = '<span class="rule-name">' + rowHeader.name + '</span><hr class="hr-rule"/>';
+        }
+
+        var val = rowHeader.value;
+        if (val === undefined) {
+            val = rowHeader.url;
+        } else if (rule !== '') {
+            val = '<span class="code">' + val + '</span>';
+        }
+        return rule + val;
+    };
+
+    var getRowHeaderPlainText = function(row, col) {
+        var regexSpan = /(<span([^>]+)>)/ig;
+        var regexHr = /(<hr([^>]+)>)/ig;
+        var val = getRowHeaderValue(row, col);
+        return val.replace(regexHr, ' - ').replace(regexSpan, '');
     };
 
     var getRowHeaderId = function(row, col) {
@@ -400,7 +419,7 @@ var NCubeEditor2 = (function ($)
                         display = '<strong>Axis Coordinates</strong>: [ ';
                         for (var axisNum = 0; axisNum < colOffset; axisNum++) {
                             var axisName = axes[axisNum].name;
-                            var axisVal = getRowHeaderValue(r, axisNum);
+                            var axisVal = getRowHeaderPlainText(r, axisNum);
                             display += '<strong>' + axisName + '</strong>: ' + axisVal + ', ';
                         }
                         if (axes.length > 1) {
@@ -408,13 +427,13 @@ var NCubeEditor2 = (function ($)
                             var axisVal = getColumnHeaderValue(c);
                         } else {
                             var axisName = axes[0].name;
-                            var axisVal = getRowHeaderValue(r, 0);
+                            var axisVal = getRowHeaderPlainText(r, 0);
                         }
                         display += '<strong>' + axisName + '</strong>: ' + axisVal + ' ]';
                     }
                 }
                 else if (r > 1) {
-                    display = '<strong>Axis</strong>: ' + axes[c].name + ', <strong>Column</strong>:' + getRowHeaderValue(r, c);
+                    display = '<strong>Axis</strong>: ' + axes[c].name + ', <strong>Column</strong>:' + getRowHeaderPlainText(r, c);
                 }
 
                 resetCoordinateBar(display);
@@ -496,7 +515,15 @@ var NCubeEditor2 = (function ($)
         else {
             var cellData = getCellData(row, col);
             if (cellData) {
-                td.innerHTML = cellData.value == null ? cellData.url : cellData.value;
+                if (cellData.url !== undefined) {
+                    td.innerHTML = '<a href="#">' + cellData.url + '</a>';
+                    td.className = 'url';
+                } else {
+                    td.innerHTML = cellData.value;
+                    if (['exp', 'method'].indexOf(cellData.type) > -1) {
+                        td.className = 'code';
+                    }
+                }
             } else if (data.defaultCellValue) {
                 td.innerHTML = data.defaultCellValue;
                 td.className = 'tableDefault';

@@ -53,6 +53,8 @@ div#editColumnsModal div.panel-group
     cursor: ew-resize;
 }
 
+/* begin coord bar and HOT */
+
 #coordinate-bar::-webkit-scrollbar {
     display:none;
 }
@@ -88,3 +90,30 @@ div#editColumnsModal div.panel-group
     overflow: visible !important;
     height: 93px !important;
 }
+
+/* end coord bar and HOT */
+
+/* begin cell display */
+
+.rule-name  {
+    background:#555;
+    color:#e8e8e8;
+    border-radius:3px;
+    font-family: "arial","helvetica", sans-serif;
+    padding-left:5px;
+    padding-right:5px;
+    padding-top:1px;
+    padding-bottom:1px
+}
+
+.hr-rule {
+    margin:1px;
+    border-style:dashed;
+    border-color:darkgray;
+}
+
+.code {
+    font-family: menlo,"Lucida Console",monaco,monospace,courier;
+}
+
+/* end cell display */
