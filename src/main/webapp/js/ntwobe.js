@@ -17,6 +17,7 @@ var NCubeEditor2 = (function ($)
     var _editCellValue = null;
     var _editCellCache = null;
     var _editCellRadioURL = null;
+    var _editColumnModal = null;
     var _valueDropdown = null;
     var _urlDropdown = null;
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
@@ -32,6 +33,7 @@ var NCubeEditor2 = (function ($)
             _editCellValue = $('#editCellValue');
             _editCellCache = $('#editCellCache');
             _editCellRadioURL = $('#editCellRadioURL');
+            _editColumnModal = $('#editColumnsModal');
             _valueDropdown = $('#datatypes-value');
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
@@ -473,6 +475,7 @@ var NCubeEditor2 = (function ($)
             td.className = CLASS_HANDSON_TABLE_HEADER;
             td.style.background = BACKGROUND_COLUMN_HEADER;
             td.style.color = COLOR_WHITE;
+            cellProperties.editor = ColumnEditor;
         }
 
         // row headaers
@@ -486,6 +489,7 @@ var NCubeEditor2 = (function ($)
             td.className = CLASS_HANDSON_TABLE_HEADER;
             td.style.background = BACKGROUND_COLUMN_HEADER;
             td.style.color = COLOR_WHITE;
+            cellProperties.editor = ColumnEditor;
         }
 
         // otherwise in cell data
@@ -599,19 +603,36 @@ var NCubeEditor2 = (function ($)
         });
     };
 
-    // ==================================== Everything to do with Cell Editing =========================================
+    // ==================================== Begin Custom HOT Editors ===================================================
+
+    var destroyEditor = function() {
+        hot.getActiveEditor().finishEditing(null, null, null, true);
+    };
 
     var onBeforeKeyDown = function(event) {
         event.isImmediatePropagationEnabled = false;
         event.cancelBubble = true;
     };
 
-    var CellEditor = Handsontable.editors.TextEditor.prototype.extend();
-    CellEditor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
-        Handsontable.editors.BaseEditor.prototype.prepare.apply(this, arguments);
-    };
-    CellEditor.prototype.open = function() {
+    var NcubeBaseEditor = Handsontable.editors.TextEditor.prototype.extend();
+    NcubeBaseEditor.prototype.open = function() {
         this.instance.addHook('beforeKeyDown', onBeforeKeyDown);
+    };
+    NcubeBaseEditor.prototype.finishEditing = function(restoreOriginalValue, ctrlDown, callback, forceClose) {
+        if (!this.isOpened()) {
+            if (forceClose) {
+                this.state = Handsontable.EditorState.EDITING; // needed to override finish editing
+            }
+            Handsontable.editors.BaseEditor.prototype.finishEditing.apply(this, arguments);
+        }
+    };
+    NcubeBaseEditor.prototype.close = function() {
+        this.instance.removeHook('beforeKeyDown', onBeforeKeyDown);
+    };
+
+    var CellEditor = NcubeBaseEditor.prototype.extend();
+    CellEditor.prototype.open = function() {
+        NcubeBaseEditor.prototype.open.apply(this, arguments);
 
         _tableCellId = getCellId(this.row, this.col);
         _cellId = _tableCellId.split('_');
@@ -620,21 +641,21 @@ var NCubeEditor2 = (function ($)
     CellEditor.prototype.isOpened = function() {
         return $(_editCellModal).hasClass('in');
     };
-    CellEditor.prototype.finishEditing = function(restoreOriginalValue, ctrlDown, callback, forceClose) {
-        if (!this.isOpened()) {
-            if (forceClose) {
-                this.state = Handsontable.EditorState.EDITING; // needed to override finish editing
-            }
-            Handsontable.editors.BaseEditor.prototype.finishEditing.apply(this, arguments);
-        }
+
+    var ColumnEditor = NcubeBaseEditor.prototype.extend();
+    ColumnEditor.prototype.open = function() {
+        NcubeBaseEditor.prototype.open.apply(this, arguments);
+
+        var axis = this.row === 1 ? axes[colOffset] : axes[this.col];
+        editColumns(axis.name);
     };
-    CellEditor.prototype.close = function() {
-        this.instance.removeHook('beforeKeyDown', onBeforeKeyDown);
+    ColumnEditor.prototype.isOpened = function() {
+        return $(_editColumnModal).hasClass('in');
     };
 
-    var destroyEditor = function() {
-        hot.getActiveEditor().finishEditing(null, null, null, true);
-    };
+    // ==================================== End Custom HOT Editors =====================================================
+
+    // ==================================== Everything to do with Cell Editing =========================================
 
     var addEditCellListeners = function() {
         $('#editCellClear').click(function() {
@@ -759,109 +780,84 @@ var NCubeEditor2 = (function ($)
 
     // ============================================== Column Editing== =================================================
 
-    var addColumnEditListeners = function()
-    {
-        $('#editColSelectAll').click(function ()
-        {
+    var addColumnEditListeners = function() {
+        $('#editColSelectAll').click(function () {
             checkAll(true, '.editColCheckBox')
         });
-        $('#editColSelectNone').click(function ()
-        {
+        $('#editColSelectNone').click(function () {
             checkAll(false, '.editColCheckBox')
         });
-        $('#editColAdd').click(function ()
-        {
+        $('#editColAdd').click(function () {
             editColAdd()
         });
-        $('#editColDelete').click(function ()
-        {
+        $('#editColDelete').click(function () {
             editColDelete()
         });
-        $('#editColUp').click(function ()
-        {
+        $('#editColUp').click(function () {
             editColUp()
         });
-        $('#editColDown').click(function ()
-        {
+        $('#editColDown').click(function () {
             editColDown()
         });
-        $('#editColumnsCancel').click(function ()
-        {
+        $('#editColumnsCancel').click(function () {
             editColCancel()
         });
-        $('#editColumnsSave').click(function ()
-        {
+        $('#editColumnsSave').click(function () {
             editColSave()
         });
     };
 
-    var editColumns = function(axisName)
-    {
-        if (!nce.ensureModifiable('Columns cannot be edited.'))
-        {
+    var editColumns = function(axisName) {
+        if (!nce.ensureModifiable('Columns cannot be edited.')) {
             return false;
         }
 
         var result = nce.call("ncubeController.getAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
         var axis;
-        if (result.status === true)
-        {
+        if (result.status === true) {
             axis = result.data;
-            if (!axis.columns)
-            {
+            if (!axis.columns) {
                 axis.columns = [];
             }
-            if (axis.defaultCol)
-            {   // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
+            if (axis.defaultCol) {
+                // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
                 axis.columns.splice(axis.columns.length - 1, 1);
             }
-        }
-        else
-        {
+        } else {
             nce.showNote("Could not retrieve axes for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         sortColumns(axis);
         loadColumns(axis);
         var moveBtnAvail = axis.preferredOrder == 1;
-        if (moveBtnAvail === true)
-        {
+        if (moveBtnAvail === true) {
             $('#editColUp').show();
             $('#editColDown').show();
-        }
-        else
-        {
+        } else {
             $('#editColUp').hide();
             $('#editColDown').hide();
         }
         $('#editColumnsLabel')[0].innerHTML = 'Edit ' + axisName;
-        $('#editColumnsModal').modal();
+        $(_editColumnModal).modal();
     };
 
-    var sortColumns = function(axis)
-    {
-        if (axis.preferredOrder == 1)
-        {
-            axis.columns.sort(function(a, b)
-            {
+    var sortColumns = function(axis) {
+        if (axis.preferredOrder == 1) {
+            axis.columns.sort(function(a, b) {
                 return a.displayOrder - b.displayOrder;
             });
         }
     };
 
-    var getUniqueId = function()
-    {
+    var getUniqueId = function() {
         return _colIds--;
     };
 
-    var editColAdd = function()
-    {
+    var editColAdd = function() {
         var input = $('.editColCheckBox');
         var loc = -1;
-        $.each(input, function (index, btn)
-        {
-            if ($(this).prop('checked'))
-            {
+        $.each(input, function (index, btn) {
+            if ($(this).prop('checked')) {
                 loc = index;
             }
         });
@@ -872,13 +868,10 @@ var NCubeEditor2 = (function ($)
             'id': getUniqueId()
         };
 
-        if (loc == -1 || axis.preferredOrder == 0)
-        {
+        if (loc == -1 || axis.preferredOrder == 0) {
             axis.columns.push(newCol);
             loc = input.length - 1;
-        }
-        else
-        {
+        } else {
             axis.columns.splice(loc + 1, 0, newCol);
         }
         loadColumns(axis);
@@ -888,50 +881,42 @@ var NCubeEditor2 = (function ($)
         input[loc + 1].select();
     };
 
-    var editColDelete = function()
-    {
+    var editColDelete = function() {
         var axis = _columnList.prop('model');
         var input = $('.editColCheckBox');
         var cols = axis.columns;
         var colsToDelete = [];
-        $.each(input, function (index, btn)
-        {
-            if ($(this).prop('checked'))
-            {
+        $.each(input, function (index, btn) {
+            if ($(this).prop('checked')) {
                 colsToDelete.push(index);
             }
         });
 
         // Walk through in reverse order, deleting from back to front so that
         // the correct elements are deleted.
-        for (var i=colsToDelete.length - 1; i >= 0; i--)
-        {
+        for (var i=colsToDelete.length - 1; i >= 0; i--) {
             cols.splice(colsToDelete[i], 1);
         }
         loadColumns(axis);
     };
 
-    var editColUp = function()
-    {
+    var editColUp = function() {
         var axis = _columnList.prop('model');
         var cols = axis.columns;
         var input = $('.editColCheckBox');
 
-        if (cols && cols.length > 0 && input[0].checked)
-        {   // Top one checked, cannot move any items up
+        if (cols && cols.length > 0 && input[0].checked) {
+            // Top one checked, cannot move any items up
             return;
         }
 
-        for (var i=0; i < input.length - 1; i++)
-        {
+        for (var i=0; i < input.length - 1; i++) {
             var tag = input[i];
             cols[i].checked = tag.checked;
-            if (!tag.checked)
-            {
+            if (!tag.checked) {
                 var nextTag = input[i + 1];
                 cols[i + 1].checked = nextTag.checked;
-                if (nextTag.checked)
-                {
+                if (nextTag.checked) {
                     tag.checked = true;
                     nextTag.checked = false;
 
@@ -948,27 +933,23 @@ var NCubeEditor2 = (function ($)
         loadColumns(axis);
     };
 
-    var editColDown = function()
-    {
+    var editColDown = function() {
         var axis = _columnList.prop('model');
         var cols = axis.columns;
         var input = $('.editColCheckBox');
 
-        if (cols && cols.length > 0 && input[cols.length - 1].checked)
-        {   // Bottom one checked, cannot move any items down
+        if (cols && cols.length > 0 && input[cols.length - 1].checked) {
+            // Bottom one checked, cannot move any items down
             return;
         }
 
-        for (var i=input.length - 1; i > 0; i--)
-        {
+        for (var i=input.length - 1; i > 0; i--) {
             var tag = input[i];
             cols[i].checked = tag.checked;
-            if (!tag.checked)
-            {
+            if (!tag.checked) {
                 var nextTag = input[i - 1];
                 cols[i - 1].checked = nextTag.checked;
-                if (nextTag.checked)
-                {
+                if (nextTag.checked) {
                     tag.checked = true;
                     nextTag.checked = false;
 
@@ -985,44 +966,38 @@ var NCubeEditor2 = (function ($)
         loadColumns(axis);
     };
 
-    var editColCancel = function()
-    {
-        $('#editColumnsModal').modal('hide');
+    var editColCancel = function() {
+        $(_editColumnModal).modal('hide');
+        destroyEditor();
     };
 
-    var editColSave = function()
-    {
+    var editColSave = function() {
         var axis = _columnList.prop('model');
-        _columnList.find('input[data-type=cond]').each(function(index, elem)
-        {
+        _columnList.find('input[data-type=cond]').each(function(index, elem) {
             axis.columns[index].value = elem.value;
         });
-        _columnList.find('input[data-type=name]').each(function(index, elem)
-        {
+        _columnList.find('input[data-type=name]').each(function(index, elem) {
             var col = axis.columns[index];
-            if (col.metaProp)
-            {
+            if (col.metaProp) {
                 col.metaProp.name = elem.value;
             }
         });
         axis.defaultCol = null;
         var result = nce.call("ncubeController.updateAxisColumns", [nce.getAppId(), nce.getSelectedCubeName(), axis]);
 
-        if (result.status !== true)
-        {
+        if (result.status !== true) {
             nce.showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
-        $('#editColumnsModal').modal('hide');
+        $(_editColumnModal).modal('hide');
+        destroyEditor();
         nce.reloadCube();
     };
 
-    var loadColumns = function(axis)
-    {
+    var loadColumns = function(axis) {
         var insTitle = $('#editColInstTitle');
         var inst = $('#editColInstructions');
-        if ('DISCRETE' == axis.type.name)
-        {
+        if ('DISCRETE' == axis.type.name) {
             insTitle[0].textContent = 'Instructions - Discrete Column';
             inst[0].innerHTML = "<i>Discrete</i> column has a single value per column. Values are matched with '='. \
             Strings are matched case-sensitively.  Look ups are indexed and run \
@@ -1035,8 +1010,7 @@ var NCubeEditor2 = (function ($)
         <li>Do not use mm/dd/yyyy or dd/mm/yyyy. \
         </li></ul></li></ul>";
         }
-        else if ('RANGE' == axis.type.name)
-        {
+        else if ('RANGE' == axis.type.name) {
             insTitle[0].textContent = 'Instructions - Range Column';
             inst[0].innerHTML = "A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
             <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Look ups are indexed \
@@ -1049,8 +1023,7 @@ var NCubeEditor2 = (function ($)
         <li><i>Date range</i>: <code>2015/01/01, 2017-01-01</code> (date >= 2015-01-01 AND date < 2017-01-01) \
         </li></ul></li></ul>";
         }
-        else if ('SET' == axis.type.name)
-        {
+        else if ('SET' == axis.type.name) {
             insTitle[0].textContent = 'Instructions - Set Column';
             inst[0].innerHTML = "A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
             match with '=' and ranges match when value is within the range [inclusive, exclusive).  Overlapping\
@@ -1065,8 +1038,7 @@ var NCubeEditor2 = (function ($)
         <li><i>Date ranges</i>: <code>[\"2015-01-01\", \"2016-12-31\"], [\"2019/01/01\", \"2020/12/31\"]</code> \
         </li></ul></li></ul>";
         }
-        else if ('NEAREST' == axis.type.name)
-        {
+        else if ('NEAREST' == axis.type.name) {
             insTitle[0].textContent = 'Instructions - Nearest Column';
             inst[0].innerHTML = "A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
             axis to the passed in value is matched.  Strings are compared similar to spell-check \
@@ -1082,8 +1054,7 @@ var NCubeEditor2 = (function ($)
         <li>Dates are entered in the same formats in Discrete column instructions (many formats supported).</li> \
         <li>Do not use mm/dd/yyyy or dd/mm/yyyy for dates.</li></ul></li></ul>";
         }
-        else if ('RULE' == axis.type.name)
-        {
+        else if ('RULE' == axis.type.name) {
             insTitle[0].textContent = 'Instructions - Rule Column';
             inst[0].innerHTML = "A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
             that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> \
@@ -1101,8 +1072,7 @@ var NCubeEditor2 = (function ($)
         <li><i>Example condition</i>: <code>input.state == 'OH'</code></li> \
         </ul></li></ul>";
         }
-        else
-        {
+        else {
             insTitle[0].textContent = 'Instructions';
             inst[0].innerHTML = 'Unknown axis type';
         }
@@ -1111,31 +1081,25 @@ var NCubeEditor2 = (function ($)
         _columnList.empty();
         _columnList.prop('model', axis);
         var displayOrder = 0;
-        $.each(axisList, function (key, item)
-        {
-            if (!item.displayOrder || item.displayOrder < 2147483647)
-            {   // Don't add default column in
+        $.each(axisList, function (key, item) {
+            if (!item.displayOrder || item.displayOrder < 2147483647) {   // Don't add default column in
                 item.displayOrder = displayOrder++;
                 var rowDiv = $('<div/>').prop({class: "row", "model": item});
                 var div = $('<div/>').prop({class: "input-group"});
                 var span = $('<span/>').prop({class: "input-group-addon"});
                 var inputBtn = $('<input/>').prop({class: "editColCheckBox", "type": "checkbox"});
-                if (item.checked === true)
-                {
+                if (item.checked === true) {
                     inputBtn[0].checked = true;
                 }
 
                 // For rules with URL to conditions, support URL: (or url:) in front of URL - then store as URL
-                if (axis.type.name == 'RULE')
-                {
-                    if (!item.metaProps)
-                    {
+                if (axis.type.name == 'RULE') {
+                    if (!item.metaProps) {
                         item.metaProps = {"name": "Condition " + displayOrder};
                     }
                     var inputName = $('<input/>').prop({class: "form-control", "type": "text"});
                     inputName.attr({"data-type": "name"});
-                    inputName.blur(function ()
-                    {
+                    inputName.blur(function () {
                         item.metaProps.name = inputName.val();
                     });
                     inputName.val(item.metaProps.name);
@@ -1143,26 +1107,22 @@ var NCubeEditor2 = (function ($)
 
                 var inputText = $('<input/>').prop({class: "form-control", "type": "text"});
                 inputText.attr({"data-type":"cond"});
-                inputText.blur(function()
-                {
+                inputText.blur(function() {
                     item.value = inputText.val();
                 });
 
                 var prefix = '';
-                if (item.isUrl)
-                {
+                if (item.isUrl) {
                     prefix += 'url|';
                 }
-                if (item.isCached)
-                {
+                if (item.isCached) {
                     prefix += 'cache|';
                 }
 
                 inputText.val(prefix + item.value);
                 span.append(inputBtn);
                 div.append(span);
-                if (axis.type.name == 'RULE')
-                {
+                if (axis.type.name == 'RULE') {
                     div.append(inputName);
                 }
                 div.append(inputText);
@@ -1176,24 +1136,18 @@ var NCubeEditor2 = (function ($)
 
     // =============================================== Begin Axis Editing ==============================================
 
-    var addAxis = function()
-    {
-        if (!nce.ensureModifiable('Axis cannot be added.'))
-        {
+    var addAxis = function() {
+        if (!nce.ensureModifiable('Axis cannot be added.')) {
             return;
         }
 
         var generalTypes = ['STRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
         var ruleTypes = ['EXPRESSION'];
-        buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected)
-        {
-            if ("RULE" == selected)
-            {
+        buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected) {
+            if ("RULE" == selected) {
                 buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function () { });
                 $('#addAxisValueTypeName').val('EXPRESSION');
-            }
-            else
-            {
+            } else {
                 buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
                 $('#addAxisValueTypeName').val('STRING');
             }
@@ -1203,27 +1157,21 @@ var NCubeEditor2 = (function ($)
         $('#addAxisModal').modal();
     };
 
-    var addAxisOk = function()
-    {
+    var addAxisOk = function() {
         $('#addAxisModal').modal('hide');
         var axisName = $('#addAxisName').val();
         var axisType = $('#addAxisTypeName').val();
         var axisValueType = $('#addAxisValueTypeName').val();
         var result = nce.call("ncubeController.addAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName, axisType, axisValueType]);
-        if (result.status === true)
-        {
+        if (result.status === true) {
             nce.loadCube();
-        }
-        else
-        {
+        } else {
             nce.showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     };
 
-    var deleteAxis = function(axisName)
-    {
-        if (!nce.ensureModifiable('Axis cannot be deleted.'))
-        {
+    var deleteAxis = function(axisName) {
+        if (!nce.ensureModifiable('Axis cannot be deleted.')) {
             return;
         }
 
@@ -1231,36 +1179,27 @@ var NCubeEditor2 = (function ($)
         $('#deleteAxisModal').modal();
     };
 
-    var deleteAxisOk = function()
-    {
+    var deleteAxisOk = function() {
         $('#deleteAxisModal').modal('hide');
         var axisName = $('#deleteAxisName').val();
         var result = nce.call("ncubeController.deleteAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
-        if (result.status === true)
-        {
+        if (result.status === true) {
             nce.loadCube();
-        }
-        else
-        {
+        } else {
             nce.showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     };
 
-    var updateAxis = function(axisName)
-    {
-        if (!nce.ensureModifiable('Axis cannot be updated.'))
-        {
+    var updateAxis = function(axisName) {
+        if (!nce.ensureModifiable('Axis cannot be updated.')) {
             return false;
         }
 
         var result = nce.call("ncubeController.getAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
         var axis;
-        if (result.status === true)
-        {
+        if (result.status === true) {
             axis = result.data;
-        }
-        else
-        {
+        } else {
             nce.showNote("Could not retrieve axes for ncube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
@@ -1271,20 +1210,17 @@ var NCubeEditor2 = (function ($)
         $('#updateAxisTypeName').val(axis.type.name);
         $('#updateAxisValueTypeName').val(axis.valueType.name);
         $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null});
-        if (isRule)
-        {
+        if (isRule) {
             hideAxisSortOption();
             showAxisDefaultColumnOption(axis);
             showAxisFireAllOption(axis);
         }
-        else if (isNearest)
-        {
+        else if (isNearest) {
             hideAxisSortOption();
             hideAxisDefaultColumnOption();
             hideAxisFireAllOption();
         }
-        else
-        {
+        else {
             showAxisSortOption(axis);
             showAxisDefaultColumnOption(axis);
             hideAxisFireAllOption();
@@ -1295,53 +1231,43 @@ var NCubeEditor2 = (function ($)
         });
     };
 
-    var showAxisSortOption = function(axis)
-    {
+    var showAxisSortOption = function(axis) {
         $('#updateAxisSortOrderRow').show();
         $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
     };
 
-    var hideAxisSortOption = function()
-    {
+    var hideAxisSortOption = function() {
         $('#updateAxisSortOrderRow').hide();
     };
 
-    var showAxisDefaultColumnOption = function(axis)
-    {
+    var showAxisDefaultColumnOption = function(axis) {
         $('#updateAxisDefaultColRow').show();
         $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null, 'disabled': false});
     };
 
-    var hideAxisDefaultColumnOption = function()
-    {
+    var hideAxisDefaultColumnOption = function() {
         $('#updateAxisDefaultColRow').hide();
     };
 
-    var showAxisFireAllOption = function(axis)
-    {
+    var showAxisFireAllOption = function(axis) {
         $('#updateAxisFireAllRow').show();
         $('#updateAxisFireAll').prop({'checked': axis.fireAll == true, 'disabled': false});
     };
 
-    var hideAxisFireAllOption = function()
-    {
+    var hideAxisFireAllOption = function() {
         $('#updateAxisFireAllRow').hide();
     };
 
-    var updateAxisOk = function()
-    {
+    var updateAxisOk = function() {
         $('#updateAxisModal').modal('hide');
         var axisName = $('#updateAxisName').val();
         var hasDefault = $('#updateAxisDefaultCol').prop('checked');
         var sortOrder = $('#updateAxisSortOrder').prop('checked');
         var fireAll = $('#updateAxisFireAll').prop('checked');
         var result = nce.call("ncubeController.updateAxis", [nce.getAppId(), nce.getSelectedCubeName(), _axisName, axisName, hasDefault, sortOrder, fireAll]);
-        if (result.status === true)
-        {
+        if (result.status === true) {
             nce.loadCube();
-        }
-        else
-        {
+        } else {
             nce.showNote("Unable to update axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     };
