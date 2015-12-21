@@ -79,3 +79,12 @@ div#editColumnsModal div.panel-group
 .handsontable .tableDefault {
     color: #CCC;
 }
+
+.ht_clone_top, .ht_clone_corner {
+    overflow: visible !important;
+}
+
+.ht_clone_top .wtHolder {
+    overflow: visible !important;
+    height: 93px !important;
+}
