@@ -16,6 +16,9 @@ var NCubeEditor2 = (function ($)
     var colOffset = null;
     var data = null;
     var cache = null;
+    var prefixes = null;
+    var cubeMap = null;
+    var cubeMapRegex = null;
     var _cellId = null;
     var _tableCellId = null;
     var _columnList = null;
@@ -93,6 +96,40 @@ var NCubeEditor2 = (function ($)
         }
 
         setCoordinateBarListeners();
+        buildCubeMap();
+    };
+
+    var buildCubeMap = function() {
+        // Step 1: Build giant cube list names string for pattern matching
+        var s = "";
+        prefixes = ['rpm.class.', 'rpm.enum.', ''];
+        cubeMap = nce.getCubeMap();
+
+        $.each(cubeMap, function (key)
+        {
+            if (key.length > 2)
+            {   // 1. Only support n-cube names with 3 or more characters in them (too many false replaces will occur otherwise)
+                // 2. Chop off accepted prefixes.
+                for (var i=0; i < prefixes.length; i++)
+                {
+                    if (key.indexOf(prefixes[i]) == 0)
+                    {
+                        key = key.replace(prefixes[i], '');
+                        break;
+                    }
+                }
+                // 3. Reverse the cube list order (comes from server alphabetically case-insensitively sorted) to match
+                // longer strings before shorter strings.
+                // 4. Replace '.' with '\.' so that they are only matched against dots (period), not any character.
+                s = escapeRegExp(key) + '|' + s;
+            }
+        });
+
+        if (s.length > 0) {
+            s = s.substring(0, s.length - 1);
+        }
+        s = '\\b(' + s + ')\\b';
+        cubeMapRegex = new RegExp(s, 'gi');
     };
 
     var load = function() {
@@ -213,11 +250,20 @@ var NCubeEditor2 = (function ($)
     var getRowHeaderValue = function(row, col) {
         var rowHeader = getRowHeader(row, col);
         var rule = '';
-        if (axes[col].type.toLowerCase() === 'rule' && rowHeader.name !== undefined) {
+        var val = '';
+
+        var axis = axes[col];
+        var type = axis.type.toLowerCase();
+        var valueType = axis.valueType.toLowerCase();
+
+        if (type === 'rule' && rowHeader.name !== undefined) {
             rule = '<span class="rule-name">' + rowHeader.name + '</span><hr class="hr-rule"/>';
         }
 
-        var val = rowHeader.value;
+        val = rowHeader.value;
+        if (valueType === 'date') {
+            val = val.substring(0, val.indexOf('T'));
+        }
         if (val === undefined) {
             val = rowHeader.url;
         } else if (rule !== '') {
@@ -419,6 +465,22 @@ var NCubeEditor2 = (function ($)
             },
             afterRender: function() {
                 $('tr:visible:odd .cell').css({'background-color': BACKGROUND_ODD_ROW});
+
+                $('.dropdown-toggle').click(function () {
+                    var button = $(this);
+                    var offset = button.offset();
+                    var dropDownTop = offset.top + button.outerHeight();
+                    var dropDownLeft = offset.left;
+
+                    var modal = button.closest('.modal-content');
+                    if (modal[0]) {
+                        var modalOffset = modal.offset();
+                        dropDownTop -= modalOffset.top;
+                        dropDownLeft -= modalOffset.left;
+                    }
+
+                    button.parent().find('ul').css({top: dropDownTop + 'px', left: dropDownLeft + 'px'});
+                });
             },
             afterSelection: function(r, c, r2, c2) {
                 var display = '';
@@ -458,7 +520,6 @@ var NCubeEditor2 = (function ($)
         if (row === 0 && (col < colOffset || col === 0)) {
             if (col === 0) {
                 td.innerHTML = cubeName;
-                td.style.overflow = 'visible';
             }
             td.style.background = BACKGROUND_CUBE_NAME;
             td.style.color = COLOR_WHITE;
@@ -466,6 +527,7 @@ var NCubeEditor2 = (function ($)
             cellProperties.readOnly = true;
             if (col < axes.length - 2) {
                 td.style.borderRight = NONE;
+                td.style.overflow = 'visible';
             }
         }
 
@@ -527,13 +589,16 @@ var NCubeEditor2 = (function ($)
             td.className = 'cell';
             if (cellData) {
                 if (cellData.url !== undefined) {
-                    td.innerHTML = '<a href="#">' + cellData.url + '</a>';
                     td.className += ' url';
+                    buildUrlLink(cellData.url, td);
+                } else if (['exp', 'method'].indexOf(cellData.type) > -1) {
+                    td.className += ' code';
+                    buildUrlLink(cellData.value, td);
+                } else if ('date' === cellData.type) {
+                    var val = cellData.value;
+                    td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
                     td.innerHTML = cellData.value;
-                    if (['exp', 'method'].indexOf(cellData.type) > -1) {
-                        td.className += ' code';
-                    }
                 }
             } else if (data.defaultCellValue) {
                 td.innerHTML = data.defaultCellValue;
@@ -541,6 +606,40 @@ var NCubeEditor2 = (function ($)
             }
 
             cellProperties.editor = CellEditor;
+        }
+    };
+
+    var buildUrlLink = function(url, element) {
+        if (url && url.length > 2) {
+            var found = false;
+
+            url = url.replace(cubeMapRegex, function (matched) {
+                found = true;
+                return '<a class="nc-anc">' + matched + '</a>';
+            });
+
+            if (found) {
+                // substitute new text with anchor tag
+                element.innerHTML = url;       // Much faster than JQuery .html('') or .text('')
+
+                // Add click handler that opens clicked cube names
+                $(element).find('a').each(function () {
+                    var link = this;
+                    $(link).click(function (e) {
+                        e.preventDefault();
+                        var cubeName = link.textContent.toLowerCase();
+
+                        for (var i = 0, len = prefixes.length; i < len; i++) {
+                            if (cubeMap[prefixes[i] + cubeName]) {
+                                nce.selectCubeByName(nce.getProperCubeName(prefixes[i] + link.textContent));
+                                break;
+                            }
+                        }
+                    });
+                });
+            } else {
+                element.innerHTML = url;
+            }
         }
     };
 
@@ -595,13 +694,6 @@ var NCubeEditor2 = (function ($)
         ul.append(li);
         $(div).append(ul);
         $(element).append(div);
-
-
-        $(button).click(function () {
-            var offset = $(button).offset();
-            var dropDownTop = offset.top + $(button).outerHeight();
-            $(ul).css({top: dropDownTop + 'px', left: offset.left + 'px'});
-        });
     };
 
     //====================================== coordinate bar functions ==================================================
