@@ -46,17 +46,36 @@ div#editColumnsModal div.panel-group
     position: fixed;
 }
 
+/* begin coord bar and HOT */
+
 #coordinate-bar {
     position: fixed;
+}
+
+#coordinate-bar-text {
     white-space: nowrap;
     overflow-x: scroll;
     cursor: ew-resize;
+    position: absolute;
+    left: 20px;
+}
+#coordinate-bar-text::-webkit-scrollbar {
+    display:none;
 }
 
-/* begin coord bar and HOT */
+#coordinate-bar-move-left {
+    cursor: pointer;
+    width: 20px;
+    position: absolute;
+    left: 0px;
+    display: none;
+}
 
-#coordinate-bar::-webkit-scrollbar {
-    display:none;
+#coordinate-bar-move-right {
+    cursor: pointer;
+    width: 20px;
+    position: absolute;
+    display: none;
 }
 
 .handsontable table.htCore {
@@ -82,13 +101,8 @@ div#editColumnsModal div.panel-group
     color: #CCC;
 }
 
-.ht_clone_top, .ht_clone_corner {
-    overflow: visible !important;
-}
-
-.ht_clone_top .wtHolder {
-    overflow: visible !important;
-    height: 93px !important;
+.dropdown-menu {
+    position: fixed;
 }
 
 /* end coord bar and HOT */

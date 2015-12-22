@@ -1,3 +1,9 @@
+(function($) {
+    $.fn.hasScrollBar = function() {
+        return this.get(0).scrollWidth > this.width();
+    }
+})(jQuery);
+
 var NCubeEditor2 = (function ($)
 {
     var headerAxisNames = ['trait','traits','businessDivisionCode','bu','month','months','col','column','cols','columns'];
@@ -80,7 +86,8 @@ var NCubeEditor2 = (function ($)
 
                 NCubeEditor2.render();
 
-                $('#coordinate-bar').width($(this).width());
+                $(getDomCoordinateBar()).width($(this).width() - 45);
+                $('#coordinate-bar-move-right').css({left: $(this).width() - 20});
             });
 
         }
@@ -410,13 +417,16 @@ var NCubeEditor2 = (function ($)
             cells: function (row, col, prop) {
                 return {renderer:categoryRenderer};
             },
+            afterRender: function() {
+                $('tr:visible:odd .cell').css({'background-color': BACKGROUND_ODD_ROW});
+            },
             afterSelection: function(r, c, r2, c2) {
                 var display = '';
                 if (c >= colOffset) {
                     if (r === 1) {
                         display = '<strong>Axis</strong>: ' + axes[colOffset].name + ', <strong>Column</strong>:' + getColumnHeaderValue(c);
                     } else if (r > 1) {
-                        display = '<strong>Axis Coordinates</strong>: [ ';
+                        display = '&nbsp;';
                         for (var axisNum = 0; axisNum < colOffset; axisNum++) {
                             var axisName = axes[axisNum].name;
                             var axisVal = getRowHeaderPlainText(r, axisNum);
@@ -429,7 +439,7 @@ var NCubeEditor2 = (function ($)
                             var axisName = axes[0].name;
                             var axisVal = getRowHeaderPlainText(r, 0);
                         }
-                        display += '<strong>' + axisName + '</strong>: ' + axisVal + ' ]';
+                        display += '<strong>' + axisName + '</strong>: ' + axisVal;
                     }
                 }
                 else if (r > 1) {
@@ -514,27 +524,23 @@ var NCubeEditor2 = (function ($)
         // otherwise in cell data
         else {
             var cellData = getCellData(row, col);
+            td.className = 'cell';
             if (cellData) {
                 if (cellData.url !== undefined) {
                     td.innerHTML = '<a href="#">' + cellData.url + '</a>';
-                    td.className = 'url';
+                    td.className += ' url';
                 } else {
                     td.innerHTML = cellData.value;
                     if (['exp', 'method'].indexOf(cellData.type) > -1) {
-                        td.className = 'code';
+                        td.className += ' code';
                     }
                 }
             } else if (data.defaultCellValue) {
                 td.innerHTML = data.defaultCellValue;
-                td.className = 'tableDefault';
+                td.className += ' tableDefault';
             }
 
             cellProperties.editor = CellEditor;
-
-            // odd row style
-            if (row % 2 != 0) {
-                td.style.background = BACKGROUND_ODD_ROW;
-            }
         }
     };
 
@@ -589,26 +595,54 @@ var NCubeEditor2 = (function ($)
         ul.append(li);
         $(div).append(ul);
         $(element).append(div);
+
+
+        $(button).click(function () {
+            var offset = $(button).offset();
+            var dropDownTop = offset.top + $(button).outerHeight();
+            $(ul).css({top: dropDownTop + 'px', left: offset.left + 'px'});
+        });
     };
 
     //====================================== coordinate bar functions ==================================================
 
     var getDomCoordinateBar = function() {
-        return document.getElementById('coordinate-bar');
+        return document.getElementById('coordinate-bar-text');
+    };
+
+    var getDomCoordinateBarLeftButton = function() {
+        return document.getElementById('coordinate-bar-move-left');
+    };
+
+    var getDomCoordinateBarRightButton = function() {
+        return document.getElementById('coordinate-bar-move-right');
     };
 
     var curDown = false;
     var curPos = 0;
     var resetCoordinateBar = function(displayText) {
         var bar = getDomCoordinateBar();
+        var left = getDomCoordinateBarLeftButton();
+        var right = getDomCoordinateBarRightButton();
+
         curDown = false;
         curPos = 0;
         bar.scrollLeft = 0;
-        bar.innerHTML = displayText || '<strong>Axis Coordinates</strong>: [ ]';
+        bar.innerHTML = displayText || '';
+
+        if ($(bar).hasScrollBar()) {
+            $(left).show();
+            $(right).show();
+        } else {
+            $(left).hide();
+            $(right).hide();
+        }
     };
 
     var setCoordinateBarListeners = function() {
         var coordBar = getDomCoordinateBar();
+        var leftButton = getDomCoordinateBarLeftButton();
+        var rightButton = getDomCoordinateBarRightButton();
 
         coordBar.addEventListener('mousedown', function (e) {
             curDown = true;
@@ -627,6 +661,14 @@ var NCubeEditor2 = (function ($)
 
         coordBar.addEventListener('mouseout', function(e) {
             curDown = false;
+        });
+
+        leftButton.addEventListener('click', function(e) {
+            coordBar.scrollLeft = coordBar.scrollLeft - 40;
+        });
+
+        rightButton.addEventListener('click', function(e) {
+            coordBar.scrollLeft = coordBar.scrollLeft + 40;
         });
     };
 
