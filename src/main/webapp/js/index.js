@@ -1278,13 +1278,7 @@ var NCE = (function ($)
             return;
         }
 
-        var jsonResult = call("ncubeController.loadCubeById", [getAppId(), revs.cubeIds[0], "json"], {noResolveRefs:true});
-        if (jsonResult.status !== true) {
-            showNote('Unable to load n-cube revision ' + revIds[0] + ':<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        var result = call("ncubeController.saveJson", [getAppId(), getSelectedCubeName(), jsonResult.data]);
+        var result = call("ncubeController.promoteRevision", [getAppId(), revs.cubeIds[0]]);
 
         if (result.status === true) {
             loadCube();
