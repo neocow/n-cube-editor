@@ -185,13 +185,13 @@ var NCubeEditor2 = (function ($)
     };
 
     var getAxisColumn = function(axis, colNum) {
+        if (axis.columnLength === 0) {
+            return;
+        }
+
         var objColumns = axis.columns;
         var keys = Object.keys(objColumns);
         var obj;
-
-        if (keys.length === 0) {
-            return;
-        }
 
         if (colNum >= keys.length) {
             obj = getAxisDefault(axis);
@@ -267,21 +267,28 @@ var NCubeEditor2 = (function ($)
 
         val = rowHeader.value;
         if (valueType === 'date') {
-            val = val.substring(0, val.indexOf('T'));
+            if (typeof val === 'object') {
+                var v1 = val[0].substring(0, val[0].indexOf('T'));
+                var v2 = val[1].substring(0, val[1].indexOf('T'));
+                val = '[' + v1 + ' - ' + v2 + ')';
+            } else {
+                val = val.substring(0, val.indexOf('T'));
+            }
         }
         if (val === undefined) {
-            val = rowHeader.url;
-        } else if (rule !== '') {
-            val = '<span class="code">' + val + '</span>';
+            val = '<a class="nc-anc">' + rowHeader.url + '</a>';
         }
-        return rule + val;
+        if (rule !== '') {
+            val = rule + '<span class="code">' + val + '</span>';
+        }
+        return val;
     };
 
     var getRowHeaderPlainText = function(row, col) {
-        var regexSpan = /(<span([^>]+)>)/ig;
+        var regexAnyTag = /(<([^>]+)>)/ig;
         var regexHr = /(<hr([^>]+)>)/ig;
         var val = getRowHeaderValue(row, col);
-        return val.replace(regexHr, ' - ').replace(regexSpan, '');
+        return val.replace(regexHr, ' - ').replace(regexAnyTag, '');
     };
 
     var getRowHeaderId = function(row, col) {
@@ -584,6 +591,11 @@ var NCubeEditor2 = (function ($)
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = val;
+                if (axes[col].type.toLowerCase() === 'rule') {
+                    buildUrlLink(td);
+                } else {
+                    buildExpressionLink(val, td);
+                }
             }
             td.className = CLASS_HANDSON_TABLE_HEADER;
             td.style.background = BACKGROUND_COLUMN_HEADER;
@@ -598,10 +610,11 @@ var NCubeEditor2 = (function ($)
             if (cellData) {
                 if (cellData.url !== undefined) {
                     td.className += ' url';
-                    buildUrlLink(cellData.url, td);
+                    td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
+                    buildUrlLink(td);
                 } else if (['exp', 'method'].indexOf(cellData.type) > -1) {
                     td.className += ' code';
-                    buildUrlLink(cellData.value, td);
+                    buildExpressionLink(cellData.value, td);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
@@ -617,7 +630,38 @@ var NCubeEditor2 = (function ($)
         }
     };
 
-    var buildUrlLink = function(url, element) {
+    var buildUrlLink = function(element) {
+        // Add click handler that opens clicked cube names
+        $(element).find('a').each(function () {
+            var anchor = $(this);
+            anchor.click(function(event)
+            {
+                nce.clearError();
+                var link = anchor[0].innerHTML;
+                if (link.indexOf('http:') == 0 || link.indexOf('https:') == 0 || link.indexOf('file:') == 0)
+                {
+                    window.open(link);
+                }
+                else
+                {
+                    var result = nce.call("ncubeController.resolveRelativeUrl", [nce.getAppId(), link], {noResolveRefs:true});
+                    if (result.status === true && result.data)
+                    {
+                        link = result.data;
+                        window.open(link);
+                    }
+                    else
+                    {
+                        var msg = result.data ? result.data : "Unable to resolve relative URL against entries in sys.classpath";
+                        nce.showNote('Unable to open ' + link + ':<hr class="hr-small"/>' + msg);
+                    }
+                }
+                event.preventDefault();
+            });
+        });
+    };
+
+    var buildExpressionLink = function(url, element) {
         if (url && url.length > 2) {
             var found = false;
 
