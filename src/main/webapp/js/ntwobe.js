@@ -288,6 +288,12 @@ var NCubeEditor2 = (function ($)
     };
 
     var getRowHeaderValue = function(row, col) {
+        var getDateRangeString = function(range) {
+            var v1 = range[0].substring(0, range[0].indexOf('T'));
+            var v2 = range[1].substring(0, range[1].indexOf('T'));
+            return '[' + v1 + ' - ' + v2 + ')';
+        };
+
         var rowHeader = getRowHeader(row, col);
         var rule = '';
         var val = '';
@@ -303,9 +309,15 @@ var NCubeEditor2 = (function ($)
         val = rowHeader.value;
         if (valueType === 'date') {
             if (typeof val === 'object') {
-                var v1 = val[0].substring(0, val[0].indexOf('T'));
-                var v2 = val[1].substring(0, val[1].indexOf('T'));
-                val = '[' + v1 + ' - ' + v2 + ')';
+                if (typeof val[0] === 'object') {
+                    var temp = '';
+                    for (var i = 0, len = val.length; i < len; i++) {
+                        temp += getDateRangeString(val[i]) + ', ';
+                    }
+                    val = temp.slice(0, temp.lastIndexOf(', ') - 1);
+                } else {
+                    val = getDateRangeString(val);
+                }
             } else {
                 val = val.substring(0, val.indexOf('T'));
             }
