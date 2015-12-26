@@ -316,7 +316,7 @@ var NCubeEditor2 = (function ($)
         if (rule !== '') {
             val = rule + '<span class="code">' + val + '</span>';
         }
-        return val;
+        return '' + val;
     };
 
     var getRowHeaderPlainText = function(row, col) {
@@ -514,8 +514,10 @@ var NCubeEditor2 = (function ($)
                 return {renderer:categoryRenderer};
             },
             afterRender: function() {
+                // for odd cell row backgrounds
                 $('tr:visible:odd .cell').css({'background-color': BACKGROUND_ODD_ROW});
 
+                // set dropdown location on buttons
                 $('.dropdown-toggle').click(function () {
                     var button = $(this);
                     var offset = button.offset();
