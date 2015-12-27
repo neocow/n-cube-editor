@@ -249,7 +249,8 @@ var NCubeEditor2 = (function ($)
     };
 
     var getColumnHeaderId = function(col) {
-        return getColumnHeader(col).id;
+        var columnHeader = getColumnHeader(col);
+        return columnHeader ? columnHeader.id : '';
     };
 
     var getAxisDefault = function(axis) {
