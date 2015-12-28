@@ -227,15 +227,9 @@ var NCubeEditor2 = (function ($)
             return;
         }
 
-        var obj;
-        var columns = axisColumnMap[axis.name];
-        if (colNum >= columns.length) {
-            obj = getAxisDefault(axis);
-        } else {
-            var key = columns[colNum];
-            obj = axis.columns[key];
-            obj.id = key;
-        }
+        var key = axisColumnMap[axis.name][colNum];
+        var obj = axis.columns[key];
+        obj.id = key;
 
         return obj;
     };
@@ -282,8 +276,7 @@ var NCubeEditor2 = (function ($)
         }
 
         var columnNumberToGet = Math.floor(rowNum / repeatRowCount) % colLen;
-        result = (axis.hasDefault && columnNumberToGet === colLen - 1)
-            ? getAxisDefault(axis) : getAxisColumn(axis, columnNumberToGet);
+        result = getAxisColumn(axis, columnNumberToGet);
 
         setCacheValue(CACHE_ROW_HEADER, {row:row, col:col}, result);
         return result;
@@ -503,6 +496,13 @@ var NCubeEditor2 = (function ($)
                 var colKeys = Object.keys(axis.columns);
                 for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
                     colArray.push(colKeys[colNum]);
+                }
+
+                if (axis.hasDefault) {
+                    var defaultColumn = getAxisDefault(axis);
+                    var defId = defaultColumn.id;
+                    colArray.push(defId);
+                    axis.columns[defId] = defaultColumn;
                 }
             }
         };
@@ -1813,12 +1813,7 @@ var NCubeEditor2 = (function ($)
     var reload = function() {
         if (hot) {
             var selection = getSelectedCellRange();
-            var right = hot.colOffset() + hot.countVisibleCols();
-            var bottom = hot.rowOffset() + hot.countVisibleRows();
-
             load();
-
-            hot.selectCell(right, bottom);
             hot.selectCell(selection.startRow, selection.startCol, selection.endRow, selection.endCol, true);
         }
     };
