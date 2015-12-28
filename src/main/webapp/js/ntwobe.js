@@ -19,6 +19,7 @@ var NCubeEditor2 = (function ($)
     var prefixes = null;
     var cubeMap = null;
     var cubeMapRegex = null;
+    var axisColumnMap = null;
     var _cellId = null;
     var _tableCellId = null;
     var _columnList = null;
@@ -125,8 +126,10 @@ var NCubeEditor2 = (function ($)
 
                 NCubeEditor2.render();
 
-                $(getDomCoordinateBar()).width($(this).width() - 45);
-                $('#coordinate-bar-move-right').css({left: $(this).width() - 20});
+                var windowWidth = $(this).width();
+                $(getDomCoordinateBar()).width(windowWidth - 45); // coord bar text
+                $('#coordinate-bar-move-right').css({left: windowWidth - 20}); // keep the right button to the end
+                $('#coordinate-bar').width(windowWidth); // coord bar container for background
             });
         }
 
@@ -224,15 +227,13 @@ var NCubeEditor2 = (function ($)
             return;
         }
 
-        var objColumns = axis.columns;
-        var keys = Object.keys(objColumns);
         var obj;
-
-        if (colNum >= keys.length) {
+        var columns = axisColumnMap[axis.name];
+        if (colNum >= columns.length) {
             obj = getAxisDefault(axis);
         } else {
-            var key = keys[colNum];
-            var obj = copyColumn(objColumns[key]);
+            var key = columns[colNum];
+            obj = axis.columns[key];
             obj.id = key;
         }
 
@@ -315,7 +316,7 @@ var NCubeEditor2 = (function ($)
                     for (var i = 0, len = val.length; i < len; i++) {
                         temp += getDateRangeString(val[i]) + ', ';
                     }
-                    val = temp.slice(0, temp.lastIndexOf(', ') - 1);
+                    val = temp.slice(0, temp.lastIndexOf(', '));
                 } else {
                     val = getDateRangeString(val);
                 }
@@ -492,10 +493,25 @@ var NCubeEditor2 = (function ($)
             }
         };
 
+        var setUpAxisColumnMap = function() {
+            axisColumnMap = {};
+            for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
+                var axis = axes[axisNum];
+                var axisName = axis.name;
+                axisColumnMap[axisName] = [];
+                var colArray = axisColumnMap[axisName];
+                var colKeys = Object.keys(axis.columns);
+                for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
+                    colArray.push(colKeys[colNum]);
+                }
+            }
+        };
+
         cache = {};
         data = cubeData;
         determineAxesOrder(data.axes);
         setUpDataTable();
+        setUpAxisColumnMap();
     };
 
     var getHotSettings = function() {
@@ -979,29 +995,25 @@ var NCubeEditor2 = (function ($)
         }
 
         var cells = [];
-        var tableCellIds = [];
         var range = getSelectedCellRange();
 
         for (var row = range.startRow; row <= range.endRow; row++) {
             for (var col = range.startCol; col <= range.endCol; col++) {
                 var cellId = getCellId(row, col);
                 if (cellId) {
-                    tableCellIds.push(cellId);
                     cells.push(cellId.split('_'));
                 }
             }
             cells.push(null);
         }
+        cells.splice(cells.length - 1, 1);
 
         // Get clipboard ready string + optionally clear cells from database
         var result = nce.call("ncubeController.copyCells", [nce.getAppId(), nce.getSelectedCubeName(), cells, isCut]);
         if (!result.status) {
             nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
         } else if (isCut) {
-            for (var i = 0, len = tableCellIds.length; i < len; i++) {
-                delete data.cells[tableCellIds[i]];
-            }
-            hot.render();
+            reload();
         }
 
         var clipData = result.data;
@@ -1037,8 +1049,6 @@ var NCubeEditor2 = (function ($)
 
         var onlyOneCellSelected = firstRow == lastRow && firstCol == lastCol;
 
-        var hotCells = {};
-
         setTimeout(function() {
             var content = _clipboard.val();
             if (!content || content == "") {
@@ -1067,9 +1077,6 @@ var NCubeEditor2 = (function ($)
                                 // Do attempt to read past edge of 2D grid
                                 var cellId = getCellId(rowNum, colNum);
                                 cellInfo.push(cellId.split('_'));
-                                var type = cellInfo[3] ? 'url' : 'value';
-                                hotCells[cellId] = {type:cellInfo[1], cache:cellInfo[2]};
-                                hotCells[cellId][type] = cellInfo[0];
                             }
                             colNum++;
                         }
@@ -1108,9 +1115,6 @@ var NCubeEditor2 = (function ($)
                             var cellId = getCellId(r, c);
                             cloneCellInfo.push(cellId.split('_'));
                             clipboard2.push(cloneCellInfo);
-                            var type = cellInfo[3] ? 'url' : 'value';
-                            hotCells[cellId] = {type:cellInfo[1], cache:cellInfo[2]};
-                            hotCells[cellId][type] = cellInfo[0];
                         }
                         rowNum++;
                     }
@@ -1137,7 +1141,6 @@ var NCubeEditor2 = (function ($)
                             // Do attempt to read past edge of 2D grid
                             var cellId = getCellId(rowNum, colNum);
                             rowCoords.push(cellId.split('_'));
-                            hotCells[cellId] = {value:lines[i][j], type:'string'};
                         }
                         colNum++;
                     }
@@ -1163,15 +1166,6 @@ var NCubeEditor2 = (function ($)
                         }
                         coords.push(rowCoords);
                     }
-
-                    //remove extra cells from hot list
-                    var ids = Object.keys(hotCells);
-                    for (var i = 0, len = ids.length; i < len; i++) {
-                        var id = ids[i];
-                        if (addHotIds.indexOf(id) < 0) {
-                            delete hotCells[id];
-                        }
-                    }
                 }
 
                 // Paste cells from database
@@ -1179,8 +1173,7 @@ var NCubeEditor2 = (function ($)
             }
 
             if (result.status) {
-                $.extend(data.cells, hotCells);
-                hot.render();
+                reload();
             } else {
                 nce.clearError();
                 nce.showNote('Error pasting cells:<hr class="hr-small"/>' + result.data);
@@ -1526,7 +1519,7 @@ var NCubeEditor2 = (function ($)
         }
         $(_editColumnModal).modal('hide');
         destroyEditor();
-        nce.reloadCube();
+        reload();
     };
 
     var loadColumns = function(axis) {
@@ -1817,6 +1810,19 @@ var NCubeEditor2 = (function ($)
         hot.render();
     };
 
+    var reload = function() {
+        if (hot) {
+            var selection = getSelectedCellRange();
+            var right = hot.colOffset() + hot.countVisibleCols();
+            var bottom = hot.rowOffset() + hot.countVisibleRows();
+
+            load();
+
+            hot.selectCell(right, bottom);
+            hot.selectCell(selection.startRow, selection.startCol, selection.endRow, selection.endCol, true);
+        }
+    };
+
     var handleCubeSelected = function() {
         load();
     };
@@ -1832,6 +1838,7 @@ var NCubeEditor2 = (function ($)
         init: init,
         handleCubeSelected: handleCubeSelected,
         load: load,
+        reload: reload,
         render: render
     };
 
