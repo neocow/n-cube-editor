@@ -315,7 +315,7 @@ var NCubeEditor2 = (function ($)
                     for (var i = 0, len = val.length; i < len; i++) {
                         temp += getDateRangeString(val[i]) + ', ';
                     }
-                    val = temp.slice(0, temp.lastIndexOf(', ') - 1);
+                    val = temp.slice(0, temp.lastIndexOf(', '));
                 } else {
                     val = getDateRangeString(val);
                 }
