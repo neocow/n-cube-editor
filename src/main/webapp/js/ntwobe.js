@@ -125,8 +125,10 @@ var NCubeEditor2 = (function ($)
 
                 NCubeEditor2.render();
 
-                $(getDomCoordinateBar()).width($(this).width() - 45);
-                $('#coordinate-bar-move-right').css({left: $(this).width() - 20});
+                var windowWidth = $(this).width();
+                $(getDomCoordinateBar()).width(windowWidth - 45); // coord bar text
+                $('#coordinate-bar-move-right').css({left: windowWidth - 20}); // keep the right button to the end
+                $('#coordinate-bar').width(windowWidth); // coord bar container for background
             });
         }
 

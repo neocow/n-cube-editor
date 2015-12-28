@@ -50,6 +50,8 @@ div#editColumnsModal div.panel-group
 
 #coordinate-bar {
     position: fixed;
+    background-color: white;
+    height: 20px;
 }
 
 #coordinate-bar-text {
@@ -80,11 +82,6 @@ div#editColumnsModal div.panel-group
 
 .handsontable table.htCore {
     background-color: #BEEEEF;
-}
-
-.handsontable th {
-    background-color: #929292 !important;
-    color: white !important;
 }
 
 .handsontable th.handsonCurrentRow, .handsonTableHeader.handsonCurrentRow {
