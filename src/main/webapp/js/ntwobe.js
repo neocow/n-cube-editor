@@ -23,6 +23,8 @@ var NCubeEditor2 = (function ($)
     var _cellId = null;
     var _tableCellId = null;
     var _columnList = null;
+    var _hideColumnsList = null;
+    var _hiddenColumns = {};
     var _editCellModal = null;
     var _editCellValue = null;
     var _editCellCache = null;
@@ -39,6 +41,7 @@ var NCubeEditor2 = (function ($)
             nce = info;
 
             _columnList = $('#editColumnsList');
+            _hideColumnsList = $('#hideColumnsList');
             _editCellModal = $('#editCellModal');
             _editCellValue = $('#editCellValue');
             _editCellCache = $('#editCellCache');
@@ -49,6 +52,7 @@ var NCubeEditor2 = (function ($)
             _clipboard = $('#cell-clipboard');
 
             addColumnEditListeners();
+            addColumnHideListeners();
             addEditCellListeners();
 
             _editCellRadioURL.change(function() {
@@ -197,6 +201,17 @@ var NCubeEditor2 = (function ($)
 
         hot = new Handsontable(document.getElementById('hot-container'), getHotSettings());
         hot.render();
+    };
+
+    var colorAxisButtons = function ()
+    {
+        var button = $('button.axis-btn').filter(function()
+        {
+            var buttonAxisName = $(this)[0].textContent.toLowerCase();
+            return _hiddenColumns.hasOwnProperty(buttonAxisName);
+        });
+        button.removeClass('btn-primary');
+        button.addClass('btn-warning');
     };
 
     var getColumnLength = function(axis) {
@@ -507,9 +522,49 @@ var NCubeEditor2 = (function ($)
             }
         };
 
+        var getHiddenColumns = function()
+        {
+            _hiddenColumns = {};
+            var storage = {};
+            var storageName = getStorageName();
+            if (localStorage.hasOwnProperty(HIDDEN_COLUMNS))
+            {
+                storage = JSON.parse(localStorage[HIDDEN_COLUMNS]);
+            }
+            else
+            {
+                localStorage[HIDDEN_COLUMNS] = JSON.stringify(storage);
+            }
+            if (storage[storageName] != undefined)
+            {
+                _hiddenColumns = storage[storageName];
+            }
+        };
+
+        var hideColumns = function() {
+            for (var i = 0, axisLength=axes.length; i < axisLength; i++)
+            {
+                var axis = axes[i];
+                var lowerAxisName = axis.name.toLowerCase();
+                if (_hiddenColumns.hasOwnProperty(lowerAxisName))
+                {
+                    var hiddenAxis = _hiddenColumns[lowerAxisName];
+                    var keys = Object.keys(hiddenAxis);
+                    for (var j = 0, len = keys.length; j < len; j++)
+                    {
+                        axis.columnLength--;
+                        var columnId = keys[j];
+                        delete axis.columns[columnId];
+                    }
+                }
+            }
+        };
+
         cache = {};
         data = cubeData;
         determineAxesOrder(data.axes);
+        getHiddenColumns();
+        hideColumns();
         setUpDataTable();
         setUpAxisColumnMap();
     };
@@ -562,6 +617,7 @@ var NCubeEditor2 = (function ($)
 
                     button.parent().find('ul').css({top: dropDownTop + 'px', left: dropDownLeft + 'px'});
                 });
+                colorAxisButtons();
             },
             afterSelection: function(r, c, r2, c2) {
                 var display = '';
@@ -829,6 +885,47 @@ var NCubeEditor2 = (function ($)
         });
         li.append(an);
         ul.append(li);
+
+        li = $('<div/>').prop({'class': 'divider'});
+        ul.append(li);
+        li = $('<li/>');
+        an = $('<a href="#">');
+        an[0].innerHTML = "Hide " + axisName + " columns...";
+        an.click(function (e)
+        {
+            e.preventDefault();
+            hideColumns(axisName)
+        });
+        li.append(an);
+        ul.append(li);
+
+        var lowerAxisName = axisName.toLowerCase();
+        li = $('<li/>');
+        an = $('<a href="#">');
+        an[0].innerHTML = "Show all " + axisName + " columns";
+        if (_hiddenColumns.hasOwnProperty(lowerAxisName))
+        {
+            an.click(function (e)
+            {
+                e.preventDefault();
+                delete _hiddenColumns[lowerAxisName];
+                storeHiddenColumns();
+                destroyEditor();
+                reload();
+            });
+        }
+        else
+        {
+            li.prop({'class': 'disabled'});
+            an.click(function (e)
+            {
+                e.preventDefault();
+            });
+        }
+        li.append(an);
+        ul.append(li);
+
+
         $(div).append(ul);
         $(element).append(div);
     };
@@ -1517,6 +1614,13 @@ var NCubeEditor2 = (function ($)
             nce.showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
+        var lowerAxisName = axis.name.toLowerCase();
+        if (_hiddenColumns.hasOwnProperty(lowerAxisName))
+        {
+            nce.showNote('Hidden column selections for axis ' + axis.name + ' removed.');
+            delete _hiddenColumns[lowerAxisName];
+            storeHiddenColumns();
+        }
         $(_editColumnModal).modal('hide');
         destroyEditor();
         reload();
@@ -1662,6 +1766,146 @@ var NCubeEditor2 = (function ($)
 
     // =============================================== End Column Editing ==============================================
 
+    // =============================================== Begin Column Hiding ==========================================
+
+    var addColumnHideListeners = function() {
+        $('#hideColSelectAll').click(function ()
+        {
+            checkAll(true, '.commitCheck')
+        });
+        $('#hideColSelectNone').click(function ()
+        {
+            checkAll(false, '.commitCheck')
+        });
+        $('#hideColumnsCancel').click(function ()
+        {
+            hideColCancel()
+        });
+        $('#hideColumnsSave').click(function ()
+        {
+            hideColSave()
+        });
+    };
+
+    var hideColumns = function(axisName)
+    {
+        if (!nce.ensureModifiable('Columns cannot be edited.'))
+        {
+            return false;
+        }
+        var result = nce.call("ncubeController.getAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
+        var axis;
+        if (result.status === true)
+        {
+            axis = result.data;
+            if (!axis.columns)
+            {
+                axis.columns = [];
+            }
+            if (axis.defaultCol)
+            {   // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
+                axis.columns.splice(axis.columns.length - 1, 1);
+            }
+        }
+        else
+        {
+            nce.showNote("Could not retrieve axes for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
+            return;
+        }
+        sortColumns(axis);
+        loadHiddenColumns(axis);
+        $('#hideColumnsLabel')[0].innerHTML = 'Hide ' + axisName;
+        $('#hideColumnsModal').modal();
+    };
+
+    var loadHiddenColumns = function(axis)
+    {
+        var insTitle = $('#hideColInstTitle');
+        var inst = $('#hideColInstructions');
+        insTitle[0].textContent = 'Instructions - Hide Column';
+        inst[0].innerHTML = "Select columns to show. Deselect columns to hide.";
+
+        var axisList = axis.columns;
+        var lowerAxisName = axis.name.toLowerCase();
+        var defaultCol = axis.defaultCol;
+        if (defaultCol !=null)
+        {
+            axisList.push(axis.defaultCol);
+        }
+        _hideColumnsList.empty();
+        _hideColumnsList.prop('model', axis);
+        var displayOrder = 0;
+        $.each(axisList, function (key, item)
+        {
+            item.displayOrder = displayOrder++;
+            var itemId = item.id;
+            var listItem = $('<li/>').prop({class: "list-group-item skinny-lr no-margins"});
+            var rowDiv = $('<div/>').prop({class: "container-fluid"});
+            var rowLabel = $('<label/>').prop({class: "checkbox no-margins col-xs-10"});
+            var labelText = item.value != null ? item.value : 'Default';
+            var inputBtn = $('<input/>').prop({class: "commitCheck", type: "checkbox"});
+            inputBtn.attr("data-id", itemId);
+            inputBtn[0].checked = !_hiddenColumns[lowerAxisName] || !_hiddenColumns[lowerAxisName][itemId];
+            listItem.append(rowDiv);
+            rowDiv.append(rowLabel);
+            rowLabel.append(inputBtn);
+            rowLabel.append(labelText);
+            _hideColumnsList.append(listItem);
+        });
+    };
+
+    var hideColCancel = function()
+    {
+        $('#hideColumnsModal').modal('hide');
+    };
+
+    var hideColSave = function()
+    {
+        var axis = _hideColumnsList.prop('model');
+        var lowerAxisName = axis.name.toLowerCase();
+        var columnIds = [];
+        $('.commitCheck:not(:checked)').each(function () {
+            var id = $(this).attr('data-id');
+            columnIds.push(id);
+        });
+        delete _hiddenColumns[lowerAxisName];
+        if (columnIds.length > 0)
+        {
+            _hiddenColumns[lowerAxisName] = {};
+            for (var i = 0, len = columnIds.length; i < len; i++)
+            {
+                var columnId = columnIds[i];
+                _hiddenColumns[lowerAxisName][columnId] = true;
+            }
+        }
+        storeHiddenColumns();
+        $('#hideColumnsModal').modal('hide');
+        destroyEditor();
+        reload();
+    };
+
+    var getStorageName = function()
+    {
+        return nce.getAppId().app + '_' + data.ncube.toLowerCase();
+    };
+
+    var storeHiddenColumns = function()
+    {
+        var storage = JSON.parse(localStorage[HIDDEN_COLUMNS]);
+        var storageName = getStorageName();
+        if (Object.keys(_hiddenColumns).length > 0)
+        {
+            storage[storageName] = _hiddenColumns;
+        }
+        else
+        {
+            delete storage[storageName];
+        }
+        localStorage[HIDDEN_COLUMNS] = JSON.stringify(storage);
+    };
+
+    // =============================================== End Column Hiding ============================================
+
     // =============================================== Begin Axis Editing ==============================================
 
     var addAxis = function() {
@@ -1712,6 +1956,13 @@ var NCubeEditor2 = (function ($)
         var axisName = $('#deleteAxisName').val();
         var result = nce.call("ncubeController.deleteAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
         if (result.status === true) {
+            var lowerAxisName = axisName.toLowerCase();
+            if (_hiddenColumns.hasOwnProperty(lowerAxisName))
+            {
+                nce.showNote('Hidden column selections for axis ' + axisName + ' removed.');
+                delete _hiddenColumns[lowerAxisName];
+                storeHiddenColumns();
+            }
             nce.loadCube();
         } else {
             nce.showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
@@ -1794,9 +2045,17 @@ var NCubeEditor2 = (function ($)
         var fireAll = $('#updateAxisFireAll').prop('checked');
         var result = nce.call("ncubeController.updateAxis", [nce.getAppId(), nce.getSelectedCubeName(), _axisName, axisName, hasDefault, sortOrder, fireAll]);
         if (result.status === true) {
+            var oldName = _axisName.toLowerCase();
+            var newName = axisName.toLowerCase();
+            if (oldName != newName)
+            {
+                _hiddenColumns[newName] = _hiddenColumns[oldName];
+                delete _hiddenColumns[oldName];
+                storeHiddenColumns();
+            }
             nce.loadCube();
         } else {
-            nce.showNote("Unable to update axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Unable to update axis '" + _axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     };
 
