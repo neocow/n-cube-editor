@@ -1868,6 +1868,11 @@ var NCubeEditor2 = (function ($)
             var id = $(this).attr('data-id');
             columnIds.push(id);
         });
+        if (columnIds.length == axis.columns.length)
+        {
+            nce.showNote('Please select at least one column to show.');
+            return;
+        }
         delete _hiddenColumns[lowerAxisName];
         if (columnIds.length > 0)
         {
