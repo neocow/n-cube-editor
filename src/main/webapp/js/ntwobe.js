@@ -413,33 +413,46 @@ var NCubeEditor2 = (function ($)
 
         var determineAxesOrder = function (cubeAxes) {
             axes = [];
-            var keys = Object.keys(cubeAxes);
-            for (var i = 0, len = keys.length; i < len; i++) {
-                axes.push(cubeAxes[keys[i]]);
-            }
-
-            var horizontal;
-            axes.sort(function (a, b) {
-                return getColumnLength(b) - getColumnLength(a);
-            });
-
-            var delta;
-            var smallestDelta = Number.MAX_VALUE;
-            for (var i = 0, len = axes.length; i < len; i++) {
-                var axis = axes[i];
-                if (headerAxisNames.indexOf(axis.name) > -1) {
-                    horizontal = i;
-                    break;
-                }
-                delta = Math.abs(getColumnLength(axis) - 12);
-                if (delta < smallestDelta) {
-                    smallestDelta = delta;
-                    horizontal = i;
+            var i, len;
+            if (localStorage.hasOwnProperty(getStorageKey(AXIS_ORDER)))
+            {
+                var order = JSON.parse(localStorage[getStorageKey(AXIS_ORDER)]);
+                for (i = 0, len = order.length; i < len; i++)
+                {
+                    var axis = cubeAxes[order[i]];
+                    getColumnLength(axis);
+                    axes.push(axis);
                 }
             }
+            else
+            {
+                var keys = Object.keys(cubeAxes);
+                for (i = 0, len = keys.length; i < len; i++) {
+                    axes.push(cubeAxes[keys[i]]);
+                }
 
-            horizontal = axes.splice(horizontal, 1);
-            axes.push(horizontal[0]);
+                var horizontal;
+                axes.sort(function (a, b) {
+                    return getColumnLength(b) - getColumnLength(a);
+                });
+
+                var delta;
+                var smallestDelta = Number.MAX_VALUE;
+                for (i = 0, len = axes.length; i < len; i++) {
+                    var axis = axes[i];
+                    if (headerAxisNames.indexOf(axis.name) > -1) {
+                        horizontal = i;
+                        break;
+                    }
+                    delta = Math.abs(getColumnLength(axis) - 12);
+                    if (delta < smallestDelta) {
+                        smallestDelta = delta;
+                        horizontal = i;
+                    }
+                }
+                horizontal = axes.splice(horizontal, 1);
+                axes.push(horizontal[0]);
+            }
         };
 
         var setUpDataTable = function() {
@@ -525,19 +538,10 @@ var NCubeEditor2 = (function ($)
         var getHiddenColumns = function()
         {
             _hiddenColumns = {};
-            var storage = {};
-            var storageName = getStorageName();
-            if (localStorage.hasOwnProperty(HIDDEN_COLUMNS))
+            var storageKey = getStorageKey(HIDDEN_COLUMNS);
+            if (localStorage.hasOwnProperty(storageKey))
             {
-                storage = JSON.parse(localStorage[HIDDEN_COLUMNS]);
-            }
-            else
-            {
-                localStorage[HIDDEN_COLUMNS] = JSON.stringify(storage);
-            }
-            if (storage[storageName] != undefined)
-            {
-                _hiddenColumns = storage[storageName];
+                _hiddenColumns = JSON.parse(localStorage[storageKey]);
             }
         };
 
@@ -935,6 +939,63 @@ var NCubeEditor2 = (function ($)
         }
         li.append(an);
         ul.append(li);
+
+        var axisIndex = findIndexOfAxisName(axisName);
+        var axesLength = axes.length;
+        if (axisIndex != axesLength - 1)
+        {
+            li = $('<div/>').prop({'class': 'divider'});
+            ul.append(li);
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Move Up";
+            an.click(function (e) {
+                e.preventDefault();
+                moveAxis(axisIndex, axesLength - 1)
+            });
+            li.append(an);
+            ul.append(li);
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Move Left";
+            if (axisIndex == 0)
+            {
+                li.prop({'class': 'disabled'});
+                an.click(function (e)
+                {
+                    e.preventDefault();
+                });
+            }
+            else
+            {
+                an.click(function (e) {
+                    e.preventDefault();
+                    moveAxis(axisIndex, axisIndex - 1)
+                });
+            }
+            li.append(an);
+            ul.append(li);
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Move Right";
+            if (axisIndex == axesLength - 2)
+            {
+                li.prop({'class': 'disabled'});
+                an.click(function (e)
+                {
+                    e.preventDefault();
+                });
+            }
+            else
+            {
+                an.click(function (e) {
+                    e.preventDefault();
+                    moveAxis(axisIndex, axisIndex + 1)
+                });
+            }
+            li.append(an);
+            ul.append(li);
+        }
 
         $(div).append(ul);
         $(element).append(div);
@@ -1899,27 +1960,56 @@ var NCubeEditor2 = (function ($)
         reload();
     };
 
-    var getStorageName = function()
+    var getStorageKey = function(prefix)
     {
-        return nce.getAppId().app + '_' + data.ncube.toLowerCase();
+        return prefix + ':' + nce.getAppId().app.toLowerCase() + ':' + data.ncube.toLowerCase();
     };
 
     var storeHiddenColumns = function()
     {
-        var storage = JSON.parse(localStorage[HIDDEN_COLUMNS]);
-        var storageName = getStorageName();
+        var storageKey = getStorageKey(HIDDEN_COLUMNS);
         if (Object.keys(_hiddenColumns).length > 0)
         {
-            storage[storageName] = _hiddenColumns;
+            localStorage[storageKey] = JSON.stringify(_hiddenColumns);
         }
         else
         {
-            delete storage[storageName];
+            delete localStorage[storageKey];
         }
-        localStorage[HIDDEN_COLUMNS] = JSON.stringify(storage);
     };
 
-    // =============================================== End Column Hiding ============================================
+    // =============================================== End Column Hiding ===============================================
+
+    // =============================================== Begin Axis Ordering =============================================
+
+    var moveAxis = function (fromIndex, toIndex) {
+        axes.splice(toIndex, 0, axes.splice(fromIndex, 1)[0]);
+        storeAxisOrder();
+        destroyEditor();
+        reload();
+    };
+
+    var findIndexOfAxisName = function (axisName) {
+        for (var i = 0, len = axes.length; i < len; i++)
+        {
+            if (axes[i].name.toLowerCase() === axisName.toLowerCase())
+            {
+                return i;
+            }
+        }
+        return -1;
+    };
+
+    var storeAxisOrder = function() {
+        var order = [];
+        for (var i = 0, len = axes.length; i < len; i++)
+        {
+            order.push(axes[i].name.toLowerCase());
+        }
+        localStorage[getStorageKey(AXIS_ORDER)] = JSON.stringify(order);
+    };
+
+    // =============================================== End Axis Ordering ===============================================
 
     // =============================================== Begin Axis Editing ==============================================
 
