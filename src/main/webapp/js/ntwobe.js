@@ -1449,7 +1449,7 @@ var NCubeEditor2 = (function ($)
                 axis.columns.splice(axis.columns.length - 1, 1);
             }
         } else {
-            nce.showNote("Could not retrieve axes for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         sortColumns(axis);
@@ -1617,7 +1617,7 @@ var NCubeEditor2 = (function ($)
         var lowerAxisName = axis.name.toLowerCase();
         if (_hiddenColumns.hasOwnProperty(lowerAxisName))
         {
-            nce.showNote('Hidden column selections for axis ' + axis.name + ' removed.');
+            nce.showNote('Hidden column selections for axis ' + axis.name + ' removed.', 'Note', 2000);
             delete _hiddenColumns[lowerAxisName];
             storeHiddenColumns();
         }
@@ -1809,12 +1809,12 @@ var NCubeEditor2 = (function ($)
         }
         else
         {
-            nce.showNote("Could not retrieve axes for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         sortColumns(axis);
         loadHiddenColumns(axis);
-        $('#hideColumnsLabel')[0].innerHTML = 'Hide ' + axisName;
+        $('#hideColumnsLabel')[0].innerHTML = 'Hide ' + axisName + ' columns';
         $('#hideColumnsModal').modal();
     };
 
@@ -1870,7 +1870,7 @@ var NCubeEditor2 = (function ($)
         });
         if (columnIds.length == axis.columns.length)
         {
-            nce.showNote('Please select at least one column to show.');
+            nce.showNote('Please select at least one column to show.', 'Note', 2000);
             return;
         }
         delete _hiddenColumns[lowerAxisName];
@@ -1964,7 +1964,7 @@ var NCubeEditor2 = (function ($)
             var lowerAxisName = axisName.toLowerCase();
             if (_hiddenColumns.hasOwnProperty(lowerAxisName))
             {
-                nce.showNote('Hidden column selections for axis ' + axisName + ' removed.');
+                nce.showNote('Hidden column selections for axis ' + axisName + ' removed.', 'Note', 2000);
                 delete _hiddenColumns[lowerAxisName];
                 storeHiddenColumns();
             }
@@ -1984,7 +1984,7 @@ var NCubeEditor2 = (function ($)
         if (result.status === true) {
             axis = result.data;
         } else {
-            nce.showNote("Could not retrieve axes for ncube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         var isRule = axis.type.name == 'RULE';
