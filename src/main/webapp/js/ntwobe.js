@@ -878,7 +878,7 @@ var NCubeEditor2 = (function ($)
         ul.append(li);
         li = $('<li/>');
         an = $('<a href="#">');
-        an[0].innerHTML = "Edit " + axisName + " columns...";
+        an[0].innerHTML = "Edit columns...";
         an.click(function (e) {
             e.preventDefault();
             editColumns(axisName)
@@ -890,7 +890,7 @@ var NCubeEditor2 = (function ($)
         ul.append(li);
         li = $('<li/>');
         an = $('<a href="#">');
-        an[0].innerHTML = "Hide " + axisName + " columns...";
+        an[0].innerHTML = "Hide columns...";
         if (axisColumnMap[axisName].length > 1)
         {
             an.click(function (e)
@@ -913,7 +913,7 @@ var NCubeEditor2 = (function ($)
         var lowerAxisName = axisName.toLowerCase();
         li = $('<li/>');
         an = $('<a href="#">');
-        an[0].innerHTML = "Show all " + axisName + " columns";
+        an[0].innerHTML = "Show all columns";
         if (_hiddenColumns.hasOwnProperty(lowerAxisName))
         {
             an.click(function (e)
