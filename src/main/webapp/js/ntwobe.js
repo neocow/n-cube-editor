@@ -1148,21 +1148,30 @@ var NCubeEditor2 = (function ($)
         };
     };
 
-    var excelCopy = function() {
-        var clipData = "";
+    var excelCopy = function()
+    {
+        var clipData = '';
         var range = getSelectedCellRange();
 
-        for (var row = range.startRow; row <= range.endRow; row++) {
-            for (var col = range.startCol; col <= range.endCol; col++) {
+        for (var row = range.startRow; row <= range.endRow; row++)
+        {
+            for (var col = range.startCol; col <= range.endCol; col++)
+            {
                 var content = getTextCellValue(row, col);
 
                 if (content.indexOf('\n') > -1) {
                     // Must quote if newline (and double any quotes inside)
                     clipData += '"' + content.replace(/"/g, '""') + '"';
-                } else {
+                }
+                else
+                {
                     clipData += content;
                 }
-                clipData += '\t';
+
+                if (col < range.endCol)
+                {   // Only add tab on last - 1 (otherwise paste will overwrite data in next column)
+                    clipData += '\t';
+                }
             }
             clipData += '\n';
         }
