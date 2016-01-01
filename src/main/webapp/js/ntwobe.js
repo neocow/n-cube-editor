@@ -203,6 +203,8 @@ var NCubeEditor2 = (function ($)
 
         handleCubeData(JSON.parse(result.data));
         hot = new Handsontable(document.getElementById('hot-container'), getHotSettings());
+        var col = axes.length == 1 ? 1 : axes.length - 1;
+        hot.selectCell(2, col);
         hot.render();
     };
 
