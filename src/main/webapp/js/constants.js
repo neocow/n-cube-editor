@@ -10,18 +10,25 @@ var DIFF_INLINE = 1;
 var DIFF_DESCRIPTIVE = 2;
 var DIFF_VISUAL = 3;
 var CLIP_NCE = '~NCE~';
+var CLIP_EXCEL = 'EXCEL';
 
 var AXIS_DEFAULT = '002147483647';
 var DEFAULT_TEXT = 'Default';
-var CACHE_ROW_HEADER = 'rowHeader';
 
 var BACKGROUND_CUBE_NAME = '#6495ED';
 var BACKGROUND_AXIS_INFO = '#4D4D4D';
-var BACKGROUND_COLUMN_HEADER = '#929292';
-var BACKGROUND_ODD_ROW = '#E0E0E0';
 var COLOR_WHITE = '#FFFFFF';
-var CLASS_HANDSON_TABLE_HEADER = 'handsonTableHeader';
+
+var CLASS_HANDSON_TABLE_HEADER = ' handsonTableHeader';
 var CLASS_HANDSON_CURRENT_ROW = 'handsonCurrentRow';
+
+var CLASS_HANDSON_CELL_BASIC = ' cell';
+var CLASS_HANDSON_CELL_CODE = ' code';
+var CLASS_HANDSON_CELL_DEFAULT = ' tableDefault';
+var CLASS_HANDSON_CELL_ODD_ROW = ' oddRow';
+var CLASS_HANDSON_CELL_URL = ' url';
+var CLASS_HANDSON_SEARCH_RESULT = ' htSearchResult';
+
 var NONE = 'none';
 
 URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
