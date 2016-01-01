@@ -88,12 +88,16 @@ var NCubeEditor2 = (function ($)
                 var isModalDisplayed = $('body').hasClass('modal-open');
                 var focus = $(':focus');
 
-                if (!isModalDisplayed && focus && focus.attr('id') != 'cube-search' && focus.attr('id') != 'cube-search-content') {
-                    if (e.metaKey || e.ctrlKey) {
+                if (!isModalDisplayed && focus && focus.attr('id') != 'cube-search' && focus.attr('id') != 'cube-search-content')
+                {
+                    if (e.metaKey || e.ctrlKey)
+                    {
                         // Control Key (command in the case of Mac)
                         if (e.keyCode == KEY_CODES.X) {
                             editCutCopy(true);  // true = isCut
-                        } else if (e.keyCode == KEY_CODES.C) {
+                        }
+                        else if (e.keyCode == KEY_CODES.C)
+                        {
                             // Ctrl-C or Ctrl-X
                             if (CLIP_NCE == _clipFormat) {
                                 // NCE
@@ -383,9 +387,10 @@ var NCubeEditor2 = (function ($)
     var getCellId = function(row, col) {
         var cellId = '';
         var headerInfo = [];
+        var i;
 
         if (axes.length > 1) {
-            for (var i = 0; i < colOffset; i++) {
+            for (i = 0; i < colOffset; i++) {
                 headerInfo.push(getRowHeaderId(row, i));
             }
             headerInfo.push(getColumnHeaderId(col));
@@ -394,7 +399,7 @@ var NCubeEditor2 = (function ($)
                 return a - b;
             });
 
-            for (var i = 0, len = headerInfo.length; i < len; i++) {
+            for (i = 0, len = headerInfo.length; i < len; i++) {
                 cellId += headerInfo[i] + '_';
             }
             cellId = cellId.slice(0, -1);
@@ -575,6 +580,7 @@ var NCubeEditor2 = (function ($)
 
     var getHotSettings = function() {
         return {
+            copyPaste: false,
             autoColumnSize: true,
             autoRowSize: false,
             enterBeginsEditing: false,
@@ -625,22 +631,23 @@ var NCubeEditor2 = (function ($)
             },
             afterSelection: function(r, c, r2, c2) {
                 var display = '';
+                var axisName, axisVal;
                 if (c >= colOffset) {
                     if (r === 1) {
                         display = '<strong>Axis</strong>: ' + axes[colOffset].name + ', <strong>Column</strong>:' + getColumnHeaderValue(c);
                     } else if (r > 1) {
                         display = '&nbsp;';
                         for (var axisNum = 0; axisNum < colOffset; axisNum++) {
-                            var axisName = axes[axisNum].name;
-                            var axisVal = getRowHeaderPlainText(r, axisNum);
+                            axisName = axes[axisNum].name;
+                            axisVal = getRowHeaderPlainText(r, axisNum);
                             display += '<strong>' + axisName + '</strong>: ' + axisVal + ', ';
                         }
                         if (axes.length > 1) {
-                            var axisName = axes[colOffset].name;
-                            var axisVal = getColumnHeaderValue(c);
+                            axisName = axes[colOffset].name;
+                            axisVal = getColumnHeaderValue(c);
                         } else {
-                            var axisName = axes[0].name;
-                            var axisVal = getRowHeaderPlainText(r, 0);
+                            axisName = axes[0].name;
+                            axisVal = getRowHeaderPlainText(r, 0);
                         }
                         display += '<strong>' + axisName + '</strong>: ' + axisVal;
                     }
@@ -756,23 +763,31 @@ var NCubeEditor2 = (function ($)
         }
     };
 
-    var getTextCellValue = function(row, col) {
+    var getTextCellValue = function(row, col)
+    {
         var cellData = getCellData(row, col);
         var val = '';
 
-        if (cellData) {
-            if (cellData.url !== undefined) {
-                val = '<a class="nc-anc">' + cellData.url + '</a>';
-            } else if ('date' === cellData.type) {
+        if (cellData)
+        {
+            if (cellData.url !== undefined)
+            {
+                val = cellData.url;
+            }
+            else if ('date' === cellData.type)
+            {
                 val = cellData.value;
                 val = val.substring(0, val.indexOf('T'));
-            } else {
+            }
+            else
+            {
                 val = cellData.value;
             }
-        } else if (data.defaultCellValue) {
+        }
+        else if (data.defaultCellValue) {
             val = data.defaultCellValue;
         }
-        return val;
+        return '' + val;
     };
 
     var buildUrlLink = function(element) {
@@ -1046,25 +1061,25 @@ var NCubeEditor2 = (function ($)
             curPos = e.pageX;
         });
 
-        coordBar.addEventListener('mouseup', function(e) {
+        coordBar.addEventListener('mouseup', function() {
             curDown = false;
         });
 
-        coordBar.addEventListener('mousemove', function(e) {
+        coordBar.addEventListener('mousemove', function() {
             if (curDown) {
                 coordBar.scrollLeft = coordBar.scrollLeft + curPos - e.pageX;
             }
         });
 
-        coordBar.addEventListener('mouseout', function(e) {
+        coordBar.addEventListener('mouseout', function() {
             curDown = false;
         });
 
-        leftButton.addEventListener('click', function(e) {
+        leftButton.addEventListener('click', function() {
             coordBar.scrollLeft = coordBar.scrollLeft - 40;
         });
 
-        rightButton.addEventListener('click', function(e) {
+        rightButton.addEventListener('click', function() {
             coordBar.scrollLeft = coordBar.scrollLeft + 40;
         });
     };
@@ -1180,6 +1195,7 @@ var NCubeEditor2 = (function ($)
         var result = nce.call("ncubeController.copyCells", [nce.getAppId(), nce.getSelectedCubeName(), cells, isCut]);
         if (!result.status) {
             nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
+            return;
         } else if (isCut) {
             reload();
         }
