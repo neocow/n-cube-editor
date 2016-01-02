@@ -34,6 +34,8 @@ var NCubeEditor2 = (function ($)
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
     var _clipboard = null;
     var _clipFormat = CLIP_NCE;
+    var _searchField = null;
+    var _searchCoords = null;
 
     var init = function(info) {
         if (!nce) {
@@ -49,6 +51,7 @@ var NCubeEditor2 = (function ($)
             _valueDropdown = $('#datatypes-value');
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
+            _searchField = document.getElementById('search-field');
 
             addColumnEditListeners();
             addColumnHideListeners();
@@ -108,7 +111,7 @@ var NCubeEditor2 = (function ($)
                         } else if (e.keyCode == KEY_CODES.K) {
                             // Toggle clipboard format to copy (NCE versus Excel)
                             if (CLIP_NCE == _clipFormat) {
-                                _clipFormat = 'EXCEL';
+                                _clipFormat = CLIP_EXCEL;
                                 nce.showNote('Use generic format (Excel support)', 'Note', 2000);
                             } else {
                                 _clipFormat = CLIP_NCE;
@@ -134,9 +137,13 @@ var NCubeEditor2 = (function ($)
                 NCubeEditor2.render();
 
                 var windowWidth = $(this).width();
-                $(getDomCoordinateBar()).width(windowWidth - 45); // coord bar text
-                $('#coordinate-bar-move-right').css({left: windowWidth - 20}); // keep the right button to the end
-                $('#coordinate-bar').width(windowWidth); // coord bar container for background
+                var search = $('#search-container');
+                var searchWidth = search.width();
+                var coordWidth = windowWidth - searchWidth;
+                $(getDomCoordinateBar()).width(coordWidth - 45); // coord bar text
+                $('#coordinate-bar-move-right').css({left: coordWidth - 20}); // keep the right button to the end
+                $('#util-container-bar').width(coordWidth); // coord bar container for background
+                search.css({left: windowWidth - searchWidth});
             });
         }
 
@@ -206,7 +213,99 @@ var NCubeEditor2 = (function ($)
         var col = axes.length == 1 ? 1 : axes.length - 1;
         hot.selectCell(2, col);
         hot.render();
+        Handsontable.Dom.addEvent(_searchField, 'keyup', function (event) {
+            var query = this.value;
+            if (query && query.length > 0) {
+                searchCubeData(query);
+                render();
+            } else {
+                clearSearchMatches();
+                render();
+            }
+        });
     };
+
+    var clearSearchMatches = function() {
+        for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
+            var axis = axes[axisNum];
+            var cols = axis.columns;
+            var colKeys = Object.keys(cols);
+            for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
+                cols[colKeys[colNum]].isSearchResult = false;
+            }
+        }
+
+        var cells = data.cells;
+        var cellKeys = Object.keys(cells);
+        for (var i = 0, len = cellKeys.length; i < len; i++) {
+            cells[cellKeys[i]].isSearchResult = false;
+        }
+    };
+
+    var searchCubeData = function(query) {
+        var queryLower = query.toLowerCase();
+        var containsQuery = function(value) {
+            return value.toString().toLowerCase().indexOf(queryLower) > -1;
+        };
+
+        // search columns
+        for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
+            var axis = axes[axisNum];
+            var cols = axis.columns;
+            var colKeys = Object.keys(cols);
+            for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
+                var col = cols[colKeys[colNum]];
+                if (col.hasOwnProperty('name') && containsQuery(col.name)) {
+                    col.isSearchResult = true;
+                    continue;
+                }
+                if (col.hasOwnProperty('url') && containsQuery(col.url)) {
+                    col.isSearchResult = true;
+                    continue;
+                }
+                if (col.hasOwnProperty('value')) {
+                    var val = col.value;
+                    if (typeof val === 'object') {
+                        for (var i = 0, iLen = val.length; i < iLen; i++) {
+                            var curVal = val[i];
+                            if (typeof curVal === 'object') {
+                                for (var j = 0, jLen = curVal.length; j < jLen; j++) {
+                                    var curCurVal = curVal[j];
+                                    if (containsQuery(curCurVal)) {
+                                        col.isSearchResult = true;
+                                        continue;
+                                    }
+                                }
+                                if (col.isSearchResult) {
+                                    continue;
+                                }
+                            } else if (containsQuery(curVal)) {
+                                col.isSearchResult = true;
+                                continue;
+                            }
+                        }
+                        if (col.isSearchResult) {
+                            continue;
+                        }
+                    } else {
+                        col.isSearchResult = containsQuery(val);
+                        continue;
+                    }
+                }
+                col.isSearchResult = false;
+            }
+        }
+
+        // search cells
+        var cells = data.cells;
+        var cellKeys = Object.keys(cells);
+        for (var i = 0, len = cellKeys.length; i < len; i++) {
+            var cell = cells[cellKeys[i]];
+            var cellVal = cell.hasOwnProperty('url') ? cell.url : cell.value;
+            cell.isSearchResult = containsQuery(cellVal);
+        }
+    };
+
 
     var colorAxisButtons = function ()
     {
@@ -232,16 +331,6 @@ var NCubeEditor2 = (function ($)
         return colLen;
     };
 
-    var copyColumn = function(column) {
-        var newCol = {};
-        var keys = Object.keys(column);
-        for (var i = 0, len = keys.length; i < len; i++) {
-            var key = keys[i];
-            newCol[key] = column[key];
-        }
-        return newCol;
-    };
-
     var getAxisColumn = function(axis, colNum) {
         if (axis.columnLength === 0) {
             return;
@@ -255,17 +344,16 @@ var NCubeEditor2 = (function ($)
     };
 
     var getColumnHeader = function(col) {
-        return getAxisColumn(axes[colOffset], col - colOffset);
+        var colHeader = getAxisColumn(axes[colOffset], col - colOffset);
+        return colHeader ? colHeader : {id:'', value:''};
     };
 
     var getColumnHeaderValue = function(col) {
-        var columnHeader = getColumnHeader(col);
-        return columnHeader ? columnHeader.value : '';
+        return getColumnHeader(col).value;
     };
 
     var getColumnHeaderId = function(col) {
-        var columnHeader = getColumnHeader(col);
-        return columnHeader ? columnHeader.id : '';
+        return getColumnHeader(col).id;
     };
 
     var getAxisDefault = function(axis) {
@@ -427,23 +515,7 @@ var NCubeEditor2 = (function ($)
             }
         };
 
-        var setUpDataTable = function()
-        {
-            var getColumnString = function(index)
-            {
-                var dividend = index;
-                var modulo;
-                var colName = '';
-
-                while (dividend > 0) {
-                    modulo = (dividend - 1) % 26;
-                    colName = String.fromCharCode(65 + modulo) + colName;
-                    dividend = Math.floor((dividend - modulo) / 26);
-                }
-
-                return colName;
-            };
-
+        var setUpDataTable = function() {
             cubeName = cubeData.ncube;
             var totalRows = 1;
             colOffset = axes.length - 1;
@@ -602,9 +674,6 @@ var NCubeEditor2 = (function ($)
                 return {renderer:categoryRenderer};
             },
             afterRender: function() {
-                // for odd cell row backgrounds
-                $('tr:visible:odd .cell').css({'background-color': BACKGROUND_ODD_ROW});
-
                 // set dropdown location on buttons
                 $('.dropdown-toggle').click(function () {
                     var button = $(this);
@@ -657,6 +726,7 @@ var NCubeEditor2 = (function ($)
 
     var categoryRenderer = function(instance, td, row, col, prop, value, cellProperties) {
         Handsontable.renderers.TextRenderer.apply(this, arguments);
+        td.className = '';
 
         // cube name
         if (row === 0 && (col < colOffset || col === 0)) {
@@ -703,11 +773,13 @@ var NCubeEditor2 = (function ($)
         // column headers
         else if (row === 1) {
             if (axes.length > 1) {
-                td.innerHTML = getColumnHeaderValue(col);
+                var column = getColumnHeader(col);
+                td.innerHTML = column.value;
+                if (column.isSearchResult) {
+                    td.className += CLASS_HANDSON_SEARCH_RESULT;
+                }
             }
-            td.className = CLASS_HANDSON_TABLE_HEADER;
-            td.style.background = BACKGROUND_COLUMN_HEADER;
-            td.style.color = COLOR_WHITE;
+            td.className += CLASS_HANDSON_TABLE_HEADER;
             cellProperties.editor = ColumnEditor;
         }
 
@@ -724,23 +796,28 @@ var NCubeEditor2 = (function ($)
                     buildExpressionLink(val, td);
                 }
             }
-            td.className = CLASS_HANDSON_TABLE_HEADER;
-            td.style.background = BACKGROUND_COLUMN_HEADER;
-            td.style.color = COLOR_WHITE;
+            td.className += CLASS_HANDSON_TABLE_HEADER;
+            if (getRowHeader(row, col).isSearchResult) {
+                td.className += CLASS_HANDSON_SEARCH_RESULT;
+            }
             cellProperties.editor = ColumnEditor;
         }
 
         // otherwise in cell data
         else {
             var cellData = getCellData(row, col);
-            td.className = 'cell';
+            td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData) {
+                if (cellData.isSearchResult) {
+                    td.className += CLASS_HANDSON_SEARCH_RESULT;
+                }
+
                 if (cellData.url !== undefined) {
-                    td.className += ' url';
+                    td.className += CLASS_HANDSON_CELL_URL;
                     td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
                     buildUrlLink(td);
                 } else if (['exp', 'method'].indexOf(cellData.type) > -1) {
-                    td.className += ' code';
+                    td.className += CLASS_HANDSON_CELL_CODE;
                     buildExpressionLink(cellData.value, td);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
@@ -750,7 +827,11 @@ var NCubeEditor2 = (function ($)
                 }
             } else if (data.defaultCellValue) {
                 td.innerHTML = data.defaultCellValue;
-                td.className += ' tableDefault';
+                td.className += CLASS_HANDSON_CELL_DEFAULT;
+            }
+
+            if (row % 2 !== 0) {
+                td.className += CLASS_HANDSON_CELL_ODD_ROW;
             }
 
             cellProperties.editor = CellEditor;

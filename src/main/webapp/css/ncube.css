@@ -48,7 +48,7 @@ div#editColumnsModal div.panel-group
 
 /* begin coord bar and HOT */
 
-#coordinate-bar {
+#util-container-bar {
     position: fixed;
     background-color: white;
     height: 20px;
@@ -80,12 +80,34 @@ div#editColumnsModal div.panel-group
     display: none;
 }
 
+#search-container {
+    width: 200px;
+    position: absolute;
+}
+
+#search-container input {
+    padding: 0;
+    width: inherit;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+}
+
 .handsontable table.htCore {
     background-color: #BEEEEF;
 }
 
 .handsontable th.handsonCurrentRow, .handsonTableHeader.handsonCurrentRow {
     opacity: .75;
+}
+
+.handsontable td.handsonTableHeader {
+    color: white;
+    background-color: #929292;
+}
+
+.handsontable .oddRow {
+    background-color: #E0E0E0;
 }
 
 .handsontable th, .handsontable td {
