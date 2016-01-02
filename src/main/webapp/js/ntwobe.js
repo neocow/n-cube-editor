@@ -245,6 +245,10 @@ var NCubeEditor2 = (function ($)
     var searchCubeData = function(query) {
         var queryLower = query.toLowerCase();
         var containsQuery = function(value) {
+            if (!value)
+            {
+                return false;
+            }
             return value.toString().toLowerCase().indexOf(queryLower) > -1;
         };
 
