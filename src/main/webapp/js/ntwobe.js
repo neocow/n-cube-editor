@@ -252,58 +252,72 @@ var NCubeEditor2 = (function ($)
             return value.toString().toLowerCase().indexOf(queryLower) > -1;
         };
 
-        // search columns
+        var i;
+        // search all axes
         for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
             var axis = axes[axisNum];
             var cols = axis.columns;
             var colKeys = Object.keys(cols);
-            for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
+
+            // search all columns for an axis
+            for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++)
+            {
                 var col = cols[colKeys[colNum]];
-                if (col.hasOwnProperty('name') && containsQuery(col.name)) {
+                col.isSearchResult = false;
+                if (col.hasOwnProperty('name') && containsQuery(col.name))
+                {
                     col.isSearchResult = true;
                     continue;
                 }
-                if (col.hasOwnProperty('url') && containsQuery(col.url)) {
+                if (col.hasOwnProperty('url') && containsQuery(col.url))
+                {
                     col.isSearchResult = true;
                     continue;
                 }
-                if (col.hasOwnProperty('value')) {
+
+                if (col.hasOwnProperty('value'))
+                {
                     var val = col.value;
-                    if (typeof val === 'object') {
-                        for (var i = 0, iLen = val.length; i < iLen; i++) {
+                    if (typeof val === 'object')
+                    {
+                        for (i = 0, iLen = val.length; i < iLen; i++)
+                        {
                             var curVal = val[i];
-                            if (typeof curVal === 'object') {
-                                for (var j = 0, jLen = curVal.length; j < jLen; j++) {
-                                    var curCurVal = curVal[j];
-                                    if (containsQuery(curCurVal)) {
+                            if (typeof curVal === 'object')
+                            {
+                                for (var j = 0, jLen = curVal.length; j < jLen; j++)
+                                {
+                                    if (containsQuery(curVal[j]))
+                                    {
                                         col.isSearchResult = true;
-                                        continue;
+                                        break;
                                     }
                                 }
-                                if (col.isSearchResult) {
-                                    continue;
+                                if (col.isSearchResult)
+                                {
+                                    break;
                                 }
-                            } else if (containsQuery(curVal)) {
+                            }
+                            else if (containsQuery(curVal))
+                            {
                                 col.isSearchResult = true;
-                                continue;
+                                break;
                             }
                         }
-                        if (col.isSearchResult) {
-                            continue;
-                        }
-                    } else {
+                    }
+                    else
+                    {
                         col.isSearchResult = containsQuery(val);
-                        continue;
                     }
                 }
-                col.isSearchResult = false;
             }
         }
 
         // search cells
         var cells = data.cells;
         var cellKeys = Object.keys(cells);
-        for (var i = 0, len = cellKeys.length; i < len; i++) {
+        for (i = 0, len = cellKeys.length; i < len; i++)
+        {
             var cell = cells[cellKeys[i]];
             var cellVal = cell.hasOwnProperty('url') ? cell.url : cell.value;
             cell.isSearchResult = containsQuery(cellVal);
