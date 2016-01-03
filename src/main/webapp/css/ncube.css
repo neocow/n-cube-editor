@@ -124,6 +124,10 @@ div#editColumnsModal div.panel-group
     position: fixed;
 }
 
+.indent-axis-buttons {
+    padding: 3px 20px;
+}
+
 /* end coord bar and HOT */
 
 /* begin cell display */
