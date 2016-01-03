@@ -1057,54 +1057,62 @@ var NCubeEditor2 = (function ($)
         {
             li = $('<div/>').prop({'class': 'divider'});
             ul.append(li);
-            li = $('<li/>');
-            an = $('<a href="#">');
-            an[0].innerHTML = "Move Up";
-            an.click(function (e) {
-                e.preventDefault();
-                moveAxis(axisIndex, axesLength - 1)
-            });
-            li.append(an);
+            li = $('<li/>').prop({'class': 'dropdown-header'});
+            li[0].innerHTML = "Move Axis";
             ul.append(li);
             li = $('<li/>');
-            an = $('<a href="#">');
-            an[0].innerHTML = "Move Left";
+            var btnGroup = $('<div/>').prop({'class': 'btn-group btn-group-sm indent-axis-buttons'}).attr({'role': 'group'});
+            li.append(btnGroup);
+            var btn, span;
+            //Move Left
+            btn = $('<button/>').prop({type:'button', class:'btn btn-default'}).attr({'aria-label': 'Move Left'});
+            span = $('<span/>').prop({'class': 'glyphicon glyphicon-arrow-left'}).attr({'aria-hidden': 'true'});
             if (axisIndex == 0)
             {
-                li.prop({'class': 'disabled'});
-                an.click(function (e)
+                btn.prop({'disabled': 'disabled'});
+                btn.click(function (e)
                 {
                     e.preventDefault();
                 });
             }
             else
             {
-                an.click(function (e) {
+                btn.click(function (e) {
                     e.preventDefault();
                     moveAxis(axisIndex, axisIndex - 1)
                 });
             }
-            li.append(an);
-            ul.append(li);
-            li = $('<li/>');
-            an = $('<a href="#">');
-            an[0].innerHTML = "Move Right";
+            btn.append(span);
+            btnGroup.append(btn);
+            //Move Up
+            btn = $('<button/>').prop({type:'button', class:'btn btn-default'}).attr({'aria-label': 'Move Up'});
+            span = $('<span/>').prop({'class': 'glyphicon glyphicon-arrow-up'}).attr({'aria-hidden': 'true'});
+            btn.append(span);
+            btn.click(function (e) {
+                e.preventDefault();
+                moveAxis(axisIndex, axesLength - 1)
+            });
+            btnGroup.append(btn);
+            //Move Right
+            btn = $('<button/>').prop({type:'button', class:'btn btn-default'}).attr({'aria-label': 'Move Right'});
+            span = $('<span/>').prop({'class': 'glyphicon glyphicon-arrow-right'}).attr({'aria-hidden': 'true'});
             if (axisIndex == axesLength - 2)
             {
-                li.prop({'class': 'disabled'});
-                an.click(function (e)
+                btn.prop({'disabled': 'disabled'});
+                btn.click(function (e)
                 {
                     e.preventDefault();
                 });
             }
             else
             {
-                an.click(function (e) {
+                btn.click(function (e) {
                     e.preventDefault();
                     moveAxis(axisIndex, axisIndex + 1)
                 });
             }
-            li.append(an);
+            btn.append(span);
+            btnGroup.append(btn);
             ul.append(li);
         }
 
