@@ -293,14 +293,14 @@ var NCubeEditor2 = (function ($)
                                         break;
                                     }
                                 }
-                                if (col.isSearchResult)
-                                {
-                                    break;
-                                }
                             }
-                            else if (containsQuery(curVal))
+                            else
                             {
-                                col.isSearchResult = true;
+                                col.isSearchResult = containsQuery(curVal);
+                            }
+
+                            if (col.isSearchResult == true)
+                            {
                                 break;
                             }
                         }
@@ -825,7 +825,7 @@ var NCubeEditor2 = (function ($)
         else {
             var cellData = getCellData(row, col);
             td.className += CLASS_HANDSON_CELL_BASIC;
-            if (cellData) {
+            if (cellData != null && cellData !== undefined) {
                 if (cellData.isSearchResult) {
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
@@ -843,7 +843,7 @@ var NCubeEditor2 = (function ($)
                 } else {
                     td.innerHTML = cellData.value;
                 }
-            } else if (data.defaultCellValue) {
+            } else if (data.defaultCellValue != null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
                 td.className += CLASS_HANDSON_CELL_DEFAULT;
             }
@@ -861,7 +861,7 @@ var NCubeEditor2 = (function ($)
         var cellData = getCellData(row, col);
         var val = '';
 
-        if (cellData)
+        if (cellData != null && cellData !== undefined)
         {
             if (cellData.url !== undefined)
             {
@@ -877,7 +877,7 @@ var NCubeEditor2 = (function ($)
                 val = cellData.value;
             }
         }
-        else if (data.defaultCellValue) {
+        else if (data.defaultCellValue != null && data.defaultCellValue !== undefined) {
             val = data.defaultCellValue;
         }
         return '' + val;
