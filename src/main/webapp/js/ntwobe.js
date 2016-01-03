@@ -252,7 +252,6 @@ var NCubeEditor2 = (function ($)
             return value.toString().toLowerCase().indexOf(queryLower) > -1;
         };
 
-        var i;
         // search all axes
         for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
             var axis = axes[axisNum];
@@ -280,7 +279,7 @@ var NCubeEditor2 = (function ($)
                     var val = col.value;
                     if (typeof val === 'object')
                     {
-                        for (i = 0, iLen = val.length; i < iLen; i++)
+                        for (var i = 0, iLen = val.length; i < iLen; i++)
                         {
                             var curVal = val[i];
                             if (typeof curVal === 'object')
@@ -316,9 +315,9 @@ var NCubeEditor2 = (function ($)
         // search cells
         var cells = data.cells;
         var cellKeys = Object.keys(cells);
-        for (i = 0, len = cellKeys.length; i < len; i++)
+        for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++)
         {
-            var cell = cells[cellKeys[i]];
+            var cell = cells[cellKeys[cellNum]];
             var cellVal = cell.hasOwnProperty('url') ? cell.url : cell.value;
             cell.isSearchResult = containsQuery(cellVal);
         }
@@ -843,7 +842,7 @@ var NCubeEditor2 = (function ($)
                 } else {
                     td.innerHTML = cellData.value;
                 }
-            } else if (data.defaultCellValue) {
+            } else if (data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
                 td.className += CLASS_HANDSON_CELL_DEFAULT;
             }
