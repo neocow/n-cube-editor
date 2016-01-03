@@ -56,6 +56,7 @@ var NCubeEditor2 = (function ($)
             addColumnEditListeners();
             addColumnHideListeners();
             addEditCellListeners();
+            addSearchListeners();
 
             _editCellRadioURL.change(function() {
                 var isUrl = _editCellRadioURL.find('input').is(':checked');
@@ -213,6 +214,9 @@ var NCubeEditor2 = (function ($)
         var col = axes.length == 1 ? 1 : axes.length - 1;
         hot.selectCell(2, col);
         hot.render();
+    };
+
+    var addSearchListeners = function() {
         Handsontable.Dom.addEvent(_searchField, 'keyup', function (event) {
             var query = this.value;
             if (query && query.length > 0) {
@@ -842,7 +846,7 @@ var NCubeEditor2 = (function ($)
                 } else {
                     td.innerHTML = cellData.value;
                 }
-            } else if (data.defaultCellValue !== undefined) {
+            } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
                 td.className += CLASS_HANDSON_CELL_DEFAULT;
             }
@@ -876,7 +880,7 @@ var NCubeEditor2 = (function ($)
                 val = cellData.value;
             }
         }
-        else if (data.defaultCellValue) {
+        else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
             val = data.defaultCellValue;
         }
         return '' + val;
@@ -1157,7 +1161,7 @@ var NCubeEditor2 = (function ($)
             curDown = false;
         });
 
-        coordBar.addEventListener('mousemove', function() {
+        coordBar.addEventListener('mousemove', function(e) {
             if (curDown) {
                 coordBar.scrollLeft = coordBar.scrollLeft + curPos - e.pageX;
             }

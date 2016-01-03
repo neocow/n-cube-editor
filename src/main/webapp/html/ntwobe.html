@@ -23,11 +23,24 @@
 <div id="ncube" class="tab-pane in active">
     <div id="ncube-content" style="overflow:visible">
         <div id="util-container-bar">
-            <div id="coordinate-bar-move-left">&lt;--</div>
+            <div id="coordinate-bar-move-left">
+                <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+            </div>
             <div id="coordinate-bar-text"></div>
-            <div id="coordinate-bar-move-right">--&gt;</div>
+            <div id="coordinate-bar-move-right">
+                <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+            </div>
             <div id="search-container">
                 <input id="search-field" type="search" placeholder="Search" />
+                <div id="search-btn-up" class="search-btn">
+                    <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                </div>
+                <div id="search-btn-down" class="search-btn">
+                    <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                </div>
+                <div id="search-btm-remove" class="search-btn">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                </div>
             </div>
         </div>
         <div id="hot-container"></div>
