@@ -217,15 +217,31 @@ var NCubeEditor2 = (function ($)
     };
 
     var addSearchListeners = function() {
-        Handsontable.Dom.addEvent(_searchField, 'keyup', function (event) {
-            var query = this.value;
-            if (query && query.length > 0) {
-                searchCubeData(query);
-                render();
-            } else {
-                clearSearchMatches();
-                render();
-            }
+        var delay = (function(){
+            var timer = 0;
+            return function(callback, ms){
+                clearTimeout(timer);
+                timer = setTimeout(callback, ms);
+            };
+        })();
+
+        $(_searchField).keyup(function () {
+            delay(function() {
+                var query = _searchField.value;
+                if (query && query.length > 0) {
+                    searchCubeData(query);
+                    render();
+                } else {
+                    clearSearchMatches();
+                    render();
+                }
+            }, 500);
+        });
+
+        $('#search-btn-remove').click(function() {
+            _searchField.value = '';
+            clearSearchMatches();
+            render();
         });
     };
 
