@@ -50,7 +50,6 @@ div#editColumnsModal div.panel-group
 
 #util-container-bar {
     position: fixed;
-    background-color: white;
     height: 20px;
 }
 
@@ -81,22 +80,29 @@ div#editColumnsModal div.panel-group
 }
 
 #search-container {
-    width: 200px;
+    width: 300px;
     position: absolute;
-    background-color: white;
+    max-height: 20px;
+    overflow: hidden;
 }
 
 #search-container input {
     padding: 0;
-    width: 128px;
+    width: 138px;
     border-right: none;
     border-top: none;
     border-bottom: none;
 }
 
-#search-container .search-btn {
+#search-info {
+    color: #C7C7CD;
+    width: 84px;
     display: inline-block;
-    width: 20px;
+    text-align: right;
+}
+
+.bg-white {
+    background-color: white;
 }
 
 .handsontable table.htCore {
@@ -105,6 +111,10 @@ div#editColumnsModal div.panel-group
 
 .handsontable th.handsonCurrentRow, .handsonTableHeader.handsonCurrentRow {
     opacity: .75;
+}
+.handsontable td.searchResult {
+    background-color: #EFFB3C !important;
+    color: #583707 !important;
 }
 
 .handsontable td.handsonTableHeader {

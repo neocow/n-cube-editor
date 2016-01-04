@@ -27,7 +27,7 @@ var CLASS_HANDSON_CELL_CODE = ' code';
 var CLASS_HANDSON_CELL_DEFAULT = ' tableDefault';
 var CLASS_HANDSON_CELL_ODD_ROW = ' oddRow';
 var CLASS_HANDSON_CELL_URL = ' url';
-var CLASS_HANDSON_SEARCH_RESULT = ' htSearchResult';
+var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 
 var NONE = 'none';
 
@@ -74,6 +74,7 @@ var KEY_CODES = {
     F11: 122,
     F12: 123,
     A: 65,
+    F: 70,
     X: 88,
     C: 67,
     K: 75,
