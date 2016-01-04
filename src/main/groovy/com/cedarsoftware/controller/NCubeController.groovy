@@ -1380,7 +1380,7 @@ class NCubeController extends BaseController
                     'n-cube2':[html:'html/ntwobe.html'],
                     JSON:[html:'html/jsonEditor.html'],
                     Details:[html:'html/details.html'],
-                    Visualize: [html:'html/vis.html'],
+                    Visualize: [html:'html/visualize.html'],
                     Test:[html:'html/test.html']
             ]
         }
