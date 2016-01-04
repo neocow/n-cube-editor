@@ -83,14 +83,20 @@ div#editColumnsModal div.panel-group
 #search-container {
     width: 200px;
     position: absolute;
+    background-color: white;
 }
 
 #search-container input {
     padding: 0;
-    width: inherit;
+    width: 128px;
     border-right: none;
     border-top: none;
     border-bottom: none;
+}
+
+#search-container .search-btn {
+    display: inline-block;
+    width: 20px;
 }
 
 .handsontable table.htCore {

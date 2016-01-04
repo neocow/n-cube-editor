@@ -36,6 +36,7 @@ var NCubeEditor2 = (function ($)
     var _clipFormat = CLIP_NCE;
     var _searchField = null;
     var _searchCoords = null;
+    var _currentSearchResultIndex = null;
 
     var init = function(info) {
         if (!nce) {
@@ -56,6 +57,7 @@ var NCubeEditor2 = (function ($)
             addColumnEditListeners();
             addColumnHideListeners();
             addEditCellListeners();
+            addSearchListeners();
 
             _editCellRadioURL.change(function() {
                 var isUrl = _editCellRadioURL.find('input').is(':checked');
@@ -213,15 +215,48 @@ var NCubeEditor2 = (function ($)
         var col = axes.length == 1 ? 1 : axes.length - 1;
         hot.selectCell(2, col);
         hot.render();
-        Handsontable.Dom.addEvent(_searchField, 'keyup', function (event) {
-            var query = this.value;
-            if (query && query.length > 0) {
-                searchCubeData(query);
-                render();
-            } else {
-                clearSearchMatches();
-                render();
+    };
+
+    var addSearchListeners = function() {
+        var delay = (function(){
+            var timer = 0;
+            return function(callback, ms){
+                clearTimeout(timer);
+                timer = setTimeout(callback, ms);
+            };
+        })();
+
+        $(_searchField).keyup(function () {
+            delay(function() {
+                var query = _searchField.value;
+                if (query && query.length > 0) {
+                    searchCubeData(query);
+                    render();
+                } else {
+                    clearSearchMatches();
+                    render();
+                }
+            }, 500);
+        });
+
+        $('#search-btn-down').click(function() {
+            if (_currentSearchResultIndex < _searchCoords.length - 1) {
+                var result = _searchCoords[++_currentSearchResultIndex];
+                hot.selectCell(result.row, result.col);
             }
+        });
+
+        $('#search-btn-up').click(function() {
+            if (_searchCoords.length > 0 && _currentSearchResultIndex > 0) {
+                var result = _searchCoords[--_currentSearchResultIndex];
+                hot.selectCell(result.row, result.col);
+            }
+        });
+
+        $('#search-btn-remove').click(function() {
+            _searchField.value = '';
+            clearSearchMatches();
+            render();
         });
     };
 
@@ -240,9 +275,14 @@ var NCubeEditor2 = (function ($)
         for (var i = 0, len = cellKeys.length; i < len; i++) {
             cells[cellKeys[i]].isSearchResult = false;
         }
+
+        _searchCoords = [];
+        _currentSearchResultIndex = 0;
     };
 
     var searchCubeData = function(query) {
+        _searchCoords = [];
+        _currentSearchResultIndex = 0;
         var queryLower = query.toLowerCase();
         var containsQuery = function(value) {
             if (!value)
@@ -252,7 +292,6 @@ var NCubeEditor2 = (function ($)
             return value.toString().toLowerCase().indexOf(queryLower) > -1;
         };
 
-        var i;
         // search all axes
         for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
             var axis = axes[axisNum];
@@ -267,11 +306,13 @@ var NCubeEditor2 = (function ($)
                 if (col.hasOwnProperty('name') && containsQuery(col.name))
                 {
                     col.isSearchResult = true;
+                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
                     continue;
                 }
                 if (col.hasOwnProperty('url') && containsQuery(col.url))
                 {
                     col.isSearchResult = true;
+                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
                     continue;
                 }
 
@@ -280,7 +321,7 @@ var NCubeEditor2 = (function ($)
                     var val = col.value;
                     if (typeof val === 'object')
                     {
-                        for (i = 0, iLen = val.length; i < iLen; i++)
+                        for (var i = 0, iLen = val.length; i < iLen; i++)
                         {
                             var curVal = val[i];
                             if (typeof curVal === 'object')
@@ -293,21 +334,26 @@ var NCubeEditor2 = (function ($)
                                         break;
                                     }
                                 }
+                                if (col.isSearchResult)
+                                {
+                                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
+                                    break;
+                                }
                             }
-                            else
+                            else if (containsQuery(curVal))
                             {
-                                col.isSearchResult = containsQuery(curVal);
-                            }
-
-                            if (col.isSearchResult == true)
-                            {
+                                col.isSearchResult = true;
+                                _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
                                 break;
                             }
                         }
                     }
                     else
                     {
-                        col.isSearchResult = containsQuery(val);
+                        if (containsQuery(val)) {
+                            col.isSearchResult = true;
+                            _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
+                        }
                     }
                 }
             }
@@ -316,14 +362,52 @@ var NCubeEditor2 = (function ($)
         // search cells
         var cells = data.cells;
         var cellKeys = Object.keys(cells);
-        for (i = 0, len = cellKeys.length; i < len; i++)
+        for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++)
         {
-            var cell = cells[cellKeys[i]];
+            var cell = cells[cellKeys[cellNum]];
             var cellVal = cell.hasOwnProperty('url') ? cell.url : cell.value;
             cell.isSearchResult = containsQuery(cellVal);
         }
+
+        _searchCoords.sort(function(a, b) {
+            var rowA = a.row;
+            var rowB = b.row;
+            if (rowA === rowB) {
+                var colA = a.col;
+                var colB = b.col;
+                return colA - colB;
+            } else {
+                return rowA - rowB;
+            }
+        });
     };
 
+    var getColumnTableCoords = function(colId) {
+        var coords = [];
+        var multiplier = 1;
+        var rowSpacing = numRows - 2;
+
+        var axisKeys = Object.keys(axisColumnMap);
+        for (var axisNum = 0, axisLen = axisKeys.length; axisNum < axisLen; axisNum++) {
+            var axisCols = axisColumnMap[axisKeys[axisNum]];
+            var colIdx = axisCols.indexOf(colId);
+            var colLen = axisCols.length;
+            rowSpacing /= colLen;
+            if (colIdx > -1) {
+                if (axisNum === colOffset) {
+                    coords.push({row: 1, col: colOffset + colIdx});
+                } else {
+                    var rowIdx = colIdx * rowSpacing;
+                    for (var m = 0; m < multiplier; m++) {
+                        coords.push({row: rowIdx + 2, col: axisNum});
+                        rowIdx += rowSpacing * colLen;
+                    }
+                }
+            }
+            multiplier *= colLen;
+        }
+        return coords;
+    };
 
     var colorAxisButtons = function ()
     {
@@ -825,7 +909,7 @@ var NCubeEditor2 = (function ($)
         else {
             var cellData = getCellData(row, col);
             td.className += CLASS_HANDSON_CELL_BASIC;
-            if (cellData != null && cellData !== undefined) {
+            if (cellData) {
                 if (cellData.isSearchResult) {
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
@@ -843,7 +927,7 @@ var NCubeEditor2 = (function ($)
                 } else {
                     td.innerHTML = cellData.value;
                 }
-            } else if (data.defaultCellValue != null && data.defaultCellValue !== undefined) {
+            } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
                 td.className += CLASS_HANDSON_CELL_DEFAULT;
             }
@@ -861,7 +945,7 @@ var NCubeEditor2 = (function ($)
         var cellData = getCellData(row, col);
         var val = '';
 
-        if (cellData != null && cellData !== undefined)
+        if (cellData)
         {
             if (cellData.url !== undefined)
             {
@@ -877,7 +961,7 @@ var NCubeEditor2 = (function ($)
                 val = cellData.value;
             }
         }
-        else if (data.defaultCellValue != null && data.defaultCellValue !== undefined) {
+        else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
             val = data.defaultCellValue;
         }
         return '' + val;
@@ -1166,7 +1250,7 @@ var NCubeEditor2 = (function ($)
             curDown = false;
         });
 
-        coordBar.addEventListener('mousemove', function() {
+        coordBar.addEventListener('mousemove', function(e) {
             if (curDown) {
                 coordBar.scrollLeft = coordBar.scrollLeft + curPos - e.pageX;
             }
