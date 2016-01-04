@@ -36,6 +36,7 @@ var NCubeEditor2 = (function ($)
     var _clipFormat = CLIP_NCE;
     var _searchField = null;
     var _searchCoords = null;
+    var _currentSearchResultIndex = null;
 
     var init = function(info) {
         if (!nce) {
@@ -238,6 +239,20 @@ var NCubeEditor2 = (function ($)
             }, 500);
         });
 
+        $('#search-btn-down').click(function() {
+            if (_currentSearchResultIndex < _searchCoords.length - 1) {
+                var result = _searchCoords[++_currentSearchResultIndex];
+                hot.selectCell(result.row, result.col);
+            }
+        });
+
+        $('#search-btn-up').click(function() {
+            if (_searchCoords.length > 0 && _currentSearchResultIndex > 0) {
+                var result = _searchCoords[--_currentSearchResultIndex];
+                hot.selectCell(result.row, result.col);
+            }
+        });
+
         $('#search-btn-remove').click(function() {
             _searchField.value = '';
             clearSearchMatches();
@@ -260,9 +275,14 @@ var NCubeEditor2 = (function ($)
         for (var i = 0, len = cellKeys.length; i < len; i++) {
             cells[cellKeys[i]].isSearchResult = false;
         }
+
+        _searchCoords = [];
+        _currentSearchResultIndex = 0;
     };
 
     var searchCubeData = function(query) {
+        _searchCoords = [];
+        _currentSearchResultIndex = 0;
         var queryLower = query.toLowerCase();
         var containsQuery = function(value) {
             if (!value)
@@ -286,11 +306,13 @@ var NCubeEditor2 = (function ($)
                 if (col.hasOwnProperty('name') && containsQuery(col.name))
                 {
                     col.isSearchResult = true;
+                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
                     continue;
                 }
                 if (col.hasOwnProperty('url') && containsQuery(col.url))
                 {
                     col.isSearchResult = true;
+                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
                     continue;
                 }
 
@@ -314,19 +336,24 @@ var NCubeEditor2 = (function ($)
                                 }
                                 if (col.isSearchResult)
                                 {
+                                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
                                     break;
                                 }
                             }
                             else if (containsQuery(curVal))
                             {
                                 col.isSearchResult = true;
+                                _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
                                 break;
                             }
                         }
                     }
                     else
                     {
-                        col.isSearchResult = containsQuery(val);
+                        if (containsQuery(val)) {
+                            col.isSearchResult = true;
+                            _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
+                        }
                     }
                 }
             }
@@ -341,8 +368,46 @@ var NCubeEditor2 = (function ($)
             var cellVal = cell.hasOwnProperty('url') ? cell.url : cell.value;
             cell.isSearchResult = containsQuery(cellVal);
         }
+
+        _searchCoords.sort(function(a, b) {
+            var rowA = a.row;
+            var rowB = b.row;
+            if (rowA === rowB) {
+                var colA = a.col;
+                var colB = b.col;
+                return colA - colB;
+            } else {
+                return rowA - rowB;
+            }
+        });
     };
 
+    var getColumnTableCoords = function(colId) {
+        var coords = [];
+        var multiplier = 1;
+        var rowSpacing = numRows - 2;
+
+        var axisKeys = Object.keys(axisColumnMap);
+        for (var axisNum = 0, axisLen = axisKeys.length; axisNum < axisLen; axisNum++) {
+            var axisCols = axisColumnMap[axisKeys[axisNum]];
+            var colIdx = axisCols.indexOf(colId);
+            var colLen = axisCols.length;
+            rowSpacing /= colLen;
+            if (colIdx > -1) {
+                if (axisNum === colOffset) {
+                    coords.push({row: 1, col: colOffset + colIdx});
+                } else {
+                    var rowIdx = colIdx * rowSpacing;
+                    for (var m = 0; m < multiplier; m++) {
+                        coords.push({row: rowIdx + 2, col: axisNum});
+                        rowIdx += rowSpacing * colLen;
+                    }
+                }
+            }
+            multiplier *= colLen;
+        }
+        return coords;
+    };
 
     var colorAxisButtons = function ()
     {
