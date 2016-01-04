@@ -2070,10 +2070,6 @@ var NCubeEditor2 = (function ($)
 
     var hideColumns = function(axisName)
     {
-        if (!nce.ensureModifiable('Columns cannot be edited.'))
-        {
-            return false;
-        }
         var result = nce.call("ncubeController.getAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
         var axis;
         if (result.status === true)
