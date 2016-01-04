@@ -22,7 +22,7 @@
 
 <div id="ncube" class="tab-pane in active">
     <div id="ncube-content" style="overflow:visible">
-        <div id="util-container-bar">
+        <div id="util-container-bar" class="bg-white">
             <div id="coordinate-bar-move-left">
                 <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
             </div>
@@ -30,16 +30,19 @@
             <div id="coordinate-bar-move-right">
                 <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
             </div>
-            <div id="search-container">
+            <div id="search-container" class="bg-white">
                 <input id="search-field" type="search" placeholder="Search" />
-                <div id="search-btn-up" class="search-btn">
-                    <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
-                </div>
-                <div id="search-btn-down" class="search-btn">
-                    <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
-                </div>
-                <div id="search-btn-remove" class="search-btn">
-                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                <div id="search-info">&nbsp;</div>
+                <div class="btn-group btn-group-xs" role="group">
+                    <button type="button" id="search-btn-up" class="btn btn-default">
+                        <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" id="search-btn-down" class="btn btn-default">
+                        <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" id="search-btn-remove" class="btn btn-default">
+                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    </button>
                 </div>
             </div>
         </div>

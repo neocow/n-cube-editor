@@ -97,7 +97,11 @@ var NCubeEditor2 = (function ($)
                     if (e.metaKey || e.ctrlKey)
                     {
                         // Control Key (command in the case of Mac)
-                        if (e.keyCode == KEY_CODES.X) {
+                        if (e.keyCode === KEY_CODES.F) {
+                            e.preventDefault();
+                            _searchField.focus();
+                        }
+                        else if (e.keyCode == KEY_CODES.X) {
                             editCutCopy(true);  // true = isCut
                         }
                         else if (e.keyCode == KEY_CODES.C)
@@ -217,6 +221,13 @@ var NCubeEditor2 = (function ($)
         hot.render();
     };
 
+    var setSearchHelperText = function() {
+        var el = document.getElementById('search-info');
+        var len = _searchCoords.length;
+        var idx = _currentSearchResultIndex + 1;
+        el.innerHTML = len > 0 ? idx + ' of ' + len : '&nbsp;';
+    };
+
     var addSearchListeners = function() {
         var delay = (function(){
             var timer = 0;
@@ -226,14 +237,21 @@ var NCubeEditor2 = (function ($)
             };
         })();
 
-        $(_searchField).keyup(function () {
+        $(_searchField).keyup(function (e) {
             delay(function() {
                 var query = _searchField.value;
                 if (query && query.length > 0) {
                     searchCubeData(query);
+                    setSearchHelperText();
                     render();
+                    if (e.keyCode === KEY_CODES.ENTER) {
+                        _searchField.blur();
+                        var result = _searchCoords[0];
+                        hot.selectCell(result.row, result.col);
+                    }
                 } else {
                     clearSearchMatches();
+                    setSearchHelperText();
                     render();
                 }
             }, 500);
@@ -243,20 +261,30 @@ var NCubeEditor2 = (function ($)
             if (_currentSearchResultIndex < _searchCoords.length - 1) {
                 var result = _searchCoords[++_currentSearchResultIndex];
                 hot.selectCell(result.row, result.col);
+                setSearchHelperText();
             }
+            $(this).blur();
         });
 
         $('#search-btn-up').click(function() {
             if (_searchCoords.length > 0 && _currentSearchResultIndex > 0) {
                 var result = _searchCoords[--_currentSearchResultIndex];
                 hot.selectCell(result.row, result.col);
+                setSearchHelperText();
             }
+            $(this).blur();
         });
 
         $('#search-btn-remove').click(function() {
             _searchField.value = '';
             clearSearchMatches();
+            setSearchHelperText();
             render();
+            $(this).blur();
+        });
+
+        $('#search-info').click(function() {
+            _searchField.focus();
         });
     };
 
@@ -283,6 +311,7 @@ var NCubeEditor2 = (function ($)
     var searchCubeData = function(query) {
         _searchCoords = [];
         _currentSearchResultIndex = 0;
+
         var queryLower = query.toLowerCase();
         var containsQuery = function(value) {
             if (!value)
@@ -292,27 +321,50 @@ var NCubeEditor2 = (function ($)
             return value.toString().toLowerCase().indexOf(queryLower) > -1;
         };
 
+        var multiplier = 1;
+        var rowSpacing = numRows - 2;
+        var axisNum, colNum, axisLen, colLen;
+        var rowSpacingHelper = [];
+
+        var getColumnTableCoords = function() {
+            if (axisNum === colOffset) {
+                _searchCoords.push({row: 1, col: colOffset + colNum});
+            } else {
+                var rowIdx = colNum * rowSpacing;
+                for (var m = 0; m < multiplier; m++) {
+                    _searchCoords.push({row: rowIdx + 2, col: axisNum});
+                    rowIdx += rowSpacing * colLen;
+                }
+            }
+        };
+
         // search all axes
-        for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
+        for (axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
             var axis = axes[axisNum];
             var cols = axis.columns;
             var colKeys = Object.keys(cols);
+            colLen = colKeys.length;
+            rowSpacing /= colLen;
+
+            var id = colKeys[0];
+            var axisOrder = id.substring(0, id.length - 12);
+            rowSpacingHelper.push({order:axisOrder, colCount:colLen, rowSpacing:rowSpacing, horizAxis:axisNum === colOffset});
 
             // search all columns for an axis
-            for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++)
+            for (colNum = 0; colNum < colLen; colNum++)
             {
                 var col = cols[colKeys[colNum]];
                 col.isSearchResult = false;
                 if (col.hasOwnProperty('name') && containsQuery(col.name))
                 {
                     col.isSearchResult = true;
-                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
+                    getColumnTableCoords();
                     continue;
                 }
                 if (col.hasOwnProperty('url') && containsQuery(col.url))
                 {
                     col.isSearchResult = true;
-                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
+                    getColumnTableCoords();
                     continue;
                 }
 
@@ -336,14 +388,14 @@ var NCubeEditor2 = (function ($)
                                 }
                                 if (col.isSearchResult)
                                 {
-                                    _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
+                                    getColumnTableCoords();
                                     break;
                                 }
                             }
                             else if (containsQuery(curVal))
                             {
                                 col.isSearchResult = true;
-                                _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
+                                getColumnTableCoords();
                                 break;
                             }
                         }
@@ -352,21 +404,52 @@ var NCubeEditor2 = (function ($)
                     {
                         if (containsQuery(val)) {
                             col.isSearchResult = true;
-                            _searchCoords = _searchCoords.concat(getColumnTableCoords(col.id));
+                            getColumnTableCoords();
                         }
                     }
                 }
             }
+            multiplier *= colLen;
         }
+        rowSpacingHelper.sort(function(a, b) {
+            return a.order - b.order;
+        });
 
         // search cells
         var cells = data.cells;
         var cellKeys = Object.keys(cells);
         for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++)
         {
-            var cell = cells[cellKeys[cellNum]];
+            var cellId = cellKeys[cellNum];
+            var cell = cells[cellId];
             var cellVal = cell.hasOwnProperty('url') ? cell.url : cell.value;
-            cell.isSearchResult = containsQuery(cellVal);
+            var found = containsQuery(cellVal);
+            cell.isSearchResult = found;
+
+            if (found) {
+                var colIds = cellId.split('_');
+                var r = 0;
+                var c = 0;
+                for (var colIdNum = 0, colIdLen = colIds.length; colIdNum < colIdLen; colIdNum++) {
+                    var curColId = colIds[colIdNum];
+                    var curHelperObj = rowSpacingHelper[colIdNum];
+                    var maxCol = curHelperObj.colCount;
+
+                    curColId = parseInt(curColId.substring(curColId.length - 10));
+                    if (curColId > maxCol) {
+                        curColId = maxCol;
+                    }
+                    curColId--;
+
+                    if (curHelperObj.horizAxis) {
+                        c = curColId;
+                    } else {
+                        r += curColId * curHelperObj.rowSpacing;
+                    }
+                }
+
+                _searchCoords.push({row: r + 2, col: c + colOffset});
+            }
         }
 
         _searchCoords.sort(function(a, b) {
@@ -380,33 +463,6 @@ var NCubeEditor2 = (function ($)
                 return rowA - rowB;
             }
         });
-    };
-
-    var getColumnTableCoords = function(colId) {
-        var coords = [];
-        var multiplier = 1;
-        var rowSpacing = numRows - 2;
-
-        var axisKeys = Object.keys(axisColumnMap);
-        for (var axisNum = 0, axisLen = axisKeys.length; axisNum < axisLen; axisNum++) {
-            var axisCols = axisColumnMap[axisKeys[axisNum]];
-            var colIdx = axisCols.indexOf(colId);
-            var colLen = axisCols.length;
-            rowSpacing /= colLen;
-            if (colIdx > -1) {
-                if (axisNum === colOffset) {
-                    coords.push({row: 1, col: colOffset + colIdx});
-                } else {
-                    var rowIdx = colIdx * rowSpacing;
-                    for (var m = 0; m < multiplier; m++) {
-                        coords.push({row: rowIdx + 2, col: axisNum});
-                        rowIdx += rowSpacing * colLen;
-                    }
-                }
-            }
-            multiplier *= colLen;
-        }
-        return coords;
     };
 
     var colorAxisButtons = function ()
@@ -697,6 +753,11 @@ var NCubeEditor2 = (function ($)
                 }
             }
         };
+
+        _searchCoords = [];
+        _currentSearchResultIndex = 0;
+        _searchField.value = '';
+        setSearchHelperText();
 
         data = cubeData;
         determineAxesOrder(data.axes);
