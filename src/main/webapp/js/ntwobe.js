@@ -368,7 +368,7 @@ var NCubeEditor2 = (function ($)
 
             var id = colKeys[0];
             var axisOrder = id.substring(0, id.length - 12);
-            rowSpacingHelper.push({order:axisOrder, colCount:colLen, rowSpacing:rowSpacing, horizAxis:axisNum === colOffset});
+            rowSpacingHelper.push({axisName:axis.name, order:axisOrder, rowSpacing:rowSpacing, horizAxis:axisNum === colOffset});
 
             // search all columns for an axis
             for (colNum = 0; colNum < colLen; colNum++)
@@ -453,18 +453,12 @@ var NCubeEditor2 = (function ($)
                 for (var colIdNum = 0, colIdLen = colIds.length; colIdNum < colIdLen; colIdNum++) {
                     var curColId = colIds[colIdNum];
                     var curHelperObj = rowSpacingHelper[colIdNum];
-                    var maxCol = curHelperObj.colCount;
-
-                    curColId = parseInt(curColId.substring(curColId.length - 10));
-                    if (curColId > maxCol) {
-                        curColId = maxCol;
-                    }
-                    curColId--;
+                    var curColNum = axisColumnMap[curHelperObj.axisName].indexOf(curColId);
 
                     if (curHelperObj.horizAxis) {
-                        c = curColId;
+                        c = curColNum;
                     } else {
-                        r += curColId * curHelperObj.rowSpacing;
+                        r += curColNum * curHelperObj.rowSpacing;
                     }
                 }
 
