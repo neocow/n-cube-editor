@@ -188,7 +188,10 @@ var NCE = (function ($)
     function addTab(cubeInfo) {
         deselectTab();
         var cubeName = cubeInfo[SELECTED_CUBE];
-        var link = $('<a/>').attr('href','#').addClass('dropdown-toggle').html(cubeName + '<span class="big-caret"></span>');
+        var link = $('<a/>')
+            .attr('href','#')
+            .addClass('dropdown-toggle')
+            .html(cubeName + '<span class="big-caret"></span>');
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
         li.addClass('active');
