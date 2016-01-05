@@ -37,6 +37,8 @@ var NCubeEditor2 = (function ($)
     var _searchField = null;
     var _searchCoords = null;
     var _currentSearchResultIndex = null;
+    var _ncubeContent = null;
+    var _ncubeHtmlError = null;
 
     var init = function(info) {
         if (!nce) {
@@ -53,6 +55,8 @@ var NCubeEditor2 = (function ($)
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
             _searchField = document.getElementById('search-field');
+            _ncubeContent = $('#ncube-content');
+            _ncubeHtmlError = $('#ncube-error');
 
             addColumnEditListeners();
             addColumnHideListeners();
@@ -190,6 +194,17 @@ var NCubeEditor2 = (function ($)
         cubeMapRegex = new RegExp(s, 'gi');
     };
 
+    var showHtmlError = function(text) {
+        _ncubeContent.hide();
+        _ncubeHtmlError.show()
+        _ncubeHtmlError[0].innerHTML = text;
+    };
+
+    var clearHtmlError = function() {
+        _ncubeContent.show();
+        _ncubeHtmlError.hide();
+    };
+
     var load = function() {
         resetCoordinateBar();
         if (hot) {
@@ -198,21 +213,23 @@ var NCubeEditor2 = (function ($)
         }
 
         if (!nce.getCubeMap() || !nce.doesCubeExist()) {
-            $('#ncube-content')[0].innerHTML = 'No cubes to load';
+            showHtmlError('No cubes to load');
             return;
         }
 
         var info = nce.getCubeMap()[(nce.getSelectedCubeName() + '').toLowerCase()];
         if (!info) {
-            $('#ncube-content')[0].innerHTML = 'No cube data to load';
+            showHtmlError('No cube data to load');
             return;
         }
 
         var result = nce.call("ncubeController.getJson", [nce.getAppId(), nce.getSelectedCubeName(), {mode:'json-index'}], {noResolveRefs:true});
         if (result.status === false) {
-            $('#ncube-content')[0].innerHTML = 'Failed to load JSON for cube, error: ' + result.data;
+            showHtmlError('Failed to load JSON for cube, error: ' + result.data);
             return;
         }
+
+        clearHtmlError();
 
         handleCubeData(JSON.parse(result.data));
         hot = new Handsontable(document.getElementById('hot-container'), getHotSettings());

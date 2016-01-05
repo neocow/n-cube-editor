@@ -133,17 +133,16 @@ var NCE = (function ($)
         cubeInfo[SELECTED_BRANCH] = _selectedBranch;
         _openCubes[_selectedCubeName] = cubeInfo;
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-        localStorage[OPEN_CUBE_SELECTED] = _selectedCubeName;
         addTab(cubeInfo);
     }
 
-    function removeCubeTab(cubeName) {
+    function removeTab(cubeName) {
+        cubeName = getProperCubeName(cubeName);
         delete _openCubes[cubeName];
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
         _openTabList.children().filter(function() { return $.text([this]).indexOf(cubeName) > -1; }).remove();
-        if (localStorage[OPEN_CUBE_SELECTED] === cubeName) {
+        if (_selectedCubeName === cubeName) {
             var nextCubeName = _openTabsPanel.find('li').first().find('a').first().text();
-            localStorage[OPEN_CUBE_SELECTED] = nextCubeName;
             _selectedCubeName = nextCubeName.toLowerCase();
             selectTab(nextCubeName);
             loadCube();
@@ -174,11 +173,12 @@ var NCE = (function ($)
     function selectTab(cubeName) {
         deselectTab();
         var list = _openTabList.children();
-        var tab = list.filter(function() { return $.text([this]).indexOf(cubeName) > -1; });
+        var tab = list.filter(function() { return $.text([this]).indexOf(getProperCubeName(cubeName)) > -1; });
         if (tab.length !== 1) {
             tab = list.first();
         }
         tab.addClass('active');
+        localStorage[SELECTED_CUBE] = cubeName;
     }
 
     function deselectTab() {
@@ -208,12 +208,11 @@ var NCE = (function ($)
                     .tab("show");
             }
 
-            if (cubeName !== localStorage[OPEN_CUBE_SELECTED]) {
+            if (cubeName !== _selectedCubeName) {
                 _selectedApp = cubeInfo[SELECTED_APP];
                 _selectedBranch = cubeInfo[SELECTED_BRANCH];
-                _selectedCubeName = cubeInfo[SELECTED_CUBE].toLowerCase();
+                _selectedCubeName = cubeInfo[SELECTED_CUBE];
                 _selectedVersion = cubeInfo[SELECTED_VERSION];
-                localStorage[OPEN_CUBE_SELECTED] = cubeInfo[SELECTED_CUBE];
                 selectTab(cubeName);
                 loadCube();
             }
@@ -227,7 +226,7 @@ var NCE = (function ($)
                     .attr('href','#')
                     .html('Close Tab')
                     .click(function() {
-                        removeCubeTab(cubeName);
+                        removeTab(cubeName.toLowerCase());
                     })
             )
         );
@@ -239,10 +238,15 @@ var NCE = (function ($)
 
     function buildTabs() {
         var cubeNames = Object.keys(_openCubes);
-        for (var i = 0, len = cubeNames.length; i < len; i++) {
-            addTab(_openCubes[cubeNames[i]]);
+        var len = cubeNames.length;
+        if (len > 0) {
+            for (var i = 0; i < len; i++) {
+                addTab(_openCubes[cubeNames[i]]);
+            }
+        } else {
+            addCurrentCubeTab();
         }
-        selectTab(localStorage[OPEN_CUBE_SELECTED]);
+        selectTab(_selectedCubeName);
     }
 
     function buildMenu()
