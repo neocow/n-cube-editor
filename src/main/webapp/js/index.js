@@ -149,6 +149,13 @@ var NCE = (function ($)
         }
     }
 
+    function removeAllTabsButCurrent() {
+        localStorage[OPEN_CUBES] = {};
+        _openCubes = {};
+        _openTabList.children().remove();
+        addCurrentCubeTab();
+    }
+
     /**
      * Background worker thread that will send search filter text asynchronously to server,
      * fetch the results, and ship to main thread (which will be updated to the filtered list).
@@ -228,7 +235,14 @@ var NCE = (function ($)
                     .click(function() {
                         removeTab(cubeName.toLowerCase());
                     })
-            )
+            )).append(
+            $('<li/>').append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Close All But This')
+                    .click(function() {
+                        removeAllTabsButCurrent();
+                    }))
         );
 
         li.append(link);
