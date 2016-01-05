@@ -258,8 +258,10 @@ var NCubeEditor2 = (function ($)
         });
 
         $('#search-btn-down').click(function() {
-            if (_currentSearchResultIndex < _searchCoords.length - 1) {
-                var result = _searchCoords[++_currentSearchResultIndex];
+            var searchResultsLen = _searchCoords.length;
+            if (_currentSearchResultIndex < searchResultsLen) {
+                var idx = searchResultsLen > 1 ? ++_currentSearchResultIndex : 0;
+                var result = _searchCoords[idx];
                 hot.selectCell(result.row, result.col);
                 setSearchHelperText();
             }
@@ -267,8 +269,9 @@ var NCubeEditor2 = (function ($)
         });
 
         $('#search-btn-up').click(function() {
-            if (_searchCoords.length > 0 && _currentSearchResultIndex > 0) {
-                var result = _searchCoords[--_currentSearchResultIndex];
+            if (_searchCoords.length > 0) {
+                var idx = _currentSearchResultIndex > 0 ? --_currentSearchResultIndex : 0;
+                var result = _searchCoords[idx];
                 hot.selectCell(result.row, result.col);
                 setSearchHelperText();
             }

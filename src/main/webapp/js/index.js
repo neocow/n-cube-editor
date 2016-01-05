@@ -52,6 +52,7 @@ var NCE = (function ($)
     var _listOfCubes= $('#ncube-list');
     var _mainTabPanel = $('#ncubeTabContent');
     var _openTabsPanel = $('#ncube-tabs');
+    var _openTabList = _openTabsPanel.find('ul');
     var _diffOutput = $('#diffOutput');
     var _mergeCubeName = null;
     var _mergeSha1 = null;
@@ -139,7 +140,7 @@ var NCE = (function ($)
     function removeCubeTab(cubeName) {
         delete _openCubes[cubeName];
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-        _openTabsPanel.find('ul').children().filter(function() { return $.text([this]).indexOf(cubeName) > -1; }).remove();
+        _openTabList.children().filter(function() { return $.text([this]).indexOf(cubeName) > -1; }).remove();
         if (localStorage[OPEN_CUBE_SELECTED] === cubeName) {
             var nextCubeName = _openTabsPanel.find('li').first().find('a').first().text();
             localStorage[OPEN_CUBE_SELECTED] = nextCubeName;
@@ -172,7 +173,7 @@ var NCE = (function ($)
 
     function selectTab(cubeName) {
         deselectTab();
-        var list = _openTabsPanel.find('ul').children();
+        var list = _openTabList.children();
         var tab = list.filter(function() { return $.text([this]).indexOf(cubeName) > -1; });
         if (tab.length !== 1) {
             tab = list.first();
@@ -181,7 +182,7 @@ var NCE = (function ($)
     }
 
     function deselectTab() {
-        _openTabsPanel.find('ul').find('.active').removeClass('active');
+        _openTabList.find('.active').removeClass('active');
     }
 
     function addTab(cubeInfo) {
@@ -230,7 +231,7 @@ var NCE = (function ($)
 
         li.append(link);
         li.append(dd);
-        _openTabsPanel.find('ul').first().append(li);
+        _openTabList.first().append(li);
     }
 
     function buildTabs() {
