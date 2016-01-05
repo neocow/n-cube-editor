@@ -259,7 +259,7 @@ var NCubeEditor2 = (function ($)
 
         $('#search-btn-down').click(function() {
             var searchResultsLen = _searchCoords.length;
-            if (_currentSearchResultIndex < searchResultsLen) {
+            if (_currentSearchResultIndex < searchResultsLen - 1 || searchResultsLen === 1) {
                 var idx = searchResultsLen > 1 ? ++_currentSearchResultIndex : 0;
                 var result = _searchCoords[idx];
                 hot.selectCell(result.row, result.col);
