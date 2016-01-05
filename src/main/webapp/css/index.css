@@ -3,6 +3,16 @@ body {
     background-color: #FAF0E6;
 }
 
+#ncube-tabs {
+    background-color: #fff;
+    border-color: #ddd;
+    border-width: 1px;
+    border-radius: 4px 4px 0 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    padding: 3px 3px 0;
+}
+
 .ncube-selected {
     color: #444 !important;
     background-color:rgba(61, 139, 202, 0.25) !important;
@@ -135,8 +145,19 @@ div#restoreCubeModal ul.list-group
     background-color: #D1C5B7;
     padding: 0 !important;
     margin: 0 !important;
-    overflow: auto !important;
     width: 100%;
+}
+
+.bg-white {
+    background-color: white;
+}
+
+.big-caret {
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid;
+    display: inline-block;
+    margin-left: 5px;
 }
 
 #app-list-div {
