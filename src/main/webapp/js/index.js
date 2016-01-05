@@ -271,7 +271,7 @@ var NCE = (function ($)
                 ul.append(li);
 
                 var div = $('<div/>').prop({class:'tab-pane', id:pageId});
-                div.attr({style:'overflow:hidden;height:100%'});
+                div.attr({style:'overflow:hidden;height:calc(100% - 25px);'});
                 _mainTabPanel.append(div);
 
                 var iframeId = 'iframe_' + pageId;
