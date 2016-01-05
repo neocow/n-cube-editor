@@ -259,7 +259,7 @@ var NCubeEditor2 = (function ($)
 
         $('#search-btn-down').click(function() {
             var searchResultsLen = _searchCoords.length;
-            if (_currentSearchResultIndex < searchResultsLen) {
+            if (_currentSearchResultIndex < searchResultsLen - 1 || searchResultsLen === 1) {
                 var idx = searchResultsLen > 1 ? ++_currentSearchResultIndex : 0;
                 var result = _searchCoords[idx];
                 hot.selectCell(result.row, result.col);
@@ -1337,6 +1337,26 @@ var NCubeEditor2 = (function ($)
 
     var destroyEditor = function() {
         hot.getActiveEditor().finishEditing(null, null, null, true);
+        var searchQuery = _searchField.value;
+        if (searchQuery !== null && searchQuery.length > 0) {
+            var curCell = getSelectedCellRange();
+            var curRow = curCell.startRow;
+            var curCol = curCell.startCol;
+            var prevIdx = _currentSearchResultIndex;
+            searchCubeData(searchQuery);
+            _currentSearchResultIndex = prevIdx;
+
+            for (var i = 0, len = _searchCoords.length; i < len; i++) {
+                var curSearchCoord = _searchCoords[i];
+                if (curRow === curSearchCoord.row && curCol === curSearchCoord.col) {
+                    _currentSearchResultIndex = i;
+                    break;
+                }
+            }
+
+            setSearchHelperText();
+            render();
+        }
     };
 
     var onBeforeKeyDown = function(event) {

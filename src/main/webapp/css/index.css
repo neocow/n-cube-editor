@@ -186,6 +186,10 @@ div#restoreCubeModal ul.list-group
 
 .top-buffer { margin-top:20px; }
 
+.nav-tabs-short li a {
+    padding: 0px 5px;
+}
+
 #fadeMe1 {
     opacity: 1.0;
     background: #D1C5B7;

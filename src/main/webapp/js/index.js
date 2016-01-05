@@ -188,7 +188,10 @@ var NCE = (function ($)
     function addTab(cubeInfo) {
         deselectTab();
         var cubeName = cubeInfo[SELECTED_CUBE];
-        var link = $('<a/>').attr('href','#').addClass('dropdown-toggle').html(cubeName + '<span class="big-caret"></span>');
+        var link = $('<a/>')
+            .attr('href','#')
+            .addClass('dropdown-toggle')
+            .html(cubeName + '<span class="big-caret"></span>');
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
         li.addClass('active');
@@ -268,7 +271,7 @@ var NCE = (function ($)
                 ul.append(li);
 
                 var div = $('<div/>').prop({class:'tab-pane', id:pageId});
-                div.attr({style:'overflow:hidden;height:100%'});
+                div.attr({style:'overflow:hidden;height:calc(100% - 25px);'});
                 _mainTabPanel.append(div);
 
                 var iframeId = 'iframe_' + pageId;
