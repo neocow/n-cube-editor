@@ -28,6 +28,8 @@ var NCE = (function ($)
     var _apps = [];
     var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
+    var _openCubes = localStorage[OPEN_CUBES];
+    _openCubes = _openCubes === undefined ? {} : JSON.parse(_openCubes);
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
@@ -49,6 +51,7 @@ var NCE = (function ($)
     var _cubeCount = $('#ncubeCount');
     var _listOfCubes= $('#ncube-list');
     var _mainTabPanel = $('#ncubeTabContent');
+    var _openTabsPanel = $('#ncube-tabs');
     var _diffOutput = $('#diffOutput');
     var _mergeCubeName = null;
     var _mergeSha1 = null;
@@ -62,7 +65,7 @@ var NCE = (function ($)
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
     var _commitModal = $('#commitRollbackModal');
-    var _diffModal = $('#diffOutputModal')
+    var _diffModal = $('#diffOutputModal');
 
     initialize();
 
@@ -80,6 +83,7 @@ var NCE = (function ($)
             loadStatusListView();
             loadVersionListView();
             buildMenu();
+            buildTabs();
             clearSearch();
             loop();
             heartBeat();
@@ -120,6 +124,31 @@ var NCE = (function ($)
         });
     }
 
+    function addCurrentCubeTab() {
+        var cubeInfo = {};
+        cubeInfo[SELECTED_CUBE] = _selectedCubeName;
+        cubeInfo[SELECTED_APP] = _selectedApp;
+        cubeInfo[SELECTED_VERSION] = _selectedVersion;
+        cubeInfo[SELECTED_BRANCH] = _selectedBranch;
+        _openCubes[_selectedCubeName] = cubeInfo;
+        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+        localStorage[OPEN_CUBE_SELECTED] = _selectedCubeName;
+        addTab(cubeInfo);
+    }
+
+    function removeCubeTab(cubeName) {
+        delete _openCubes[cubeName];
+        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+        _openTabsPanel.find('ul').children().filter(function() { return $.text([this]).indexOf(cubeName) > -1; }).remove();
+        if (localStorage[OPEN_CUBE_SELECTED] === cubeName) {
+            var nextCubeName = _openTabsPanel.find('li').first().find('a').first().text();
+            localStorage[OPEN_CUBE_SELECTED] = nextCubeName;
+            _selectedCubeName = nextCubeName.toLowerCase();
+            selectTab(nextCubeName);
+            loadCube();
+        }
+    }
+
     /**
      * Background worker thread that will send search filter text asynchronously to server,
      * fetch the results, and ship to main thread (which will be updated to the filtered list).
@@ -139,6 +168,77 @@ var NCE = (function ($)
         {
             alert('Sorry! No Web Worker support. Try using the Chrome browser.');
         }
+    }
+
+    function selectTab(cubeName) {
+        deselectTab();
+        var list = _openTabsPanel.find('ul').children();
+        var tab = list.filter(function() { return $.text([this]).indexOf(cubeName) > -1; });
+        if (tab.length !== 1) {
+            tab = list.first();
+        }
+        tab.addClass('active');
+    }
+
+    function deselectTab() {
+        _openTabsPanel.find('ul').find('.active').removeClass('active');
+    }
+
+    function addTab(cubeInfo) {
+        deselectTab();
+        var cubeName = cubeInfo[SELECTED_CUBE];
+        var link = $('<a/>').attr('href','#').addClass('dropdown-toggle').html(cubeName + '<span class="big-caret"></span>');
+        link.attr('data-toggle', 'dropdown');
+        var li = $('<li/>');
+        li.addClass('active');
+        li.addClass('dropdown');
+        li.click(function(e) {
+            // only show dropdown when clicking the caret, not just the tab
+            if($(e.target).is("span")) {
+                $(this).find("a")
+                    .addClass("dropdown-toggle")
+                    .attr("data-toggle", "dropdown");
+            } else {
+                $(this).find('a').removeClass("dropdown-toggle")
+                    .attr("data-toggle", "")
+                    .tab("show");
+            }
+
+            if (cubeName !== localStorage[OPEN_CUBE_SELECTED]) {
+                _selectedApp = cubeInfo[SELECTED_APP];
+                _selectedBranch = cubeInfo[SELECTED_BRANCH];
+                _selectedCubeName = cubeInfo[SELECTED_CUBE].toLowerCase();
+                _selectedVersion = cubeInfo[SELECTED_VERSION];
+                localStorage[OPEN_CUBE_SELECTED] = cubeInfo[SELECTED_CUBE];
+                selectTab(cubeName);
+                loadCube();
+            }
+        });
+
+        var dd = $('<ul/>');
+        dd.addClass('dropdown-menu');
+        dd.append(
+            $('<li/>').append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Close Tab')
+                    .click(function() {
+                        removeCubeTab(cubeName);
+                    })
+            )
+        );
+
+        li.append(link);
+        li.append(dd);
+        _openTabsPanel.find('ul').first().append(li);
+    }
+
+    function buildTabs() {
+        var cubeNames = Object.keys(_openCubes);
+        for (var i = 0, len = cubeNames.length; i < len; i++) {
+            addTab(_openCubes[cubeNames[i]]);
+        }
+        selectTab(localStorage[OPEN_CUBE_SELECTED]);
     }
 
     function buildMenu()
@@ -254,6 +354,12 @@ var NCE = (function ($)
     {
         _selectedCubeName = getProperCubeName(cubeName);
         localStorage[SELECTED_CUBE] = cubeName;
+
+        if (_openCubes.hasOwnProperty(_selectedCubeName)) {
+            selectTab(_selectedCubeName);
+        } else {
+            addCurrentCubeTab();
+        }
         loadCube(); // load spreadsheet side
     }
 
