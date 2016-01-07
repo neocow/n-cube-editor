@@ -1873,7 +1873,7 @@ var NCE = (function ($)
 
     function serverStats()
     {
-        var result = call("ncubeController.heartBeat", []);
+        var result = call("ncubeController.heartBeat", [{}]);
 
         if (result.status === false)
         {
@@ -2690,8 +2690,22 @@ var NCE = (function ($)
     {
         setInterval(function()
         {
-            call("ncubeController.heartBeat", []);
+            var obj = {};
+            for (var i = 0, len = _openCubes.length; i < len; i++) {
+                var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
+                var key = cubeInfo.slice(0, 4).join('_');
+                var sha1 = _cubeList[cubeInfo[3].toLowerCase()].sha1;
+                obj[key] = sha1;
+            }
+            var result = call("ncubeController.heartBeat", [obj]);
+            if (result.status) {
+                heartBeatResponse(result.data);
+            }
         }, 60000);
+    }
+
+    function heartBeatResponse(response) {
+        // TODO - check result sha1 vs open tabs to display status changes
     }
 
     function doesItemExist(item, list)

@@ -1547,8 +1547,9 @@ class NCubeController extends BaseController
         JsonWriter.formatJson(json).readLines()
     }
 
-    Map heartBeat()
+    Map heartBeat(Map openCubes)
     {
+        //TODO -- openCubes is currently map of app_version_branch_cubeName : sha1; need to check and return in result set
         // If remotely accessing server, use the following to get the MBeanServerConnection...
 //        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:/jmxrmi")
 //        JMXConnector jmxc = JMXConnectorFactory.connect(url, null)
