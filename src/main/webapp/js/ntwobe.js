@@ -145,20 +145,24 @@ var NCubeEditor2 = (function ($)
                 }
 
                 NCubeEditor2.render();
-
-                var windowWidth = $(this).width();
-                var search = $('#search-container');
-                var searchWidth = search.width();
-                var coordWidth = windowWidth - searchWidth;
-                $(getDomCoordinateBar()).width(coordWidth - 45); // coord bar text
-                $('#coordinate-bar-move-right').css({left: coordWidth - 20}); // keep the right button to the end
-                $('#util-container-bar').width(coordWidth); // coord bar container for background
-                search.css({left: windowWidth - searchWidth});
+                setUtilityBarDisplay();
             });
         }
 
         setCoordinateBarListeners();
         buildCubeMap();
+        setUtilityBarDisplay();
+    };
+
+    var setUtilityBarDisplay = function() {
+        var windowWidth = $(this).width();
+        var search = $('#search-container');
+        var searchWidth = search.width();
+        var coordWidth = windowWidth - searchWidth;
+        $(getDomCoordinateBar()).width(coordWidth - 45); // coord bar text
+        $('#coordinate-bar-move-right').css({left: coordWidth - 20}); // keep the right button to the end
+        $('#util-container-bar').width(coordWidth); // coord bar container for background
+        search.css({left: windowWidth - searchWidth});
     };
 
     var buildCubeMap = function() {
