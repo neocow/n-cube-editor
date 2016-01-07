@@ -205,12 +205,24 @@ var NCE = (function ($)
         _openTabList.find('.active').removeClass('active');
     }
 
+    function getTabImage(imgSrc) {
+        return '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;';
+    }
+
     function addTab(cubeInfo) {
         deselectTab();
+        var imgSrc;
+        for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
+            var opt = _menuOptions[x];
+            if (opt.pageId === cubeInfo[4]) {
+                imgSrc = opt.imgSrc;
+                break;
+            }
+        }
         var link = $('<a/>')
             .attr('href','#')
             .addClass('dropdown-toggle ncube-tab-top-level')
-            .html(cubeInfo[3] + ' - ' + cubeInfo[4].replace('PageId','') + '<span class="big-caret"></span>');
+            .html(getTabImage(imgSrc) + cubeInfo[3] + '<span class="big-caret"></span>');
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
         li.addClass('active');
@@ -271,11 +283,12 @@ var NCE = (function ($)
         for (var menuIdx = 0, menuLen = _menuOptions.length; menuIdx < menuLen; menuIdx++) {
             (function() {
                 var menuOption = _menuOptions[menuIdx];
+                var imgHtml = getTabImage(menuOption.imgSrc);
                 dd.append(
                     $('<li/>').append(
                         $('<a/>')
                             .attr('href', '#')
-                            .html(menuOption.key)
+                            .html(imgHtml + menuOption.key)
                             .click(function (e) {
                                 clearError();
                                 _activeTab = menuOption.pageId;
@@ -298,7 +311,7 @@ var NCE = (function ($)
                                         cubeInfo[4] = _activeTab;
                                         _openCubes[tabIdx] = cia2;
                                         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-                                        link.html(cubeInfo[3] + ' - ' + _activeTab.replace('PageId','') + '<span class="big-caret"></span>');
+                                        link.html(imgHtml + cubeInfo[3] + '<span class="big-caret"></span>');
                                         li.attr('id', cia2.replace(/\./g,'_'));
                                     }
                                     switchTabPane(_activeTab);
@@ -392,9 +405,8 @@ var NCE = (function ($)
         {
             if (!key.startsWith('~') && !key.startsWith('@') && !key.startsWith('#'))
             {
-                var menuId = key.replace(/\s/g,'_') + 'Tab';
                 var pageId = key.replace(/\s/g,'_') + 'PageId';
-                _menuOptions.push({key:key, menuId:menuId, pageId:pageId});
+                _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
                 if (!_activeTab) {
                     _activeTab = pageId;
                 }
