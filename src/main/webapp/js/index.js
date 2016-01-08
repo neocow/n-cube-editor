@@ -29,10 +29,11 @@ var NCE = (function ($)
     var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
     var _openCubes = localStorage[OPEN_CUBES];
-    _openCubes = _openCubes === undefined
-        || Object.prototype.toString.call(_openCubes) !== '[object Array]'
-        || (_openCubes.length > 0 && typeof _openCubes[0] === 'object')
-        ? [] : JSON.parse(_openCubes);
+    _openCubes = _openCubes === undefined ? [] : JSON.parse(_openCubes);
+    if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
+            || (_openCubes.length > 0 && typeof _openCubes[0] === 'object')) {
+        _openCubes = [];
+    }
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
@@ -214,7 +215,7 @@ var NCE = (function ($)
     }
 
     function getTabImage(imgSrc) {
-        return '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;';
+        return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;' : '';
     }
 
     function addTab(cubeInfo) {
@@ -490,6 +491,9 @@ var NCE = (function ($)
 
     function selectCubeByName(cubeName)
     {
+        if (!cubeName) {
+            return;
+        }
         _selectedCubeName = getProperCubeName(cubeName);
         localStorage[SELECTED_CUBE] = cubeName;
 
@@ -1102,14 +1106,7 @@ var NCE = (function ($)
         // If there is no _selectedCubeName, establish one if possible (choose 1st cube in list)
         if (!_selectedCubeName || !doesCubeExist())
         {
-            if (first)
-            {
-                _selectedCubeName = (_cubeList && first) ? _cubeList[first.toLowerCase()].name : null;
-            }
-            else
-            {
-                _selectedCubeName = null;
-            }
+            selectCubeByName((_cubeList && first) ? _cubeList[first.toLowerCase()].name : null);
         }
     }
 
@@ -1289,8 +1286,7 @@ var NCE = (function ($)
             _selectedCubeName = null;
             if (keyCount(_cubeList) > 0)
             {
-                _selectedCubeName = Object.keys(_cubeList)[0];
-                loadCube();
+                selectCubeByName(Object.keys(_cubeList)[0]);
             }
             runSearch();
         }
@@ -1684,8 +1680,7 @@ var NCE = (function ($)
                 anchor.click(function ()
                 {
                     showRefsFromCubeClose();
-                    _selectedCubeName = getProperCubeName(value);
-                    loadCube();
+                    selectCubeByName(value);
                 });
                 li.append(anchor);
                 ul.append(li);

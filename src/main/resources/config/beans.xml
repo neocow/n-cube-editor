@@ -109,6 +109,7 @@
         </bean>
     </beans>
 
+
     <beans profile="exa-dev">
         <bean id="ncubeDataSource" destroy-method="close"
               class="org.apache.tomcat.jdbc.pool.DataSource"
@@ -140,7 +141,7 @@
               p:driverClassName="oracle.jdbc.driver.OracleDriver"
               p:url="jdbc:oracle:thin:@dm01-scan.td.afg:1521/app_ncubep.prod.gai.com"
               p:username="{user}"
-              p:password="{quality}"
+              p:password="{password}"
               p:initialSize="5"
               p:minIdle="5"
               p:maxIdle="10"
