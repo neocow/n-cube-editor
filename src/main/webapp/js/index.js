@@ -776,15 +776,6 @@ var NCE = (function ($)
         {
             revisionHistoryOk();
         });
-        $('#showRefsToMenu').click(function ()
-        {
-            setTimeout(function() { showRefsToCube(); }, PROGRESS_DELAY);
-            showNote('Calculating inbound references from other n-cubes to this n-cube...', 'Please wait...');
-        });
-        $('#showRefsToClose').click(function ()
-        {
-            showRefsToCubeClose()
-        });
         $('#showRefsFromMenu').click(function ()
         {
             showRefsFromCube()
@@ -1670,47 +1661,6 @@ var NCE = (function ($)
         }
     }
 
-    function showRefsToCube()
-    {
-        clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
-        {
-            showNote('No n-cube selected. No (inbound) references to show.');
-            return;
-        }
-        $('#showRefsToLabel')[0].textContent = 'Inbound refs to: ' + _selectedCubeName;
-        var ul = $('#refsToCubeList');
-        ul.empty();
-        $('#showRefsToCubeModal').modal();
-        var result = call("ncubeController.getReferencesTo", [getAppId(), _selectedCubeName]);
-        if (result.status === true)
-        {
-            $.each(result.data, function (index, value)
-            {
-                var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
-                var anchor = $('<a href="#"/>');
-                anchor[0].innerHTML = value;
-                anchor.click(function ()
-                {
-                    showRefsToCubeClose();
-                    _selectedCubeName = getProperCubeName(value);
-                    loadCube();
-                });
-                li.append(anchor);
-                ul.append(li);
-            });
-        }
-        else
-        {
-            showNote('Error fetching inbound references to ' + _selectedCubeName + ' (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
-        }
-    }
-
-    function showRefsToCubeClose()
-    {
-        $('#showRefsToCubeModal').modal('hide');
-    }
-
     function showRefsFromCube()
     {
         clearError();
@@ -2140,7 +2090,6 @@ var NCE = (function ($)
             runSearch();
             buildMenu();
             clearError();
-            showNote('<kbd>' + (branchName || head) + '</kbd>', 'Active Branch', 3000);
         }, PROGRESS_DELAY);
         clearError();
         showNote('Changing branch to: ' + branchName, 'Please wait...');
@@ -2184,6 +2133,11 @@ var NCE = (function ($)
         $('#commitRollbackLabel')[0].textContent = title;
 
         var branchChanges = result.data;
+        branchChanges.sort(
+            function compare(a,b)
+            {
+                return a.name.localeCompare(b.name);
+            });
 
         _commitModal.prop('changes', branchChanges);
         var ul = $('#commitRollbackList');

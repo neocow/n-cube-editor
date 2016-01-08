@@ -416,41 +416,6 @@ class NCubeController extends BaseController
     }
 
     /**
-     * Find all references to an n-cube.  This is an expensive method, as all cubes within the
-     * app (version and status) must be checked.
-     * @return Object[] of String cube names that reference the named cube, otherwise a String
-     * error message.
-     */
-    Object[] getReferencesTo(ApplicationID appId, String cubeName)
-    {
-        try
-        {
-            appId = addTenant(appId)
-            isAllowed(appId, cubeName, null)
-            Set<String> references = new CaseInsensitiveSet<>()
-            List<NCubeInfoDto> ncubes = nCubeService.search(appId, "*", null, [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true])
-
-            for (NCubeInfoDto info : ncubes)
-            {
-                NCube loadedCube = nCubeService.getCube(appId, info.name)
-                if (loadedCube.getReferencedCubeNames().contains(cubeName))
-                {
-                    references.add(info.name)
-                }
-            }
-            references.remove(cubeName)    // do not include reference to self.
-            Object[] refs = references.toArray()
-            caseInsensitiveSort(references.toArray())
-            return refs
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return null
-        }
-    }
-
-    /**
      * Find all references from (out going) an n-cube.
      * @return Object[] of String cube names that the passed in (named) cube references,
      * otherwise a String error message.
