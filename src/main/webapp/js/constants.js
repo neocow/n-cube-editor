@@ -33,6 +33,13 @@ var CLASS_HANDSON_CELL_URL = ' url';
 var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 
 var NONE = 'none';
+var CUBE_INFO = {
+    APP: 0,
+    VERSION: 1,
+    BRANCH: 2,
+    CUBE: 3,
+    TAB: 4
+};
 
 URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
