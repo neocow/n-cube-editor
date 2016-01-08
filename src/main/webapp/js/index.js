@@ -29,7 +29,10 @@ var NCE = (function ($)
     var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
     var _openCubes = localStorage[OPEN_CUBES];
-    _openCubes = _openCubes === undefined ? [] : JSON.parse(_openCubes);
+    _openCubes = _openCubes === undefined
+        || Object.prototype.toString.call(_openCubes) !== '[object Array]'
+        || (_openCubes.length > 0 && typeof _openCubes[0] === 'object')
+        ? [] : JSON.parse(_openCubes);
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
@@ -155,6 +158,11 @@ var NCE = (function ($)
         _openCubes = [];
         delete localStorage[OPEN_CUBES];
         _openTabList.children().remove();
+    }
+
+    function setTabClass(cubeInfo, tabClass) {
+        var cia = cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_');
+        $('[id^='+cia).find('a.ncube-tab-top-level').addClass(tabClass);
     }
 
     /**
@@ -1893,7 +1901,7 @@ var NCE = (function ($)
             return;
         }
         clearError();
-        displayMap(result.data, 'Server Statistics');
+        displayMap(result.data.serverStats, 'Server Statistics');
     }
 
     function httpHeaders()
@@ -2706,18 +2714,28 @@ var NCE = (function ($)
             for (var i = 0, len = _openCubes.length; i < len; i++) {
                 var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
                 var key = cubeInfo.slice(0, 4).join('_');
-                var sha1 = _cubeList[cubeInfo[3].toLowerCase()].sha1;
-                obj[key] = sha1;
+                var cube = _cubeList[cubeInfo[3].toLowerCase()];
+                if (cube && cube.hasOwnProperty('sha1')) {
+                    obj[key] = cube.sha1;
+                }
             }
             var result = call("ncubeController.heartBeat", [obj]);
             if (result.status) {
-                heartBeatResponse(result.data);
+                heartBeatResponse(obj, result.data.compareResults);
             }
         }, 60000);
     }
 
-    function heartBeatResponse(response) {
-        // TODO - check result sha1 vs open tabs to display status changes
+    function heartBeatResponse(before, after) {
+        var bKeys = Object.keys(before);
+        for (var i = 0, len = bKeys.length; i < len; i++) {
+            var key = bKeys[i];
+            var aRes = after[key];
+
+            if (before[key] !== aRes.sha1) {
+                setTabClass(key.split('_'), aRes.conflict ? 'conflict' : 'out-of-sync');
+            }
+        }
     }
 
     function doesItemExist(item, list)

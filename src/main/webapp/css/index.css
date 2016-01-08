@@ -13,14 +13,22 @@ body {
     padding: 3px 3px 0;
 }
 
-#ncube-tabs .nav-tabs.ncube-tab-top-level li a {
+#ncube-tabs li a.ncube-tab-top-level {
     color: #555;
     border: 1px solid #ddd;
     background-color: #F2F2F2;
 }
 
-#ncube-tabs .nav-tabs.ncube-tab-top-level li.active a{
-    background-color: white;
+#ncube-tabs li.active a.ncube-tab-top-level {
+    background-color: white !important;
+}
+
+#ncube-tabs li a.ncube-tab-top-level.conflict {
+    background-color: #FFC7C7;
+}
+
+#ncube-tabs li a.ncube-tab-top-level.out-of-sync {
+    background-color: #E5FFFF;
 }
 
 .ncube-selected {
