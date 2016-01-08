@@ -61,6 +61,28 @@
         The profiles list can be comma separated if you need more than one profile
     -->
 
+    <!--<bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"-->
+          <!--p:driverClassName="com.mysql.jdbc.Driver"-->
+          <!--p:url="jdbc:mysql://mysqldev.cwge6txtewt5.us-east-1.rds.amazonaws.com:3306/ncube"-->
+          <!--p:username="ncube"-->
+          <!--p:password="ncube"-->
+          <!--p:initialSize="5"-->
+          <!--p:minIdle="5"-->
+          <!--p:maxIdle="10"-->
+          <!--p:maxActive="100"-->
+          <!--p:maxWait="120000"-->
+          <!--p:jmxEnabled="true"-->
+          <!--p:removeAbandoned="true"-->
+          <!--p:removeAbandonedTimeout="180"-->
+          <!--p:testOnBorrow="true"-->
+          <!--p:testOnReturn="false"-->
+          <!--p:testWhileIdle="false"-->
+          <!--p:timeBetweenEvictionRunsMillis="30000"-->
+          <!--p:minEvictableIdleTimeMillis="30000"-->
+          <!--p:validationInterval="60000"-->
+          <!--p:validationQuery="/* ping */">-->
+    <!--</bean>-->
+
     <bean id="ncubeDataSource" destroy-method="close"
           class="org.apache.tomcat.jdbc.pool.DataSource"
           p:driverClassName="oracle.jdbc.driver.OracleDriver"
@@ -84,36 +106,13 @@
           p:validationQuery="select 1 from dual">
     </bean>
 
-    <beans profile="amazon">
-        <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
-              p:driverClassName="com.mysql.jdbc.Driver"
-              p:url="jdbc:mysql://mysqldev.cwge6txtewt5.us-east-1.rds.amazonaws.com:3306/ncube"
-              p:username="{user}"
-              p:password="{password}"
-              p:initialSize="5"
-              p:minIdle="5"
-              p:maxIdle="10"
-              p:maxActive="100"
-              p:maxWait="120000"
-              p:jmxEnabled="true"
-              p:removeAbandoned="true"
-              p:removeAbandonedTimeout="180"
-              p:testOnBorrow="true"
-              p:testOnReturn="false"
-              p:testWhileIdle="false"
-              p:timeBetweenEvictionRunsMillis="30000"
-              p:minEvictableIdleTimeMillis="30000"
-              p:validationInterval="60000"
-              p:validationQuery="/* ping */">
-        </bean>
-    </beans>
 
     <beans profile="mysql">
         <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
               p:driverClassName="com.mysql.jdbc.Driver"
               p:url="jdbc:mysql://localhost:3306/ncube"
-              p:username="{user}"
-              p:password="{password}"
+              p:username="ncube"
+              p:password="ncube"
               p:initialSize="5"
               p:minIdle="5"
               p:maxIdle="10"
@@ -131,15 +130,14 @@
               p:validationQuery="/* ping */">
         </bean>
     </beans>
-
 
     <beans profile="exa-dev">
         <bean id="ncubeDataSource" destroy-method="close"
               class="org.apache.tomcat.jdbc.pool.DataSource"
               p:driverClassName="oracle.jdbc.driver.OracleDriver"
               p:url="jdbc:oracle:thin:@dm01np-scan.td.afg:1521/app_ncubed.dev.gai.com"
-              p:username="{user}"
-              p:password="{password}"
+              p:username="nce"
+              p:password="quality"
               p:initialSize="5"
               p:minIdle="5"
               p:maxIdle="10"
@@ -163,8 +161,8 @@
               class="org.apache.tomcat.jdbc.pool.DataSource"
               p:driverClassName="oracle.jdbc.driver.OracleDriver"
               p:url="jdbc:oracle:thin:@dm01-scan.td.afg:1521/app_ncubep.prod.gai.com"
-              p:username="{user}"
-              p:password="{password}"
+              p:username="nce"
+              p:password="quality"
               p:initialSize="5"
               p:minIdle="5"
               p:maxIdle="10"
