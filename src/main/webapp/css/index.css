@@ -13,6 +13,16 @@ body {
     padding: 3px 3px 0;
 }
 
+#ncube-tabs .nav-tabs.ncube-tab-top-level li a {
+    color: #555;
+    border: 1px solid #ddd;
+    background-color: #F2F2F2;
+}
+
+#ncube-tabs .nav-tabs.ncube-tab-top-level li.active a{
+    background-color: white;
+}
+
 .ncube-selected {
     color: #444 !important;
     background-color:rgba(61, 139, 202, 0.25) !important;

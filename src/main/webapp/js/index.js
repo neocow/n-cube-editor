@@ -29,7 +29,7 @@ var NCE = (function ($)
     var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
     var _openCubes = localStorage[OPEN_CUBES];
-    _openCubes = _openCubes === undefined ? {} : JSON.parse(_openCubes);
+    _openCubes = _openCubes === undefined ? [] : JSON.parse(_openCubes);
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
@@ -45,7 +45,7 @@ var NCE = (function ($)
     }
     var _selectedStatus = "SNAPSHOT";
     var _errorId = null;
-    var _activeTab = 'n-cubeTab';
+    var _activeTab = localStorage[ACTIVE_TAB];
     var _searchNames = $('#cube-search');
     var _searchContent = $('#cube-search-content');
     var _cubeCount = $('#ncubeCount');
@@ -62,6 +62,7 @@ var NCE = (function ($)
     var _diffLastResult = null;
     var _diffLeftName = '';
     var _diffRightName = '';
+    var _menuOptions = [];
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -84,7 +85,6 @@ var NCE = (function ($)
             loadStatusListView();
             loadVersionListView();
             buildMenu();
-            buildTabs();
             clearSearch();
             loop();
             heartBeat();
@@ -126,34 +126,35 @@ var NCE = (function ($)
     }
 
     function addCurrentCubeTab() {
-        var cubeInfo = {};
-        cubeInfo[SELECTED_CUBE] = _selectedCubeName;
-        cubeInfo[SELECTED_APP] = _selectedApp;
-        cubeInfo[SELECTED_VERSION] = _selectedVersion;
-        cubeInfo[SELECTED_BRANCH] = _selectedBranch;
-        _openCubes[_selectedCubeName] = cubeInfo;
+        var cubeInfo = [_selectedApp, _selectedVersion, _selectedBranch, _selectedCubeName, _activeTab];
+        _openCubes.push(cubeInfo.join(TAB_SEPARATOR));
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
         addTab(cubeInfo);
     }
 
-    function removeTab(cubeName) {
-        cubeName = getProperCubeName(cubeName);
-        delete _openCubes[cubeName];
+    function removeTab(cubeInfo) {
+        var cia = cubeInfo.join(TAB_SEPARATOR);
+        _openCubes.splice(_openCubes.indexOf(cia), 1);
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-        _openTabList.children().filter(function() { return $.text([this]).indexOf(cubeName) > -1; }).remove();
-        if (_selectedCubeName === cubeName) {
-            var nextCubeName = _openTabsPanel.find('li').first().find('a').first().text();
-            _selectedCubeName = nextCubeName.toLowerCase();
-            selectTab(nextCubeName);
+
+        var cubeName = cubeInfo[3];
+        var activeTab = cubeInfo[4];
+
+        $('#' + cia.replace(/\./g,'_')).remove();
+        if (_selectedApp === cubeInfo[0]
+                && _selectedVersion === cubeInfo[1]
+                && _selectedBranch === cubeInfo[2]
+                && _selectedCubeName === cubeName
+                && _activeTab === activeTab) {
+            selectTab(_openCubes[0].split(TAB_SEPARATOR));
             loadCube();
         }
     }
 
-    function removeAllTabsButCurrent() {
-        localStorage[OPEN_CUBES] = {};
-        _openCubes = {};
+    function removeAllTabs() {
+        _openCubes = [];
+        delete localStorage[OPEN_CUBES];
         _openTabList.children().remove();
-        addCurrentCubeTab();
     }
 
     /**
@@ -177,71 +178,178 @@ var NCE = (function ($)
         }
     }
 
-    function selectTab(cubeName) {
+    function selectTab(cubeInfo) {
         deselectTab();
-        var list = _openTabList.children();
-        var tab = list.filter(function() { return $.text([this]).indexOf(getProperCubeName(cubeName)) > -1; });
-        if (tab.length !== 1) {
-            tab = list.first();
+        var tab = $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_'));
+        if (tab.length < 1) {
+            tab = _openTabList.children().first();
         }
         tab.addClass('active');
-        localStorage[SELECTED_CUBE] = cubeName;
+
+        _selectedApp = cubeInfo[0];
+        _selectedVersion = cubeInfo[1];
+        _selectedBranch = cubeInfo[2];
+        _selectedCubeName = cubeInfo[3];
+        _activeTab = cubeInfo[4];
+
+        localStorage[SELECTED_APP] = _selectedApp;
+        localStorage[SELECTED_VERSION] = _selectedVersion;
+        localStorage[SELECTED_BRANCH] = _selectedBranch;
+        localStorage[SELECTED_CUBE] = _selectedCubeName;
+        localStorage[ACTIVE_TAB] = _activeTab;
+
+        switchTabPane(_activeTab);
     }
 
     function deselectTab() {
         _openTabList.find('.active').removeClass('active');
     }
 
+    function getTabImage(imgSrc) {
+        return '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;';
+    }
+
     function addTab(cubeInfo) {
         deselectTab();
-        var cubeName = cubeInfo[SELECTED_CUBE];
+        var imgSrc;
+        for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
+            var opt = _menuOptions[x];
+            if (opt.pageId === cubeInfo[4]) {
+                imgSrc = opt.imgSrc;
+                break;
+            }
+        }
         var link = $('<a/>')
             .attr('href','#')
-            .addClass('dropdown-toggle')
-            .html(cubeName + '<span class="big-caret"></span>');
+            .addClass('dropdown-toggle ncube-tab-top-level')
+            .html(getTabImage(imgSrc) + cubeInfo[3] + '<span class="big-caret"></span>');
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
         li.addClass('active');
         li.addClass('dropdown');
+        li.attr('id', cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_'));
         li.click(function(e) {
             // only show dropdown when clicking the caret, not just the tab
-            if($(e.target).is("span")) {
-                $(this).find("a")
-                    .addClass("dropdown-toggle")
-                    .attr("data-toggle", "dropdown");
-            } else {
-                $(this).find('a').removeClass("dropdown-toggle")
-                    .attr("data-toggle", "")
-                    .tab("show");
-            }
+            var target = $(e.target);
+            var isSpan = target.is('span');
+            var isTopLevel = target.hasClass('ncube-tab-top-level');
+            if (isSpan || isTopLevel) {
+                if (isTopLevel) {
+                    target
+                        .removeClass('dropdown-toggle')
+                        .attr('data-toggle', '')
+                        .tab('show');
+                } else {
+                    $(this).find('.ncube-tab-top-level')
+                        .addClass('dropdown-toggle')
+                        .attr('data-toggle', 'dropdown');
+                }
 
-            if (cubeName !== _selectedCubeName) {
-                _selectedApp = cubeInfo[SELECTED_APP];
-                _selectedBranch = cubeInfo[SELECTED_BRANCH];
-                _selectedCubeName = cubeInfo[SELECTED_CUBE];
-                _selectedVersion = cubeInfo[SELECTED_VERSION];
-                selectTab(cubeName);
-                loadCube();
+                var appChanged = _selectedApp !== cubeInfo[0];
+                var verChanged = _selectedVersion !== cubeInfo[1];
+                var braChanged = _selectedBranch !== cubeInfo[2];
+                var cubChanged = _selectedCubeName !== cubeInfo[3];
+                var tabChanged = _activeTab !== cubeInfo[4];
+
+                if (appChanged || verChanged || braChanged || cubChanged || tabChanged) {
+                    _selectedApp = cubeInfo[0];
+                    _selectedVersion = cubeInfo[1];
+                    _selectedBranch = cubeInfo[2];
+                    _selectedCubeName = cubeInfo[3];
+                    _activeTab = cubeInfo[4];
+                    if (appChanged || verChanged || braChanged) {
+                        if (appChanged || verChanged) {
+                            if (appChanged) {
+                                loadAppNames();
+                                loadAppListView();
+                            }
+                            loadVersions();
+                            loadStatusListView();
+                            loadVersionListView();
+                        }
+                        showActiveBranch();
+                        loadNCubes();
+                        loadNCubeListView();
+                    }
+                    selectTab(cubeInfo);
+                    loadCube();
+                }
             }
         });
 
         var dd = $('<ul/>');
         dd.addClass('dropdown-menu');
+
+        for (var menuIdx = 0, menuLen = _menuOptions.length; menuIdx < menuLen; menuIdx++) {
+            (function() {
+                var menuOption = _menuOptions[menuIdx];
+                var imgHtml = getTabImage(menuOption.imgSrc);
+                dd.append(
+                    $('<li/>').append(
+                        $('<a/>')
+                            .attr('href', '#')
+                            .html(imgHtml + menuOption.key)
+                            .click(function (e) {
+                                clearError();
+                                _activeTab = menuOption.pageId;
+                                var ci2 = [cubeInfo[0], cubeInfo[1], cubeInfo[2], cubeInfo[3], _activeTab];
+                                var cia2 = ci2.join(TAB_SEPARATOR);
+                                var tabIdx = _openCubes.indexOf(cia2);
+                                var isCtrlKey = e.metaKey || e.ctrlKey;
+                                if (isCtrlKey) {
+                                    e.stopImmediatePropagation();
+                                    e.preventDefault();
+                                }
+
+                                if (tabIdx > -1) { // already open
+                                    selectTab(ci2);
+                                } else {
+                                    if (isCtrlKey) { // open new tab
+                                        addCurrentCubeTab();
+                                    } else { // use current tab
+                                        tabIdx = _openCubes.indexOf(cubeInfo.join(TAB_SEPARATOR));
+                                        cubeInfo[4] = _activeTab;
+                                        _openCubes[tabIdx] = cia2;
+                                        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+                                        link.html(imgHtml + cubeInfo[3] + '<span class="big-caret"></span>');
+                                        li.attr('id', cia2.replace(/\./g,'_'));
+                                    }
+                                    switchTabPane(_activeTab);
+                                }
+                            })
+                    )
+                );
+            })();
+        }
+
         dd.append(
+            $('<div/>')
+                .prop({'class': 'divider'})
+        ).append(
             $('<li/>').append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Close Tab')
+                    .html('Close')
                     .click(function() {
-                        removeTab(cubeName.toLowerCase());
-                    })
-            )).append(
+                        removeTab(cubeInfo);
+                    }))
+        ).append(
+            $('<li/>').append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Close All')
+                    .click(function() {
+                        removeAllTabs();
+                        switchTabPane(null);
+                    }))
+        ).append(
             $('<li/>').append(
                 $('<a/>')
                     .attr('href','#')
                     .html('Close All But This')
                     .click(function() {
-                        removeAllTabsButCurrent();
+                        removeAllTabs();
+                        addCurrentCubeTab();
                     }))
         );
 
@@ -250,17 +358,34 @@ var NCE = (function ($)
         _openTabList.first().append(li);
     }
 
+    function switchTabPane(pageId) {
+        $('.tab-pane').removeClass('active');
+        if (pageId) {
+            $('#' + pageId).addClass('active');
+            var iframeId = 'iframe_' + pageId;
+            try {
+                var cw = document.getElementById(iframeId).contentWindow;
+                if (cw.tabActivated !== undefined) {
+                    cw.tabActivated(buildAppState())
+                    localStorage[ACTIVE_TAB] = pageId;
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+    }
+
     function buildTabs() {
-        var cubeNames = Object.keys(_openCubes);
-        var len = cubeNames.length;
+        _openTabList.children().remove();
+        var len = _openCubes.length;
         if (len > 0) {
             for (var i = 0; i < len; i++) {
-                addTab(_openCubes[cubeNames[i]]);
+                addTab(_openCubes[i].split(TAB_SEPARATOR));
             }
         } else {
             addCurrentCubeTab();
         }
-        selectTab(_selectedCubeName);
+        selectTab([_selectedApp, _selectedVersion, _selectedBranch, _selectedCubeName, _activeTab]);
     }
 
     function buildMenu()
@@ -275,18 +400,16 @@ var NCE = (function ($)
         $('#appTitle')[0].innerHTML = menu['~Title'];
         var ul = $('#menuList');
         ul.empty();
+        _menuOptions = [];
         $.each(menu, function (key, value)
         {
             if (!key.startsWith('~') && !key.startsWith('@') && !key.startsWith('#'))
             {
-                var menuId = key.replace(/\s/g,'_') + 'Tab';
                 var pageId = key.replace(/\s/g,'_') + 'PageId';
-                var li = $('<li/>');
-                var a = $('<a/>').prop({'id': menuId, 'href': '#' + pageId});
-                a.attr({'data-toggle':'tab', 'style':"border-radius:8px"});
-                a[0].innerHTML = key;
-                li.append(a);
-                ul.append(li);
+                _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
+                if (!_activeTab) {
+                    _activeTab = pageId;
+                }
 
                 var div = $('<div/>').prop({class:'tab-pane', id:pageId});
                 div.attr({style:'overflow:hidden;height:calc(100% - 25px);'});
@@ -302,21 +425,6 @@ var NCE = (function ($)
                     html += '?appId=' + JSON.stringify(getAppId());
                 }
                 iframe.attr({style:'position:relative;height:100%;width:100%', src:html});
-
-                $('#' + menuId).click(function ()
-                {
-                    clearError();
-                    _activeTab = menuId;
-
-                    try
-                    {
-                        document.getElementById(iframeId).contentWindow.tabActivated(buildAppState());
-                    }
-                    catch (e)
-                    {
-                        console.log(e);
-                    }
-                });
             }
         });
     }
@@ -377,9 +485,23 @@ var NCE = (function ($)
         _selectedCubeName = getProperCubeName(cubeName);
         localStorage[SELECTED_CUBE] = cubeName;
 
-        if (_openCubes.hasOwnProperty(_selectedCubeName)) {
-            selectTab(_selectedCubeName);
-        } else {
+        var cubeInfo = [_selectedApp, _selectedVersion, _selectedBranch, _selectedCubeName];
+        var cis = cubeInfo.join(TAB_SEPARATOR);
+        var found = false;
+        for (var i = 0, len = _openCubes.length; i < len; i++) {
+            var oci = _openCubes[i];
+            var idx = oci.lastIndexOf(TAB_SEPARATOR);
+            var tab = oci.substring(idx + TAB_SEPARATOR.length);
+            oci = oci.substring(0, idx);
+
+            if (oci === cis) {
+                cubeInfo.push(tab);
+                selectTab(cubeInfo);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
             addCurrentCubeTab();
         }
         loadCube(); // load spreadsheet side
@@ -496,7 +618,7 @@ var NCE = (function ($)
 
         _searchNames.keyup(function (e)
         {
-            if (e.keyCode == 27)
+            if (e.keyCode === KEY_CODES.ESCAPE)
             {   // ESCape key
                 clearSearch();
             }
@@ -504,7 +626,7 @@ var NCE = (function ($)
 
         _searchContent.keyup(function (e)
         {
-            if (e.keyCode == 27)
+            if (e.keyCode === KEY_CODES.ESCAPE)
             {   // ESCape key
                 clearSearch();
             }
@@ -1763,7 +1885,7 @@ var NCE = (function ($)
 
     function serverStats()
     {
-        var result = call("ncubeController.heartBeat", []);
+        var result = call("ncubeController.heartBeat", [{}]);
 
         if (result.status === false)
         {
@@ -2580,8 +2702,22 @@ var NCE = (function ($)
     {
         setInterval(function()
         {
-            call("ncubeController.heartBeat", []);
+            var obj = {};
+            for (var i = 0, len = _openCubes.length; i < len; i++) {
+                var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
+                var key = cubeInfo.slice(0, 4).join('_');
+                var sha1 = _cubeList[cubeInfo[3].toLowerCase()].sha1;
+                obj[key] = sha1;
+            }
+            var result = call("ncubeController.heartBeat", [obj]);
+            if (result.status) {
+                heartBeatResponse(result.data);
+            }
         }, 60000);
+    }
+
+    function heartBeatResponse(response) {
+        // TODO - check result sha1 vs open tabs to display status changes
     }
 
     function doesItemExist(item, list)
@@ -2664,14 +2800,15 @@ var NCE = (function ($)
 
     // API
     return {
-        getSelectedStatus: getSelectedStatus
+        getSelectedStatus: getSelectedStatus,
+        buildTabs: buildTabs
     }
 
 })(jQuery);
 
 function frameLoaded()
 {
-    $('#menuList').find(':first-child').find('a').click();
+    NCE.buildTabs();
     $('.fadeMe2').fadeOut(800, function()
     {
         $('.fadeMe2').remove();
