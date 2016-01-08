@@ -1549,7 +1549,6 @@ class NCubeController extends BaseController
 
     Map heartBeat(Map openCubes)
     {
-        //TODO -- openCubes is currently map of app_version_branch_cubeName : sha1; need to check and return in result set
         // If remotely accessing server, use the following to get the MBeanServerConnection...
 //        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:/jmxrmi")
 //        JMXConnector jmxc = JMXConnectorFactory.connect(url, null)
@@ -1559,6 +1558,8 @@ class NCubeController extends BaseController
 //        Set result = conn.queryMBeans(null, "Catalina:type=DataSource,path=/appdb,host=localhost,class=javax.sql.DataSource")
 //        jmxc.close()
 
+        Map results = [:]
+
         // Force session creation / update (only for statistics - we do NOT want to use a session - must...remain...stateless)
         JsonCommandServlet.servletRequest.get().getSession()
 
@@ -1566,15 +1567,15 @@ class NCubeController extends BaseController
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer()
 
         // App server name and version
-        Map results = [:]
-        putIfNotNull(results, 'Server Info', getAttribute(mbs, 'Catalina:type=Server', 'serverInfo'))
-        putIfNotNull(results, 'JVM Route', getAttribute(mbs, 'Catalina:type=Engine', 'jvmRoute'))
+        Map serverStats = [:]
+        putIfNotNull(serverStats, 'Server Info', getAttribute(mbs, 'Catalina:type=Server', 'serverInfo'))
+        putIfNotNull(serverStats, 'JVM Route', getAttribute(mbs, 'Catalina:type=Engine', 'jvmRoute'))
 
-        putIfNotNull(results, 'hostname, servlet', getServletHostname())
-        putIfNotNull(results, 'hostname, OS', getInetHostname())
-        putIfNotNull(results, 'Context', JsonCommandServlet.servletRequest.get().getContextPath())
-        putIfNotNull(results, 'Sessions, active', getAttribute(mbs, 'Catalina:type=Manager,host=localhost,context=' + results.Context, 'activeSessions'))
-        putIfNotNull(results, 'Sessions, peak', getAttribute(mbs, 'Catalina:type=Manager,host=localhost,context=' + results.Context, 'maxActive'))
+        putIfNotNull(serverStats, 'hostname, servlet', getServletHostname())
+        putIfNotNull(serverStats, 'hostname, OS', getInetHostname())
+        putIfNotNull(serverStats, 'Context', JsonCommandServlet.servletRequest.get().getContextPath())
+        putIfNotNull(serverStats, 'Sessions, active', getAttribute(mbs, 'Catalina:type=Manager,host=localhost,context=' + serverStats.Context, 'activeSessions'))
+        putIfNotNull(serverStats, 'Sessions, peak', getAttribute(mbs, 'Catalina:type=Manager,host=localhost,context=' + serverStats.Context, 'maxActive'))
 
         Set<ObjectName> set = mbs.queryNames(new ObjectName('Catalina:type=ThreadPool,name=*'), null)
         Set<String> connectors = [] as LinkedHashSet
@@ -1586,39 +1587,48 @@ class NCubeController extends BaseController
         for (String conn : connectors)
         {
             String cleanKey = cleanKey(conn)
-            putIfNotNull(results, cleanKey + ' t-pool max', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxThreads'))
-            putIfNotNull(results, cleanKey + ' t-pool cur', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadCount'))
-            putIfNotNull(results, cleanKey + ' busy thread', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadsBusy'))
-            putIfNotNull(results, cleanKey + ' max conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxConnections'))
-            putIfNotNull(results, cleanKey + ' curr conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'connectionCount'))
+            putIfNotNull(serverStats, cleanKey + ' t-pool max', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxThreads'))
+            putIfNotNull(serverStats, cleanKey + ' t-pool cur', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadCount'))
+            putIfNotNull(serverStats, cleanKey + ' busy thread', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'currentThreadsBusy'))
+            putIfNotNull(serverStats, cleanKey + ' max conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'maxConnections'))
+            putIfNotNull(serverStats, cleanKey + ' curr conn', getAttribute(mbs, 'Catalina:type=ThreadPool,name=' + conn, 'connectionCount'))
         }
 
         // OS
-        putIfNotNull(results, 'OS', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Name'))
-        putIfNotNull(results, 'OS version', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Version'))
-        putIfNotNull(results, 'CPU', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Arch'))
-        putIfNotNull(results, 'CPU Process Load', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'ProcessCpuLoad'))
-        putIfNotNull(results, 'CPU System Load', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'SystemCpuLoad'))
-        putIfNotNull(results, 'CPU Cores', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'AvailableProcessors'))
+        putIfNotNull(serverStats, 'OS', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Name'))
+        putIfNotNull(serverStats, 'OS version', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Version'))
+        putIfNotNull(serverStats, 'CPU', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Arch'))
+        putIfNotNull(serverStats, 'CPU Process Load', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'ProcessCpuLoad'))
+        putIfNotNull(serverStats, 'CPU System Load', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'SystemCpuLoad'))
+        putIfNotNull(serverStats, 'CPU Cores', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'AvailableProcessors'))
         double machMem = (long) getAttribute(mbs, 'java.lang:type=OperatingSystem', 'TotalPhysicalMemorySize')
         long K = 1024L
         long MB = K * 1024L
         long GB = MB * 1024L
         machMem = machMem / GB
-        putIfNotNull(results, 'Physical Memory', (machMem.round(2)) + ' GB')
+        putIfNotNull(serverStats, 'Physical Memory', (machMem.round(2)) + ' GB')
 
         // JVM
-        putIfNotNull(results, 'Java version', getAttribute(mbs, 'JMImplementation:type=MBeanServerDelegate', 'ImplementationVersion'))
-        putIfNotNull(results, 'Loaded class count', getAttribute(mbs, 'java.lang:type=ClassLoading', 'LoadedClassCount'))
+        putIfNotNull(serverStats, 'Java version', getAttribute(mbs, 'JMImplementation:type=MBeanServerDelegate', 'ImplementationVersion'))
+        putIfNotNull(serverStats, 'Loaded class count', getAttribute(mbs, 'java.lang:type=ClassLoading', 'LoadedClassCount'))
 
         // JVM Memory
         Runtime rt = Runtime.getRuntime()
         double maxMem = rt.maxMemory() / MB
         double freeMem = rt.freeMemory() / MB
         double usedMem = maxMem - freeMem
-        putIfNotNull(results, 'Heap size (-Xmx)', (maxMem.round(1)) + ' MB')
-        putIfNotNull(results, 'Used memory', (usedMem.round(1)) + ' MB')
-        putIfNotNull(results, 'Free memory', (freeMem.round(1)) + ' MB')
+        putIfNotNull(serverStats, 'Heap size (-Xmx)', (maxMem.round(1)) + ' MB')
+        putIfNotNull(serverStats, 'Used memory', (usedMem.round(1)) + ' MB')
+        putIfNotNull(serverStats, 'Free memory', (freeMem.round(1)) + ' MB')
+
+        putIfNotNull(results, 'serverStats', serverStats)
+
+        Map compareResults = [:]
+        openCubes.each{ key, sha1 ->
+            //TODO -- openCubes is currently map of app_version_branch_cubeName : sha1; need to check and return in result set
+            putIfNotNull(compareResults, key.toString(), [sha1:sha1, conflict:false])
+        }
+        putIfNotNull(results, 'compareResults', compareResults)
 
         return results
     }
