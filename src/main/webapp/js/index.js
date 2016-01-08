@@ -214,7 +214,7 @@ var NCE = (function ($)
     }
 
     function getTabImage(imgSrc) {
-        return '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;';
+        return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;' : '';
     }
 
     function addTab(cubeInfo) {
@@ -1102,14 +1102,7 @@ var NCE = (function ($)
         // If there is no _selectedCubeName, establish one if possible (choose 1st cube in list)
         if (!_selectedCubeName || !doesCubeExist())
         {
-            if (first)
-            {
-                _selectedCubeName = (_cubeList && first) ? _cubeList[first.toLowerCase()].name : null;
-            }
-            else
-            {
-                _selectedCubeName = null;
-            }
+            selectCubeByName((_cubeList && first) ? _cubeList[first.toLowerCase()].name : null);
         }
     }
 
@@ -1289,8 +1282,7 @@ var NCE = (function ($)
             _selectedCubeName = null;
             if (keyCount(_cubeList) > 0)
             {
-                _selectedCubeName = Object.keys(_cubeList)[0];
-                loadCube();
+                selectCubeByName(Object.keys(_cubeList)[0]);
             }
             runSearch();
         }
@@ -1684,8 +1676,7 @@ var NCE = (function ($)
                 anchor.click(function ()
                 {
                     showRefsFromCubeClose();
-                    _selectedCubeName = getProperCubeName(value);
-                    loadCube();
+                    selectCubeByName(value);
                 });
                 li.append(anchor);
                 ul.append(li);
