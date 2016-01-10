@@ -14,6 +14,8 @@ var DIFF_VISUAL = 3;
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
 var TAB_SEPARATOR = '----';
+var MIN_COL_WIDTH = 50;
+var MAX_COL_WIDTH = 600;
 
 var AXIS_DEFAULT = '002147483647';
 var DEFAULT_TEXT = 'Default';
