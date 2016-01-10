@@ -19,6 +19,7 @@ var NCubeEditor2 = (function ($)
     var cubeMap = null;
     var cubeMapRegex = null;
     var axisColumnMap = null;
+    var _columnWidths = [];
     var _cellId = null;
     var _tableCellId = null;
     var _columnList = null;
@@ -743,7 +744,7 @@ var NCubeEditor2 = (function ($)
             }
         };
 
-        var getHiddenColumns = function()
+        var hideColumns = function()
         {
             _hiddenColumns = {};
             var storageKey = getStorageKey(HIDDEN_COLUMNS);
@@ -751,9 +752,6 @@ var NCubeEditor2 = (function ($)
             {
                 _hiddenColumns = JSON.parse(localStorage[storageKey]);
             }
-        };
-
-        var hideColumns = function() {
             for (var i = 0, axisLength=axes.length; i < axisLength; i++)
             {
                 var axis = axes[i];
@@ -779,10 +777,99 @@ var NCubeEditor2 = (function ($)
 
         data = cubeData;
         determineAxesOrder(data.axes);
-        getHiddenColumns();
         hideColumns();
         setUpDataTable();
         setUpAxisColumnMap();
+        setUpColumnWidths();
+    };
+
+    var setUpColumnWidths = function()
+    {
+        var calcDomWidth = function (value, modifier, type)
+        {
+            var testElement = type == 'exp' ? testCode: testCell;
+            testElement[0].textContent = value;
+            return testElement.width() + modifier;
+        };
+
+        var findWidth = function(oldWidth, newWidth)
+        {
+            if (oldWidth == undefined) oldWidth = 0;
+            if (newWidth == undefined) newWidth = 0;
+            if (oldWidth > MAX_COL_WIDTH || newWidth > MAX_COL_WIDTH)
+            {
+                return MAX_COL_WIDTH
+            }
+            else
+            {
+                return Math.max(MIN_COL_WIDTH, oldWidth, newWidth);
+            }
+        };
+
+        var setupTopWidths = function()
+        {
+            if (axes.length > 1)
+            {
+                var columns = axes[colOffset].columns;
+                var columnKeys = Object.keys(columns);
+                for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
+                {
+                    var colKey = columnKeys[colIndex];
+                    var firstWidth = calcDomWidth(columns[colKey].value, 10, null);
+                    topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
+                }
+            }
+            var firstColId = axisColumnMap[axes[colOffset].name][0];
+            var colPrefix = firstColId.slice(0,-10);
+            var regex = new RegExp(colPrefix + "(?:\\d{10})");
+            var cells = data.cells;
+            var cellKeys = Object.keys(cells);
+            for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
+                var cellKey = cellKeys[keyIndex];
+                var cell = cells[cellKey];
+                var value = cell.hasOwnProperty('url') ? cell.url: cell.value;
+                var width = calcDomWidth(value, 10, cell.type);
+                var colId = regex.exec(cellKey)[0];
+                topWidths[colId] = findWidth(topWidths[colId], width);
+            }
+        };
+
+        var buildWidthArray = function()
+        {
+            for (var hotCol = 0, hotColLength = getHotSettings().startCols; hotCol < hotColLength; hotCol++)
+            {
+                if (hotCol < axes.length - 1)
+                {
+                    var columnId, columnName;
+                    var axisName = axes[hotCol].name;
+                    var buttonWidth = calcDomWidth(axisName, 45, null);
+                    var oldWidth = findWidth(0, buttonWidth);
+
+                    var axisColumns = axisColumnMap[axisName];
+                    for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
+                    {
+                        columnId = axisColumns[axisCol];
+                        columnName = axes[hotCol].columns[columnId].value;
+                        var colWidth = calcDomWidth(columnName, 10, null);
+                        var correctWidth = findWidth(oldWidth, colWidth);
+                        oldWidth = correctWidth;
+                    }
+                    _columnWidths.push(correctWidth);
+                }
+                else
+                {
+                    var columnHeaderId = getColumnHeaderId(hotCol);
+                    _columnWidths.push(topWidths[columnHeaderId]);
+                }
+            }
+        };
+
+        _columnWidths = [];
+        var topWidths = {};
+        var testCell = $('#test-cell');
+        var testCode = $('#test-code');
+        setupTopWidths();
+        buildWidthArray();
     };
 
     var calcColumnHeader = function(index)
@@ -826,7 +913,7 @@ var NCubeEditor2 = (function ($)
         return {
             copyPaste: false,
             fillHandle: false,
-            autoColumnSize: true,
+            colWidths: _columnWidths,
             autoRowSize: false,
             enterBeginsEditing: false,
             enterMoves: {row: 1, col: 0},
@@ -930,15 +1017,11 @@ var NCubeEditor2 = (function ($)
                 td.style.overflow = 'visible';
                 buildAxisMenu(axes[colOffset].name, td);
             }
+            td.colSpan = axes[colOffset].columnLength;
             td.style.background = BACKGROUND_AXIS_INFO;
             td.style.color = COLOR_WHITE;
             td.style.opacity = '1';
             cellProperties.readOnly = true;
-
-            // rest of the top row
-            if (col < numColumns - 1) {
-                td.style.borderRight = NONE;
-            }
         }
 
         // vertical axes metadata area
@@ -1754,6 +1837,7 @@ var NCubeEditor2 = (function ($)
         data.cells[_tableCellId] = {value:cellInfo.value};
         _cellId = null;
         destroyEditor();
+        reload();
     };
 
     var enabledDisableCheckBoxes = function() {
