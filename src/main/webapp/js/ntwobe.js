@@ -201,7 +201,7 @@ var NCubeEditor2 = (function ($)
 
     var showHtmlError = function(text) {
         _ncubeContent.hide();
-        _ncubeHtmlError.show()
+        _ncubeHtmlError.show();
         _ncubeHtmlError[0].innerHTML = text;
     };
 
@@ -932,7 +932,7 @@ var NCubeEditor2 = (function ($)
             contextMenu: false,
             manualColumnResize: true,
             manualRowResize: true,
-            fixedColumnsLeft: axes.length - 1,
+            fixedColumnsLeft: colOffset,
             fixedRowsTop: 2,
             currentRowClassName: CLASS_HANDSON_CURRENT_ROW,
             currentColClassName: CLASS_HANDSON_CURRENT_ROW,
