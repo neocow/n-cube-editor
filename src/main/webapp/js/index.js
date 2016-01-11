@@ -237,21 +237,34 @@ var NCE = (function ($)
         li.addClass('active');
         li.addClass('dropdown');
         li.attr('id', cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_'));
+        li.tooltip({
+            trigger: 'hover',
+            placement: 'auto top',
+            animate: true,
+            delay: 250,
+            container: 'body',
+            title: cubeInfo[0] + ' - ' + cubeInfo[1] + ' - ' + cubeInfo[2] + ' - ' + cubeInfo[3],
+            template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
+        });
         li.click(function(e) {
             // only show dropdown when clicking the caret, not just the tab
             var target = $(e.target);
             var isSpan = target.is('span');
             var isTopLevel = target.hasClass('ncube-tab-top-level');
             if (isSpan || isTopLevel) {
-                if (isTopLevel) {
+                if (isTopLevel) { // when clicking tab show tab, not dropdown
                     target
                         .removeClass('dropdown-toggle')
                         .attr('data-toggle', '')
                         .tab('show');
-                } else {
+                } else { // clicking caret for dropdown
                     $(this).find('.ncube-tab-top-level')
                         .addClass('dropdown-toggle')
                         .attr('data-toggle', 'dropdown');
+                    $(document).one('click', function() { // prevent tooltip and dropdown from remaining on screen
+                        li.removeClass('open');
+                        li.tooltip('hide');
+                    });
                 }
 
                 var appChanged = _selectedApp !== cubeInfo[0];
@@ -314,6 +327,8 @@ var NCE = (function ($)
                                     selectTab(ci2);
                                 } else {
                                     if (isCtrlKey) { // open new tab
+                                        li.removeClass('open');
+                                        li.tooltip('hide');
                                         addCurrentCubeTab();
                                     } else { // use current tab
                                         tabIdx = _openCubes.indexOf(cubeInfo.join(TAB_SEPARATOR));
@@ -340,6 +355,7 @@ var NCE = (function ($)
                     .attr('href','#')
                     .html('Close')
                     .click(function() {
+                        li.tooltip('destroy');
                         removeTab(cubeInfo);
                     }))
         ).append(
@@ -348,6 +364,7 @@ var NCE = (function ($)
                     .attr('href','#')
                     .html('Close All')
                     .click(function() {
+                        li.tooltip('destroy');
                         removeAllTabs();
                         switchTabPane(null);
                     }))
@@ -357,6 +374,7 @@ var NCE = (function ($)
                     .attr('href','#')
                     .html('Close All But This')
                     .click(function() {
+                        li.tooltip('destroy');
                         removeAllTabs();
                         addCurrentCubeTab();
                     }))
