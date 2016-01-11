@@ -56,25 +56,21 @@ div#editColumnsModal div.panel-group
 #coordinate-bar-text {
     white-space: nowrap;
     overflow-x: scroll;
-    cursor: ew-resize;
+    cursor: default;
     position: absolute;
-    left: 20px;
+    left: 24px;
 }
 #coordinate-bar-text::-webkit-scrollbar {
     display:none;
 }
 
 #coordinate-bar-move-left {
-    cursor: pointer;
-    width: 20px;
     position: absolute;
     left: 0px;
     display: none;
 }
 
 #coordinate-bar-move-right {
-    cursor: pointer;
-    width: 20px;
     position: absolute;
     display: none;
 }

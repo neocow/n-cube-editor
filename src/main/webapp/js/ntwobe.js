@@ -160,8 +160,8 @@ var NCubeEditor2 = (function ($)
         var search = $('#search-container');
         var searchWidth = search.width();
         var coordWidth = windowWidth - searchWidth;
-        $(getDomCoordinateBar()).width(coordWidth - 45); // coord bar text
-        $('#coordinate-bar-move-right').css({left: coordWidth - 20}); // keep the right button to the end
+        $(getDomCoordinateBar()).width(coordWidth - 50); // coord bar text
+        $('#coordinate-bar-move-right').css({left: coordWidth - 24}); // keep the right button to the end
         $('#util-container-bar').width(coordWidth); // coord bar container for background
         search.css({left: windowWidth - searchWidth});
     };
@@ -1388,15 +1388,11 @@ var NCubeEditor2 = (function ($)
         return document.getElementById('coordinate-bar-move-right');
     };
 
-    var curDown = false;
-    var curPos = 0;
     var resetCoordinateBar = function(displayText) {
         var bar = getDomCoordinateBar();
         var left = getDomCoordinateBarLeftButton();
         var right = getDomCoordinateBarRightButton();
 
-        curDown = false;
-        curPos = 0;
         bar.scrollLeft = 0;
         bar.innerHTML = displayText || '';
 
@@ -1414,31 +1410,14 @@ var NCubeEditor2 = (function ($)
         var leftButton = getDomCoordinateBarLeftButton();
         var rightButton = getDomCoordinateBarRightButton();
 
-        coordBar.addEventListener('mousedown', function (e) {
-            curDown = true;
-            curPos = e.pageX;
-        });
-
-        coordBar.addEventListener('mouseup', function() {
-            curDown = false;
-        });
-
-        coordBar.addEventListener('mousemove', function(e) {
-            if (curDown) {
-                coordBar.scrollLeft = coordBar.scrollLeft + curPos - e.pageX;
-            }
-        });
-
-        coordBar.addEventListener('mouseout', function() {
-            curDown = false;
-        });
-
-        leftButton.addEventListener('click', function() {
+        $(leftButton).click(function() {
             coordBar.scrollLeft = coordBar.scrollLeft - 40;
+            $(this).blur();
         });
 
-        rightButton.addEventListener('click', function() {
+        $(rightButton).click(function() {
             coordBar.scrollLeft = coordBar.scrollLeft + 40;
+            $(this).blur();
         });
     };
 
