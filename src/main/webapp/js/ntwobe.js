@@ -993,6 +993,11 @@ var NCubeEditor2 = (function ($)
                 }
 
                 resetCoordinateBar(display);
+            },
+            afterSelectionEnd: function(r, c, r2, c2) {
+                if (hot.getCellMeta(r, c).readOnly) {
+                    hot.deselectCell();
+                }
             }
         };
     };
