@@ -918,6 +918,7 @@ var NCubeEditor2 = (function ($)
             copyPaste: false,
             fillHandle: false,
             colWidths: _columnWidths,
+            rowHeights: [33],
             autoRowSize: false,
             enterBeginsEditing: false,
             enterMoves: {row: 1, col: 0},
@@ -1020,6 +1021,7 @@ var NCubeEditor2 = (function ($)
             if (axes.length > 1 && col === colOffset) {
                 td.style.overflow = 'visible';
                 buildAxisMenu(axes[colOffset].name, td);
+                $(td).find('div.btn-group').addClass('pos-fixed');
             }
             td.colSpan = axes[colOffset].columnLength;
             td.style.background = BACKGROUND_AXIS_INFO;
