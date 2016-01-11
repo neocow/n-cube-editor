@@ -105,6 +105,10 @@ div#editColumnsModal div.panel-group
     background-color: white;
 }
 
+.pos-fixed {
+    position: fixed;
+}
+
 .handsontable table.htCore {
     background-color: #BEEEEF;
 }
@@ -129,7 +133,6 @@ div#editColumnsModal div.panel-group
 .handsontable th, .handsontable td {
     border-top: 1px solid #CCC;
     border-bottom: none !important;
-
 }
 
 .handsontable .tableDefault {

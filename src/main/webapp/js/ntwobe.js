@@ -351,8 +351,12 @@ var NCubeEditor2 = (function ($)
         var axisNum, colNum, axisLen, colLen;
         var rowSpacingHelper = [];
 
+        var isHorizAxis = function(axisNum) {
+            return axisLen > 1 && axisNum === colOffset;
+        };
+
         var getColumnTableCoords = function() {
-            if (axisNum === colOffset) {
+            if (isHorizAxis(axisNum)) {
                 _searchCoords.push({row: 1, col: colOffset + colNum});
             } else {
                 var rowIdx = colNum * rowSpacing;
@@ -373,7 +377,7 @@ var NCubeEditor2 = (function ($)
 
             var id = colKeys[0];
             var axisOrder = id.substring(0, id.length - 12);
-            rowSpacingHelper.push({axisName:axis.name, order:axisOrder, rowSpacing:rowSpacing, horizAxis:axisNum === colOffset});
+            rowSpacingHelper.push({axisName:axis.name, order:axisOrder, rowSpacing:rowSpacing, horizAxis:isHorizAxis(axisNum)});
 
             // search all columns for an axis
             for (colNum = 0; colNum < colLen; colNum++)
@@ -467,7 +471,7 @@ var NCubeEditor2 = (function ($)
                     }
                 }
 
-                _searchCoords.push({row: r + 2, col: c + colOffset});
+                _searchCoords.push({row: r + 2, col: c + (colOffset || 1)});
             }
         }
 
@@ -914,6 +918,7 @@ var NCubeEditor2 = (function ($)
             copyPaste: false,
             fillHandle: false,
             colWidths: _columnWidths,
+            rowHeights: [33],
             autoRowSize: false,
             enterBeginsEditing: false,
             enterMoves: {row: 1, col: 0},
@@ -988,6 +993,11 @@ var NCubeEditor2 = (function ($)
                 }
 
                 resetCoordinateBar(display);
+            },
+            afterSelectionEnd: function(r, c, r2, c2) {
+                if (hot.getCellMeta(r, c).readOnly) {
+                    hot.deselectCell();
+                }
             }
         };
     };
@@ -1016,6 +1026,7 @@ var NCubeEditor2 = (function ($)
             if (axes.length > 1 && col === colOffset) {
                 td.style.overflow = 'visible';
                 buildAxisMenu(axes[colOffset].name, td);
+                $(td).find('div.btn-group').addClass('pos-fixed');
             }
             td.colSpan = axes[colOffset].columnLength;
             td.style.background = BACKGROUND_AXIS_INFO;
