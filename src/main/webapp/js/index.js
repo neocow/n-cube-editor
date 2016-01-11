@@ -231,7 +231,7 @@ var NCE = (function ($)
         var link = $('<a/>')
             .attr('href','#')
             .addClass('dropdown-toggle ncube-tab-top-level')
-            .html(getTabImage(imgSrc) + cubeInfo[CUBE_INFO.CUBE] + '<span class="big-caret"></span>');
+            .html(getTabImage(imgSrc) + cubeInfo[CUBE_INFO.CUBE] + '<span class="click-space"><span class="big-caret"></span></span>');
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
         li.addClass('active');
