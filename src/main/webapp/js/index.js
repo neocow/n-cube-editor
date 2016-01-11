@@ -141,13 +141,13 @@ var NCE = (function ($)
         _openCubes.splice(_openCubes.indexOf(cia), 1);
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
 
-        var cubeName = cubeInfo[3];
-        var activeTab = cubeInfo[4];
+        var cubeName = cubeInfo[CUBE_INFO.CUBE];
+        var activeTab = cubeInfo[CUBE_INFO.TAB];
 
         $('#' + cia.replace(/\./g,'_')).remove();
-        if (_selectedApp === cubeInfo[0]
-                && _selectedVersion === cubeInfo[1]
-                && _selectedBranch === cubeInfo[2]
+        if (_selectedApp === cubeInfo[CUBE_INFO.APP]
+                && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
+                && _selectedBranch === cubeInfo[CUBE_INFO.BRANCH]
                 && _selectedCubeName === cubeName
                 && _activeTab === activeTab) {
             selectTab(_openCubes[0].split(TAB_SEPARATOR));
@@ -195,11 +195,11 @@ var NCE = (function ($)
         }
         tab.addClass('active');
 
-        _selectedApp = cubeInfo[0];
-        _selectedVersion = cubeInfo[1];
-        _selectedBranch = cubeInfo[2];
-        _selectedCubeName = cubeInfo[3];
-        _activeTab = cubeInfo[4];
+        _selectedApp = cubeInfo[CUBE_INFO.APP];
+        _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
+        _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
+        _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
+        _activeTab = cubeInfo[CUBE_INFO.TAB];
 
         localStorage[SELECTED_APP] = _selectedApp;
         localStorage[SELECTED_VERSION] = _selectedVersion;
@@ -223,7 +223,7 @@ var NCE = (function ($)
         var imgSrc;
         for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
             var opt = _menuOptions[x];
-            if (opt.pageId === cubeInfo[4]) {
+            if (opt.pageId === cubeInfo[CUBE_INFO.TAB]) {
                 imgSrc = opt.imgSrc;
                 break;
             }
@@ -231,7 +231,7 @@ var NCE = (function ($)
         var link = $('<a/>')
             .attr('href','#')
             .addClass('dropdown-toggle ncube-tab-top-level')
-            .html(getTabImage(imgSrc) + cubeInfo[3] + '<span class="big-caret"></span>');
+            .html(getTabImage(imgSrc) + cubeInfo[CUBE_INFO.CUBE] + '<span class="big-caret"></span>');
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
         li.addClass('active');
@@ -243,7 +243,7 @@ var NCE = (function ($)
             animate: true,
             delay: 250,
             container: 'body',
-            title: cubeInfo[0] + ' - ' + cubeInfo[1] + ' - ' + cubeInfo[2] + ' - ' + cubeInfo[3],
+            title: cubeInfo[CUBE_INFO.APP] + ' - ' + cubeInfo[CUBE_INFO.VERSION] + ' - ' + cubeInfo[CUBE_INFO.BRANCH] + ' - ' + cubeInfo[CUBE_INFO.CUBE],
             template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
         });
         li.click(function(e) {
@@ -267,18 +267,18 @@ var NCE = (function ($)
                     });
                 }
 
-                var appChanged = _selectedApp !== cubeInfo[0];
-                var verChanged = _selectedVersion !== cubeInfo[1];
-                var braChanged = _selectedBranch !== cubeInfo[2];
-                var cubChanged = _selectedCubeName !== cubeInfo[3];
-                var tabChanged = _activeTab !== cubeInfo[4];
+                var appChanged = _selectedApp !== cubeInfo[CUBE_INFO.APP];
+                var verChanged = _selectedVersion !== cubeInfo[CUBE_INFO.VERSION];
+                var braChanged = _selectedBranch !== cubeInfo[CUBE_INFO.BRANCH];
+                var cubChanged = _selectedCubeName !== cubeInfo[CUBE_INFO.CUBE];
+                var tabChanged = _activeTab !== cubeInfo[CUBE_INFO.TAB];
 
                 if (appChanged || verChanged || braChanged || cubChanged || tabChanged) {
-                    _selectedApp = cubeInfo[0];
-                    _selectedVersion = cubeInfo[1];
-                    _selectedBranch = cubeInfo[2];
-                    _selectedCubeName = cubeInfo[3];
-                    _activeTab = cubeInfo[4];
+                    _selectedApp = cubeInfo[CUBE_INFO.APP];
+                    _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
+                    _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
+                    _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
+                    _activeTab = cubeInfo[CUBE_INFO.TAB];
                     if (appChanged || verChanged || braChanged) {
                         if (appChanged || verChanged) {
                             if (appChanged) {
@@ -314,7 +314,7 @@ var NCE = (function ($)
                             .click(function (e) {
                                 clearError();
                                 _activeTab = menuOption.pageId;
-                                var ci2 = [cubeInfo[0], cubeInfo[1], cubeInfo[2], cubeInfo[3], _activeTab];
+                                var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.CUBE], _activeTab];
                                 var cia2 = ci2.join(TAB_SEPARATOR);
                                 var tabIdx = _openCubes.indexOf(cia2);
                                 var isCtrlKey = e.metaKey || e.ctrlKey;
@@ -332,10 +332,10 @@ var NCE = (function ($)
                                         addCurrentCubeTab();
                                     } else { // use current tab
                                         tabIdx = _openCubes.indexOf(cubeInfo.join(TAB_SEPARATOR));
-                                        cubeInfo[4] = _activeTab;
+                                        cubeInfo[CUBE_INFO.TAB] = _activeTab;
                                         _openCubes[tabIdx] = cia2;
                                         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-                                        link.html(imgHtml + cubeInfo[3] + '<span class="big-caret"></span>');
+                                        link.html(imgHtml + cubeInfo[CUBE_INFO.CUBE] + '<span class="big-caret"></span>');
                                         li.attr('id', cia2.replace(/\./g,'_'));
                                     }
                                     switchTabPane(_activeTab);
@@ -2681,7 +2681,7 @@ var NCE = (function ($)
             for (var i = 0, len = _openCubes.length; i < len; i++) {
                 var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
                 var key = cubeInfo.slice(0, 4).join('_');
-                var cube = _cubeList[cubeInfo[3].toLowerCase()];
+                var cube = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                 if (cube && cube.hasOwnProperty('sha1')) {
                     obj[key] = cube.sha1;
                 }
