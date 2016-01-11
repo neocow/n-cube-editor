@@ -175,6 +175,11 @@ div#restoreCubeModal ul.list-group
     background-color: white;
 }
 
+.click-space {
+    display: inline-block;
+    width: 20px;
+}
+
 .big-caret {
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;

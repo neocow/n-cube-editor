@@ -56,25 +56,21 @@ div#editColumnsModal div.panel-group
 #coordinate-bar-text {
     white-space: nowrap;
     overflow-x: scroll;
-    cursor: ew-resize;
+    cursor: default;
     position: absolute;
-    left: 20px;
+    left: 24px;
 }
 #coordinate-bar-text::-webkit-scrollbar {
     display:none;
 }
 
 #coordinate-bar-move-left {
-    cursor: pointer;
-    width: 20px;
     position: absolute;
     left: 0px;
     display: none;
 }
 
 #coordinate-bar-move-right {
-    cursor: pointer;
-    width: 20px;
     position: absolute;
     display: none;
 }
@@ -116,9 +112,9 @@ div#editColumnsModal div.panel-group
 .handsontable th.handsonCurrentRow, .handsonTableHeader.handsonCurrentRow {
     opacity: .75;
 }
-.handsontable td.searchResult {
-    background-color: #EFFB3C !important;
-    color: #583707 !important;
+.handsontable .htCore td.searchResult {
+    background-color: #EFFB3C;
+    color: #583707;
 }
 
 .handsontable td.handsonTableHeader {
@@ -130,9 +126,17 @@ div#editColumnsModal div.panel-group
     background-color: #E0E0E0;
 }
 
-.handsontable th, .handsontable td {
+.handsontable .htCore col.rowHeader {
+    width: 40px;
+}
+
+.handsontable .htCore th, .handsontable .htCore td {
     border-top: 1px solid #CCC;
-    border-bottom: none !important;
+    border-bottom: none;
+}
+
+.handsontable .htCore th {
+    color: #D9D9D9;
 }
 
 .handsontable .tableDefault {
