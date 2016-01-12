@@ -2680,7 +2680,7 @@ var NCE = (function ($)
             var obj = {};
             for (var i = 0, len = _openCubes.length; i < len; i++) {
                 var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
-                var key = cubeInfo.slice(0, 4).join('_');
+                var key = cubeInfo.slice(0, 4).join(PIPE);
                 var cube = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                 if (cube && cube.hasOwnProperty('sha1')) {
                     obj[key] = cube.sha1;
@@ -2700,7 +2700,7 @@ var NCE = (function ($)
             var aRes = after[key];
 
             if (before[key] !== aRes.sha1) {
-                setTabClass(key.split('_'), aRes.conflict ? 'conflict' : 'out-of-sync');
+                setTabClass(key.split(PIPE), aRes.conflict ? 'conflict' : 'out-of-sync');
             }
         }
     }

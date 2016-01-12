@@ -132,7 +132,7 @@ div#editColumnsModal div.panel-group
 
 .handsontable .htCore th, .handsontable .htCore td {
     border-top: 1px solid #CCC;
-    border-bottom: none;
+    border-bottom: none !important;
 }
 
 .handsontable .htCore th {

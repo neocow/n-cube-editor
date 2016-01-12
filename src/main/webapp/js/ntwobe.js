@@ -156,12 +156,15 @@ var NCubeEditor2 = (function ($)
     };
 
     var setUtilityBarDisplay = function() {
+        var moveRightBtn = $('#coordinate-bar-move-right');
+        var btnWidth = moveRightBtn.outerWidth();
+
         var windowWidth = $(this).width();
         var search = $('#search-container');
         var searchWidth = search.width();
         var coordWidth = windowWidth - searchWidth;
-        $(getDomCoordinateBar()).width(coordWidth - 50); // coord bar text
-        $('#coordinate-bar-move-right').css({left: coordWidth - 24}); // keep the right button to the end
+        $(getDomCoordinateBar()).width(coordWidth - btnWidth * 2); // coord bar text
+        moveRightBtn.css({left: coordWidth - btnWidth}); // keep the right button to the end
         $('#util-container-bar').width(coordWidth); // coord bar container for background
         search.css({left: windowWidth - searchWidth});
     };
@@ -1411,12 +1414,12 @@ var NCubeEditor2 = (function ($)
         var rightButton = getDomCoordinateBarRightButton();
 
         $(leftButton).click(function() {
-            coordBar.scrollLeft = coordBar.scrollLeft - 40;
+            coordBar.scrollLeft = coordBar.scrollLeft - COORDINATE_BAR_SCROLL_AMOUNT;
             $(this).blur();
         });
 
         $(rightButton).click(function() {
-            coordBar.scrollLeft = coordBar.scrollLeft + 40;
+            coordBar.scrollLeft = coordBar.scrollLeft + COORDINATE_BAR_SCROLL_AMOUNT;
             $(this).blur();
         });
     };
