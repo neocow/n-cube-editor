@@ -2326,14 +2326,20 @@ var NCubeEditor2 = (function ($)
             var listItem = $('<li/>').prop({class: "list-group-item skinny-lr no-margins"});
             var rowDiv = $('<div/>').prop({class: "container-fluid"});
             var rowLabel = $('<label/>').prop({class: "checkbox no-margins col-xs-10"});
+            var ruleLabel = '';
+            if (item.metaProps !=null)
+            {
+                ruleLabel = item.metaProps.name + ': ';
+            }
             var labelText = item.value != null ? item.value : 'Default';
+            var label = ruleLabel + labelText;
             var inputBtn = $('<input/>').prop({class: "commitCheck", type: "checkbox"});
             inputBtn.attr("data-id", itemId);
             inputBtn[0].checked = !_hiddenColumns[lowerAxisName] || !_hiddenColumns[lowerAxisName][itemId];
             listItem.append(rowDiv);
             rowDiv.append(rowLabel);
             rowLabel.append(inputBtn);
-            rowLabel.append(labelText);
+            rowLabel.append(label);
             _hideColumnsList.append(listItem);
         });
     };
