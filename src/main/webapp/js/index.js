@@ -2700,8 +2700,8 @@ var NCE = (function ($)
             var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
             var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
             var cube = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
-            if (cube && cube.hasOwnProperty('sha1')) {
-                obj[key] = cube.sha1;
+            if (cube && cube.hasOwnProperty('headSha1')) {
+                obj[key] = cube.headSha1;
             }
         }
         var result = call("ncubeController.heartBeat", [obj]);
@@ -2718,7 +2718,7 @@ var NCE = (function ($)
             var key = bKeys[i];
             var aRes = after[key];
 
-            if (before[key] !== aRes.sha1) {
+            if (aRes && before[key] !== aRes.headSha1) {
                 setTabClass(key.split(TAB_SEPARATOR), aRes.conflict ? 'conflict' : 'out-of-sync');
             }
         }
