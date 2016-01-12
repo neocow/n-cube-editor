@@ -241,7 +241,7 @@ var NCubeEditor2 = (function ($)
 
         handleCubeData(JSON.parse(result.data));
         hot = new Handsontable(document.getElementById('hot-container'), getHotSettings());
-        var col = axes.length == 1 ? 1 : axes.length - 1;
+        var col = axes.length == 1 ? 1 : colOffset;
         hot.selectCell(2, col);
         hot.render();
     };
@@ -1500,6 +1500,9 @@ var NCubeEditor2 = (function ($)
 
     var getSelectedCellRange = function() {
         var cellRange = hot.getSelected(); // index of the currently selected cells as an array [startRow, startCol, endRow, endCol]
+        if (!cellRange) {
+            return null;
+        }
         return {
             startRow: cellRange[0],
             startCol: cellRange[1],
@@ -2560,7 +2563,13 @@ var NCubeEditor2 = (function ($)
         if (hot) {
             var selection = getSelectedCellRange();
             load();
-            hot.selectCell(selection.startRow, selection.startCol, selection.endRow, selection.endCol, true);
+
+            if (selection) {
+                hot.selectCell(selection.startRow, selection.startCol, selection.endRow, selection.endCol, true);
+            } else {
+                var col = axes.length === 1 ? 1 : colOffset;
+                hot.selectCell(2, col);
+            }
         }
     };
 
