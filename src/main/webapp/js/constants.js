@@ -14,7 +14,7 @@ var DIFF_DESCRIPTIVE = 2;
 var DIFF_VISUAL = 3;
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
-var TAB_SEPARATOR = '----';
+var TAB_SEPARATOR = '~';
 var MIN_COL_WIDTH = 50;
 var MAX_COL_WIDTH = 600;
 
@@ -35,7 +35,6 @@ var CLASS_HANDSON_CELL_ODD_ROW = ' oddRow';
 var CLASS_HANDSON_CELL_URL = ' url';
 var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 
-var PIPE = '|';
 var COORDINATE_BAR_SCROLL_AMOUNT = 40;
 var NONE = 'none';
 var CUBE_INFO = {
