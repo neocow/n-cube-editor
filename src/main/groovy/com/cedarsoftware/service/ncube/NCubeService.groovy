@@ -12,7 +12,8 @@ import com.cedarsoftware.util.io.JsonObject
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import groovy.transform.CompileStatic
-
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 /**
  * RESTful Ajax/JSON API for editor application
  *
@@ -35,6 +36,8 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class NCubeService
 {
+    private static final Logger LOG = LogManager.getLogger(NCubeService.class)
+
     List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching, Map options)
     {
         if (!cubeNamePattern.startsWith('*'))
@@ -426,5 +429,20 @@ class NCubeService
             String s = "Failed to load n-cubes from passed in JSON, last successful cube read: " + lastSuccessful
             throw new IllegalArgumentException(s, e)
         }
+    }
+
+    MapEntry getUpToDateStatus(ApplicationID appId, String cubeName, String sha1)
+    {
+        Map options = [(NCubeManager.SEARCH_EXACT_MATCH_NAME): true,
+                       (NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY): true]
+
+        List<NCubeInfoDto> list = NCubeManager.search(appId.asHead(), cubeName, null, options)
+        if (list.size() != 1)
+        {   // For now, silently ignore, but log discrepency
+            LOG.info('Unable to check up-to-date status for cube: ' + cubeName + ', app: ' + appId)
+            return new MapEntry(sha1, false)
+        }
+        NCubeInfoDto dto = list[0]
+        return new MapEntry(dto.sha1, false)
     }
 }

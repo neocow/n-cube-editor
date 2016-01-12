@@ -74,9 +74,6 @@ class NCubeController extends BaseController
     private NCubeService nCubeService;
     private static String servletHostname = null
     private static String inetHostname = null
-    private static final char SEP_FIELD = '\u2618'
-    private static final char SEP_COL = '\u261E'
-    private static final char SEP_ROW = '\u261F'
 
     // Bind to ConcurrentLinkedHashMap because some plugins will need it.
     private ConcurrentMap<String, Object> futureCache = new ConcurrentLinkedHashMap.Builder<String, Object>()
@@ -1589,9 +1586,20 @@ class NCubeController extends BaseController
         putIfNotNull(results, 'serverStats', serverStats)
 
         Map compareResults = [:]
-        openCubes.each{ key, sha1 ->
-            //TODO -- openCubes is currently map of app_version_branch_cubeName : sha1; need to check and return in result set
-            putIfNotNull(compareResults, key.toString(), [sha1:sha1, conflict:false])
+        openCubes.each { key, sha1 ->
+            if (key != null && sha1 != null)
+            {
+                String cubeId = key.toString()
+                String[] pieces = key.toString().split('~')
+                if (pieces != null && pieces.length > 4)
+                {
+                    ApplicationID appId = new ApplicationID("x", pieces[0], pieces[1], pieces[2], pieces[3])
+                    appId = addTenant(appId)
+                    String cubeName = pieces[4]
+                    MapEntry status = nCubeService.getUpToDateStatus(appId, cubeName, sha1.toString())
+                    putIfNotNull(compareResults, cubeId, [headSha1: status.key, conflict: status.value])
+                }
+            }
         }
         putIfNotNull(results, 'compareResults', compareResults)
 
