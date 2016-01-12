@@ -378,7 +378,7 @@ var NCE = (function ($)
             $('<li/>').append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Close All But This')
+                    .html('Close Others')
                     .click(function() {
                         li.tooltip('destroy');
                         removeAllTabs();
