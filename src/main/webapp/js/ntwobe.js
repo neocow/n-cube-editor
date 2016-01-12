@@ -815,16 +815,14 @@ var NCubeEditor2 = (function ($)
 
         var setupTopWidths = function()
         {
-            if (axes.length > 1)
+            var axis = axes[colOffset];
+            var columns = axis.columns;
+            var columnKeys = axisColumnMap[axis.name];
+            for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
             {
-                var columns = axes[colOffset].columns;
-                var columnKeys = Object.keys(columns);
-                for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
-                {
-                    var colKey = columnKeys[colIndex];
-                    var firstWidth = calcDomWidth(columns[colKey].value, 10, null);
-                    topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
-                }
+                var colKey = columnKeys[colIndex];
+                var firstWidth = calcDomWidth(columns[colKey].value, 10, null);
+                topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
             }
             var firstColId = axisColumnMap[axes[colOffset].name][0];
             var colPrefix = firstColId.slice(0,-10);
@@ -834,7 +832,7 @@ var NCubeEditor2 = (function ($)
             for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
                 var cellKey = cellKeys[keyIndex];
                 var cell = cells[cellKey];
-                var value = cell.hasOwnProperty('url') ? cell.url: cell.value;
+                var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
                 var width = calcDomWidth(value, 10, cell.type);
                 var colId = regex.exec(cellKey)[0];
                 topWidths[colId] = findWidth(topWidths[colId], width);
@@ -847,21 +845,8 @@ var NCubeEditor2 = (function ($)
             {
                 if (hotCol < axes.length - 1)
                 {
-                    var columnId, columnName;
                     var axisName = axes[hotCol].name;
-                    var buttonWidth = calcDomWidth(axisName, 45, null);
-                    var oldWidth = findWidth(0, buttonWidth);
-
-                    var axisColumns = axisColumnMap[axisName];
-                    for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
-                    {
-                        columnId = axisColumns[axisCol];
-                        columnName = axes[hotCol].columns[columnId].value;
-                        var colWidth = calcDomWidth(columnName, 10, null);
-                        var correctWidth = findWidth(oldWidth, colWidth);
-                        oldWidth = correctWidth;
-                    }
-                    _columnWidths.push(correctWidth);
+                    _columnWidths.push(findWidestColumn(axisName));
                 }
                 else
                 {
@@ -871,12 +856,55 @@ var NCubeEditor2 = (function ($)
             }
         };
 
+        var buildSingleAxisWidthArray = function()
+        {
+            var axisName = axes[0].name;
+            _columnWidths.push(findWidestColumn(axisName));
+
+            var correctWidth;
+            var oldWidth = 0;
+            var cells = data.cells;
+            var cellKeys = Object.keys(cells);
+            for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
+                var cellKey = cellKeys[keyIndex];
+                var cell = cells[cellKey];
+                var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
+                var width = calcDomWidth(value, 10, cell.type);
+                correctWidth = findWidth(oldWidth, width);
+                oldWidth = correctWidth;
+            }
+            _columnWidths.push(correctWidth);
+        };
+
+        var findWidestColumn = function (axisName)
+        {
+            var buttonWidth = calcDomWidth(axisName, 45, null);
+            var oldWidth = findWidth(0, buttonWidth);
+            var axisColumns = axisColumnMap[axisName];
+            for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
+            {
+                var columnId = axisColumns[axisCol];
+                var columnName = data.axes[axisName.toLowerCase()].columns[columnId].value;
+                var colWidth = calcDomWidth(columnName, 10, null);
+                var correctWidth = findWidth(oldWidth, colWidth);
+                oldWidth = correctWidth;
+            }
+            return correctWidth;
+        };
+
         _columnWidths = [];
         var topWidths = {};
         var testCell = $('#test-cell');
         var testCode = $('#test-code');
-        setupTopWidths();
-        buildWidthArray();
+        if (axes.length == 1)
+        {
+            buildSingleAxisWidthArray();
+        }
+        else
+        {
+            setupTopWidths();
+            buildWidthArray();
+        }
     };
 
     var calcColumnHeader = function(index)
