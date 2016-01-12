@@ -445,8 +445,7 @@ class NCubeService
         List<NCubeInfoDto> list = NCubeManager.search(appId.asHead(), cubeName, null, options)
         if (list.size() != 1)
         {   // For now, silently ignore, but log discrepency
-            LOG.info('Unable to check up-to-date status for cube: ' + cubeName + ', app: ' + appId.asHead())
-            return true
+            return false
         }
 
         NCubeInfoDto dto = list[0]
@@ -455,8 +454,7 @@ class NCubeService
         list = NCubeManager.search(appId, cubeName, null, options)
         if (list.size() != 1)
         {   // For now, silently ignore, but log discrepency
-            LOG.info('Unable to check up-to-date status for cube: ' + cubeName + ', app: ' + appId)
-            return true
+            return false
         }
         dto = list[0]
         return StringUtilities.equalsIgnoreCase(realHeadSha1, dto.headSha1)
