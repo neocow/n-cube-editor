@@ -431,18 +431,34 @@ class NCubeService
         }
     }
 
-    MapEntry getUpToDateStatus(ApplicationID appId, String cubeName, String sha1)
+    Object getUpToDateStatus(ApplicationID appId, String cubeName)
     {
+        if (appId.isHead())
+        {   // HEAD cube can never be out-of-date by definition.
+            return true
+        }
+
         Map options = [(NCubeManager.SEARCH_EXACT_MATCH_NAME): true,
                        (NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY): true]
 
+        String realHeadSha1
         List<NCubeInfoDto> list = NCubeManager.search(appId.asHead(), cubeName, null, options)
         if (list.size() != 1)
         {   // For now, silently ignore, but log discrepency
-            LOG.info('Unable to check up-to-date status for cube: ' + cubeName + ', app: ' + appId)
-            return new MapEntry(sha1, false)
+            LOG.info('Unable to check up-to-date status for cube: ' + cubeName + ', app: ' + appId.asHead())
+            return true
         }
+
         NCubeInfoDto dto = list[0]
-        return new MapEntry(dto.sha1, false)
+        realHeadSha1 = dto.sha1
+
+        list = NCubeManager.search(appId, cubeName, null, options)
+        if (list.size() != 1)
+        {   // For now, silently ignore, but log discrepency
+            LOG.info('Unable to check up-to-date status for cube: ' + cubeName + ', app: ' + appId)
+            return true
+        }
+        dto = list[0]
+        return StringUtilities.equalsIgnoreCase(realHeadSha1, dto.headSha1)
     }
 }

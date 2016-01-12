@@ -2695,31 +2695,43 @@ var NCE = (function ($)
 
     function heartBeat()
     {
-        var obj = {};
-        for (var i = 0, len = _openCubes.length; i < len; i++) {
-            var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
-            var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
-            var cube = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
-            if (cube && cube.hasOwnProperty('headSha1')) {
-                obj[key] = cube.headSha1;
+        setInterval(function()
+        {
+            var obj = {};
+            for (var i = 0, len = _openCubes.length; i < len; i++)
+            {
+                var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
+                var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
+                obj[key] = '';
             }
-        }
-        var result = call("ncubeController.heartBeat", [obj]);
-        if (result.status) {
-            heartBeatResponse(obj, result.data.compareResults);
-        }
-
-        setTimeout(heartBeat, 60000);
+            var result = call("ncubeController.heartBeat", [obj]);
+            if (result.status)
+            {
+                heartBeatResponse(obj, result.data.compareResults);
+            }
+        }, 60000);
     }
 
-    function heartBeatResponse(before, after) {
-        var bKeys = Object.keys(before);
-        for (var i = 0, len = bKeys.length; i < len; i++) {
-            var key = bKeys[i];
-            var aRes = after[key];
+    function heartBeatResponse(before, after)
+    {
+        var beforeKeys = Object.keys(before);
+        for (var i = 0, len = beforeKeys.length; i < len; i++)
+        {
+            var key = beforeKeys[i];
+            var afterResult = after[key];
 
-            if (aRes && before[key] !== aRes.headSha1) {
-                setTabClass(key.split(TAB_SEPARATOR), aRes.conflict ? 'conflict' : 'out-of-sync');
+            var cssClass = null;
+            if (afterResult == null)
+            {
+                cssClass = 'conflict';
+            }
+            else if (afterResult === false)
+            {
+                cssClass = 'out-of-sync';
+            }
+            if (cssClass)
+            {
+                setTabClass(key.split(TAB_SEPARATOR), cssClass);
             }
         }
     }

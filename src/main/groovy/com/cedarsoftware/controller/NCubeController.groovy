@@ -1586,18 +1586,18 @@ class NCubeController extends BaseController
         putIfNotNull(results, 'serverStats', serverStats)
 
         Map compareResults = [:]
-        openCubes.each { key, sha1 ->
-            if (key != null && sha1 != null)
+        openCubes.each { key, nothing ->
+            if (key != null)
             {
                 String cubeId = key.toString()
-                String[] pieces = key.toString().split('~')
+                String[] pieces = cubeId.split('~')
                 if (pieces != null && pieces.length > 4)
                 {
                     ApplicationID appId = new ApplicationID("x", pieces[0], pieces[1], pieces[2], pieces[3])
                     appId = addTenant(appId)
                     String cubeName = pieces[4]
-                    MapEntry status = nCubeService.getUpToDateStatus(appId, cubeName, sha1.toString())
-                    putIfNotNull(compareResults, cubeId, [headSha1: status.key, conflict: status.value])
+                    Object status = nCubeService.getUpToDateStatus(appId, cubeName)
+                    putIfNotNull(compareResults, cubeId, status)
                 }
             }
         }
