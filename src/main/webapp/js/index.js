@@ -831,6 +831,10 @@ var NCE = (function ($)
         {
             changeVersionOk()
         });
+        $('#clearStorage').click(function()
+        {
+            clearStorage();
+        });
         $('#clearCache').click(function()
         {
             clearCache();
@@ -1843,6 +1847,16 @@ var NCE = (function ($)
         }
 
         return true;
+    }
+
+    function clearStorage() {
+        var keys = Object.keys(localStorage);
+        for (var i = 0, len = keys.length; i < len; i++) {
+            var key = keys[i];
+            if (key.startsWith(NCE_PREFIX)) {
+                delete localStorage[key];
+            }
+        }
     }
 
     function clearCache()
