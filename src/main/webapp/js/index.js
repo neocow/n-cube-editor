@@ -47,7 +47,7 @@ var NCE = (function ($)
     {
         _selectedBranch = localStorage[SELECTED_BRANCH];
     }
-    var _selectedStatus = "SNAPSHOT";
+    var _selectedStatus = localStorage[SELECTED_STATUS] || 'SNAPSHOT';
     var _errorId = null;
     var _activeTab = localStorage[ACTIVE_TAB];
     var _searchNames = $('#cube-search');
@@ -130,7 +130,7 @@ var NCE = (function ($)
     }
 
     function addCurrentCubeTab() {
-        var cubeInfo = [_selectedApp, _selectedVersion, _selectedBranch, _selectedCubeName, _activeTab];
+        var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab];
         _openCubes.push(cubeInfo.join(TAB_SEPARATOR));
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
         addTab(cubeInfo);
@@ -148,6 +148,7 @@ var NCE = (function ($)
         $('#' + cia.replace(/\./g,'_')).remove();
         if (_selectedApp === cubeInfo[CUBE_INFO.APP]
                 && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
+                && _selectedStatus === cubeInfo[CUBE_INFO.STATUS]
                 && _selectedBranch === cubeInfo[CUBE_INFO.BRANCH]
                 && _selectedCubeName === cubeName
                 && _activeTab === activeTab) {
@@ -198,12 +199,14 @@ var NCE = (function ($)
 
         _selectedApp = cubeInfo[CUBE_INFO.APP];
         _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
+        _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
         _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
         _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
         _activeTab = cubeInfo[CUBE_INFO.TAB];
 
         localStorage[SELECTED_APP] = _selectedApp;
         localStorage[SELECTED_VERSION] = _selectedVersion;
+        localStorage[SELECTED_STATUS] = _selectedStatus;
         localStorage[SELECTED_BRANCH] = _selectedBranch;
         localStorage[SELECTED_CUBE] = _selectedCubeName;
         localStorage[ACTIVE_TAB] = _activeTab;
@@ -244,7 +247,7 @@ var NCE = (function ($)
             animate: true,
             delay: 250,
             container: 'body',
-            title: cubeInfo[CUBE_INFO.APP] + ' - ' + cubeInfo[CUBE_INFO.VERSION] + ' - ' + cubeInfo[CUBE_INFO.BRANCH] + ' - ' + cubeInfo[CUBE_INFO.CUBE],
+            title: cubeInfo[CUBE_INFO.APP] + ' - ' + cubeInfo[CUBE_INFO.VERSION] + ' - ' + cubeInfo[CUBE_INFO.STATUS] + ' - ' + cubeInfo[CUBE_INFO.BRANCH] + ' - ' + cubeInfo[CUBE_INFO.CUBE],
             template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
         });
         li.click(function(e) {
@@ -270,18 +273,20 @@ var NCE = (function ($)
 
                 var appChanged = _selectedApp !== cubeInfo[CUBE_INFO.APP];
                 var verChanged = _selectedVersion !== cubeInfo[CUBE_INFO.VERSION];
+                var staChanged = _selectedStatus !== cubeInfo[CUBE_INFO.STATUS];
                 var braChanged = _selectedBranch !== cubeInfo[CUBE_INFO.BRANCH];
                 var cubChanged = _selectedCubeName !== cubeInfo[CUBE_INFO.CUBE];
                 var tabChanged = _activeTab !== cubeInfo[CUBE_INFO.TAB];
 
-                if (appChanged || verChanged || braChanged || cubChanged || tabChanged) {
+                if (appChanged || verChanged || staChanged || braChanged || cubChanged || tabChanged) {
                     _selectedApp = cubeInfo[CUBE_INFO.APP];
                     _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
+                    _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
                     _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
                     _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
                     _activeTab = cubeInfo[CUBE_INFO.TAB];
-                    if (appChanged || verChanged || braChanged) {
-                        if (appChanged || verChanged) {
+                    if (appChanged || verChanged || staChanged || braChanged) {
+                        if (appChanged || verChanged || staChanged) {
                             if (appChanged) {
                                 loadAppNames();
                                 loadAppListView();
@@ -315,7 +320,7 @@ var NCE = (function ($)
                             .click(function (e) {
                                 clearError();
                                 _activeTab = menuOption.pageId;
-                                var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.CUBE], _activeTab];
+                                var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.CUBE], _activeTab];
                                 var cia2 = ci2.join(TAB_SEPARATOR);
                                 var tabIdx = _openCubes.indexOf(cia2);
                                 var isCtrlKey = e.metaKey || e.ctrlKey;
@@ -413,7 +418,7 @@ var NCE = (function ($)
         } else {
             addCurrentCubeTab();
         }
-        selectTab([_selectedApp, _selectedVersion, _selectedBranch, _selectedCubeName, _activeTab]);
+        selectTab([_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab]);
     }
 
     function buildMenu()
