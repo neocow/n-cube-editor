@@ -164,7 +164,7 @@ var NCE = (function ($)
     }
 
     function setTabClass(cubeInfo, tabClass) {
-        var cia = cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_');
+        var cia = cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~');
         $('[id^='+cia).find('a.ncube-tab-top-level').addClass(tabClass);
     }
 
@@ -521,7 +521,7 @@ var NCE = (function ($)
         _selectedCubeName = getProperCubeName(cubeName);
         localStorage[SELECTED_CUBE] = cubeName;
 
-        var cubeInfo = [_selectedApp, _selectedVersion, _selectedBranch, _selectedCubeName];
+        var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName];
         var cis = cubeInfo.join(TAB_SEPARATOR);
         var found = false;
         for (var i = 0, len = _openCubes.length; i < len; i++) {
@@ -2695,22 +2695,21 @@ var NCE = (function ($)
 
     function heartBeat()
     {
-        setInterval(function()
-        {
-            var obj = {};
-            for (var i = 0, len = _openCubes.length; i < len; i++) {
-                var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
-                var key = cubeInfo.slice(0, 4).join(TAB_SEPARATOR);
-                var cube = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
-                if (cube && cube.hasOwnProperty('sha1')) {
-                    obj[key] = cube.sha1;
-                }
+        var obj = {};
+        for (var i = 0, len = _openCubes.length; i < len; i++) {
+            var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
+            var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
+            var cube = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+            if (cube && cube.hasOwnProperty('sha1')) {
+                obj[key] = cube.sha1;
             }
-            var result = call("ncubeController.heartBeat", [obj]);
-            if (result.status) {
-                heartBeatResponse(obj, result.data.compareResults);
-            }
-        }, 60000);
+        }
+        var result = call("ncubeController.heartBeat", [obj]);
+        if (result.status) {
+            heartBeatResponse(obj, result.data.compareResults);
+        }
+
+        setTimeout(heartBeat, 60000);
     }
 
     function heartBeatResponse(before, after) {
