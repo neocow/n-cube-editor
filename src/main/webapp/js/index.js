@@ -134,6 +134,7 @@ var NCE = (function ($)
         _openCubes.push(cubeInfo.join(TAB_SEPARATOR));
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
         addTab(cubeInfo);
+        switchTabPane(_activeTab);
     }
 
     function removeTab(cubeInfo) {
