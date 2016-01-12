@@ -145,7 +145,7 @@ var NCE = (function ($)
         var cubeName = cubeInfo[CUBE_INFO.CUBE];
         var activeTab = cubeInfo[CUBE_INFO.TAB];
 
-        $('#' + cia.replace(/\./g,'_')).remove();
+        $('#' + cia.replace(/\./g,'_').replace(/~/g,'\\~')).remove();
         if (_selectedApp === cubeInfo[CUBE_INFO.APP]
                 && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
                 && _selectedStatus === cubeInfo[CUBE_INFO.STATUS]
@@ -191,7 +191,7 @@ var NCE = (function ($)
 
     function selectTab(cubeInfo) {
         deselectTab();
-        var tab = $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_'));
+        var tab = $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~'));
         if (tab.length < 1) {
             tab = _openTabList.children().first();
         }
