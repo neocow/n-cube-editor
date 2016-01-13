@@ -177,7 +177,8 @@ div#restoreCubeModal ul.list-group
 
 .click-space {
     display: inline-block;
-    width: 20px;
+    width: 22px;
+    margin-right: 1px;
 }
 
 .big-caret {
