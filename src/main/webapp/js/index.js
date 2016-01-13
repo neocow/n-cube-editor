@@ -242,7 +242,7 @@ var NCE = (function ($)
             .html(getTabImage(imgSrc)
                 + '<span class="tab-text">' + cubeInfo[CUBE_INFO.CUBE] + '</span>'
                 + '<span class="click-space"><span class="big-caret"></span></span>'
-                + '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>'
+                + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
             );
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
@@ -262,13 +262,12 @@ var NCE = (function ($)
             // only show dropdown when clicking the caret, not just the tab
             var target = $(e.target);
             var isClose = target.hasClass('glyphicon-remove');
-            var isDroptdown = target.hasClass('click-space');
-            var isTopLevel = target.hasClass('ncube-tab-top-level');
+            var isDroptdown = target.hasClass('click-space') || target.hasClass('big-caret');
 
             if (isClose) {
                 li.tooltip('destroy');
                 removeTab(cubeInfo);
-            } else if (isDroptdown || isTopLevel) {
+            } else {
                if (isDroptdown) { // clicking caret for dropdown
                     $(this).find('.ncube-tab-top-level')
                         .addClass('dropdown-toggle')
@@ -278,7 +277,7 @@ var NCE = (function ($)
                         li.tooltip('hide');
                     });
                 } else { // when clicking tab show tab, not dropdown
-                    target
+                   $(this).find('.ncube-tab-top-level')
                         .removeClass('dropdown-toggle')
                         .attr('data-toggle', '')
                         .tab('show');
@@ -319,7 +318,7 @@ var NCE = (function ($)
         });
 
         var dd = $('<ul/>');
-        dd.addClass('dropdown-menu');
+        dd.addClass('dropdown-menu tab-menu');
 
         for (var menuIdx = 0, menuLen = _menuOptions.length; menuIdx < menuLen; menuIdx++) {
             (function() {
@@ -424,7 +423,7 @@ var NCE = (function ($)
             try {
                 var cw = document.getElementById(iframeId).contentWindow;
                 if (cw.tabActivated !== undefined) {
-                    cw.tabActivated(buildAppState())
+                    cw.tabActivated(buildAppState());
                     localStorage[ACTIVE_TAB] = pageId;
                 }
             } catch (e) {

@@ -38,6 +38,10 @@ body {
     text-align: center;
 }
 
+ul.tab-menu {
+    width: 225px;
+}
+
 .tab-tooltip {
     height: 23px;
     max-width: 100%;
@@ -186,6 +190,12 @@ div#restoreCubeModal ul.list-group
     display: inline-block;
     width: 22px;
     margin-right: 1px;
+    position: relative;
+    top: -1px;
+}
+
+.tab-close-icon {
+    top: 2px;
 }
 
 .big-caret {
