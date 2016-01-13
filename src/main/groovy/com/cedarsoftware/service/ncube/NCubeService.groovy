@@ -444,8 +444,8 @@ class NCubeService
         String realHeadSha1
         List<NCubeInfoDto> list = NCubeManager.search(appId.asHead(), cubeName, null, options)
         if (list.size() != 1)
-        {   // For now, silently ignore, but log discrepency
-            return false
+        {   // New cube in your branch but not yet in HEAD branch
+            return true
         }
 
         NCubeInfoDto dto = list[0]
@@ -453,8 +453,8 @@ class NCubeService
 
         list = NCubeManager.search(appId, cubeName, null, options)
         if (list.size() != 1)
-        {   // For now, silently ignore, but log discrepency
-            return false
+        {   // Ignore when you can't find the cube that was requested
+            return true
         }
         dto = list[0]
         return StringUtilities.equalsIgnoreCase(realHeadSha1, dto.headSha1)
