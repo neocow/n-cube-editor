@@ -11,13 +11,14 @@ body {
     -webkit-box-shadow: none;
     box-shadow: none;
     padding: 3px 3px 0;
+    height: 25px;
 }
 
 #ncube-tabs li a.ncube-tab-top-level {
     color: #555;
     border: 1px solid #ddd;
     background-color: #D4D4D4;
-    width: 225px;
+    width: 223px;
 }
 
 #ncube-tabs li.active a.ncube-tab-top-level {
@@ -36,6 +37,28 @@ body {
     display: inline-block;
     width: 150px;
     text-align: center;
+}
+
+#tab-overflow {
+    display: inline-block;
+    width: 31px;
+
+}
+
+#tab-overflow-text {
+    font-size: smaller;
+    display: inline-block;
+}
+
+.overflow-dropdown {
+    position: fixed;
+    width: 500px;
+}
+
+.overflow-dropdown li a {
+    padding: 3px 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 ul.tab-menu {
@@ -231,6 +254,10 @@ div#restoreCubeModal ul.list-group
 }
 
 .top-buffer { margin-top:20px; }
+
+.nav-tabs-short {
+    display: inline-block;
+}
 
 .nav-tabs-short li a {
     padding: 0px 5px;
