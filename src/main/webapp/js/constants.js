@@ -36,6 +36,8 @@ var CLASS_HANDSON_CELL_ODD_ROW = ' oddRow';
 var CLASS_HANDSON_CELL_URL = ' url';
 var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 
+var TAB_WIDTH = 225;
+var TAB_OVERFLOW_WIDTH = 31;
 var COORDINATE_BAR_SCROLL_AMOUNT = 40;
 var NONE = 'none';
 var CUBE_INFO = {

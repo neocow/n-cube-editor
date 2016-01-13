@@ -126,15 +126,17 @@ var NCE = (function ($)
             //	enable state management
             , stateManagement__enabled: false // automatic cookie load & save enabled by default
             , showDebugMessages: false // log and/or display messages from debugging & testing code
+            , onresize_end: function() {
+                buildTabs();
+            }
         });
     }
 
     function addCurrentCubeTab() {
         var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab];
-        _openCubes.push(cubeInfo.join(TAB_SEPARATOR));
+        _openCubes.unshift(cubeInfo.join(TAB_SEPARATOR));
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-        addTab(cubeInfo);
-        switchTabPane(_activeTab);
+        buildTabs();
     }
 
     function removeTab(cubeInfo) {
@@ -159,12 +161,13 @@ var NCE = (function ($)
                 switchTabPane(null);
             }
         }
+        buildTabs();
     }
 
     function removeAllTabs() {
         _openCubes = [];
         delete localStorage[OPEN_CUBES];
-        _openTabList.children().remove();
+        buildTabs();
     }
 
     function setTabClass(cubeInfo, tabClass) {
@@ -432,15 +435,80 @@ var NCE = (function ($)
         }
     }
 
+    function calcMaxTabs() {
+        var windowWidth = $('#ncube-tabs').width();
+        var availableWidth = windowWidth - TAB_OVERFLOW_WIDTH;
+        return Math.floor(availableWidth / TAB_WIDTH);
+    }
+
     function buildTabs() {
         _openTabList.children().remove();
         var len = _openCubes.length;
         if (len > 0) {
-            for (var i = 0; i < len; i++) {
+            var maxTabs = calcMaxTabs();
+
+            var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab];
+            var idx = _openCubes.indexOf(cubeInfo.join(TAB_SEPARATOR));
+            if (idx >= maxTabs) { // if selected tab is now in overflow, bring to front
+                var temp = _openCubes.splice(idx, 1);
+                _openCubes.unshift(temp[0]);
+                localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+            }
+
+            for (var i = 0; i < len && i < maxTabs; i++) {
                 addTab(_openCubes[i].split(TAB_SEPARATOR));
             }
-            selectTab([_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab]);
+            if (len > maxTabs) {
+                buildTabOverflow(maxTabs, len);
+                $('#tab-overflow').show();
+            } else {
+                $('#tab-overflow').hide();
+            }
+            selectTab(cubeInfo);
         }
+    }
+
+    function buildTabOverflow(maxTabs, len) {
+        $('#tab-overflow-text')[0].innerHTML = len - maxTabs;
+        var dd = $('#tab-overflow').find('ul');
+        for (var i = maxTabs; i < len; i++) {
+            (function() {
+                var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
+                var imgSrc;
+                for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
+                    var opt = _menuOptions[x];
+                    if (opt.pageId === cubeInfo[CUBE_INFO.TAB]) {
+                        imgSrc = opt.imgSrc;
+                        break;
+                    }
+                }
+
+                dd.append(
+                    $('<li/>').append(
+                        $('<a/>')
+                            .attr('href', '#')
+                            .html(getTabImage(imgSrc)
+                                + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ')
+                            )
+                            .click(function() {
+                                _selectedApp = cubeInfo[CUBE_INFO.APP];
+                                _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
+                                _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
+                                _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
+                                _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
+                                _activeTab = cubeInfo[CUBE_INFO.TAB];
+                                buildTabs();
+                            })
+                    )
+                );
+            })();
+        }
+
+        var button = $('#tab-overflow').find('button');
+        var offset = button.offset();
+        var dropDownTop = offset.top + button.outerHeight();
+        var dropDownLeft = offset.left + button.outerWidth() - dd.outerWidth();
+        dd.css({top: dropDownTop + 'px', left: dropDownLeft + 'px'});
     }
 
     function buildMenu()
