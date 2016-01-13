@@ -440,10 +440,8 @@ var NCE = (function ($)
             for (var i = 0; i < len; i++) {
                 addTab(_openCubes[i].split(TAB_SEPARATOR));
             }
-        } else {
-            addCurrentCubeTab();
+            selectTab([_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab]);
         }
-        selectTab([_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab]);
     }
 
     function buildMenu()
@@ -532,7 +530,6 @@ var NCE = (function ($)
         _searchContent.val('');
         loadNCubeListView();
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
-        loadCube(); // load spreadsheet side
         _searchNames.val('');
         _searchContent.val('');
         _cubeCount[0].textContent = Object.keys(_cubeList).length;
@@ -709,7 +706,6 @@ var NCE = (function ($)
                 loadVersionListView();
                 loadNCubes();
                 loadNCubeListView();
-                loadCube();
                 runSearch();
                 buildMenu();
             }, PROGRESS_DELAY);
@@ -728,7 +724,6 @@ var NCE = (function ($)
             {   // Allow bootstrap-selection widget to update before loading content
                 loadNCubes();
                 loadNCubeListView();
-                loadCube();
                 runSearch();
                 buildMenu();
             }, PROGRESS_DELAY);
@@ -948,7 +943,6 @@ var NCE = (function ($)
                 loadVersionListView();
                 loadNCubes();
                 loadNCubeListView();
-                loadCube();
                 runSearch();
                 buildMenu();
             });
@@ -1154,12 +1148,6 @@ var NCE = (function ($)
         else
         {
             showNote('Unable to load n-cubes:<hr class="hr-small"/>' + result.data);
-        }
-
-        // If there is no _selectedCubeName, establish one if possible (choose 1st cube in list)
-        if (!_selectedCubeName || !doesCubeExist())
-        {
-            selectCubeByName((_cubeList && first) ? _cubeList[first.toLowerCase()].name : null);
         }
     }
 
@@ -2144,7 +2132,6 @@ var NCE = (function ($)
             loadStatusListView();
             loadVersionListView();
             loadNCubeListView();
-            loadCube();
             runSearch();
             buildMenu();
             clearError();
