@@ -1339,10 +1339,10 @@ class NCubeController extends BaseController
             LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage(), e)
             return ['~Title':'Configuration Editor',
                     'n-cube':[html:'html/ntwobe.html',img:'img/letter-n.png'],
+                    'n-cube-old':[html:'html/ncube.html',img:'img/letter-o.png'],
                     'JSON':[html:'html/jsonEditor.html',img:'img/letter-j.png'],
                     'Details':[html:'html/details.html',img:'img/letter-d.png'],
-                    'Test':[html:'html/test.html',img:'img/letter-t.png'],
-                    'Visualize': [html:'html/visualize.html', img:'img/letter-v.png']
+                    'Test':[html:'html/test.html',img:'img/letter-t.png']
             ]
         }
     }
