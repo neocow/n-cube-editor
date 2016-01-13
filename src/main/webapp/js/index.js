@@ -152,8 +152,12 @@ var NCE = (function ($)
                 && _selectedBranch === cubeInfo[CUBE_INFO.BRANCH]
                 && _selectedCubeName === cubeName
                 && _activeTab === activeTab) {
-            selectTab(_openCubes[0].split(TAB_SEPARATOR));
-            loadCube();
+            if (_openCubes.length > 0) {
+                selectTab(_openCubes[0].split(TAB_SEPARATOR));
+                loadCube();
+            } else {
+                switchTabPane(null);
+            }
         }
     }
 
@@ -235,7 +239,11 @@ var NCE = (function ($)
         var link = $('<a/>')
             .attr('href','#')
             .addClass('dropdown-toggle ncube-tab-top-level')
-            .html(getTabImage(imgSrc) + cubeInfo[CUBE_INFO.CUBE] + '<span class="click-space"><span class="big-caret"></span></span>');
+            .html(getTabImage(imgSrc)
+                + '<span class="tab-text">' + cubeInfo[CUBE_INFO.CUBE] + '</span>'
+                + '<span class="click-space"><span class="big-caret"></span></span>'
+                + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
+            );
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
         li.addClass('active');
@@ -253,15 +261,14 @@ var NCE = (function ($)
         li.click(function(e) {
             // only show dropdown when clicking the caret, not just the tab
             var target = $(e.target);
-            var isSpan = target.is('span');
-            var isTopLevel = target.hasClass('ncube-tab-top-level');
-            if (isSpan || isTopLevel) {
-                if (isTopLevel) { // when clicking tab show tab, not dropdown
-                    target
-                        .removeClass('dropdown-toggle')
-                        .attr('data-toggle', '')
-                        .tab('show');
-                } else { // clicking caret for dropdown
+            var isClose = target.hasClass('glyphicon-remove');
+            var isDroptdown = target.hasClass('click-space') || target.hasClass('big-caret');
+
+            if (isClose) {
+                li.tooltip('destroy');
+                removeTab(cubeInfo);
+            } else {
+               if (isDroptdown) { // clicking caret for dropdown
                     $(this).find('.ncube-tab-top-level')
                         .addClass('dropdown-toggle')
                         .attr('data-toggle', 'dropdown');
@@ -269,6 +276,11 @@ var NCE = (function ($)
                         li.removeClass('open');
                         li.tooltip('hide');
                     });
+                } else { // when clicking tab show tab, not dropdown
+                   $(this).find('.ncube-tab-top-level')
+                        .removeClass('dropdown-toggle')
+                        .attr('data-toggle', '')
+                        .tab('show');
                 }
 
                 var appChanged = _selectedApp !== cubeInfo[CUBE_INFO.APP];
@@ -306,7 +318,7 @@ var NCE = (function ($)
         });
 
         var dd = $('<ul/>');
-        dd.addClass('dropdown-menu');
+        dd.addClass('dropdown-menu tab-menu');
 
         for (var menuIdx = 0, menuLen = _menuOptions.length; menuIdx < menuLen; menuIdx++) {
             (function() {
@@ -341,7 +353,6 @@ var NCE = (function ($)
                                         cubeInfo[CUBE_INFO.TAB] = _activeTab;
                                         _openCubes[tabIdx] = cia2;
                                         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-                                        link.html(imgHtml + cubeInfo[CUBE_INFO.CUBE] + '<span class="big-caret"></span>');
                                         li.attr('id', cia2.replace(/\./g,'_'));
                                     }
                                     switchTabPane(_activeTab);
@@ -389,6 +400,19 @@ var NCE = (function ($)
         li.append(link);
         li.append(dd);
         _openTabList.first().append(li);
+
+        trimText(li.find('.tab-text')[0]);
+    }
+
+    function trimText(el){
+        if (el.scrollWidth > el.offsetWidth) {
+            var value = el.innerHTML;
+            do {
+                value = '...' + value.substr(4);
+                el.innerHTML = value;
+            }
+            while (el.scrollWidth > el.offsetWidth);
+        }
     }
 
     function switchTabPane(pageId) {
@@ -399,7 +423,7 @@ var NCE = (function ($)
             try {
                 var cw = document.getElementById(iframeId).contentWindow;
                 if (cw.tabActivated !== undefined) {
-                    cw.tabActivated(buildAppState())
+                    cw.tabActivated(buildAppState());
                     localStorage[ACTIVE_TAB] = pageId;
                 }
             } catch (e) {
@@ -415,10 +439,8 @@ var NCE = (function ($)
             for (var i = 0; i < len; i++) {
                 addTab(_openCubes[i].split(TAB_SEPARATOR));
             }
-        } else {
-            addCurrentCubeTab();
+            selectTab([_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab]);
         }
-        selectTab([_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab]);
     }
 
     function buildMenu()
@@ -507,7 +529,6 @@ var NCE = (function ($)
         _searchContent.val('');
         loadNCubeListView();
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
-        loadCube(); // load spreadsheet side
         _searchNames.val('');
         _searchContent.val('');
         _cubeCount[0].textContent = Object.keys(_cubeList).length;
@@ -684,7 +705,6 @@ var NCE = (function ($)
                 loadVersionListView();
                 loadNCubes();
                 loadNCubeListView();
-                loadCube();
                 runSearch();
                 buildMenu();
             }, PROGRESS_DELAY);
@@ -703,7 +723,6 @@ var NCE = (function ($)
             {   // Allow bootstrap-selection widget to update before loading content
                 loadNCubes();
                 loadNCubeListView();
-                loadCube();
                 runSearch();
                 buildMenu();
             }, PROGRESS_DELAY);
@@ -923,7 +942,6 @@ var NCE = (function ($)
                 loadVersionListView();
                 loadNCubes();
                 loadNCubeListView();
-                loadCube();
                 runSearch();
                 buildMenu();
             });
@@ -1129,12 +1147,6 @@ var NCE = (function ($)
         else
         {
             showNote('Unable to load n-cubes:<hr class="hr-small"/>' + result.data);
-        }
-
-        // If there is no _selectedCubeName, establish one if possible (choose 1st cube in list)
-        if (!_selectedCubeName || !doesCubeExist())
-        {
-            selectCubeByName((_cubeList && first) ? _cubeList[first.toLowerCase()].name : null);
         }
     }
 
@@ -2119,7 +2131,6 @@ var NCE = (function ($)
             loadStatusListView();
             loadVersionListView();
             loadNCubeListView();
-            loadCube();
             runSearch();
             buildMenu();
             clearError();
