@@ -67,6 +67,7 @@ var NCE = (function ($)
     var _diffLeftName = '';
     var _diffRightName = '';
     var _menuOptions = [];
+    var _tabOverflow = $('#tab-overflow');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -443,6 +444,7 @@ var NCE = (function ($)
 
     function buildTabs() {
         _openTabList.children().remove();
+        _tabOverflow.hide();
         var len = _openCubes.length;
         if (len > 0) {
             var maxTabs = calcMaxTabs();
@@ -460,9 +462,7 @@ var NCE = (function ($)
             }
             if (len > maxTabs) {
                 buildTabOverflow(maxTabs, len);
-                $('#tab-overflow').show();
-            } else {
-                $('#tab-overflow').hide();
+                _tabOverflow.show();
             }
             selectTab(cubeInfo);
         }
@@ -470,7 +470,7 @@ var NCE = (function ($)
 
     function buildTabOverflow(maxTabs, len) {
         $('#tab-overflow-text')[0].innerHTML = len - maxTabs;
-        var dd = $('#tab-overflow').find('ul');
+        var dd = _tabOverflow.find('ul');
         for (var i = maxTabs; i < len; i++) {
             (function() {
                 var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
@@ -504,7 +504,7 @@ var NCE = (function ($)
             })();
         }
 
-        var button = $('#tab-overflow').find('button');
+        var button = _tabOverflow.find('button');
         var offset = button.offset();
         var dropDownTop = offset.top + button.outerHeight();
         var dropDownLeft = offset.left + button.outerWidth() - dd.outerWidth();
