@@ -406,8 +406,8 @@ var NCE = (function ($)
     }
 
     function trimText(el){
-        if (el.scrollWidth) {
-            var value = '...' + el.innerHTML;
+        if (el.scrollWidth > el.offsetWidth) {
+            var value = el.innerHTML;
             do {
                 value = '...' + value.substr(4);
                 el.innerHTML = value;
