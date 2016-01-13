@@ -239,9 +239,8 @@ var NCE = (function ($)
         var link = $('<a/>')
             .attr('href','#')
             .addClass('dropdown-toggle ncube-tab-top-level')
-            .html(
-                getTabImage(imgSrc)
-                + cubeInfo[CUBE_INFO.CUBE]
+            .html(getTabImage(imgSrc)
+                + '<span class="tab-text">' + cubeInfo[CUBE_INFO.CUBE] + '</span>'
                 + '<span class="click-space"><span class="big-caret"></span></span>'
                 + '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>'
             );
@@ -402,6 +401,19 @@ var NCE = (function ($)
         li.append(link);
         li.append(dd);
         _openTabList.first().append(li);
+
+        trimText(li.find('.tab-text')[0]);
+    }
+
+    function trimText(el){
+        if (el.scrollWidth) {
+            var value = '...' + el.innerHTML;
+            do {
+                value = '...' + value.substr(4);
+                el.innerHTML = value;
+            }
+            while (el.scrollWidth > el.offsetWidth);
+        }
     }
 
     function switchTabPane(pageId) {

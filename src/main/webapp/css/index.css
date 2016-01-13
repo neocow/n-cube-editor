@@ -17,6 +17,7 @@ body {
     color: #555;
     border: 1px solid #ddd;
     background-color: #D4D4D4;
+    width: 225px;
 }
 
 #ncube-tabs li.active a.ncube-tab-top-level {
@@ -29,6 +30,12 @@ body {
 
 #ncube-tabs li a.ncube-tab-top-level.out-of-sync {
     background-color: #E5FFFF;
+}
+
+#ncube-tabs li a.ncube-tab-top-level span.tab-text {
+    display: inline-block;
+    width: 150px;
+    text-align: center;
 }
 
 .tab-tooltip {
