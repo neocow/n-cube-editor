@@ -43,6 +43,7 @@ var TAB_WIDTH = 217;
 var TAB_OVERFLOW_WIDTH = 31;
 var COORDINATE_BAR_SCROLL_AMOUNT = 40;
 var NONE = 'none';
+var NBSP = '&nbsp;';
 var CUBE_INFO = {
     APP: 0,
     VERSION: 1,

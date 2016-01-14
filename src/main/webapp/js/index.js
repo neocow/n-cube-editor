@@ -346,7 +346,7 @@ var NCE = (function ($)
                     $('<li/>').append(
                         $('<a/>')
                             .attr('href', '#')
-                            .html(imgHtml + menuOption.key)
+                            .html(imgHtml + NBSP + menuOption.key)
                             .click(function (e) {
                                 clearError();
                                 _activeTab = menuOption.pageId;
@@ -511,7 +511,7 @@ var NCE = (function ($)
                         $('<a/>')
                             .attr('href', '#')
                             .addClass(openCube.status)
-                            .html(getTabImage(imgSrc)
+                            .html(getTabImage(imgSrc) + NBSP
                                 + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ')
                             )
                             .click(function() {
