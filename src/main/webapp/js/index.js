@@ -245,7 +245,7 @@ var NCE = (function ($)
     }
 
     function getTabImage(imgSrc) {
-        return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;' : '';
+        return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px"/>' : '';
     }
 
     function addTab(cubeInfo, status) {
