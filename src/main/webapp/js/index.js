@@ -32,6 +32,10 @@ var NCE = (function ($)
     try
     {
         _openCubes = JSON.parse(_openCubes);
+        if (_openCubes[0].indexOf('~') == -1)
+        {
+            _openCubes = [];
+        }
     }
     catch (e)
     {
