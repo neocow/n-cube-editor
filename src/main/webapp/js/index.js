@@ -358,6 +358,10 @@ var NCE = (function ($)
                                         _openCubes[tabIdx] = cia2;
                                         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
                                         li.attr('id', cia2.replace(/\./g,'_'));
+                                        var img = link.find('img');
+                                        if (img.length > 0) {
+                                            img.attr('src', menuOption.imgSrc);
+                                        }
                                     }
                                     switchTabPane(_activeTab);
                                 }
@@ -425,10 +429,13 @@ var NCE = (function ($)
             $('#' + pageId).addClass('active');
             var iframeId = 'iframe_' + pageId;
             try {
-                var cw = document.getElementById(iframeId).contentWindow;
-                if (cw.tabActivated !== undefined) {
-                    cw.tabActivated(buildAppState());
-                    localStorage[ACTIVE_TAB] = pageId;
+                var frame = document.getElementById(iframeId);
+                if (frame) {
+                    var cw = frame.contentWindow;
+                    if (cw.tabActivated !== undefined) {
+                        cw.tabActivated(buildAppState());
+                        localStorage[ACTIVE_TAB] = pageId;
+                    }
                 }
             } catch (e) {
                 console.log(e);
