@@ -217,6 +217,15 @@ var NCE = (function ($)
         }
     }
 
+    function makeCubeInfoActive(cubeInfo) {
+        _selectedApp = cubeInfo[CUBE_INFO.APP];
+        _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
+        _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
+        _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
+        _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
+        _activeTab = cubeInfo[CUBE_INFO.TAB];
+    }
+
     function selectTab(cubeInfo) {
         deselectTab();
         var tab = $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~'));
@@ -225,13 +234,7 @@ var NCE = (function ($)
         }
         tab.addClass('active');
 
-        _selectedApp = cubeInfo[CUBE_INFO.APP];
-        _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
-        _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
-        _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
-        _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
-        _activeTab = cubeInfo[CUBE_INFO.TAB];
-
+        makeCubeInfoActive(cubeInfo);
         localStorage[SELECTED_APP] = _selectedApp;
         localStorage[SELECTED_VERSION] = _selectedVersion;
         localStorage[SELECTED_STATUS] = _selectedStatus;
@@ -315,12 +318,7 @@ var NCE = (function ($)
                 var tabChanged = _activeTab !== cubeInfo[CUBE_INFO.TAB];
 
                 if (appChanged || verChanged || staChanged || braChanged || cubChanged || tabChanged) {
-                    _selectedApp = cubeInfo[CUBE_INFO.APP];
-                    _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
-                    _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
-                    _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
-                    _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
-                    _activeTab = cubeInfo[CUBE_INFO.TAB];
+                    makeCubeInfoActive(cubeInfo);
                     if (appChanged || verChanged || staChanged || braChanged) {
                         if (appChanged || verChanged || staChanged) {
                             if (appChanged) {
@@ -518,12 +516,7 @@ var NCE = (function ($)
                                 + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ')
                             )
                             .click(function() {
-                                _selectedApp = cubeInfo[CUBE_INFO.APP];
-                                _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
-                                _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
-                                _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
-                                _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
-                                _activeTab = cubeInfo[CUBE_INFO.TAB];
+                                makeCubeInfoActive(cubeInfo);
                                 buildTabs();
                             })
                     )
@@ -648,7 +641,14 @@ var NCE = (function ($)
 
             if (oci === cis) {
                 cubeInfo.push(tab);
-                selectTab(cubeInfo);
+
+                if (i < calcMaxTabs()) {
+                    selectTab(cubeInfo);
+                } else {
+                    makeCubeInfoActive(cubeInfo);
+                    buildTabs();
+                    return;
+                }
                 found = true;
                 break;
             }
