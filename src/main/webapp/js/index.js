@@ -32,7 +32,12 @@ var NCE = (function ($)
     try
     {
         _openCubes = JSON.parse(_openCubes);
-        if (_openCubes[0].indexOf('~') == -1)
+
+        if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
+            || (_openCubes.length > 0 && typeof _openCubes[0] === 'object')) {
+            _openCubes = [];
+        }
+        else if (_openCubes[0].indexOf('~') == -1)
         {
             _openCubes = [];
         }
@@ -40,10 +45,6 @@ var NCE = (function ($)
     catch (e)
     {
         _openCubes = []
-    }
-    if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
-            || (_openCubes.length > 0 && typeof _openCubes[0] === 'object')) {
-        _openCubes = [];
     }
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
