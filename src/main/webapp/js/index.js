@@ -2841,6 +2841,7 @@ var NCE = (function ($)
 
             _openCubes[i].status = status;
         }
+        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
         buildTabs();
     }
 
