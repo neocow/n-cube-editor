@@ -37,6 +37,7 @@ body {
     display: inline-block;
     width: 150px;
     text-align: center;
+    white-space: nowrap;
 }
 
 #tab-overflow {
