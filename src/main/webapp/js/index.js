@@ -2903,7 +2903,8 @@ var NCE = (function ($)
     // API
     return {
         getSelectedStatus: getSelectedStatus,
-        buildTabs: buildTabs
+        buildTabs: buildTabs,
+        heartBeat: heartBeat()
     }
 
 })(jQuery);
@@ -2917,6 +2918,7 @@ function frameLoaded()
     });
     $('#fadeMe1').fadeOut(500, function()
     {
+        NCE.heartBeat();
         $('#fadeMe1').remove();
     });
 }
