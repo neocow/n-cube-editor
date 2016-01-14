@@ -886,7 +886,10 @@ var NCubeEditor2 = (function ($)
                 var columnId = axisColumns[axisCol];
                 var column = data.axes[axisName.toLowerCase()].columns[columnId];
                 var columnName;
-                if (column.hasOwnProperty('name') && column.name.length > column.value.length)
+                if (column.hasOwnProperty('name') && column.hasOwnProperty('value'))
+                {
+                    columnName = column.name.length > column.value.length ? column.name : column.value;
+                } else if (column.hasOwnProperty('name'))
                 {
                     columnName = column.name;
                 }
