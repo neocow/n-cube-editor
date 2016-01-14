@@ -358,6 +358,10 @@ var NCE = (function ($)
                                         _openCubes[tabIdx] = cia2;
                                         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
                                         li.attr('id', cia2.replace(/\./g,'_'));
+                                        var img = link.find('img');
+                                        if (img.length > 0) {
+                                            img.attr('src', menuOption.imgSrc);
+                                        }
                                     }
                                     switchTabPane(_activeTab);
                                 }
@@ -425,10 +429,13 @@ var NCE = (function ($)
             $('#' + pageId).addClass('active');
             var iframeId = 'iframe_' + pageId;
             try {
-                var cw = document.getElementById(iframeId).contentWindow;
-                if (cw.tabActivated !== undefined) {
-                    cw.tabActivated(buildAppState());
-                    localStorage[ACTIVE_TAB] = pageId;
+                var frame = document.getElementById(iframeId);
+                if (frame) {
+                    var cw = frame.contentWindow;
+                    if (cw.tabActivated !== undefined) {
+                        cw.tabActivated(buildAppState());
+                        localStorage[ACTIVE_TAB] = pageId;
+                    }
                 }
             } catch (e) {
                 console.log(e);
@@ -461,8 +468,8 @@ var NCE = (function ($)
                 addTab(_openCubes[i].split(TAB_SEPARATOR));
             }
             if (len > maxTabs) {
-                buildTabOverflow(maxTabs, len);
                 _tabOverflow.show();
+                buildTabOverflow(maxTabs, len);
             }
             selectTab(cubeInfo);
         }
@@ -2896,7 +2903,8 @@ var NCE = (function ($)
     // API
     return {
         getSelectedStatus: getSelectedStatus,
-        buildTabs: buildTabs
+        buildTabs: buildTabs,
+        heartBeat: heartBeat()
     }
 
 })(jQuery);
@@ -2910,6 +2918,7 @@ function frameLoaded()
     });
     $('#fadeMe1').fadeOut(500, function()
     {
+        NCE.heartBeat();
         $('#fadeMe1').remove();
     });
 }
