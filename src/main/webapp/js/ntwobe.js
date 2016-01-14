@@ -884,7 +884,16 @@ var NCubeEditor2 = (function ($)
             for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
             {
                 var columnId = axisColumns[axisCol];
-                var columnName = data.axes[axisName.toLowerCase()].columns[columnId].value;
+                var column = data.axes[axisName.toLowerCase()].columns[columnId];
+                var columnName;
+                if (column.hasOwnProperty('name') && column.name.length > column.value.length)
+                {
+                    columnName = column.name;
+                }
+                else
+                {
+                    columnName = column.value;
+                }
                 var colWidth = calcDomWidth(columnName, 10, null);
                 var correctWidth = findWidth(oldWidth, colWidth);
                 oldWidth = correctWidth;
