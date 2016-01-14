@@ -59,7 +59,15 @@ body {
 .overflow-dropdown li a {
     padding: 3px 10px;
     overflow: hidden;
+}
+
+.overflow-dropdown li a span.dropdown-tab-text {
+    width: 450px;
+    display: inline-block;
     text-overflow: ellipsis;
+    overflow: hidden;
+    position: relative;
+    top: 6px;
 }
 
 ul.tab-menu {
