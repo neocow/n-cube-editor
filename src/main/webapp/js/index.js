@@ -162,19 +162,15 @@ var NCE = (function ($)
     }
 
     function removeTab(cubeInfo) {
-        _openCubes.splice(_openCubes[getOpenCubeIndex(cubeInfo)], 1);
+        _openCubes.splice(getOpenCubeIndex(cubeInfo), 1);
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
 
-        var cubeName = cubeInfo[CUBE_INFO.CUBE];
-        var activeTab = cubeInfo[CUBE_INFO.TAB];
-
-        $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~')).remove();
         if (_selectedApp === cubeInfo[CUBE_INFO.APP]
-                && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
-                && _selectedStatus === cubeInfo[CUBE_INFO.STATUS]
-                && _selectedBranch === cubeInfo[CUBE_INFO.BRANCH]
-                && _selectedCubeName === cubeName
-                && _activeTab === activeTab) {
+            && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
+            && _selectedStatus === cubeInfo[CUBE_INFO.STATUS]
+            && _selectedBranch === cubeInfo[CUBE_INFO.BRANCH]
+            && _selectedCubeName === cubeInfo[CUBE_INFO.CUBE]
+            && _activeTab === cubeInfo[CUBE_INFO.TAB]) {
             if (_openCubes.length > 0) {
                 selectTab(_openCubes[0].cubeKey.split(TAB_SEPARATOR));
                 loadCube();
@@ -182,6 +178,7 @@ var NCE = (function ($)
                 switchTabPane(null);
             }
         }
+
         buildTabs();
     }
 
@@ -392,6 +389,57 @@ var NCE = (function ($)
             $('<li/>').append(
                 $('<a/>')
                     .attr('href','#')
+                    .html('Commit')
+                    .click(function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if ($(this).find('button').length === 0) {
+                            $(this).append(
+                                $('<button/>')
+                                    .addClass('btn btn-danger btn-xs pull-right')
+                                    .html('Cancel')
+                                    .click(function (e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        $(this).parent().find('button').remove();
+                                    })
+                            ).append(
+                                $('<button/>')
+                                    .addClass('btn btn-primary btn-xs pull-right')
+                                    .html('Confirm')
+                                    .click(function (e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        //var cubeName = cubeInfo[CUBE_INFO.CUBE].toLowerCase();
+                                        //var dto = _cubeList[cubeName];
+                                        //callCommit([dto]);
+                                    })
+                            );
+                        }
+                    }))
+        ).append(
+            $('<li/>').append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Update')
+                    .click(function() {
+
+                    }))
+        ).append(
+            $('<li/>').append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Rollback')
+                    .click(function() {
+
+                    }))
+        ).append(
+            $('<div/>')
+                .prop({'class': 'divider'})
+        ).append(
+            $('<li/>').append(
+                $('<a/>')
+                    .attr('href','#')
                     .html('Close')
                     .click(function() {
                         li.tooltip('destroy');
@@ -512,11 +560,18 @@ var NCE = (function ($)
                             .attr('href', '#')
                             .addClass(openCube.status)
                             .html(getTabImage(imgSrc) + NBSP
-                                + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ')
+                                + '<span class="dropdown-tab-text">' + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ') + '</span>'
+                                + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
                             )
-                            .click(function() {
-                                makeCubeInfoActive(cubeInfo);
-                                buildTabs();
+                            .click(function(e) {
+                                if ($(e.target).hasClass('glyphicon-remove')) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    removeTab(cubeInfo);
+                                } else {
+                                    makeCubeInfoActive(cubeInfo);
+                                    buildTabs();
+                                }
                             })
                     )
                 );
