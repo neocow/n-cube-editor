@@ -191,11 +191,6 @@ var NCE = (function ($)
         buildTabs();
     }
 
-    function setTabClass(cubeInfo, tabClass) {
-        var cia = cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~');
-        $('[id^='+cia).find('a.ncube-tab-top-level').addClass(tabClass);
-    }
-
     /**
      * Background worker thread that will send search filter text asynchronously to server,
      * fetch the results, and ship to main thread (which will be updated to the filtered list).
@@ -250,10 +245,10 @@ var NCE = (function ($)
     }
 
     function getTabImage(imgSrc) {
-        return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;' : '';
+        return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px"/>' : '';
     }
 
-    function addTab(cubeInfo) {
+    function addTab(cubeInfo, status) {
         deselectTab();
         var imgSrc;
         for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
@@ -266,6 +261,7 @@ var NCE = (function ($)
         var link = $('<a/>')
             .attr('href','#')
             .addClass('dropdown-toggle ncube-tab-top-level')
+            .addClass(status)
             .html(getTabImage(imgSrc)
                 + '<span class="tab-text">' + cubeInfo[CUBE_INFO.CUBE] + '</span>'
                 + '<span class="click-space"><span class="big-caret"></span></span>'
@@ -350,7 +346,7 @@ var NCE = (function ($)
                     $('<li/>').append(
                         $('<a/>')
                             .attr('href', '#')
-                            .html(imgHtml + menuOption.key)
+                            .html(imgHtml + NBSP + menuOption.key)
                             .click(function (e) {
                                 clearError();
                                 _activeTab = menuOption.pageId;
@@ -483,7 +479,8 @@ var NCE = (function ($)
             }
 
             for (var i = 0; i < len && i < maxTabs; i++) {
-                addTab(_openCubes[i].cubeKey.split(TAB_SEPARATOR));
+                var openCube = _openCubes[i];
+                addTab(openCube.cubeKey.split(TAB_SEPARATOR), openCube.status);
             }
             if (len > maxTabs) {
                 _tabOverflow.show();
@@ -498,7 +495,8 @@ var NCE = (function ($)
         var dd = _tabOverflow.find('ul');
         for (var i = maxTabs; i < len; i++) {
             (function() {
-                var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
+                var openCube = _openCubes[i];
+                var cubeInfo = openCube.cubeKey.split(TAB_SEPARATOR);
                 var imgSrc;
                 for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
                     var opt = _menuOptions[x];
@@ -512,7 +510,8 @@ var NCE = (function ($)
                     $('<li/>').append(
                         $('<a/>')
                             .attr('href', '#')
-                            .html(getTabImage(imgSrc)
+                            .addClass(openCube.status)
+                            .html(getTabImage(imgSrc) + NBSP
                                 + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ')
                             )
                             .click(function() {
@@ -1002,7 +1001,7 @@ var NCE = (function ($)
 
     function saveState()
     {
-        var title = (_selectedCubeName ? _selectedCubeName : '') + ':' + (_selectedApp ? _selectedApp : '') + '/' + (_selectedVersion ? _selectedVersion : '') + '/' + (_selectedStatus ? _selectedStatus : '') + '/' + (_selectedBranch ? _selectedBranch : '');
+        var title = (_selectedApp ? _selectedApp : '') + ' - ' + (_selectedVersion ? _selectedVersion : '') + ' - ' + (_selectedStatus ? _selectedStatus : '') + ' - ' + (_selectedBranch ? _selectedBranch : '') + ' - ' + (_selectedCubeName ? _selectedCubeName : '');
         document.title = title;
         var state = history.state;
         if (state && state.app == _selectedApp &&
@@ -2808,16 +2807,17 @@ var NCE = (function ($)
         setInterval(function()
         {
             var obj = {};
-            for (var i = 0, len = _openCubes.length; i < len; i++)
-            {
-                var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
-                var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
-                obj[key] = '';
-            }
+            // TODO - this will be relevent again when we rethink server side
+            //for (var i = 0, len = _openCubes.length; i < len; i++)
+            //{
+            //    var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
+            //    var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
+            //    obj[key] = '';
+            //}
             var result = call("ncubeController.heartBeat", [obj]);
             if (result.status)
             {
-                heartBeatResponse(obj, result.data.compareResults);
+                //heartBeatResponse(obj, result.data.compareResults);
             }
         }, 60000);
     }
@@ -2830,20 +2830,20 @@ var NCE = (function ($)
             var key = beforeKeys[i];
             var afterResult = after[key];
 
-            var cssClass = null;
+            var status = null;
             if (afterResult == null)
             {
-                cssClass = 'conflict';
+                status = CLASS_CONFLICT;
             }
             else if (afterResult === false)
             {
-                cssClass = 'out-of-sync';
+                status = CLASS_OUT_OF_SYNC;
             }
-            if (cssClass)
-            {
-                setTabClass(key.split(TAB_SEPARATOR), cssClass);
-            }
+
+            _openCubes[i].status = status;
         }
+        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+        buildTabs();
     }
 
     function doesItemExist(item, list)
@@ -2927,8 +2927,7 @@ var NCE = (function ($)
     // API
     return {
         getSelectedStatus: getSelectedStatus,
-        buildTabs: buildTabs,
-        heartBeat: heartBeat
+        buildTabs: buildTabs
     }
 
 })(jQuery);
@@ -2942,7 +2941,6 @@ function frameLoaded()
     });
     $('#fadeMe1').fadeOut(500, function()
     {
-        NCE.heartBeat();
         $('#fadeMe1').remove();
     });
 }

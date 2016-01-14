@@ -18,18 +18,18 @@ body {
     color: #555;
     border: 1px solid #ddd;
     background-color: #D4D4D4;
-    width: 223px;
+    width: 215px;
 }
 
 #ncube-tabs li.active a.ncube-tab-top-level {
     background-color: white !important;
 }
 
-#ncube-tabs li a.ncube-tab-top-level.conflict {
+#ncube-tabs li a.ncube-tab-top-level.conflict, #tab-overflow li a.conflict{
     background-color: #FFC7C7;
 }
 
-#ncube-tabs li a.ncube-tab-top-level.out-of-sync {
+#ncube-tabs li a.ncube-tab-top-level.out-of-sync, #tab-overflow li a.out-of-sync {
     background-color: #E5FFFF;
 }
 
