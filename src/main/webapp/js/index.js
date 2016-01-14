@@ -29,7 +29,14 @@ var NCE = (function ($)
     var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
     var _openCubes = localStorage[OPEN_CUBES];
-    _openCubes = _openCubes === undefined ? [] : JSON.parse(_openCubes);
+    try
+    {
+        _openCubes = JSON.parse(_openCubes);
+    }
+    catch (e)
+    {
+        _openCubes = []
+    }
     if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
             || (_openCubes.length > 0 && typeof _openCubes[0] === 'object')) {
         _openCubes = [];
