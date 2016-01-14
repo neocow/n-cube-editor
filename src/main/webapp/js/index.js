@@ -468,8 +468,8 @@ var NCE = (function ($)
                 addTab(_openCubes[i].split(TAB_SEPARATOR));
             }
             if (len > maxTabs) {
-                buildTabOverflow(maxTabs, len);
                 _tabOverflow.show();
+                buildTabOverflow(maxTabs, len);
             }
             selectTab(cubeInfo);
         }
