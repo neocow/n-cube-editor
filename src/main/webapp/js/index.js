@@ -191,11 +191,6 @@ var NCE = (function ($)
         buildTabs();
     }
 
-    function setTabClass(cubeInfo, tabClass) {
-        var cia = cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~');
-        $('[id^='+cia).find('a.ncube-tab-top-level').addClass(tabClass);
-    }
-
     /**
      * Background worker thread that will send search filter text asynchronously to server,
      * fetch the results, and ship to main thread (which will be updated to the filtered list).
@@ -253,7 +248,7 @@ var NCE = (function ($)
         return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px"/> &nbsp;' : '';
     }
 
-    function addTab(cubeInfo) {
+    function addTab(cubeInfo, status) {
         deselectTab();
         var imgSrc;
         for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
@@ -266,6 +261,7 @@ var NCE = (function ($)
         var link = $('<a/>')
             .attr('href','#')
             .addClass('dropdown-toggle ncube-tab-top-level')
+            .addClass(status)
             .html(getTabImage(imgSrc)
                 + '<span class="tab-text">' + cubeInfo[CUBE_INFO.CUBE] + '</span>'
                 + '<span class="click-space"><span class="big-caret"></span></span>'
@@ -483,7 +479,8 @@ var NCE = (function ($)
             }
 
             for (var i = 0; i < len && i < maxTabs; i++) {
-                addTab(_openCubes[i].cubeKey.split(TAB_SEPARATOR));
+                var openCube = _openCubes[i];
+                addTab(openCube.cubeKey.split(TAB_SEPARATOR), openCube.status);
             }
             if (len > maxTabs) {
                 _tabOverflow.show();
@@ -498,7 +495,8 @@ var NCE = (function ($)
         var dd = _tabOverflow.find('ul');
         for (var i = maxTabs; i < len; i++) {
             (function() {
-                var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
+                var openCube = _openCubes[i];
+                var cubeInfo = openCube.cubeKey.split(TAB_SEPARATOR);
                 var imgSrc;
                 for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
                     var opt = _menuOptions[x];
@@ -512,6 +510,7 @@ var NCE = (function ($)
                     $('<li/>').append(
                         $('<a/>')
                             .attr('href', '#')
+                            .addClass(openCube.status)
                             .html(getTabImage(imgSrc)
                                 + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ')
                             )
@@ -2830,20 +2829,19 @@ var NCE = (function ($)
             var key = beforeKeys[i];
             var afterResult = after[key];
 
-            var cssClass = null;
+            var status = null;
             if (afterResult == null)
             {
-                cssClass = 'conflict';
+                status = CLASS_CONFLICT;
             }
             else if (afterResult === false)
             {
-                cssClass = 'out-of-sync';
+                status = CLASS_OUT_OF_SYNC;
             }
-            if (cssClass)
-            {
-                setTabClass(key.split(TAB_SEPARATOR), cssClass);
-            }
+
+            _openCubes[i].status = status;
         }
+        buildTabs();
     }
 
     function doesItemExist(item, list)

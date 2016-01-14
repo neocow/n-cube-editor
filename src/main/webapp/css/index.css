@@ -25,11 +25,11 @@ body {
     background-color: white !important;
 }
 
-#ncube-tabs li a.ncube-tab-top-level.conflict {
+#ncube-tabs li a.ncube-tab-top-level.conflict, #tab-overflow li a.conflict{
     background-color: #FFC7C7;
 }
 
-#ncube-tabs li a.ncube-tab-top-level.out-of-sync {
+#ncube-tabs li a.ncube-tab-top-level.out-of-sync, #tab-overflow li a.out-of-sync {
     background-color: #E5FFFF;
 }
 
