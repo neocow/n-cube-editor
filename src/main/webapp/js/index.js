@@ -2927,7 +2927,7 @@ var NCE = (function ($)
     // API
     return {
         getSelectedStatus: getSelectedStatus,
-        buildTabs: buildTabs,
+        buildTabs: buildTabs
     }
 
 })(jQuery);
