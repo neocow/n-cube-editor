@@ -389,57 +389,6 @@ var NCE = (function ($)
             $('<li/>').append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Commit')
-                    .click(function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if ($(this).find('button').length === 0) {
-                            $(this).append(
-                                $('<button/>')
-                                    .addClass('btn btn-danger btn-xs pull-right')
-                                    .html('Cancel')
-                                    .click(function (e) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        $(this).parent().find('button').remove();
-                                    })
-                            ).append(
-                                $('<button/>')
-                                    .addClass('btn btn-primary btn-xs pull-right')
-                                    .html('Confirm')
-                                    .click(function (e) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        //var cubeName = cubeInfo[CUBE_INFO.CUBE].toLowerCase();
-                                        //var dto = _cubeList[cubeName];
-                                        //callCommit([dto]);
-                                    })
-                            );
-                        }
-                    }))
-        ).append(
-            $('<li/>').append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Update')
-                    .click(function() {
-
-                    }))
-        ).append(
-            $('<li/>').append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Rollback')
-                    .click(function() {
-
-                    }))
-        ).append(
-            $('<div/>')
-                .prop({'class': 'divider'})
-        ).append(
-            $('<li/>').append(
-                $('<a/>')
-                    .attr('href','#')
                     .html('Close')
                     .click(function() {
                         li.tooltip('destroy');
