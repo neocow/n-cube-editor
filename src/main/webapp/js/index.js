@@ -2807,16 +2807,17 @@ var NCE = (function ($)
         setInterval(function()
         {
             var obj = {};
-            for (var i = 0, len = _openCubes.length; i < len; i++)
-            {
-                var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
-                var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
-                obj[key] = '';
-            }
+            // TODO - this will be relevent again when we rethink server side
+            //for (var i = 0, len = _openCubes.length; i < len; i++)
+            //{
+            //    var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
+            //    var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
+            //    obj[key] = '';
+            //}
             var result = call("ncubeController.heartBeat", [obj]);
             if (result.status)
             {
-                heartBeatResponse(obj, result.data.compareResults);
+                //heartBeatResponse(obj, result.data.compareResults);
             }
         }, 60000);
     }
@@ -2941,7 +2942,6 @@ function frameLoaded()
     });
     $('#fadeMe1').fadeOut(500, function()
     {
-        NCE.heartBeat();
         $('#fadeMe1').remove();
     });
 }
