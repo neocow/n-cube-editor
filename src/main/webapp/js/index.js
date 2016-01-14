@@ -2916,7 +2916,7 @@ var NCE = (function ($)
     return {
         getSelectedStatus: getSelectedStatus,
         buildTabs: buildTabs,
-        heartBeat: heartBeat()
+        heartBeat: heartBeat
     }
 
 })(jQuery);
