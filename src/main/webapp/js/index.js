@@ -34,10 +34,10 @@ var NCE = (function ($)
         _openCubes = JSON.parse(_openCubes);
 
         if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
-            || (_openCubes.length > 0 && typeof _openCubes[0] === 'object')) {
+            || (_openCubes.length > 0 && typeof _openCubes[0] !== 'object')) {
             _openCubes = [];
         }
-        else if (_openCubes[0].indexOf('~') == -1)
+        else if (!_openCubes[0].hasOwnProperty('cubeKey'))
         {
             _openCubes = [];
         }
@@ -147,20 +147,28 @@ var NCE = (function ($)
 
     function addCurrentCubeTab() {
         var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab];
-        _openCubes.unshift(cubeInfo.join(TAB_SEPARATOR));
+        _openCubes.unshift({cubeKey:cubeInfo.join(TAB_SEPARATOR)});
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
         buildTabs();
     }
 
+    function getOpenCubeIndex(cubeInfo) {
+        var cis = cubeInfo.join(TAB_SEPARATOR);
+        for (var i = 0, len = _openCubes.length; i < len; i++) {
+            if (cis === _openCubes[i].cubeKey) {
+                return i;
+            }
+        }
+    }
+
     function removeTab(cubeInfo) {
-        var cia = cubeInfo.join(TAB_SEPARATOR);
-        _openCubes.splice(_openCubes.indexOf(cia), 1);
+        _openCubes.splice(_openCubes[getOpenCubeIndex(cubeInfo)], 1);
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
 
         var cubeName = cubeInfo[CUBE_INFO.CUBE];
         var activeTab = cubeInfo[CUBE_INFO.TAB];
 
-        $('#' + cia.replace(/\./g,'_').replace(/~/g,'\\~')).remove();
+        $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~')).remove();
         if (_selectedApp === cubeInfo[CUBE_INFO.APP]
                 && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
                 && _selectedStatus === cubeInfo[CUBE_INFO.STATUS]
@@ -168,7 +176,7 @@ var NCE = (function ($)
                 && _selectedCubeName === cubeName
                 && _activeTab === activeTab) {
             if (_openCubes.length > 0) {
-                selectTab(_openCubes[0].split(TAB_SEPARATOR));
+                selectTab(_openCubes[0].cubeKey.split(TAB_SEPARATOR));
                 loadCube();
             } else {
                 switchTabPane(null);
@@ -209,6 +217,15 @@ var NCE = (function ($)
         }
     }
 
+    function makeCubeInfoActive(cubeInfo) {
+        _selectedApp = cubeInfo[CUBE_INFO.APP];
+        _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
+        _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
+        _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
+        _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
+        _activeTab = cubeInfo[CUBE_INFO.TAB];
+    }
+
     function selectTab(cubeInfo) {
         deselectTab();
         var tab = $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~'));
@@ -217,13 +234,7 @@ var NCE = (function ($)
         }
         tab.addClass('active');
 
-        _selectedApp = cubeInfo[CUBE_INFO.APP];
-        _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
-        _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
-        _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
-        _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
-        _activeTab = cubeInfo[CUBE_INFO.TAB];
-
+        makeCubeInfoActive(cubeInfo);
         localStorage[SELECTED_APP] = _selectedApp;
         localStorage[SELECTED_VERSION] = _selectedVersion;
         localStorage[SELECTED_STATUS] = _selectedStatus;
@@ -307,12 +318,7 @@ var NCE = (function ($)
                 var tabChanged = _activeTab !== cubeInfo[CUBE_INFO.TAB];
 
                 if (appChanged || verChanged || staChanged || braChanged || cubChanged || tabChanged) {
-                    _selectedApp = cubeInfo[CUBE_INFO.APP];
-                    _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
-                    _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
-                    _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
-                    _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
-                    _activeTab = cubeInfo[CUBE_INFO.TAB];
+                    makeCubeInfoActive(cubeInfo);
                     if (appChanged || verChanged || staChanged || braChanged) {
                         if (appChanged || verChanged || staChanged) {
                             if (appChanged) {
@@ -350,7 +356,7 @@ var NCE = (function ($)
                                 _activeTab = menuOption.pageId;
                                 var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.CUBE], _activeTab];
                                 var cia2 = ci2.join(TAB_SEPARATOR);
-                                var tabIdx = _openCubes.indexOf(cia2);
+                                var tabIdx = getOpenCubeIndex(ci2);
                                 var isCtrlKey = e.metaKey || e.ctrlKey;
                                 if (isCtrlKey) {
                                     e.stopImmediatePropagation();
@@ -365,9 +371,9 @@ var NCE = (function ($)
                                         li.tooltip('hide');
                                         addCurrentCubeTab();
                                     } else { // use current tab
-                                        tabIdx = _openCubes.indexOf(cubeInfo.join(TAB_SEPARATOR));
+                                        tabIdx = getOpenCubeIndex(cubeInfo);
                                         cubeInfo[CUBE_INFO.TAB] = _activeTab;
-                                        _openCubes[tabIdx] = cia2;
+                                        _openCubes[tabIdx].cubeKey = cia2;
                                         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
                                         li.attr('id', cia2.replace(/\./g,'_'));
                                         var img = link.find('img');
@@ -469,7 +475,7 @@ var NCE = (function ($)
             var maxTabs = calcMaxTabs();
 
             var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab];
-            var idx = _openCubes.indexOf(cubeInfo.join(TAB_SEPARATOR));
+            var idx = getOpenCubeIndex(cubeInfo);
             if (idx >= maxTabs) { // if selected tab is now in overflow, bring to front
                 var temp = _openCubes.splice(idx, 1);
                 _openCubes.unshift(temp[0]);
@@ -477,7 +483,7 @@ var NCE = (function ($)
             }
 
             for (var i = 0; i < len && i < maxTabs; i++) {
-                addTab(_openCubes[i].split(TAB_SEPARATOR));
+                addTab(_openCubes[i].cubeKey.split(TAB_SEPARATOR));
             }
             if (len > maxTabs) {
                 _tabOverflow.show();
@@ -492,7 +498,7 @@ var NCE = (function ($)
         var dd = _tabOverflow.find('ul');
         for (var i = maxTabs; i < len; i++) {
             (function() {
-                var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
+                var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
                 var imgSrc;
                 for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
                     var opt = _menuOptions[x];
@@ -510,12 +516,7 @@ var NCE = (function ($)
                                 + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ')
                             )
                             .click(function() {
-                                _selectedApp = cubeInfo[CUBE_INFO.APP];
-                                _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
-                                _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
-                                _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
-                                _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
-                                _activeTab = cubeInfo[CUBE_INFO.TAB];
+                                makeCubeInfoActive(cubeInfo);
                                 buildTabs();
                             })
                     )
@@ -633,14 +634,21 @@ var NCE = (function ($)
         var cis = cubeInfo.join(TAB_SEPARATOR);
         var found = false;
         for (var i = 0, len = _openCubes.length; i < len; i++) {
-            var oci = _openCubes[i];
+            var oci = _openCubes[i].cubeKey;
             var idx = oci.lastIndexOf(TAB_SEPARATOR);
             var tab = oci.substring(idx + TAB_SEPARATOR.length);
             oci = oci.substring(0, idx);
 
             if (oci === cis) {
                 cubeInfo.push(tab);
-                selectTab(cubeInfo);
+
+                if (i < calcMaxTabs()) {
+                    selectTab(cubeInfo);
+                } else {
+                    makeCubeInfoActive(cubeInfo);
+                    buildTabs();
+                    return;
+                }
                 found = true;
                 break;
             }
@@ -2364,8 +2372,13 @@ var NCE = (function ($)
 
         _commitModal.modal('hide');
 
+        callCommit(changes);
+        showNote('Committing changes on selected cubes...', 'Please wait...');
+    }
+
+    function callCommit(changedDtos) {
         setTimeout(function() {
-            var result = call("ncubeController.commitBranch", [getAppId(), changes]);
+            var result = call("ncubeController.commitBranch", [getAppId(), changedDtos]);
             clearError();
             if (result.status === false)
             {
@@ -2378,7 +2391,7 @@ var NCE = (function ($)
             reloadCube();
             runSearch();
 
-            var note = 'Successfully committed ' + changes.length + ' cube(s).<hr class="hr-small"/>';
+            var note = 'Successfully committed ' + changedDtos.length + ' cube(s).<hr class="hr-small"/>';
             note += '<b style="color:cornflowerblue">Committed cubes:</b><br>';
             $.each(result.data, function(idx, infoDto)
             {
@@ -2386,7 +2399,6 @@ var NCE = (function ($)
             });
             showNote(note);
         }, PROGRESS_DELAY);
-        showNote('Committing changes on selected cubes...', 'Please wait...');
     }
 
     function rollbackOk()
@@ -2798,7 +2810,7 @@ var NCE = (function ($)
             var obj = {};
             for (var i = 0, len = _openCubes.length; i < len; i++)
             {
-                var cubeInfo = _openCubes[i].split(TAB_SEPARATOR);
+                var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
                 var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
                 obj[key] = '';
             }
