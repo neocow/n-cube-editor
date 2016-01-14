@@ -824,18 +824,26 @@ var NCubeEditor2 = (function ($)
                 var firstWidth = calcDomWidth(columns[colKey].value, 10, null);
                 topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
             }
-            var firstColId = axisColumnMap[axes[colOffset].name][0];
-            var colPrefix = firstColId.slice(0,-10);
-            var regex = new RegExp(colPrefix + "(?:\\d{10})");
-            var cells = data.cells;
-            var cellKeys = Object.keys(cells);
-            for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
-                var cellKey = cellKeys[keyIndex];
-                var cell = cells[cellKey];
-                var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
-                var width = calcDomWidth(value, 10, cell.type);
-                var colId = regex.exec(cellKey)[0];
-                topWidths[colId] = findWidth(topWidths[colId], width);
+            var columnIds = axisColumnMap[axes[colOffset].name];
+            if (columnIds.length == 0)
+            {
+                _columnWidths.push(MIN_COL_WIDTH);
+            }
+            else
+            {
+                var firstColId = columnIds[0];
+                var colPrefix = firstColId.slice(0,-10);
+                var regex = new RegExp(colPrefix + "(?:\\d{10})");
+                var cells = data.cells;
+                var cellKeys = Object.keys(cells);
+                for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
+                    var cellKey = cellKeys[keyIndex];
+                    var cell = cells[cellKey];
+                    var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
+                    var width = calcDomWidth(value, 10, cell.type);
+                    var colId = regex.exec(cellKey)[0];
+                    topWidths[colId] = findWidth(topWidths[colId], width);
+                }
             }
         };
 
@@ -886,7 +894,10 @@ var NCubeEditor2 = (function ($)
                 var columnId = axisColumns[axisCol];
                 var column = data.axes[axisName.toLowerCase()].columns[columnId];
                 var columnName;
-                if (column.hasOwnProperty('name') && column.name.length > column.value.length)
+                if (column.hasOwnProperty('name') && column.hasOwnProperty('value'))
+                {
+                    columnName = column.name.length > column.value.length ? column.name : column.value;
+                } else if (column.hasOwnProperty('name'))
                 {
                     columnName = column.name;
                 }
