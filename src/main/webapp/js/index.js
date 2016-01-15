@@ -266,6 +266,12 @@ var NCE = (function ($)
             );
         link.attr('data-toggle', 'dropdown');
         var li = $('<li/>');
+        function closeTab() {
+            li.removeClass('open');
+            li.tooltip('hide');
+            li.find('button').remove();
+        }
+
         li.addClass('active');
         li.addClass('dropdown');
         li.attr('id', cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_'));
@@ -293,8 +299,7 @@ var NCE = (function ($)
                         .addClass('dropdown-toggle')
                         .attr('data-toggle', 'dropdown');
                     $(document).one('click', function() { // prevent tooltip and dropdown from remaining on screen
-                        li.removeClass('open');
-                        li.tooltip('hide');
+                        closeTab();
                     });
                 } else { // when clicking tab show tab, not dropdown
                    $(this).find('.ncube-tab-top-level')
@@ -383,6 +388,89 @@ var NCE = (function ($)
         }
 
         dd.append(
+            $('<div/>')
+                .prop({'class': 'divider'})
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Compare...')
+                    .click(function(e) {
+                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                        var leftInfoDto = $.extend(true, {}, infoDto);
+                        leftInfoDto.branch = 'HEAD';
+                        diffCubes(leftInfoDto, infoDto, infoDto.name);
+                    }))
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Commit Cube')
+                    .click(function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        li.find('li').not($(this).parent()).find('button').remove();
+                        var buttons = $(this).find('button');
+                        if (buttons.length === 0) {
+                            $(this).append(
+                                $('<button/>')
+                                    .addClass('btn btn-danger btn-xs pull-right')
+                                    .html('Cancel')
+                            ).append(
+                                $('<button/>')
+                                    .addClass('btn btn-primary btn-xs pull-right')
+                                    .html('Confirm')
+                                    .click(function (e) {
+                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                                        callCommit([infoDto], true);
+                                        closeTab();
+                                    })
+                            );
+                        } else {
+                            buttons.remove();
+                        }
+                    }))
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Rollback Cube')
+                    .click(function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        li.find('li').not($(this).parent()).find('button').remove();
+                        var buttons = $(this).find('button');
+                        if (buttons.length === 0) {
+                            $(this).append(
+                                $('<button/>')
+                                    .addClass('btn btn-danger btn-xs pull-right')
+                                    .html('Cancel')
+                            ).append(
+                                $('<button/>')
+                                    .addClass('btn btn-primary btn-xs pull-right')
+                                    .html('Confirm')
+                                    .click(function (e) {
+                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                                        callRollback([infoDto]);
+                                        closeTab();
+                                    })
+                            );
+                        } else {
+                            buttons.remove();
+                        }
+                    }))
+        ).append(
+            $('<li/>')
+                .addClass('disabled')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Update Cube')
+                )
+        ).append(
             $('<div/>')
                 .prop({'class': 'divider'})
         ).append(
@@ -2378,12 +2466,19 @@ var NCE = (function ($)
         _commitModal.modal('hide');
 
         callCommit(changes);
-        showNote('Committing changes on selected cubes...', 'Please wait...');
     }
 
-    function callCommit(changedDtos) {
+    function callCommit(changedDtos, fromTabMenu) {
+        showNote('Committing changes on selected cubes...', 'Please wait...');
         setTimeout(function() {
-            var result = call("ncubeController.commitBranch", [getAppId(), changedDtos]);
+            var result;
+            if (fromTabMenu) {
+                var cubeName = changedDtos[0].name;
+                result = call("ncubeController.commitCube", [getAppId(), cubeName]);
+            } else {
+                result = call("ncubeController.commitBranch", [getAppId(), changedDtos]);
+            }
+
             clearError();
             if (result.status === false)
             {
@@ -2420,8 +2515,13 @@ var NCE = (function ($)
         });
 
         _commitModal.modal('hide');
+        callRollback(changes);
+    }
+
+    function callRollback(changes) {
+        showNote('Rolling back changes on selected cubes...', 'Please wait...');
         setTimeout(function(){
-            var names = []
+            var names = [];
             for (var i=0; i < changes.length; i++)
             {
                 names.push(changes[i].name)
@@ -2448,7 +2548,6 @@ var NCE = (function ($)
             });
             showNote(note);
         }, PROGRESS_DELAY);
-        showNote('Rolling back changes on selected cubes...', 'Please wait...');
     }
 
     function updateBranch()

@@ -1153,6 +1153,28 @@ class NCubeController extends BaseController
         }
     }
 
+    Object commitCube(ApplicationID appId, String cubeName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, null, Delta.Type.UPDATE)
+            Object[] infoDtos = search(appId, cubeName, null, true);
+            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
+            return committedCubes.toArray()
+        }
+        catch (BranchMergeException e)
+        {
+            markRequestFailed(e.getMessage())
+            return e.getErrors()
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return [:]
+        }
+    }
+
     Object commitBranch(ApplicationID appId, Object[] infoDtos)
     {
         try
