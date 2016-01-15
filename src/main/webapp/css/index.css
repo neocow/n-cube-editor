@@ -78,6 +78,10 @@ body {
     height: 22px;
 }
 
+.tab-menu li a {
+    height: 100%;
+}
+
 .tab-menu li button {
     margin-left: 2px;
 }

@@ -398,7 +398,7 @@ var NCE = (function ($)
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Compare with HEAD')
+                    .html('Compare with Head')
                     .click(function(e) {
                         var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                         var leftInfoDto = $.extend(true, {}, infoDto);
@@ -455,9 +455,9 @@ var NCE = (function ($)
                                     .addClass('btn btn-primary btn-xs pull-right')
                                     .html('Confirm')
                                     .click(function (e) {
+                                        closeTab();
                                         var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                                         callCommit([infoDto], true);
-                                        closeTab();
                                     })
                             );
                         } else {
@@ -485,9 +485,9 @@ var NCE = (function ($)
                                     .addClass('btn btn-primary btn-xs pull-right')
                                     .html('Confirm')
                                     .click(function (e) {
+                                        closeTab();
                                         var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                                         callRollback([infoDto]);
-                                        closeTab();
                                     })
                             );
                         } else {
@@ -502,6 +502,36 @@ var NCE = (function ($)
                     .attr('href','#')
                     .html('Update...')
                 )
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Delete...')
+                    .click(function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        li.find('li').not($(this).parent()).find('button').remove();
+                        var buttons = $(this).find('button');
+                        if (buttons.length === 0) {
+                            $(this).append(
+                                $('<button/>')
+                                    .addClass('btn btn-danger btn-xs pull-right')
+                                    .html('Cancel')
+                            ).append(
+                                $('<button/>')
+                                    .addClass('btn btn-primary btn-xs pull-right')
+                                    .html('Confirm')
+                                    .click(function (e) {
+                                        closeTab();
+                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                                        callDelete([infoDto.name]);
+                                    })
+                            );
+                        } else {
+                            buttons.remove();
+                        }
+                    }))
         ).append(
             $('<div/>')
                 .prop({'class': 'divider'})
@@ -1563,6 +1593,10 @@ var NCE = (function ($)
             }
         });
 
+        callDelete(cubesToDelete);
+    }
+
+    function callDelete(cubesToDelete) {
         var result = call("ncubeController.deleteCubes", [getAppId(), cubesToDelete]);
         if (result.status === true) {
             var cubeInfo = [];
