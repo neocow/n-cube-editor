@@ -809,7 +809,8 @@ var TestEditor = (function ($)
             _testLayoutCenter.find('> .well').animate({
                 scrollTop: _testResultsDiv.offset().top
             }, 200);
-
+            nce.loadNCubes();
+            nce.loadNCubeListView();
         }
         catch (e)
         {

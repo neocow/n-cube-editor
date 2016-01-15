@@ -689,7 +689,9 @@ var NCE = (function ($)
             reloadCube: reloadCube,
             selectBranch: selectBranch,
             selectCubeByName: selectCubeByName,
-            showNote: showNote
+            showNote: showNote,
+            loadNCubes: loadNCubes,
+            loadNCubeListView: loadNCubeListView
         };
     }
 
