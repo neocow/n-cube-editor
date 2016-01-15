@@ -268,18 +268,20 @@
 <!-- Delete Cube Modal -->
 <div id="deleteCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteCubeLabel"
      aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="deleteCubeLabel" class="modal-title"></h3>
             </div>
-            <div class="modal-body">
-                <h4>Are you sure?</h4>
+            <div class="modal-body" style="overflow: auto;height:450px">
+                <ul id="deleteCubeList" class="list-group no-padding">
+                </ul>
             </div>
             <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
-                <button id="deleteCubeOk" class="btn btn-primary">Delete</button>
+                <button id="deleteSelectNone" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select None</button>
+                <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Don't delete</button>
+                <button id="deleteCubeOk" class="btn btn-primary btn-sm">Delete</button>
             </div>
         </div>
     </div>

@@ -223,6 +223,10 @@ var NCE = (function ($)
         var tab = $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~'));
         if (tab.length < 1) {
             tab = _openTabList.children().first();
+            var id = tab.prop('id');
+            cubeInfo[CUBE_INFO.TAB] = id.substring(id.lastIndexOf('~') + 1);
+            id = id.substring(0, id.lastIndexOf('~'));
+            cubeInfo[CUBE_INFO.CUBE] = id.substring(id.lastIndexOf('~') + 1);
         }
         tab.addClass('active');
 
@@ -394,7 +398,7 @@ var NCE = (function ($)
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Compare with HEAD')
+                    .html('Compare with Head')
                     .click(function(e) {
                         var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                         var leftInfoDto = $.extend(true, {}, infoDto);
@@ -406,7 +410,7 @@ var NCE = (function ($)
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Show Revision History')
+                    .html('Revision History...')
                     .click(function(e) {
                         revisionHistory();
                     }))
@@ -451,9 +455,9 @@ var NCE = (function ($)
                                     .addClass('btn btn-primary btn-xs pull-right')
                                     .html('Confirm')
                                     .click(function (e) {
+                                        closeTab();
                                         var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                                         callCommit([infoDto], true);
-                                        closeTab();
                                     })
                             );
                         } else {
@@ -481,9 +485,9 @@ var NCE = (function ($)
                                     .addClass('btn btn-primary btn-xs pull-right')
                                     .html('Confirm')
                                     .click(function (e) {
+                                        closeTab();
                                         var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                                         callRollback([infoDto]);
-                                        closeTab();
                                     })
                             );
                         } else {
@@ -498,6 +502,36 @@ var NCE = (function ($)
                     .attr('href','#')
                     .html('Update...')
                 )
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Delete...')
+                    .click(function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        li.find('li').not($(this).parent()).find('button').remove();
+                        var buttons = $(this).find('button');
+                        if (buttons.length === 0) {
+                            $(this).append(
+                                $('<button/>')
+                                    .addClass('btn btn-danger btn-xs pull-right')
+                                    .html('Cancel')
+                            ).append(
+                                $('<button/>')
+                                    .addClass('btn btn-primary btn-xs pull-right')
+                                    .html('Confirm')
+                                    .click(function (e) {
+                                        closeTab();
+                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                                        callDelete([infoDto.name]);
+                                    })
+                            );
+                        } else {
+                            buttons.remove();
+                        }
+                    }))
         ).append(
             $('<div/>')
                 .prop({'class': 'divider'})
@@ -1011,6 +1045,10 @@ var NCE = (function ($)
         {
             deleteCube();
         });
+        $('#deleteSelectNone').click(function()
+        {
+            checkAll(false, 'input[type="checkbox"]');
+        });
         $('#deleteCubeOk').click(function ()
         {
             deleteCubeOk();
@@ -1511,32 +1549,86 @@ var NCE = (function ($)
 
     function deleteCube()
     {
-        if (!ensureModifiable('Cannot delete n-cube.'))
-        {
+        clearError();
+        if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
+            showNote('Need to have an application, version, and status selected first.');
+            return;
+        }
+        if (isHeadSelected()) {
+            selectBranch();
             return;
         }
 
-        $('#deleteCubeLabel')[0].textContent = "Delete '" + _selectedCubeName + "' ?";
-        $('#deleteCubeModal').modal();
+        var ul = $('#deleteCubeList');
+        ul.empty();
+        $('#deleteCubeLabel')[0].textContent = 'Delete Cubes in ' + _selectedVersion + ', ' + _selectedStatus;
+        var result = call("ncubeController.search", [getAppId(), "*", null, true]);
+        if (result.status === true) {
+            $.each(result.data, function (index, value) {
+                var cubeName = value.name;
+                var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
+                var div = $('<div/>').prop({class: 'container-fluid'});
+                var checkbox = $('<input>').prop({class:'deleteCheck', type:'checkbox', checked:cubeName === _selectedCubeName});
+                var label = $('<label/>').prop({class: 'checkbox no-margins'});
+                label[0].textContent = cubeName;
+                checkbox.prependTo(label); // <=== create input without the closing tag
+                div.append(label);
+                li.append(div);
+                ul.append(li);
+            });
+            $('#deleteCubeModal').modal();
+        } else {
+            showNote('Error fetching cubes (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
+        }
     }
 
-    function deleteCubeOk()
-    {
+    function deleteCubeOk() {
         $('#deleteCubeModal').modal('hide');
-        var result = call("ncubeController.deleteCubes", [getAppId(), [_selectedCubeName]]);
-        if (result.status === true)
-        {
-            delete _cubeList[_selectedCubeName.toLowerCase()];
-            _selectedCubeName = null;
-            if (keyCount(_cubeList) > 0)
-            {
-                selectCubeByName(Object.keys(_cubeList)[0]);
+
+        var input = $('.deleteCheck');
+        var cubesToDelete = [];
+        $.each(input, function (index, label) {
+            if ($(this).is(':checked')) {
+                cubesToDelete.push($(this).parent()[0].textContent);
             }
+        });
+
+        callDelete(cubesToDelete);
+    }
+
+    function callDelete(cubesToDelete) {
+        var result = call("ncubeController.deleteCubes", [getAppId(), cubesToDelete]);
+        if (result.status === true) {
+            var cubeInfo = [];
+            cubeInfo[CUBE_INFO.APP] = _selectedApp;
+            cubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
+            cubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
+            cubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
+            for (var i = 0, len = cubesToDelete.length; i < len; i++) {
+                var cubeName = cubesToDelete[i];
+                delete _cubeList[cubeName.toLowerCase()];
+                if (_selectedCubeName === cubeName) {
+                    _selectedCubeName = null;
+                    _activeTab = null;
+                    delete localStorage[SELECTED_CUBE];
+                    delete localStorage[ACTIVE_TAB];
+                }
+
+                cubeInfo[CUBE_INFO.CUBE] = cubeName;
+
+                var cis = cubeInfo.join(TAB_SEPARATOR);
+                for (var x = _openCubes.length - 1; x >= 0; x--) {
+                    if (_openCubes[x].cubeKey.indexOf(cis) > -1) {
+                        _openCubes.splice(x, 1);
+                    }
+                }
+            }
+            localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+            buildTabs();
+            loadNCubeListView();
             runSearch();
-        }
-        else
-        {
-            showNote("Unable to delete n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
+        } else {
+            showNote("Unable to delete cubes: " + '<hr class="hr-small"/>' + result.data);
         }
     }
 
