@@ -1045,6 +1045,10 @@ var NCE = (function ($)
         {
             deleteCube();
         });
+        $('#deleteSelectAll').click(function()
+        {
+            checkAll(true, 'input[type="checkbox"]');
+        });
         $('#deleteSelectNone').click(function()
         {
             checkAll(false, 'input[type="checkbox"]');
@@ -1562,24 +1566,23 @@ var NCE = (function ($)
         var ul = $('#deleteCubeList');
         ul.empty();
         $('#deleteCubeLabel')[0].textContent = 'Delete Cubes in ' + _selectedVersion + ', ' + _selectedStatus;
-        var result = call("ncubeController.search", [getAppId(), "*", null, true]);
-        if (result.status === true) {
-            $.each(result.data, function (index, value) {
-                var cubeName = value.name;
-                var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
-                var div = $('<div/>').prop({class: 'container-fluid'});
-                var checkbox = $('<input>').prop({class:'deleteCheck', type:'checkbox', checked:cubeName === _selectedCubeName});
-                var label = $('<label/>').prop({class: 'checkbox no-margins'});
-                label[0].textContent = cubeName;
-                checkbox.prependTo(label); // <=== create input without the closing tag
-                div.append(label);
-                li.append(div);
-                ul.append(li);
+        var cubeLinks = _listOfCubes.find('a');
+        for (var i = 0, len = cubeLinks.length; i < len; i++) {
+            var cubeName = cubeLinks[i].textContent;
+            var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
+            var div = $('<div/>').prop({class: 'container-fluid'});
+            var checkbox = $('<input>').prop({
+                class: 'deleteCheck',
+                type: 'checkbox'
             });
-            $('#deleteCubeModal').modal();
-        } else {
-            showNote('Error fetching cubes (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
+            var label = $('<label/>').prop({class: 'checkbox no-margins'});
+            label[0].textContent = cubeName;
+            checkbox.prependTo(label); // <=== create input without the closing tag
+            div.append(label);
+            li.append(div);
+            ul.append(li);
         }
+        $('#deleteCubeModal').modal();
     }
 
     function deleteCubeOk() {
