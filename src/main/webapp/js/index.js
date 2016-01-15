@@ -406,7 +406,7 @@ var NCE = (function ($)
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Show Revision History')
+                    .html('Revision History...')
                     .click(function(e) {
                         revisionHistory();
                     }))
