@@ -388,14 +388,13 @@ var NCE = (function ($)
         }
 
         dd.append(
-            $('<div/>')
-                .prop({'class': 'divider'})
+            $('<div/>').addClass('divider')
         ).append(
             $('<li/>')
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Compare...')
+                    .html('Compare with HEAD')
                     .click(function(e) {
                         var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
                         var leftInfoDto = $.extend(true, {}, infoDto);
@@ -407,7 +406,36 @@ var NCE = (function ($)
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Commit Cube')
+                    .html('Show Revision History')
+                    .click(function(e) {
+                        revisionHistory();
+                    }))
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Show Outbound References')
+                    .click(function(e) {
+                        showRefsFromCube();
+                    }))
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Show Required Scopes')
+                    .click(function(e) {
+                        showReqScope();
+                    }))
+        ).append(
+            $('<div/>').addClass('divider')
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Commit...')
                     .click(function(e) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -437,7 +465,7 @@ var NCE = (function ($)
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Rollback Cube')
+                    .html('Rollback...')
                     .click(function(e) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -468,7 +496,7 @@ var NCE = (function ($)
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Update Cube')
+                    .html('Update...')
                 )
         ).append(
             $('<div/>')
@@ -1003,25 +1031,13 @@ var NCE = (function ($)
         {
             checkAll(false, 'input[type="checkbox"]');
         });
-        $('#revisionHistoryMenu').click(function ()
-        {
-            revisionHistory();
-        });
         $('#revisionHistoryOk').click(function ()
         {
             revisionHistoryOk();
         });
-        $('#showRefsFromMenu').click(function ()
-        {
-            showRefsFromCube()
-        });
         $('#showRefsFromClose').click(function ()
         {
             showRefsFromCubeClose()
-        });
-        $('#showReqScopeMenu').click(function ()
-        {
-            showReqScope()
         });
         $('#showReqScopeClose').click(function ()
         {
