@@ -1158,7 +1158,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            isAllowed(appId, null, Delta.Type.UPDATE)
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
             Object[] infoDtos = search(appId, cubeName, null, true);
             List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
             return committedCubes.toArray()
