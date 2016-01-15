@@ -70,8 +70,16 @@ body {
     top: 6px;
 }
 
-ul.tab-menu {
-    width: 225px;
+.tab-menu {
+    width: 215px;
+}
+
+.tab-menu li {
+    height: 22px;
+}
+
+.tab-menu li button {
+    margin-left: 2px;
 }
 
 .tab-tooltip {
