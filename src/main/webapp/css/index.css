@@ -75,7 +75,7 @@ body {
 }
 
 .tab-menu li {
-    height: 22px;
+    min-height: 22px;
 }
 
 .tab-menu li a {
@@ -84,6 +84,11 @@ body {
 
 .tab-menu li button {
     margin-left: 2px;
+}
+
+.tab-menu li input {
+    margin: 5px 0 0 5px;
+    width: 95%;
 }
 
 .tab-tooltip {

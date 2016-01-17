@@ -274,6 +274,7 @@ var NCE = (function ($)
             li.removeClass('open');
             li.tooltip('hide');
             li.find('button').remove();
+            li.find('input').remove();
         }
 
         li.addClass('active');
@@ -503,6 +504,9 @@ var NCE = (function ($)
                     .html('Update...')
                 )
         ).append(
+            $('<div/>')
+                .addClass('divider')
+        ).append(
             $('<li/>')
                 .append(
                 $('<a/>')
@@ -530,6 +534,63 @@ var NCE = (function ($)
                             );
                         } else {
                             buttons.remove();
+                        }
+                    }))
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Duplicate...')
+                    .click(function(e) {
+                        dupeCube();
+                    }))
+        ).append(
+            $('<li/>')
+                .append(
+                $('<a/>')
+                    .attr('href','#')
+                    .html('Rename')
+                    .click(function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!ensureModifiable('Unable to rename cube.')) {
+                            return;
+                        }
+                        var parent = $(this).parent();
+                        var inputs = parent.find('input');
+                        if (inputs.length === 0) {
+                            var newNameInput = $('<input/>')
+                                .prop({type: 'text', placeholder: cubeInfo[CUBE_INFO.CUBE]})
+                                .addClass('form-control')
+                                .click(function (ie) {
+                                    ie.preventDefault();
+                                    ie.stopPropagation();
+                                })
+                                .keyup(function(ie) {
+                                    if (ie.keyCode === KEY_CODES.ENTER) {
+                                        closeTab();
+                                        renameCube(newNameInput.val());
+                                    }
+                                });
+                            parent.append(newNameInput);
+                            $(this).append(
+                                $('<button/>')
+                                    .addClass('btn btn-danger btn-xs pull-right')
+                                    .html('Cancel')
+                            ).append(
+                                $('<button/>')
+                                    .addClass('btn btn-primary btn-xs pull-right')
+                                    .html('Confirm')
+                                    .click(function (e) {
+                                        closeTab();
+                                        renameCube(newNameInput.val());
+                                    })
+                            );
+                            newNameInput[0].focus();
+                        } else {
+                            inputs.remove();
+                            parent.find('button').remove();
                         }
                     }))
         ).append(
@@ -1025,17 +1086,9 @@ var NCE = (function ($)
         {
             newCubeSave()
         });
-        $('#renameCubeMenu').click(function ()
-        {
-            renameCube();
-        });
         $('#renameCubeOk').click(function ()
         {
             renameCubeOk();
-        });
-        $('#dupeCubeMenu').click(function ()
-        {
-            dupeCube();
         });
         $('#dupeCubeCopy').click(function ()
         {
@@ -1885,37 +1938,40 @@ var NCE = (function ($)
         $('#revisionHistoryModal').modal('hide');
     }
 
-    function renameCube()
-    {
-        if (!ensureModifiable('Unable to rename cube.'))
-        {
-            return;
-        }
+    function renameCube(newName) {
+        var result = call("ncubeController.renameCube", [getAppId(), _selectedCubeName, newName]);
+        if (result.status === true) {
+            var oldCubeInfo = [];
+            oldCubeInfo[CUBE_INFO.APP] = _selectedApp;
+            oldCubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
+            oldCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
+            oldCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
+            oldCubeInfo[CUBE_INFO.CUBE] = _selectedCubeName;
+            var oldCis = oldCubeInfo.join(TAB_SEPARATOR);
 
-        $('#renameCubeAppName').val(_selectedApp);
-        $('#renameCubeVersion').val(_selectedVersion);
-        $('#renameCubeName').val(_selectedCubeName);
-        $('#renameNewCubeName').val('');
-        $('#renameCubeLabel')[0].textContent = 'Rename';
-        $('#renameCubeModal').modal();
-    }
-
-    function renameCubeOk()
-    {
-        $('#renameCubeModal').modal('hide');
-        var oldName = $('#renameCubeName').val();
-        var newName = $('#renameNewCubeName').val();
-        var result = call("ncubeController.renameCube", [getAppId(), oldName, newName]);
-        if (result.status === true)
-        {
-            loadNCubes();
+            var newCubeInfo = [];
+            newCubeInfo[CUBE_INFO.APP] = _selectedApp;
+            newCubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
+            newCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
+            newCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
+            newCubeInfo[CUBE_INFO.CUBE] = newName;
+            newCubeInfo[CUBE_INFO.TAB] = _activeTab;
+            var newCis = newCubeInfo.join(TAB_SEPARATOR);
+            for (var i = 0, len = _openCubes.length; i < len; i++) {
+                var openCube = _openCubes[i];
+                if (openCube.cubeKey.indexOf(oldCis) > -1) {
+                    openCube.cubeKey = newCis;
+                }
+            }
+            localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
             _selectedCubeName = newName;
+            localStorage[SELECTED_CUBE] = _selectedCubeName;
+            buildTabs();
+            loadNCubes();
             loadNCubeListView();
             loadCube();
             runSearch();
-        }
-        else
-        {
+        } else {
             showNote("Unable to rename n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
