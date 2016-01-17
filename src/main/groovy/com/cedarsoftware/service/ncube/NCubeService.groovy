@@ -102,6 +102,11 @@ class NCubeService
         return NCubeManager.updateBranch(appId, username)
     }
 
+    Map<String, Object> updateBranchCube(ApplicationID appId, String cubeName, String username)
+    {
+        return NCubeManager.updateBranch(appId, cubeName, username)
+    }
+
     void deleteBranch(ApplicationID appId)
     {
         NCubeManager.deleteBranch(appId);
