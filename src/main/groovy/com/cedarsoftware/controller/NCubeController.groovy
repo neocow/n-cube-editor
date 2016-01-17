@@ -1227,13 +1227,13 @@ class NCubeController extends BaseController
         }
     }
 
-    Object updateBranchCube(ApplicationID appId, String cubeName)
+    Object updateBranchCube(ApplicationID appId, String cubeName, String sourceBranch)
     {
         try
         {
             appId = addTenant(appId)
             isAllowed(appId, cubeName, Delta.Type.UPDATE)
-            Map<String, Object> result = nCubeService.updateBranchCube(appId, cubeName, getUserForDatabase())
+            Map<String, Object> result = nCubeService.updateBranchCube(appId, cubeName, sourceBranch, getUserForDatabase())
             return result
         }
         catch (Exception e)

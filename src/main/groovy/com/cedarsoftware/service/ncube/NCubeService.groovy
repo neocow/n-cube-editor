@@ -102,8 +102,9 @@ class NCubeService
         return NCubeManager.updateBranch(appId, username)
     }
 
-    Map<String, Object> updateBranchCube(ApplicationID appId, String cubeName, String username)
+    Map<String, Object> updateBranchCube(ApplicationID appId, String cubeName, String sourceBranch, String username)
     {
+        // TODO: Call new branch-aware API when it becomes available.
         return NCubeManager.updateBranch(appId, cubeName, username)
     }
 
