@@ -110,7 +110,7 @@ div#editColumnsModal div.panel-group
 }
 
 .handsontable th.handsonCurrentRow, .handsonTableHeader.handsonCurrentRow {
-    opacity: .75;
+    background-color: rgba(146, 146, 146, 0.75) !important;
 }
 .handsontable .htCore td.searchResult {
     background-color: #EFFB3C;
