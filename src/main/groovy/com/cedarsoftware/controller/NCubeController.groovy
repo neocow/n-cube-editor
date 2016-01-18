@@ -725,7 +725,7 @@ class NCubeController extends BaseController
                 {
                     errors.add('[exception]')
                     errors.add('\n')
-                    errors.add(getCauses(e))
+                    errors.add(getTestCauses(e))
                     success = false
                 }
             }
@@ -1716,6 +1716,15 @@ class NCubeController extends BaseController
         {
             LOG.warn("error occurred", e)
         }
+    }
+
+    private static String getTestCauses(Throwable t)
+    {
+        StringWriter sw = new StringWriter()
+        PrintWriter pw = new PrintWriter(sw)
+        t.printStackTrace(pw)
+        String s = sw.toString()
+        return s.replace('Caused by:', '<hr style="border-top: 1px solid #aaa;margin:8px"><b>Caused by:</b><br>')
     }
 
     private static String getCauses(Throwable t)
