@@ -80,6 +80,7 @@ var NCE = (function ($)
     var _diffRightName = '';
     var _menuOptions = [];
     var _tabOverflow = $('#tab-overflow');
+    var _branchNames = [];
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -396,16 +397,19 @@ var NCE = (function ($)
             $('<div/>').addClass('divider')
         ).append(
             $('<li/>')
+                .addClass('dropdown-submenu')
                 .append(
                 $('<a/>')
-                    .attr('href','#')
-                    .html('Compare with Head')
-                    .click(function(e) {
-                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
-                        var leftInfoDto = $.extend(true, {}, infoDto);
-                        leftInfoDto.branch = 'HEAD';
-                        diffCubes(leftInfoDto, infoDto, infoDto.name);
-                    }))
+                    .prop({href:'#', tabindex:'-1'})
+                    .html('Compare')
+            ).append(
+                createBranchesUl(function(branchName) {
+                    var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                    var leftInfoDto = $.extend(true, {}, infoDto);
+                    leftInfoDto.branch = branchName;
+                    diffCubes(leftInfoDto, infoDto, infoDto.name);
+                })
+            )
         ).append(
             $('<li/>')
                 .append(
@@ -497,12 +501,22 @@ var NCE = (function ($)
                     }))
         ).append(
             $('<li/>')
-                .addClass('disabled')
+                .addClass('dropdown-submenu')
                 .append(
                 $('<a/>')
-                    .attr('href','#')
-                    .html('Update...')
-                )
+                    .prop({href:'#', tabindex:'-1'})
+                    .html('Update')
+                ).append(
+                    $('<ul/>').addClass('dropdown-menu')
+                        .append(
+                        $('<li/>').append(
+                            $('<a/>').attr('href','#').html('HEAD')
+                                .click(function() {
+                                    callUpdate('HEAD');
+                                })
+                        )
+                    )
+            )
         ).append(
             $('<div/>')
                 .addClass('divider')
@@ -643,6 +657,23 @@ var NCE = (function ($)
             }
             while (el.scrollWidth > el.offsetWidth);
         }
+    }
+
+    function createBranchesUl(func) {
+        var branchNames = getBranchNames();
+        var branchesUl = $('<ul/>').addClass('dropdown-menu');
+        for (var bnIdx = 0, bnLen = branchNames.length; bnIdx < bnLen; bnIdx++) {
+            (function() {
+                var branchName = branchNames[bnIdx];
+                branchesUl.append($('<li/>').append(
+                        $('<a/>').attr('href', '#').html(branchName).click(function () {
+                            return func(branchName);
+                        })
+                    )
+                );
+            })();
+        }
+        return branchesUl;
     }
 
     function switchTabPane(pageId) {
@@ -2345,7 +2376,7 @@ var NCE = (function ($)
         });
         $('#branchUpdate').click(function()
         {
-            setTimeout(function() { updateBranch(); }, PROGRESS_DELAY);
+            setTimeout(function() { callUpdate(); }, PROGRESS_DELAY);
             showNote('Updating branch...');
         });
         $('#branchDelete').click(function()
@@ -2394,21 +2425,25 @@ var NCE = (function ($)
         $('#BranchMenu')[0].innerHTML = 'Branch:&nbsp;<button class="btn-sm btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>';
     }
 
+    function getBranchNames() {
+        if (_branchNames.length === 0) {
+            var result = call("ncubeController.getBranches", []);
+            if (!result.status) {
+                showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
+                return [];
+            }
+            _branchNames = result.data;
+        }
+        return _branchNames;
+    }
+
     function selectBranch()
     {
         clearError();
         $('#newBranchName').val("");
         $('#branchNameWarning').hide();
 
-        var result = call("ncubeController.getBranches", []);
-
-        if (!result.status)
-        {
-            showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        var branchNames = result.data;
+        var branchNames = getBranchNames();
         var ul = $('#branchList');
         ul.empty();
 
@@ -2717,11 +2752,16 @@ var NCE = (function ($)
         }, PROGRESS_DELAY);
     }
 
-    function updateBranch()
+    function callUpdate(sourceBranch)
     {
         clearError();
 
-        var result = call('ncubeController.updateBranch', [getAppId()]);
+        var result;
+        if (sourceBranch != undefined) {
+            result = call('ncubeController.updateBranchCube', [getAppId(), _selectedCubeName, sourceBranch]);
+        } else  {
+            result = call('ncubeController.updateBranch', [getAppId()]);
+        }
         if (!result.status)
         {
             showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
