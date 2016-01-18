@@ -24,6 +24,7 @@ var NCE = (function ($)
 {
     var head = 'HEAD';
     var _searchThread;
+    var _heartBeatThread;
     var _cubeList = {};
     var _apps = [];
     var _statuses = ['RELEASE', 'SNAPSHOT'];
@@ -94,7 +95,7 @@ var NCE = (function ($)
         try
         {
             setupMainSplitter();
-            startWorker();
+            startWorkers();
             showActiveBranch();
             loadAppNames();
             loadVersions();
@@ -189,19 +190,36 @@ var NCE = (function ($)
         buildTabs();
     }
 
-    /**
-     * Background worker thread that will send search filter text asynchronously to server,
-     * fetch the results, and ship to main thread (which will be updated to the filtered list).
-     */
-    function startWorker()
+    function startWorkers()
     {
-        if (typeof(Worker) !== "undefined")
+        if (typeof(Worker) !== 'undefined')
         {
-            _searchThread = new Worker("js/loadCubeList.js");
+            /**
+             * Background worker thread that will send search filter text asynchronously to server,
+             * fetch the results, and ship to main thread (which will be updated to the filtered list).
+             */
+            _searchThread = new Worker('js/loadCubeList.js');
             _searchThread.onmessage = function(event)
             {
                 var list = event.data;
                 loadFilteredNCubeListView(list);
+            };
+
+            // background thread for heartbeat
+            _heartBeatThread = new Worker('js/heartBeat.js');
+            _heartBeatThread.onmessage = function(event) {
+                var result = event.data.obj;
+                for (var i = 0, len = result.length; i < len; i++) {
+                    for (var x = 0, xLen = _openCubes.length; x < xLen; x++) {
+                        var curCube = _openCubes[x];
+                        var curRes = result[i];
+                        if (curCube.cubeKey.indexOf(curRes.key) > -1) {
+                            curCube.status = curRes.status;
+                        }
+                    }
+                }
+                localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+                updateTabStatus();
             };
         }
         else
@@ -338,7 +356,6 @@ var NCE = (function ($)
                         loadNCubeListView();
                     }
                     selectTab(cubeInfo);
-                    loadCube();
                 }
             }
         });
@@ -696,6 +713,29 @@ var NCE = (function ($)
         }
     }
 
+    function updateTabStatus() {
+        var allStatusClasses = [CLASS_OUT_OF_SYNC, CLASS_CONFLICT];
+        function updateElementStatus(el, status) {
+            el = $(el);
+            el.removeClass(allStatusClasses);
+            if (status !== undefined && status !== null) {
+                el.addClass(status);
+            }
+        }
+
+        // top tabs
+        var tabs = _openTabList.find('li').find('a.ncube-tab-top-level');
+        for (var tabNum = 0, tabLen = tabs.length; tabNum < tabLen; tabNum++) {
+            updateElementStatus(tabs[tabNum], _openCubes[tabNum].status);
+        }
+
+        // overflow
+        var overflow = _tabOverflow.find('li').find('a');
+        for (var oNum = 0, oLen = overflow.length; oNum < oLen; oNum++) {
+            updateElementStatus(overflow[oNum], _openCubes[tabNum + oNum]);
+        }
+    }
+
     function calcMaxTabs() {
         var windowWidth = $('#ncube-tabs').width();
         var availableWidth = windowWidth - TAB_OVERFLOW_WIDTH;
@@ -903,7 +943,6 @@ var NCE = (function ($)
         if (!found) {
             addCurrentCubeTab();
         }
-        loadCube(); // load spreadsheet side
     }
 
     function runSearch()
@@ -2425,8 +2464,8 @@ var NCE = (function ($)
         $('#BranchMenu')[0].innerHTML = 'Branch:&nbsp;<button class="btn-sm btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>';
     }
 
-    function getBranchNames() {
-        if (_branchNames.length === 0) {
+    function getBranchNames(refresh) {
+        if (refresh || _branchNames.length === 0) {
             var result = call("ncubeController.getBranches", []);
             if (!result.status) {
                 showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
@@ -2443,7 +2482,7 @@ var NCE = (function ($)
         $('#newBranchName').val("");
         $('#branchNameWarning').hide();
 
-        var branchNames = getBranchNames();
+        var branchNames = getBranchNames(true);
         var ul = $('#branchList');
         ul.empty();
 
@@ -3114,48 +3153,24 @@ var NCE = (function ($)
         }, 500);
     }
 
-    function heartBeat()
-    {
-        setInterval(function()
-        {
-            var obj = {};
-            // TODO - this will be relevent again when we rethink server side
-            //for (var i = 0, len = _openCubes.length; i < len; i++)
-            //{
-            //    var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
-            //    var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
-            //    obj[key] = '';
-            //}
-            var result = call("ncubeController.heartBeat", [obj]);
-            if (result.status)
-            {
-                //heartBeatResponse(obj, result.data.compareResults);
-            }
-        }, 60000);
+    function createHeartBeatTransferObj() {
+        var obj = {};
+        for (var i = 0, len = _openCubes.length; i < len; i++) {
+            var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
+            var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
+            obj[key] = '';
+        }
+
+        return {obj:obj, aBuffer: new ArrayBuffer(1024 * 1024)};
     }
 
-    function heartBeatResponse(before, after)
-    {
-        var beforeKeys = Object.keys(before);
-        for (var i = 0, len = beforeKeys.length; i < len; i++)
-        {
-            var key = beforeKeys[i];
-            var afterResult = after[key];
-
-            var status = null;
-            if (afterResult == null)
-            {
-                status = CLASS_CONFLICT;
-            }
-            else if (afterResult === false)
-            {
-                status = CLASS_OUT_OF_SYNC;
-            }
-
-            _openCubes[i].status = status;
-        }
-        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-        buildTabs();
+    function heartBeat() {
+        var transferObj = createHeartBeatTransferObj();
+        _heartBeatThread.postMessage(transferObj, [transferObj.aBuffer]);
+        setInterval(function() {
+            transferObj = createHeartBeatTransferObj();
+            _heartBeatThread.postMessage(transferObj, [transferObj.aBuffer]);
+        }, 60000);
     }
 
     function doesItemExist(item, list)

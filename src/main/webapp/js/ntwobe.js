@@ -1044,11 +1044,6 @@ var NCubeEditor2 = (function ($)
                 }
 
                 resetCoordinateBar(display);
-            },
-            afterSelectionEnd: function(r, c, r2, c2) {
-                if (hot.getCellMeta(r, c).readOnly) {
-                    hot.deselectCell();
-                }
             }
         };
     };
@@ -1064,7 +1059,6 @@ var NCubeEditor2 = (function ($)
             }
             td.style.background = BACKGROUND_CUBE_NAME;
             td.style.color = COLOR_WHITE;
-            td.style.opacity = '1';
             cellProperties.readOnly = true;
             if (col < axes.length - 2) {
                 td.style.borderRight = NONE;
@@ -1082,7 +1076,6 @@ var NCubeEditor2 = (function ($)
             td.colSpan = axes[colOffset].columnLength;
             td.style.background = BACKGROUND_AXIS_INFO;
             td.style.color = COLOR_WHITE;
-            td.style.opacity = '1';
             cellProperties.readOnly = true;
         }
 
@@ -1090,7 +1083,6 @@ var NCubeEditor2 = (function ($)
         else if (row === 1 && (col < colOffset || col === 0)) {
             td.style.background = BACKGROUND_AXIS_INFO;
             td.style.color = COLOR_WHITE;
-            td.style.opacity = '1';
             td.style.overflow = 'visible';
             cellProperties.readOnly = true;
             buildAxisMenu(axes[col].name, td);
