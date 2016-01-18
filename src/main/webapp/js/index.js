@@ -356,7 +356,6 @@ var NCE = (function ($)
                         loadNCubeListView();
                     }
                     selectTab(cubeInfo);
-                    loadCube();
                 }
             }
         });
@@ -944,7 +943,6 @@ var NCE = (function ($)
         if (!found) {
             addCurrentCubeTab();
         }
-        loadCube(); // load spreadsheet side
     }
 
     function runSearch()
