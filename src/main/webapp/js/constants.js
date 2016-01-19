@@ -19,6 +19,10 @@ var TAB_SEPARATOR = '~';
 var MIN_COL_WIDTH = 50;
 var MAX_COL_WIDTH = 600;
 
+var CONFIG_TITLE = '~Title';
+var CONFIG_DEFAULT_TAB = '~DefaultTab';
+var PAGE_ID = 'PageId';
+
 var AXIS_DEFAULT = '002147483647';
 var DEFAULT_TEXT = 'Default';
 

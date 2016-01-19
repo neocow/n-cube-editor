@@ -839,7 +839,14 @@ var NCE = (function ($)
             return;
         }
         var menu = result.data;
-        $('#appTitle')[0].innerHTML = menu['~Title'];
+        $('#appTitle')[0].innerHTML = menu[CONFIG_TITLE];
+        _defaultTab = menu[CONFIG_DEFAULT_TAB];
+        if (_defaultTab) {
+            _defaultTab = _defaultTab.replace(/\s/g,'_') + PAGE_ID;
+            if (!_activeTab) {
+                _activeTab = _defaultTab;
+            }
+        }
         var ul = $('#menuList');
         ul.empty();
         _menuOptions = [];
@@ -847,7 +854,7 @@ var NCE = (function ($)
         {
             if (!key.startsWith('~') && !key.startsWith('@') && !key.startsWith('#'))
             {
-                var pageId = key.replace(/\s/g,'_') + 'PageId';
+                var pageId = key.replace(/\s/g,'_') + PAGE_ID;
                 _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
                 if (!_activeTab) {
                     _activeTab = pageId;
