@@ -19,9 +19,6 @@ var TAB_SEPARATOR = '~';
 var MIN_COL_WIDTH = 50;
 var MAX_COL_WIDTH = 600;
 
-var COPY_IND_NCE = 'CP NCE';
-var COPY_IND_EXCEL = 'CP EXCEL';
-
 var AXIS_DEFAULT = '002147483647';
 var DEFAULT_TEXT = 'Default';
 
