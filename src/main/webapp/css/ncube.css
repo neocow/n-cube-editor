@@ -151,6 +151,13 @@ div#editColumnsModal div.panel-group
     padding: 3px 20px;
 }
 
+#hot-container > div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(2) > th {
+    font-size: x-small;
+    white-space: normal;
+    line-height: 15px;
+    color: #555;
+}
+
 /* end coord bar and HOT */
 
 /* begin cell display */

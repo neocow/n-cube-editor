@@ -35,6 +35,7 @@ var NCubeEditor2 = (function ($)
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
     var _clipboard = null;
     var _clipFormat = CLIP_NCE;
+    var _clipInd = COPY_IND_NCE;
     var _searchField = null;
     var _searchCoords = null;
     var _currentSearchResultIndex = null;
@@ -121,12 +122,15 @@ var NCubeEditor2 = (function ($)
                             }
                         } else if (e.keyCode == KEY_CODES.K) {
                             // Toggle clipboard format to copy (NCE versus Excel)
+                            e.preventDefault();
                             if (CLIP_NCE == _clipFormat) {
                                 _clipFormat = CLIP_EXCEL;
-                                nce.showNote('Use generic format (Excel support)', 'Note', 2000);
+                                _clipInd = COPY_IND_EXCEL;
+                                render();
                             } else {
                                 _clipFormat = CLIP_NCE;
-                                nce.showNote('Use N-Cube Editor format (NCE support)', 'Note', 2000);
+                                _clipInd = COPY_IND_NCE;
+                                render();
                             }
                         } else if (e.keyCode == KEY_CODES.V) {
                             // Ctrl-V
@@ -957,9 +961,12 @@ var NCubeEditor2 = (function ($)
 
     var calcRowHeader = function(index)
     {
-        if (index < 2)
+        if (index < 1)
         {
             return '';
+        }
+        if (index === 1) {
+            return _clipInd;
         }
         return index - 1;
     };
