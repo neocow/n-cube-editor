@@ -5,13 +5,12 @@ body {
 
 #ncube-tabs {
     background-color: #fff;
-    border-color: #ddd;
-    border-width: 1px;
+    border: 1px solid #ddd;
     border-radius: 4px 4px 0 0;
     -webkit-box-shadow: none;
     box-shadow: none;
-    padding: 3px 3px 0;
-    height: 25px;
+    padding: 1px 1px 0;
+    height: 22px;
 }
 
 #ncube-tabs li a.ncube-tab-top-level {
@@ -26,9 +25,8 @@ body {
 }
 
 #ncube-tabs .dropdown-menu li a.active-view, #ncube-tabs .dropdown-menu li a.active-view:hover {
-    background-color: #337ab7;
+    background: #337ab7 none;
     color: white;
-    background-image: none;
 }
 
 #ncube-tabs li a.ncube-tab-top-level span.tab-text {
@@ -41,7 +39,11 @@ body {
 #tab-overflow {
     display: inline-block;
     width: 32px;
+}
 
+#tab-overflow button {
+    height: 20px;
+    margin-top: -4px;
 }
 
 #tab-overflow-text {
@@ -76,7 +78,7 @@ body {
 }
 
 .tab-menu li a {
-    height: 100%;
+    min-height: inherit;
 }
 
 .tab-menu li button {
@@ -128,7 +130,9 @@ body {
     border-radius: 0;
 }
 
-.top-buffer { margin-top:25px; }
+.top-buffer {
+    margin-top:25px;
+}
 
 a.ncube-selected:hover, .a.ncube-selected:active {
     color: darkgray;
@@ -282,8 +286,12 @@ div#restoreCubeModal ul.list-group
     display: inline-block;
 }
 
+.nav-tabs-short>li {
+    font-size: 13px;
+}
+
 .nav-tabs-short li a {
-    padding: 0px 5px;
+    padding: 0 5px;
 }
 
 #fadeMe1 {
@@ -478,8 +486,7 @@ div#restoreCubeModal ul.list-group
 .dropdown-submenu>a:after {
     content: " ";
     float: right;
-    border-color: transparent;
-    border-style: solid;
+    border: solid transparent;
     border-width: 5px 0 5px 5px;
     border-left-color: #000;
     margin-top: 5px;

@@ -831,7 +831,7 @@ var NCE = (function ($)
         var offset = button.offset();
         var maxWidth = offset.left + button.outerWidth();
         var dropdownWidth = largestText < maxWidth ? largestText : maxWidth;
-        var dropDownTop = offset.top + button.outerHeight();
+        var dropDownTop = offset.top + button.outerHeight() + parseInt(button.css('marginTop').replace('px',''));
         var dropDownLeft = maxWidth - dropdownWidth;
         dd.css({top: dropDownTop + 'px', left: dropDownLeft + 'px', width: dropdownWidth + 'px'});
     }
@@ -868,7 +868,7 @@ var NCE = (function ($)
                 }
 
                 var div = $('<div/>').prop({class:'tab-pane', id:pageId});
-                div.attr({style:'overflow:hidden;height:calc(100% - 25px);'});
+                div.attr({style:'overflow:hidden;height:calc(100% - 22px);'});
                 _mainTabPanel.append(div);
 
                 var iframeId = 'iframe_' + pageId;
