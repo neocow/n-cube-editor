@@ -1155,7 +1155,7 @@ var NCubeEditor2 = (function ($)
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
-                    td.innerHTML = cellData.value;
+                    buildExpressionLink(cellData.value, td);
                 }
             } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
