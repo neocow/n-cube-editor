@@ -35,7 +35,6 @@ var NCubeEditor2 = (function ($)
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
     var _clipboard = null;
     var _clipFormat = CLIP_NCE;
-    var _clipInd = COPY_IND_NCE;
     var _searchField = null;
     var _searchCoords = null;
     var _currentSearchResultIndex = null;
@@ -125,11 +124,9 @@ var NCubeEditor2 = (function ($)
                             e.preventDefault();
                             if (CLIP_NCE == _clipFormat) {
                                 _clipFormat = CLIP_EXCEL;
-                                _clipInd = COPY_IND_EXCEL;
                                 render();
                             } else {
                                 _clipFormat = CLIP_NCE;
-                                _clipInd = COPY_IND_NCE;
                                 render();
                             }
                         } else if (e.keyCode == KEY_CODES.V) {
@@ -966,7 +963,7 @@ var NCubeEditor2 = (function ($)
             return '';
         }
         if (index === 1) {
-            return _clipInd;
+            return '<span class="glyphicon glyphicon-copy" style="font-size:13px"></span>' + NBSP + _clipFormat;
         }
         return index - 1;
     };

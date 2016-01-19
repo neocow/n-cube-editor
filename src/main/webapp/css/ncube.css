@@ -156,6 +156,7 @@ div#editColumnsModal div.panel-group
     white-space: normal;
     line-height: 15px;
     color: #555;
+    padding: 0;
 }
 
 /* end coord bar and HOT */
