@@ -259,11 +259,15 @@ var NCE = (function ($)
         localStorage[SELECTED_CUBE] = _selectedCubeName;
         localStorage[ACTIVE_TAB] = _activeTab;
 
+        tab.find('a.' + CLASS_ACTIVE_VIEW).removeClass(CLASS_ACTIVE_VIEW);
+        tab.find('a').filter(function(){return $(this)[0].textContent.trim() === _activeTab.replace(PAGE_ID,'');}).addClass(CLASS_ACTIVE_VIEW);
+
+
         switchTabPane(_activeTab);
     }
 
     function deselectTab() {
-        _openTabList.find('.active').removeClass('active');
+        _openTabList.find('li.dropdown.active').removeClass('active');
     }
 
     function getTabImage(imgSrc) {
@@ -368,47 +372,49 @@ var NCE = (function ($)
         for (var menuIdx = 0, menuLen = _menuOptions.length; menuIdx < menuLen; menuIdx++) {
             (function() {
                 var menuOption = _menuOptions[menuIdx];
+                var pageId = menuOption.pageId;
                 var imgHtml = getTabImage(menuOption.imgSrc);
-                dd.append(
-                    $('<li/>').append(
-                        $('<a/>')
-                            .attr('href', '#')
-                            .html(imgHtml + NBSP + menuOption.key)
-                            .click(function (e) {
-                                clearError();
-                                _activeTab = menuOption.pageId;
-                                var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.CUBE], _activeTab];
-                                var cia2 = ci2.join(TAB_SEPARATOR);
-                                var tabIdx = getOpenCubeIndex(ci2);
-                                var isCtrlKey = e.metaKey || e.ctrlKey;
-                                if (isCtrlKey) {
-                                    e.stopImmediatePropagation();
-                                    e.preventDefault();
-                                }
 
-                                if (tabIdx > -1) { // already open
-                                    selectTab(ci2);
-                                } else {
-                                    if (isCtrlKey) { // open new tab
-                                        li.removeClass('open');
-                                        li.tooltip('hide');
-                                        addCurrentCubeTab();
-                                    } else { // use current tab
-                                        tabIdx = getOpenCubeIndex(cubeInfo);
-                                        cubeInfo[CUBE_INFO.TAB] = _activeTab;
-                                        _openCubes[tabIdx].cubeKey = cia2;
-                                        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
-                                        li.attr('id', cia2.replace(/\./g,'_'));
-                                        var img = link.find('img');
-                                        if (img.length > 0) {
-                                            img.attr('src', menuOption.imgSrc);
-                                        }
-                                    }
-                                    switchTabPane(_activeTab);
+                var anc = $('<a/>')
+                    .attr('href', '#')
+                    .html(imgHtml + NBSP + menuOption.key)
+                    .click(function (e) {
+                        clearError();
+                        _activeTab = pageId;
+                        var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.CUBE], _activeTab];
+                        var cia2 = ci2.join(TAB_SEPARATOR);
+                        var tabIdx = getOpenCubeIndex(ci2);
+                        var isCtrlKey = e.metaKey || e.ctrlKey;
+                        if (isCtrlKey) {
+                            e.stopImmediatePropagation();
+                            e.preventDefault();
+                        }
+
+                        if (tabIdx > -1) { // already open
+                            selectTab(ci2);
+                        } else {
+                            if (isCtrlKey) { // open new tab
+                                li.removeClass('open');
+                                li.tooltip('hide');
+                                addCurrentCubeTab();
+                            } else { // use current tab
+                                tabIdx = getOpenCubeIndex(cubeInfo);
+                                cubeInfo[CUBE_INFO.TAB] = _activeTab;
+                                _openCubes[tabIdx].cubeKey = cia2;
+                                localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+                                li.attr('id', cia2.replace(/\./g,'_'));
+                                var img = link.find('img');
+                                if (img.length > 0) {
+                                    img.attr('src', menuOption.imgSrc);
                                 }
-                            })
-                    )
-                );
+                                li.find('a').removeClass(CLASS_ACTIVE_VIEW);
+                                $(this).addClass(CLASS_ACTIVE_VIEW);
+                            }
+                            switchTabPane(_activeTab);
+                        }
+                    });
+
+                dd.append($('<li/>').append(anc));
             })();
         }
 

@@ -25,6 +25,12 @@ body {
     background-color: white;
 }
 
+#ncube-tabs .dropdown-menu li a.active-view, #ncube-tabs .dropdown-menu li a.active-view:hover {
+    background-color: #337ab7;
+    color: white;
+    background-image: none;
+}
+
 #ncube-tabs li a.ncube-tab-top-level span.tab-text {
     display: inline-block;
     width: 150px;
