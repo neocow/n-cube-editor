@@ -63,6 +63,7 @@ var NCE = (function ($)
     var _selectedStatus = localStorage[SELECTED_STATUS] || 'SNAPSHOT';
     var _errorId = null;
     var _activeTab = localStorage[ACTIVE_TAB];
+    var _defaultTab = null;
     var _searchNames = $('#cube-search');
     var _searchContent = $('#cube-search-content');
     var _cubeCount = $('#ncubeCount');
@@ -850,6 +851,7 @@ var NCE = (function ($)
                 _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
                 if (!_activeTab) {
                     _activeTab = pageId;
+                    _defaultTab = pageId;
                 }
 
                 var div = $('<div/>').prop({class:'tab-pane', id:pageId});
@@ -954,6 +956,7 @@ var NCE = (function ($)
             }
         }
         if (!found) {
+            _activeTab = _defaultTab;
             addCurrentCubeTab();
         }
     }
