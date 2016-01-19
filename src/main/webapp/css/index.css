@@ -22,15 +22,7 @@ body {
 }
 
 #ncube-tabs li.active a.ncube-tab-top-level {
-    background-color: white !important;
-}
-
-#ncube-tabs li a.ncube-tab-top-level.conflict, #tab-overflow li a.conflict{
-    background-color: #FFC7C7;
-}
-
-#ncube-tabs li a.ncube-tab-top-level.out-of-sync, #tab-overflow li a.out-of-sync {
-    background-color: #E5FFFF;
+    background-color: white;
 }
 
 #ncube-tabs li a.ncube-tab-top-level span.tab-text {
@@ -42,7 +34,7 @@ body {
 
 #tab-overflow {
     display: inline-block;
-    width: 31px;
+    width: 32px;
 
 }
 
@@ -53,7 +45,6 @@ body {
 
 .overflow-dropdown {
     position: fixed;
-    width: 500px;
 }
 
 .overflow-dropdown li a {
@@ -62,7 +53,7 @@ body {
 }
 
 .overflow-dropdown li a span.dropdown-tab-text {
-    width: 450px;
+    width: calc(100% - 30px);
     display: inline-block;
     text-overflow: ellipsis;
     overflow: hidden;

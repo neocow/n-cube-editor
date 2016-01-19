@@ -39,8 +39,8 @@ var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 var CLASS_CONFLICT = 'conflict';
 var CLASS_OUT_OF_SYNC = 'out-of-sync';
 
+var TAB_OVERFLOW_TEXT_PADDING = 55;
 var TAB_WIDTH = 217;
-var TAB_OVERFLOW_WIDTH = 31;
 var COORDINATE_BAR_SCROLL_AMOUNT = 40;
 var NONE = 'none';
 var NBSP = '&nbsp;';

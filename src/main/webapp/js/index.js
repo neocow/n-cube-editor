@@ -82,6 +82,7 @@ var NCE = (function ($)
     var _menuOptions = [];
     var _tabOverflow = $('#tab-overflow');
     var _branchNames = [];
+    var _hiddenCell = $('#test-cell');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -738,7 +739,7 @@ var NCE = (function ($)
 
     function calcMaxTabs() {
         var windowWidth = $('#ncube-tabs').width();
-        var availableWidth = windowWidth - TAB_OVERFLOW_WIDTH;
+        var availableWidth = windowWidth - _tabOverflow.outerWidth();
         return Math.floor(availableWidth / TAB_WIDTH);
     }
 
@@ -772,6 +773,8 @@ var NCE = (function ($)
     function buildTabOverflow(maxTabs, len) {
         $('#tab-overflow-text')[0].innerHTML = len - maxTabs;
         var dd = _tabOverflow.find('ul');
+        var largestText = TAB_WIDTH;
+
         for (var i = maxTabs; i < len; i++) {
             (function() {
                 var openCube = _openCubes[i];
@@ -785,13 +788,20 @@ var NCE = (function ($)
                     }
                 }
 
+                var tabText = cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ');
+                _hiddenCell[0].innerHTML = tabText;
+                var textWidth = _hiddenCell.width();
+                if (textWidth > largestText) {
+                    largestText = textWidth;
+                }
+
                 dd.append(
                     $('<li/>').append(
                         $('<a/>')
                             .attr('href', '#')
                             .addClass(openCube.status)
                             .html(getTabImage(imgSrc) + NBSP
-                                + '<span class="dropdown-tab-text">' + cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ') + '</span>'
+                                + '<span class="dropdown-tab-text">' + tabText + '</span>'
                                 + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
                             )
                             .click(function(e) {
@@ -809,11 +819,14 @@ var NCE = (function ($)
             })();
         }
 
+        largestText += TAB_OVERFLOW_TEXT_PADDING;
         var button = _tabOverflow.find('button');
         var offset = button.offset();
+        var maxWidth = offset.left + button.outerWidth();
+        var dropdownWidth = largestText < maxWidth ? largestText : maxWidth;
         var dropDownTop = offset.top + button.outerHeight();
-        var dropDownLeft = offset.left + button.outerWidth() - dd.outerWidth();
-        dd.css({top: dropDownTop + 'px', left: dropDownLeft + 'px'});
+        var dropDownLeft = maxWidth - dropdownWidth;
+        dd.css({top: dropDownTop + 'px', left: dropDownLeft + 'px', width: dropdownWidth + 'px'});
     }
 
     function buildMenu()
