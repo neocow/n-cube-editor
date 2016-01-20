@@ -19,6 +19,10 @@ var TAB_SEPARATOR = '~';
 var MIN_COL_WIDTH = 50;
 var MAX_COL_WIDTH = 600;
 
+var CONFIG_TITLE = '~Title';
+var CONFIG_DEFAULT_TAB = '~DefaultTab';
+var PAGE_ID = 'PageId';
+
 var AXIS_DEFAULT = '002147483647';
 var DEFAULT_TEXT = 'Default';
 
@@ -38,9 +42,10 @@ var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 
 var CLASS_CONFLICT = 'conflict';
 var CLASS_OUT_OF_SYNC = 'out-of-sync';
+var CLASS_ACTIVE_VIEW = 'active-view';
 
+var TAB_OVERFLOW_TEXT_PADDING = 55;
 var TAB_WIDTH = 217;
-var TAB_OVERFLOW_WIDTH = 31;
 var COORDINATE_BAR_SCROLL_AMOUNT = 40;
 var NONE = 'none';
 var NBSP = '&nbsp;';

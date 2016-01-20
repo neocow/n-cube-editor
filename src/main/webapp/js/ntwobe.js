@@ -120,15 +120,7 @@ var NCubeEditor2 = (function ($)
                                 excelCopy();
                             }
                         } else if (e.keyCode == KEY_CODES.K) {
-                            // Toggle clipboard format to copy (NCE versus Excel)
-                            e.preventDefault();
-                            if (CLIP_NCE == _clipFormat) {
-                                _clipFormat = CLIP_EXCEL;
-                                render();
-                            } else {
-                                _clipFormat = CLIP_NCE;
-                                render();
-                            }
+                            toggleClipFormat(e);
                         } else if (e.keyCode == KEY_CODES.V) {
                             // Ctrl-V
                             // Point focus to hidden text area so that it will receive the pasted content
@@ -154,6 +146,14 @@ var NCubeEditor2 = (function ($)
         setCoordinateBarListeners();
         buildCubeMap();
         setUtilityBarDisplay();
+    };
+
+    var toggleClipFormat = function(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        _clipFormat = CLIP_NCE === _clipFormat ? CLIP_EXCEL : CLIP_NCE;
+        render();
     };
 
     var setUtilityBarDisplay = function() {
@@ -245,6 +245,7 @@ var NCubeEditor2 = (function ($)
         var col = axes.length == 1 ? 1 : colOffset;
         hot.selectCell(2, col);
         hot.render();
+        setClipFormatToggleListener();
     };
 
     var setSearchHelperText = function() {
@@ -1002,22 +1003,7 @@ var NCubeEditor2 = (function ($)
                 return {renderer:categoryRenderer};
             },
             afterRender: function() {
-                // set dropdown location on buttons
-                $('.dropdown-toggle').click(function () {
-                    var button = $(this);
-                    var offset = button.offset();
-                    var dropDownTop = offset.top + button.outerHeight();
-                    var dropDownLeft = offset.left;
-
-                    var modal = button.closest('.modal-content');
-                    if (modal[0]) {
-                        var modalOffset = modal.offset();
-                        dropDownTop -= modalOffset.top;
-                        dropDownLeft -= modalOffset.left;
-                    }
-
-                    button.parent().find('ul').css({top: dropDownTop + 'px', left: dropDownLeft + 'px'});
-                });
+                setButtonDropdownLocations();
                 colorAxisButtons();
             },
             afterSelection: function(r, c, r2, c2) {
@@ -1050,6 +1036,30 @@ var NCubeEditor2 = (function ($)
                 resetCoordinateBar(display);
             }
         };
+    };
+
+    var setClipFormatToggleListener = function() {
+        $('#hot-container > div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(2) > th').click(function(e) {
+            toggleClipFormat(e);
+        });
+    };
+
+    var setButtonDropdownLocations = function() {
+        $('.dropdown-toggle').click(function () {
+            var button = $(this);
+            var offset = button.offset();
+            var dropDownTop = offset.top + button.outerHeight();
+            var dropDownLeft = offset.left;
+
+            var modal = button.closest('.modal-content');
+            if (modal[0]) {
+                var modalOffset = modal.offset();
+                dropDownTop -= modalOffset.top;
+                dropDownLeft -= modalOffset.left;
+            }
+
+            button.parent().find('ul').css({top: dropDownTop + 'px', left: dropDownLeft + 'px'});
+        });
     };
 
     var categoryRenderer = function(instance, td, row, col, prop, value, cellProperties) {
@@ -1145,7 +1155,7 @@ var NCubeEditor2 = (function ($)
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
-                    td.innerHTML = cellData.value;
+                    buildExpressionLink(cellData.value, td);
                 }
             } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
