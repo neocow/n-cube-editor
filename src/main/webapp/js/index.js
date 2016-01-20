@@ -305,6 +305,7 @@ var NCE = (function ($)
             li.tooltip('hide');
             li.find('button').remove();
             li.find('input').remove();
+            $('div.dropdown-backdrop').hide();
         }
 
         li.addClass('active');
@@ -396,6 +397,9 @@ var NCE = (function ($)
                         }
 
                         if (tabIdx > -1) { // already open
+                            e.preventDefault();
+                            e.stopPropagation();
+                            closeTab();
                             selectTab(ci2);
                         } else {
                             if (isCtrlKey) { // open new tab
