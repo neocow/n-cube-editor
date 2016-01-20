@@ -63,6 +63,10 @@ var NCE = (function ($)
     var _selectedStatus = localStorage[SELECTED_STATUS] || 'SNAPSHOT';
     var _errorId = null;
     var _activeTab = localStorage[ACTIVE_TAB];
+    if (!_activeTab)
+    {
+        _activeTab = 'n-cube' + PAGE_ID;
+    }
     var _defaultTab = null;
     var _searchNames = $('#cube-search');
     var _searchContent = $('#cube-search-content');
@@ -257,11 +261,10 @@ var NCE = (function ($)
         localStorage[SELECTED_STATUS] = _selectedStatus;
         localStorage[SELECTED_BRANCH] = _selectedBranch;
         localStorage[SELECTED_CUBE] = _selectedCubeName;
-        localStorage[ACTIVE_TAB] = _activeTab;
+        if (_activeTab) localStorage[ACTIVE_TAB] = _activeTab;
 
         tab.find('a.' + CLASS_ACTIVE_VIEW).removeClass(CLASS_ACTIVE_VIEW);
         tab.find('a').filter(function(){return $(this)[0].textContent.trim() === _activeTab.replace(PAGE_ID,'');}).addClass(CLASS_ACTIVE_VIEW);
-
 
         switchTabPane(_activeTab);
     }
