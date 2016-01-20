@@ -807,7 +807,7 @@ var NCE = (function ($)
                         $('<a/>')
                             .attr('href', '#')
                             .addClass(openCube.status)
-                            .html(getTabImage(imgSrc) + NBSP
+                            .html(getTabImage(imgSrc)
                                 + '<span class="dropdown-tab-text">' + tabText + '</span>'
                                 + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
                             )
