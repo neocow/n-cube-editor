@@ -807,7 +807,7 @@ var NCE = (function ($)
                         $('<a/>')
                             .attr('href', '#')
                             .addClass(openCube.status)
-                            .html(getTabImage(imgSrc) + NBSP
+                            .html(getTabImage(imgSrc)
                                 + '<span class="dropdown-tab-text">' + tabText + '</span>'
                                 + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
                             )
@@ -868,7 +868,8 @@ var NCE = (function ($)
                 }
 
                 var div = $('<div/>').prop({class:'tab-pane', id:pageId});
-                div.attr({style:'overflow:hidden;height:calc(100% - 22px);'});
+                var tabHeight = $('#ncube-tabs').outerHeight();
+                div.attr({style:'overflow:hidden;height:calc(100% - ' + tabHeight + 'px);'});
                 _mainTabPanel.append(div);
 
                 var iframeId = 'iframe_' + pageId;
