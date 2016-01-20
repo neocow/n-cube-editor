@@ -963,8 +963,9 @@ var NCubeEditor2 = (function ($)
         {
             return '';
         }
+        var text = _clipFormat === CLIP_NCE ? 'NCE' : 'Excel';
         if (index === 1) {
-            return '<span class="glyphicon glyphicon-copy" style="font-size:13px"></span>' + NBSP + _clipFormat;
+            return '<span class="glyphicon glyphicon-copy" style="font-size:13px"></span>' + NBSP + text;
         }
         return index - 1;
     };
