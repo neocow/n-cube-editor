@@ -305,6 +305,7 @@ var NCE = (function ($)
             li.tooltip('hide');
             li.find('button').remove();
             li.find('input').remove();
+            $('div.dropdown-backdrop').hide();
         }
 
         li.addClass('active');
