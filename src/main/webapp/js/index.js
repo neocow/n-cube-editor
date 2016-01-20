@@ -261,10 +261,16 @@ var NCE = (function ($)
         localStorage[SELECTED_STATUS] = _selectedStatus;
         localStorage[SELECTED_BRANCH] = _selectedBranch;
         localStorage[SELECTED_CUBE] = _selectedCubeName;
-        if (_activeTab) localStorage[ACTIVE_TAB] = _activeTab;
-
+        if (!_activeTab)
+        {
+            _activeTab = 'n-cube' + PAGE_ID;
+        }
+        localStorage[ACTIVE_TAB] = _activeTab;
         tab.find('a.' + CLASS_ACTIVE_VIEW).removeClass(CLASS_ACTIVE_VIEW);
-        tab.find('a').filter(function(){return $(this)[0].textContent.trim() === _activeTab.replace(PAGE_ID,'');}).addClass(CLASS_ACTIVE_VIEW);
+        tab.find('a').filter(function()
+        {
+            return $(this)[0].textContent.trim() === _activeTab.replace(PAGE_ID,'');
+        }).addClass(CLASS_ACTIVE_VIEW);
 
         switchTabPane(_activeTab);
     }
@@ -704,7 +710,8 @@ var NCE = (function ($)
         return branchesUl;
     }
 
-    function switchTabPane(pageId) {
+    function switchTabPane(pageId)
+    {
         $('.tab-pane').removeClass('active');
         if (pageId) {
             $('#' + pageId).addClass('active');
