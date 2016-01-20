@@ -735,7 +735,7 @@ class NCubeController extends BaseController
         }
         catch(Exception e)
         {
-            fail(e)
+            markRequestFailed(getTestCauses(e))
             ThreadAwarePrintStream.getContent()
             ThreadAwarePrintStreamErr.getContent()
             return null
