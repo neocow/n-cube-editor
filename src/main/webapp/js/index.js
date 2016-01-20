@@ -62,10 +62,10 @@ var NCE = (function ($)
     }
     var _selectedStatus = localStorage[SELECTED_STATUS] || 'SNAPSHOT';
     var _errorId = null;
-    var _activeTab = localStorage[ACTIVE_TAB];
-    if (!_activeTab)
+    var _activeTabViewType = localStorage[ACTIVE_TAB_VIEW_TYPE];
+    if (!_activeTabViewType)
     {
-        _activeTab = 'n-cube' + PAGE_ID;
+        _activeTabViewType = 'n-cube' + PAGE_ID;
     }
     var _defaultTab = null;
     var _searchNames = $('#cube-search');
@@ -154,7 +154,7 @@ var NCE = (function ($)
     }
 
     function addCurrentCubeTab() {
-        var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab];
+        var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
         _openCubes.unshift({cubeKey:cubeInfo.join(TAB_SEPARATOR)});
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
         buildTabs();
@@ -177,8 +177,8 @@ var NCE = (function ($)
             && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
             && _selectedStatus === cubeInfo[CUBE_INFO.STATUS]
             && _selectedBranch === cubeInfo[CUBE_INFO.BRANCH]
-            && _selectedCubeName === cubeInfo[CUBE_INFO.CUBE]
-            && _activeTab === cubeInfo[CUBE_INFO.TAB]) {
+            && _selectedCubeName === cubeInfo[CUBE_INFO.NAME]
+            && getActiveTabViewType() === cubeInfo[CUBE_INFO.TAB_VIEW]) {
             if (_openCubes.length > 0) {
                 selectTab(_openCubes[0].cubeKey.split(TAB_SEPARATOR));
                 loadCube();
@@ -239,8 +239,8 @@ var NCE = (function ($)
         _selectedVersion = cubeInfo[CUBE_INFO.VERSION];
         _selectedStatus = cubeInfo[CUBE_INFO.STATUS];
         _selectedBranch = cubeInfo[CUBE_INFO.BRANCH];
-        _selectedCubeName = cubeInfo[CUBE_INFO.CUBE];
-        _activeTab = cubeInfo[CUBE_INFO.TAB];
+        _selectedCubeName = cubeInfo[CUBE_INFO.NAME];
+        setActiveTabViewType(cubeInfo[CUBE_INFO.TAB_VIEW]);
     }
 
     function selectTab(cubeInfo) {
@@ -249,9 +249,9 @@ var NCE = (function ($)
         if (tab.length < 1) {
             tab = _openTabList.children().first();
             var id = tab.prop('id');
-            cubeInfo[CUBE_INFO.TAB] = id.substring(id.lastIndexOf('~') + 1);
+            cubeInfo[CUBE_INFO.TAB_VIEW] = id.substring(id.lastIndexOf('~') + 1);
             id = id.substring(0, id.lastIndexOf('~'));
-            cubeInfo[CUBE_INFO.CUBE] = id.substring(id.lastIndexOf('~') + 1);
+            cubeInfo[CUBE_INFO.NAME] = id.substring(id.lastIndexOf('~') + 1);
         }
         tab.addClass('active');
 
@@ -261,18 +261,14 @@ var NCE = (function ($)
         localStorage[SELECTED_STATUS] = _selectedStatus;
         localStorage[SELECTED_BRANCH] = _selectedBranch;
         localStorage[SELECTED_CUBE] = _selectedCubeName;
-        if (!_activeTab)
-        {
-            _activeTab = 'n-cube' + PAGE_ID;
-        }
-        localStorage[ACTIVE_TAB] = _activeTab;
+        localStorage[ACTIVE_TAB_VIEW_TYPE] = getActiveTabViewType();
         tab.find('a.' + CLASS_ACTIVE_VIEW).removeClass(CLASS_ACTIVE_VIEW);
         tab.find('a').filter(function()
         {
-            return $(this)[0].textContent.trim() === _activeTab.replace(PAGE_ID,'');
+            return $(this)[0].textContent.trim() === getActiveTabViewType().replace(PAGE_ID,'');
         }).addClass(CLASS_ACTIVE_VIEW);
 
-        switchTabPane(_activeTab);
+        switchTabPane(getActiveTabViewType());
     }
 
     function deselectTab() {
@@ -288,7 +284,7 @@ var NCE = (function ($)
         var imgSrc;
         for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
             var opt = _menuOptions[x];
-            if (opt.pageId === cubeInfo[CUBE_INFO.TAB]) {
+            if (opt.pageId === cubeInfo[CUBE_INFO.TAB_VIEW]) {
                 imgSrc = opt.imgSrc;
                 break;
             }
@@ -298,7 +294,7 @@ var NCE = (function ($)
             .addClass('dropdown-toggle ncube-tab-top-level')
             .addClass(status)
             .html(getTabImage(imgSrc)
-                + '<span class="tab-text">' + cubeInfo[CUBE_INFO.CUBE] + '</span>'
+                + '<span class="tab-text">' + cubeInfo[CUBE_INFO.NAME] + '</span>'
                 + '<span class="click-space"><span class="big-caret"></span></span>'
                 + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
             );
@@ -320,7 +316,7 @@ var NCE = (function ($)
             animate: true,
             delay: 250,
             container: 'body',
-            title: cubeInfo[CUBE_INFO.APP] + ' - ' + cubeInfo[CUBE_INFO.VERSION] + ' - ' + cubeInfo[CUBE_INFO.STATUS] + ' - ' + cubeInfo[CUBE_INFO.BRANCH] + ' - ' + cubeInfo[CUBE_INFO.CUBE],
+            title: cubeInfo[CUBE_INFO.APP] + ' - ' + cubeInfo[CUBE_INFO.VERSION] + ' - ' + cubeInfo[CUBE_INFO.STATUS] + ' - ' + cubeInfo[CUBE_INFO.BRANCH] + ' - ' + cubeInfo[CUBE_INFO.NAME],
             template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
         });
         li.click(function(e) {
@@ -351,8 +347,8 @@ var NCE = (function ($)
                 var verChanged = _selectedVersion !== cubeInfo[CUBE_INFO.VERSION];
                 var staChanged = _selectedStatus !== cubeInfo[CUBE_INFO.STATUS];
                 var braChanged = _selectedBranch !== cubeInfo[CUBE_INFO.BRANCH];
-                var cubChanged = _selectedCubeName !== cubeInfo[CUBE_INFO.CUBE];
-                var tabChanged = _activeTab !== cubeInfo[CUBE_INFO.TAB];
+                var cubChanged = _selectedCubeName !== cubeInfo[CUBE_INFO.NAME];
+                var tabChanged = getActiveTabViewType() !== cubeInfo[CUBE_INFO.TAB_VIEW];
 
                 if (appChanged || verChanged || staChanged || braChanged || cubChanged || tabChanged) {
                     makeCubeInfoActive(cubeInfo);
@@ -389,8 +385,8 @@ var NCE = (function ($)
                     .html(imgHtml + NBSP + menuOption.key)
                     .click(function (e) {
                         clearError();
-                        _activeTab = pageId;
-                        var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.CUBE], _activeTab];
+                        setActiveTabViewType(pageId);
+                        var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType()];
                         var cia2 = ci2.join(TAB_SEPARATOR);
                         var tabIdx = getOpenCubeIndex(ci2);
                         var isCtrlKey = e.metaKey || e.ctrlKey;
@@ -408,7 +404,7 @@ var NCE = (function ($)
                                 addCurrentCubeTab();
                             } else { // use current tab
                                 tabIdx = getOpenCubeIndex(cubeInfo);
-                                cubeInfo[CUBE_INFO.TAB] = _activeTab;
+                                cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
                                 _openCubes[tabIdx].cubeKey = cia2;
                                 localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
                                 li.attr('id', cia2.replace(/\./g,'_'));
@@ -419,7 +415,7 @@ var NCE = (function ($)
                                 li.find('a').removeClass(CLASS_ACTIVE_VIEW);
                                 $(this).addClass(CLASS_ACTIVE_VIEW);
                             }
-                            switchTabPane(_activeTab);
+                            switchTabPane(getActiveTabViewType());
                         }
                     });
 
@@ -438,7 +434,7 @@ var NCE = (function ($)
                     .html('Compare')
             ).append(
                 createBranchesUl(function(branchName) {
-                    var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                    var infoDto = _cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()];
                     var leftInfoDto = $.extend(true, {}, infoDto);
                     leftInfoDto.branch = branchName;
                     diffCubes(leftInfoDto, infoDto, infoDto.name);
@@ -495,7 +491,7 @@ var NCE = (function ($)
                                     .html('Confirm')
                                     .click(function (e) {
                                         closeTab();
-                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()];
                                         callCommit([infoDto], true);
                                     })
                             );
@@ -525,7 +521,7 @@ var NCE = (function ($)
                                     .html('Confirm')
                                     .click(function (e) {
                                         closeTab();
-                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()];
                                         callRollback([infoDto]);
                                     })
                             );
@@ -576,7 +572,7 @@ var NCE = (function ($)
                                     .html('Confirm')
                                     .click(function (e) {
                                         closeTab();
-                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.CUBE].toLowerCase()];
+                                        var infoDto = _cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()];
                                         callDelete([infoDto.name]);
                                     })
                             );
@@ -609,7 +605,7 @@ var NCE = (function ($)
                         var inputs = parent.find('input');
                         if (inputs.length === 0) {
                             var newNameInput = $('<input/>')
-                                .prop({type: 'text', placeholder: cubeInfo[CUBE_INFO.CUBE]})
+                                .prop({type: 'text', placeholder: cubeInfo[CUBE_INFO.NAME]})
                                 .addClass('form-control')
                                 .click(function (ie) {
                                     ie.preventDefault();
@@ -722,7 +718,7 @@ var NCE = (function ($)
                     var cw = frame.contentWindow;
                     if (cw.tabActivated !== undefined) {
                         cw.tabActivated(buildAppState());
-                        localStorage[ACTIVE_TAB] = pageId;
+                        localStorage[ACTIVE_TAB_VIEW_TYPE] = pageId;
                     }
                 }
             } catch (e) {
@@ -767,7 +763,7 @@ var NCE = (function ($)
         if (len > 0) {
             var maxTabs = calcMaxTabs();
 
-            var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, _activeTab];
+            var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
             var idx = getOpenCubeIndex(cubeInfo);
             if (idx >= maxTabs) { // if selected tab is now in overflow, bring to front
                 var temp = _openCubes.splice(idx, 1);
@@ -799,13 +795,13 @@ var NCE = (function ($)
                 var imgSrc;
                 for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
                     var opt = _menuOptions[x];
-                    if (opt.pageId === cubeInfo[CUBE_INFO.TAB]) {
+                    if (opt.pageId === cubeInfo[CUBE_INFO.TAB_VIEW]) {
                         imgSrc = opt.imgSrc;
                         break;
                     }
                 }
 
-                var tabText = cubeInfo.slice(0, CUBE_INFO.TAB).join(' - ');
+                var tabText = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - ');
                 _hiddenCell[0].innerHTML = tabText;
                 var textWidth = _hiddenCell.width();
                 if (textWidth > largestText) {
@@ -859,8 +855,8 @@ var NCE = (function ($)
         _defaultTab = menu[CONFIG_DEFAULT_TAB];
         if (_defaultTab) {
             _defaultTab = _defaultTab.replace(/\s/g,'_') + PAGE_ID;
-            if (!_activeTab) {
-                _activeTab = _defaultTab;
+            if (!_activeTabViewType) {
+                setActiveTabViewType(_defaultTab);
             }
         }
         var ul = $('#menuList');
@@ -872,8 +868,8 @@ var NCE = (function ($)
             {
                 var pageId = key.replace(/\s/g,'_') + PAGE_ID;
                 _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
-                if (!_activeTab) {
-                    _activeTab = pageId;
+                if (!_activeTabViewType) {
+                    setActiveTabViewType(pageId);
                     _defaultTab = pageId;
                 }
 
@@ -980,7 +976,7 @@ var NCE = (function ($)
             }
         }
         if (!found) {
-            _activeTab = _defaultTab;
+            setActiveTabViewType(_defaultTab);
             addCurrentCubeTab();
         }
     }
@@ -1775,12 +1771,12 @@ var NCE = (function ($)
                 delete _cubeList[cubeName.toLowerCase()];
                 if (_selectedCubeName === cubeName) {
                     _selectedCubeName = null;
-                    _activeTab = null;
+                    _activeTabViewType = null;
                     delete localStorage[SELECTED_CUBE];
-                    delete localStorage[ACTIVE_TAB];
+                    delete localStorage[ACTIVE_TAB_VIEW_TYPE];
                 }
 
-                cubeInfo[CUBE_INFO.CUBE] = cubeName;
+                cubeInfo[CUBE_INFO.NAME] = cubeName;
 
                 var cis = cubeInfo.join(TAB_SEPARATOR);
                 for (var x = _openCubes.length - 1; x >= 0; x--) {
@@ -2056,7 +2052,7 @@ var NCE = (function ($)
             oldCubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
             oldCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
             oldCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
-            oldCubeInfo[CUBE_INFO.CUBE] = _selectedCubeName;
+            oldCubeInfo[CUBE_INFO.NAME] = _selectedCubeName;
             var oldCis = oldCubeInfo.join(TAB_SEPARATOR);
 
             var newCubeInfo = [];
@@ -2064,8 +2060,8 @@ var NCE = (function ($)
             newCubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
             newCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
             newCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
-            newCubeInfo[CUBE_INFO.CUBE] = newName;
-            newCubeInfo[CUBE_INFO.TAB] = _activeTab;
+            newCubeInfo[CUBE_INFO.NAME] = newName;
+            newCubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
             var newCis = newCubeInfo.join(TAB_SEPARATOR);
             for (var i = 0, len = _openCubes.length; i < len; i++) {
                 var openCube = _openCubes[i];
@@ -3197,7 +3193,7 @@ var NCE = (function ($)
         var obj = {};
         for (var i = 0, len = _openCubes.length; i < len; i++) {
             var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
-            var key = cubeInfo.slice(0, CUBE_INFO.TAB).join(TAB_SEPARATOR);
+            var key = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(TAB_SEPARATOR);
             obj[key] = '';
         }
 
@@ -3289,6 +3285,21 @@ var NCE = (function ($)
     var getSelectedStatus = function()
     {
         return _selectedStatus;
+    };
+
+    var setActiveTabViewType = function(viewType)
+    {
+        _activeTabViewType = viewType;
+        return getActiveTabViewType();
+    };
+
+    var getActiveTabViewType = function()
+    {
+        if (!_activeTabViewType)
+        {
+            _activeTabViewType = 'n-cube' + PAGE_ID;
+        }
+        return _activeTabViewType;
     };
 
     // API
