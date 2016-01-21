@@ -343,6 +343,7 @@ var NCE = (function ($)
                         .attr('data-toggle', '')
                         .tab('show');
                 }
+                saveState();
 
                 var appChanged = _selectedApp !== cubeInfo[CUBE_INFO.APP];
                 var verChanged = _selectedVersion !== cubeInfo[CUBE_INFO.VERSION];
@@ -953,6 +954,7 @@ var NCE = (function ($)
         if (!cubeName) {
             return;
         }
+        saveState();
         _selectedCubeName = getProperCubeName(cubeName);
         localStorage[SELECTED_CUBE] = cubeName;
 
