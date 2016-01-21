@@ -107,17 +107,18 @@ var NCubeEditor2 = (function ($)
                             _searchField.focus();
                         }
                         else if (e.keyCode == KEY_CODES.X) {
-                            editCutCopy(true);  // true = isCut
+                            if (CLIP_NCE == _clipFormat) {
+                                editCutCopy(true);  // true = isCut
+                            } else {
+                                excelCutCopy(true);
+                            }
                         }
                         else if (e.keyCode == KEY_CODES.C)
                         {
-                            // Ctrl-C or Ctrl-X
                             if (CLIP_NCE == _clipFormat) {
-                                // NCE
                                 editCutCopy(false); // false = copy
                             } else {
-                                // Excel
-                                excelCopy();
+                                excelCutCopy(false);
                             }
                         } else if (e.keyCode == KEY_CODES.K) {
                             toggleClipFormat(e);
@@ -1567,16 +1568,25 @@ var NCubeEditor2 = (function ($)
         };
     };
 
-    var excelCopy = function()
+    var excelCutCopy = function(isCut)
     {
+        if (isCut && !nce.ensureModifiable('Cannot cut / copy cells.')) {
+            return;
+        }
+
         var clipData = '';
         var range = getSelectedCellRange();
+        var cells = [];
 
         for (var row = range.startRow; row <= range.endRow; row++)
         {
             for (var col = range.startCol; col <= range.endCol; col++)
             {
                 var content = getTextCellValue(row, col);
+                var cellId = getCellId(row, col);
+                if (cellId) {
+                    cells.push(cellId.split('_'));
+                }
 
                 if (content.indexOf('\n') > -1) {
                     // Must quote if newline (and double any quotes inside)
@@ -1592,7 +1602,18 @@ var NCubeEditor2 = (function ($)
                     clipData += '\t';
                 }
             }
+            cells.push(null);
             clipData += '\n';
+        }
+        cells.splice(cells.length - 1, 1);
+
+        if (isCut) {
+            var result = nce.call("ncubeController.copyCells", [nce.getAppId(), nce.getSelectedCubeName(), cells, true]);
+            if (!result.status) {
+                nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
+                return;
+            }
+            reload();
         }
 
         _clipboard.val(clipData);
@@ -1624,7 +1645,8 @@ var NCubeEditor2 = (function ($)
         if (!result.status) {
             nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
             return;
-        } else if (isCut) {
+        }
+        if (isCut) {
             reload();
         }
 
