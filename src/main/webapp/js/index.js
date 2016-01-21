@@ -343,7 +343,6 @@ var NCE = (function ($)
                         .attr('data-toggle', '')
                         .tab('show');
                 }
-                saveState();
 
                 var appChanged = _selectedApp !== cubeInfo[CUBE_INFO.APP];
                 var verChanged = _selectedVersion !== cubeInfo[CUBE_INFO.VERSION];
@@ -369,6 +368,7 @@ var NCE = (function ($)
                         loadNCubeListView();
                     }
                     selectTab(cubeInfo);
+                    saveState();
                 }
             }
         });
@@ -542,15 +542,9 @@ var NCE = (function ($)
                     .prop({href:'#', tabindex:'-1'})
                     .html('Update')
                 ).append(
-                    $('<ul/>').addClass('dropdown-menu')
-                        .append(
-                        $('<li/>').append(
-                            $('<a/>').attr('href','#').html('HEAD')
-                                .click(function() {
-                                    callUpdate('HEAD');
-                                })
-                        )
-                    )
+                    createBranchesUl(function(branchName) {
+                        callUpdate(branchName);
+                    })
             )
         ).append(
             $('<div/>')
@@ -954,7 +948,6 @@ var NCE = (function ($)
         if (!cubeName) {
             return;
         }
-        saveState();
         _selectedCubeName = getProperCubeName(cubeName);
         localStorage[SELECTED_CUBE] = cubeName;
 
@@ -985,6 +978,7 @@ var NCE = (function ($)
             setActiveTabViewType(_defaultTab);
             addCurrentCubeTab();
         }
+        saveState();
     }
 
     function runSearch()
