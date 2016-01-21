@@ -180,8 +180,27 @@ var NCE = (function ($)
             && _selectedCubeName === cubeInfo[CUBE_INFO.NAME]
             && getActiveTabViewType() === cubeInfo[CUBE_INFO.TAB_VIEW]) {
             if (_openCubes.length > 0) {
-                selectTab(_openCubes[0].cubeKey.split(TAB_SEPARATOR));
-                loadCube();
+                var newCubeInfo = _openCubes[0].cubeKey.split(TAB_SEPARATOR);
+                var appChanged = _selectedApp !== newCubeInfo[CUBE_INFO.APP];
+                var verChanged = _selectedVersion !== newCubeInfo[CUBE_INFO.VERSION];
+                var staChanged = _selectedStatus !== newCubeInfo[CUBE_INFO.STATUS];
+                var braChanged = _selectedBranch !== newCubeInfo[CUBE_INFO.BRANCH];
+                makeCubeInfoActive(newCubeInfo);
+
+                if (appChanged || verChanged || staChanged || braChanged) {
+                    if (appChanged || verChanged || staChanged) {
+                        if (appChanged) {
+                            loadAppNames();
+                            loadAppListView();
+                        }
+                        loadVersions();
+                        loadStatusListView();
+                        loadVersionListView();
+                    }
+                    showActiveBranch();
+                    loadNCubes();
+                    loadNCubeListView();
+                }
             } else {
                 switchTabPane(null);
             }
