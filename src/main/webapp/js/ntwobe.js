@@ -1156,7 +1156,7 @@ var NCubeEditor2 = (function ($)
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
-                    buildExpressionLink(cellData.value, td);
+                    buildExpressionLink(cellData.value + '', td);
                 }
             } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
@@ -1246,12 +1246,11 @@ var NCubeEditor2 = (function ($)
                 $(element).find('a').each(function () {
                     var link = this;
                     $(link).click(function (e) {
-                        e.preventDefault();
                         var cubeName = link.textContent.toLowerCase();
-
                         for (var i = 0, len = prefixes.length; i < len; i++) {
-                            if (cubeMap[prefixes[i] + cubeName]) {
-                                nce.selectCubeByName(nce.getProperCubeName(prefixes[i] + link.textContent));
+                            var fullName = prefixes[i] + cubeName;
+                            if (cubeMap[fullName]) {
+                                nce.selectCubeByName(nce.getProperCubeName(fullName));
                                 break;
                             }
                         }
@@ -1260,6 +1259,8 @@ var NCubeEditor2 = (function ($)
             } else {
                 element.innerHTML = url;
             }
+        } else {
+            element.innerHTML = url;
         }
     };
 
