@@ -2510,7 +2510,7 @@ var NCE = (function ($)
                 reloadCube();
                 runSearch();
             }, PROGRESS_DELAY);
-            showNote('Closing merge window, reloading cubes...', 'Note', 2000);
+            showNote('Closing merge window, reloading cubes...', 'Note', 1000);
         });
     }
 
@@ -2787,7 +2787,7 @@ var NCE = (function ($)
             reloadCube();
             runSearch();
 
-            var note = 'Successfully committed ' + changedDtos.length + ' cube(s).<hr class="hr-small"/>';
+            var note = 'Successfully committed ' + result.data.length + ' cube(s).<hr class="hr-small"/>';
             note += '<b style="color:cornflowerblue">Committed cubes:</b><br>';
             $.each(result.data, function(idx, infoDto)
             {
