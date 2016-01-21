@@ -181,32 +181,36 @@ var NCE = (function ($)
             && getActiveTabViewType() === cubeInfo[CUBE_INFO.TAB_VIEW]) {
             if (_openCubes.length > 0) {
                 var newCubeInfo = _openCubes[0].cubeKey.split(TAB_SEPARATOR);
-                var appChanged = _selectedApp !== newCubeInfo[CUBE_INFO.APP];
-                var verChanged = _selectedVersion !== newCubeInfo[CUBE_INFO.VERSION];
-                var staChanged = _selectedStatus !== newCubeInfo[CUBE_INFO.STATUS];
-                var braChanged = _selectedBranch !== newCubeInfo[CUBE_INFO.BRANCH];
-                makeCubeInfoActive(newCubeInfo);
-
-                if (appChanged || verChanged || staChanged || braChanged) {
-                    if (appChanged || verChanged || staChanged) {
-                        if (appChanged) {
-                            loadAppNames();
-                            loadAppListView();
-                        }
-                        loadVersions();
-                        loadStatusListView();
-                        loadVersionListView();
-                    }
-                    showActiveBranch();
-                    loadNCubes();
-                    loadNCubeListView();
-                }
+                reloadEnvIfNeeded(newCubeInfo);
             } else {
                 switchTabPane(null);
             }
         }
 
         buildTabs();
+    }
+
+    function reloadEnvIfNeeded(cubeInfo) {
+        var appChanged = _selectedApp !== cubeInfo[CUBE_INFO.APP];
+        var verChanged = _selectedVersion !== cubeInfo[CUBE_INFO.VERSION];
+        var staChanged = _selectedStatus !== cubeInfo[CUBE_INFO.STATUS];
+        var braChanged = _selectedBranch !== cubeInfo[CUBE_INFO.BRANCH];
+        makeCubeInfoActive(cubeInfo);
+
+        if (appChanged || verChanged || staChanged || braChanged) {
+            if (appChanged || verChanged || staChanged) {
+                if (appChanged) {
+                    loadAppNames();
+                    loadAppListView();
+                }
+                loadVersions();
+                loadStatusListView();
+                loadVersionListView();
+            }
+            showActiveBranch();
+            loadNCubes();
+            loadNCubeListView();
+        }
     }
 
     function removeAllTabs() {
@@ -363,29 +367,11 @@ var NCE = (function ($)
                         .tab('show');
                 }
 
-                var appChanged = _selectedApp !== cubeInfo[CUBE_INFO.APP];
-                var verChanged = _selectedVersion !== cubeInfo[CUBE_INFO.VERSION];
-                var staChanged = _selectedStatus !== cubeInfo[CUBE_INFO.STATUS];
-                var braChanged = _selectedBranch !== cubeInfo[CUBE_INFO.BRANCH];
                 var cubChanged = _selectedCubeName !== cubeInfo[CUBE_INFO.NAME];
                 var tabChanged = getActiveTabViewType() !== cubeInfo[CUBE_INFO.TAB_VIEW];
 
-                if (appChanged || verChanged || staChanged || braChanged || cubChanged || tabChanged) {
-                    makeCubeInfoActive(cubeInfo);
-                    if (appChanged || verChanged || staChanged || braChanged) {
-                        if (appChanged || verChanged || staChanged) {
-                            if (appChanged) {
-                                loadAppNames();
-                                loadAppListView();
-                            }
-                            loadVersions();
-                            loadStatusListView();
-                            loadVersionListView();
-                        }
-                        showActiveBranch();
-                        loadNCubes();
-                        loadNCubeListView();
-                    }
+                reloadEnvIfNeeded(cubeInfo);
+                if (cubChanged || tabChanged) {
                     selectTab(cubeInfo);
                     saveState();
                 }
