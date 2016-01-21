@@ -542,15 +542,9 @@ var NCE = (function ($)
                     .prop({href:'#', tabindex:'-1'})
                     .html('Update')
                 ).append(
-                    $('<ul/>').addClass('dropdown-menu')
-                        .append(
-                        $('<li/>').append(
-                            $('<a/>').attr('href','#').html('HEAD')
-                                .click(function() {
-                                    callUpdate('HEAD');
-                                })
-                        )
-                    )
+                    createBranchesUl(function(branchName) {
+                        callUpdate(branchName);
+                    })
             )
         ).append(
             $('<div/>')
