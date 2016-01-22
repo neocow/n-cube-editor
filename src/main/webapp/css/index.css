@@ -118,6 +118,7 @@ body {
 .tab-tooltip {
     height: 23px;
     max-width: 100%;
+    white-space: nowrap;
 }
 
 .ncube-selected {

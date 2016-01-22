@@ -345,7 +345,7 @@ var NCE = (function ($)
             animate: true,
             delay: 250,
             container: 'body',
-            title: cubeInfo[CUBE_INFO.APP] + ' - ' + cubeInfo[CUBE_INFO.VERSION] + ' - ' + cubeInfo[CUBE_INFO.STATUS] + ' - ' + cubeInfo[CUBE_INFO.BRANCH] + ' - ' + cubeInfo[CUBE_INFO.NAME],
+            title: cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - '),
             template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
         });
         li.click(function(e) {
