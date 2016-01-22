@@ -41,6 +41,8 @@ var NCubeEditor2 = (function ($)
     var _ncubeContent = null;
     var _ncubeHtmlError = null;
     var _bufferText = null;
+    var _testCode = null;
+    var _testCell = null;
 
     var init = function(info) {
         if (!nce) {
@@ -59,6 +61,8 @@ var NCubeEditor2 = (function ($)
             _searchField = document.getElementById('search-field');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
+            _testCell = $('#test-cell');
+            _testCode = $('#test-code');
 
             addColumnEditListeners();
             addColumnHideListeners();
@@ -133,12 +137,17 @@ var NCubeEditor2 = (function ($)
             });
 
             $(window).resize(function () {
+                var winWidth = $(this).width();
                 if (hot) {
                     hot.updateSettings({
                         height: $(this).height() - $('#hot-container').offset().top,
-                        width: $(this).width()
+                        width: winWidth
                     });
                 }
+
+                var cellCss = {'max-width':winWidth+'px', padding:'0', border:'none'};
+                _testCode.css(cellCss);
+                _testCell.css(cellCss);
 
                 NCubeEditor2.render();
                 setUtilityBarDisplay();
@@ -798,7 +807,7 @@ var NCubeEditor2 = (function ($)
     {
         var calcDomWidth = function (value, modifier, type)
         {
-            var testElement = type == 'exp' ? testCode: testCell;
+            var testElement = type == 'exp' ? _testCode: _testCell;
             testElement[0].textContent = value;
             return testElement.width() + modifier;
         };
@@ -918,8 +927,6 @@ var NCubeEditor2 = (function ($)
 
         _columnWidths = [];
         var topWidths = {};
-        var testCell = $('#test-cell');
-        var testCode = $('#test-code');
         if (axes.length == 1)
         {
             buildSingleAxisWidthArray();
