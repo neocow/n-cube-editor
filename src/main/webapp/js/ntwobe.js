@@ -40,6 +40,7 @@ var NCubeEditor2 = (function ($)
     var _currentSearchResultIndex = null;
     var _ncubeContent = null;
     var _ncubeHtmlError = null;
+    var _bufferText = null;
 
     var init = function(info) {
         if (!nce) {
@@ -1512,7 +1513,28 @@ var NCubeEditor2 = (function ($)
         event.cancelBubble = true;
     };
 
+    var keepKeyDownText = function(e) {
+        var keycode = e.keyCode;
+        var valid =
+            (keycode > 47 && keycode < 58)   || // number keys
+            keycode == 32 || keycode == 13   || // spacebar & return key(s) (if you want to allow carriage returns)
+            (keycode > 64 && keycode < 91)   || // letter keys
+            (keycode > 95 && keycode < 112)  || // numpad keys
+            (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
+            (keycode > 218 && keycode < 223);   // [\]' (in order)
+
+        if (valid) {
+            var addChar = String.fromCharCode(keycode);
+            _bufferText += e.shiftKey ? addChar : addChar.toLowerCase();
+        }
+    };
+
     var NcubeBaseEditor = Handsontable.editors.TextEditor.prototype.extend();
+    NcubeBaseEditor.prototype.prepare = function(row, col, prop, td, cellProperties) {
+        Handsontable.editors.BaseEditor.prototype.prepare.apply(this, arguments);
+        _bufferText = '';
+        this.instance.addHook('beforeKeyDown', keepKeyDownText);
+    };
     NcubeBaseEditor.prototype.open = function() {
         this.instance.addHook('beforeKeyDown', onBeforeKeyDown);
     };
@@ -1845,7 +1867,8 @@ var NCubeEditor2 = (function ($)
 
         var cellInfo = result.data;
         // Set the cell value (String)
-        _editCellValue.val(cellInfo.value ? cellInfo.value : "");
+        var cellValue = cellInfo.value ? cellInfo.value : '';
+        _editCellValue.val(cellValue);
         if (cellInfo.dataType == "null" || !cellInfo.dataType) {
             cellInfo.dataType = "string";
         }
@@ -1869,6 +1892,12 @@ var NCubeEditor2 = (function ($)
 
         enabledDisableCheckBoxes(); // reset for form
         _editCellModal.modal('show');
+
+        if (_bufferText.trim() !== '') {
+            $(_editCellModal).one('shown.bs.modal', function () {
+                _editCellValue.val(cellValue + _bufferText);
+            });
+        }
     };
 
     var editCellClear = function() {
