@@ -153,9 +153,14 @@ var NCE = (function ($)
         });
     }
 
-    function addCurrentCubeTab() {
+    function addCurrentCubeTab(insertIdx) {
         var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
-        _openCubes.unshift({cubeKey:cubeInfo.join(TAB_SEPARATOR)});
+        var newOpenCube = {cubeKey:cubeInfo.join(TAB_SEPARATOR)};
+        if (insertIdx > -1) {
+            _openCubes.splice(insertIdx, 0, newOpenCube);
+        } else {
+            _openCubes.unshift(newOpenCube);
+        }
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
         buildTabs();
     }
@@ -408,12 +413,12 @@ var NCE = (function ($)
                             closeTab();
                             selectTab(ci2);
                         } else {
+                            tabIdx = getOpenCubeIndex(cubeInfo);
                             if (isCtrlKey) { // open new tab
                                 li.removeClass('open');
                                 li.tooltip('hide');
-                                addCurrentCubeTab();
+                                addCurrentCubeTab(tabIdx);
                             } else { // use current tab
-                                tabIdx = getOpenCubeIndex(cubeInfo);
                                 cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
                                 _openCubes[tabIdx].cubeKey = cia2;
                                 localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
