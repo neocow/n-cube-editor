@@ -180,25 +180,19 @@ var TestEditor = (function ($)
             $('#runCurrentTestMenu').click(function (e)
             {
                 e.preventDefault();
-                $(this).css({'cursor':'wait'});
                 runCurrentTest();
-                $(this).css({'cursor':'default'})
             });
 
             $('#runTestButton').click(function (e)
             {
                 e.preventDefault();
-                $(this).css({'cursor':'wait'});
                 runCurrentTest();
-                $(this).css({'cursor':'default'})
             });
 
             $('#runTestMenu').click(function (e)
             {
                 e.preventDefault();
-                $(this).css({'cursor':'wait'});
                 runCurrentTest();
-                $(this).css({'cursor':'default'})
             });
 
             $('#renameCurrentTestMenu').click(function (e)
@@ -793,30 +787,36 @@ var TestEditor = (function ($)
 
         try
         {
-            var test = getActiveTest();
-            _testData[_testSelectionAnchor] = test;
+            $('#testResults').html('Running test...');
+            setOutputHeaderColor(null);
 
-            var result = nce.call("ncubeController.runTest", [nce.getAppId(), nce.getSelectedCubeName(), test]);
-            saveAllTests(true);
-
-            if (result.status != true)
+            setTimeout(function()
             {
-                showTestResult(false, "Could not run test:  " + result.data);
+                var test = getActiveTest();
+                _testData[_testSelectionAnchor] = test;
+
+                var result = nce.call("ncubeController.runTest", [nce.getAppId(), nce.getSelectedCubeName(), test]);
+                saveAllTests(true);
+
+                if (result.status != true)
+                {
+                    showTestResult(false, "Could not run test:  " + result.data);
+
+                    _testLayoutCenter.find('> .well').animate({
+                        scrollTop: _testResultsDiv.offset().top
+                    }, 200);
+
+                    return;
+                }
+
+                showTestResult(result.data["_result"], result.data["_message"]);
 
                 _testLayoutCenter.find('> .well').animate({
                     scrollTop: _testResultsDiv.offset().top
                 }, 200);
-
-                return;
-            }
-
-            showTestResult(result.data["_result"], result.data["_message"]);
-
-            _testLayoutCenter.find('> .well').animate({
-                scrollTop: _testResultsDiv.offset().top
-            }, 200);
-            nce.loadNCubes();
-            nce.loadNCubeListView();
+                nce.loadNCubes();
+                nce.loadNCubeListView();
+            }, 1);
         }
         catch (e)
         {
