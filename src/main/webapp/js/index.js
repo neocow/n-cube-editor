@@ -19,7 +19,6 @@
  *         limitations under the License.
  */
 
-// TODO: After cube is changed (Edit Columns, Update Axis, Edit Cell) - need to fetch latest n-cubeInfo DTO and update client-side cache.
 var NCE = (function ($)
 {
     var head = 'HEAD';
@@ -156,8 +155,8 @@ var NCE = (function ($)
     }
 
     function addCurrentCubeTab(insertIdx) {
-        var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
-        var newOpenCube = {cubeKey:cubeInfo.join(TAB_SEPARATOR)};
+        var cubeInfo = getSelectedCubeInfo();
+        var newOpenCube = {cubeKey:getCubeInfoKey(cubeInfo)};
         if (insertIdx > -1) {
             _openCubes.splice(insertIdx, 0, newOpenCube);
         } else {
@@ -168,12 +167,33 @@ var NCE = (function ($)
     }
 
     function getOpenCubeIndex(cubeInfo) {
-        var cis = cubeInfo.join(TAB_SEPARATOR);
+        var cubeInfoKey = getCubeInfoKey(cubeInfo);
         for (var i = 0, len = _openCubes.length; i < len; i++) {
-            if (cis === _openCubes[i].cubeKey) {
+            if (cubeInfoKey === _openCubes[i].cubeKey) {
                 return i;
             }
         }
+    }
+
+
+    function getCubeInfoKey(cubeInfo)
+    {
+        return cubeInfo.join(TAB_SEPARATOR);
+    }
+
+    function getCubeInfo(cubeKey)
+    {
+        return cubeKey.split(TAB_SEPARATOR);
+    }
+
+    function getSelectedCubeInfo()
+    {
+        return [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
+    }
+
+    function getSelectedCubeInfoKey()
+    {
+        return getCubeInfoKey([_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()]);
     }
 
     function removeTab(cubeInfo) {
@@ -187,7 +207,7 @@ var NCE = (function ($)
             && _selectedCubeName === cubeInfo[CUBE_INFO.NAME]
             && getActiveTabViewType() === cubeInfo[CUBE_INFO.TAB_VIEW]) {
             if (_openCubes.length > 0) {
-                var newCubeInfo = _openCubes[0].cubeKey.split(TAB_SEPARATOR);
+                var newCubeInfo = getCubeInfo(_openCubes[0].cubeKey);
                 var appChanged = _selectedApp !== newCubeInfo[CUBE_INFO.APP];
                 var verChanged = _selectedVersion !== newCubeInfo[CUBE_INFO.VERSION];
                 var staChanged = _selectedStatus !== newCubeInfo[CUBE_INFO.STATUS];
@@ -271,7 +291,7 @@ var NCE = (function ($)
 
     function selectTab(cubeInfo) {
         deselectTab();
-        var tab = $('#' + cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_').replace(/~/g,'\\~'));
+        var tab = $('#' + getCubeInfoKey(cubeInfo).replace(/\./g,'_').replace(/~/g,'\\~'));
         if (tab.length < 1) {
             tab = _openTabList.children().first();
             var id = tab.prop('id');
@@ -337,7 +357,7 @@ var NCE = (function ($)
 
         li.addClass('active');
         li.addClass('dropdown');
-        li.attr('id', cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_'));
+        li.attr('id', getCubeInfoKey(cubeInfo).replace(/\./g,'_'));
         li.attr('draggable', true);
         li.on("dragstart", function(e) {
             _draggingTabCubeInfo = cubeInfo;
@@ -420,7 +440,7 @@ var NCE = (function ($)
                         clearError();
                         setActiveTabViewType(pageId);
                         var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType()];
-                        var cia2 = ci2.join(TAB_SEPARATOR);
+                        var cia2 = getCubeInfoKey(ci2);
                         var tabIdx = getOpenCubeIndex(ci2);
                         var isCtrlKey = e.metaKey || e.ctrlKey;
                         if (isCtrlKey) {
@@ -793,7 +813,7 @@ var NCE = (function ($)
         if (len > 0) {
             var maxTabs = calcMaxTabs();
 
-            var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
+            var cubeInfo = getSelectedCubeInfo();
             var idx = getOpenCubeIndex(cubeInfo);
             if (idx >= maxTabs) { // if selected tab is now in overflow, bring to front
                 var temp = _openCubes.splice(idx, 1);
@@ -803,7 +823,7 @@ var NCE = (function ($)
 
             for (var i = 0; i < len && i < maxTabs; i++) {
                 var openCube = _openCubes[i];
-                addTab(openCube.cubeKey.split(TAB_SEPARATOR), openCube.status);
+                addTab(getCubeInfo(openCube.cubeKey), openCube.status);
             }
             if (len > maxTabs) {
                 _tabOverflow.show();
@@ -821,7 +841,7 @@ var NCE = (function ($)
         for (var i = maxTabs; i < len; i++) {
             (function() {
                 var openCube = _openCubes[i];
-                var cubeInfo = openCube.cubeKey.split(TAB_SEPARATOR);
+                var cubeInfo = getCubeInfo(openCube.cubeKey);
                 var imgSrc;
                 for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
                     var opt = _menuOptions[x];
@@ -943,6 +963,7 @@ var NCE = (function ($)
             getSelectedApp: getSelectedApp,
             getSelectedVersion: getSelectedVersion,
             getSelectedStatus: getSelectedStatus,
+            getSelectedCubeInfoKey: getSelectedCubeInfoKey,
             isHeadSelected: isHeadSelected,
             loadCube: loadCube,
             reloadCube: reloadCube,
@@ -983,7 +1004,7 @@ var NCE = (function ($)
         localStorage[SELECTED_CUBE] = cubeName;
 
         var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName];
-        var cis = cubeInfo.join(TAB_SEPARATOR);
+        var cis = getCubeInfoKey(cubeInfo);
         var found = false;
         for (var i = 0, len = _openCubes.length; i < len; i++) {
             var oci = _openCubes[i].cubeKey;
@@ -1831,7 +1852,7 @@ var NCE = (function ($)
 
                 cubeInfo[CUBE_INFO.NAME] = cubeName;
 
-                var cis = cubeInfo.join(TAB_SEPARATOR);
+                var cis = getCubeInfoKey(cubeInfo);
                 for (var x = _openCubes.length - 1; x >= 0; x--) {
                     if (_openCubes[x].cubeKey.indexOf(cis) > -1) {
                         _openCubes.splice(x, 1);
@@ -2106,7 +2127,7 @@ var NCE = (function ($)
             oldCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
             oldCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
             oldCubeInfo[CUBE_INFO.NAME] = _selectedCubeName;
-            var oldCis = oldCubeInfo.join(TAB_SEPARATOR);
+            var oldCis = getCubeInfoKey(oldCubeInfo);
 
             var newCubeInfo = [];
             newCubeInfo[CUBE_INFO.APP] = _selectedApp;
@@ -2115,7 +2136,8 @@ var NCE = (function ($)
             newCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
             newCubeInfo[CUBE_INFO.NAME] = newName;
             newCubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
-            var newCis = newCubeInfo.join(TAB_SEPARATOR);
+            var newCis = getCubeInfoKey(newCubeInfo);
+
             for (var i = 0, len = _openCubes.length; i < len; i++) {
                 var openCube = _openCubes[i];
                 if (openCube.cubeKey.indexOf(oldCis) > -1) {
@@ -3245,7 +3267,7 @@ var NCE = (function ($)
     function createHeartBeatTransferObj() {
         var obj = {};
         for (var i = 0, len = _openCubes.length; i < len; i++) {
-            var cubeInfo = _openCubes[i].cubeKey.split(TAB_SEPARATOR);
+            var cubeInfo = getCubeInfo(_openCubes[i].cubeKey);
             var key = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(TAB_SEPARATOR);
             obj[key] = '';
         }

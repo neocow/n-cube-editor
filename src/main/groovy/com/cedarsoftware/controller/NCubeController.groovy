@@ -1,4 +1,5 @@
 package com.cedarsoftware.controller
+
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.AxisType
@@ -1720,12 +1721,171 @@ class NCubeController extends BaseController
 
     private static String getTestCauses(Throwable t)
     {
-        StringWriter sw = new StringWriter()
-        PrintWriter pw = new PrintWriter(sw)
-        t.printStackTrace(pw)
-        String s = sw.toString()
-        return s.replace('Caused by:', '<hr style="border-top: 1px solid #aaa;margin:8px"><b>Caused by:</b><br>')
+        LinkedList<Map<String, Object>> stackTraces = new LinkedList<>()
+
+        while (true)
+        {
+            stackTraces.push([msg: t.getLocalizedMessage(), trace: t.getStackTrace()])
+            t = t.getCause()
+            if (t == null)
+            {
+                break
+            }
+        }
+
+        // Convert from LinkedList to direct access list
+        List<Map<String, Object>> stacks = new ArrayList<>(stackTraces)
+        StringBuilder s = new StringBuilder()
+        int len = stacks.size()
+
+        for (int i=0; i < len; i++)
+        {
+            Map<String, Object> map = stacks[i]
+            s.append('<b style="color:darkred">')
+            s.append(map.msg)
+            s.append('</b><br>')
+
+            if (i != len - 1)
+            {
+                Map nextStack = stacks[i + 1]
+                StackTraceElement[] nextStackElementArray = (StackTraceElement[]) nextStack.trace
+                s.append(trace(map.trace as StackTraceElement[], nextStackElementArray))
+                s.append('<hr style="border-top: 1px solid #aaa;margin:8px"><b>Called by:</b><br>')
+            }
+            else
+            {
+                s.append(trace(map.trace as StackTraceElement[], null))
+            }
+        }
+
+        return '<pre>' + s + '</pre>'
     }
+
+    private static String trace(StackTraceElement[] stackTrace, StackTraceElement[] nextStrackTrace)
+    {
+        StringBuilder s = new StringBuilder()
+        int len = stackTrace.length
+        for (int i=0; i < len; i++)
+        {
+            s.append('&nbsp;&nbsp;')
+            StackTraceElement element = stackTrace[i]
+            if (alreadyExists(element, nextStrackTrace))
+            {
+                s.append('...continues below<br>')
+                return s.toString()
+            }
+            else
+            {
+                s.append(element.className)
+                s.append('.')
+                s.append(element.methodName)
+                s.append('()&nbsp;<small><b class="pull-right">')
+                if (element.nativeMethod)
+                {
+                    s.append('Native Method')
+                }
+                else
+                {
+                    if (element.fileName)
+                    {
+                        s.append(element.fileName)
+                        s.append(':')
+                        s.append(element.lineNumber)
+                    }
+                    else
+                    {
+                        s.append('source n/a')
+                    }
+                }
+                s.append('</b></small><br>')
+            }
+        }
+
+        return s.toString()
+    }
+
+    private static boolean alreadyExists(StackTraceElement element, StackTraceElement[] stackTrace)
+    {
+        if (ArrayUtilities.isEmpty(stackTrace))
+        {
+            return false
+        }
+
+        for (StackTraceElement traceElement : stackTrace)
+        {
+            if (element.equals(traceElement))
+            {
+                return true
+            }
+        }
+        return false
+    }
+
+//    private void printStackTrace(Throwable t, StringBuilder s) {
+//        // Guard against malicious overrides of Throwable.equals by
+//        // using a Set with identity equality semantics.
+//        Set<Throwable> dejaVu = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>())
+//        dejaVu.add(t)
+//
+//        synchronized (s) {
+//            // Print our stack trace
+//            s.println(this);
+//            StackTraceElement[] trace = getOurStackTrace();
+//            for (StackTraceElement traceElement : trace)
+//                s.println("\tat " + traceElement);
+//
+//            // Print suppressed exceptions, if any
+//            for (Throwable se : getSuppressed())
+//                se.printEnclosedStackTrace(s, trace, SUPPRESSED_CAPTION, "\t", dejaVu);
+//
+//            // Print cause, if any
+//            Throwable ourCause = getCause();
+//            if (ourCause != null)
+//                ourCause.printEnclosedStackTrace(s, trace, CAUSE_CAPTION, "", dejaVu);
+//        }
+//    }
+//
+//    /**
+//     * Print our stack trace as an enclosed exception for the specified
+//     * stack trace.
+//     */
+//    private void printEnclosedStackTrace(PrintStreamOrWriter s,
+//                                         StackTraceElement[] enclosingTrace,
+//                                         String caption,
+//                                         String prefix,
+//                                         Set<Throwable> dejaVu) {
+//        assert Thread.holdsLock(s.lock());
+//        if (dejaVu.contains(this)) {
+//            s.println("\t[CIRCULAR REFERENCE:" + this + "]");
+//        } else {
+//            dejaVu.add(this);
+//            // Compute number of frames in common between this and enclosing trace
+//            StackTraceElement[] trace = getOurStackTrace();
+//            int m = trace.length - 1;
+//            int n = enclosingTrace.length - 1;
+//            while (m >= 0 && n >=0 && trace[m].equals(enclosingTrace[n])) {
+//                m--; n--;
+//            }
+//            int framesInCommon = trace.length - 1 - m;
+//
+//            // Print our stack trace
+//            s.println(prefix + caption + this);
+//            for (int i = 0; i <= m; i++)
+//                s.println(prefix + "\tat " + trace[i]);
+//            if (framesInCommon != 0)
+//                s.println(prefix + "\t... " + framesInCommon + " more");
+//
+//            // Print suppressed exceptions, if any
+//            for (Throwable se : getSuppressed())
+//                se.printEnclosedStackTrace(s, trace, SUPPRESSED_CAPTION,
+//                        prefix +"\t", dejaVu);
+//
+//            // Print cause, if any
+//            Throwable ourCause = getCause();
+//            if (ourCause != null)
+//                ourCause.printEnclosedStackTrace(s, trace, CAUSE_CAPTION, prefix, dejaVu);
+//        }
+//    }
 
     private static String getCauses(Throwable t)
     {
