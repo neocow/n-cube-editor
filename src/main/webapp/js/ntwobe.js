@@ -40,6 +40,9 @@ var NCubeEditor2 = (function ($)
     var _currentSearchResultIndex = null;
     var _ncubeContent = null;
     var _ncubeHtmlError = null;
+    var _bufferText = null;
+    var _testCode = null;
+    var _testCell = null;
 
     var init = function(info) {
         if (!nce) {
@@ -58,6 +61,8 @@ var NCubeEditor2 = (function ($)
             _searchField = document.getElementById('search-field');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
+            _testCell = $('#test-cell');
+            _testCode = $('#test-code');
 
             addColumnEditListeners();
             addColumnHideListeners();
@@ -132,12 +137,17 @@ var NCubeEditor2 = (function ($)
             });
 
             $(window).resize(function () {
+                var winWidth = $(this).width();
                 if (hot) {
                     hot.updateSettings({
                         height: $(this).height() - $('#hot-container').offset().top,
-                        width: $(this).width()
+                        width: winWidth
                     });
                 }
+
+                var cellCss = {'max-width':winWidth+'px', padding:'0', border:'none'};
+                _testCode.css(cellCss);
+                _testCell.css(cellCss);
 
                 NCubeEditor2.render();
                 setUtilityBarDisplay();
@@ -797,7 +807,7 @@ var NCubeEditor2 = (function ($)
     {
         var calcDomWidth = function (value, modifier, type)
         {
-            var testElement = type == 'exp' ? testCode: testCell;
+            var testElement = type == 'exp' ? _testCode: _testCell;
             testElement[0].textContent = value;
             return testElement.width() + modifier;
         };
@@ -917,8 +927,6 @@ var NCubeEditor2 = (function ($)
 
         _columnWidths = [];
         var topWidths = {};
-        var testCell = $('#test-cell');
-        var testCode = $('#test-code');
         if (axes.length == 1)
         {
             buildSingleAxisWidthArray();
@@ -1512,7 +1520,28 @@ var NCubeEditor2 = (function ($)
         event.cancelBubble = true;
     };
 
+    var keepKeyDownText = function(e) {
+        var keycode = e.keyCode;
+        var valid =
+            (keycode > 47 && keycode < 58)   || // number keys
+            keycode == 32 || keycode == 13   || // spacebar & return key(s) (if you want to allow carriage returns)
+            (keycode > 64 && keycode < 91)   || // letter keys
+            (keycode > 95 && keycode < 112)  || // numpad keys
+            (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
+            (keycode > 218 && keycode < 223);   // [\]' (in order)
+
+        if (valid) {
+            var addChar = String.fromCharCode(keycode);
+            _bufferText += e.shiftKey ? addChar : addChar.toLowerCase();
+        }
+    };
+
     var NcubeBaseEditor = Handsontable.editors.TextEditor.prototype.extend();
+    NcubeBaseEditor.prototype.prepare = function(row, col, prop, td, cellProperties) {
+        Handsontable.editors.BaseEditor.prototype.prepare.apply(this, arguments);
+        _bufferText = '';
+        this.instance.addHook('beforeKeyDown', keepKeyDownText);
+    };
     NcubeBaseEditor.prototype.open = function() {
         this.instance.addHook('beforeKeyDown', onBeforeKeyDown);
     };
@@ -1845,7 +1874,8 @@ var NCubeEditor2 = (function ($)
 
         var cellInfo = result.data;
         // Set the cell value (String)
-        _editCellValue.val(cellInfo.value ? cellInfo.value : "");
+        var cellValue = cellInfo.value ? cellInfo.value : '';
+        _editCellValue.val(cellValue);
         if (cellInfo.dataType == "null" || !cellInfo.dataType) {
             cellInfo.dataType = "string";
         }
@@ -1869,6 +1899,12 @@ var NCubeEditor2 = (function ($)
 
         enabledDisableCheckBoxes(); // reset for form
         _editCellModal.modal('show');
+
+        if (_bufferText.trim() !== '') {
+            $(_editCellModal).one('shown.bs.modal', function () {
+                _editCellValue.val(cellValue + _bufferText);
+            });
+        }
     };
 
     var editCellClear = function() {
