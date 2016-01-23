@@ -88,6 +88,8 @@ var NCE = (function ($)
     var _tabOverflow = $('#tab-overflow');
     var _branchNames = [];
     var _hiddenCell = $('#test-cell');
+    var _draggingTabCubeInfo = null;
+    var _tabDragIndicator = $('#tab-drag-indicator');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -304,7 +306,7 @@ var NCE = (function ($)
     }
 
     function getTabImage(imgSrc) {
-        return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px"/>' : '';
+        return imgSrc ? '<img src="' + imgSrc + '" height="16px" width="16px" draggable="false"/>' : '';
     }
 
     function addTab(cubeInfo, status) {
@@ -319,6 +321,7 @@ var NCE = (function ($)
         }
         var link = $('<a/>')
             .attr('href','#')
+            .attr('draggable', false)
             .addClass('dropdown-toggle ncube-tab-top-level')
             .addClass(status)
             .html(getTabImage(imgSrc)
@@ -339,6 +342,10 @@ var NCE = (function ($)
         li.addClass('active');
         li.addClass('dropdown');
         li.attr('id', cubeInfo.join(TAB_SEPARATOR).replace(/\./g,'_'));
+        li.attr('draggable', true);
+        li.on("dragstart", function(e) {
+            _draggingTabCubeInfo = cubeInfo;
+        });
         li.tooltip({
             trigger: 'hover',
             placement: 'auto top',
@@ -760,7 +767,7 @@ var NCE = (function ($)
     }
 
     function calcMaxTabs() {
-        var windowWidth = $('#ncube-tabs').width();
+        var windowWidth = _openTabsPanel.width();
         var availableWidth = windowWidth - _tabOverflow.outerWidth();
         return Math.floor(availableWidth / TAB_WIDTH);
     }
@@ -1070,6 +1077,28 @@ var NCE = (function ($)
 
     function addListeners()
     {
+        _openTabsPanel.on('drop dragdrop', function(e) {
+            $('.tooltip').hide();
+            _tabDragIndicator.hide();
+            var posX = e.originalEvent.x - $('#center').offset().left;
+            var oldTabIdx = getOpenCubeIndex(_draggingTabCubeInfo);
+            var newTabIdx = Math.floor(posX / TAB_WIDTH);
+            if (newTabIdx !== oldTabIdx) {
+                _openCubes.splice(newTabIdx, 0, _openCubes.splice(oldTabIdx, 1)[0]);
+                localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+                buildTabs();
+            }
+        });
+        _openTabsPanel.on('dragenter dragover', function(e) {
+            e.preventDefault();
+            var offsetLeft = $('#center').offset().left;
+            var posX = e.originalEvent.x - offsetLeft;
+            var left = Math.floor(posX / TAB_WIDTH) * TAB_WIDTH + offsetLeft;
+            var top = _openTabsPanel.outerHeight() - _tabDragIndicator.height() + _openTabsPanel.offset().top;
+            _tabDragIndicator.css({left:left, top:top});
+            _tabDragIndicator.show()
+        });
+
         // 'Close' for the Diff Modal
         $('#diffModalClose').click(function() {
             _diffModal.css('display', 'none');

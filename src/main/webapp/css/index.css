@@ -70,6 +70,14 @@ body {
     display: inline-block;
 }
 
+#tab-drag-indicator {
+    position: absolute;
+    z-index: 1001;
+    height: 18px;
+    width: 2px;
+    background-color: #555;
+}
+
 .overflow-dropdown {
     position: fixed;
 }
