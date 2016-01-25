@@ -253,8 +253,7 @@ var NCubeEditor2 = (function ($)
 
         handleCubeData(JSON.parse(result.data));
         hot = new Handsontable(document.getElementById('hot-container'), getHotSettings());
-        var col = axes.length == 1 ? 1 : colOffset;
-        hot.selectCell(2, col);
+        selectSavedOrDefaultCell();
         hot.render();
         setClipFormatToggleListener();
     };
@@ -1044,6 +1043,7 @@ var NCubeEditor2 = (function ($)
                 }
 
                 resetCoordinateBar(display);
+                nce.saveViewPosition({row:r, col: c});
             }
         };
     };
@@ -2687,9 +2687,23 @@ var NCubeEditor2 = (function ($)
             if (selection) {
                 hot.selectCell(selection.startRow, selection.startCol, selection.endRow, selection.endCol, true);
             } else {
-                var col = axes.length === 1 ? 1 : colOffset;
-                hot.selectCell(2, col);
+                selectSavedOrDefaultCell();
             }
+        }
+    };
+
+    var selectSavedOrDefaultCell = function() {
+        if (hot) {
+            var pos = nce.getViewPosition();
+            var row, col;
+            if (typeof pos === 'object') {
+                row = pos.row;
+                col = pos.col;
+            } else {
+                row = 2;
+                col = axes.length === 1 ? 1 : colOffset;
+            }
+            hot.selectCell(row, col);
         }
     };
 
