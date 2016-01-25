@@ -22,7 +22,7 @@ var NCubeJsonEditor = (function ($)
             var options =
             {
                 mode: 'code',
-                change: function ()
+                onChange: function ()
                 {
                     updateDirtyStatus();
                 }
@@ -30,59 +30,29 @@ var NCubeJsonEditor = (function ($)
 
             _editor = new JSONEditor(container, options);
             addSaveButton();
+
+            if (_editor.aceEditor) {
+                _editor.aceEditor.session.on('changeScrollTop', function(scrollTop) {
+                    saveViewPosition(scrollTop);
+                });
+            }
         }
-        _vScroll = $('.ace_scrollbar-v');
-        _hScroll = $('.ace_scrollbar-h');
-
-        _vScroll.scroll(function() {
-            clearTimeout($.data(this, 'scrollVTimer'));
-            $.data(this, 'scrollVTimer', setTimeout(function() {
-                saveViewPosition({scrollTop: _vScroll.scrollTop()});
-            }, 250));
-        });
-
-        _hScroll.scroll(function() {
-            clearTimeout($.data(this, 'scrollHTimer'));
-            $.data(this, 'scrollHTimer', setTimeout(function() {
-                saveViewPosition({scrollLeft: _hScroll.scrollLeft()});
-            }, 250));
-        });
-
-        // have to use this hack to get around lack of exposed API in json editor for the underlying ace editor
-        MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-        var observer = new MutationObserver(function(mutations, observer) {
-            scrollToSavedPosition();
-        }).observe(_vScroll[0], {
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['style']
-        });
-    };
-
-    var getSavedScrollPosition = function() {
-        var pos = nce.getViewPosition();
-        if (typeof pos !== 'object') {
-            pos = {scrollTop:0, scrollLeft:0};
-        }
-        return pos;
+        scrollToSavedPosition();
     };
 
     var scrollToSavedPosition = function() {
-        var pos = getSavedScrollPosition();
-        _vScroll.scrollTop(pos.scrollTop);
-        _hScroll.scrollLeft(pos.scrollLeft);
+        var pos = nce.getViewPosition() || 0;
+        _editor.aceEditor.session.setScrollTop(pos);
     };
 
     var saveViewPosition = function (scrollInfo) {
-        var pos = getSavedScrollPosition();
-        $.extend(pos, scrollInfo);
-        nce.saveViewPosition(pos);
+        nce.saveViewPosition(scrollInfo);
     };
 
     var addSaveButton = function()
     {
         var editCtrl = $('#jsoneditor');
-        var menu = editCtrl.find('.menu');
+        var menu = editCtrl.find('.jsoneditor-menu');
         var save = $("<button/>").attr(
         {
             id: 'saveButton',
@@ -114,18 +84,18 @@ var NCubeJsonEditor = (function ($)
 
     var isDirty = function()
     {
-        if (_editor.editor)
+        if (_editor.aceEditor)
         {
-            return !_editor.editor.getSession().getUndoManager().isClean();
+            return !_editor.aceEditor.getSession().getUndoManager().isClean();
         }
         return false;
     };
 
     var clearDirtyStatus = function()
     {
-        if (_editor.editor)
+        if (_editor.aceEditor)
         {
-            var undoMgr = _editor.editor.getSession().getUndoManager();
+            var undoMgr = _editor.aceEditor.getSession().getUndoManager();
             undoMgr.reset();
             undoMgr.markClean();
         }
