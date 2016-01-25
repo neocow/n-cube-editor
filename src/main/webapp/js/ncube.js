@@ -90,6 +90,15 @@ var NCubeEditor = (function ($)
                 $('#editCellValue').focus();
             });
 
+            $(window).scroll(function() {
+                clearTimeout($.data(this, 'scrollTimer'));
+                $.data(this, 'scrollTimer', setTimeout(function() {
+                    var scrollTop = $(this).scrollTop();
+                    var scrollLeft = $(this).scrollLeft();
+                    nce.saveViewPosition({scrollTop:scrollTop, scrollLeft:scrollLeft});
+                }, 250));
+            });
+
             $(document).keydown(function(e)
             {
                 var isModalDisplayed = $('body').hasClass('modal-open');
@@ -278,6 +287,16 @@ var NCubeEditor = (function ($)
         if (nce.getSelectedCubeName().indexOf('erne.') != 0)
         {
             buildCubeNameLinks();
+        }
+
+        scrollToSavedPosition();
+    };
+
+    var scrollToSavedPosition = function() {
+        var pos = nce.getViewPosition();
+        if (typeof pos === 'object') {
+            $(window).scrollTop(pos.scrollTop);
+            $(window).scrollLeft(pos.scrollLeft);
         }
     };
 

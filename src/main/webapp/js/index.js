@@ -156,7 +156,7 @@ var NCE = (function ($)
 
     function addCurrentCubeTab(insertIdx) {
         var cubeInfo = getSelectedCubeInfo();
-        var newOpenCube = {cubeKey:getCubeInfoKey(cubeInfo)};
+        var newOpenCube = {cubeKey:getCubeInfoKey(cubeInfo),status:null,position:{}};
         if (insertIdx > -1) {
             _openCubes.splice(insertIdx, 0, newOpenCube);
         } else {
@@ -175,6 +175,14 @@ var NCE = (function ($)
         }
     }
 
+    function saveViewPosition(position) {
+        _openCubes[getOpenCubeIndex(getSelectedCubeInfo())].position[getActiveTabViewType()] = position;
+        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+    }
+
+    function getViewPosition() {
+        return _openCubes[getOpenCubeIndex(getSelectedCubeInfo())].position[getActiveTabViewType()];
+    }
 
     function getCubeInfoKey(cubeInfo)
     {
@@ -193,7 +201,7 @@ var NCE = (function ($)
 
     function getSelectedCubeInfoKey()
     {
-        return getCubeInfoKey([_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()]);
+        return getCubeInfoKey(getSelectedCubeInfo());
     }
 
     function removeTab(cubeInfo) {
@@ -971,7 +979,9 @@ var NCE = (function ($)
             selectCubeByName: selectCubeByName,
             showNote: showNote,
             loadNCubes: loadNCubes,
-            loadNCubeListView: loadNCubeListView
+            loadNCubeListView: loadNCubeListView,
+            saveViewPosition: saveViewPosition,
+            getViewPosition: getViewPosition
         };
     }
 
