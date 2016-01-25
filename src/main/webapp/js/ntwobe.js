@@ -1440,6 +1440,25 @@ var NCubeEditor2 = (function ($)
             btn.append(span);
             btnGroup.append(btn);
             ul.append(li);
+
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Revert Axis Order";
+            if (hasCustomAxisOrder()) {
+                an.click(function (e) {
+                    e.preventDefault();
+                    delete localStorage[getStorageKey(AXIS_ORDER)];
+                    destroyEditor();
+                    reload();
+                });
+            } else {
+                li.prop({'class': 'disabled'});
+                an.click(function (e) {
+                    e.preventDefault();
+                });
+            }
+            li.append(an);
+            ul.append(li);
         }
 
         $(div).append(ul);
