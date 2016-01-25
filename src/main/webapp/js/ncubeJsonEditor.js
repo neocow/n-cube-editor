@@ -9,6 +9,8 @@ var NCubeJsonEditor = (function ($)
 {
     var nce = null;
     var _editor = null;
+    var _vScroll = null;
+    var _hScroll = null;
 
     var init = function(info)
     {
@@ -29,6 +31,52 @@ var NCubeJsonEditor = (function ($)
             _editor = new JSONEditor(container, options);
             addSaveButton();
         }
+        _vScroll = $('.ace_scrollbar-v');
+        _hScroll = $('.ace_scrollbar-h');
+
+        _vScroll.scroll(function() {
+            clearTimeout($.data(this, 'scrollVTimer'));
+            $.data(this, 'scrollVTimer', setTimeout(function() {
+                saveViewPosition({scrollTop: _vScroll.scrollTop()});
+            }, 250));
+        });
+
+        _hScroll.scroll(function() {
+            clearTimeout($.data(this, 'scrollHTimer'));
+            $.data(this, 'scrollHTimer', setTimeout(function() {
+                saveViewPosition({scrollLeft: _hScroll.scrollLeft()});
+            }, 250));
+        });
+
+        // have to use this hack to get around lack of exposed API in json editor for the underlying ace editor
+        MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+        var observer = new MutationObserver(function(mutations, observer) {
+            scrollToSavedPosition();
+        }).observe(_vScroll[0], {
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style']
+        });
+    };
+
+    var getSavedScrollPosition = function() {
+        var pos = nce.getViewPosition();
+        if (typeof pos !== 'object') {
+            pos = {scrollTop:0, scrollLeft:0};
+        }
+        return pos;
+    };
+
+    var scrollToSavedPosition = function() {
+        var pos = getSavedScrollPosition();
+        _vScroll.scrollTop(pos.scrollTop);
+        _hScroll.scrollLeft(pos.scrollLeft);
+    };
+
+    var saveViewPosition = function (scrollInfo) {
+        var pos = getSavedScrollPosition();
+        $.extend(pos, scrollInfo);
+        nce.saveViewPosition(pos);
     };
 
     var addSaveButton = function()
