@@ -8,6 +8,7 @@ import com.cedarsoftware.ncube.CellInfo
 import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.CommandCell
 import com.cedarsoftware.ncube.Delta
+import com.cedarsoftware.ncube.DeltaProcessor
 import com.cedarsoftware.ncube.GroovyExpression
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeInfoDto
@@ -902,7 +903,7 @@ class NCubeController extends BaseController
             isAllowed(appId, cubeName, null)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Set<Long> colIds = getCoordinate(ids)
-            Map<String, Comparable> coord = ncube.getCoordinateFromColumnIds(colIds)
+            Map<String, Comparable> coord = ncube.getDisplayCoordinateFromIds(colIds)
             Map<String, Comparable> niceCoord = [:]
             coord.each {
                 k, v ->
@@ -1530,7 +1531,7 @@ class NCubeController extends BaseController
     {
         if (leftCube && rightCube)
         {
-            List<Delta> delta = rightCube.getDeltaDescription(leftCube)
+            List<Delta> delta = DeltaProcessor.getDeltaDescription(rightCube, leftCube)
             StringBuilder s = new StringBuilder()
             delta.each {
                 Delta d ->
