@@ -665,12 +665,16 @@ var NCubeEditor2 = (function ($)
         return data.cells[getCellId(row, col)];
     };
 
+    var hasCustomAxisOrder = function() {
+        return localStorage.hasOwnProperty(getStorageKey(AXIS_ORDER));
+    };
+
     var handleCubeData = function(cubeData) {
 
         var determineAxesOrder = function (cubeAxes) {
             axes = [];
             var i, len, axis;
-            if (localStorage.hasOwnProperty(getStorageKey(AXIS_ORDER)))
+            if (hasCustomAxisOrder())
             {
                 var order = JSON.parse(localStorage[getStorageKey(AXIS_ORDER)]);
                 for (i = 0, len = order.length; i < len; i++)
@@ -1435,6 +1439,25 @@ var NCubeEditor2 = (function ($)
             }
             btn.append(span);
             btnGroup.append(btn);
+            ul.append(li);
+
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Revert Axis Order";
+            if (hasCustomAxisOrder()) {
+                an.click(function (e) {
+                    e.preventDefault();
+                    delete localStorage[getStorageKey(AXIS_ORDER)];
+                    destroyEditor();
+                    reload();
+                });
+            } else {
+                li.prop({'class': 'disabled'});
+                an.click(function (e) {
+                    e.preventDefault();
+                });
+            }
+            li.append(an);
             ul.append(li);
         }
 
@@ -2546,6 +2569,10 @@ var NCubeEditor2 = (function ($)
         var axisValueType = $('#addAxisValueTypeName').val();
         var result = nce.call("ncubeController.addAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName, axisType, axisValueType]);
         if (result.status === true) {
+            if (hasCustomAxisOrder()) {
+                axes.splice(colOffset, 0, {name:axisName});
+                storeAxisOrder();
+            }
             nce.loadCube();
         } else {
             nce.showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
@@ -2572,6 +2599,11 @@ var NCubeEditor2 = (function ($)
                 nce.showNote('Hidden column selections for axis ' + axisName + ' removed.', 'Note', 2000);
                 delete _hiddenColumns[lowerAxisName];
                 storeHiddenColumns();
+            }
+            if (hasCustomAxisOrder()) {
+                var order = JSON.parse(localStorage[getStorageKey(AXIS_ORDER)]);
+                axes.splice(order.indexOf(lowerAxisName), 1);
+                storeAxisOrder();
             }
             nce.loadCube();
         } else {
@@ -2662,6 +2694,12 @@ var NCubeEditor2 = (function ($)
                 _hiddenColumns[newName] = _hiddenColumns[oldName];
                 delete _hiddenColumns[oldName];
                 storeHiddenColumns();
+
+                if (hasCustomAxisOrder()) {
+                    var order = JSON.parse(localStorage[getStorageKey(AXIS_ORDER)]);
+                    axes[order.indexOf(oldName)].name = newName;
+                    storeAxisOrder();
+                }
             }
             nce.loadCube();
         } else {
