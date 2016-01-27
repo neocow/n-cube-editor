@@ -17,8 +17,15 @@ var DIFF_VISUAL = 3;
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
 var TAB_SEPARATOR = '~';
+
 var MIN_COL_WIDTH = 50;
 var MAX_COL_WIDTH = 600;
+var FONT_SIZE = '14px';
+var FONT_CELL = FONT_SIZE + ' Helvetica Neue';
+var FONT_CODE = FONT_SIZE + ' Lucida Console';
+var CALC_WIDTH_AXIS_BUTTON_MOD = 50;
+var CALC_WIDTH_BASE_MOD = 20;
+var CALC_WIDTH_TAB_OVERFLOW_MOD = 45;
 
 var CONFIG_TITLE = '~Title';
 var CONFIG_DEFAULT_TAB = '~DefaultTab';
@@ -36,6 +43,7 @@ var CLASS_HANDSON_CURRENT_ROW = 'handsonCurrentRow';
 
 var CLASS_HANDSON_CELL_BASIC = ' cell';
 var CLASS_HANDSON_CELL_CODE = ' code';
+var CLASS_HANDSON_CELL_CUBE_NAME = ' cube-name';
 var CLASS_HANDSON_CELL_DEFAULT = ' tableDefault';
 var CLASS_HANDSON_CELL_ODD_ROW = ' oddRow';
 var CLASS_HANDSON_CELL_URL = ' url';
@@ -61,6 +69,7 @@ var CUBE_INFO = {
 
 URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
+CODE_CELL_TYPE_LIST = ['exp', 'method'];
 
 var KEY_CODES = {
     MOUSE_LEFT: 1,

@@ -1,7 +1,16 @@
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();
-    }
+    };
+
+    $.fn.canvasMeasureWidth = function (font) {
+        if (!jQuery._cachedCanvas) {
+            var canvas = document.createElement('canvas');
+            jQuery._cachedCanvas = canvas.getContext('2d');
+        }
+        jQuery._cachedCanvas.font = font;
+        return jQuery._cachedCanvas.measureText(this[0].innerText).width;
+    };
 })(jQuery);
 
 var NCubeEditor2 = (function ($)
@@ -41,8 +50,7 @@ var NCubeEditor2 = (function ($)
     var _ncubeContent = null;
     var _ncubeHtmlError = null;
     var _bufferText = null;
-    var _testCode = null;
-    var _testCell = null;
+    var _firstRenderedCol = null;
 
     var init = function(info) {
         if (!nce) {
@@ -61,8 +69,6 @@ var NCubeEditor2 = (function ($)
             _searchField = document.getElementById('search-field');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
-            _testCell = $('#test-cell');
-            _testCode = $('#test-code');
 
             addColumnEditListeners();
             addColumnHideListeners();
@@ -145,10 +151,6 @@ var NCubeEditor2 = (function ($)
                     });
                 }
 
-                var cellCss = {'max-width':winWidth+'px', padding:'0', border:'none'};
-                _testCode.css(cellCss);
-                _testCell.css(cellCss);
-
                 NCubeEditor2.render();
                 setUtilityBarDisplay();
             });
@@ -157,6 +159,18 @@ var NCubeEditor2 = (function ($)
         setCoordinateBarListeners();
         buildCubeMap();
         setUtilityBarDisplay();
+    };
+
+    var getNumFrozenCols = function() {
+        var savedNum = nce.getNumFrozenCols();
+        if (savedNum !== null) {
+            return parseInt(savedNum);
+        }
+        return colOffset || 1;
+    };
+
+    var saveNumFrozenCols = function(num) {
+        nce.saveNumFrozenCols(num);
     };
 
     var toggleClipFormat = function(event) {
@@ -580,18 +594,20 @@ var NCubeEditor2 = (function ($)
         return result;
     };
 
-    var getRowHeaderValue = function(row, col) {
+    var getTableRowHeaderValue = function(row, col) {
+        return getRowHeaderValue(axes[col], getRowHeader(row, col));
+    };
+
+    var getRowHeaderValue = function(axis, rowHeader) {
         var getDateRangeString = function(range) {
             var v1 = range[0].substring(0, range[0].indexOf('T'));
             var v2 = range[1].substring(0, range[1].indexOf('T'));
             return '[' + v1 + ' - ' + v2 + ')';
         };
 
-        var rowHeader = getRowHeader(row, col);
         var rule = '';
         var val = '';
 
-        var axis = axes[col];
         var type = axis.type.toLowerCase();
         var valueType = axis.valueType.toLowerCase();
 
@@ -627,7 +643,7 @@ var NCubeEditor2 = (function ($)
     var getRowHeaderPlainText = function(row, col) {
         var regexAnyTag = /(<([^>]+)>)/ig;
         var regexHr = /(<hr([^>]+)>)/ig;
-        var val = getRowHeaderValue(row, col);
+        var val = getTableRowHeaderValue(row, col);
         return val.replace(regexHr, ' - ').replace(regexAnyTag, '');
     };
 
@@ -810,9 +826,9 @@ var NCubeEditor2 = (function ($)
     {
         var calcDomWidth = function (value, modifier, type)
         {
-            var testElement = type == 'exp' ? _testCode: _testCell;
-            testElement[0].textContent = value;
-            return testElement.width() + modifier;
+            var font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
+            var width = $('<p>' + value + '</p>').canvasMeasureWidth(font) + modifier;
+            return width;
         };
 
         var findWidth = function(oldWidth, newWidth)
@@ -837,7 +853,8 @@ var NCubeEditor2 = (function ($)
             for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
             {
                 var colKey = columnKeys[colIndex];
-                var firstWidth = calcDomWidth(columns[colKey].value, 10, null);
+                var columnText = getRowHeaderValue(axis, columns[colKey]);
+                var firstWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, null);
                 topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
             }
             var columnIds = axisColumnMap[axes[colOffset].name];
@@ -855,8 +872,8 @@ var NCubeEditor2 = (function ($)
                 for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
                     var cellKey = cellKeys[keyIndex];
                     var cell = cells[cellKey];
-                    var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
-                    var width = calcDomWidth(value, 10, cell.type);
+                    var value = getTextCellValue(cell);
+                    var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
                     var colId = regex.exec(cellKey)[0];
                     topWidths[colId] = findWidth(topWidths[colId], width);
                 }
@@ -867,7 +884,7 @@ var NCubeEditor2 = (function ($)
         {
             for (var hotCol = 0, hotColLength = getHotSettings().startCols; hotCol < hotColLength; hotCol++)
             {
-                if (hotCol < axes.length - 1)
+                if (hotCol < colOffset)
                 {
                     var axisName = axes[hotCol].name;
                     _columnWidths.push(findWidestColumn(axisName));
@@ -892,8 +909,8 @@ var NCubeEditor2 = (function ($)
             for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
                 var cellKey = cellKeys[keyIndex];
                 var cell = cells[cellKey];
-                var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
-                var width = calcDomWidth(value, 10, cell.type);
+                var value = getTextCellValue(cell);
+                var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
                 correctWidth = findWidth(oldWidth, width);
                 oldWidth = correctWidth;
             }
@@ -902,26 +919,16 @@ var NCubeEditor2 = (function ($)
 
         var findWidestColumn = function (axisName)
         {
-            var buttonWidth = calcDomWidth(axisName, 45, null);
+            var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
             var oldWidth = findWidth(0, buttonWidth);
             var axisColumns = axisColumnMap[axisName];
+            var axis = data.axes[axisName.toLowerCase()];
             for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
             {
                 var columnId = axisColumns[axisCol];
-                var column = data.axes[axisName.toLowerCase()].columns[columnId];
-                var columnName;
-                if (column.hasOwnProperty('name') && column.hasOwnProperty('value'))
-                {
-                    columnName = column.name.length > column.value.length ? column.name : column.value;
-                } else if (column.hasOwnProperty('name'))
-                {
-                    columnName = column.name;
-                }
-                else
-                {
-                    columnName = column.value;
-                }
-                var colWidth = calcDomWidth(columnName, 10, null);
+                var column = axis.columns[columnId];
+                var columnText = getRowHeaderValue(axis, column);
+                var colWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, null);
                 var correctWidth = findWidth(oldWidth, colWidth);
                 oldWidth = correctWidth;
             }
@@ -982,6 +989,11 @@ var NCubeEditor2 = (function ($)
         return index - 1;
     };
 
+    var setFrozenColumns = function(numFixed) {
+        saveNumFrozenCols(numFixed);
+        hot.updateSettings({fixedColumnsLeft:numFixed});
+    };
+
     var getHotSettings = function() {
         return {
             copyPaste: false,
@@ -1001,7 +1013,7 @@ var NCubeEditor2 = (function ($)
             contextMenu: false,
             manualColumnResize: true,
             manualRowResize: true,
-            fixedColumnsLeft: colOffset,
+            fixedColumnsLeft: getNumFrozenCols(),
             fixedRowsTop: 2,
             currentRowClassName: CLASS_HANDSON_CURRENT_ROW,
             currentColClassName: CLASS_HANDSON_CURRENT_ROW,
@@ -1014,6 +1026,9 @@ var NCubeEditor2 = (function ($)
             },
             cells: function (row, col, prop) {
                 return {renderer:categoryRenderer};
+            },
+            beforeRender: function() {
+                _firstRenderedCol = null;
             },
             afterRender: function() {
                 setButtonDropdownLocations();
@@ -1048,6 +1063,36 @@ var NCubeEditor2 = (function ($)
 
                 resetCoordinateBar(display);
                 nce.saveViewPosition({row:r, col: c});
+            },
+            afterScrollHorizontally: function() {
+                var numFixed = getNumFrozenCols();
+                if (numFixed < colOffset) {
+                    var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1)');
+                    var btn = $(tr).find('div.btn-group');
+                    var scrollAmt = $('.ht_master .wtHolder').scrollLeft();
+                    var thWidth = tr.find('th').outerWidth();
+                    var frozenWidth = thWidth;
+                    var startingWidth = thWidth;
+
+                    if (_firstRenderedCol === 0) {
+                        for (var i = 0; i < colOffset; i++) {
+                            var curWidth = tr.find('td').eq(i).outerWidth();
+                            startingWidth += curWidth;
+                            if (i < numFixed) {
+                                frozenWidth += curWidth;
+                            }
+                        }
+                    }
+
+                    var newWidth;
+                    if (scrollAmt < (startingWidth - frozenWidth)) {
+                        newWidth = startingWidth - scrollAmt;
+                    } else {
+                        var afterSubtract = frozenWidth || (startingWidth - scrollAmt);
+                        newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
+                    }
+                    btn.css({left:newWidth});
+                }
             }
         };
     };
@@ -1079,14 +1124,19 @@ var NCubeEditor2 = (function ($)
     var categoryRenderer = function(instance, td, row, col, prop, value, cellProperties) {
         Handsontable.renderers.TextRenderer.apply(this, arguments);
         td.className = '';
+        if (_firstRenderedCol === null) {
+            _firstRenderedCol = col;
+        }
 
         // cube name
         if (row === 0 && (col < colOffset || col === 0)) {
             if (col === 0) {
                 td.innerHTML = cubeName;
             }
+            td.className += CLASS_HANDSON_CELL_CUBE_NAME;
             td.style.background = BACKGROUND_CUBE_NAME;
             td.style.color = COLOR_WHITE;
+            td.colSpan = 1;
             cellProperties.readOnly = true;
             if (col < axes.length - 2) {
                 td.style.borderRight = NONE;
@@ -1096,12 +1146,12 @@ var NCubeEditor2 = (function ($)
 
         // horizontal axis metadata area
         else if (row === 0) {
-            if (axes.length > 1 && col === colOffset) {
+            if (axes.length > 1 && (col === colOffset || (_firstRenderedCol > 0 && col === _firstRenderedCol))) {
                 td.style.overflow = 'visible';
                 buildAxisMenu(axes[colOffset].name, td);
                 $(td).find('div.btn-group').addClass('pos-fixed');
+                td.colSpan = axes[colOffset].columnLength - _firstRenderedCol;
             }
-            td.colSpan = axes[colOffset].columnLength;
             td.style.background = BACKGROUND_AXIS_INFO;
             td.style.color = COLOR_WHITE;
             cellProperties.readOnly = true;
@@ -1131,8 +1181,8 @@ var NCubeEditor2 = (function ($)
 
         // row headaers
         else if (col === 0 || col < colOffset) {
-            var val = getRowHeaderValue(row, col);
-            if (row > 2 && getColumnLength(axes[col]) > 1 && val === getRowHeaderValue(row - 1, col)) {
+            var val = getTableRowHeaderValue(row, col);
+            if (row > 2 && getColumnLength(axes[col]) > 1 && val === getTableRowHeaderValue(row - 1, col)) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = val;
@@ -1162,7 +1212,7 @@ var NCubeEditor2 = (function ($)
                     td.className += CLASS_HANDSON_CELL_URL;
                     td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
                     buildUrlLink(td);
-                } else if (['exp', 'method'].indexOf(cellData.type) > -1) {
+                } else if (CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
                     td.className += CLASS_HANDSON_CELL_CODE;
                     buildExpressionLink(cellData.value, td);
                 } else if ('date' === cellData.type) {
@@ -1184,9 +1234,12 @@ var NCubeEditor2 = (function ($)
         }
     };
 
-    var getTextCellValue = function(row, col)
+    var getTableTextCellValue = function(row, col) {
+        return getTextCellValue(getCellData(row, col));
+    };
+
+    var getTextCellValue = function(cellData)
     {
-        var cellData = getCellData(row, col);
         var val = '';
 
         if (cellData)
@@ -1374,6 +1427,39 @@ var NCubeEditor2 = (function ($)
                 e.preventDefault();
             });
         }
+        li.append(an);
+        ul.append(li);
+
+        li = $('<div/>').prop({'class': 'divider'});
+        ul.append(li);
+        li = $('<li/>');
+        an = $('<a href="#">');
+        an[0].innerHTML = "# Frozen Table Columns:";
+        an.click(function (e) {
+            e.preventDefault();
+        });
+        var newNameInput = $('<input/>')
+            .attr('type','text')
+            .addClass('form-control frozen-cols-input')
+            .val(getNumFrozenCols())
+            .click(function (ie) {
+                ie.preventDefault();
+                ie.stopPropagation();
+            })
+            .keyup(function(e) {
+                if ([KEY_CODES.ENTER,KEY_CODES.TAB].indexOf(e.keyCode) > -1) {
+                    li.removeClass('open');
+                    $('div.dropdown-backdrop').hide();
+                }
+            })
+            .change(function() {
+                var val = $(this).val();
+                if (!isNaN(val)) {
+                    setFrozenColumns(parseInt(val));
+                }
+            })
+        ;
+        an.append(newNameInput);
         li.append(an);
         ul.append(li);
 
@@ -1634,7 +1720,7 @@ var NCubeEditor2 = (function ($)
         {
             for (var col = range.startCol; col <= range.endCol; col++)
             {
-                var content = getTextCellValue(row, col);
+                var content = getTableTextCellValue(row, col);
                 var cellId = getCellId(row, col);
                 if (cellId) {
                     cells.push(cellId.split('_'));

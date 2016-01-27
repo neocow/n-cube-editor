@@ -151,6 +151,13 @@ div#editColumnsModal div.panel-group
     padding: 3px 20px;
 }
 
+
+.frozen-cols-input {
+    width: 30px;
+    height: inherit;
+    padding: 2px 5px;
+}
+
 #hot-container > div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(2) > th {
     font-size: x-small;
     white-space: normal;
