@@ -19,6 +19,17 @@
  *         limitations under the License.
  */
 
+(function($) {
+    $.fn.canvasMeasureWidth = function (font) {
+        if (!jQuery._cachedCanvas) {
+            var canvas = document.createElement('canvas');
+            jQuery._cachedCanvas = canvas.getContext('2d');
+        }
+        jQuery._cachedCanvas.font = font;
+        return jQuery._cachedCanvas.measureText(this[0].innerText).width;
+    };
+})(jQuery);
+
 var NCE = (function ($)
 {
     var head = 'HEAD';
@@ -86,7 +97,6 @@ var NCE = (function ($)
     var _menuOptions = [];
     var _tabOverflow = $('#tab-overflow');
     var _branchNames = [];
-    var _hiddenCell = $('#test-cell');
     var _draggingTabCubeInfo = null;
     var _tabDragIndicator = $('#tab-drag-indicator');
 
@@ -878,8 +888,7 @@ var NCE = (function ($)
                 }
 
                 var tabText = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - ');
-                _hiddenCell[0].innerHTML = tabText;
-                var textWidth = _hiddenCell.width();
+                var textWidth = $('<p>' + tabText + '</p>').canvasMeasureWidth(FONT_CELL) + CALC_WIDTH_TAB_OVERFLOW_MOD;
                 if (textWidth > largestText) {
                     largestText = textWidth;
                 }

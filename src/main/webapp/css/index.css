@@ -78,12 +78,6 @@ body {
     background-color: #555;
 }
 
-#test-cell {
-    padding:0;
-    border: none;
-    display: inline-block;
-}
-
 .overflow-dropdown {
     position: fixed;
 }

@@ -170,12 +170,6 @@ div#editColumnsModal div.panel-group
 
 /* begin cell display */
 
-#test-cell, #test-code {
-    padding:0;
-    border: none;
-    display: inline-block;
-}
-
 .rule-name  {
     background:#555;
     color:#e8e8e8;

@@ -17,8 +17,15 @@ var DIFF_VISUAL = 3;
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
 var TAB_SEPARATOR = '~';
+
 var MIN_COL_WIDTH = 50;
 var MAX_COL_WIDTH = 600;
+var FONT_SIZE = '14px';
+var FONT_CELL = FONT_SIZE + ' Helvetica Neue';
+var FONT_CODE = FONT_SIZE + ' Lucida Console';
+var CALC_WIDTH_AXIS_BUTTON_MOD = 65;
+var CALC_WIDTH_BASE_MOD = 20;
+var CALC_WIDTH_TAB_OVERFLOW_MOD = 45;
 
 var CONFIG_TITLE = '~Title';
 var CONFIG_DEFAULT_TAB = '~DefaultTab';

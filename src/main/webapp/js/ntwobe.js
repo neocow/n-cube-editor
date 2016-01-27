@@ -1,7 +1,16 @@
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();
-    }
+    };
+
+    $.fn.canvasMeasureWidth = function (font) {
+        if (!jQuery._cachedCanvas) {
+            var canvas = document.createElement('canvas');
+            jQuery._cachedCanvas = canvas.getContext('2d');
+        }
+        jQuery._cachedCanvas.font = font;
+        return jQuery._cachedCanvas.measureText(this[0].innerText).width;
+    };
 })(jQuery);
 
 var NCubeEditor2 = (function ($)
@@ -41,8 +50,6 @@ var NCubeEditor2 = (function ($)
     var _ncubeContent = null;
     var _ncubeHtmlError = null;
     var _bufferText = null;
-    var _testCode = null;
-    var _testCell = null;
     var _firstRenderedCol = null;
 
     var init = function(info) {
@@ -62,8 +69,6 @@ var NCubeEditor2 = (function ($)
             _searchField = document.getElementById('search-field');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
-            _testCell = $('#test-cell');
-            _testCode = $('#test-code');
 
             addColumnEditListeners();
             addColumnHideListeners();
@@ -145,10 +150,6 @@ var NCubeEditor2 = (function ($)
                         width: winWidth
                     });
                 }
-
-                var cellCss = {'max-width':winWidth+'px'};
-                _testCode.css(cellCss);
-                _testCell.css(cellCss);
 
                 NCubeEditor2.render();
                 setUtilityBarDisplay();
@@ -823,9 +824,9 @@ var NCubeEditor2 = (function ($)
     {
         var calcDomWidth = function (value, modifier, type)
         {
-            var testElement = type == 'exp' ? _testCode: _testCell;
-            testElement[0].textContent = value;
-            return testElement.width() + modifier;
+            var font = type === 'exp' ? FONT_CODE : FONT_CELL;
+            var width = $('<p>' + value + '</p>').canvasMeasureWidth(font) + modifier;
+            return width;
         };
 
         var findWidth = function(oldWidth, newWidth)
@@ -850,7 +851,7 @@ var NCubeEditor2 = (function ($)
             for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
             {
                 var colKey = columnKeys[colIndex];
-                var firstWidth = calcDomWidth(columns[colKey].value, 10, null);
+                var firstWidth = calcDomWidth(columns[colKey].value, CALC_WIDTH_BASE_MOD, null);
                 topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
             }
             var columnIds = axisColumnMap[axes[colOffset].name];
@@ -869,7 +870,7 @@ var NCubeEditor2 = (function ($)
                     var cellKey = cellKeys[keyIndex];
                     var cell = cells[cellKey];
                     var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
-                    var width = calcDomWidth(value, 10, cell.type);
+                    var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
                     var colId = regex.exec(cellKey)[0];
                     topWidths[colId] = findWidth(topWidths[colId], width);
                 }
@@ -906,7 +907,7 @@ var NCubeEditor2 = (function ($)
                 var cellKey = cellKeys[keyIndex];
                 var cell = cells[cellKey];
                 var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
-                var width = calcDomWidth(value, 10, cell.type);
+                var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
                 correctWidth = findWidth(oldWidth, width);
                 oldWidth = correctWidth;
             }
@@ -915,7 +916,7 @@ var NCubeEditor2 = (function ($)
 
         var findWidestColumn = function (axisName)
         {
-            var buttonWidth = calcDomWidth(axisName, 45, null);
+            var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
             var oldWidth = findWidth(0, buttonWidth);
             var axisColumns = axisColumnMap[axisName];
             for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
@@ -934,7 +935,7 @@ var NCubeEditor2 = (function ($)
                 {
                     columnName = column.value;
                 }
-                var colWidth = calcDomWidth(columnName, 10, null);
+                var colWidth = calcDomWidth(columnName, CALC_WIDTH_BASE_MOD, null);
                 var correctWidth = findWidth(oldWidth, colWidth);
                 oldWidth = correctWidth;
             }
