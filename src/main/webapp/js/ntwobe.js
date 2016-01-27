@@ -146,7 +146,7 @@ var NCubeEditor2 = (function ($)
                     });
                 }
 
-                var cellCss = {'max-width':winWidth+'px', padding:'0', border:'none'};
+                var cellCss = {'max-width':winWidth+'px'};
                 _testCode.css(cellCss);
                 _testCell.css(cellCss);
 
@@ -880,7 +880,7 @@ var NCubeEditor2 = (function ($)
         {
             for (var hotCol = 0, hotColLength = getHotSettings().startCols; hotCol < hotColLength; hotCol++)
             {
-                if (hotCol < axes.length - 1)
+                if (hotCol < colOffset)
                 {
                     var axisName = axes[hotCol].name;
                     _columnWidths.push(findWidestColumn(axisName));
