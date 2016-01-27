@@ -594,18 +594,20 @@ var NCubeEditor2 = (function ($)
         return result;
     };
 
-    var getRowHeaderValue = function(row, col) {
+    var getTableRowHeaderValue = function(row, col) {
+        return getRowHeaderValue(axes[col], getRowHeader(row, col));
+    };
+
+    var getRowHeaderValue = function(axis, rowHeader) {
         var getDateRangeString = function(range) {
             var v1 = range[0].substring(0, range[0].indexOf('T'));
             var v2 = range[1].substring(0, range[1].indexOf('T'));
             return '[' + v1 + ' - ' + v2 + ')';
         };
 
-        var rowHeader = getRowHeader(row, col);
         var rule = '';
         var val = '';
 
-        var axis = axes[col];
         var type = axis.type.toLowerCase();
         var valueType = axis.valueType.toLowerCase();
 
@@ -641,7 +643,7 @@ var NCubeEditor2 = (function ($)
     var getRowHeaderPlainText = function(row, col) {
         var regexAnyTag = /(<([^>]+)>)/ig;
         var regexHr = /(<hr([^>]+)>)/ig;
-        var val = getRowHeaderValue(row, col);
+        var val = getTableRowHeaderValue(row, col);
         return val.replace(regexHr, ' - ').replace(regexAnyTag, '');
     };
 
@@ -824,7 +826,7 @@ var NCubeEditor2 = (function ($)
     {
         var calcDomWidth = function (value, modifier, type)
         {
-            var font = type === 'exp' ? FONT_CODE : FONT_CELL;
+            var font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
             var width = $('<p>' + value + '</p>').canvasMeasureWidth(font) + modifier;
             return width;
         };
@@ -851,7 +853,8 @@ var NCubeEditor2 = (function ($)
             for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
             {
                 var colKey = columnKeys[colIndex];
-                var firstWidth = calcDomWidth(columns[colKey].value, CALC_WIDTH_BASE_MOD, null);
+                var columnText = getRowHeaderValue(axis, columns[colKey]);
+                var firstWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, null);
                 topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
             }
             var columnIds = axisColumnMap[axes[colOffset].name];
@@ -869,7 +872,7 @@ var NCubeEditor2 = (function ($)
                 for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
                     var cellKey = cellKeys[keyIndex];
                     var cell = cells[cellKey];
-                    var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
+                    var value = getTextCellValue(cell);
                     var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
                     var colId = regex.exec(cellKey)[0];
                     topWidths[colId] = findWidth(topWidths[colId], width);
@@ -906,7 +909,7 @@ var NCubeEditor2 = (function ($)
             for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
                 var cellKey = cellKeys[keyIndex];
                 var cell = cells[cellKey];
-                var value = cell.hasOwnProperty('url') ? cell.url : cell.value;
+                var value = getTextCellValue(cell);
                 var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
                 correctWidth = findWidth(oldWidth, width);
                 oldWidth = correctWidth;
@@ -919,23 +922,13 @@ var NCubeEditor2 = (function ($)
             var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
             var oldWidth = findWidth(0, buttonWidth);
             var axisColumns = axisColumnMap[axisName];
+            var axis = data.axes[axisName.toLowerCase()];
             for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
             {
                 var columnId = axisColumns[axisCol];
-                var column = data.axes[axisName.toLowerCase()].columns[columnId];
-                var columnName;
-                if (column.hasOwnProperty('name') && column.hasOwnProperty('value'))
-                {
-                    columnName = column.name.length > column.value.length ? column.name : column.value;
-                } else if (column.hasOwnProperty('name'))
-                {
-                    columnName = column.name;
-                }
-                else
-                {
-                    columnName = column.value;
-                }
-                var colWidth = calcDomWidth(columnName, CALC_WIDTH_BASE_MOD, null);
+                var column = axis.columns[columnId];
+                var columnText = getRowHeaderValue(axis, column);
+                var colWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, null);
                 var correctWidth = findWidth(oldWidth, colWidth);
                 oldWidth = correctWidth;
             }
@@ -1188,8 +1181,8 @@ var NCubeEditor2 = (function ($)
 
         // row headaers
         else if (col === 0 || col < colOffset) {
-            var val = getRowHeaderValue(row, col);
-            if (row > 2 && getColumnLength(axes[col]) > 1 && val === getRowHeaderValue(row - 1, col)) {
+            var val = getTableRowHeaderValue(row, col);
+            if (row > 2 && getColumnLength(axes[col]) > 1 && val === getTableRowHeaderValue(row - 1, col)) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = val;
@@ -1219,7 +1212,7 @@ var NCubeEditor2 = (function ($)
                     td.className += CLASS_HANDSON_CELL_URL;
                     td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
                     buildUrlLink(td);
-                } else if (['exp', 'method'].indexOf(cellData.type) > -1) {
+                } else if (CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
                     td.className += CLASS_HANDSON_CELL_CODE;
                     buildExpressionLink(cellData.value, td);
                 } else if ('date' === cellData.type) {
@@ -1241,9 +1234,12 @@ var NCubeEditor2 = (function ($)
         }
     };
 
-    var getTextCellValue = function(row, col)
+    var getTableTextCellValue = function(row, col) {
+        return getTextCellValue(getCellData(row, col));
+    };
+
+    var getTextCellValue = function(cellData)
     {
-        var cellData = getCellData(row, col);
         var val = '';
 
         if (cellData)
@@ -1724,7 +1720,7 @@ var NCubeEditor2 = (function ($)
         {
             for (var col = range.startCol; col <= range.endCol; col++)
             {
-                var content = getTextCellValue(row, col);
+                var content = getTableTextCellValue(row, col);
                 var cellId = getCellId(row, col);
                 if (cellId) {
                     cells.push(cellId.split('_'));

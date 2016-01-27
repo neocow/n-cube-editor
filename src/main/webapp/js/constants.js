@@ -23,7 +23,7 @@ var MAX_COL_WIDTH = 600;
 var FONT_SIZE = '14px';
 var FONT_CELL = FONT_SIZE + ' Helvetica Neue';
 var FONT_CODE = FONT_SIZE + ' Lucida Console';
-var CALC_WIDTH_AXIS_BUTTON_MOD = 65;
+var CALC_WIDTH_AXIS_BUTTON_MOD = 50;
 var CALC_WIDTH_BASE_MOD = 20;
 var CALC_WIDTH_TAB_OVERFLOW_MOD = 45;
 
@@ -69,6 +69,7 @@ var CUBE_INFO = {
 
 URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
+CODE_CELL_TYPE_LIST = ['exp', 'method'];
 
 var KEY_CODES = {
     MOUSE_LEFT: 1,
