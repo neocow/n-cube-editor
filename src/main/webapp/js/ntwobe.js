@@ -43,6 +43,7 @@ var NCubeEditor2 = (function ($)
     var _bufferText = null;
     var _testCode = null;
     var _testCell = null;
+    var _firstRenderedCol = null;
 
     var init = function(info) {
         if (!nce) {
@@ -157,6 +158,18 @@ var NCubeEditor2 = (function ($)
         setCoordinateBarListeners();
         buildCubeMap();
         setUtilityBarDisplay();
+    };
+
+    var getNumFrozenCols = function() {
+        var savedNum = nce.getNumFrozenCols();
+        if (savedNum !== null) {
+            return parseInt(savedNum);
+        }
+        return colOffset || 1;
+    };
+
+    var saveNumFrozenCols = function(num) {
+        nce.saveNumFrozenCols(num);
     };
 
     var toggleClipFormat = function(event) {
@@ -982,6 +995,11 @@ var NCubeEditor2 = (function ($)
         return index - 1;
     };
 
+    var setFrozenColumns = function(numFixed) {
+        saveNumFrozenCols(numFixed);
+        hot.updateSettings({fixedColumnsLeft:numFixed});
+    };
+
     var getHotSettings = function() {
         return {
             copyPaste: false,
@@ -1001,7 +1019,7 @@ var NCubeEditor2 = (function ($)
             contextMenu: false,
             manualColumnResize: true,
             manualRowResize: true,
-            fixedColumnsLeft: colOffset,
+            fixedColumnsLeft: getNumFrozenCols(),
             fixedRowsTop: 2,
             currentRowClassName: CLASS_HANDSON_CURRENT_ROW,
             currentColClassName: CLASS_HANDSON_CURRENT_ROW,
@@ -1014,6 +1032,9 @@ var NCubeEditor2 = (function ($)
             },
             cells: function (row, col, prop) {
                 return {renderer:categoryRenderer};
+            },
+            beforeRender: function() {
+                _firstRenderedCol = null;
             },
             afterRender: function() {
                 setButtonDropdownLocations();
@@ -1048,6 +1069,36 @@ var NCubeEditor2 = (function ($)
 
                 resetCoordinateBar(display);
                 nce.saveViewPosition({row:r, col: c});
+            },
+            afterScrollHorizontally: function() {
+                var numFixed = getNumFrozenCols();
+                if (numFixed < colOffset) {
+                    var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1)');
+                    var btn = $(tr).find('div.btn-group');
+                    var scrollAmt = $('.ht_master .wtHolder').scrollLeft();
+                    var thWidth = tr.find('th').outerWidth();
+                    var frozenWidth = thWidth;
+                    var startingWidth = thWidth;
+
+                    if (_firstRenderedCol === 0) {
+                        for (var i = 0; i < colOffset; i++) {
+                            var curWidth = tr.find('td').eq(i).outerWidth();
+                            startingWidth += curWidth;
+                            if (i < numFixed) {
+                                frozenWidth += curWidth;
+                            }
+                        }
+                    }
+
+                    var newWidth;
+                    if (scrollAmt < (startingWidth - frozenWidth)) {
+                        newWidth = startingWidth - scrollAmt;
+                    } else {
+                        var afterSubtract = frozenWidth || (startingWidth - scrollAmt);
+                        newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
+                    }
+                    btn.css({left:newWidth});
+                }
             }
         };
     };
@@ -1079,14 +1130,19 @@ var NCubeEditor2 = (function ($)
     var categoryRenderer = function(instance, td, row, col, prop, value, cellProperties) {
         Handsontable.renderers.TextRenderer.apply(this, arguments);
         td.className = '';
+        if (_firstRenderedCol === null) {
+            _firstRenderedCol = col;
+        }
 
         // cube name
         if (row === 0 && (col < colOffset || col === 0)) {
             if (col === 0) {
                 td.innerHTML = cubeName;
             }
+            td.className += CLASS_HANDSON_CELL_CUBE_NAME;
             td.style.background = BACKGROUND_CUBE_NAME;
             td.style.color = COLOR_WHITE;
+            td.colSpan = 1;
             cellProperties.readOnly = true;
             if (col < axes.length - 2) {
                 td.style.borderRight = NONE;
@@ -1096,12 +1152,12 @@ var NCubeEditor2 = (function ($)
 
         // horizontal axis metadata area
         else if (row === 0) {
-            if (axes.length > 1 && col === colOffset) {
+            if (axes.length > 1 && (col === colOffset || (_firstRenderedCol > 0 && col === _firstRenderedCol))) {
                 td.style.overflow = 'visible';
                 buildAxisMenu(axes[colOffset].name, td);
                 $(td).find('div.btn-group').addClass('pos-fixed');
+                td.colSpan = axes[colOffset].columnLength - _firstRenderedCol;
             }
-            td.colSpan = axes[colOffset].columnLength;
             td.style.background = BACKGROUND_AXIS_INFO;
             td.style.color = COLOR_WHITE;
             cellProperties.readOnly = true;
@@ -1374,6 +1430,39 @@ var NCubeEditor2 = (function ($)
                 e.preventDefault();
             });
         }
+        li.append(an);
+        ul.append(li);
+
+        li = $('<div/>').prop({'class': 'divider'});
+        ul.append(li);
+        li = $('<li/>');
+        an = $('<a href="#">');
+        an[0].innerHTML = "# Frozen Table Columns:";
+        an.click(function (e) {
+            e.preventDefault();
+        });
+        var newNameInput = $('<input/>')
+            .attr('type','text')
+            .addClass('form-control frozen-cols-input')
+            .val(getNumFrozenCols())
+            .click(function (ie) {
+                ie.preventDefault();
+                ie.stopPropagation();
+            })
+            .keyup(function(e) {
+                if ([KEY_CODES.ENTER,KEY_CODES.TAB].indexOf(e.keyCode) > -1) {
+                    li.removeClass('open');
+                    $('div.dropdown-backdrop').hide();
+                }
+            })
+            .change(function() {
+                var val = $(this).val();
+                if (!isNaN(val)) {
+                    setFrozenColumns(parseInt(val));
+                }
+            })
+        ;
+        an.append(newNameInput);
         li.append(an);
         ul.append(li);
 

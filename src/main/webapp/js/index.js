@@ -156,7 +156,7 @@ var NCE = (function ($)
 
     function addCurrentCubeTab(insertIdx) {
         var cubeInfo = getSelectedCubeInfo();
-        var newOpenCube = {cubeKey:getCubeInfoKey(cubeInfo),status:null,position:{}};
+        var newOpenCube = {cubeKey:getCubeInfoKey(cubeInfo),status:null,position:{},numFrozenCols:null};
         if (insertIdx > -1) {
             _openCubes.splice(insertIdx, 0, newOpenCube);
         } else {
@@ -175,13 +175,31 @@ var NCE = (function ($)
         }
     }
 
-    function saveViewPosition(position) {
-        _openCubes[getOpenCubeIndex(getSelectedCubeInfo())].position[getActiveTabViewType()] = position;
+    function saveOpenCubeInfoValue(property, value) {
+        _openCubes[getOpenCubeIndex(getSelectedCubeInfo())][property] = value;
         localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
     }
 
+    function getOpenCubeInfoValue(property) {
+        return _openCubes[getOpenCubeIndex(getSelectedCubeInfo())][property];
+    }
+
+    function saveViewPosition(position) {
+        var savedPos = getOpenCubeInfoValue('position');
+        savedPos[getActiveTabViewType()] = position;
+        saveOpenCubeInfoValue('position', savedPos);
+    }
+
     function getViewPosition() {
-        return _openCubes[getOpenCubeIndex(getSelectedCubeInfo())].position[getActiveTabViewType()];
+        return getOpenCubeInfoValue('position')[getActiveTabViewType()];
+    }
+
+    function saveNumFrozenCols(num) {
+        saveOpenCubeInfoValue('numFrozenCols', num);
+    }
+
+    function getNumFrozenCols() {
+        return getOpenCubeInfoValue('numFrozenCols');
     }
 
     function getCubeInfoKey(cubeInfo)
@@ -981,7 +999,9 @@ var NCE = (function ($)
             loadNCubes: loadNCubes,
             loadNCubeListView: loadNCubeListView,
             saveViewPosition: saveViewPosition,
-            getViewPosition: getViewPosition
+            getViewPosition: getViewPosition,
+            getNumFrozenCols: getNumFrozenCols,
+            saveNumFrozenCols: saveNumFrozenCols
         };
     }
 
