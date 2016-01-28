@@ -599,14 +599,14 @@ class NCubeController extends BaseController
      * Update an entire set of columns on an axis at one time.  The updatedAxis is not a real axis,
      * but treated like an Axis-DTO where the list of columns within the axis are in display order.
      */
-    void updateAxisColumns(ApplicationID appId, String cubeName, Axis updatedAxis)
+    void updateAxisColumns(ApplicationID appId, String cubeName, String axisName, Object[] cols)
     {
         try
         {
             appId = addTenant(appId)
             isAllowed(appId, cubeName, Delta.Type.UPDATE)
+            Set<Column> columns = new LinkedHashSet<>()
 
-            List<Column> cols = updatedAxis.getColumns()
             if (cols != null)
             {
                 cols.each {
@@ -614,13 +614,14 @@ class NCubeController extends BaseController
                         Object value = column.value
                         if (value == null || "".equals(value))
                         {
-                            throw new IllegalArgumentException('Column cannot have empty value, n-cube: ' + cubeName + ', axis: ' + updatedAxis.name)
+                            throw new IllegalArgumentException('Column cannot have empty value, n-cube: ' + cubeName + ', axis: ' + axisName)
                         }
+                        columns.add(column)
                 }
             }
 
             NCube ncube = nCubeService.loadCube(appId, cubeName)
-            ncube.updateColumns(updatedAxis)
+            ncube.updateColumns(axisName, columns)
             nCubeService.updateNCube(ncube, getUserForDatabase())
         }
         catch (Exception e)

@@ -1463,7 +1463,7 @@ var NCubeEditor2 = (function ($)
         ul.append(li);
         li = $('<li/>');
         an = $('<a href="#">');
-        an[0].innerHTML = "# Frozen Table Columns:";
+        an[0].innerHTML = "# Frozen Columns:";
         an.click(function (e) {
             e.preventDefault();
         });
@@ -2320,7 +2320,7 @@ var NCubeEditor2 = (function ($)
             }
         });
         axis.defaultCol = null;
-        var result = nce.call("ncubeController.updateAxisColumns", [nce.getAppId(), nce.getSelectedCubeName(), axis]);
+        var result = nce.call("ncubeController.updateAxisColumns", [nce.getAppId(), nce.getSelectedCubeName(), axis.name, axis.columns]);
 
         if (result.status !== true) {
             nce.showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
