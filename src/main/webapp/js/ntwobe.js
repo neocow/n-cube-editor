@@ -640,6 +640,13 @@ var NCubeEditor2 = (function ($)
         return '' + val;
     };
 
+    var getRowHeaderPlainTextForWidth = function(axis, rowHeader) {
+        var regexAnyTag = /(<([^>]+)>)/ig;
+        var regexHr = /(<hr([^>]+)>)/ig;
+        var val = getRowHeaderValue(axis, rowHeader);
+        return val.replace(regexHr, '\n').replace(regexAnyTag, '');
+    };
+
     var getRowHeaderPlainText = function(row, col) {
         var regexAnyTag = /(<([^>]+)>)/ig;
         var regexHr = /(<hr([^>]+)>)/ig;
@@ -827,8 +834,29 @@ var NCubeEditor2 = (function ($)
         var calcDomWidth = function (value, modifier, type)
         {
             var font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
-            var width = $('<p>' + value + '</p>').canvasMeasureWidth(font) + modifier;
-            return width;
+            var width = 0;
+            var idx = value.indexOf('\n');
+            if (idx < 0) {
+                width = $('<p>' + value + '</p>').canvasMeasureWidth(font);
+            } else {
+                var getNewWidth = function(str) {
+                    var tempWidth = $('<p>' + str + '</p>').canvasMeasureWidth(font);
+                    if (tempWidth > width) {
+                        width = tempWidth;
+                    }
+                };
+                var temp2;
+                var temp1 = value;
+                while (idx > -1) {
+                    temp2 = value.substring(0, idx);
+                    getNewWidth(temp2);
+                    temp1 = temp1.substring(idx + 1);
+                    idx = temp1.indexOf('\n');
+                }
+                getNewWidth(temp1);
+            }
+
+            return width + modifier;
         };
 
         var findWidth = function(oldWidth, newWidth)
@@ -853,8 +881,9 @@ var NCubeEditor2 = (function ($)
             for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
             {
                 var colKey = columnKeys[colIndex];
-                var columnText = getRowHeaderValue(axis, columns[colKey]);
-                var firstWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, null);
+                var column = columns[colKey];
+                var columnText = getRowHeaderPlainTextForWidth(axis, column);
+                var firstWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, column.type);
                 topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
             }
             var columnIds = axisColumnMap[axes[colOffset].name];
@@ -927,8 +956,8 @@ var NCubeEditor2 = (function ($)
             {
                 var columnId = axisColumns[axisCol];
                 var column = axis.columns[columnId];
-                var columnText = getRowHeaderValue(axis, column);
-                var colWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, null);
+                var columnText = getRowHeaderPlainTextForWidth(axis, column);
+                var colWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, column.type);
                 var correctWidth = findWidth(oldWidth, colWidth);
                 oldWidth = correctWidth;
             }
