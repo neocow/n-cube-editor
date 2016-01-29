@@ -555,7 +555,7 @@ var NCE = (function ($)
                 .append(
                 $('<a/>')
                     .attr('href','#')
-                    .html('Show Required Scopes')
+                    .html('Show Required Scope')
                     .click(function(e) {
                         showReqScope();
                     }))
