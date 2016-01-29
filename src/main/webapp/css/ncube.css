@@ -98,7 +98,7 @@ div#editColumnsModal div.panel-group
 }
 
 #search-field {
-    outline: -webkit-focus-ring-color auto 0;
+    outline: none;
 }
 
 .bg-white {
