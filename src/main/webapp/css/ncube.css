@@ -97,8 +97,16 @@ div#editColumnsModal div.panel-group
     text-align: right;
 }
 
+#search-field {
+    outline: -webkit-focus-ring-color auto 0;
+}
+
 .bg-white {
     background-color: white;
+}
+
+.bg-off-white {
+    background-color: #F4F4F4;
 }
 
 .pos-fixed {
