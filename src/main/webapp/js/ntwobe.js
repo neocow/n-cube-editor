@@ -876,8 +876,11 @@ var NCubeEditor2 = (function ($)
         var setupTopWidths = function()
         {
             var axis = axes[colOffset];
+            var axisName = axis.name;
             var columns = axis.columns;
-            var columnKeys = axisColumnMap[axis.name];
+            var columnKeys = axisColumnMap[axisName];
+            var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
+            topWidths[columnKeys[0]] = findWidth(0, buttonWidth);
             for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
             {
                 var colKey = columnKeys[colIndex];
@@ -886,14 +889,14 @@ var NCubeEditor2 = (function ($)
                 var firstWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, column.type);
                 topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
             }
-            var columnIds = axisColumnMap[axes[colOffset].name];
-            if (columnIds.length == 0)
+
+            if (columnKeys.length == 0)
             {
                 _columnWidths.push(MIN_COL_WIDTH);
             }
             else
             {
-                var firstColId = columnIds[0];
+                var firstColId = columnKeys[0];
                 var colPrefix = firstColId.slice(0,-10);
                 var regex = new RegExp(colPrefix + "(?:\\d{10})");
                 var cells = data.cells;
@@ -950,6 +953,7 @@ var NCubeEditor2 = (function ($)
         {
             var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
             var oldWidth = findWidth(0, buttonWidth);
+            var correctWidth = oldWidth;
             var axisColumns = axisColumnMap[axisName];
             var axis = data.axes[axisName.toLowerCase()];
             for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
@@ -958,7 +962,7 @@ var NCubeEditor2 = (function ($)
                 var column = axis.columns[columnId];
                 var columnText = getRowHeaderPlainTextForWidth(axis, column);
                 var colWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, column.type);
-                var correctWidth = findWidth(oldWidth, colWidth);
+                correctWidth = findWidth(oldWidth, colWidth);
                 oldWidth = correctWidth;
             }
             return correctWidth;
