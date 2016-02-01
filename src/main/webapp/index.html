@@ -64,22 +64,16 @@
             <li class="dropdown">
                 <a id="VersionMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Version: </a>
                 <ul class="dropdown-menu">
-                    <li class="divider"></li>
-                    <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
-                    <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
                 </ul>
             </li>
             <li>
                 <a href="#">Status:
-                    <div id="status-button-group" class="btn-group btn-group-sm" data-toggle="buttons">
-                        <label class="btn btn-primary active">
-                            <input type="radio" name="options" id="option1" autocomplete="off" checked> Radio 1 (preselected)
+                    <div class="btn-group btn-group-sm" data-toggle="buttons">
+                        <label id="status-release" class="btn btn-primary">
+                            <input type="radio" name="options" autocomplete="off"> RELEASE
                         </label>
-                        <label class="btn btn-primary">
-                            <input type="radio" name="options" id="option2" autocomplete="off"> Radio 2
-                        </label>
-                        <label class="btn btn-primary">
-                            <input type="radio" name="options" id="option3" autocomplete="off"> Radio 3
+                        <label id="status-snapshot" class="btn btn-primary">
+                            <input type="radio" name="options" autocomplete="off"> SNAPSHOT
                         </label>
                     </div>
                 </a>
@@ -102,6 +96,9 @@
                     <li><a id="clearStorage" href="#">Clear Local Storage</a></li>
                     <li><a id="serverStats" href="#">Server Stats</a></li>
                     <li><a id="httpHeaders" href="#">View HTTP Headers</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
+                    <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
                 </ul>
             </li>
         </ul>

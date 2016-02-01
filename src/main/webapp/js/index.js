@@ -37,7 +37,6 @@ var NCE = (function ($)
     var _heartBeatThread;
     var _cubeList = {};
     var _apps = [];
-    var _statuses = ['RELEASE', 'SNAPSHOT'];
     var _versions = [];
     var _openCubes = localStorage[OPEN_CUBES];
     try
@@ -1142,9 +1141,18 @@ var NCE = (function ($)
     // Clear versions (add single 'Loading versions...' entry)
     function setVersionListLoading()
     {
-        var ul = _versionMenu.parent().find('.dropdown-menu');
-        ul.find('.' + CLASS_VERSION_MENU_ITEM).remove();
+        _versionMenu.parent().find('.dropdown-menu').empty();
         _versionMenu[0].innerHTML = 'Version: Loading...';
+    }
+
+    function changeStatus(value) {
+        _selectedStatus = value;
+        loadVersions();
+        loadVersionListView();
+        loadNCubes();
+        loadNCubeListView();
+        runSearch();
+        buildMenu();
     }
 
     function addListeners()
@@ -1169,6 +1177,13 @@ var NCE = (function ($)
             var top = _openTabsPanel.outerHeight() - _tabDragIndicator.height() + _openTabsPanel.offset().top;
             _tabDragIndicator.css({left:left, top:top});
             _tabDragIndicator.show()
+        });
+
+        $('#status-release').click(function() {
+            changeStatus(STATUS.RELEASE);
+        });
+        $('#status-snapshot').click(function() {
+            changeStatus(STATUS.SNAPSHOT);
         });
 
         // 'Close' for the Diff Modal
@@ -1425,48 +1440,22 @@ var NCE = (function ($)
 
     function loadStatusListView()
     {
-        var list = $('#status-button-group');
-        list.empty();
-
-        $.each(_statuses, function (index, value) {
-            var label = $('<label/>');
-            label.addClass('btn btn-primary');
-
-            var btn = $('<input>');
-            btn.prop({type:'radio', name:'options', autocomplete:'off'});
-
-            if (_selectedStatus === value) {
-                label.addClass('active');
-                btn.prop({checked:''});
-            }
-
-            label.click(function () {
-                _selectedStatus = value;
-                loadVersions();
-                loadVersionListView();
-                loadNCubes();
-                loadNCubeListView();
-                runSearch();
-                buildMenu();
-            });
-
-            label.append(btn);
-            label.append(value);
-            list.append(label);
-        });
+        var id = _selectedStatus === STATUS.RELEASE ? 'status-release' : 'status-snapshot';
+        var el = $('#' + id);
+        el.addClass('active');
+        el.find('input').prop({checked:''});
     }
 
     function loadVersionListView()
     {
         var ul = _versionMenu.parent().find('.dropdown-menu');
-        ul.find('.' + CLASS_VERSION_MENU_ITEM).remove();
+        ul.empty();
 
         $.each(_versions, function (index, value)
         {
             var li = $('<li/>');
             var an = $('<a/>');
             an.attr('href','#');
-            an.addClass(CLASS_VERSION_MENU_ITEM);
             an[0].innerHTML = value;
             an.click(function() {
                 localStorage[SELECTED_VERSION] = value;
@@ -2223,7 +2212,7 @@ var NCE = (function ($)
         {
             var appId = {
                 'app':app,
-                'status':'SNAPSHOT',
+                'status':STATUS.SNAPSHOT,
                 'branch':_selectedBranch
             };
             var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus, _selectedBranch]);
@@ -2253,7 +2242,7 @@ var NCE = (function ($)
         var destAppId = {
             'app':newApp,
             'version':newVersion,
-            'status':'SNAPSHOT',
+            'status':STATUS.SNAPSHOT,
             'branch':_selectedBranch
         };
         var result = call("ncubeController.duplicateCube", [getAppId(), destAppId, _selectedCubeName, newName]);
@@ -2262,7 +2251,7 @@ var NCE = (function ($)
             loadAppNames();
             _selectedApp = newApp;
             loadAppListView();
-            _selectedStatus = 'SNAPSHOT';
+            _selectedStatus = STATUS.SNAPSHOT;
             loadStatusListView();
             loadVersions();
             _selectedVersion = newVersion;
