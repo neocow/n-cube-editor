@@ -451,7 +451,7 @@ class NCubeController extends BaseController
             isAllowed(appId, cubeName, null)
 
             NCube ncube = nCubeService.getCube(appId, cubeName)
-            Set<String> refs = ncube.getRequiredScope()
+            Set<String> refs = ncube.getRequiredScope([:], [:])
             Object[] scopeKeys = refs.toArray()
             caseInsensitiveSort(scopeKeys)
             return scopeKeys
@@ -820,7 +820,7 @@ class NCubeController extends BaseController
                 throw new IllegalArgumentException("Test name cannot be empty, cube: " + cubeName + ", app: " + appId)
             }
 
-            Set<String> items = ncube.getRequiredScope()
+            Set<String> items = ncube.getRequiredScope([:], [:])
             int size = items == null ? 0 : items.size()
 
             StringValuePair<CellInfo>[] coords = new StringValuePair[size]
