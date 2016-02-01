@@ -99,6 +99,8 @@ var NCE = (function ($)
     var _branchNames = [];
     var _draggingTabCubeInfo = null;
     var _tabDragIndicator = $('#tab-drag-indicator');
+    var _appMenu = $('#AppMenu');
+    var _versionMenu = $('#VersionMenu');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -944,8 +946,6 @@ var NCE = (function ($)
                 setActiveTabViewType(_defaultTab);
             }
         }
-        var ul = $('#menuList');
-        ul.empty();
         _menuOptions = [];
         $.each(menu, function (key, value)
         {
@@ -1142,11 +1142,9 @@ var NCE = (function ($)
     // Clear versions (add single 'Loading versions...' entry)
     function setVersionListLoading()
     {
-        var select = $('#version-list');
-        select.empty();
-        var option = $('<option/>');
-        option[0].textContent = 'Loading versions...';
-        select.append(option);
+        var ul = _versionMenu.parent().find('.dropdown-menu');
+        ul.find('.' + CLASS_VERSION_MENU_ITEM).remove();
+        _versionMenu[0].innerHTML = 'Version: Loading...';
     }
 
     function addListeners()
@@ -1217,45 +1215,6 @@ var NCE = (function ($)
             {   // ESCape key
                 clearSearch();
             }
-        });
-
-        // Selection listener for application change
-        $('#app-list').change(function (e)
-        {
-            var appName = e.target.value;
-            localStorage[SELECTED_APP] = appName;
-            _selectedApp = appName;
-
-            setVersionListLoading();
-            setCubeListLoading();
-
-            setTimeout(function()
-            {   // Allow selection widget to update before loading content
-                loadVersions();
-                loadVersionListView();
-                loadNCubes();
-                loadNCubeListView();
-                runSearch();
-                buildMenu();
-            }, PROGRESS_DELAY);
-        });
-
-        // Selection listener for version number change
-        $('#version-list').change(function (e)
-        {
-            var version = e.target.value;
-            localStorage[SELECTED_VERSION] = version;
-            _selectedVersion = version;
-
-            setCubeListLoading();
-
-            setTimeout(function()
-            {   // Allow bootstrap-selection widget to update before loading content
-                loadNCubes();
-                loadNCubeListView();
-                runSearch();
-                buildMenu();
-            }, PROGRESS_DELAY);
         });
 
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
@@ -1406,20 +1365,41 @@ var NCE = (function ($)
 
     function loadAppListView()
     {
-        $('#appCount')[0].textContent = _apps.length;  // update no. applications badge
-        var select = $('#app-list');
-        select.empty();
+        var ul = _appMenu.parent().find('.dropdown-menu');
+        ul.empty();
 
         $.each(_apps, function (index, value)
         {
-            var option = $("<option/>");
-            option[0].textContent = value;
-            select.append(option);
+            var li = $('<li/>');
+            var an = $('<a/>');
+            an.attr('href','#');
+            an[0].innerHTML = value;
+            an.click(function() {
+                localStorage[SELECTED_APP] = value;
+                _selectedApp = value;
+                _appMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
+
+                setVersionListLoading();
+                setCubeListLoading();
+
+                setTimeout(function()
+                {   // Allow selection widget to update before loading content
+                    loadVersions();
+                    loadVersionListView();
+                    loadNCubes();
+                    loadNCubeListView();
+                    runSearch();
+                    buildMenu();
+                }, PROGRESS_DELAY);
+            });
+
+            li.append(an);
+            ul.append(li);
         });
 
         if (_selectedApp)
         {
-            select.val(_selectedApp);
+            _appMenu[0].innerHTML = 'Application:&nbsp;<button class="btn-sm btn-primary">' + _selectedApp + '&nbsp;<b class="caret"></b></button>';
         }
     }
 
@@ -1445,17 +1425,23 @@ var NCE = (function ($)
 
     function loadStatusListView()
     {
-        var list = $('#status-list');
+        var list = $('#status-button-group');
         list.empty();
-        $.each(_statuses, function (index, value)
-        {
-            var li = $("<li/>");
-            var anchor = $('<a href="#"/>');
-            anchor.click(function ()
-            {
-                var status = anchor[0].textContent;
-                setListSelectedStatus(status, '#status-list');
-                _selectedStatus = status;
+
+        $.each(_statuses, function (index, value) {
+            var label = $('<label/>');
+            label.addClass('btn btn-primary');
+
+            var btn = $('<input>');
+            btn.prop({type:'radio', name:'options', autocomplete:'off'});
+
+            if (_selectedStatus === value) {
+                label.addClass('active');
+                btn.prop({checked:''});
+            }
+
+            label.click(function () {
+                _selectedStatus = value;
                 loadVersions();
                 loadVersionListView();
                 loadNCubes();
@@ -1463,29 +1449,48 @@ var NCE = (function ($)
                 runSearch();
                 buildMenu();
             });
-            anchor[0].textContent = value;
-            li.append(anchor);
-            list.append(li);
+
+            label.append(btn);
+            label.append(value);
+            list.append(label);
         });
-        setListSelectedStatus(_selectedStatus, '#status-list');
     }
 
     function loadVersionListView()
     {
-        $('#verCount')[0].textContent = _versions.length;  // update number of versions for the selected app
-        var select = $('#version-list');
-        select.empty();
+        var ul = _versionMenu.parent().find('.dropdown-menu');
+        ul.find('.' + CLASS_VERSION_MENU_ITEM).remove();
 
         $.each(_versions, function (index, value)
         {
-            var option = $("<option/>");
-            option[0].textContent = value;
-            select.append(option);
+            var li = $('<li/>');
+            var an = $('<a/>');
+            an.attr('href','#');
+            an.addClass(CLASS_VERSION_MENU_ITEM);
+            an[0].innerHTML = value;
+            an.click(function() {
+                localStorage[SELECTED_VERSION] = value;
+                _selectedVersion = value;
+                _versionMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
+
+                setCubeListLoading();
+
+                setTimeout(function()
+                {   // Allow bootstrap-selection widget to update before loading content
+                    loadNCubes();
+                    loadNCubeListView();
+                    runSearch();
+                    buildMenu();
+                }, PROGRESS_DELAY);
+            });
+
+            li.append(an);
+            ul.prepend(li);
         });
 
         if (_selectedVersion)
         {
-            select.val(_selectedVersion);
+            _versionMenu[0].innerHTML = 'Version:&nbsp;<button class="btn-sm btn-primary">' + _selectedVersion + '&nbsp;<b class="caret"></b></button>';
         }
     }
 
@@ -2258,7 +2263,7 @@ var NCE = (function ($)
             _selectedApp = newApp;
             loadAppListView();
             _selectedStatus = 'SNAPSHOT';
-            setListSelectedStatus('SNAPSHOT', '#status-list');
+            loadStatusListView();
             loadVersions();
             _selectedVersion = newVersion;
             loadVersionListView();
