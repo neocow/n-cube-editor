@@ -57,6 +57,34 @@
         </ul>
         <ul class="nav navbar-nav navbar-right">
             <li class="dropdown">
+                <a id="AppMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Application: </a>
+                <ul class="dropdown-menu">
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a id="VersionMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Version: </a>
+                <ul class="dropdown-menu">
+                    <li class="divider"></li>
+                    <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
+                    <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Status:
+                    <div id="status-button-group" class="btn-group btn-group-sm" data-toggle="buttons">
+                        <label class="btn btn-primary active">
+                            <input type="radio" name="options" id="option1" autocomplete="off" checked> Radio 1 (preselected)
+                        </label>
+                        <label class="btn btn-primary">
+                            <input type="radio" name="options" id="option2" autocomplete="off"> Radio 2
+                        </label>
+                        <label class="btn btn-primary">
+                            <input type="radio" name="options" id="option3" autocomplete="off"> Radio 3
+                        </label>
+                    </div>
+                </a>
+            </li>
+            <li class="dropdown">
                 <a id="BranchMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Branch: </a>
                 <ul class="dropdown-menu">
                     <li><a id="branchSelect" href="#">Select/Create Branch...</a></li>
@@ -81,47 +109,7 @@
 </header>
 
 <div id="west" class="ui-layout-west noselect">
-    <div id="app-list-div" class="panel">
-        <div class="panel-heading">
-            <div class="btn-group">
-                <a class="btn-sm btn-primary" href="#">Application</a>
-            </div>
-            <span id="appCount" class="badge pull-right"></span>
-        </div>
-        <select id="app-list" class="form-control">
-            <option>Loading applications...</option>
-        </select>
-    </div>
-
-    <div id="version-list-div" class="panel">
-        <div class="panel-heading">
-            <div class="btn-group">
-                <a id="foo" href="#" class="btn-sm btn-primary dropdown-toggle" aria-haspopup="true" data-toggle="dropdown" role="button">
-                    <span>Version</span><span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu" role="menu" aria-labelledby="foo">
-                    <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
-                    <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
-                </ul>
-            </div>
-            <span id="verCount" class="badge pull-right"></span>
-        </div>
-        <select id="version-list" class="form-control">
-            <option>Loading versions...</option>
-        </select>
-    </div>
-
-    <div id="status-list-div" class="panel">
-        <div class="main-list">
-            <ul class="nav nav-list" id="status-list">
-                <li>
-                    <a>Loading status...</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <div id="ncube-list-div" class="panel" style="height:calc(100% - 210px)">
+    <div id="ncube-list-div" class="panel" style="height:100%">
         <div class="panel-heading">
             <div class="btn-group">
                 <a href="#" class="btn-sm btn-primary dropdown-toggle" aria-haspopup="true" data-toggle="dropdown"

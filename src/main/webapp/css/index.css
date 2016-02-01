@@ -328,6 +328,12 @@ div#restoreCubeModal ul.list-group
     padding: 0 2px;
 }
 
+.navbar-nav>li>.dropdown-menu {
+    max-height: 250px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
 #fadeMe1 {
     opacity: 1.0;
     background: #D1C5B7;

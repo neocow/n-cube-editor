@@ -53,6 +53,8 @@ var CLASS_CONFLICT = 'conflict';
 var CLASS_OUT_OF_SYNC = 'out-of-sync';
 var CLASS_ACTIVE_VIEW = 'active-view';
 
+var CLASS_VERSION_MENU_ITEM = 'version-menu-item';
+
 var TAB_OVERFLOW_TEXT_PADDING = 70;
 var TAB_WIDTH = 217;
 var COORDINATE_BAR_SCROLL_AMOUNT = 40;
