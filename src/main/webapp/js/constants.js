@@ -53,8 +53,6 @@ var CLASS_CONFLICT = 'conflict';
 var CLASS_OUT_OF_SYNC = 'out-of-sync';
 var CLASS_ACTIVE_VIEW = 'active-view';
 
-var CLASS_VERSION_MENU_ITEM = 'version-menu-item';
-
 var TAB_OVERFLOW_TEXT_PADDING = 70;
 var TAB_WIDTH = 217;
 var COORDINATE_BAR_SCROLL_AMOUNT = 40;
@@ -69,9 +67,14 @@ var CUBE_INFO = {
     TAB_VIEW: 5
 };
 
-URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
-CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
-CODE_CELL_TYPE_LIST = ['exp', 'method'];
+var STATUS = {
+    RELEASE: 'RELEASE',
+    SNAPSHOT: 'SNAPSHOT'
+};
+
+var URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
+var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
+var CODE_CELL_TYPE_LIST = ['exp', 'method'];
 
 var KEY_CODES = {
     MOUSE_LEFT: 1,
