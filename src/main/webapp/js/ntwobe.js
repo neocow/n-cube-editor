@@ -1280,9 +1280,9 @@ var NCubeEditor2 = (function ($)
                     td.className += CLASS_HANDSON_CELL_URL;
                     td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
                     buildUrlLink(td);
-                } else if (CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
+                } else if (cellData.value) if (CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
                     td.className += CLASS_HANDSON_CELL_CODE;
-                    var highlighted = hljs.highlightAuto(cellData.value);
+                    var highlighted = hljs.highlightAuto('' + cellData.value);
                     buildExpressionLink(highlighted.value, td);
                     var pre = $('<pre/>').append($('<code/>').append(td.innerHTML));
                     td.innerHTML = '';
@@ -1291,8 +1291,8 @@ var NCubeEditor2 = (function ($)
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
-                    var highlighted = hljs.highlightAuto(cellData.value);
-                    buildExpressionLink(highlighted.value + '', td);
+                    var highlighted = hljs.highlightAuto('' + cellData.value);
+                    buildExpressionLink(highlighted.value, td);
                 }
             } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
