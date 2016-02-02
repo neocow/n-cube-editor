@@ -178,6 +178,13 @@ div#editColumnsModal div.panel-group
     padding: 0;
 }
 
+td pre {
+    padding: 0;
+    margin: 0;
+    background-color: inherit;
+    border: none;
+}
+
 /* end coord bar and HOT */
 
 /* begin cell display */

@@ -1250,11 +1250,15 @@ var NCubeEditor2 = (function ($)
                     td.className += CLASS_HANDSON_CELL_CODE;
                     var highlighted = hljs.highlightAuto(cellData.value);
                     buildExpressionLink(highlighted.value, td);
+                    var pre = $('<pre/>').append($('<code/>').append(td.innerHTML));
+                    td.innerHTML = '';
+                    $(td).append(pre);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
-                    buildExpressionLink(cellData.value + '', td);
+                    var highlighted = hljs.highlightAuto(cellData.value);
+                    buildExpressionLink(highlighted.value + '', td);
                 }
             } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
