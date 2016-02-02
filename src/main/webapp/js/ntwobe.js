@@ -1248,7 +1248,8 @@ var NCubeEditor2 = (function ($)
                     buildUrlLink(td);
                 } else if (CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
                     td.className += CLASS_HANDSON_CELL_CODE;
-                    buildExpressionLink(cellData.value, td);
+                    var highlighted = hljs.highlightAuto(cellData.value);
+                    buildExpressionLink(highlighted.value, td);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
