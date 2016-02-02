@@ -134,10 +134,6 @@ div#editColumnsModal div.panel-group
     background-color: #E0E0E0;
 }
 
-.handsontable .htCore col.rowHeader {
-    width: 40px;
-}
-
 .handsontable .htCore th, .handsontable .htCore td {
     border-top: 1px solid #CCC;
     border-bottom: none !important;

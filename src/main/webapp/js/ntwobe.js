@@ -833,6 +833,9 @@ var NCubeEditor2 = (function ($)
     {
         var calcDomWidth = function (value, modifier, type)
         {
+            if (textWidths.hasOwnProperty(value)) {
+                return textWidths[value] + modifier;
+            }
             var font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
             var width = 0;
             var idx = value.indexOf('\n');
@@ -856,6 +859,7 @@ var NCubeEditor2 = (function ($)
                 getNewWidth(temp1);
             }
 
+            textWidths[value] = width;
             return width + modifier;
         };
 
@@ -970,6 +974,7 @@ var NCubeEditor2 = (function ($)
 
         _columnWidths = [];
         var topWidths = {};
+        var textWidths = {};
         if (axes.length == 1)
         {
             buildSingleAxisWidthArray();
@@ -979,6 +984,7 @@ var NCubeEditor2 = (function ($)
             setupTopWidths();
             buildWidthArray();
         }
+        textWidths = null; // free up memory
     };
 
     var calcColumnHeader = function(index)
