@@ -559,7 +559,7 @@ var NCubeEditor2 = (function ($)
     };
 
     var getColumnHeaderValue = function(col) {
-        return getColumnHeader(col).value;
+        return getRowHeaderValue(axes[colOffset], getColumnHeader(col));
     };
 
     var getColumnHeaderId = function(col) {
@@ -1081,8 +1081,9 @@ var NCubeEditor2 = (function ($)
                             display += '<strong>' + axisName + '</strong>: ' + axisVal + ', ';
                         }
                         if (axes.length > 1) {
-                            axisName = axes[colOffset].name;
-                            axisVal = getColumnHeaderValue(c);
+                            var axis = axes[colOffset];
+                            axisName = axis.name;
+                            axisVal = getRowHeaderPlainTextForWidth(axis, getColumnHeader(c));
                         } else {
                             axisName = axes[0].name;
                             axisVal = getRowHeaderPlainText(r, 0);
@@ -1203,7 +1204,7 @@ var NCubeEditor2 = (function ($)
         else if (row === 1) {
             if (axes.length > 1) {
                 var column = getColumnHeader(col);
-                td.innerHTML = column.value;
+                td.innerHTML = getRowHeaderValue(axes[colOffset], column);
                 if (column.isSearchResult) {
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
