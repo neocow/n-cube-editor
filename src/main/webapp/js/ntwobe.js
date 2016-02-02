@@ -985,6 +985,31 @@ var NCubeEditor2 = (function ($)
             buildWidthArray();
         }
         textWidths = null; // free up memory
+
+        var savedWidths = getSavedColumnWidths();
+        var savedWidthKeys = Object.keys(savedWidths);
+        for (var i = 0, len = savedWidthKeys.length; i < len; i++) {
+            var key = savedWidthKeys[i];
+            _columnWidths[key] = savedWidths[key];
+        }
+    };
+
+    var deleteSavedColumnWidths = function() {
+        delete localStorage[getStorageKey(COLUMN_WIDTHS)];
+    };
+
+    var getSavedColumnWidths = function() {
+        var localWidthVar = localStorage[getStorageKey(COLUMN_WIDTHS)];
+        if (localWidthVar) {
+            return JSON.parse(localWidthVar);
+        }
+        return {};
+    };
+
+    var saveColumnWidth = function(col, newVal) {
+        var saved = getSavedColumnWidths();
+        saved[col] = newVal;
+        localStorage[getStorageKey(COLUMN_WIDTHS)] = JSON.stringify(saved);
     };
 
     var calcColumnHeader = function(index)
@@ -1072,6 +1097,9 @@ var NCubeEditor2 = (function ($)
             afterRender: function() {
                 setButtonDropdownLocations();
                 colorAxisButtons();
+            },
+            afterColumnResize: function(currentColumn, newSize, isDoubleClick) {
+                saveColumnWidth(currentColumn, newSize);
             },
             afterSelection: function(r, c, r2, c2) {
                 var display = '';
@@ -2349,6 +2377,7 @@ var NCubeEditor2 = (function ($)
             delete _hiddenColumns[lowerAxisName];
             storeHiddenColumns();
         }
+        deleteSavedColumnWidths();
         $(_editColumnModal).modal('hide');
         destroyEditor();
         reload();
@@ -2644,6 +2673,7 @@ var NCubeEditor2 = (function ($)
     var moveAxis = function (fromIndex, toIndex) {
         axes.splice(toIndex, 0, axes.splice(fromIndex, 1)[0]);
         storeAxisOrder();
+        deleteSavedColumnWidths();
         destroyEditor();
         reload();
     };
@@ -2704,6 +2734,7 @@ var NCubeEditor2 = (function ($)
                 axes.splice(colOffset, 0, {name:axisName});
                 storeAxisOrder();
             }
+            deleteSavedColumnWidths();
             nce.loadCube();
         } else {
             nce.showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
@@ -2736,6 +2767,7 @@ var NCubeEditor2 = (function ($)
                 axes.splice(order.indexOf(lowerAxisName), 1);
                 storeAxisOrder();
             }
+            deleteSavedColumnWidths();
             nce.loadCube();
         } else {
             nce.showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
