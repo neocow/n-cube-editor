@@ -833,6 +833,9 @@ var NCubeEditor2 = (function ($)
     {
         var calcDomWidth = function (value, modifier, type)
         {
+            if (textWidths.hasOwnProperty(value)) {
+                return textWidths[value] + modifier;
+            }
             var font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
             var width = 0;
             var idx = value.indexOf('\n');
@@ -856,6 +859,7 @@ var NCubeEditor2 = (function ($)
                 getNewWidth(temp1);
             }
 
+            textWidths[value] = width;
             return width + modifier;
         };
 
@@ -970,6 +974,7 @@ var NCubeEditor2 = (function ($)
 
         _columnWidths = [];
         var topWidths = {};
+        var textWidths = {};
         if (axes.length == 1)
         {
             buildSingleAxisWidthArray();
@@ -979,6 +984,7 @@ var NCubeEditor2 = (function ($)
             setupTopWidths();
             buildWidthArray();
         }
+        textWidths = null; // free up memory
     };
 
     var calcColumnHeader = function(index)
@@ -1250,11 +1256,15 @@ var NCubeEditor2 = (function ($)
                     td.className += CLASS_HANDSON_CELL_CODE;
                     var highlighted = hljs.highlightAuto(cellData.value);
                     buildExpressionLink(highlighted.value, td);
+                    var pre = $('<pre/>').append($('<code/>').append(td.innerHTML));
+                    td.innerHTML = '';
+                    $(td).append(pre);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
-                    buildExpressionLink(cellData.value + '', td);
+                    var highlighted = hljs.highlightAuto(cellData.value);
+                    buildExpressionLink(highlighted.value + '', td);
                 }
             } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
