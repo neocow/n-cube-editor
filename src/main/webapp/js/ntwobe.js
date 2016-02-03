@@ -1282,17 +1282,12 @@ var NCubeEditor2 = (function ($)
                     buildUrlLink(td);
                 } else if (cellData.value) if (CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
                     td.className += CLASS_HANDSON_CELL_CODE;
-                    var highlighted = hljs.highlightAuto('' + cellData.value);
-                    buildExpressionLink(highlighted.value, td);
-                    var pre = $('<pre/>').append($('<code/>').append(td.innerHTML));
-                    td.innerHTML = '';
-                    $(td).append(pre);
+                    buildExpressionLink('' + cellData.value, td);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
-                    var highlighted = hljs.highlightAuto('' + cellData.value);
-                    buildExpressionLink(highlighted.value, td);
+                    buildExpressionLink('' + cellData.value, td);
                 }
             } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                 td.innerHTML = data.defaultCellValue;
@@ -1376,11 +1371,9 @@ var NCubeEditor2 = (function ($)
                 found = true;
                 return '<a class="nc-anc">' + matched + '</a>';
             });
+            element.innerHTML = url;
 
             if (found) {
-                // substitute new text with anchor tag
-                element.innerHTML = url;       // Much faster than JQuery .html('') or .text('')
-
                 // Add click handler that opens clicked cube names
                 $(element).find('a').each(function () {
                     var link = this;
@@ -1395,8 +1388,6 @@ var NCubeEditor2 = (function ($)
                         }
                     });
                 });
-            } else {
-                element.innerHTML = url;
             }
         } else {
             element.innerHTML = url;
