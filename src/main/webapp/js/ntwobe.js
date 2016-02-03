@@ -879,19 +879,32 @@ var NCubeEditor2 = (function ($)
 
         var setupTopWidths = function()
         {
+            var savedWidths = getSavedColumnWidths();
             var axis = axes[colOffset];
             var axisName = axis.name;
             var columns = axis.columns;
             var columnKeys = axisColumnMap[axisName];
-            var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
-            topWidths[columnKeys[0]] = findWidth(0, buttonWidth);
+            var width;
+            if (savedWidths.hasOwnProperty(0 + colOffset)) {
+                width = savedWidths[0 + colOffset];
+            } else {
+                var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
+                width = findWidth(0, buttonWidth);
+            }
+            topWidths[columnKeys[0]] = width;
+
             for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
             {
                 var colKey = columnKeys[colIndex];
-                var column = columns[colKey];
-                var columnText = getRowHeaderPlainTextForWidth(axis, column);
-                var firstWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, column.type);
-                topWidths[colKey] = findWidth(topWidths[colKey], firstWidth);
+                if (savedWidths.hasOwnProperty(colIndex + colOffset)) {
+                    width = savedWidths[colIndex + colOffset];
+                } else {
+                    var column = columns[colKey];
+                    var columnText = getRowHeaderPlainTextForWidth(axis, column);
+                    var firstWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, column.type);
+                    width = findWidth(topWidths[colKey], firstWidth);
+                }
+                topWidths[colKey] = width;
             }
 
             if (columnKeys.length == 0)
@@ -905,25 +918,40 @@ var NCubeEditor2 = (function ($)
                 var regex = new RegExp(colPrefix + "(?:\\d{10})");
                 var cells = data.cells;
                 var cellKeys = Object.keys(cells);
+                var topKeys = Object.keys(topWidths);
                 for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
                     var cellKey = cellKeys[keyIndex];
-                    var cell = cells[cellKey];
-                    var value = getTextCellValue(cell);
-                    var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
                     var colId = regex.exec(cellKey)[0];
-                    topWidths[colId] = findWidth(topWidths[colId], width);
+                    var hotColIdx = topKeys.indexOf(colId) + colOffset;
+                    if (savedWidths.hasOwnProperty(hotColIdx)) {
+                        width = savedWidths[hotColIdx];
+                    } else {
+                        var cell = cells[cellKey];
+                        var value = getTextCellValue(cell);
+                        width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
+                        width = findWidth(topWidths[colId], width);
+                    }
+
+                    topWidths[colId] = width;
                 }
             }
         };
 
         var buildWidthArray = function()
         {
+            var savedWidths = getSavedColumnWidths();
             for (var hotCol = 0, hotColLength = getHotSettings().startCols; hotCol < hotColLength; hotCol++)
             {
                 if (hotCol < colOffset)
                 {
-                    var axisName = axes[hotCol].name;
-                    _columnWidths.push(findWidestColumn(axisName));
+                    var width;
+                    if (savedWidths.hasOwnProperty(hotCol)) {
+                        width = savedWidths[hotCol];
+                    } else {
+                        var axisName = axes[hotCol].name;
+                        width = findWidestColumn(axisName);
+                    }
+                    _columnWidths.push(width);
                 }
                 else
                 {
@@ -935,22 +963,34 @@ var NCubeEditor2 = (function ($)
 
         var buildSingleAxisWidthArray = function()
         {
-            var axisName = axes[0].name;
-            _columnWidths.push(findWidestColumn(axisName));
+            var savedWidths = getSavedColumnWidths();
 
-            var correctWidth;
-            var oldWidth = 0;
-            var cells = data.cells;
-            var cellKeys = Object.keys(cells);
-            for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
-                var cellKey = cellKeys[keyIndex];
-                var cell = cells[cellKey];
-                var value = getTextCellValue(cell);
-                var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
-                correctWidth = findWidth(oldWidth, width);
-                oldWidth = correctWidth;
+            // header width
+            if (savedWidths.hasOwnProperty(0)) {
+                _columnWidths.push(savedWidths[0]);
+            } else {
+                var axisName = axes[0].name;
+                _columnWidths.push(findWidestColumn(axisName));
             }
-            _columnWidths.push(correctWidth);
+
+            // cell width
+            if (savedWidths.hasOwnProperty(1)) {
+                _columnWidths.push(savedWidths[1]);
+            } else {
+                var correctWidth;
+                var oldWidth = 0;
+                var cells = data.cells;
+                var cellKeys = Object.keys(cells);
+                for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
+                    var cellKey = cellKeys[keyIndex];
+                    var cell = cells[cellKey];
+                    var value = getTextCellValue(cell);
+                    var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
+                    correctWidth = findWidth(oldWidth, width);
+                    oldWidth = correctWidth;
+                }
+                _columnWidths.push(correctWidth);
+            }
         };
 
         var findWidestColumn = function (axisName)
@@ -985,13 +1025,6 @@ var NCubeEditor2 = (function ($)
             buildWidthArray();
         }
         textWidths = null; // free up memory
-
-        var savedWidths = getSavedColumnWidths();
-        var savedWidthKeys = Object.keys(savedWidths);
-        for (var i = 0, len = savedWidthKeys.length; i < len; i++) {
-            var key = savedWidthKeys[i];
-            _columnWidths[key] = savedWidths[key];
-        }
     };
 
     var deleteSavedColumnWidths = function() {
