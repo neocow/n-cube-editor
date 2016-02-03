@@ -1404,9 +1404,21 @@ var NCubeEditor2 = (function ($)
                 found = true;
                 return '<a class="nc-anc">' + matched + '</a>';
             });
-            element.innerHTML = url;
 
             if (found) {
+                //highlight in between links
+                var highlighted = '';
+                var ancIdx;
+                while ((ancIdx = url.indexOf('<a class="nc-anc">')) > -1) {
+                    var text = url.substring(0, ancIdx);
+                    var endIdx = url.indexOf('</a>') + 4;
+                    highlighted += hljs.highlightAuto(text).value;
+                    highlighted += url.substring(ancIdx, endIdx);
+                    url = url.substring(endIdx);
+                }
+                highlighted += hljs.highlightAuto(url).value;
+                element.innerHTML = highlighted;
+
                 // Add click handler that opens clicked cube names
                 $(element).find('a').each(function () {
                     var link = this;
@@ -1421,6 +1433,8 @@ var NCubeEditor2 = (function ($)
                         }
                     });
                 });
+            } else {
+                element.innerHTML = hljs.highlightAuto(url).value;
             }
         } else {
             element.innerHTML = url;
