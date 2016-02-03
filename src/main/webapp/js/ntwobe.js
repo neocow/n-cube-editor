@@ -1527,6 +1527,25 @@ var NCubeEditor2 = (function ($)
         li.append(an);
         ul.append(li);
 
+        li = $('<li/>');
+        an = $('<a href="#">');
+        an[0].innerHTML = "Revert column widths";
+        if (localStorage[getStorageKey(COLUMN_WIDTHS)]) {
+            an.click(function (e) {
+                e.preventDefault();
+                delete localStorage[getStorageKey(COLUMN_WIDTHS)]
+                reload();
+            });
+        } else {
+            li.prop({'class': 'disabled'});
+            an.click(function (e)
+            {
+                e.preventDefault();
+            });
+        }
+        li.append(an);
+        ul.append(li);
+
         li = $('<div/>').prop({'class': 'divider'});
         ul.append(li);
         li = $('<li/>');
