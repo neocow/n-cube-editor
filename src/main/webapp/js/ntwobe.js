@@ -2064,6 +2064,20 @@ var NCubeEditor2 = (function ($)
         $('#editCellOk').click(function() {
             editCellOK();
         });
+        _editCellValue.keydown(function(e) {
+            if (e.keyCode === KEY_CODES.TAB) {
+                e.preventDefault();
+                var start = this.selectionStart;
+                var end = this.selectionEnd;
+
+                // set textarea value to insert tab
+                var oldVal = $(this).val();
+                $(this).val(oldVal.substring(0, start) + '\t' + oldVal.substring(end));
+
+                // put cursor to correct position
+                this.selectionStart = this.selectionEnd = start + 1;
+            }
+        });
     };
 
     var editCell = function() {
