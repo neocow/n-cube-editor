@@ -1315,7 +1315,7 @@ var NCubeEditor2 = (function ($)
                     buildUrlLink(td);
                 } else if (cellData.value) if (CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
                     td.className += CLASS_HANDSON_CELL_CODE;
-                    buildExpressionLink('' + cellData.value, td);
+                    buildExpressionLink('' + cellData.value, td, ['groovy']);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
@@ -1396,7 +1396,7 @@ var NCubeEditor2 = (function ($)
         });
     };
 
-    var buildExpressionLink = function(url, element) {
+    var buildExpressionLink = function(url, element, highlightLanguages) {
         if (url && url.length > 2) {
             var found = false;
 
@@ -1408,15 +1408,18 @@ var NCubeEditor2 = (function ($)
             if (found) {
                 //highlight in between links
                 var highlighted = '';
+                var tempHighlight;
                 var ancIdx;
                 while ((ancIdx = url.indexOf('<a class="nc-anc">')) > -1) {
                     var text = url.substring(0, ancIdx);
                     var endIdx = url.indexOf('</a>') + 4;
-                    highlighted += hljs.highlightAuto(text).value;
+                    tempHighlight = highlightLanguages ? hljs.highlightAuto(text, highlightLanguages) : hljs.highlightAuto(text);
+                    highlighted += tempHighlight.value;
                     highlighted += url.substring(ancIdx, endIdx);
                     url = url.substring(endIdx);
                 }
-                highlighted += hljs.highlightAuto(url).value;
+                tempHighlight = highlightLanguages ? hljs.highlightAuto(url, highlightLanguages) : hljs.highlightAuto(url);
+                highlighted += tempHighlight.value;
                 element.innerHTML = highlighted;
 
                 // Add click handler that opens clicked cube names
@@ -1434,7 +1437,8 @@ var NCubeEditor2 = (function ($)
                     });
                 });
             } else {
-                element.innerHTML = hljs.highlightAuto(url).value;
+                var highlighted = highlightLanguages ? hljs.highlightAuto(url, highlightLanguages) : hljs.highlightAuto(url);
+                element.innerHTML = highlighted.value;
             }
         } else {
             element.innerHTML = url;
