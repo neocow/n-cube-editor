@@ -201,3 +201,24 @@ div#editColumnsModal div.panel-group
 }
 
 /* end cell display */
+
+.axisTable {
+    display: table;
+    margin-bottom: 10px;
+    border-collapse: separate;
+    border-spacing: 10px;
+}
+
+.axisTableRow {
+    display: table-row;
+}
+
+.axisTableCellLeft {
+    display: table-cell;
+    font-weight: bold;
+}
+
+.axisTableCellRight {
+    display: table-cell;
+    width: 100%
+}

@@ -997,6 +997,7 @@ var NCE = (function ($)
             getSelectedApp: getSelectedApp,
             getSelectedVersion: getSelectedVersion,
             getSelectedStatus: getSelectedStatus,
+            getSelectedBranch: getSelectedBranch,
             getSelectedCubeInfoKey: getSelectedCubeInfoKey,
             isHeadSelected: isHeadSelected,
             loadCube: loadCube,
@@ -3393,6 +3394,10 @@ var NCE = (function ($)
     var getSelectedStatus = function()
     {
         return _selectedStatus;
+    };
+
+    var getSelectedBranch = function() {
+        return _selectedBranch;
     };
 
     var setActiveTabViewType = function(viewType)

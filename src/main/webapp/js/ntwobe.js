@@ -51,6 +51,45 @@ var NCubeEditor2 = (function ($)
     var _ncubeHtmlError = null;
     var _bufferText = null;
     var _firstRenderedCol = null;
+    var _axisName = null;
+    var _isRefAxis = null;
+    var _hasRefFilter = null;
+    var _addAxisName = null;
+    var _addAxisTypeName = null;
+    var _addAxisValueTypeName = null;
+    var _refAxisGroup = null;
+    var _refAxisBranch = null;
+    var _refAxisStatus = null;
+    var _refAxisApp = null;
+    var _refAxisVersion = null;
+    var _refAxisCube = null;
+    var _refAxisAxis = null;
+    var _refFilterGroup = null;
+    var _refFilterBranch = null;
+    var _refFilterStatus = null;
+    var _refFilterApp = null;
+    var _refFilterVersion = null;
+    var _refFilterCube = null;
+    var _refFilterMethod = null;
+    var _isRefAxisUpdate = null;
+    var _hasRefFilterUpdate = null;
+    var _updateAxisName = null;
+    var _updateAxisTypeName = null;
+    var _updateAxisValueTypeName = null;
+    var _refAxisGroupUpdate = null;
+    var _refAxisBranchUpdate = null;
+    var _refAxisStatusUpdate = null;
+    var _refAxisAppUpdate = null;
+    var _refAxisVersionUpdate = null;
+    var _refAxisCubeUpdate = null;
+    var _refAxisAxisUpdate = null;
+    var _refFilterGroupUpdate = null;
+    var _refFilterBranchUpdate = null;
+    var _refFilterStatusUpdate = null;
+    var _refFilterAppUpdate = null;
+    var _refFilterVersionUpdate = null;
+    var _refFilterCubeUpdate = null;
+    var _refFilterMethodUpdate = null;
 
     var init = function(info) {
         if (!nce) {
@@ -69,7 +108,46 @@ var NCubeEditor2 = (function ($)
             _searchField = document.getElementById('search-field');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
+            _isRefAxis = $('#isRefAxis');
+            _hasRefFilter = $('#hasRefFilter');
+            _addAxisName = $('#addAxisName');
+            _addAxisTypeName = $('#addAxisTypeName');
+            _addAxisValueTypeName = $('#addAxisValueTypeName');
+            _refAxisGroup = $('#refAxisGroup');
+            _refAxisBranch = $('#refAxisBranch');
+            _refAxisStatus = $('#refAxisStatus');
+            _refAxisApp = $('#refAxisApp');
+            _refAxisVersion = $('#refAxisVersion');
+            _refAxisCube = $('#refAxisCube');
+            _refAxisAxis = $('#refAxisAxis');
+            _refFilterGroup = $('#refFilterGroup');
+            _refFilterBranch = $('#refFilterBranch');
+            _refFilterStatus = $('#refFilterStatus');
+            _refFilterApp = $('#refFilterApp');
+            _refFilterVersion = $('#refFilterVersion');
+            _refFilterCube = $('#refFilterCube');
+            _refFilterMethod = $('#refFilterMethod');
+            _isRefAxisUpdate = $('#isRefAxisUpdate');
+            _hasRefFilterUpdate = $('#hasRefFilterUpdate');
+            _updateAxisName = $('#updateAxisName');
+            _updateAxisTypeName = $('#updateAxisTypeName');
+            _updateAxisValueTypeName = $('#updateAxisValueTypeName');
+            _refAxisGroupUpdate = $('#refAxisGroupUpdate');
+            _refAxisBranchUpdate = $('#refAxisBranchUpdate');
+            _refAxisStatusUpdate = $('#refAxisStatusUpdate');
+            _refAxisAppUpdate = $('#refAxisAppUpdate');
+            _refAxisVersionUpdate = $('#refAxisVersionUpdate');
+            _refAxisCubeUpdate = $('#refAxisCubeUpdate');
+            _refAxisAxisUpdate = $('#refAxisAxisUpdate');
+            _refFilterGroupUpdate = $('#refFilterGroupUpdate');
+            _refFilterBranchUpdate = $('#refFilterBranchUpdate');
+            _refFilterStatusUpdate = $('#refFilterStatusUpdate');
+            _refFilterAppUpdate = $('#refFilterAppUpdate');
+            _refFilterVersionUpdate = $('#refFilterVersionUpdate');
+            _refFilterCubeUpdate = $('#refFilterCubeUpdate');
+            _refFilterMethodUpdate = $('#refFilterMethodUpdate');
 
+            addAxisEditListeners();
             addColumnEditListeners();
             addColumnHideListeners();
             addEditCellListeners();
@@ -616,7 +694,7 @@ var NCubeEditor2 = (function ($)
         }
 
         val = rowHeader.value;
-        if (valueType === 'date') {
+        if (valueType === 'date' && val !== DEFAULT_TEXT) {
             if (typeof val === 'object') {
                 if (typeof val[0] === 'object') {
                     var temp = '';
@@ -1249,9 +1327,10 @@ var NCubeEditor2 = (function ($)
         else if (row === 0) {
             if (axes.length > 1 && (col === colOffset || (_firstRenderedCol > 0 && col === _firstRenderedCol))) {
                 td.style.overflow = 'visible';
-                buildAxisMenu(axes[colOffset].name, td);
+                var axis = axes[colOffset];
+                buildAxisMenu(axis, td);
                 $(td).find('div.btn-group').addClass('pos-fixed');
-                td.colSpan = axes[colOffset].columnLength - _firstRenderedCol;
+                td.colSpan = axis.columnLength - _firstRenderedCol;
             }
             td.style.background = BACKGROUND_AXIS_INFO;
             td.style.color = COLOR_WHITE;
@@ -1264,7 +1343,7 @@ var NCubeEditor2 = (function ($)
             td.style.color = COLOR_WHITE;
             td.style.overflow = 'visible';
             cellProperties.readOnly = true;
-            buildAxisMenu(axes[col].name, td);
+            buildAxisMenu(axes[col], td);
         }
 
         // column headers
@@ -1449,7 +1528,9 @@ var NCubeEditor2 = (function ($)
         }
     };
 
-    var buildAxisMenu = function(axisName, element) {
+    var buildAxisMenu = function(axis, element) {
+        var axisName = axis.name;
+
         var div = $('<div/>').prop({class: 'btn-group axis-menu'});
         var button = $('<button/>').prop({type:'button', class:'btn-sm btn-primary dropdown-toggle axis-btn'})
             .attr('data-toggle', 'dropdown');
@@ -1492,10 +1573,18 @@ var NCubeEditor2 = (function ($)
         li = $('<li/>');
         an = $('<a href="#">');
         an[0].innerHTML = "Edit columns...";
-        an.click(function (e) {
-            e.preventDefault();
-            editColumns(axisName)
-        });
+        if (axis.isRef) {
+            li.prop('class', 'disabled');
+            an.click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        } else {
+            an.click(function (e) {
+                e.preventDefault();
+                editColumns(axisName)
+            });
+        }
         li.append(an);
         ul.append(li);
 
@@ -1518,6 +1607,7 @@ var NCubeEditor2 = (function ($)
             an.click(function (e)
             {
                 e.preventDefault();
+                e.stopPropagation();
             });
         }
         li.append(an);
@@ -1544,6 +1634,7 @@ var NCubeEditor2 = (function ($)
             an.click(function (e)
             {
                 e.preventDefault();
+                e.stopPropagation();
             });
         }
         li.append(an);
@@ -1563,6 +1654,7 @@ var NCubeEditor2 = (function ($)
             an.click(function (e)
             {
                 e.preventDefault();
+                e.stopPropagation();
             });
         }
         li.append(an);
@@ -1575,6 +1667,7 @@ var NCubeEditor2 = (function ($)
         an[0].innerHTML = "# Frozen Columns:";
         an.click(function (e) {
             e.preventDefault();
+            e.stopPropagation();
         });
         var newNameInput = $('<input/>')
             .attr('type','text')
@@ -1679,6 +1772,7 @@ var NCubeEditor2 = (function ($)
                 li.prop({'class': 'disabled'});
                 an.click(function (e) {
                     e.preventDefault();
+                    e.stopPropagation();
                 });
             }
             li.append(an);
@@ -2679,7 +2773,7 @@ var NCubeEditor2 = (function ($)
             {
                 ruleLabel = item.metaProps.name + ': ';
             }
-            var labelText = item.value != null ? item.value : 'Default';
+            var labelText = item.value != null ? item.value : DEFAULT_TEXT;
             var label = ruleLabel + labelText;
             var inputBtn = $('<input/>').prop({class: "commitCheck", type: "checkbox"});
             inputBtn.attr("data-id", itemId);
@@ -2781,6 +2875,203 @@ var NCubeEditor2 = (function ($)
 
     // =============================================== Begin Axis Editing ==============================================
 
+    var addAxisEditListeners = function() {
+        var getBranchesMethod = 'getBranches';
+        var getAppsMethod = 'getAppNames';
+        var getVersionsMethod = 'getAppVersions';
+        var cubeSearchMethod = 'search';
+        var searchAxis = 'axis';
+        var searchMethod = 'method';
+        var axisTypes = {};
+
+        var populateSelect = function(sel, method, params, defVal, forceRefresh) {
+            if (forceRefresh || sel[0].options.length === 0) {
+                sel.empty();
+                var result = nce.call('ncubeController.' + method, params);
+                if (result.status === true) {
+                    var results = result.data;
+                    for (var i = 0, len = results.length; i < len; i++) {
+                        var option = $('<option/>');
+                        var optionValue = results[i];
+                        if (method === cubeSearchMethod) {
+                            optionValue = optionValue.name;
+                        }
+                        option[0].innerHTML = optionValue;
+                        sel.append(option);
+                    }
+                } else {
+                    nce.showNote('Error calling ' + method + '():<hr class="hr-small"/>' + result.data);
+                }
+            }
+            if (defVal) {
+                sel.val(defVal);
+            } else {
+                sel.prepend($('<option/>'));
+            }
+        };
+
+        var populateSelectFromCube = function(sel, params, searchType, defVal, forceRefresh) {
+            if (forceRefresh || sel[0].options.length === 0) {
+                sel.empty();
+                var result = nce.call('ncubeController.getJson', params, {noResolveRefs:true});
+                if (result.status === true) {
+                    var results = JSON.parse(result.data).axes;
+                    if (searchType === searchMethod) {
+                        for (var idx = 0, iLen = results.length; idx < iLen; idx++) {
+                            var axis = results[idx];
+                            if (['method','methods'].indexOf(axis.name) > -1) {
+                                results = axis.columns;
+                                break;
+                            }
+                        }
+                    }
+                    for (var i = 0, len = results.length; i < len; i++) {
+                        var option = $('<option/>');
+                        var obj = results[i];
+                        var val;
+                        if (searchType === searchMethod) {
+                            val = obj.value;
+                        } else if (searchType === searchAxis) {
+                            val = obj.name;
+                            axisTypes[val] = {axisType:obj.type, valueType:obj.valueType};
+                        }
+                        option[0].innerHTML = val;
+                        sel.append(option);
+                    }
+                } else {
+                    nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
+                }
+            }
+            if (defVal) {
+                sel.val(defVal);
+            } else {
+                sel.prepend($('<option/>'));
+            }
+        };
+
+        var populateStatusSelect = function(sel, defVal) {
+            if (sel[0].options.length === 0) {
+                sel.append($('<option/>').html(STATUS.RELEASE));
+                sel.append($('<option/>').html(STATUS.SNAPSHOT));
+            }
+            if (defVal) {
+                sel.val(defVal);
+            }
+        };
+
+        _isRefAxis.change(function() {
+            _refAxisGroup.toggle();
+
+            var toggleVal = $(this)[0].checked;
+            _addAxisTypeName.parent().find('button').prop('disabled', toggleVal);
+            _addAxisValueTypeName.parent().find('button').prop('disabled', toggleVal);
+
+            var app = nce.getSelectedApp();
+            var status = nce.getSelectedStatus();
+            var branch = nce.getSelectedBranch();
+            var version = nce.getSelectedVersion();
+            populateSelect(_refAxisBranch, getBranchesMethod, [], branch, false);
+            populateStatusSelect(_refAxisStatus, status);
+            populateSelect(_refAxisApp, getAppsMethod, [status, branch] , app, toggleVal);
+            populateSelect(_refAxisVersion, getVersionsMethod, [app, status, branch], version, toggleVal);
+            populateSelect(_refAxisCube, cubeSearchMethod, [appIdFrom(app, version, status, branch), '*', null, true], null, toggleVal);
+            _refAxisAxis.empty();
+        });
+        _hasRefFilter.change(function() {
+            _refFilterGroup.toggle();
+
+            var toggleVal = $(this)[0].checked;
+            var app = nce.getSelectedApp();
+            var status = nce.getSelectedStatus();
+            var branch = nce.getSelectedBranch();
+            var version = nce.getSelectedVersion();
+            populateSelect(_refFilterBranch, getBranchesMethod, [], branch, false);
+            populateStatusSelect(_refFilterStatus, status);
+            populateSelect(_refFilterApp, getAppsMethod, [status, branch], app, toggleVal);
+            populateSelect(_refFilterVersion, getVersionsMethod, [app, status, branch], version, toggleVal);
+            populateSelect(_refFilterCube, cubeSearchMethod, [appIdFrom(app, version, status, branch), '*', null, true], null, toggleVal);
+            _refFilterMethod.empty();
+        });
+
+        _refAxisBranch.change(function() {
+            _refAxisApp.empty();
+            _refAxisVersion.empty();
+            _refAxisCube.empty();
+            _refAxisAxis.empty();
+            populateSelect(_refAxisApp, getAppsMethod, [_refAxisStatus.val(), $(this).val()]);
+        });
+        _refFilterBranch.change(function() {
+            _refFilterApp.empty();
+            _refFilterVersion.empty();
+            _refFilterCube.empty();
+            _refFilterMethod.empty();
+            populateSelect(_refFilterApp, getAppsMethod, [_refFilterStatus.val(), $(this).val()]);
+        });
+
+        _refAxisStatus.change(function() {
+            _refAxisApp.empty();
+            _refAxisVersion.empty();
+            _refAxisCube.empty();
+            _refAxisAxis.empty();
+            populateSelect(_refAxisApp, getAppsMethod, [$(this).val(), _refAxisBranch.val()]);
+        });
+        _refFilterStatus.change(function() {
+            _refFilterApp.empty();
+            _refFilterVersion.empty();
+            _refFilterCube.empty();
+            _refFilterMethod.empty();
+            populateSelect(_refFilterApp, getAppsMethod, [$(this).val(), _refFilterBranch.val()]);
+        });
+
+        _refAxisApp.change(function() {
+            _refAxisVersion.empty();
+            _refAxisCube.empty();
+            _refAxisAxis.empty();
+            populateSelect(_refAxisVersion, getVersionsMethod, [$(this).val(), _refAxisStatus.val(), _refAxisBranch.val()]);
+        });
+        _refFilterApp.change(function() {
+            _refFilterVersion.empty();
+            _refFilterCube.empty();
+            _refFilterMethod.empty();
+            populateSelect(_refFilterVersion, getVersionsMethod, [$(this).val(), _refFilterStatus.val(), _refFilterBranch.val()]);
+        });
+
+        _refAxisVersion.change(function() {
+            _refAxisCube.empty();
+            _refAxisAxis.empty();
+            populateSelect(_refAxisCube, cubeSearchMethod, [appIdFrom(_refAxisApp.val(), $(this).val(), _refAxisStatus.val(), _refAxisBranch.val()), '*', null, true]);
+        });
+        _refFilterVersion.change(function() {
+            _refFilterCube.empty();
+            _refFilterMethod.empty();
+            populateSelect(_refFilterCube, cubeSearchMethod, [appIdFrom(_refFilterApp.val(), $(this).val(), _refFilterStatus.val(), _refFilterBranch.val()), '*', null, true]);
+        });
+
+        _refAxisCube.change(function() {
+            _refAxisAxis.empty();
+            populateSelectFromCube(_refAxisAxis, [appIdFrom(_refAxisApp.val(), _refAxisVersion.val(), _refAxisStatus.val(), _refAxisBranch.val()), _refAxisCube.val(), {mode:'json'}], searchAxis, null, true);
+        });
+        _refFilterCube.change(function() {
+            _refFilterMethod.empty();
+            populateSelectFromCube(_refFilterMethod, [appIdFrom(_refFilterApp.val(), _refFilterVersion.val(), _refFilterStatus.val(), _refFilterBranch.val()), _refFilterCube.val(), {mode:'json'}], searchMethod, null, true);
+        });
+
+        _refAxisAxis.change(function() {
+            var val = axisTypes[$(this).val()];
+            $('#addAxisTypeName').val(val.axisType);
+            $('#addAxisValueTypeName').val(val.valueType);
+        });
+    };
+
+    var appIdFrom = function(app, version, status, branch) {
+        return {
+            app: app,
+            version: version,
+            status: status,
+            branch: branch
+        };
+    };
+
     var addAxis = function() {
         if (!nce.ensureModifiable('Axis cannot be added.')) {
             return;
@@ -2791,23 +3082,37 @@ var NCubeEditor2 = (function ($)
         buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected) {
             if ("RULE" == selected) {
                 buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', ruleTypes, function () { });
-                $('#addAxisValueTypeName').val('EXPRESSION');
+                _addAxisValueTypeName.val('EXPRESSION');
             } else {
                 buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
-                $('#addAxisValueTypeName').val('STRING');
+                _addAxisValueTypeName.val('STRING');
             }
         });
         buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', generalTypes, function () { });
-        $('#addAxisName').val('');
+        _addAxisName.val('');
         $('#addAxisModal').modal();
     };
 
     var addAxisOk = function() {
         $('#addAxisModal').modal('hide');
-        var axisName = $('#addAxisName').val();
-        var axisType = $('#addAxisTypeName').val();
-        var axisValueType = $('#addAxisValueTypeName').val();
-        var result = nce.call("ncubeController.addAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName, axisType, axisValueType]);
+        var axisName = _addAxisName.val();
+        var appId = nce.getAppId();
+        var cubeName = nce.getSelectedCubeName();
+        var params;
+        if (_isRefAxis[0].checked) {
+            var refAppId = appIdFrom(_refAxisApp.val(), _refAxisVersion.val(), _refAxisStatus.val(), _refAxisBranch.val());
+            var refCubeName = _refAxisCube.val();
+            var refAxisName = _refAxisAxis.val();
+            var filterAppId = appIdFrom(_refFilterApp.val(), _refFilterVersion.val(), _refFilterStatus.val(), _refFilterBranch.val());
+            var filterCubeName = _refFilterCube.val();
+            var filterMethodName = _refFilterMethod.val();
+            params = [refAppId, refCubeName, refAxisName, filterAppId, filterCubeName, filterMethodName];
+        } else {
+            var axisType = _addAxisTypeName.val();
+            var axisValueType = _addAxisValueTypeName.val();
+            params = [axisType, axisValueType];
+        }
+        var result = nce.call("ncubeController.addAxis", [appId, cubeName, axisName].concat(params));
         if (result.status === true) {
             if (hasCustomAxisOrder()) {
                 axes.splice(colOffset, 0, {name:axisName});
@@ -2868,10 +3173,9 @@ var NCubeEditor2 = (function ($)
         }
         var isRule = axis.type.name == 'RULE';
         var isNearest = axis.type.name == 'NEAREST';
-        $('#updateAxisLabel')[0].textContent = 'Update Axis';
-        $('#updateAxisName').val(axisName);
-        $('#updateAxisTypeName').val(axis.type.name);
-        $('#updateAxisValueTypeName').val(axis.valueType.name);
+        _updateAxisName.val(axisName);
+        _updateAxisTypeName.val(axis.type.name);
+        _updateAxisValueTypeName.val(axis.valueType.name);
         $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null});
         if (isRule) {
             hideAxisSortOption();
@@ -2888,6 +3192,40 @@ var NCubeEditor2 = (function ($)
             showAxisDefaultColumnOption(axis);
             hideAxisFireAllOption();
         }
+
+        if (axis.isRef) {
+            var metaProps = axis.metaProps;
+            _refAxisGroupUpdate.show();
+            _isRefAxisUpdate[0].checked = true;
+            if (metaProps.transformApp) {
+                _refFilterGroupUpdate.show();
+                _hasRefFilterUpdate[0].checked = true;
+            } else {
+                _refFilterGroupUpdate.hide();
+                _hasRefFilterUpdate[0].checked = false;
+                _refFilterGroupUpdate.find('input').val('');
+            }
+            _refAxisBranchUpdate.val(metaProps.referenceBranch);
+            _refAxisStatusUpdate.val(metaProps.referenceStatus);
+            _refAxisAppUpdate.val(metaProps.referenceApp);
+            _refAxisVersionUpdate.val(metaProps.referenceVersion);
+            _refAxisCubeUpdate.val(metaProps.referenceCubeName);
+            _refAxisAxisUpdate.val(metaProps.referenceAxisName);
+            _refFilterBranchUpdate.val(metaProps.transformBranch);
+            _refFilterStatusUpdate.val(metaProps.transformStatus);
+            _refFilterAppUpdate.val(metaProps.transformApp);
+            _refFilterVersionUpdate.val(metaProps.transformVersion);
+            _refFilterCubeUpdate.val(metaProps.transformCubeName);
+            _refFilterMethodUpdate.val(metaProps.transformMethodName);
+        } else {
+            _refAxisGroupUpdate.hide();
+            _refFilterGroupUpdate.hide();
+            _isRefAxisUpdate[0].checked = false;
+            _hasRefFilterUpdate[0].checked = false;
+            _refAxisGroupUpdate.find('input').val('');
+            _refFilterGroupUpdate.find('input').val('');
+        }
+
         _axisName = axisName;
         $('#updateAxisModal').modal({
             keyboard: true

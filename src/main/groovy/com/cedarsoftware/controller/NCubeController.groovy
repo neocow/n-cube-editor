@@ -537,6 +537,23 @@ class NCubeController extends BaseController
     }
 
     /**
+     * Add axis to an existing SNAPSHOT n-cube that is a reference to an axis in another cube.
+     */
+    void addAxis(ApplicationID appId, String cubeName, String axisName, ApplicationID refAppId, String refCubeName, String refAxisName, ApplicationID transformAppId, String transformCubeName, String transformMethodName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, Delta.Type.ADD)
+            nCubeService.addAxis(appId, cubeName, axisName, refAppId, refCubeName, refAxisName, transformAppId, transformCubeName, transformMethodName, getUserForDatabase())
+        }
+        catch (Exception e)
+        {
+            fail(e)
+        }
+    }
+
+    /**
      * Return the requested axis.  The returned axis has some 'massaging' applied to it before
      * being returned.  First, it is being returned using the 'map-of-maps' format from json-io
      * so that the column IDs can be converted from Longs to Strings, because Javascript cannot
