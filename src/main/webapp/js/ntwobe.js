@@ -77,6 +77,7 @@ var NCubeEditor2 = (function ($)
     var _updateAxisName = null;
     var _updateAxisTypeName = null;
     var _updateAxisValueTypeName = null;
+    var _updateAxisSortOrder = null;
     var _refAxisGroupUpdate = null;
     var _refAxisBranchUpdate = null;
     var _refAxisStatusUpdate = null;
@@ -133,6 +134,7 @@ var NCubeEditor2 = (function ($)
             _updateAxisName = $('#updateAxisName');
             _updateAxisTypeName = $('#updateAxisTypeName');
             _updateAxisValueTypeName = $('#updateAxisValueTypeName');
+            _updateAxisSortOrder = $('#updateAxisSortOrder');
             _refAxisGroupUpdate = $('#refAxisGroupUpdate');
             _refAxisBranchUpdate = $('#refAxisBranchUpdate');
             _refAxisStatusUpdate = $('#refAxisStatusUpdate');
@@ -161,23 +163,23 @@ var NCubeEditor2 = (function ($)
             });
 
             _urlDropdown.change(function() {
-                enabledDisableCheckBoxes()
+                enabledDisableCheckBoxes();
             });
 
             _valueDropdown.change(function() {
-                enabledDisableCheckBoxes()
+                enabledDisableCheckBoxes();
             });
             $('#addAxisOk').click(function () {
-                addAxisOk()
+                addAxisOk();
             });
             $('#deleteAxisOk').click(function () {
-                deleteAxisOk()
+                deleteAxisOk();
             });
             $('#updateAxisMenu').click(function () {
-                updateAxis()
+                updateAxis();
             });
             $('#updateAxisOk').click(function () {
-                updateAxisOk()
+                updateAxisOk();
             });
             _editCellModal.on('shown.bs.modal', function () {
                 $('#editCellValue').focus();
@@ -3213,6 +3215,7 @@ var NCubeEditor2 = (function ($)
         }
 
         if (axis.isRef) {
+            _updateAxisSortOrder.prop('disabled', true);
             var metaProps = axis.metaProps;
             _refAxisGroupUpdate.show();
             _isRefAxisUpdate[0].checked = true;
@@ -3253,7 +3256,7 @@ var NCubeEditor2 = (function ($)
 
     var showAxisSortOption = function(axis) {
         $('#updateAxisSortOrderRow').show();
-        $('#updateAxisSortOrder').prop({'checked': axis.preferredOrder == 0, 'disabled': false});
+        _updateAxisSortOrder.prop({'checked': axis.preferredOrder == 0, 'disabled': false});
     };
 
     var hideAxisSortOption = function() {
@@ -3282,7 +3285,7 @@ var NCubeEditor2 = (function ($)
         $('#updateAxisModal').modal('hide');
         var axisName = $('#updateAxisName').val();
         var hasDefault = $('#updateAxisDefaultCol').prop('checked');
-        var sortOrder = $('#updateAxisSortOrder').prop('checked');
+        var sortOrder = _updateAxisSortOrder.prop('checked');
         var fireAll = $('#updateAxisFireAll').prop('checked');
         var result = nce.call("ncubeController.updateAxis", [nce.getAppId(), nce.getSelectedCubeName(), _axisName, axisName, hasDefault, sortOrder, fireAll]);
         if (result.status === true) {
