@@ -3124,9 +3124,14 @@ var NCubeEditor2 = (function ($)
             var refAppId = appIdFrom(_refAxisApp.val(), _refAxisVersion.val(), _refAxisStatus.val(), _refAxisBranch.val());
             var refCubeName = _refAxisCube.val();
             var refAxisName = _refAxisAxis.val();
-            var filterAppId = appIdFrom(_refFilterApp.val(), _refFilterVersion.val(), _refFilterStatus.val(), _refFilterBranch.val());
-            var filterCubeName = _refFilterCube.val();
-            var filterMethodName = _refFilterMethod.val();
+            var filterAppId = null;
+            var filterCubeName = null;
+            var filterMethodName = null;
+            if (_hasRefFilter[0].checked) {
+                filterAppId = appIdFrom(_refFilterApp.val(), _refFilterVersion.val(), _refFilterStatus.val(), _refFilterBranch.val());
+                filterCubeName = _refFilterCube.val();
+                filterMethodName = _refFilterMethod.val();
+            }
             params = [refAppId, refCubeName, refAxisName, filterAppId, filterCubeName, filterMethodName];
         } else {
             var axisType = _addAxisTypeName.val();
