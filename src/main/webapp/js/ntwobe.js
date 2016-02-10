@@ -51,6 +51,7 @@ var NCubeEditor2 = (function ($)
     var _ncubeHtmlError = null;
     var _bufferText = null;
     var _firstRenderedCol = null;
+    var _defaultCellText = null;
     var _axisName = null;
     var _isRefAxis = null;
     var _hasRefFilter = null;
@@ -898,6 +899,7 @@ var NCubeEditor2 = (function ($)
         _currentSearchResultIndex = 0;
         _searchField.value = '';
         setSearchHelperText();
+        _defaultCellText = null;
 
         data = cubeData;
         determineAxesOrder(data.axes);
@@ -1369,7 +1371,8 @@ var NCubeEditor2 = (function ($)
                 if (axes[col].type.toLowerCase() === 'rule') {
                     buildUrlLink(td);
                 } else {
-                    buildExpressionLink(val, td);
+                    td.innerHTML = buildExpressionLink(val);
+                    activateLinks(td);
                 }
             }
             td.className += CLASS_HANDSON_TABLE_HEADER;
@@ -1394,16 +1397,22 @@ var NCubeEditor2 = (function ($)
                     buildUrlLink(td);
                 } else if (cellData.value) if (CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
                     td.className += CLASS_HANDSON_CELL_CODE;
-                    buildExpressionLink('' + cellData.value, td, 'groovy');
+                    td.innerHTML = buildExpressionLink('' + cellData.value, 'groovy');
+                    activateLinks(td);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
                 } else {
-                    buildExpressionLink('' + cellData.value, td);
+                    td.innerHTML = buildExpressionLink('' + cellData.value);
+                    activateLinks(td);
                 }
             } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
-                td.innerHTML = data.defaultCellValue;
                 td.className += CLASS_HANDSON_CELL_DEFAULT;
+                if (_defaultCellText === null) {
+                    _defaultCellText = buildExpressionLink('' + data.defaultCellValue, NONE);
+                }
+                td.innerHTML = _defaultCellText;
+                activateLinks(td);
             }
 
             if (row % 2 !== 0) {
@@ -1475,57 +1484,67 @@ var NCubeEditor2 = (function ($)
         });
     };
 
-    var buildExpressionLink = function(url, element, highlightLanguage) {
+    var buildExpressionLink = function(url, highlightLanguage) {
         if (url && url.length > 2) {
             var found = false;
+            var val;
+            var shouldHighlight = highlightLanguage !== NONE;
 
             url = url.replace(cubeMapRegex, function (matched) {
                 found = true;
                 return '<a class="nc-anc">' + matched + '</a>';
             });
+            val = url;
 
             if (found) {
-                //highlight in between links
-                var highlighted = '';
-                var tempHighlight;
-                var top;
-                var ancIdx;
-                while ((ancIdx = url.indexOf('<a class="nc-anc">')) > -1) {
-                    var text = url.substring(0, ancIdx);
-                    var endIdx = url.indexOf('</a>') + 4;
-                    tempHighlight = highlightLanguage ? hljs.highlight(highlightLanguage, text, true, top) : hljs.highlightAuto(text);
-                    if (highlightLanguage) {
-                        top = hljs.highlight(highlightLanguage, url.substring(0, endIdx), true, top).top;
-                    }
-                    highlighted += tempHighlight.value;
-                    highlighted += url.substring(ancIdx, endIdx);
-                    url = url.substring(endIdx);
-                }
-                tempHighlight = highlightLanguage ? hljs.highlight(highlightLanguage, url, true, top) : hljs.highlightAuto(url);
-                highlighted += tempHighlight.value;
-                element.innerHTML = highlighted;
-
-                // Add click handler that opens clicked cube names
-                $(element).find('a').each(function () {
-                    var link = this;
-                    $(link).click(function (e) {
-                        var cubeName = link.textContent.toLowerCase();
-                        for (var i = 0, len = prefixes.length; i < len; i++) {
-                            var fullName = prefixes[i] + cubeName;
-                            if (cubeMap[fullName]) {
-                                nce.selectCubeByName(nce.getProperCubeName(fullName));
-                                break;
-                            }
+                if (shouldHighlight) {
+                    //highlight in between links
+                    var highlighted = '';
+                    var tempHighlight;
+                    var top;
+                    var ancIdx;
+                    while ((ancIdx = url.indexOf('<a class="nc-anc">')) > -1) {
+                        var text = url.substring(0, ancIdx);
+                        var endIdx = url.indexOf('</a>') + 4;
+                        tempHighlight = highlightLanguage ? hljs.highlight(highlightLanguage, text, true, top) : hljs.highlightAuto(text);
+                        if (highlightLanguage) {
+                            top = hljs.highlight(highlightLanguage, url.substring(0, endIdx), true, top).top;
                         }
-                    });
-                });
+                        highlighted += tempHighlight.value;
+                        highlighted += url.substring(ancIdx, endIdx);
+                        url = url.substring(endIdx);
+                    }
+                    tempHighlight = highlightLanguage ? hljs.highlight(highlightLanguage, url, true, top) : hljs.highlightAuto(url);
+                    highlighted += tempHighlight.value;
+                    val = highlighted;
+                }
             } else {
-                var highlighted = highlightLanguage ? hljs.highlight(highlightLanguage, url, true) : hljs.highlightAuto(url);
-                element.innerHTML = highlighted.value;
+                if (shouldHighlight) {
+                    var highlighted = highlightLanguage ? hljs.highlight(highlightLanguage, url, true) : hljs.highlightAuto(url);
+                    val = highlighted.value;
+                }
             }
         } else {
-            element.innerHTML = url;
+            val = url;
         }
+        return val;
+    };
+
+    var activateLinks = function(element) {
+        // Add click handler that opens clicked cube names
+        $(element).find('a').each(function () {
+            var link = this;
+            $(link).click(function (e) {
+                var cubeName = link.textContent.toLowerCase();
+                for (var i = 0, len = prefixes.length; i < len; i++) {
+                    var fullName = prefixes[i] + cubeName;
+                    if (cubeMap[fullName]) {
+                        nce.selectCubeByName(nce.getProperCubeName(fullName));
+                        break;
+                    }
+                }
+            });
+        });
     };
 
     var buildAxisMenu = function(axis, element) {

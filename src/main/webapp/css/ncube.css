@@ -147,7 +147,7 @@ div#editColumnsModal div.panel-group
     color: #D9D9D9;
 }
 
-.handsontable .tableDefault {
+.handsontable .tableDefault, .handsontable .tableDefault a {
     color: #CCC;
 }
 
