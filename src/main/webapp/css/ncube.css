@@ -159,6 +159,9 @@ div#editColumnsModal div.panel-group
     padding: 3px 20px;
 }
 
+.axis-menu-button {
+    margin-left: 2px !important;
+}
 
 .frozen-cols-input {
     width: 30px;

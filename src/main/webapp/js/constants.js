@@ -25,6 +25,7 @@ var FONT_SIZE = '14px';
 var FONT_CELL = FONT_SIZE + ' Helvetica Neue';
 var FONT_CODE = FONT_SIZE + ' Lucida Console';
 var CALC_WIDTH_AXIS_BUTTON_MOD = 45;
+var CALC_WIDTH_REF_AX_BUTTON_MOD = 55;
 var CALC_WIDTH_BASE_MOD = 30;
 var CALC_WIDTH_TAB_OVERFLOW_MOD = 45;
 

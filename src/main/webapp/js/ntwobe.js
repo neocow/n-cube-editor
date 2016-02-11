@@ -970,7 +970,8 @@ var NCubeEditor2 = (function ($)
             if (savedWidths.hasOwnProperty(0 + colOffset)) {
                 width = savedWidths[0 + colOffset];
             } else {
-                var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
+                var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
+                var buttonWidth = calcDomWidth(axisName, modifier, null);
                 width = findWidth(0, buttonWidth);
             }
             topWidths[columnKeys[0]] = width;
@@ -1030,8 +1031,7 @@ var NCubeEditor2 = (function ($)
                     if (savedWidths.hasOwnProperty(hotCol)) {
                         width = savedWidths[hotCol];
                     } else {
-                        var axisName = axes[hotCol].name;
-                        width = findWidestColumn(axisName);
+                        width = findWidestColumn(axes[hotCol]);
                     }
                     _columnWidths.push(width);
                 }
@@ -1051,8 +1051,7 @@ var NCubeEditor2 = (function ($)
             if (savedWidths.hasOwnProperty(0)) {
                 _columnWidths.push(savedWidths[0]);
             } else {
-                var axisName = axes[0].name;
-                _columnWidths.push(findWidestColumn(axisName));
+                _columnWidths.push(findWidestColumn(axes[0]));
             }
 
             // cell width
@@ -1075,13 +1074,14 @@ var NCubeEditor2 = (function ($)
             }
         };
 
-        var findWidestColumn = function (axisName)
+        var findWidestColumn = function (axis)
         {
-            var buttonWidth = calcDomWidth(axisName, CALC_WIDTH_AXIS_BUTTON_MOD, null);
+            var axisName = axis.name;
+            var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
+            var buttonWidth = calcDomWidth(axisName, modifier, null);
             var oldWidth = findWidth(0, buttonWidth);
             var correctWidth = oldWidth;
             var axisColumns = axisColumnMap[axisName];
-            var axis = data.axes[axisName.toLowerCase()];
             for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
             {
                 var columnId = axisColumns[axisCol];
@@ -1555,7 +1555,7 @@ var NCubeEditor2 = (function ($)
         var div = $('<div/>').prop({class: 'btn-group axis-menu'});
         var button = $('<button/>').prop({type:'button', class:'btn-sm btn-primary dropdown-toggle axis-btn'})
             .attr('data-toggle', 'dropdown');
-        var name = $('<span/>').innerHTML = axisName;
+        var name = $('<span/>').innerHTML = isRef ? axisName + NBSP + '<span class="glyphicon glyphicon-share-alt"></span>' : axisName;
         var caret = $('<span/>').prop({class: 'caret'});
         button.append(name);
         button.append(caret);
@@ -1573,6 +1573,41 @@ var NCubeEditor2 = (function ($)
                 e.preventDefault();
                 var appId = appIdFrom(axis.referenceApp, axis.referenceVersion, axis.referenceStatus, axis.referenceBranch);
                 nce.selectCubeFromAppId(appId, axis.referenceCubeName);
+            });
+            li.append(an);
+            ul.append(li);
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Break reference";
+            an.click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                li.find('li').not($(this).parent()).find('button').remove();
+                var buttons = $(this).find('button');
+                if (buttons.length === 0) {
+                    $(this).append(
+                        $('<button/>')
+                            .addClass('btn btn-danger btn-xs pull-right axis-menu-button')
+                            .html('Cancel')
+                    ).append(
+                        $('<button/>')
+                            .addClass('btn btn-primary btn-xs pull-right axis-menu-button')
+                            .html('Confirm')
+                            .click(function (e) {
+                                li.parent().parent().removeClass('open');
+                                li.find('button').remove();
+                                $('div.dropdown-backdrop').hide();
+                                var result = nce.call("ncubeController.breakAxisReference", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
+                                if (result.status) {
+                                    reload();
+                                } else {
+                                    nce.showNote('Error breaking reference for axis ' + axisName + ':<hr class="hr-small"/>' + result.data);
+                                }
+                            })
+                    );
+                } else {
+                    buttons.remove();
+                }
             });
             li.append(an);
             ul.append(li);

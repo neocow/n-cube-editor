@@ -647,6 +647,20 @@ class NCubeController extends BaseController
         }
     }
 
+    void breakAxisReference(ApplicationID appId, String cubeName, String axisName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
+            nCubeService.breakAxisReference(appId, cubeName, axisName, getUserForDatabase())
+        }
+        catch (Exception e)
+        {
+            fail(e)
+        }
+    }
+
     void renameCube(ApplicationID appId, String oldName, String newName)
     {
         try
