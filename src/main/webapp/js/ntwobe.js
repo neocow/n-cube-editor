@@ -1370,12 +1370,6 @@ var NCubeEditor2 = (function ($)
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = val;
-                if (axes[col].type.toLowerCase() === 'rule') {
-                    buildUrlLink(td);
-                } else {
-                    td.innerHTML = buildExpressionLink(val);
-                    activateLinks(td);
-                }
             }
             td.className += CLASS_HANDSON_TABLE_HEADER;
             if (getRowHeader(row, col).isSearchResult) {
