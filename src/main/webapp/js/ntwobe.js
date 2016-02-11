@@ -1633,23 +1633,10 @@ var NCubeEditor2 = (function ($)
         li = $('<li/>');
         an = $('<a href="#">');
         an[0].innerHTML = "Hide columns...";
-        if (axisColumnMap[axisName].length > 1)
-        {
-            an.click(function (e)
-            {
-                e.preventDefault();
-                hideColumns(axisName)
-            });
-        }
-        else
-        {
-            li.prop({'class': 'disabled'});
-            an.click(function (e)
-            {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-        }
+        an.click(function (e) {
+            e.preventDefault();
+            hideColumns(axisName)
+        });
         li.append(an);
         ul.append(li);
 
