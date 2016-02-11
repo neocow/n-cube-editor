@@ -7,6 +7,7 @@ import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.ReferenceAxisLoader
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.io.JsonObject
 import com.cedarsoftware.util.io.JsonReader
@@ -183,6 +184,66 @@ class NCubeService
         Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY, maxId + 1)
         ncube.addAxis(axis)
         NCubeManager.updateCube(appId, ncube, username)
+    }
+
+    void addAxis(ApplicationID appId, String cubeName, String axisName, ApplicationID refAppId, String refCubeName, String refAxisName, ApplicationID transformAppId, String transformCubeName, String transformMethodName, String username)
+    {
+        NCube nCube = NCubeManager.getCube(appId, cubeName)
+        if (nCube == null)
+        {
+            throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + cubeName + "' not found for app: " + appId)
+        }
+
+        NCube refCube = NCubeManager.getCube(refAppId, refCubeName)
+        if (refCube == null)
+        {
+            throw new IllegalArgumentException("Could not add axis '" + axisName + "', reference NCube '" + refCubeName + "' not found for app: " + refAppId)
+        }
+        Axis refAxis = refCube.getAxis(refAxisName)
+        if (refAxis == null)
+        {
+            throw new IllegalArgumentException("Could not add axis '" + axisName + "', Axis '" + refAxisName + "' not found for reference cube: " + refCubeName)
+        }
+
+        if (transformAppId != null && transformCubeName != null && transformMethodName != null) {
+            NCube filterCube = NCubeManager.getCube(transformAppId, transformCubeName)
+            if (filterCube == null)
+            {
+                throw new IllegalArgumentException("Could not add axis '" + axisName + "', filter NCube '" + transformCubeName + "' not found for app: " + transformAppId)
+            }
+            //???
+        }
+
+        long maxId = -1
+        Iterator<Axis> i = nCube.getAxes().iterator()
+        while (i.hasNext())
+        {
+            Axis axis = i.next()
+            if (axis.id > maxId)
+            {
+                maxId = axis.id
+            }
+        }
+
+        Map args = [:]
+        args[ReferenceAxisLoader.REF_TENANT] = refAppId.tenant
+        args[ReferenceAxisLoader.REF_APP] = refAppId.app
+        args[ReferenceAxisLoader.REF_VERSION] = refAppId.version
+        args[ReferenceAxisLoader.REF_STATUS] = refAppId.status
+        args[ReferenceAxisLoader.REF_BRANCH] = refAppId.branch
+        args[ReferenceAxisLoader.REF_CUBE_NAME] = refCubeName  // cube name of the holder of the referring (pointing) axis
+        args[ReferenceAxisLoader.REF_AXIS_NAME] = refAxisName    // axis name of the referring axis (the variable that you had missing earlier)
+        args[ReferenceAxisLoader.TRANSFORM_APP] = transformAppId?.app	// Notice no target tenant.  User MUST stay within TENENT boundary
+        args[ReferenceAxisLoader.TRANSFORM_VERSION] = transformAppId?.version
+        args[ReferenceAxisLoader.TRANSFORM_STATUS] = transformAppId?.status
+        args[ReferenceAxisLoader.TRANSFORM_BRANCH] = transformAppId?.branch
+        args[ReferenceAxisLoader.TRANSFORM_CUBE_NAME] = transformCubeName
+        args[ReferenceAxisLoader.TRANSFORM_METHOD_NAME] = transformMethodName
+        ReferenceAxisLoader refAxisLoader = new ReferenceAxisLoader(cubeName, axisName, args)
+
+        Axis axis = new Axis(axisName, maxId + 1, false, refAxisLoader)
+        nCube.addAxis(axis)
+        NCubeManager.updateCube(appId, nCube, username)
     }
 
     /**

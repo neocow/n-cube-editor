@@ -164,6 +164,10 @@ var NCE = (function ($)
             }
         });
     }
+    
+    function saveOpenCubeList() {
+        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+    }
 
     function addCurrentCubeTab(insertIdx) {
         var cubeInfo = getSelectedCubeInfo();
@@ -173,7 +177,7 @@ var NCE = (function ($)
         } else {
             _openCubes.unshift(newOpenCube);
         }
-        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+        saveOpenCubeList();
         buildTabs();
     }
 
@@ -188,7 +192,7 @@ var NCE = (function ($)
 
     function saveOpenCubeInfoValue(property, value) {
         _openCubes[getOpenCubeIndex(getSelectedCubeInfo())][property] = value;
-        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+        saveOpenCubeList();
     }
 
     function getOpenCubeInfoValue(property) {
@@ -235,7 +239,7 @@ var NCE = (function ($)
 
     function removeTab(cubeInfo) {
         _openCubes.splice(getOpenCubeIndex(cubeInfo), 1);
-        localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+        saveOpenCubeList();
 
         if (_selectedApp === cubeInfo[CUBE_INFO.APP]
             && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
@@ -307,7 +311,7 @@ var NCE = (function ($)
                         }
                     }
                 }
-                localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+                saveOpenCubeList();
                 updateTabStatus();
             };
         }
@@ -330,6 +334,13 @@ var NCE = (function ($)
         deselectTab();
         var tab = $('#' + getCubeInfoKey(cubeInfo).replace(/\./g,'_').replace(/~/g,'\\~'));
         if (tab.length < 1) {
+            var idx = getOpenCubeIndex(cubeInfo);
+            if (idx > -1) {
+                _openCubes.unshift(_openCubes.splice(idx, 1)[0]);
+                saveOpenCubeList();
+                buildTabs();
+                return;
+            }
             tab = _openTabList.children().first();
             var id = tab.prop('id');
             cubeInfo[CUBE_INFO.TAB_VIEW] = id.substring(id.lastIndexOf('~') + 1);
@@ -499,7 +510,7 @@ var NCE = (function ($)
                             } else { // use current tab
                                 cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
                                 _openCubes[tabIdx].cubeKey = cia2;
-                                localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+                                saveOpenCubeList();
                                 li.attr('id', cia2.replace(/\./g,'_'));
                                 var img = link.find('img');
                                 if (img.length > 0) {
@@ -855,7 +866,7 @@ var NCE = (function ($)
             if (idx >= maxTabs) { // if selected tab is now in overflow, bring to front
                 var temp = _openCubes.splice(idx, 1);
                 _openCubes.unshift(temp[0]);
-                localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+                saveOpenCubeList();
             }
 
             for (var i = 0; i < len && i < maxTabs; i++) {
@@ -997,6 +1008,7 @@ var NCE = (function ($)
             getSelectedApp: getSelectedApp,
             getSelectedVersion: getSelectedVersion,
             getSelectedStatus: getSelectedStatus,
+            getSelectedBranch: getSelectedBranch,
             getSelectedCubeInfoKey: getSelectedCubeInfoKey,
             isHeadSelected: isHeadSelected,
             loadCube: loadCube,
@@ -1009,7 +1021,8 @@ var NCE = (function ($)
             saveViewPosition: saveViewPosition,
             getViewPosition: getViewPosition,
             getNumFrozenCols: getNumFrozenCols,
-            saveNumFrozenCols: saveNumFrozenCols
+            saveNumFrozenCols: saveNumFrozenCols,
+            selectCubeFromAppId: selectCubeFromAppId
         };
     }
 
@@ -1069,6 +1082,37 @@ var NCE = (function ($)
             addCurrentCubeTab();
         }
         saveState();
+    }
+
+    function selectCubeFromAppId(appId, cubeName) {
+        var app = appId.app;
+        var version = appId.version;
+        var branch = appId.branch;
+        var status = appId.status;
+        var appChanged = _selectedApp !== app;
+        var verChanged = _selectedVersion !== version;
+        var staChanged = _selectedStatus !== status;
+        var braChanged = _selectedBranch !== branch;
+        _selectedApp = app;
+        _selectedVersion = version;
+        _selectedBranch = branch;
+        _selectedStatus = status;
+
+        if (appChanged || verChanged || staChanged || braChanged) {
+            if (appChanged || verChanged || staChanged) {
+                if (appChanged) {
+                    loadAppNames();
+                    loadAppListView();
+                }
+                loadVersions();
+                loadStatusListView();
+                loadVersionListView();
+            }
+            showActiveBranch();
+            loadNCubes();
+            loadNCubeListView();
+        }
+        selectCubeByName(cubeName);
     }
 
     function runSearch()
@@ -1165,7 +1209,7 @@ var NCE = (function ($)
             var newTabIdx = Math.floor(posX / TAB_WIDTH);
             if (newTabIdx !== oldTabIdx) {
                 _openCubes.splice(newTabIdx, 0, _openCubes.splice(oldTabIdx, 1)[0]);
-                localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+                saveOpenCubeList();
                 buildTabs();
             }
         });
@@ -1892,7 +1936,7 @@ var NCE = (function ($)
                     }
                 }
             }
-            localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+            saveOpenCubeList();
             buildTabs();
             loadNCubeListView();
             runSearch();
@@ -2177,7 +2221,7 @@ var NCE = (function ($)
                     openCube.cubeKey = newCis;
                 }
             }
-            localStorage[OPEN_CUBES] = JSON.stringify(_openCubes);
+            saveOpenCubeList();
             _selectedCubeName = newName;
             localStorage[SELECTED_CUBE] = _selectedCubeName;
             buildTabs();
@@ -3393,6 +3437,10 @@ var NCE = (function ($)
     var getSelectedStatus = function()
     {
         return _selectedStatus;
+    };
+
+    var getSelectedBranch = function() {
+        return _selectedBranch;
     };
 
     var setActiveTabViewType = function(viewType)
