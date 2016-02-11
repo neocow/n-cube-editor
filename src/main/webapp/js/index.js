@@ -1010,7 +1010,8 @@ var NCE = (function ($)
             saveViewPosition: saveViewPosition,
             getViewPosition: getViewPosition,
             getNumFrozenCols: getNumFrozenCols,
-            saveNumFrozenCols: saveNumFrozenCols
+            saveNumFrozenCols: saveNumFrozenCols,
+            selectCubeFromAppId: selectCubeFromAppId
         };
     }
 
@@ -1070,6 +1071,37 @@ var NCE = (function ($)
             addCurrentCubeTab();
         }
         saveState();
+    }
+
+    function selectCubeFromAppId(appId, cubeName) {
+        var app = appId.app;
+        var version = appId.version;
+        var branch = appId.branch;
+        var status = appId.status;
+        var appChanged = _selectedApp !== app;
+        var verChanged = _selectedVersion !== version;
+        var staChanged = _selectedStatus !== status;
+        var braChanged = _selectedBranch !== branch;
+        _selectedApp = app;
+        _selectedVersion = version;
+        _selectedBranch = branch;
+        _selectedStatus = status;
+
+        if (appChanged || verChanged || staChanged || braChanged) {
+            if (appChanged || verChanged || staChanged) {
+                if (appChanged) {
+                    loadAppNames();
+                    loadAppListView();
+                }
+                loadVersions();
+                loadStatusListView();
+                loadVersionListView();
+            }
+            showActiveBranch();
+            loadNCubes();
+            loadNCubeListView();
+        }
+        selectCubeByName(cubeName);
     }
 
     function runSearch()

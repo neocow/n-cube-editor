@@ -1551,6 +1551,7 @@ var NCubeEditor2 = (function ($)
 
     var buildAxisMenu = function(axis, element) {
         var axisName = axis.name;
+        var isRef = axis.isRef;
 
         var div = $('<div/>').prop({class: 'btn-group axis-menu'});
         var button = $('<button/>').prop({type:'button', class:'btn-sm btn-primary dropdown-toggle axis-btn'})
@@ -1562,8 +1563,26 @@ var NCubeEditor2 = (function ($)
         div.append(button);
 
         var ul = $('<ul/>').prop({class: 'dropdown-menu', role: 'menu'});
-        var li = $('<li/>');
-        var an = $('<a href="#">');
+        var li;
+        var an;
+
+        if (isRef) {
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Go to axis source";
+            an.click(function (e) {
+                e.preventDefault();
+                var appId = appIdFrom(axis.referenceApp, axis.referenceVersion, axis.referenceStatus, axis.referenceBranch);
+                nce.selectCubeFromAppId(appId, axis.referenceCubeName);
+            });
+            li.append(an);
+            ul.append(li);
+            li = $('<div/>').prop({'class': 'divider'});
+            ul.append(li);
+        }
+
+        li = $('<li/>');
+        an = $('<a href="#">');
         an[0].innerHTML = "Update Axis...";
         an.click(function (e) {
             e.preventDefault();
@@ -1594,7 +1613,7 @@ var NCubeEditor2 = (function ($)
         li = $('<li/>');
         an = $('<a href="#">');
         an[0].innerHTML = "Edit columns...";
-        if (axis.isRef) {
+        if (isRef) {
             li.prop('class', 'disabled');
             an.click(function(e) {
                 e.preventDefault();
