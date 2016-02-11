@@ -194,26 +194,6 @@ class NCubeService
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + cubeName + "' not found for app: " + appId)
         }
 
-        NCube refCube = NCubeManager.getCube(refAppId, refCubeName)
-        if (refCube == null)
-        {
-            throw new IllegalArgumentException("Could not add axis '" + axisName + "', reference NCube '" + refCubeName + "' not found for app: " + refAppId)
-        }
-        Axis refAxis = refCube.getAxis(refAxisName)
-        if (refAxis == null)
-        {
-            throw new IllegalArgumentException("Could not add axis '" + axisName + "', Axis '" + refAxisName + "' not found for reference cube: " + refCubeName)
-        }
-
-        if (transformAppId != null && transformCubeName != null && transformMethodName != null) {
-            NCube filterCube = NCubeManager.getCube(transformAppId, transformCubeName)
-            if (filterCube == null)
-            {
-                throw new IllegalArgumentException("Could not add axis '" + axisName + "', filter NCube '" + transformCubeName + "' not found for app: " + transformAppId)
-            }
-            //???
-        }
-
         long maxId = -1
         Iterator<Axis> i = nCube.getAxes().iterator()
         while (i.hasNext())

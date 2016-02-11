@@ -2013,14 +2013,13 @@ class NCubeController extends BaseController
         String json = JsonWriter.objectToJson(axis, [(JsonWriter.TYPE): false] as Map)
         Map axisConverted = JsonReader.jsonToMaps(json)
         axisConverted.'@type' = axis.getClass().getName()
-        Object[] cols = (Object[]) axisConverted.columns
+        Object[] cols = axis.getColumns() as Object[]
+        axisConverted.remove('idToCol')
 
-        for (Object item : cols)
+        for (int i = 0; i < cols.length; i++)
         {
-            Map col = (Map) item
-            col.'@type' = Column.class.getName()
-            Column actualCol = axis.getColumnById((Long)col.id)
-            col.id = String.valueOf(col.id) // Stringify Long ID (Javascript safe if quoted)
+            Column actualCol = (Column) cols[i]
+            Map col = columnToMap(actualCol)
             CellInfo cellInfo = new CellInfo(actualCol.getValue())
             String value = cellInfo.value
             if (axis.valueType == AxisValueType.DATE && axis.type != AxisType.SET)
@@ -2031,8 +2030,17 @@ class NCubeController extends BaseController
             col.isUrl = cellInfo.isUrl
             col.dataType = cellInfo.dataType
             col.isCached = cellInfo.isCached
+            cols[i] = col
         }
+        axisConverted.columns = cols
         return axisConverted
+    }
+
+    private static Map columnToMap(Column col) {
+        Map map = [:]
+        map.id = String.valueOf(col.id) // Stringify Long ID (Javascript safe if quoted)
+        map.'@type' = Column.class.getName()
+        return map
     }
 
     public static boolean isNumeric(String str)
