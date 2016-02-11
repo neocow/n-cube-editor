@@ -1366,7 +1366,8 @@ var NCubeEditor2 = (function ($)
         // row headaers
         else if (col === 0 || col < colOffset) {
             var val = getTableRowHeaderValue(row, col);
-            if (row > 2 && getColumnLength(axes[col]) > 1 && val === getTableRowHeaderValue(row - 1, col)) {
+            var axis = axes[col];
+            if (row > 2 && getColumnLength(axis) > 1 && val === getTableRowHeaderValue(row - 1, col)) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = val;
@@ -1375,7 +1376,11 @@ var NCubeEditor2 = (function ($)
             if (getRowHeader(row, col).isSearchResult) {
                 td.className += CLASS_HANDSON_SEARCH_RESULT;
             }
+
             cellProperties.editor = ColumnEditor;
+            if (axis.isRef) {
+                cellProperties.readOnly = true;
+            }
         }
 
         // otherwise in cell data
