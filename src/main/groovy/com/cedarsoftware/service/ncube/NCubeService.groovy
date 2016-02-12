@@ -292,6 +292,22 @@ class NCubeService
     }
 
     /**
+     * Removes the reference from one axis to another.
+     */
+    void breakAxisReference(ApplicationID appId, String name, String axisName, String username)
+    {
+        NCube ncube = NCubeManager.getCube(appId, name)
+        if (ncube == null)
+        {
+            throw new IllegalArgumentException("Could not break reference for '" + axisName + "', NCube '" + name + "' not found for app: " + appId)
+        }
+
+        // Update default column setting (if changed)
+        ncube.breakAxisReference(axisName);
+        NCubeManager.updateCube(appId, ncube, username)
+    }
+
+    /**
      * Update the indicated column (by ID) with the passed in String value.  The String value
      * is parsed into DISCRETE, RANGE, SET, NEAREST, or RULE, and to the proper axis value type
      * for the axis.  This allows Strings like "[10, 25]" to be passed into a Range axis, for
