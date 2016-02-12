@@ -357,7 +357,7 @@ var NCubeEditor2 = (function ($)
         var el = document.getElementById('search-info');
         var len = _searchCoords.length;
         var idx = _currentSearchResultIndex + 1;
-        el.innerHTML = len > 0 ? idx + ' of ' + len : '&nbsp;';
+        el.innerHTML = len > 0 ? idx + ' of ' + len : '';
     };
 
     var addSearchListeners = function() {

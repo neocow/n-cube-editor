@@ -93,6 +93,7 @@ div#editColumnsModal div.panel-group
 #search-info {
     color: #C7C7CD;
     width: 84px;
+    height: 15px;
     display: inline-block;
     text-align: right;
 }
