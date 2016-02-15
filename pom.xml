@@ -29,6 +29,11 @@
             <name>John DeRegnaucourt</name>
             <email>jdereg@gmail.com</email>
         </developer>
+        <developer>
+            <id>tympollack</id>
+            <name>Tym Pollack</name>
+            <email>timothypollack@gmail.com</email>
+        </developer>
     </developers>
 
     <properties>
@@ -55,6 +60,13 @@
         <version.plugin.war>2.6</version.plugin.war>
         <version.plugin.groovy.eclipse.compiler>2.9.2-01</version.plugin.groovy.eclipse.compiler>
         <version.plugin.groovy.eclipse.batch>2.4.3-01</version.plugin.groovy.eclipse.batch>
+        <version.plugin.frontend.maven.plugin>0.0.27</version.plugin.frontend.maven.plugin>
+        <version.jetty>9.3.7.v20160115</version.jetty>
+        <version.tomcat.jdbc>8.0.29</version.tomcat.jdbc>
+        <version.oracle.jdbc>11.2.0.3</version.oracle.jdbc>
+        <jetty.httpPort>9001</jetty.httpPort>
+        <jetty.stopPort>9101</jetty.stopPort>
+        <jetty.stopKey>ncubeeditor</jetty.stopKey>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -140,22 +152,22 @@
             </plugin>
 
             <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-gpg-plugin</artifactId>-->
-                <!--<version>${version.plugin.gpg}</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>sign-artifacts</id>-->
-                        <!--<phase>verify</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>sign</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<keyname>${gpg.keyname}</keyname>-->
-                            <!--<passphrase>${gpg.passphrase}</passphrase>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
+            <!--<groupId>org.apache.maven.plugins</groupId>-->
+            <!--<artifactId>maven-gpg-plugin</artifactId>-->
+            <!--<version>${version.plugin.gpg}</version>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>sign-artifacts</id>-->
+            <!--<phase>verify</phase>-->
+            <!--<goals>-->
+            <!--<goal>sign</goal>-->
+            <!--</goals>-->
+            <!--<configuration>-->
+            <!--<keyname>${gpg.keyname}</keyname>-->
+            <!--<passphrase>${gpg.passphrase}</passphrase>-->
+            <!--</configuration>-->
+            <!--</execution>-->
+            <!--</executions>-->
             <!--</plugin>-->
 
             <plugin>
@@ -173,7 +185,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.6</version>
+                <version>${version.plugin.war}</version>
                 <configuration>
                     <packagingExcludes>**/*CprLocal.properties</packagingExcludes>
                     <archiveClasses>false</archiveClasses>
@@ -181,6 +193,123 @@
                     <warName>n-cube-editor</warName>
                     <webXml>src\main\webapp\WEB-INF\web.xml</webXml>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>${version.jetty}</version>
+                <configuration>
+                    <scanIntervalSeconds>0</scanIntervalSeconds>
+                    <stopKey>${jetty.stopKey}</stopKey>
+                    <stopPort>${jetty.stopPort}</stopPort>
+                    <webAppSourceDirectory>${project.basedir}/src/main/webapp</webAppSourceDirectory>
+                    <webApp>
+                        <contextPath>/n-cube-editor</contextPath>
+                        <baseResource implementation="org.eclipse.jetty.util.resource.ResourceCollection">
+                            <resourcesAsCSV>${project.basedir}/src/main/webapp</resourcesAsCSV>
+                        </baseResource>
+                    </webApp>
+                    <useTestClasspath>true</useTestClasspath>
+                    <waitForChild>false</waitForChild>
+                    <systemProperties>
+                        <systemProperty>
+                            <name>jetty.httpPort</name>
+                            <value>${jetty.httpPort}</value>
+                        </systemProperty>
+                    </systemProperties>
+                    <jvmArgs>"-Djetty.httpPort=${jetty.httpPort} -Dspring.profiles.active=\"exa-dev\""</jvmArgs>
+                    <jettyXml>${project.basedir}/jetty.xml</jettyXml>
+                    <environmentVariables>
+                        <HTTP_PORT>${jetty.httpPort}</HTTP_PORT>
+                    </environmentVariables>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.tomcat</groupId>
+                        <artifactId>tomcat-jdbc</artifactId>
+                        <version>${version.tomcat.jdbc}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>oracle</groupId>
+                        <artifactId>ojdbc6</artifactId>
+                        <version>${version.oracle.jdbc}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>start-jetty</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                        <configuration>
+                            <daemon>true</daemon>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${version.plugin.frontend.maven.plugin}</version>
+                <executions>
+
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v0.12.7</nodeVersion>
+                            <npmVersion>3.7.1</npmVersion>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>npm run build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>bower install</id>
+                        <goals>
+                            <goal>bower</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+
+                    <!--<execution>
+                        <id>npm run protractor</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run integration</arguments>
+                        </configuration>
+                    </execution>-->
+
+                    <!--<execution>
+                        <id>javascript tests</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>karma</goal>
+                        </goals>
+                        <configuration>
+                            <karmaConfPath>karma.conf.ci.js</karmaConfPath>
+                        </configuration>
+                    </execution>-->
+
+                </executions>
             </plugin>
 
         </plugins>
@@ -258,9 +387,9 @@
             <version>${version.spring}</version>
         </dependency>
         <!--<dependency>-->
-            <!--<groupId>org.springframework</groupId>-->
-            <!--<artifactId>spring-mock</artifactId>-->
-            <!--<version>${version.spring.mock}</version>-->
+        <!--<groupId>org.springframework</groupId>-->
+        <!--<artifactId>spring-mock</artifactId>-->
+        <!--<version>${version.spring.mock}</version>-->
         <!--</dependency>-->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -295,24 +424,24 @@
             <optional>true</optional>
         </dependency>
         <!--<dependency>-->
-            <!--<groupId>org.xhtmlrenderer</groupId>-->
-            <!--<artifactId>core-renderer</artifactId>-->
-            <!--<version>${version.xhtml.renderer}</version>-->
+        <!--<groupId>org.xhtmlrenderer</groupId>-->
+        <!--<artifactId>core-renderer</artifactId>-->
+        <!--<version>${version.xhtml.renderer}</version>-->
         <!--</dependency>-->
         <!--<dependency>-->
-        	<!--<groupId>commons-beanutils</groupId>-->
-        	<!--<artifactId>commons-beanutils</artifactId>-->
-        	<!--<version>${version.commons-beanutils}</version>-->
+        <!--<groupId>commons-beanutils</groupId>-->
+        <!--<artifactId>commons-beanutils</artifactId>-->
+        <!--<version>${version.commons-beanutils}</version>-->
         <!--</dependency>-->
-	</dependencies>
+    </dependencies>
 
     <dependencyManagement>
         <dependencies>
-	        <!--<dependency>-->
-	            <!--<groupId>org.springframework</groupId>-->
-	            <!--<artifactId>spring-context-support</artifactId>-->
-	            <!--<version>${version.spring}</version>-->
-	        <!--</dependency>-->
+            <!--<dependency>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-context-support</artifactId>-->
+            <!--<version>${version.spring}</version>-->
+            <!--</dependency>-->
         </dependencies>
     </dependencyManagement>
 

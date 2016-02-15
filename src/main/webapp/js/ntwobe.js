@@ -3400,7 +3400,11 @@ var NCubeEditor2 = (function ($)
     // The loading of all of the Javascript (deeply) is continuous on the main thread.
     // Therefore, the setTimeout(, 1) ensures that the main window (parent frame)
     // is called after all Javascript has been loaded.
-    setTimeout(function() { window.parent.frameLoaded(); }, 1);
+    if (window.parent.frameLoaded) {
+        setTimeout(function () {
+            window.parent.frameLoaded();
+        }, 1);
+    }
 
     // API
     return {
