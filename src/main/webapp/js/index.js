@@ -69,7 +69,7 @@ var NCE = (function ($)
     {
         _selectedBranch = localStorage[SELECTED_BRANCH];
     }
-    var _selectedStatus = localStorage[SELECTED_STATUS] || 'SNAPSHOT';
+    var _selectedStatus = localStorage[SELECTED_STATUS] || STATUS.SNAPSHOT;
     var _errorId = null;
     var _activeTabViewType = localStorage[ACTIVE_TAB_VIEW_TYPE];
     if (!_activeTabViewType)
@@ -100,6 +100,8 @@ var NCE = (function ($)
     var _tabDragIndicator = $('#tab-drag-indicator');
     var _appMenu = $('#AppMenu');
     var _versionMenu = $('#VersionMenu');
+    var _statusRelease = $('#status-release');
+    var _statusSnapshot = $('#status-snapshot');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1191,6 +1193,7 @@ var NCE = (function ($)
 
     function changeStatus(value) {
         _selectedStatus = value;
+        loadStatusListView();
         loadVersions();
         loadVersionListView();
         loadNCubes();
@@ -1223,10 +1226,10 @@ var NCE = (function ($)
             _tabDragIndicator.show()
         });
 
-        $('#status-release').click(function() {
+        _statusRelease.click(function() {
             changeStatus(STATUS.RELEASE);
         });
-        $('#status-snapshot').click(function() {
+        _statusSnapshot.click(function() {
             changeStatus(STATUS.SNAPSHOT);
         });
 
@@ -1482,12 +1485,14 @@ var NCE = (function ($)
             cube: _selectedCubeName}, title);
     }
 
-    function loadStatusListView()
-    {
-        var id = _selectedStatus === STATUS.RELEASE ? 'status-release' : 'status-snapshot';
-        var el = $('#' + id);
-        el.addClass('active');
-        el.find('input').prop({checked:''});
+    function loadStatusListView() {
+        var isRelease = _selectedStatus === STATUS.RELEASE;
+        var selected = isRelease ? _statusRelease : _statusSnapshot;
+        var notSelected = isRelease ? _statusSnapshot : _statusRelease;
+        selected.addClass('active');
+        notSelected.removeClass('active');
+        selected.find('input').prop('checked','true');
+        notSelected.find('input').prop('checked','false');
     }
 
     function loadVersionListView()
