@@ -2945,7 +2945,7 @@ var NCubeEditor2 = (function ($)
         var searchMethod = 'method';
         var axisTypes = {};
 
-        var populateSelect = function(sel, method, params, defVal, forceRefresh) {
+        var populateSelect = function(sel, method, params, defVal, forceRefresh, isInverted) {
             if (forceRefresh || sel[0].options.length === 0) {
                 sel.empty();
                 var result = nce.call('ncubeController.' + method, params);
@@ -2958,7 +2958,11 @@ var NCubeEditor2 = (function ($)
                             optionValue = optionValue.name;
                         }
                         option[0].innerHTML = optionValue;
-                        sel.append(option);
+                        if (isInverted) {
+                            sel.prepend(option);
+                        } else {
+                            sel.append(option);
+                        }
                     }
                 } else {
                     nce.showNote('Error calling ' + method + '():<hr class="hr-small"/>' + result.data);
@@ -3010,16 +3014,6 @@ var NCubeEditor2 = (function ($)
             }
         };
 
-        var populateStatusSelect = function(sel, defVal) {
-            if (sel[0].options.length === 0) {
-                sel.append($('<option/>').html(STATUS.RELEASE));
-                sel.append($('<option/>').html(STATUS.SNAPSHOT));
-            }
-            if (defVal) {
-                sel.val(defVal);
-            }
-        };
-
         _isRefAxis.change(function() {
             _refAxisGroup.toggle();
 
@@ -3027,74 +3021,32 @@ var NCubeEditor2 = (function ($)
             _addAxisTypeName.parent().find('button').prop('disabled', toggleVal);
             _addAxisValueTypeName.parent().find('button').prop('disabled', toggleVal);
 
-            var app = nce.getSelectedApp();
-            var status = nce.getSelectedStatus();
-            var branch = nce.getSelectedBranch();
-            var version = nce.getSelectedVersion();
-            populateSelect(_refAxisBranch, getBranchesMethod, [], branch, false);
-            populateStatusSelect(_refAxisStatus, status);
-            populateSelect(_refAxisApp, getAppsMethod, [status, branch] , app, toggleVal);
-            populateSelect(_refAxisVersion, getVersionsMethod, [app, status, branch], version, toggleVal);
-            populateSelect(_refAxisCube, cubeSearchMethod, [appIdFrom(app, version, status, branch), '*', null, true], null, toggleVal);
+            var status = _refAxisStatus.val();
+            var branch = _refAxisBranch.val();
+            populateSelect(_refAxisApp, getAppsMethod, [status, branch] , null, toggleVal);
             _refAxisAxis.empty();
         });
         _hasRefFilter.change(function() {
             _refFilterGroup.toggle();
 
             var toggleVal = $(this)[0].checked;
-            var app = nce.getSelectedApp();
-            var status = nce.getSelectedStatus();
-            var branch = nce.getSelectedBranch();
-            var version = nce.getSelectedVersion();
-            populateSelect(_refFilterBranch, getBranchesMethod, [], branch, false);
-            populateStatusSelect(_refFilterStatus, status);
-            populateSelect(_refFilterApp, getAppsMethod, [status, branch], app, toggleVal);
-            populateSelect(_refFilterVersion, getVersionsMethod, [app, status, branch], version, toggleVal);
-            populateSelect(_refFilterCube, cubeSearchMethod, [appIdFrom(app, version, status, branch), '*', null, true], null, toggleVal);
+            var status = _refFilterStatus.val();
+            var branch = _refFilterBranch.val();
+            populateSelect(_refFilterApp, getAppsMethod, [status, branch], null, toggleVal);
             _refFilterMethod.empty();
-        });
-
-        _refAxisBranch.change(function() {
-            _refAxisApp.empty();
-            _refAxisVersion.empty();
-            _refAxisCube.empty();
-            _refAxisAxis.empty();
-            populateSelect(_refAxisApp, getAppsMethod, [_refAxisStatus.val(), $(this).val()]);
-        });
-        _refFilterBranch.change(function() {
-            _refFilterApp.empty();
-            _refFilterVersion.empty();
-            _refFilterCube.empty();
-            _refFilterMethod.empty();
-            populateSelect(_refFilterApp, getAppsMethod, [_refFilterStatus.val(), $(this).val()]);
-        });
-
-        _refAxisStatus.change(function() {
-            _refAxisApp.empty();
-            _refAxisVersion.empty();
-            _refAxisCube.empty();
-            _refAxisAxis.empty();
-            populateSelect(_refAxisApp, getAppsMethod, [$(this).val(), _refAxisBranch.val()]);
-        });
-        _refFilterStatus.change(function() {
-            _refFilterApp.empty();
-            _refFilterVersion.empty();
-            _refFilterCube.empty();
-            _refFilterMethod.empty();
-            populateSelect(_refFilterApp, getAppsMethod, [$(this).val(), _refFilterBranch.val()]);
         });
 
         _refAxisApp.change(function() {
             _refAxisVersion.empty();
             _refAxisCube.empty();
             _refAxisAxis.empty();
-            populateSelect(_refAxisVersion, getVersionsMethod, [$(this).val(), _refAxisStatus.val(), _refAxisBranch.val()]);
+            populateSelect(_refAxisVersion, getVersionsMethod, [$(this).val(), _refAxisStatus.val(), _refAxisBranch.val()], null, true, true);
         });
         _refFilterApp.change(function() {
             _refFilterVersion.empty();
             _refFilterCube.empty();
             _refFilterMethod.empty();
-            populateSelect(_refFilterVersion, getVersionsMethod, [$(this).val(), _refFilterStatus.val(), _refFilterBranch.val()]);
+            populateSelect(_refFilterVersion, getVersionsMethod, [$(this).val(), _refFilterStatus.val(), _refFilterBranch.val()], null, true, true);
         });
 
         _refAxisVersion.change(function() {
@@ -3400,7 +3352,11 @@ var NCubeEditor2 = (function ($)
     // The loading of all of the Javascript (deeply) is continuous on the main thread.
     // Therefore, the setTimeout(, 1) ensures that the main window (parent frame)
     // is called after all Javascript has been loaded.
-    setTimeout(function() { window.parent.frameLoaded(); }, 1);
+    if (window.parent.frameLoaded) {
+        setTimeout(function () {
+            window.parent.frameLoaded();
+        }, 1);
+    }
 
     // API
     return {
