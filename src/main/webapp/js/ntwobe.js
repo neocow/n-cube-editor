@@ -163,7 +163,6 @@ var NCubeEditor2 = (function ($) {
             addColumnHideListeners();
             addEditCellListeners();
             addSearchListeners();
-            addModalFilters();
 
             _editCellRadioURL.change(function() {
                 var isUrl = _editCellRadioURL.find('input').is(':checked');
@@ -249,32 +248,6 @@ var NCubeEditor2 = (function ($) {
         setCoordinateBarListeners();
         buildCubeMap();
         setUtilityBarDisplay();
-    };
-
-    var addModalFilters = function() {
-        $('.modal-filter').each(function() {
-            var div = $(this);
-
-            var input = $('<input/>');
-            input.prop({'type':'text','placeholder':'Filter...'});
-            input.css({'width':'100%'});
-            input.keyup(function(e) {
-                delay(function() {
-                    var query = input.val();
-                    var items = div.parent().find('.modal-body').find('ul').find('li');
-                    if (query === '') {
-                        items.show();
-                    } else {
-                        items.hide();
-                        items.filter(function () {
-                            return $(this)[0].innerHTML.indexOf(query) > -1;
-                        }).show();
-                    }
-                }, 200);
-            });
-
-            div.append(input);
-        });
     };
 
     var getNumFrozenCols = function() {

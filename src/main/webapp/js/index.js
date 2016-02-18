@@ -146,27 +146,47 @@ var NCE = (function ($)
         })();
 
         $('.modal-filter').each(function() {
-            var div = $(this);
+            var contentDiv = $(this);
+            var list = contentDiv.find('.modal-body').find('ul');
 
+            var countSpan = $('<span/>');
+            countSpan.addClass('pull-left selected-count');
+            contentDiv.find('.select-none').after(countSpan);
+
+            var items = [];
+            var checkBoxes = [];
+            var checkedItems = [];
+            contentDiv.click(function() {
+                if (items.length === 0) {
+                    items = list.find('li');
+                    checkBoxes = items.find('input[type="checkbox"]');
+                }
+                checkedItems = checkBoxes.filter(function() {
+                    return $(this)[0].checked;
+                });
+                countSpan[0].innerHTML = checkedItems.length + ' of ' + items.length + ' Selected';
+            });
+
+            var div = $('<div/>');
             var input = $('<input/>');
             input.prop({'type':'text','placeholder':'Filter...'});
             input.css({'width':'100%'});
             input.keyup(function(e) {
                 delay(function() {
-                    var query = input.val();
-                    var items = div.parent().find('.modal-body').find('ul').find('li');
+                    var query = input.val().toLowerCase();
                     if (query === '') {
                         items.show();
                     } else {
                         items.hide();
                         items.filter(function () {
-                            return $(this)[0].innerHTML.indexOf(query) > -1;
+                            return $(this)[0].innerHTML.toLowerCase().indexOf(query) > -1;
                         }).show();
                     }
                 }, 200);
             });
 
             div.append(input);
+            contentDiv.find('.modal-header').after(div);
         });
     }
 
@@ -1240,6 +1260,13 @@ var NCE = (function ($)
 
     function addListeners()
     {
+        $('.select-all').click(function() {
+            checkAll(true, 'input[type="checkbox"]')
+        });
+        $('.select-none').click(function() {
+            checkAll(false, 'input[type="checkbox"]')
+        });
+
         _openTabsPanel.on('drop dragdrop', function(e) {
             $('.tooltip').hide();
             _tabDragIndicator.hide();
@@ -1374,14 +1401,6 @@ var NCE = (function ($)
         {
             deleteCube();
         });
-        $('#deleteSelectAll').click(function()
-        {
-            checkAll(true, 'input[type="checkbox"]');
-        });
-        $('#deleteSelectNone').click(function()
-        {
-            checkAll(false, 'input[type="checkbox"]');
-        });
         $('#deleteCubeOk').click(function ()
         {
             deleteCubeOk();
@@ -1393,14 +1412,6 @@ var NCE = (function ($)
         $('#restoreCubeOk').click(function ()
         {
             restoreCubeOk();
-        });
-        $('#restoreSelectAll').click(function()
-        {
-            checkAll(true, 'input[type="checkbox"]');
-        });
-        $('#restoreSelectNone').click(function()
-        {
-            checkAll(false, 'input[type="checkbox"]');
         });
         $('#revisionHistoryOk').click(function ()
         {
@@ -2620,14 +2631,6 @@ var NCE = (function ($)
         {
             setTimeout(function() { commitBranch(true); }, PROGRESS_DELAY);
             showNote('Processing commit request...');
-        });
-        $('#commitRollbackSelectAll').click(function()
-        {
-            checkAll(true, 'input[type="checkbox"]')
-        });
-        $('#commitRollbackSelectNone').click(function()
-        {
-            checkAll(false, 'input[type="checkbox"]')
         });
         $('#commitOk').click(function()
         {
