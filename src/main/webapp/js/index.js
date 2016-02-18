@@ -128,11 +128,46 @@ var NCE = (function ($)
             loop();
             heartBeat();
             addListeners();
+            addModalFilters();
         }
         catch (e)
         {
             console.log(e);
         }
+    }
+
+    function addModalFilters() {
+        var delay = (function(){
+            var timer = 0;
+            return function(callback, ms){
+                clearTimeout(timer);
+                timer = setTimeout(callback, ms);
+            };
+        })();
+
+        $('.modal-filter').each(function() {
+            var div = $(this);
+
+            var input = $('<input/>');
+            input.prop({'type':'text','placeholder':'Filter...'});
+            input.css({'width':'100%'});
+            input.keyup(function(e) {
+                delay(function() {
+                    var query = input.val();
+                    var items = div.parent().find('.modal-body').find('ul').find('li');
+                    if (query === '') {
+                        items.show();
+                    } else {
+                        items.hide();
+                        items.filter(function () {
+                            return $(this)[0].innerHTML.indexOf(query) > -1;
+                        }).show();
+                    }
+                }, 200);
+            });
+
+            div.append(input);
+        });
     }
 
     function setupMainSplitter() {
@@ -705,7 +740,8 @@ var NCE = (function ($)
                         var inputs = parent.find('input');
                         if (inputs.length === 0) {
                             var newNameInput = $('<input/>')
-                                .prop({type: 'text', placeholder: cubeInfo[CUBE_INFO.NAME]})
+                                .prop('type','text')
+                                .val(cubeInfo[CUBE_INFO.NAME])
                                 .addClass('form-control')
                                 .click(function (ie) {
                                     ie.preventDefault();
