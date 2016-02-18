@@ -3310,7 +3310,12 @@ var NCE = (function ($)
         else if (viewType == DIFF_DESCRIPTIVE)
         {
             var textArea = $('<textarea style="width:100%;height:100%;box-sizing:border-box" ondblclick="this.focus();this.select()" readonly/>');
-            textArea[0].innerHTML = _diffLastResult.delta;
+            var str = _diffLastResult.delta;
+            if (!str || str == '')
+            {
+                str = 'No difference';
+            }
+            textArea[0].innerHTML = str;
             _diffOutput.append(textArea);
         }
         else if (viewType == DIFF_VISUAL)
