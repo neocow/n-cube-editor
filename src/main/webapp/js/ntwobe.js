@@ -1366,7 +1366,7 @@ var NCubeEditor2 = (function ($)
             if (row > 2 && getColumnLength(axis) > 1 && rowHeader.id === getRowHeader(row - 1, col).id) {
                 td.style.borderTop = NONE;
             } else {
-                td.innerHTML = getRowHeaderValue(axes[col], rowHeader);
+                td.innerHTML = getRowHeaderValue(axis, rowHeader);
             }
             td.className += CLASS_HANDSON_TABLE_HEADER;
             if (getRowHeader(row, col).isSearchResult) {
