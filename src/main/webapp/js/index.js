@@ -740,7 +740,8 @@ var NCE = (function ($)
                         var inputs = parent.find('input');
                         if (inputs.length === 0) {
                             var newNameInput = $('<input/>')
-                                .prop({type: 'text', placeholder: cubeInfo[CUBE_INFO.NAME]})
+                                .prop('type','text')
+                                .val(cubeInfo[CUBE_INFO.NAME])
                                 .addClass('form-control')
                                 .click(function (ie) {
                                     ie.preventDefault();
