@@ -675,10 +675,6 @@ var NCubeEditor2 = (function ($)
         return result;
     };
 
-    var getTableRowHeaderValue = function(row, col) {
-        return getRowHeaderValue(axes[col], getRowHeader(row, col));
-    };
-
     var getRowHeaderValue = function(axis, rowHeader) {
         var getDateRangeString = function(range) {
             var v1 = range[0].substring(0, range[0].indexOf('T'));
@@ -731,7 +727,7 @@ var NCubeEditor2 = (function ($)
     var getRowHeaderPlainText = function(row, col) {
         var regexAnyTag = /(<([^>]+)>)/ig;
         var regexHr = /(<hr([^>]+)>)/ig;
-        var val = getTableRowHeaderValue(row, col);
+        var val = getRowHeaderValue(axes[col], getRowHeader(row, col));
         return val.replace(regexHr, ' - ').replace(regexAnyTag, '');
     };
 
@@ -1365,12 +1361,12 @@ var NCubeEditor2 = (function ($)
 
         // row headaers
         else if (col === 0 || col < colOffset) {
-            var val = getTableRowHeaderValue(row, col);
+            var rowHeader = getRowHeader(row, col);
             var axis = axes[col];
-            if (row > 2 && getColumnLength(axis) > 1 && val === getTableRowHeaderValue(row - 1, col)) {
+            if (row > 2 && getColumnLength(axis) > 1 && rowHeader.id === getRowHeader(row - 1, col).id) {
                 td.style.borderTop = NONE;
             } else {
-                td.innerHTML = val;
+                td.innerHTML = getRowHeaderValue(axes[col], rowHeader);
             }
             td.className += CLASS_HANDSON_TABLE_HEADER;
             if (getRowHeader(row, col).isSearchResult) {
