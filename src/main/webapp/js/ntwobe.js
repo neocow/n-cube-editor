@@ -335,17 +335,6 @@ var NCubeEditor2 = (function ($) {
             hot = null;
         }
 
-        if (!nce.getCubeMap() || !nce.doesCubeExist()) {
-            showHtmlError('No cubes to load');
-            return;
-        }
-
-        var info = nce.getCubeMap()[(nce.getSelectedCubeName() + '').toLowerCase()];
-        if (!info) {
-            showHtmlError('No cube data to load');
-            return;
-        }
-
         var result = nce.call("ncubeController.getJson", [nce.getAppId(), nce.getSelectedCubeName(), {mode:'json-index'}], {noResolveRefs:true});
         if (result.status === false) {
             showHtmlError('Failed to load JSON for cube, error: ' + result.data);
