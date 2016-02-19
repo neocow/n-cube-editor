@@ -63,9 +63,9 @@ class NCubeService
         return NCubeManager.getRevisionHistory(appId, cubeName)
     }
 
-    List<String> getAppNames(String tenant, String status, String branch)
+    List<String> getAppNames(String tenant)
     {
-        return NCubeManager.getAppNames(tenant, status, branch)
+        return NCubeManager.getAppNames(tenant)
     }
 
     List<String> getAppVersions(String tenant, String app, String status, String branch)
@@ -73,9 +73,19 @@ class NCubeService
         return NCubeManager.getAppVersions(tenant, app, status, branch)
     }
 
+    Map<String, List<String>> getVersions(String tenant, String app, String branch)
+    {
+        return NCubeManager.getVersions(tenant, app, branch)
+    }
+
     void createBranch(ApplicationID appId)
     {
         NCubeManager.createBranch(appId)
+    }
+
+    Set<String> getBranches(ApplicationID appId)
+    {
+        return NCubeManager.getBranches(appId)
     }
 
     Set<String> getBranches(String tenant)

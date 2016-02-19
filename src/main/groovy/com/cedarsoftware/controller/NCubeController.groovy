@@ -276,16 +276,23 @@ class NCubeController extends BaseController
         }
     }
 
-    Object[] getAppNames(String status, String branch)
+    // @Deprecated
+    // TODO: Remove
+    Object[] getAppNames(String unused1, String unused2)
+    {
+        return getAppNames()
+    }
+
+    Object[] getAppNames()
     {
         try
         {
-            String tenant = getTenant()
+            // TODO: Snag tenant based on authentication
+            String tenant = "NONE";
+
             ApplicationID.validateTenant(tenant)
-            ApplicationID.validateStatus(status)
-            ApplicationID.validateBranch(branch)
-            // TODO: Filter APP names
-            List<String> appNames = nCubeService.getAppNames(tenant, status, branch)
+            // TODO: Filter APP names by Access Control List data
+            List<String> appNames = nCubeService.getAppNames(tenant)
             Object[] appNameArray = appNames.toArray()
             caseInsensitiveSort(appNameArray)
             return appNameArray
@@ -302,11 +309,7 @@ class NCubeController extends BaseController
         try
         {
             String tenant = getTenant()
-            ApplicationID.validateTenant(tenant)
-            ApplicationID.validateApp(app)
             ApplicationID.validateStatus(status)
-            ApplicationID.validateBranch(branchName)
-            // TODO: Custom isAllowed() may be needed
             List<String> appVersions = nCubeService.getAppVersions(tenant, app, status, branchName)
 
             // Sort by version number (1.1.0, 1.2.0, 1.12.0, ...) not String order (1.1.0, 1.12.0, 1.2.0, ...)
@@ -338,6 +341,53 @@ class NCubeController extends BaseController
             fail(e)
             return null
         }
+    }
+
+    Map getVersions(String app, String branchName)
+    {
+        try
+        {
+            String tenant = getTenant()
+            Map<String, List<String>> versions = nCubeService.getVersions(tenant, app, branchName)
+
+            List<String> releaseVersions = versions.RELEASE
+            List<String> snapshotversions = versions.SNAPSHOT
+
+            // Sort by version number (1.1.0, 1.2.0, 1.12.0, ...) not String order (1.1.0, 1.12.0, 1.2.0, ...)
+            sortVersions(releaseVersions)
+            sortVersions(snapshotversions)
+            return versions
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    private void sortVersions(List<String> versions)
+    {
+        Collections.sort(versions, new Comparator<Object>() {
+            public int compare(Object o1, Object o2)
+            {
+                String s1 = (String) o1
+                String s2 = (String) o2
+                return getVersionValue(s1) - getVersionValue(s2)
+            }
+
+            int getVersionValue(String v)
+            {
+                String[] pieces = VERSION_REGEX.split(v)
+                if (pieces.length != 3)
+                {
+                    return 0
+                }
+                int major = Integer.valueOf(pieces[0]) * 1000 * 1000
+                int minor = Integer.valueOf(pieces[1]) * 1000
+                int rev = Integer.valueOf(pieces[2])
+                return major + minor + rev
+            }
+        })
     }
 
     /**
@@ -1146,6 +1196,31 @@ class NCubeController extends BaseController
         }
     }
 
+    Object[] getBranches(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+
+            Set<String> branches = nCubeService.getBranches(appId)
+            if (branches == null && branches.isEmpty())
+            {
+                return [ApplicationID.HEAD] as Object[]
+            }
+            branches.remove(ApplicationID.HEAD)
+            Object[] branchNames = branches.toArray()
+            caseInsensitiveSort(branchNames)
+            def head = ['HEAD'] as Object[]
+            return head.plus(branchNames)
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    // TODO: Remove this API
     Object[] getBranches()
     {
         try
