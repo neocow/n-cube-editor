@@ -136,6 +136,34 @@ var NCE = (function ($)
         }
     }
 
+    function getUIBranch() {
+        var button = $('BranchMenu').find('button');
+        if (button.length > 0) {
+            return button[0].textContent
+        }
+        return _selectedBranch;
+    }
+
+    function getUIStatus() {
+        return _statusRelease.hasClass('active') ? STATUS.RELEASE : STATUS.SNAPSHOT;
+    }
+
+    function getUIVersion() {
+        var button = $('VersionMenu').find('button');
+        if (button.length > 0) {
+            return button[0].textContent;
+        }
+        return _selectedVersion;
+    }
+
+    function getUIApp() {
+        var button = $('AppMenu').find('button');
+        if (button.length > 0) {
+            return button[0].textContent;
+        }
+        return _selectedApp;
+    }
+
     function addModalFilters() {
         var delay = (function(){
             var timer = 0;
@@ -306,26 +334,7 @@ var NCE = (function ($)
             && getActiveTabViewType() === cubeInfo[CUBE_INFO.TAB_VIEW]) {
             if (_openCubes.length > 0) {
                 var newCubeInfo = getCubeInfo(_openCubes[0].cubeKey);
-                var appChanged = _selectedApp !== newCubeInfo[CUBE_INFO.APP];
-                var verChanged = _selectedVersion !== newCubeInfo[CUBE_INFO.VERSION];
-                var staChanged = _selectedStatus !== newCubeInfo[CUBE_INFO.STATUS];
-                var braChanged = _selectedBranch !== newCubeInfo[CUBE_INFO.BRANCH];
                 makeCubeInfoActive(newCubeInfo);
-
-                if (appChanged || verChanged || staChanged || braChanged) {
-                    if (appChanged || verChanged || staChanged) {
-                        if (appChanged) {
-                            loadAppNames();
-                            loadAppListView();
-                        }
-                        loadVersions();
-                        loadStatusListView();
-                        loadVersionListView();
-                    }
-                    showActiveBranch();
-                    loadNCubes();
-                    loadNCubeListView();
-                }
             } else {
                 switchTabPane(null);
             }
@@ -509,20 +518,6 @@ var NCE = (function ($)
 
                 if (appChanged || verChanged || staChanged || braChanged || cubChanged || tabChanged) {
                     makeCubeInfoActive(cubeInfo);
-                    if (appChanged || verChanged || staChanged || braChanged) {
-                        if (appChanged || verChanged || staChanged) {
-                            if (appChanged) {
-                                loadAppNames();
-                                loadAppListView();
-                            }
-                            loadVersions();
-                            loadStatusListView();
-                            loadVersionListView();
-                        }
-                        showActiveBranch();
-                        loadNCubes();
-                        loadNCubeListView();
-                    }
                     selectTab(cubeInfo);
                     saveState();
                 }
@@ -1156,20 +1151,6 @@ var NCE = (function ($)
         _selectedBranch = branch;
         _selectedStatus = status;
 
-        if (appChanged || verChanged || staChanged || braChanged) {
-            if (appChanged || verChanged || staChanged) {
-                if (appChanged) {
-                    loadAppNames();
-                    loadAppListView();
-                }
-                loadVersions();
-                loadStatusListView();
-                loadVersionListView();
-            }
-            showActiveBranch();
-            loadNCubes();
-            loadNCubeListView();
-        }
         selectCubeByName(cubeName);
     }
 
@@ -1365,9 +1346,6 @@ var NCE = (function ($)
                     _selectedCubeName = state.cube;
                     _selectedBranch = state.branch;
                     showActiveBranch();
-                    loadAppNames();
-                    loadVersions();
-                    loadNCubes();
                     loadAppListView();
                     loadStatusListView();
                     loadVersionListView();
@@ -1726,19 +1704,19 @@ var NCE = (function ($)
     function loadNCubes()
     {
         _cubeList = {};
-        if (!_selectedApp)
+        if (!getUIApp())
         {
             return;
         }
-        if (!_selectedVersion)
+        if (!getUIVersion())
         {
             return;
         }
-        if (!_selectedStatus)
+        if (!getUIStatus())
         {
             return;
         }
-        var result = call("ncubeController.search", [getAppId(), '*', null, true]);
+        var result = call("ncubeController.search", [getUIAppId(), '*', null, true]);
         var first = null;
         if (result.status === true)
         {
@@ -1768,23 +1746,26 @@ var NCE = (function ($)
     {
         _versions = [];
         clearError();
-        if (!_selectedApp)
+        var app = getUIApp();
+        var status = getUIStatus();
+        var branch = getUIBranch();
+        if (!app)
         {
             showNote('Unable to load versions, no n-cube App selected.');
             return;
         }
-        if (!_selectedStatus)
+        if (!status)
         {
             showNote('Unable to load versions, no n-cube Status selected.');
             return;
         }
-        if (!_selectedBranch)
+        if (!branch)
         {
             showNote('Unable to load versions, no branch selected.');
             return;
         }
 
-        var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus, _selectedBranch]);
+        var result = call("ncubeController.getAppVersions", [app, status, branch]);
         if (result.status === true)
         {
             $.each(result.data, function (index, value)
@@ -1818,7 +1799,7 @@ var NCE = (function ($)
     {
         _apps = [];
         clearError();
-        var result = call("ncubeController.getAppNames", [_selectedStatus, _selectedBranch]);
+        var result = call("ncubeController.getAppNames", [getUIStatus(), getUIBranch()]);
         if (result.status === true)
         {
             $.each(result.data, function (index, value)
@@ -3465,6 +3446,16 @@ var NCE = (function ($)
             'version':_selectedVersion,
             'status':_selectedStatus,
             'branch':_selectedBranch
+        }
+    }
+
+    function getUIAppId()
+    {
+        return {
+            'app':getUIApp(),
+            'version':getUIVersion(),
+            'status':getUIStatus(),
+            'branch':getUIBranch()
         }
     }
 
