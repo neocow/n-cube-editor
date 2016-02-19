@@ -215,19 +215,18 @@
 <div id="deleteCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteCubeLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content modal-filter">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="deleteCubeLabel" class="modal-title"></h3>
             </div>
-            <div class="modal-filter"></div>
             <div class="modal-body" style="overflow: auto;height:450px">
                 <ul id="deleteCubeList" class="list-group no-padding">
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="deleteSelectAll" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select All</button>
-                <button id="deleteSelectNone" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select None</button>
+                <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
+                <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Don't delete</button>
                 <button id="deleteCubeOk" class="btn btn-primary btn-sm">Delete</button>
             </div>
@@ -239,19 +238,18 @@
 <div id="restoreCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="restoreCubeLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content modal-filter">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="restoreCubeLabel" class="modal-title"></h3>
             </div>
-            <div class="modal-filter"></div>
             <div class="modal-body" style="overflow: auto;height:450px">
                 <ul id="deletedCubeList" class="list-group no-padding">
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="restoreSelectAll" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select All</button>
-                <button id="restoreSelectNone" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select None</button>
+                <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
+                <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Don't restore</button>
                 <button id="restoreCubeOk" class="btn btn-primary btn-sm">Restore</button>
             </div>
@@ -286,19 +284,18 @@
 <div id="commitRollbackModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="commitRollbackLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content modal-filter">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="commitRollbackLabel" class="modal-title"></h3>
             </div>
-            <div class="modal-filter"></div>
             <div class="modal-body" style="overflow: auto;height:450px">
                 <ul id="commitRollbackList" class="list-group">
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="commitRollbackSelectAll" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select All</button>
-                <button id="commitRollbackSelectNone" class="btn btn-info btn-sm pull-left" aria-hidden="true">Select None</button>
+                <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
+                <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
                 <button id="commitOk" class="btn btn-primary btn-sm">Commit</button>
                 <button id="rollbackOk" class="btn btn-primary btn-sm">Rollback</button>
@@ -311,12 +308,11 @@
 <div id="selectBranchModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="chooseBranchLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content modal-filter">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="chooseBranchLabel" class="modal-title">Select or Create Branch</h3>
             </div>
-            <div class="modal-filter"></div>
             <div class="modal-body" style="overflow: auto;height:450px">
 
                 <form role="form">
@@ -383,12 +379,11 @@
 <div id="mergeBranchModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mergeBranchLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content modal-filter">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id=mergeBranchLabel" class="modal-title">Merge Branch</h3>
             </div>
-            <div class="modal-filter"></div>
             <div class="modal-body" style="overflow: auto;height:450px">
 
                 <form role="form">
@@ -476,12 +471,11 @@
 <div id="showRefsToCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsToLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content modal-filter">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="showRefsToLabel" class="modal-title"></h3>
             </div>
-            <div class="modal-filter"></div>
             <div class="modal-body" style="overflow: auto;height:450px">
                 <ul id="refsToCubeList" class="list-group">
                 </ul>
@@ -497,12 +491,11 @@
 <div id="showRefsFromCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsFromLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content modal-filter">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="showRefsFromLabel" class="modal-title"></h3>
             </div>
-            <div class="modal-filter"></div>
             <div class="modal-body" style="overflow: auto;height:450px">
                 <ul id="refsFromCubeList" class="list-group">
                 </ul>
@@ -518,12 +511,11 @@
 <div id="showReqScopeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showReqScopeLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content modal-filter">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="showReqScopeLabel" class="modal-title"></h3>
             </div>
-            <div class="modal-filter"></div>
             <div class="modal-body" style="overflow: auto;height:450px">
                 <ul id="reqScopeList" class="list-group">
                 </ul>

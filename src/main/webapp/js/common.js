@@ -92,7 +92,7 @@ function escapeRegExp(string)
  */
 function checkAll(state, queryStr)
 {
-    var input = $(queryStr);
+    var input = $(queryStr).filter(':visible');
     $.each(input, function (index, btn)
     {
         $(this).prop('checked', state);
