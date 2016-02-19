@@ -335,7 +335,7 @@ var NCubeEditor2 = (function ($) {
             hot = null;
         }
 
-        var result = nce.call("ncubeController.getJson", [nce.getAppId(), nce.getSelectedCubeName(), {mode:'json-index'}], {noResolveRefs:true});
+        var result = nce.call("ncubeController.getJson", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:'json-index'}], {noResolveRefs:true});
         if (result.status === false) {
             showHtmlError('Failed to load JSON for cube, error: ' + result.data);
             return;
@@ -1453,7 +1453,7 @@ var NCubeEditor2 = (function ($) {
                 }
                 else
                 {
-                    var result = nce.call("ncubeController.resolveRelativeUrl", [nce.getAppId(), link], {noResolveRefs:true});
+                    var result = nce.call("ncubeController.resolveRelativeUrl", [nce.getSelectedTabAppId(), link], {noResolveRefs:true});
                     if (result.status === true && result.data)
                     {
                         link = result.data;
@@ -1582,7 +1582,7 @@ var NCubeEditor2 = (function ($) {
                                 li.parent().parent().removeClass('open');
                                 li.find('button').remove();
                                 $('div.dropdown-backdrop').hide();
-                                var result = nce.call("ncubeController.breakAxisReference", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
+                                var result = nce.call("ncubeController.breakAxisReference", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
                                 if (result.status) {
                                     reload();
                                 } else {
@@ -2024,7 +2024,7 @@ var NCubeEditor2 = (function ($) {
         cells.splice(cells.length - 1, 1);
 
         if (isCut) {
-            var result = nce.call("ncubeController.copyCells", [nce.getAppId(), nce.getSelectedCubeName(), cells, true]);
+            var result = nce.call("ncubeController.copyCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, true]);
             if (!result.status) {
                 nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
                 return;
@@ -2057,7 +2057,7 @@ var NCubeEditor2 = (function ($) {
         cells.splice(cells.length - 1, 1);
 
         // Get clipboard ready string + optionally clear cells from database
-        var result = nce.call("ncubeController.copyCells", [nce.getAppId(), nce.getSelectedCubeName(), cells, isCut]);
+        var result = nce.call("ncubeController.copyCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, isCut]);
         if (!result.status) {
             nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
             return;
@@ -2171,7 +2171,7 @@ var NCubeEditor2 = (function ($) {
                     clipboard = clipboard2;
                 }
                 // Paste cells from database
-                result = nce.call("ncubeController.pasteCellsNce", [nce.getAppId(), nce.getSelectedCubeName(), clipboard]);
+                result = nce.call("ncubeController.pasteCellsNce", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), clipboard]);
             } else {
                 // Normal clipboard data, from Excel, for example
                 var lines = parseExcelClipboard(content);
@@ -2219,7 +2219,7 @@ var NCubeEditor2 = (function ($) {
                 }
 
                 // Paste cells from database
-                result = nce.call("ncubeController.pasteCells", [nce.getAppId(), nce.getSelectedCubeName(), values, coords]);
+                result = nce.call("ncubeController.pasteCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), values, coords]);
             }
 
             if (result.status) {
@@ -2266,7 +2266,7 @@ var NCubeEditor2 = (function ($) {
             return;
         }
 
-        var result = nce.call("ncubeController.getCellNoExecute", [nce.getAppId(), nce.getSelectedCubeName(), _cellId]);
+        var result = nce.call("ncubeController.getCellNoExecute", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _cellId]);
 
         if (result.status === false) {
             nce.showNote('Unable to fetch the cell contents: ' + result.data);
@@ -2310,7 +2310,7 @@ var NCubeEditor2 = (function ($) {
 
     var editCellClear = function() {
         _editCellModal.modal('hide');
-        var result = nce.call("ncubeController.updateCell", [nce.getAppId(), nce.getSelectedCubeName(), _cellId, null]);
+        var result = nce.call("ncubeController.updateCell", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _cellId, null]);
 
         if (result.status === false) {
             _cellId = null;
@@ -2337,7 +2337,7 @@ var NCubeEditor2 = (function ($) {
         cellInfo.isCached = _editCellCache.find('input').prop('checked');
         _editCellModal.modal('hide');
 
-        var result = nce.call("ncubeController.updateCell", [nce.getAppId(), nce.getSelectedCubeName(), _cellId, cellInfo]);
+        var result = nce.call("ncubeController.updateCell", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _cellId, cellInfo]);
 
         if (result.status === false) {
             _cellId = null;
@@ -2412,7 +2412,7 @@ var NCubeEditor2 = (function ($) {
             return false;
         }
 
-        var result = nce.call("ncubeController.getAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
+        var result = nce.call("ncubeController.getAxis", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
         var axis;
         if (result.status === true) {
             axis = result.data;
@@ -2583,7 +2583,7 @@ var NCubeEditor2 = (function ($) {
             }
         });
         axis.defaultCol = null;
-        var result = nce.call("ncubeController.updateAxisColumns", [nce.getAppId(), nce.getSelectedCubeName(), axis.name, axis.columns]);
+        var result = nce.call("ncubeController.updateAxisColumns", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name, axis.columns]);
 
         if (result.status !== true) {
             nce.showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
@@ -2765,7 +2765,7 @@ var NCubeEditor2 = (function ($) {
 
     var hideColumns = function(axisName)
     {
-        var result = nce.call("ncubeController.getAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
+        var result = nce.call("ncubeController.getAxis", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
         var axis;
         if (result.status === true)
         {
@@ -2869,7 +2869,7 @@ var NCubeEditor2 = (function ($) {
 
     var getStorageKey = function(prefix)
     {
-        return prefix + ':' + nce.getAppId().app.toLowerCase() + ':' + data.ncube.toLowerCase();
+        return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + data.ncube.toLowerCase();
     };
 
     var storeHiddenColumns = function()
@@ -3094,7 +3094,7 @@ var NCubeEditor2 = (function ($) {
     var addAxisOk = function() {
         $('#addAxisModal').modal('hide');
         var axisName = _addAxisName.val();
-        var appId = nce.getAppId();
+        var appId = nce.getSelectedTabAppId();
         var cubeName = nce.getSelectedCubeName();
         var params;
         if (_isRefAxis[0].checked) {
@@ -3140,7 +3140,7 @@ var NCubeEditor2 = (function ($) {
     var deleteAxisOk = function() {
         $('#deleteAxisModal').modal('hide');
         var axisName = $('#deleteAxisName').val();
-        var result = nce.call("ncubeController.deleteAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
+        var result = nce.call("ncubeController.deleteAxis", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
         if (result.status === true) {
             var lowerAxisName = axisName.toLowerCase();
             if (_hiddenColumns.hasOwnProperty(lowerAxisName))
@@ -3166,7 +3166,7 @@ var NCubeEditor2 = (function ($) {
             return false;
         }
 
-        var result = nce.call("ncubeController.getAxis", [nce.getAppId(), nce.getSelectedCubeName(), axisName]);
+        var result = nce.call("ncubeController.getAxis", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
         var axis;
         if (result.status === true) {
             axis = result.data;
@@ -3269,7 +3269,7 @@ var NCubeEditor2 = (function ($) {
         var hasDefault = $('#updateAxisDefaultCol').prop('checked');
         var sortOrder = _updateAxisSortOrder.prop('checked');
         var fireAll = $('#updateAxisFireAll').prop('checked');
-        var result = nce.call("ncubeController.updateAxis", [nce.getAppId(), nce.getSelectedCubeName(), _axisName, axisName, hasDefault, sortOrder, fireAll]);
+        var result = nce.call("ncubeController.updateAxis", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _axisName, axisName, hasDefault, sortOrder, fireAll]);
         if (result.status === true) {
             var oldName = _axisName.toLowerCase();
             var newName = axisName.toLowerCase();
