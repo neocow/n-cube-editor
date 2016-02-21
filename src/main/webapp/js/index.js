@@ -2672,10 +2672,13 @@ var NCE = (function ($)
         $('#BranchMenu')[0].innerHTML = 'Branch:&nbsp;<button class="btn-sm btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>';
     }
 
-    function getBranchNames(refresh) {
-        if (refresh || _branchNames.length === 0) {
-            var result = call("ncubeController.getBranches", []);
-            if (!result.status) {
+    function getBranchNames(refresh)
+    {
+        if (refresh || _branchNames.length === 0)
+        {
+            var result = call("ncubeController.getBranches", [getAppId()]);
+            if (!result.status)
+            {
                 showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
                 return [];
             }

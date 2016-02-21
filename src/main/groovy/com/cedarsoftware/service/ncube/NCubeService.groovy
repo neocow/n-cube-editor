@@ -73,9 +73,9 @@ class NCubeService
         return NCubeManager.getAppVersions(tenant, app, status, branch)
     }
 
-    Map<String, List<String>> getVersions(String tenant, String app, String branch)
+    Map<String, List<String>> getVersions(String tenant, String app)
     {
-        return NCubeManager.getVersions(tenant, app, branch)
+        return NCubeManager.getVersions(tenant, app)
     }
 
     void createBranch(ApplicationID appId)

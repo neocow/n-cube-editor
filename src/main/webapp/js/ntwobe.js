@@ -2922,7 +2922,6 @@ var NCubeEditor2 = (function ($) {
     // =============================================== Begin Axis Editing ==============================================
 
     var addAxisEditListeners = function() {
-        var getBranchesMethod = 'getBranches';
         var getAppsMethod = 'getAppNames';
         var getVersionsMethod = 'getAppVersions';
         var cubeSearchMethod = 'search';

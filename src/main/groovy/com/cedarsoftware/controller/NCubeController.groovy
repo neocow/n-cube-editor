@@ -343,12 +343,12 @@ class NCubeController extends BaseController
         }
     }
 
-    Map getVersions(String app, String branchName)
+    Map getVersions(String app)
     {
         try
         {
             String tenant = getTenant()
-            Map<String, List<String>> versions = nCubeService.getVersions(tenant, app, branchName)
+            Map<String, List<String>> versions = nCubeService.getVersions(tenant, app)
 
             List<String> releaseVersions = versions.RELEASE
             List<String> snapshotversions = versions.SNAPSHOT
