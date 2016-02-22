@@ -45,8 +45,11 @@ import javax.management.MBeanServer
 import javax.management.ObjectName
 import javax.servlet.http.HttpServletRequest
 import java.lang.management.ManagementFactory
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.regex.Pattern
+
 /**
  * NCubeController API.
  *
@@ -76,6 +79,14 @@ class NCubeController extends BaseController
     private NCubeService nCubeService;
     private static String servletHostname = null
     private static String inetHostname = null
+
+    // TODO: Temporary until we have n_cube_app table
+    // TODO: Verify all places that can create a cube are clearing the appCache
+    private static final Set<String> appCache = new ConcurrentSkipListSet<>()
+
+    // TODO: Temporary until we have n_cube_app_versions table
+    // TODO: Verify all places that can create a cube are clearing the appVersionsCache
+//    private static final Map<String, Map<String, List<String>>> appVersions = new ConcurrentHashMap<>()
 
     // Bind to ConcurrentLinkedHashMap because some plugins will need it.
     private ConcurrentMap<String, Object> futureCache = new ConcurrentLinkedHashMap.Builder<String, Object>()
@@ -283,6 +294,7 @@ class NCubeController extends BaseController
         return getAppNames()
     }
 
+    // TODO: Filter APP names by Access Control List data
     Object[] getAppNames()
     {
         try
@@ -291,9 +303,16 @@ class NCubeController extends BaseController
             String tenant = "NONE";
 
             ApplicationID.validateTenant(tenant)
-            // TODO: Filter APP names by Access Control List data
-            List<String> appNames = nCubeService.getAppNames(tenant)
-            Object[] appNameArray = appNames.toArray()
+
+            // TODO: Remove app name cache when we have n_cube_app table
+            Object[] appNameArray = appCache.toArray()
+            if (appNameArray.length == 0)
+            {
+                List<String> appNames = nCubeService.getAppNames(tenant)
+                appCache.clear()
+                appCache.addAll(appNames)
+                appNameArray = appNames.toArray()
+            }
             caseInsensitiveSort(appNameArray)
             return appNameArray
         }
@@ -310,6 +329,9 @@ class NCubeController extends BaseController
         {
             String tenant = getTenant()
             ApplicationID.validateStatus(status)
+
+            // TODO: Pull from cache
+
             List<String> appVersions = nCubeService.getAppVersions(tenant, app, status, branchName)
 
             // Sort by version number (1.1.0, 1.2.0, 1.12.0, ...) not String order (1.1.0, 1.12.0, 1.2.0, ...)
@@ -349,6 +371,9 @@ class NCubeController extends BaseController
         {
             String tenant = getTenant()
             Map<String, List<String>> versions = nCubeService.getVersions(tenant, app)
+
+
+            // TODO: Pull from cache
 
             List<String> releaseVersions = versions.RELEASE
             List<String> snapshotversions = versions.SNAPSHOT
@@ -399,6 +424,12 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             isAllowed(appId, cubeName, Delta.Type.ADD)
+
+            // TODO: Remove when n_cube_app table added
+            if (!appCache.contains(appId.app))
+            {   // Clear cache, new App added
+                appCache.clear()
+            }
 
             NCube ncube = new NCube(cubeName)
             Axis cols = new Axis("Column", AxisType.DISCRETE, AxisValueType.STRING, false, Axis.DISPLAY, 1)
@@ -525,6 +556,13 @@ class NCubeController extends BaseController
             destAppId = addTenant(destAppId)
             isAllowed(appId, cubeName, null)
             isAllowed(destAppId, newName, Delta.Type.ADD)
+
+            // TODO: Remove when n_cube_app table added
+            if (!appCache.contains(appId.app))
+            {   // Clear cache, new App added
+                appCache.clear()
+            }
+
             nCubeService.duplicateCube(appId, destAppId, cubeName, newName, getUserForDatabase())
         }
         catch (Exception e)
@@ -1175,6 +1213,7 @@ class NCubeController extends BaseController
             appId = addTenant(appId)
             isAllowed(appId, null, null)
             nCubeService.clearCache(appId)
+            appCache.clear()
         }
         catch (Exception e)
         {
@@ -1483,7 +1522,7 @@ class NCubeController extends BaseController
         }
         catch (Exception e)
         {
-            LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage(), e)
+            LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage())
             return ['~Title':'Configuration Editor',
                     'n-cube':[html:'html/ntwobe.html',img:'img/letter-n.png'],
                     'n-cube-old':[html:'html/ncube.html',img:'img/letter-o.png'],

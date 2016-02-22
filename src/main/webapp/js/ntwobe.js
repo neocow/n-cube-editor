@@ -3005,18 +3005,14 @@ var NCubeEditor2 = (function ($) {
             _addAxisTypeName.parent().find('button').prop('disabled', toggleVal);
             _addAxisValueTypeName.parent().find('button').prop('disabled', toggleVal);
 
-            var status = _refAxisStatus.val();
-            var branch = _refAxisBranch.val();
-            populateSelect(_refAxisApp, getAppsMethod, [status, branch] , null, toggleVal);
+            populateSelect(_refAxisApp, getAppsMethod, [] , null, toggleVal);
             _refAxisAxis.empty();
         });
         _hasRefFilter.change(function() {
             _refFilterGroup.toggle();
 
             var toggleVal = $(this)[0].checked;
-            var status = _refFilterStatus.val();
-            var branch = _refFilterBranch.val();
-            populateSelect(_refFilterApp, getAppsMethod, [status, branch], null, toggleVal);
+            populateSelect(_refFilterApp, getAppsMethod, [], null, toggleVal);
             _refFilterMethod.empty();
         });
 
