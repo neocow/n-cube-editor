@@ -86,7 +86,8 @@ class NCubeController extends BaseController
 
     // TODO: Temporary until we have n_cube_app_versions table
     // TODO: Verify all places that can create a cube are clearing the appVersionsCache
-//    private static final Map<String, Map<String, List<String>>> appVersions = new ConcurrentHashMap<>()
+    private static final Map<String, List<String>> appVersions = new ConcurrentHashMap<>()
+    private static final Object versionsLock = new Object()
 
     // Bind to ConcurrentLinkedHashMap because some plugins will need it.
     private ConcurrentMap<String, Object> futureCache = new ConcurrentLinkedHashMap.Builder<String, Object>()
@@ -309,7 +310,6 @@ class NCubeController extends BaseController
             if (appNameArray.length == 0)
             {
                 List<String> appNames = nCubeService.getAppNames(tenant)
-                appCache.clear()
                 appCache.addAll(appNames)
                 appNameArray = appNames.toArray()
             }
@@ -328,35 +328,27 @@ class NCubeController extends BaseController
         try
         {
             String tenant = getTenant()
-            ApplicationID.validateStatus(status)
 
-            // TODO: Pull from cache
+            // TODO: Pull from cache (temporary)
+            List<String> appVers = appVersions[app]
+            if (appVers != null && appVers.size() > 0)
+            {
+                return appVers.toArray()
+            }
 
-            List<String> appVersions = nCubeService.getAppVersions(tenant, app, status, branchName)
-
-            // Sort by version number (1.1.0, 1.2.0, 1.12.0, ...) not String order (1.1.0, 1.12.0, 1.2.0, ...)
-            Collections.sort(appVersions, new Comparator<Object>() {
-                public int compare(Object o1, Object o2)
+            synchronized(versionsLock)
+            {
+                appVers = appVersions[app]
+                if (appVers != null && appVers.size() > 0)
                 {
-                    String s1 = (String) o1
-                    String s2 = (String) o2
-                    return getVersionValue(s1) - getVersionValue(s2)
+                    return appVers.toArray()
                 }
 
-                int getVersionValue(String v)
-                {
-                    String[] pieces = VERSION_REGEX.split(v)
-                    if (pieces.length != 3)
-                    {
-                        return 0
-                    }
-                    int major = Integer.valueOf(pieces[0]) * 1000 * 1000
-                    int minor = Integer.valueOf(pieces[1]) * 1000
-                    int rev = Integer.valueOf(pieces[2])
-                    return major + minor + rev
-                }
-            })
-            return appVersions.toArray()
+                List<String> versionsForApp = nCubeService.getAppVersions(tenant, app, status, branchName)
+                sortVersions(versionsForApp)
+                appVersions[app] = versionsForApp
+                return versionsForApp.toArray()
+            }
         }
         catch (Exception e)
         {
@@ -365,23 +357,48 @@ class NCubeController extends BaseController
         }
     }
 
-    Map getVersions(String app)
+    Object[] getVersions(String app)
     {
         try
         {
             String tenant = getTenant()
-            Map<String, List<String>> versions = nCubeService.getVersions(tenant, app)
 
+            // TODO: Pull from cache (temporary)
+            List<String> appVers = appVersions[app]
+            if (appVers != null && appVers.size() > 0)
+            {
+                return appVers.toArray()
+            }
 
-            // TODO: Pull from cache
+            synchronized(versionsLock)
+            {
+                appVers = appVersions[app]
+                if (appVers != null && appVers.size() > 0)
+                {   // Locked thread 2+
+                    return appVers.toArray()
+                }
 
-            List<String> releaseVersions = versions.RELEASE
-            List<String> snapshotversions = versions.SNAPSHOT
+                Map<String, List<String>> versionMap = nCubeService.getVersions(tenant, app)
 
-            // Sort by version number (1.1.0, 1.2.0, 1.12.0, ...) not String order (1.1.0, 1.12.0, 1.2.0, ...)
-            sortVersions(releaseVersions)
-            sortVersions(snapshotversions)
-            return versions
+                List<String> releaseVersions = versionMap.RELEASE
+                List<String> snapshotversions = versionMap.SNAPSHOT
+
+                // Sort by version number (1.1.0, 1.2.0, 1.12.0, ...) not String order (1.1.0, 1.12.0, 1.2.0, ...)
+                sortVersions(releaseVersions)
+                sortVersions(snapshotversions)
+                List<String> combined = new ArrayList()
+                for (String relVer : releaseVersions)
+                {
+                    combined.add(relVer + '-RELEASE')
+                }
+                for (String relVer : snapshotversions)
+                {
+                    combined.add(relVer + '-SNAPSHOT')
+                }
+                sortVersions(combined)
+                appVersions[app] = combined
+                return combined.toArray()
+            }
         }
         catch (Exception e)
         {
@@ -426,10 +443,8 @@ class NCubeController extends BaseController
             isAllowed(appId, cubeName, Delta.Type.ADD)
 
             // TODO: Remove when n_cube_app table added
-            if (!appCache.contains(appId.app))
-            {   // Clear cache, new App added
-                appCache.clear()
-            }
+            appCache.add(appId.app)
+            addVersionToCache(appId)
 
             NCube ncube = new NCube(cubeName)
             Axis cols = new Axis("Column", AxisType.DISCRETE, AxisValueType.STRING, false, Axis.DISPLAY, 1)
@@ -558,10 +573,10 @@ class NCubeController extends BaseController
             isAllowed(destAppId, newName, Delta.Type.ADD)
 
             // TODO: Remove when n_cube_app table added
-            if (!appCache.contains(appId.app))
-            {   // Clear cache, new App added
-                appCache.clear()
-            }
+            appCache.add(appId.app)
+            appCache.add(destAppId.app)
+            addVersionToCache(appId)
+            addVersionToCache(destAppId)
 
             nCubeService.duplicateCube(appId, destAppId, cubeName, newName, getUserForDatabase())
         }
@@ -1204,6 +1219,26 @@ class NCubeController extends BaseController
             fail(e)
             return null
         }
+    }
+
+    // TODO: Remove this cache once the database performance issue is worked out for getAppVersions() / getVersions()
+    void addVersionToCache(ApplicationID appId)
+    {
+        List<String> verList = appVersions[appId.app]
+        if (verList == null)
+        {
+            return
+        }
+
+        String combined = appId.version + '-' + appId.status
+        for (String ver : verList)
+        {
+            if (ver.equalsIgnoreCase(combined))
+            {
+                return
+            }
+        }
+        verList.add(combined)
     }
 
     void clearCache(ApplicationID appId)
