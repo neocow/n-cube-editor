@@ -1770,22 +1770,22 @@ var NCE = (function ($)
         $('#newCubeName').val('');
         buildDropDown('#newCubeAppList', '#newCubeAppName', _apps, function (app)
         {
-            var result = call("ncubeController.getAppVersions", [getAppId()]);
-            if (result.status === true)
-            {
-                buildDropDown('#existVersionList', '#newCubeVersion', result.data, function ()
-                {
-                });
-            }
-            else
-            {
-                showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
-            }
+            buildVersionsDropdown('#existVersionList', '#newCubeVersion');
         });
-        buildDropDown('#existVersionList', '#newCubeVersion', _versions, function ()
-        {
-        });
+        buildVersionsDropdown('#existVersionList', '#newCubeVersion');
         $('#newCubeModal').modal();
+    }
+
+    function buildVersionsDropdown(listId, inputId) {
+        var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus, _selectedBranch]);
+        if (result.status === true)
+        {
+            buildDropDown(listId, inputId, result.data, function(){});
+        }
+        else
+        {
+            showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
+        }
     }
 
     function newCubeSave()
@@ -2258,26 +2258,9 @@ var NCE = (function ($)
         $('#dupeCubeLabel')[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
         buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', _apps, function (app)
         {
-            var appId = {
-                'app':app,
-                'status':STATUS.SNAPSHOT,
-                'branch':_selectedBranch
-            };
-            var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus, _selectedBranch]);
-            if (result.status === true)
-            {
-                buildDropDown('#dupeCubeVersionList', '#dupeCubeVersion', result.data, function ()
-                {
-                });
-            }
-            else
-            {
-                showNote('Unable to load App versions:<hr class="hr-small"/>' + result.data);
-            }
+            buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion');
         });
-        buildDropDown('#dupeCubeVersionList', '#dupeCubeVersion', _versions, function ()
-        {
-        });
+        buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion');
         $('#dupeCubeModal').modal();
     }
 
