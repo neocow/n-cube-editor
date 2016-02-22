@@ -102,8 +102,6 @@ var NCE = (function ($)
     var _tabDragIndicator = $('#tab-drag-indicator');
     var _appMenu = $('#AppMenu');
     var _versionMenu = $('#VersionMenu');
-    var _statusRelease = $('#status-release');
-    var _statusSnapshot = $('#status-snapshot');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -123,7 +121,6 @@ var NCE = (function ($)
             loadVersions();
             loadNCubes();
             loadAppListView();
-            loadStatusListView();
             loadVersionListView();
             buildMenu();
             clearSearch();
@@ -1189,17 +1186,6 @@ var NCE = (function ($)
         _versionMenu[0].innerHTML = 'Version: Loading...';
     }
 
-    function changeStatus(value) {
-        _selectedStatus = value;
-        loadStatusListView();
-        loadVersions();
-        loadVersionListView();
-        loadNCubes();
-        loadNCubeListView();
-        runSearch();
-        buildMenu();
-    }
-
     function addListeners()
     {
         $('.select-all').click(function() {
@@ -1229,13 +1215,6 @@ var NCE = (function ($)
             var top = _openTabsPanel.outerHeight() - _tabDragIndicator.height() + _openTabsPanel.offset().top;
             _tabDragIndicator.css({left:left, top:top});
             _tabDragIndicator.show()
-        });
-
-        _statusRelease.click(function() {
-            changeStatus(STATUS.RELEASE);
-        });
-        _statusSnapshot.click(function() {
-            changeStatus(STATUS.SNAPSHOT);
         });
 
         // 'Close' for the Diff Modal
@@ -1311,7 +1290,6 @@ var NCE = (function ($)
                     loadVersions();
                     loadNCubes();
                     loadAppListView();
-                    loadStatusListView();
                     loadVersionListView();
                     selectCubeByName(_selectedCubeName);
                     buildMenu();
@@ -1474,16 +1452,6 @@ var NCE = (function ($)
             cube: _selectedCubeName}, title);
     }
 
-    function loadStatusListView() {
-        var isRelease = _selectedStatus === STATUS.RELEASE;
-        var selected = isRelease ? _statusRelease : _statusSnapshot;
-        var notSelected = isRelease ? _statusSnapshot : _statusRelease;
-        selected.addClass('active');
-        notSelected.removeClass('active');
-        selected.find('input').prop('checked','true');
-        notSelected.find('input').prop('checked','false');
-    }
-
     function loadVersionListView()
     {
         var ul = _versionMenu.parent().find('.dropdown-menu');
@@ -1491,13 +1459,18 @@ var NCE = (function ($)
 
         $.each(_versions, function (index, value)
         {
+            var arr = value.split('-');
+            var version = arr[0];
+            var status = arr[1];
             var li = $('<li/>');
             var an = $('<a/>');
             an.attr('href','#');
             an[0].innerHTML = value;
             an.click(function() {
-                localStorage[SELECTED_VERSION] = value;
-                _selectedVersion = value;
+                localStorage[SELECTED_VERSION] = version;
+                _selectedVersion = version;
+                localStorage[SELECTED_STATUS] = status;
+                _selectedStatus = status;
                 _versionMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
 
                 setCubeListLoading();
@@ -1517,7 +1490,7 @@ var NCE = (function ($)
 
         if (_selectedVersion)
         {
-            _versionMenu[0].innerHTML = 'Version:&nbsp;<button class="btn-sm btn-primary">' + _selectedVersion + '&nbsp;<b class="caret"></b></button>';
+            _versionMenu[0].innerHTML = 'Version:&nbsp;<button class="btn-sm btn-primary">' + _selectedVersion + '-' + _selectedStatus + '&nbsp;<b class="caret"></b></button>';
         }
     }
 
@@ -1715,18 +1688,7 @@ var NCE = (function ($)
             showNote('Unable to load versions, no n-cube App selected.');
             return;
         }
-        if (!_selectedStatus)
-        {
-            showNote('Unable to load versions, no n-cube Status selected.');
-            return;
-        }
-        if (!_selectedBranch)
-        {
-            showNote('Unable to load versions, no branch selected.');
-            return;
-        }
-
-        var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus, _selectedBranch]);
+        var result = call("ncubeController.getVersions", [_selectedApp]);
         if (result.status === true)
         {
             $.each(result.data, function (index, value)
@@ -1738,17 +1700,26 @@ var NCE = (function ($)
         {
             showNote('Unable to load versions:<hr class="hr-small"/>' + result.data);
         }
-        if (!_selectedVersion || !doesVersionExist(_selectedVersion))
+        if (!_selectedVersion || !doesVersionExist(_selectedVersion, _selectedStatus))
         {
-            _selectedVersion = (_versions && _versions.length > 0) ? _versions[_versions.length - 1] : null;
+            var version = (_versions && _versions.length > 0) ? _versions[_versions.length - 1] : null;
+            if (version) {
+                var arr = version.split('-');
+                _selectedVersion = arr[0];
+                _selectedBranch = arr[1];
+            } else {
+                _selectedVersion = null;
+                _selectedStatus = null;
+            }
         }
     }
 
-    function doesVersionExist(selVer)
+    function doesVersionExist(selVer, selStatus)
     {
+        var chkVer = selVer + '-' + selStatus;
         for (var i=0; i < _versions.length; i++)
         {
-            if (_versions[i] == selVer)
+            if (_versions[i] == chkVer)
             {
                 return true;
             }
@@ -1828,7 +1799,7 @@ var NCE = (function ($)
         var version = $('#newCubeVersion').val();
         if (!version)
         {
-            showNote("Note", "Version must be x.y.z")
+            showNote("Note", "Version must be x.y.z");
             return;
         }
         var appId = getAppId();
@@ -1843,7 +1814,6 @@ var NCE = (function ($)
             loadNCubes();
             loadVersions();
             loadAppListView();
-            loadStatusListView();
             loadVersionListView();
             loadNCubeListView();
             clearSearch();
@@ -2333,7 +2303,6 @@ var NCE = (function ($)
             _selectedApp = newApp;
             loadAppListView();
             _selectedStatus = STATUS.SNAPSHOT;
-            loadStatusListView();
             loadVersions();
             _selectedVersion = newVersion;
             loadVersionListView();
@@ -2434,7 +2403,6 @@ var NCE = (function ($)
             {
                 var saveSelectedVersion = _selectedVersion;
                 loadVersions();
-                _selectedVersion = doesItemExist(saveSelectedVersion, _versions) ? saveSelectedVersion : _selectedVersion;
                 loadVersionListView();
                 loadNCubes();
                 loadNCubeListView();
@@ -2768,7 +2736,6 @@ var NCE = (function ($)
             loadVersions();
             loadNCubes();
             loadAppListView();
-            loadStatusListView();
             loadVersionListView();
             loadNCubeListView();
             runSearch();
