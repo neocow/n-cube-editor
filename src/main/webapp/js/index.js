@@ -304,18 +304,11 @@ var NCE = (function ($)
         _openCubes.splice(getOpenCubeIndex(cubeInfo), 1);
         saveOpenCubeList();
 
-        if (_selectedApp === cubeInfo[CUBE_INFO.APP]
-            && _selectedVersion === cubeInfo[CUBE_INFO.VERSION]
-            && _selectedStatus === cubeInfo[CUBE_INFO.STATUS]
-            && _selectedBranch === cubeInfo[CUBE_INFO.BRANCH]
-            && _selectedCubeName === cubeInfo[CUBE_INFO.NAME]
-            && getActiveTabViewType() === cubeInfo[CUBE_INFO.TAB_VIEW]) {
-            if (_openCubes.length > 0) {
-                var newCubeInfo = getCubeInfo(_openCubes[0].cubeKey);
-                makeCubeInfoActive(newCubeInfo);
-            } else {
-                switchTabPane(null);
-            }
+        if (_openCubes.length > 0) {
+            var newCubeInfo = getCubeInfo(_openCubes[0].cubeKey);
+            makeCubeInfoActive(newCubeInfo);
+        } else {
+            switchTabPane(null);
         }
 
         buildTabs();
