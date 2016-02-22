@@ -427,7 +427,7 @@ class NCubeController extends BaseController
                 }
                 int major = Integer.valueOf(pieces[0]) * 1000 * 1000
                 int minor = Integer.valueOf(pieces[1]) * 1000
-                int rev = Integer.valueOf(pieces[2])
+                int rev = Integer.valueOf(pieces[2].split('-')[0])
                 return major + minor + rev
             }
         })
