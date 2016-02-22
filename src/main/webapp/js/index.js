@@ -156,10 +156,6 @@ var NCE = (function ($)
             var checkBoxes = [];
             var checkedItems = [];
             contentDiv.click(function() {
-                if (items.length === 0) {
-                    items = list.find('li');
-                    checkBoxes = items.find('input[type="checkbox"]');
-                }
                 checkedItems = checkBoxes.filter(function() {
                     return $(this)[0].checked;
                 });
@@ -168,6 +164,7 @@ var NCE = (function ($)
 
             var div = $('<div/>');
             var input = $('<input/>');
+            input.addClass('modal-filter-input');
             input.prop({'type':'text','placeholder':'Filter...'});
             input.css({'width':'100%'});
             input.keyup(function(e) {
@@ -181,11 +178,18 @@ var NCE = (function ($)
                             return $(this)[0].innerHTML.toLowerCase().indexOf(query) > -1;
                         }).show();
                     }
-                }, 200);
+                }, e.keyCode === KEY_CODES.ENTER ? 0 : 200);
             });
 
             div.append(input);
             contentDiv.find('.modal-header').after(div);
+
+            contentDiv.parent().parent().on('shown.bs.modal', function () {
+                input.val('');
+                input.focus();
+                items = list.find('li');
+                checkBoxes = items.find('input[type="checkbox"]');
+            })
         });
     }
 
