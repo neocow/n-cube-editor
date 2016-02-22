@@ -86,6 +86,7 @@ class NCubeController extends BaseController
 
     // TODO: Temporary until we have n_cube_app_versions table
     // TODO: Verify all places that can create a cube are clearing the appVersionsCache
+    private static final Map<String, List<String>> appVersions1 = new ConcurrentHashMap<>()
     private static final Map<String, List<String>> appVersions = new ConcurrentHashMap<>()
     private static final Object versionsLock = new Object()
 
@@ -330,7 +331,7 @@ class NCubeController extends BaseController
             String tenant = getTenant()
 
             // TODO: Pull from cache (temporary)
-            List<String> appVers = appVersions[app]
+            List<String> appVers = appVersions1[app]
             if (appVers != null && appVers.size() > 0)
             {
                 return appVers.toArray()
@@ -338,7 +339,7 @@ class NCubeController extends BaseController
 
             synchronized(versionsLock)
             {
-                appVers = appVersions[app]
+                appVers = appVersions1[app]
                 if (appVers != null && appVers.size() > 0)
                 {
                     return appVers.toArray()
@@ -346,7 +347,7 @@ class NCubeController extends BaseController
 
                 List<String> versionsForApp = nCubeService.getAppVersions(tenant, app, status, branchName)
                 sortVersions(versionsForApp)
-                appVersions[app] = versionsForApp
+                appVersions1[app] = versionsForApp
                 return versionsForApp.toArray()
             }
         }
@@ -1224,7 +1225,22 @@ class NCubeController extends BaseController
     // TODO: Remove this cache once the database performance issue is worked out for getAppVersions() / getVersions()
     void addVersionToCache(ApplicationID appId)
     {
-        List<String> verList = appVersions[appId.app]
+        List<String> verList = appVersions1[appId.app]
+        if (verList == null)
+        {
+            return
+        }
+
+        for (String ver : verList)
+        {
+            if (ver.equalsIgnoreCase(appId.version))
+            {
+                return
+            }
+        }
+        verList.add(appId.version)
+
+        verList = appVersions[appId.app]
         if (verList == null)
         {
             return
