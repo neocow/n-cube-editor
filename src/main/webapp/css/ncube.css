@@ -26,6 +26,11 @@
     opacity: 0;
 }
 
+#topAxisBtn {
+    z-index: 999;
+    position: fixed;
+}
+
 div#editColumnsModal ul.list-group
 {
     padding-left: 20px;

@@ -100,6 +100,7 @@ var NCubeEditor2 = (function ($) {
     var _refFilterVersionUpdate = null;
     var _refFilterCubeUpdate = null;
     var _refFilterMethodUpdate = null;
+    var _topAxisBtn = null;
 
     var init = function(info) {
         if (!nce) {
@@ -157,6 +158,7 @@ var NCubeEditor2 = (function ($) {
             _refFilterVersionUpdate = $('#refFilterVersionUpdate');
             _refFilterCubeUpdate = $('#refFilterCubeUpdate');
             _refFilterMethodUpdate = $('#refFilterMethodUpdate');
+            _topAxisBtn = $('#topAxisBtn');
 
             addAxisEditListeners();
             addColumnEditListeners();
@@ -896,6 +898,16 @@ var NCubeEditor2 = (function ($) {
         setUpColumnWidths();
     };
 
+    var buildTopAxisMenu = function() {
+        buildAxisMenu(axes[colOffset], _topAxisBtn);
+        var frozen = getNumFrozenCols();
+        var idx = colOffset > frozen ? colOffset : frozen;
+        idx += 2;
+        var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')');
+        var offset = tr.offset();
+        _topAxisBtn.css({top:offset.top+1, left:offset.left+1});
+    };
+
     var setUpColumnWidths = function()
     {
         var calcDomWidth = function (value, modifier, type)
@@ -1163,7 +1175,7 @@ var NCubeEditor2 = (function ($) {
             copyPaste: false,
             fillHandle: false,
             colWidths: _columnWidths,
-            rowHeights: [33],
+            rowHeights: [33,33],
             autoRowSize: false,
             enterBeginsEditing: false,
             enterMoves: {row: 1, col: 0},
@@ -1195,6 +1207,8 @@ var NCubeEditor2 = (function ($) {
                 _firstRenderedCol = null;
             },
             afterRender: function() {
+                buildTopAxisMenu();
+                moveTopAxisMenu();
                 setButtonDropdownLocations();
                 colorAxisButtons();
             },
@@ -1233,36 +1247,37 @@ var NCubeEditor2 = (function ($) {
                 nce.saveViewPosition({row:r, col: c});
             },
             afterScrollHorizontally: function() {
-                var numFixed = getNumFrozenCols();
-                if (numFixed < colOffset) {
-                    var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1)');
-                    var btn = $(tr).find('div.btn-group');
-                    var scrollAmt = $('.ht_master .wtHolder').scrollLeft();
-                    var thWidth = tr.find('th').outerWidth();
-                    var frozenWidth = thWidth;
-                    var startingWidth = thWidth;
-
-                    if (_firstRenderedCol === 0) {
-                        for (var i = 0; i < colOffset; i++) {
-                            var curWidth = tr.find('td').eq(i).outerWidth();
-                            startingWidth += curWidth;
-                            if (i < numFixed) {
-                                frozenWidth += curWidth;
-                            }
-                        }
-                    }
-
-                    var newWidth;
-                    if (scrollAmt < (startingWidth - frozenWidth)) {
-                        newWidth = startingWidth - scrollAmt;
-                    } else {
-                        var afterSubtract = frozenWidth || (startingWidth - scrollAmt);
-                        newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
-                    }
-                    btn.css({left:newWidth});
-                }
+                moveTopAxisMenu();
             }
         };
+    };
+
+    var moveTopAxisMenu = function() {
+        var numFixed = getNumFrozenCols();
+        var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1)');
+        var scrollAmt = $('.ht_master .wtHolder').scrollLeft();
+        var thWidth = tr.find('th').outerWidth();
+        var frozenWidth = thWidth;
+        var startingWidth = thWidth;
+
+        if (_firstRenderedCol === 0) {
+            for (var i = 0; i < colOffset; i++) {
+                var curWidth = tr.find('td').eq(i).outerWidth();
+                startingWidth += curWidth;
+                if (i < numFixed) {
+                    frozenWidth += curWidth;
+                }
+            }
+        }
+
+        var newWidth;
+        if (scrollAmt < (startingWidth - frozenWidth)) {
+            newWidth = startingWidth - scrollAmt;
+        } else {
+            var afterSubtract = frozenWidth || (startingWidth - scrollAmt);
+            newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
+        }
+        _topAxisBtn.css({left:newWidth});
     };
 
     var setClipFormatToggleListener = function() {
@@ -1316,10 +1331,7 @@ var NCubeEditor2 = (function ($) {
         else if (row === 0) {
             if (axes.length > 1 && (col === colOffset || (_firstRenderedCol > 0 && col === _firstRenderedCol))) {
                 td.style.overflow = 'visible';
-                var axis = axes[colOffset];
-                buildAxisMenu(axis, td);
-                $(td).find('div.btn-group').addClass('pos-fixed');
-                td.colSpan = axis.columnLength - _firstRenderedCol;
+                td.colSpan = axes[colOffset].columnLength - _firstRenderedCol;
             }
             td.style.background = BACKGROUND_AXIS_INFO;
             td.style.color = COLOR_WHITE;
@@ -1826,6 +1838,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         $(div).append(ul);
+        $(element).empty();
         $(element).append(div);
     };
 
