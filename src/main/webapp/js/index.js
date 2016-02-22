@@ -2226,7 +2226,7 @@ var NCE = (function ($)
             saveOpenCubeList();
             _selectedCubeName = newName;
             localStorage[SELECTED_CUBE] = _selectedCubeName;
-            buildTabs();
+            buildTabs(newCubeInfo);
             loadCube();
             if (appIdsEqual(getSelectedTabAppId(), getAppId())) {
                 loadNCubes();
