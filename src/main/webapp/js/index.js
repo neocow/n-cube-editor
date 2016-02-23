@@ -326,6 +326,13 @@ var NCE = (function ($)
             return $(this)[0].textContent.trim() === getActiveTabViewType().replace(PAGE_ID,'');
         }).addClass(CLASS_ACTIVE_VIEW);
 
+        if (cubeInfo[CUBE_INFO.APP] === _selectedApp
+            && cubeInfo[CUBE_INFO.VERSION] === _selectedVersion
+            && cubeInfo[CUBE_INFO.STATUS] === _selectedStatus
+            && cubeInfo[CUBE_INFO.BRANCH] === _selectedBranch) {
+            setListSelectedStatus(_selectedCubeName, '#ncube-list');
+        }
+
         switchTabPane(getActiveTabViewType());
     }
 
@@ -1514,6 +1521,7 @@ var NCE = (function ($)
 
     function loadCube()
     {
+        console.log('fired');
         saveState();
         try
         {
@@ -1527,8 +1535,6 @@ var NCE = (function ($)
         {
             console.log(e);
         }
-
-        setListSelectedStatus(_selectedCubeName, '#ncube-list');
     }
 
     /**
