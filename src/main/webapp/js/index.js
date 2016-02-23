@@ -449,7 +449,7 @@ var NCE = (function ($)
                             if (isCtrlKey) { // open new tab
                                 li.removeClass('open');
                                 li.tooltip('hide');
-                                addCurrentCubeTab(tabIdx, cubeInfo, getInfoDto());
+                                addCurrentCubeTab(tabIdx, ci2, getInfoDto());
                             } else { // use current tab
                                 cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
                                 _openCubes[tabIdx].cubeKey = cia2;
