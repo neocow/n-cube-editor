@@ -206,3 +206,76 @@ function parseExcelClipboard(str)
 
     return arr;
 }
+
+var delay = (function(){
+    var timer = 0;
+    return function(callback, ms){
+        clearTimeout(timer);
+        timer = setTimeout(callback, ms);
+    };
+})();
+
+function addModalFilters() {
+    $('.modal-filter').each(function() {
+        var contentDiv = $(this);
+        var list = contentDiv.find('.modal-body').find('ul');
+
+        var countSpan = $('<span/>');
+        countSpan.addClass('pull-left selected-count');
+        contentDiv.find('.select-none').after(countSpan);
+
+        var items = [];
+        var checkBoxes = [];
+        var checkedItems = [];
+        contentDiv.click(function() {
+            checkedItems = checkBoxes.filter(function() {
+                return $(this)[0].checked;
+            });
+            countSpan[0].innerHTML = checkedItems.length + ' of ' + items.length + ' Selected';
+        });
+
+        var div = $('<div/>');
+        var input = $('<input/>');
+        input.addClass('modal-filter-input');
+        input.prop({'type':'text','placeholder':'Filter...'});
+        input.css({'width':'100%'});
+        input.keyup(function(e) {
+            delay(function() {
+                var query = input.val().toLowerCase();
+                if (query === '') {
+                    items.show();
+                } else {
+                    items.hide();
+                    items.filter(function () {
+                        return $(this)[0].innerHTML.toLowerCase().indexOf(query) > -1;
+                    }).show();
+                }
+            }, e.keyCode === KEY_CODES.ENTER ? 0 : 200);
+        });
+
+        div.append(input);
+        contentDiv.find('.modal-header').after(div);
+
+        contentDiv.parent().parent().on('shown.bs.modal', function () {
+            input.val('');
+            input.focus();
+            items = list.find('li');
+            checkBoxes = items.find('input[type="checkbox"]');
+        })
+    });
+}
+
+(function($) {
+    $.fn.hasScrollBar = function() {
+        return this.get(0).scrollWidth > this.width();
+    };
+
+    $.fn.canvasMeasureWidth = function (font) {
+        if (!jQuery._cachedCanvas) {
+            var canvas = document.createElement('canvas');
+            jQuery._cachedCanvas = canvas.getContext('2d');
+        }
+        jQuery._cachedCanvas.font = font;
+        return jQuery._cachedCanvas.measureText(this[0].innerText).width;
+    };
+})(jQuery);

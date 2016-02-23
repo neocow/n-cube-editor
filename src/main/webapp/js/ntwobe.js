@@ -1,27 +1,4 @@
-(function($) {
-    $.fn.hasScrollBar = function() {
-        return this.get(0).scrollWidth > this.width();
-    };
-
-    $.fn.canvasMeasureWidth = function (font) {
-        if (!jQuery._cachedCanvas) {
-            var canvas = document.createElement('canvas');
-            jQuery._cachedCanvas = canvas.getContext('2d');
-        }
-        jQuery._cachedCanvas.font = font;
-        return jQuery._cachedCanvas.measureText(this[0].innerText).width;
-    };
-})(jQuery);
-
 var NCubeEditor2 = (function ($) {
-
-    var delay = (function(){
-        var timer = 0;
-        return function(callback, ms){
-            clearTimeout(timer);
-            timer = setTimeout(callback, ms);
-        };
-    })();
 
     var headerAxisNames = ['trait','traits','businessDivisionCode','bu','month','months','col','column','cols','columns'];
     var nce = null;
@@ -250,6 +227,7 @@ var NCubeEditor2 = (function ($) {
         setCoordinateBarListeners();
         buildCubeMap();
         setUtilityBarDisplay();
+        addModalFilters();
     };
 
     var getNumFrozenCols = function() {
@@ -899,13 +877,17 @@ var NCubeEditor2 = (function ($) {
     };
 
     var buildTopAxisMenu = function() {
-        buildAxisMenu(axes[colOffset], _topAxisBtn);
-        var frozen = getNumFrozenCols();
-        var idx = colOffset > frozen ? colOffset : frozen;
-        idx += 2;
-        var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')');
-        var offset = tr.offset();
-        _topAxisBtn.css({top:offset.top+1, left:offset.left+1});
+        if (axes.length < 2) {
+            _topAxisBtn.empty();
+        } else {
+            buildAxisMenu(axes[colOffset], _topAxisBtn);
+            var frozen = getNumFrozenCols();
+            var idx = colOffset > frozen ? colOffset : frozen;
+            idx += 2;
+            var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')');
+            var offset = tr.offset();
+            _topAxisBtn.css({top: offset.top + 1, left: offset.left + 1});
+        }
     };
 
     var setUpColumnWidths = function()
