@@ -68,11 +68,6 @@ class NCubeService
         return NCubeManager.getAppNames(tenant)
     }
 
-    List<String> getAppVersions(String tenant, String app, String status, String branch)
-    {
-        return NCubeManager.getAppVersions(tenant, app, status, branch)
-    }
-
     Map<String, List<String>> getVersions(String tenant, String app)
     {
         return NCubeManager.getVersions(tenant, app)
