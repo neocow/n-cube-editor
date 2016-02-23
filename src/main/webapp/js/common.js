@@ -247,7 +247,7 @@ function addModalFilters() {
                 } else {
                     items.hide();
                     items.filter(function () {
-                        return $(this)[0].innerHTML.toLowerCase().indexOf(query) > -1;
+                        return $(this)[0].textContent.toLowerCase().indexOf(query) > -1;
                     }).show();
                 }
             }, e.keyCode === KEY_CODES.ENTER ? 0 : 200);
