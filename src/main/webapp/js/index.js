@@ -405,9 +405,11 @@ var NCE = (function ($)
                         .tab('show');
                 }
 
-                makeCubeInfoActive(cubeInfo);
-                selectTab(cubeInfo);
-                saveState();
+                if (cubeInfo !== _selectedCubeInfo) {
+                    makeCubeInfoActive(cubeInfo);
+                    selectTab(cubeInfo);
+                    saveState();
+                }
             }
         });
 
