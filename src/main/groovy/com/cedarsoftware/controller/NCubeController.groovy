@@ -86,7 +86,6 @@ class NCubeController extends BaseController
 
     // TODO: Temporary until we have n_cube_app_versions table
     // TODO: Verify all places that can create a cube are clearing the appVersionsCache
-    private static final Map<String, List<String>> appVersions1 = new ConcurrentHashMap<>()
     private static final Map<String, List<String>> appVersions = new ConcurrentHashMap<>()
     private static final Object versionsLock = new Object()
 
@@ -328,28 +327,20 @@ class NCubeController extends BaseController
     {
         try
         {
-            String tenant = getTenant()
-
-            // TODO: Pull from cache (temporary)
-            List<String> appVers = appVersions1[app]
-            if (appVers != null && appVers.size() > 0)
+            Object[] vers = getVersions(app)
+            if (ArrayUtilities.isEmpty(vers))
             {
-                return appVers.toArray()
+                return vers
             }
 
-            synchronized(versionsLock)
+            // Filter out duplicates, remove trailing '-SNAPSHOT' and '-RELEASE'
+            Set<String> versions = new LinkedHashSet<>()
+            for (int i=vers.length - 1; i >=0; i--)
             {
-                appVers = appVersions1[app]
-                if (appVers != null && appVers.size() > 0)
-                {
-                    return appVers.toArray()
-                }
-
-                List<String> versionsForApp = nCubeService.getAppVersions(tenant, app, status, branchName)
-                sortVersions(versionsForApp)
-                appVersions1[app] = versionsForApp
-                return versionsForApp.toArray()
+                String mvnVer = vers[i]
+                versions.add(mvnVer.split('-')[0])
             }
+            return versions.toArray()
         }
         catch (Exception e)
         {
@@ -1225,22 +1216,7 @@ class NCubeController extends BaseController
     // TODO: Remove this cache once the database performance issue is worked out for getAppVersions() / getVersions()
     void addVersionToCache(ApplicationID appId)
     {
-        List<String> verList = appVersions1[appId.app]
-        if (verList == null)
-        {
-            return
-        }
-
-        for (String ver : verList)
-        {
-            if (ver.equalsIgnoreCase(appId.version))
-            {
-                return
-            }
-        }
-        verList.add(appId.version)
-
-        verList = appVersions[appId.app]
+        List<String> verList = appVersions[appId.app]
         if (verList == null)
         {
             return

@@ -1634,7 +1634,7 @@ var NCE = (function ($)
             if (version) {
                 var arr = version.split('-');
                 _selectedVersion = arr[0];
-                _selectedBranch = arr[1];
+                _selectedStatus = arr[1];
             } else {
                 _selectedVersion = null;
                 _selectedStatus = null;
