@@ -212,16 +212,18 @@ var NCubeEditor2 = (function ($) {
             });
 
             $(window).resize(function () {
-                var winWidth = $(this).width();
-                if (hot) {
-                    hot.updateSettings({
-                        height: $(this).height() - $('#hot-container').offset().top,
-                        width: winWidth
-                    });
-                }
+                delay(function() {
+                    var winWidth = $(this).width();
+                    if (hot) {
+                        hot.updateSettings({
+                            height: $(this).height() - $('#hot-container').offset().top,
+                            width: winWidth
+                        });
+                    }
 
-                NCubeEditor2.render();
-                setUtilityBarDisplay();
+                    NCubeEditor2.render();
+                    setUtilityBarDisplay();
+                },PROGRESS_DELAY);
             });
         }
 

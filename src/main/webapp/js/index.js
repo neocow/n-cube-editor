@@ -151,7 +151,9 @@ var NCE = (function ($)
             , stateManagement__enabled: false // automatic cookie load & save enabled by default
             , showDebugMessages: false // log and/or display messages from debugging & testing code
             , onresize_end: function() {
-                buildTabs();
+                delay(function() {
+                    buildTabs();
+                },PROGRESS_DELAY);
             }
         });
     }
