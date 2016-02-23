@@ -877,13 +877,17 @@ var NCubeEditor2 = (function ($) {
     };
 
     var buildTopAxisMenu = function() {
-        buildAxisMenu(axes[colOffset], _topAxisBtn);
-        var frozen = getNumFrozenCols();
-        var idx = colOffset > frozen ? colOffset : frozen;
-        idx += 2;
-        var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')');
-        var offset = tr.offset();
-        _topAxisBtn.css({top:offset.top+1, left:offset.left+1});
+        if (axes.length < 2) {
+            _topAxisBtn.empty();
+        } else {
+            buildAxisMenu(axes[colOffset], _topAxisBtn);
+            var frozen = getNumFrozenCols();
+            var idx = colOffset > frozen ? colOffset : frozen;
+            idx += 2;
+            var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')');
+            var offset = tr.offset();
+            _topAxisBtn.css({top: offset.top + 1, left: offset.left + 1});
+        }
     };
 
     var setUpColumnWidths = function()
