@@ -142,6 +142,7 @@ var NCubeEditor2 = (function ($) {
             addColumnHideListeners();
             addEditCellListeners();
             addSearchListeners();
+            addModalFilters();
 
             _editCellRadioURL.change(function() {
                 var isUrl = _editCellRadioURL.find('input').is(':checked');
@@ -227,7 +228,6 @@ var NCubeEditor2 = (function ($) {
         setCoordinateBarListeners();
         buildCubeMap();
         setUtilityBarDisplay();
-        addModalFilters();
     };
 
     var getNumFrozenCols = function() {
