@@ -247,7 +247,13 @@ function addModalFilters() {
                 } else {
                     items.hide();
                     items.filter(function () {
-                        return $(this)[0].textContent.toLowerCase().indexOf(query) > -1;
+                        var li = $(this);
+                        var cb = li.find('input[type="checkbox"]');
+                        var el = li;
+                        if (cb.length > 0) {
+                            el = cb.parent();
+                        }
+                        return el[0].textContent.toLowerCase().indexOf(query) > -1;
                     }).show();
                 }
             }, e.keyCode === KEY_CODES.ENTER ? 0 : 200);
