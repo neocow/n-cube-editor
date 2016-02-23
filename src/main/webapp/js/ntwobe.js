@@ -2433,6 +2433,7 @@ var NCubeEditor2 = (function ($) {
             $('#editColDown').hide();
         }
         $('#editColumnsLabel')[0].innerHTML = 'Edit ' + axisName;
+        hot.addHook('beforeKeyDown', onBeforeKeyDown);
         $(_editColumnModal).modal();
     };
 
@@ -2563,6 +2564,7 @@ var NCubeEditor2 = (function ($) {
 
     var editColCancel = function() {
         $(_editColumnModal).modal('hide');
+        hot.removeHook('beforeKeyDown', onBeforeKeyDown);
         destroyEditor();
     };
 
@@ -2593,6 +2595,7 @@ var NCubeEditor2 = (function ($) {
         }
         deleteSavedColumnWidths();
         $(_editColumnModal).modal('hide');
+        hot.removeHook('beforeKeyDown', onBeforeKeyDown);
         destroyEditor();
         reload();
     };
@@ -2782,6 +2785,7 @@ var NCubeEditor2 = (function ($) {
         sortColumns(axis);
         loadHiddenColumns(axis);
         $('#hideColumnsLabel')[0].innerHTML = 'Hide ' + axisName + ' columns';
+        hot.addHook('beforeKeyDown', onBeforeKeyDown);
         $('#hideColumnsModal').modal();
     };
 
@@ -2830,6 +2834,7 @@ var NCubeEditor2 = (function ($) {
     var hideColCancel = function()
     {
         $('#hideColumnsModal').modal('hide');
+        hot.removeHook('beforeKeyDown', onBeforeKeyDown);
     };
 
     var hideColSave = function()
@@ -2858,6 +2863,7 @@ var NCubeEditor2 = (function ($) {
         }
         storeHiddenColumns();
         $('#hideColumnsModal').modal('hide');
+        hot.removeHook('beforeKeyDown', onBeforeKeyDown);
         destroyEditor();
         reload();
     };
