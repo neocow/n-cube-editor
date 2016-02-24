@@ -1851,7 +1851,7 @@ class NCubeController extends BaseController
     {
         if (value != null)
         {
-            if (value instanceof Number)
+            if (value instanceof Integer)
             {
                 value = value.longValue()
             }
@@ -2191,10 +2191,19 @@ class NCubeController extends BaseController
         return axisConverted
     }
 
-    private static Map columnToMap(Column col) {
+    private static Map columnToMap(Column col)
+    {
         Map map = [:]
-        map.id = String.valueOf(col.id) // Stringify Long ID (Javascript safe if quoted)
+        map.id = Converter.convert(col.id, String.class)  // Stringify Long ID (Javascript safe if quoted)
         map.'@type' = Column.class.getName()
+        if (col.getMetaProperties().size() > 0)
+        {
+            map.metaProps = [:]
+        }
+        for (Map.Entry<String, Object> entry : col.getMetaProperties())
+        {
+            map.metaProps[entry.key] = entry.value == null ? 'null' : entry.value.toString()
+        }
         return map
     }
 
