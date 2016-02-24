@@ -151,7 +151,9 @@ var NCE = (function ($)
             , stateManagement__enabled: false // automatic cookie load & save enabled by default
             , showDebugMessages: false // log and/or display messages from debugging & testing code
             , onresize_end: function() {
-                buildTabs();
+                delay(function() {
+                    buildTabs();
+                },PROGRESS_DELAY);
             }
         });
     }
@@ -324,6 +326,15 @@ var NCE = (function ($)
             return $(this)[0].textContent.trim() === getActiveTabViewType().replace(PAGE_ID,'');
         }).addClass(CLASS_ACTIVE_VIEW);
 
+        var listCubeName = null;
+        if (cubeInfo[CUBE_INFO.APP] === _selectedApp
+            && cubeInfo[CUBE_INFO.VERSION] === _selectedVersion
+            && cubeInfo[CUBE_INFO.STATUS] === _selectedStatus
+            && cubeInfo[CUBE_INFO.BRANCH] === _selectedBranch) {
+            listCubeName = _selectedCubeName;
+        }
+        setListSelectedStatus(listCubeName, '#ncube-list');
+
         switchTabPane(getActiveTabViewType());
     }
 
@@ -447,7 +458,7 @@ var NCE = (function ($)
                             if (isCtrlKey) { // open new tab
                                 li.removeClass('open');
                                 li.tooltip('hide');
-                                addCurrentCubeTab(tabIdx, cubeInfo, getInfoDto());
+                                addCurrentCubeTab(tabIdx, ci2, getInfoDto());
                             } else { // use current tab
                                 cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
                                 _openCubes[tabIdx].cubeKey = cia2;
@@ -1512,6 +1523,7 @@ var NCE = (function ($)
 
     function loadCube()
     {
+        console.log('fired');
         saveState();
         try
         {
@@ -1525,8 +1537,6 @@ var NCE = (function ($)
         {
             console.log(e);
         }
-
-        setListSelectedStatus(_selectedCubeName, '#ncube-list');
     }
 
     /**
@@ -1535,29 +1545,21 @@ var NCE = (function ($)
      */
     function setListSelectedStatus(itemName, listId)
     {
-        if (itemName == null)
-        {
+        var items = $(listId).find('li a');
+        items.filter('.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
+        if (itemName === null) {
             return;
         }
-        var items = $(listId).find('li a');
+
         var saveSelected = null;
         var loItemName = itemName.toLowerCase();
 
-        $.each(items, function (index, value)
-        {
-            var anchor = $(value);
+        items.filter(function() {
+            var anchor = $(this);
             var text = anchor[0].textContent;
             var elemName = anchor.attr('itemName');
-            if (loItemName == elemName || itemName == text)
-            {
-                saveSelected = anchor;
-                anchor.removeClass('ncube-notselected').addClass('ncube-selected');
-            }
-            else
-            {
-                anchor.removeClass('ncube-selected').addClass('ncube-notselected');
-            }
-        });
+            return loItemName === elemName || itemName === text
+        }).removeClass('ncube-notselected').addClass('ncube-selected');
 
         if (saveSelected)
         {
