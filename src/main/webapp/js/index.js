@@ -1547,7 +1547,7 @@ var NCE = (function ($)
     {
         var items = $(listId).find('li a');
         items.filter('.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
-        if (itemName === null) {
+        if (itemName === null || itemName === undefined) {
             return;
         }
 
