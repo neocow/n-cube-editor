@@ -143,6 +143,7 @@ var NCubeEditor2 = (function ($) {
             addEditCellListeners();
             addSearchListeners();
             addModalFilters();
+            modalsDraggable(true);
 
             _editCellRadioURL.change(function() {
                 var isUrl = _editCellRadioURL.find('input').is(':checked');
