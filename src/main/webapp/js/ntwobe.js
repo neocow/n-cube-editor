@@ -256,7 +256,7 @@ var NCubeEditor2 = (function ($) {
         var moveRightBtn = $('#coordinate-bar-move-right');
         var btnWidth = moveRightBtn.outerWidth();
 
-        var windowWidth = $(this).width();
+        var windowWidth = $(this).width() - 3;
         var search = $('#search-container');
         var searchWidth = search.width();
         var coordWidth = windowWidth - searchWidth;
