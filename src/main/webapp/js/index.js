@@ -1558,13 +1558,12 @@ var NCE = (function ($)
             var anchor = $(this);
             var text = anchor[0].textContent;
             var elemName = anchor.attr('itemName');
-            return loItemName === elemName || itemName === text
+            if (loItemName === elemName || itemName === text) {
+                anchor.scrollintoview();
+                return true;
+            }
+            return false;
         }).removeClass('ncube-notselected').addClass('ncube-selected');
-
-        if (saveSelected)
-        {
-            saveSelected.scrollintoview();
-        }
     }
 
     /**
