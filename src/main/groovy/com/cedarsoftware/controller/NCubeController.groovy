@@ -30,6 +30,7 @@ import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
 import com.cedarsoftware.util.CaseInsensitiveSet
 import com.cedarsoftware.util.Converter
+import com.cedarsoftware.util.Visualizer
 import com.cedarsoftware.util.InetAddressUtilities
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
@@ -280,6 +281,26 @@ class NCubeController extends BaseController
                 default:
                     throw new IllegalArgumentException("getJson() - unknown mode: " + mode)
             }
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    String getVisualizerJson(ApplicationID appId, Map options)
+    {
+        try
+        {
+            String cubeName = options.startCubeName
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, null)
+
+            Visualizer vis = new Visualizer()
+            vis.input = [options:options]
+            vis.ncube = nCubeService.getCube(appId, cubeName)
+            return vis.run()
         }
         catch (Exception e)
         {
@@ -1889,7 +1910,7 @@ class NCubeController extends BaseController
         }
         else
         {
-            LOG.warn("error occurred", e)
+            LOG.info("error occurred", e)
         }
     }
 

@@ -271,6 +271,16 @@ function addModalFilters() {
     });
 }
 
+function modalsDraggable(shouldBeDraggable) {
+    $('.modal').each(function() {
+        var modal = $(this);
+        modal.draggable({
+            handle: '.modal-header'
+        });
+        modal.draggable(shouldBeDraggable ? 'enable' : 'disable');
+    });
+}
+
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();

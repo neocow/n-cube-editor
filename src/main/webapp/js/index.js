@@ -117,6 +117,7 @@ var NCE = (function ($)
             heartBeat();
             addListeners();
             addModalFilters();
+            modalsDraggable(true);
         }
         catch (e)
         {
