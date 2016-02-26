@@ -37,6 +37,7 @@ import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
+import com.google.common.util.concurrent.AtomicDouble
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
 import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
@@ -80,6 +81,8 @@ class NCubeController extends BaseController
     private NCubeService nCubeService;
     private static String servletHostname = null
     private static String inetHostname = null
+    private static AtomicDouble processLoadPeak = new AtomicDouble(0.0d)
+    private static AtomicDouble systemLoadPeak = new AtomicDouble(0.0d)
 
     // TODO: Temporary until we have n_cube_app table
     // TODO: Verify all places that can create a cube are clearing the appCache
@@ -1793,8 +1796,20 @@ class NCubeController extends BaseController
         putIfNotNull(serverStats, 'OS', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Name'))
         putIfNotNull(serverStats, 'OS version', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Version'))
         putIfNotNull(serverStats, 'CPU', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'Arch'))
-        putIfNotNull(serverStats, 'CPU Process Load', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'ProcessCpuLoad'))
-        putIfNotNull(serverStats, 'CPU System Load', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'SystemCpuLoad'))
+        double processLoad = getAttribute(mbs, 'java.lang:type=OperatingSystem', 'ProcessCpuLoad') as Double
+        if (processLoad > processLoadPeak.get())
+        {
+            processLoadPeak.set(processLoad)
+        }
+        double systemLoad = getAttribute(mbs, 'java.lang:type=OperatingSystem', 'SystemCpuLoad') as Double
+        if (systemLoad > systemLoadPeak.get())
+        {
+            systemLoadPeak.set(systemLoad)
+        }
+        putIfNotNull(serverStats, 'Process CPU Load', processLoad)
+        putIfNotNull(serverStats, 'System CPU Load', systemLoad)
+        putIfNotNull(serverStats, 'Peak Process CPU Load', processLoadPeak.get())
+        putIfNotNull(serverStats, 'Peak System CPU Load', systemLoadPeak.get())
         putIfNotNull(serverStats, 'CPU Cores', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'AvailableProcessors'))
         double machMem = (long) getAttribute(mbs, 'java.lang:type=OperatingSystem', 'TotalPhysicalMemorySize')
         long K = 1024L
