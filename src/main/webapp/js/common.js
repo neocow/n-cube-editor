@@ -274,8 +274,23 @@ function addModalFilters() {
 function modalsDraggable(shouldBeDraggable) {
     $('.modal').each(function() {
         var modal = $(this);
+        var maxX = modal.width() / 2;
+        var maxY = modal.height() / 2;
+        var prevX = 0;
+        var prevY = 0;
         modal.draggable({
-            handle: '.modal-header'
+            handle: '.modal-header',
+            drag: function(e) {
+                var offset = modal.offset();
+                var posX = offset.left;
+                var posY = offset.top;
+                if ((posX > maxX && posX > prevX) || (posY > maxY && posY > prevY)) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                }
+                prevX = posX;
+                prevY = posY;
+            }
         });
         modal.draggable(shouldBeDraggable ? 'enable' : 'disable');
     });
