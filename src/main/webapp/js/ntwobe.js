@@ -1675,8 +1675,7 @@ var NCubeEditor2 = (function ($) {
             if (_filters.length > 0) {
                 an.click(function (e) {
                     e.preventDefault();
-                    _filters = [];
-                    saveFilters();
+                    clearFilters();
                     destroyEditor();
                     reload();
                 });
@@ -1823,6 +1822,7 @@ var NCubeEditor2 = (function ($) {
             btn.append(span);
             btn.click(function (e) {
                 e.preventDefault();
+                clearFilters();
                 moveAxis(axisIndex, colOffset)
             });
             btnGroup.append(btn);
@@ -3034,6 +3034,11 @@ var NCubeEditor2 = (function ($) {
         return filters ? JSON.parse(filters) : [];
     };
 
+    var clearFilters = function() {
+        _filters = [];
+        saveFilters();
+    };
+
     var saveFilters = function() {
         saveOrDeleteValue(_filters, getStorageKey(FILTERS));
     };
@@ -3282,6 +3287,7 @@ var NCubeEditor2 = (function ($) {
                 storeAxisOrder();
             }
             deleteSavedColumnWidths();
+            clearFilters();
             nce.loadCube();
         } else {
             nce.showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
@@ -3314,6 +3320,7 @@ var NCubeEditor2 = (function ($) {
                 axes.splice(order.indexOf(lowerAxisName), 1);
                 storeAxisOrder();
             }
+            clearFilters();
             deleteSavedColumnWidths();
             nce.loadCube();
         } else {
