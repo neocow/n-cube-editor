@@ -11,6 +11,7 @@ var HIDDEN_COLUMNS = NCE_PREFIX + 'HIDDEN_COLUMNS';
 var AXIS_ORDER = NCE_PREFIX + 'AXIS_ORDER';
 var COLUMN_WIDTHS = NCE_PREFIX + 'COLUMN_WIDTHS';
 var TEST_RESULTS = NCE_PREFIX + 'TEST_RESULTS';
+var FILTERS = NCE_PREFIX + 'FILTERS';
 var PROGRESS_DELAY = 300;
 var DIFF_SIDE_BY_SIDE = 0;
 var DIFF_INLINE = 1;
@@ -78,6 +79,7 @@ var STATUS = {
 var URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
+var FILTER_COMPARATOR_LIST = ['=','>','<','contains','excludes'];
 
 var KEY_CODES = {
     MOUSE_LEFT: 1,

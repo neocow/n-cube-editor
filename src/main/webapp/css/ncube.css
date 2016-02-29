@@ -31,10 +31,19 @@
     position: fixed;
 }
 
-div#editColumnsModal ul.list-group
+ul.list-group
 {
     padding-left: 20px;
     padding-right: 20px;
+}
+
+#filterTable {
+    margin: 0 auto;
+}
+
+#filterTable td {
+    padding-right: 25px;
+    text-align: center;
 }
 
 div#editColumnsModal div.panel-group
