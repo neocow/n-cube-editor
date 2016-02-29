@@ -81,6 +81,7 @@ var NCubeEditor2 = (function ($) {
     var _filterModal = null;
     var _filters = null;
     var _filterTable = null;
+    var _columnIdCombinationsToShow = null;
 
     var init = function(info) {
         if (!nce) {
@@ -638,18 +639,30 @@ var NCubeEditor2 = (function ($) {
         }
 
         var axis = axes[col];
-        var colLen = getColumnLength(axis);
-        var repeatRowCount = (numRows - 2) / colLen;
+        if (getAppliedFilters().length === 0) {
+            var colLen = getColumnLength(axis);
+            var repeatRowCount = (numRows - 2) / colLen;
 
-        for (var axisNum = 0; axisNum < col; axisNum++)
-        {
-            var tempAxis = axes[axisNum];
-            var colCount = getColumnLength(tempAxis);
-            repeatRowCount /= colCount;
+            for (var axisNum = 0; axisNum < col; axisNum++) {
+                var tempAxis = axes[axisNum];
+                var colCount = getColumnLength(tempAxis);
+                repeatRowCount /= colCount;
+            }
+            var columnNumberToGet = Math.floor(rowNum / repeatRowCount) % colLen;
+            result = getAxisColumn(axis, columnNumberToGet);
+        } else {
+            var ids = _columnIdCombinationsToShow[rowNum].split('_');
+            for (var idx = 0, idLen = ids.length; idx < idLen; idx++) {
+                var curId = ids[idx];
+                var column = axis.columns[curId];
+                if (column !== undefined) {
+                    result = column;
+                    result.id = curId;
+                    break;
+                }
+            }
         }
 
-        var columnNumberToGet = Math.floor(rowNum / repeatRowCount) % colLen;
-        result = getAxisColumn(axis, columnNumberToGet);
         return result;
     };
 
@@ -747,6 +760,33 @@ var NCubeEditor2 = (function ($) {
         return localStorage.hasOwnProperty(getStorageKey(AXIS_ORDER));
     };
 
+    var getAppliedFilters = function() {
+        var appliedFilters = [];
+        for (var i = 0, len = _filters.length; i < len; i++) {
+            var curFilter = _filters[i];
+            if (curFilter.isApplied) {
+                appliedFilters.push(curFilter);
+            }
+        }
+
+        return appliedFilters;
+    };
+
+    var getCellsByColumnId = function(colId) {
+        var allCells = data.cells;
+        var cellKeys = Object.keys(allCells);
+        var columnCells = {};
+        for (var i = 0, len = cellKeys.length; i < len; i++) {
+            var key = cellKeys[i];
+            if (key.indexOf(colId) > -1) {
+                var cell = allCells[key];
+                columnCells[key] = cell;
+            }
+        }
+
+        return columnCells;
+    };
+
     var handleCubeData = function(cubeData) {
 
         var determineAxesOrder = function (cubeAxes) {
@@ -797,6 +837,8 @@ var NCubeEditor2 = (function ($) {
             cubeName = cubeData.ncube;
             var totalRows = 1;
             colOffset = axes.length - 1;
+            _filters = getSavedFilters();
+            var appliedFilters = getAppliedFilters();
 
             if (axes.length > 1) {
                 var horizAxis = axes[colOffset];
@@ -810,11 +852,65 @@ var NCubeEditor2 = (function ($) {
 
                 numColumns += colLen;
 
-                for (var axisNum = 0; axisNum < colOffset; axisNum++) {
-                    totalRows *= getColumnLength(axes[axisNum]);
-                }
+                if (appliedFilters.length === 0) {
+                    for (var axisNum = 0; axisNum < colOffset; axisNum++) {
+                        totalRows *= getColumnLength(axes[axisNum]);
+                    }
+                    numRows = totalRows + 2;
+                } else {
+                    _columnIdCombinationsToShow = [];
+                    for (var f = 0, fLen = appliedFilters.length; f < fLen; f++) {
+                        var curIdCombinationsToShow = [];
+                        var filter = appliedFilters[f];
+                        var colCells = getCellsByColumnId(filter.column);
+                        var colCellKeys = Object.keys(colCells);
+                        for (var c = 0, cLen = colCellKeys.length; c < cLen; c++) {
+                            var colCellKey = colCellKeys[c];
+                            var colCell = colCells[colCellKey];
+                            var cellVal = getTextCellValue(colCell);
+                            var isMatch = false;
+                            var expVal = filter.expressionValue;
+                            switch (filter.comparator) {
+                                case '=':
+                                    isMatch = cellVal === expVal;
+                                    break;
+                                case '>':
+                                    isMatch = cellVal > expVal;
+                                    break;
+                                case '<':
+                                    isMatch = cellVal < expVal;
+                                    break;
+                                case 'contains':
+                                    isMatch = cellVal.indexOf(expVal) > -1;
+                                    break;
+                                case 'excludes':
+                                    isMatch = cellVal.indexOf(expVal) === -1;
+                                    break;
+                            }
 
-                numRows = totalRows + 2;
+                            var axisColId = colCellKey.replace(filter.column,'').replace('__','');
+                            if (axisColId.indexOf('_') === 0) {
+                                axisColId = axisColId.substring(1);
+                            }
+                            if (isMatch) {
+                                curIdCombinationsToShow.push(axisColId);
+                            }
+                        }
+                        if (f === 0) {
+                            _columnIdCombinationsToShow = curIdCombinationsToShow;
+                        } else {
+                            var tempArr = [];
+                            for (var i = 0, len = _columnIdCombinationsToShow.length; i < len; i++) {
+                                var curVal = _columnIdCombinationsToShow[i];
+                                if (curIdCombinationsToShow.indexOf(curVal) > -1) {
+                                    tempArr.push(curVal);
+                                }
+                            }
+                            _columnIdCombinationsToShow = tempArr;
+                        }
+                    }
+                    numRows = _columnIdCombinationsToShow.length + 2;
+                }
             }
             else
             {
@@ -871,10 +967,6 @@ var NCubeEditor2 = (function ($) {
             }
         };
 
-        var filterData = function() {
-            _filters = getSavedFilters();
-        };
-
         _searchCoords = [];
         _currentSearchResultIndex = 0;
         _searchField.value = '';
@@ -884,7 +976,6 @@ var NCubeEditor2 = (function ($) {
         data = cubeData;
         determineAxesOrder(data.axes);
         hideColumns();
-        filterData();
         setUpDataTable();
         setUpAxisColumnMap();
         setUpColumnWidths();
@@ -2509,7 +2600,6 @@ var NCubeEditor2 = (function ($) {
     var filterClose = function() {
         $(_filterModal).modal('hide');
         hot.removeHook('beforeKeyDown', onBeforeKeyDown);
-        destroyEditor();
     };
 
     var filterOpen = function() {
