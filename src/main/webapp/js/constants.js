@@ -79,7 +79,7 @@ var STATUS = {
 var URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
-var FILTER_COMPARATOR_LIST = ['=','>','<','contains','excludes'];
+var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 
 var KEY_CODES = {
     MOUSE_LEFT: 1,

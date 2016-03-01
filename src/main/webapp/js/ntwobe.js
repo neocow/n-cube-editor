@@ -796,6 +796,8 @@ var NCubeEditor2 = (function ($) {
         switch (filter.comparator) {
             case '=':
                 return cellVal === expVal;
+            case '!=':
+                return cellVal !== expVal;
             case '>':
                 if (isNaN(cellVal) || isNaN(expVal)) {
                     return cellVal > expVal;
