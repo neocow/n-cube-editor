@@ -794,9 +794,15 @@ var NCubeEditor2 = (function ($) {
             case '=':
                 return cellVal === expVal;
             case '>':
-                return cellVal > expVal;
+                if (isNaN(cellVal) && isNaN(expVal)) {
+                    return cellVal > expVal;
+                }
+                return parseInt(cellVal) > parseInt(expVal);
             case '<':
-                return cellVal < expVal;
+                if (isNaN(cellVal) && isNaN(expVal)) {
+                    return cellVal < expVal;
+                }
+                return parseInt(cellVal) < parseInt(expVal);
             case 'contains':
                 return cellVal.toLowerCase().indexOf(expVal.toLowerCase()) > -1;
             case 'excludes':
