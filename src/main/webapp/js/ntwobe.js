@@ -787,6 +787,24 @@ var NCubeEditor2 = (function ($) {
         return columnCells;
     };
 
+    var doesCellMatchFilterExpression = function(cell, filter) {
+        var cellVal = getTextCellValue(cell);
+        var expVal = filter.expressionValue;
+        switch (filter.comparator) {
+            case '=':
+                return cellVal === expVal;
+            case '>':
+                return cellVal > expVal;
+            case '<':
+                return cellVal < expVal;
+            case 'contains':
+                return cellVal.toLowerCase().indexOf(expVal.toLowerCase()) > -1;
+            case 'excludes':
+                return cellVal.toLowerCase().indexOf(expVal.toLowerCase()) === -1;
+        }
+        return false;
+    };
+
     var handleCubeData = function(cubeData) {
 
         var determineAxesOrder = function (cubeAxes) {
@@ -859,54 +877,38 @@ var NCubeEditor2 = (function ($) {
                     numRows = totalRows + 2;
                 } else {
                     _columnIdCombinationsToShow = [];
-                    for (var f = 0, fLen = appliedFilters.length; f < fLen; f++) {
-                        var curIdCombinationsToShow = [];
-                        var filter = appliedFilters[f];
-                        var colCells = getCellsByColumnId(filter.column);
-                        var colCellKeys = Object.keys(colCells);
-                        for (var c = 0, cLen = colCellKeys.length; c < cLen; c++) {
-                            var colCellKey = colCellKeys[c];
-                            var colCell = colCells[colCellKey];
-                            var cellVal = getTextCellValue(colCell);
-                            var isMatch = false;
-                            var expVal = filter.expressionValue;
-                            switch (filter.comparator) {
-                                case '=':
-                                    isMatch = cellVal === expVal;
-                                    break;
-                                case '>':
-                                    isMatch = cellVal > expVal;
-                                    break;
-                                case '<':
-                                    isMatch = cellVal < expVal;
-                                    break;
-                                case 'contains':
-                                    isMatch = cellVal.toLowerCase().indexOf(expVal.toLowerCase()) > -1;
-                                    break;
-                                case 'excludes':
-                                    isMatch = cellVal.toLowerCase().indexOf(expVal.toLowerCase()) === -1;
-                                    break;
-                            }
-
-                            var axisColId = colCellKey.replace(filter.column,'').replace('__','');
+                    var colIdReplaceIdx;
+                    var firstFilter = appliedFilters[0];
+                    var colCells = getCellsByColumnId(firstFilter.column);
+                    var colCellKeys = Object.keys(colCells);
+                    for (var c = 0, cLen = colCellKeys.length; c < cLen; c++) {
+                        var colCellKey = colCellKeys[c];
+                        var colCell = colCells[colCellKey];
+                        if (doesCellMatchFilterExpression(colCell, firstFilter)) {
+                            colIdReplaceIdx = colCellKey.indexOf(firstFilter.column);
+                            var axisColId = colCellKey.replace(firstFilter.column,'').replace('__','');
                             if (axisColId.indexOf('_') === 0) {
                                 axisColId = axisColId.substring(1);
+                            } else if (axisColId.substring(axisColId.length - 1) === '_') {
+                                axisColId = axisColId.substring(0, axisColId.length - 1);
                             }
-                            if (isMatch) {
-                                curIdCombinationsToShow.push(axisColId);
-                            }
+                            _columnIdCombinationsToShow.push(axisColId);
                         }
-                        if (f === 0) {
-                            _columnIdCombinationsToShow = curIdCombinationsToShow;
-                        } else {
-                            var tempArr = [];
-                            for (var i = 0, len = _columnIdCombinationsToShow.length; i < len; i++) {
-                                var curVal = _columnIdCombinationsToShow[i];
-                                if (curIdCombinationsToShow.indexOf(curVal) > -1) {
-                                    tempArr.push(curVal);
-                                }
+                    }
+
+                    for (var f = 1, fLen = appliedFilters.length; f < fLen; f++) {
+                        var filter = appliedFilters[f];
+                        var addIn = colIdReplaceIdx === 0 ? filter.column + '_' : '_' + filter.column;
+
+                        for (var comboIdx = 0, comboLen = _columnIdCombinationsToShow.length; comboIdx < comboLen; comboIdx++) {
+                            var combo = _columnIdCombinationsToShow[comboIdx];
+                            var cellId = [combo.slice(0, colIdReplaceIdx), addIn, combo.slice(colIdReplaceIdx)].join('');
+                            var cell = data.cells[cellId];
+                            if (!doesCellMatchFilterExpression(cell, filter)) {
+                                _columnIdCombinationsToShow.splice(comboIdx, 1);
+                                comboIdx--;
+                                comboLen--;
                             }
-                            _columnIdCombinationsToShow = tempArr;
                         }
                     }
                     numRows = _columnIdCombinationsToShow.length + 2;
