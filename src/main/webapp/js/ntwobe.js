@@ -78,6 +78,10 @@ var NCubeEditor2 = (function ($) {
     var _refFilterCubeUpdate = null;
     var _refFilterMethodUpdate = null;
     var _topAxisBtn = null;
+    var _filterModal = null;
+    var _filters = null;
+    var _filterTable = null;
+    var _columnIdCombinationsToShow = null;
 
     var init = function(info) {
         if (!nce) {
@@ -136,11 +140,14 @@ var NCubeEditor2 = (function ($) {
             _refFilterCubeUpdate = $('#refFilterCubeUpdate');
             _refFilterMethodUpdate = $('#refFilterMethodUpdate');
             _topAxisBtn = $('#topAxisBtn');
+            _filterModal = $('#filterModal');
+            _filterTable = $('#filterTable');
 
             addAxisEditListeners();
             addColumnEditListeners();
             addColumnHideListeners();
             addEditCellListeners();
+            addFilterListeners();
             addSearchListeners();
             addModalFilters();
             modalsDraggable(true);
@@ -632,18 +639,30 @@ var NCubeEditor2 = (function ($) {
         }
 
         var axis = axes[col];
-        var colLen = getColumnLength(axis);
-        var repeatRowCount = (numRows - 2) / colLen;
+        if (getAppliedFilters().length === 0) {
+            var colLen = getColumnLength(axis);
+            var repeatRowCount = (numRows - 2) / colLen;
 
-        for (var axisNum = 0; axisNum < col; axisNum++)
-        {
-            var tempAxis = axes[axisNum];
-            var colCount = getColumnLength(tempAxis);
-            repeatRowCount /= colCount;
+            for (var axisNum = 0; axisNum < col; axisNum++) {
+                var tempAxis = axes[axisNum];
+                var colCount = getColumnLength(tempAxis);
+                repeatRowCount /= colCount;
+            }
+            var columnNumberToGet = Math.floor(rowNum / repeatRowCount) % colLen;
+            result = getAxisColumn(axis, columnNumberToGet);
+        } else {
+            var ids = _columnIdCombinationsToShow[rowNum].split('_');
+            for (var idx = 0, idLen = ids.length; idx < idLen; idx++) {
+                var curId = ids[idx];
+                var column = axis.columns[curId];
+                if (column !== undefined) {
+                    result = column;
+                    result.id = curId;
+                    break;
+                }
+            }
         }
 
-        var columnNumberToGet = Math.floor(rowNum / repeatRowCount) % colLen;
-        result = getAxisColumn(axis, columnNumberToGet);
         return result;
     };
 
@@ -741,6 +760,33 @@ var NCubeEditor2 = (function ($) {
         return localStorage.hasOwnProperty(getStorageKey(AXIS_ORDER));
     };
 
+    var getAppliedFilters = function() {
+        var appliedFilters = [];
+        for (var i = 0, len = _filters.length; i < len; i++) {
+            var curFilter = _filters[i];
+            if (curFilter.isApplied) {
+                appliedFilters.push(curFilter);
+            }
+        }
+
+        return appliedFilters;
+    };
+
+    var getCellsByColumnId = function(colId) {
+        var allCells = data.cells;
+        var cellKeys = Object.keys(allCells);
+        var columnCells = {};
+        for (var i = 0, len = cellKeys.length; i < len; i++) {
+            var key = cellKeys[i];
+            if (key.indexOf(colId) > -1) {
+                var cell = allCells[key];
+                columnCells[key] = cell;
+            }
+        }
+
+        return columnCells;
+    };
+
     var handleCubeData = function(cubeData) {
 
         var determineAxesOrder = function (cubeAxes) {
@@ -791,6 +837,8 @@ var NCubeEditor2 = (function ($) {
             cubeName = cubeData.ncube;
             var totalRows = 1;
             colOffset = axes.length - 1;
+            _filters = getSavedFilters();
+            var appliedFilters = getAppliedFilters();
 
             if (axes.length > 1) {
                 var horizAxis = axes[colOffset];
@@ -804,11 +852,65 @@ var NCubeEditor2 = (function ($) {
 
                 numColumns += colLen;
 
-                for (var axisNum = 0; axisNum < colOffset; axisNum++) {
-                    totalRows *= getColumnLength(axes[axisNum]);
-                }
+                if (appliedFilters.length === 0) {
+                    for (var axisNum = 0; axisNum < colOffset; axisNum++) {
+                        totalRows *= getColumnLength(axes[axisNum]);
+                    }
+                    numRows = totalRows + 2;
+                } else {
+                    _columnIdCombinationsToShow = [];
+                    for (var f = 0, fLen = appliedFilters.length; f < fLen; f++) {
+                        var curIdCombinationsToShow = [];
+                        var filter = appliedFilters[f];
+                        var colCells = getCellsByColumnId(filter.column);
+                        var colCellKeys = Object.keys(colCells);
+                        for (var c = 0, cLen = colCellKeys.length; c < cLen; c++) {
+                            var colCellKey = colCellKeys[c];
+                            var colCell = colCells[colCellKey];
+                            var cellVal = getTextCellValue(colCell);
+                            var isMatch = false;
+                            var expVal = filter.expressionValue;
+                            switch (filter.comparator) {
+                                case '=':
+                                    isMatch = cellVal === expVal;
+                                    break;
+                                case '>':
+                                    isMatch = cellVal > expVal;
+                                    break;
+                                case '<':
+                                    isMatch = cellVal < expVal;
+                                    break;
+                                case 'contains':
+                                    isMatch = cellVal.indexOf(expVal) > -1;
+                                    break;
+                                case 'excludes':
+                                    isMatch = cellVal.indexOf(expVal) === -1;
+                                    break;
+                            }
 
-                numRows = totalRows + 2;
+                            var axisColId = colCellKey.replace(filter.column,'').replace('__','');
+                            if (axisColId.indexOf('_') === 0) {
+                                axisColId = axisColId.substring(1);
+                            }
+                            if (isMatch) {
+                                curIdCombinationsToShow.push(axisColId);
+                            }
+                        }
+                        if (f === 0) {
+                            _columnIdCombinationsToShow = curIdCombinationsToShow;
+                        } else {
+                            var tempArr = [];
+                            for (var i = 0, len = _columnIdCombinationsToShow.length; i < len; i++) {
+                                var curVal = _columnIdCombinationsToShow[i];
+                                if (curIdCombinationsToShow.indexOf(curVal) > -1) {
+                                    tempArr.push(curVal);
+                                }
+                            }
+                            _columnIdCombinationsToShow = tempArr;
+                        }
+                    }
+                    numRows = _columnIdCombinationsToShow.length + 2;
+                }
             }
             else
             {
@@ -1533,6 +1635,7 @@ var NCubeEditor2 = (function ($) {
     var buildAxisMenu = function(axis, element) {
         var axisName = axis.name;
         var isRef = axis.isRef;
+        var axisIndex = findIndexOfAxisName(axisName);
 
         var div = $('<div/>').prop({class: 'btn-group axis-menu'});
         var button = $('<button/>').prop({type:'button', class:'btn-sm btn-primary dropdown-toggle axis-btn'})
@@ -1644,6 +1747,41 @@ var NCubeEditor2 = (function ($) {
         li.append(an);
         ul.append(li);
 
+        if (axisIndex === colOffset) {
+            li = $('<div/>').prop({'class': 'divider'});
+            ul.append(li);
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Filter Data...";
+            an.click(function (e) {
+                e.preventDefault();
+                filterOpen();
+            });
+            li.append(an);
+            ul.append(li);
+
+            li = $('<li/>');
+            an = $('<a href="#">');
+            an[0].innerHTML = "Clear Filters";
+            if (_filters.length > 0) {
+                an.click(function (e) {
+                    e.preventDefault();
+                    clearFilters();
+                    destroyEditor();
+                    reload();
+                });
+            }
+            else {
+                li.prop('class','disabled');
+                an.click(function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            }
+            li.append(an);
+            ul.append(li);
+        }
+
         li = $('<div/>').prop({'class': 'divider'});
         ul.append(li);
         li = $('<li/>');
@@ -1737,9 +1875,8 @@ var NCubeEditor2 = (function ($) {
         li.append(an);
         ul.append(li);
 
-        var axisIndex = findIndexOfAxisName(axisName);
         var axesLength = axes.length;
-        if (axisIndex != axesLength - 1)
+        if (axisIndex !== colOffset)
         {
             li = $('<div/>').prop({'class': 'divider'});
             ul.append(li);
@@ -1776,7 +1913,8 @@ var NCubeEditor2 = (function ($) {
             btn.append(span);
             btn.click(function (e) {
                 e.preventDefault();
-                moveAxis(axisIndex, axesLength - 1)
+                clearFilters();
+                moveAxis(axisIndex, colOffset)
             });
             btnGroup.append(btn);
             //Move Right
@@ -2376,6 +2514,111 @@ var NCubeEditor2 = (function ($) {
 
     // =============================================== End Cell Editing ================================================
 
+    // ============================================== Begin Filtering ==================================================
+
+    var addFilterListeners = function() {
+        $('#filterInstTitle')[0].textContent = 'Instructions - Filter Data';
+        $('#filterInstructions')[0].innerHTML = 'Select filters to apply to cell data for ncube.';
+        var tr = $('<tr/>');
+        tr.append($('<td/>').html('Apply'));
+        tr.append($('<td/>').html('Column'));
+        tr.append($('<td/>').html('Comparator'));
+        tr.append($('<td/>').html('Comparison Value'));
+        _filterTable.append(tr);
+
+        $('#filterAdd').click(function() {
+            addFilter();
+        });
+        $('#filterClear').click(function () {
+            filterClear();
+        });
+        $('#filterCancel').click(function () {
+            filterClose();
+        });
+        $('#filterSave').click(function () {
+            filterSave();
+        });
+    };
+
+    var addNewTableRow = function() {
+        var appliedCheckbox = $('<input/>').prop({type:'checkbox', class:'isApplied'});
+        var columnSelect = $('<select/>').prop('class','column');
+        var expressionSelect = $('<select/>').prop('class','comparator');
+        var expressionInput = $('<input/>').prop({type:'text', class:'expressionValue'});
+
+        var columns = axes[colOffset].columns;
+        var columnKeys = Object.keys(columns);
+        for (var i = 0, len = columnKeys.length; i < len; i++) {
+            var colId = columnKeys[i];
+            var opt = $('<option/>');
+            opt.val(colId);
+            opt.text(columns[colId].value);
+            columnSelect.append(opt);
+        }
+
+        for (var c = 0, cLen = FILTER_COMPARATOR_LIST.length; c < cLen; c++) {
+            expressionSelect.append($('<option/>').text(FILTER_COMPARATOR_LIST[c]));
+        }
+
+        var tr = $('<tr/>').prop('class','filter-expression');
+        tr.append($('<td/>').append(appliedCheckbox));
+        tr.append($('<td/>').append(columnSelect));
+        tr.append($('<td/>').append(expressionSelect));
+        tr.append($('<td/>').append(expressionInput));
+        _filterTable.append(tr);
+
+        return tr;
+    };
+
+    var addFilter = function() {
+        var tr = addNewTableRow();
+        tr.find('.isApplied').prop('checked','true');
+    };
+
+    var filterClear = function() {
+        _filterTable.find('tr.filter-expression').remove();
+    };
+
+    var filterSave = function() {
+        _filters = [];
+        var trs = _filterTable.find('tr.filter-expression');
+        for (var trIdx = 0, trLen = trs.length; trIdx < trLen; trIdx++) {
+            var tr = $(trs[trIdx]);
+            var filter = {};
+            filter.isApplied = tr.find('.isApplied').prop('checked');
+            filter.column = tr.find('.column').val();
+            filter.comparator = tr.find('.comparator').val();
+            filter.expressionValue = tr.find('.expressionValue').val();
+            _filters.push(filter);
+        }
+
+        saveFilters();
+        filterClose();
+        reload();
+    };
+
+    var filterClose = function() {
+        $(_filterModal).modal('hide');
+        hot.removeHook('beforeKeyDown', onBeforeKeyDown);
+    };
+
+    var filterOpen = function() {
+        filterClear();
+        for (var f = 0, fLen = _filters.length; f < fLen; f++) {
+            var filter = _filters[f];
+            var tr = addNewTableRow();
+            tr.find('.isApplied').prop('checked',filter.isApplied);
+            tr.find('.column').val(filter.column);
+            tr.find('.comparator').val(filter.comparator);
+            tr.find('.expressionValue').val(filter.expressionValue);
+        }
+
+        hot.addHook('beforeKeyDown', onBeforeKeyDown);
+        $(_filterModal).modal();
+    };
+
+    // =============================================== End Filtering ===================================================
+
     // ============================================== Column Editing== =================================================
 
     var addColumnEditListeners = function() {
@@ -2876,15 +3119,28 @@ var NCubeEditor2 = (function ($) {
         return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + data.ncube.toLowerCase();
     };
 
-    var storeHiddenColumns = function()
-    {
-        var storageKey = getStorageKey(HIDDEN_COLUMNS);
-        if (Object.keys(_hiddenColumns).length > 0)
-        {
-            localStorage[storageKey] = JSON.stringify(_hiddenColumns);
-        }
-        else
-        {
+    var getSavedFilters = function() {
+        var filters = localStorage[getStorageKey(FILTERS)];
+        return filters ? JSON.parse(filters) : [];
+    };
+
+    var clearFilters = function() {
+        _filters = [];
+        saveFilters();
+    };
+
+    var saveFilters = function() {
+        saveOrDeleteValue(_filters, getStorageKey(FILTERS));
+    };
+
+    var storeHiddenColumns = function() {
+        saveOrDeleteValue(_hiddenColumns, getStorageKey(HIDDEN_COLUMNS));
+    };
+
+    var saveOrDeleteValue = function(obj, storageKey) {
+        if (obj && Object.keys(obj).length > 0) {
+            localStorage[storageKey] = JSON.stringify(obj);
+        } else {
             delete localStorage[storageKey];
         }
     };
@@ -3121,6 +3377,7 @@ var NCubeEditor2 = (function ($) {
                 storeAxisOrder();
             }
             deleteSavedColumnWidths();
+            clearFilters();
             nce.loadCube();
         } else {
             nce.showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
@@ -3153,6 +3410,7 @@ var NCubeEditor2 = (function ($) {
                 axes.splice(order.indexOf(lowerAxisName), 1);
                 storeAxisOrder();
             }
+            clearFilters();
             deleteSavedColumnWidths();
             nce.loadCube();
         } else {
