@@ -881,10 +881,10 @@ var NCubeEditor2 = (function ($) {
                                     isMatch = cellVal < expVal;
                                     break;
                                 case 'contains':
-                                    isMatch = cellVal.indexOf(expVal) > -1;
+                                    isMatch = cellVal.toLowerCase().indexOf(expVal.toLowerCase()) > -1;
                                     break;
                                 case 'excludes':
-                                    isMatch = cellVal.indexOf(expVal) === -1;
+                                    isMatch = cellVal.toLowerCase().indexOf(expVal.toLowerCase()) === -1;
                                     break;
                             }
 
@@ -1451,7 +1451,7 @@ var NCubeEditor2 = (function ($) {
         else if (col === 0 || col < colOffset) {
             var rowHeader = getRowHeader(row, col);
             var axis = axes[col];
-            if (row > 2 && getColumnLength(axis) > 1 && rowHeader.id === getRowHeader(row - 1, col).id) {
+            if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = getRowHeaderValue(axis, rowHeader);
