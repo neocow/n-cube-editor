@@ -2532,6 +2532,7 @@ var NCubeEditor2 = (function ($) {
         tr.append($('<td/>').html('Column'));
         tr.append($('<td/>').html('Comparator'));
         tr.append($('<td/>').html('Comparison Value'));
+        tr.append($('<td/>'));
         _filterTable.append(tr);
 
         $('#filterAdd').click(function() {
@@ -2549,10 +2550,12 @@ var NCubeEditor2 = (function ($) {
     };
 
     var addNewTableRow = function() {
+        var tr = $('<tr/>').prop('class','filter-expression');
         var appliedCheckbox = $('<input/>').prop({type:'checkbox', class:'isApplied'});
         var columnSelect = $('<select/>').prop('class','column');
         var expressionSelect = $('<select/>').prop('class','comparator');
         var expressionInput = $('<input/>').prop({type:'text', class:'expressionValue'});
+        var closeBtn = $('<span/>').prop({class:'glyphicon glyphicon-remove tab-close-icon', 'aria-hidden':'true'});
 
         var columns = axes[colOffset].columns;
         var columnKeys = Object.keys(columns);
@@ -2568,11 +2571,15 @@ var NCubeEditor2 = (function ($) {
             expressionSelect.append($('<option/>').text(FILTER_COMPARATOR_LIST[c]));
         }
 
-        var tr = $('<tr/>').prop('class','filter-expression');
+        closeBtn.click(function() {
+            tr.remove();
+        });
+
         tr.append($('<td/>').append(appliedCheckbox));
         tr.append($('<td/>').append(columnSelect));
         tr.append($('<td/>').append(expressionSelect));
         tr.append($('<td/>').append(expressionInput));
+        tr.append($('<td/>').append(closeBtn));
         _filterTable.append(tr);
 
         return tr;
