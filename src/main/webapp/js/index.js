@@ -768,6 +768,7 @@ var NCE = (function ($)
                     if (cw.tabActivated !== undefined) {
                         cw.tabActivated(buildAppState());
                         localStorage[ACTIVE_TAB_VIEW_TYPE] = pageId;
+                        cw.focus();
                     }
                 }
             } catch (e) {
