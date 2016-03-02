@@ -350,9 +350,14 @@ var NCubeEditor2 = (function ($) {
 
     var addSearchListeners = function() {
         $(_searchField).keyup(function (e) {
-            if (e.keyCode === KEY_CODES.ENTER) {
+            var keyCode = e.keyCode;
+            if (keyCode === KEY_CODES.ENTER) {
                 runSearch();
                 searchDown();
+            } else if (keyCode === KEY_CODES.ARROW_DOWN) {
+                searchDown();
+            } else if (keyCode === KEY_CODES.ARROW_UP) {
+                searchUp();
             } else {
                 delay(function() {
                     runSearch();

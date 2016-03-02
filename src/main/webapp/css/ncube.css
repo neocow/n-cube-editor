@@ -132,9 +132,15 @@ div#editColumnsModal div.panel-group
     background-color: #BEEEEF;
 }
 
-.handsonTableHeader.handsonCurrentRow {
-    background-color: rgba(146, 146, 146, 0.75) !important;
+.handsontable .htCore td.handsonTableHeader.handsonCurrentRow {
+    background-color: rgba(146, 146, 146, 0.75);
 }
+
+.handsontable .htCore td.handsonTableHeader.searchResult.handsonCurrentRow {
+    background-color: rgba(239, 251, 60, 0.75);
+    color: #583707;
+}
+
 .handsontable .htCore td.searchResult {
     background-color: #EFFB3C;
     color: #583707;
