@@ -1397,12 +1397,32 @@ var NCubeEditor2 = (function ($) {
                 }
 
                 resetCoordinateBar(display);
-                nce.saveViewPosition({row:r, col: c});
+                saveViewPosition(r, c);
             },
             afterScrollHorizontally: function() {
                 moveTopAxisMenu();
+                saveViewPosition();
+            },
+            afterScrollVertically: function() {
+                saveViewPosition();
             }
         };
+    };
+
+    var saveViewPosition = function(row, col) {
+        delay(function() {
+            var wth = $('.wtHolder');
+            var r, c;
+            var saved = nce.getViewPosition();
+            if (row !== undefined && col !== undefined) {
+                r = row;
+                c = col;
+            } else {
+                r = saved.row;
+                c = saved.c;
+            }
+            nce.saveViewPosition({row:r, col: c, left:wth.scrollLeft(), top:wth.scrollTop()});
+        },PROGRESS_DELAY);
     };
 
     var moveTopAxisMenu = function() {
@@ -3657,15 +3677,21 @@ var NCubeEditor2 = (function ($) {
     var selectSavedOrDefaultCell = function() {
         if (hot) {
             var pos = nce.getViewPosition();
-            var row, col;
+            var row, col, left, top;
             if (typeof pos === 'object') {
                 row = pos.row;
                 col = pos.col;
+                left = pos.left;
+                top = pos.top;
             } else {
                 row = 2;
                 col = axes.length === 1 ? 1 : colOffset;
             }
+
             hot.selectCell(row, col);
+            var wth = $('.wtHolder')[0];
+            wth.scrollLeft = left || 0;
+            wth.scrollTop = top || 0;
         }
     };
 
