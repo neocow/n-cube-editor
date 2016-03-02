@@ -768,6 +768,7 @@ var NCE = (function ($)
                     if (cw.tabActivated !== undefined) {
                         cw.tabActivated(buildAppState());
                         localStorage[ACTIVE_TAB_VIEW_TYPE] = pageId;
+                        cw.focus();
                     }
                 }
             } catch (e) {
@@ -1281,27 +1282,27 @@ var NCE = (function ($)
         });
         $('#showRefsFromClose').click(function ()
         {
-            showRefsFromCubeClose()
+            showRefsFromCubeClose();
         });
         $('#showReqScopeClose').click(function ()
         {
-            showReqScopeClose()
+            showReqScopeClose();
         });
         $('#releaseCubesMenu').click(function ()
         {
-            releaseCubes()
+            releaseCubes();
         });
         $('#releaseCubesOk').click(function ()
         {
-            releaseCubesOk()
+            releaseCubesOk();
         });
         $('#changeVerMenu').click(function ()
         {
-            changeVersion()
+            changeVersion();
         });
         $('#changeVerOk').click(function ()
         {
-            changeVersionOk()
+            changeVersionOk();
         });
         $('#clearStorage').click(function()
         {
@@ -2297,8 +2298,7 @@ var NCE = (function ($)
     function releaseCubes()
     {
         clearError();
-        if (!isHeadSelected())
-        {
+        if (_selectedBranch !== head) {
             showNote('HEAD branch must be selected to release a version.');
             return;
         }

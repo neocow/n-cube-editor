@@ -82,6 +82,7 @@ var NCubeEditor2 = (function ($) {
     var _filters = null;
     var _filterTable = null;
     var _columnIdCombinationsToShow = null;
+    var _searchText = null;
 
     var init = function(info) {
         if (!nce) {
@@ -349,43 +350,28 @@ var NCubeEditor2 = (function ($) {
 
     var addSearchListeners = function() {
         $(_searchField).keyup(function (e) {
-            delay(function() {
-                var query = _searchField.value;
-                if (query && query.length > 0) {
-                    searchCubeData(query);
-                    setSearchHelperText();
-                    render();
-                    if (e.keyCode === KEY_CODES.ENTER) {
-                        _searchField.blur();
-                        var result = _searchCoords[0];
-                        hot.selectCell(result.row, result.col);
-                    }
-                } else {
-                    clearSearchMatches();
-                    setSearchHelperText();
-                    render();
-                }
-            }, 500);
+            var keyCode = e.keyCode;
+            if (keyCode === KEY_CODES.ENTER) {
+                runSearch();
+                searchDown();
+            } else if (keyCode === KEY_CODES.ARROW_DOWN) {
+                searchDown();
+            } else if (keyCode === KEY_CODES.ARROW_UP) {
+                searchUp();
+            } else {
+                delay(function() {
+                    runSearch();
+                }, 500);
+            }
         });
 
         $('#search-btn-down').click(function() {
-            var searchResultsLen = _searchCoords.length;
-            if (_currentSearchResultIndex < searchResultsLen - 1 || searchResultsLen === 1) {
-                var idx = searchResultsLen > 1 ? ++_currentSearchResultIndex : 0;
-                var result = _searchCoords[idx];
-                hot.selectCell(result.row, result.col);
-                setSearchHelperText();
-            }
+            searchDown();
             $(this).blur();
         });
 
         $('#search-btn-up').click(function() {
-            if (_searchCoords.length > 0) {
-                var idx = _currentSearchResultIndex > 0 ? --_currentSearchResultIndex : 0;
-                var result = _searchCoords[idx];
-                hot.selectCell(result.row, result.col);
-                setSearchHelperText();
-            }
+            searchUp();
             $(this).blur();
         });
 
@@ -400,6 +386,39 @@ var NCubeEditor2 = (function ($) {
         $('#search-info').click(function() {
             _searchField.focus();
         });
+    };
+
+    var runSearch = function() {
+        var query = _searchField.value;
+        if (_searchText !== query) {
+            if (query && query.length > 0) {
+                searchCubeData(query);
+            } else {
+                clearSearchMatches();
+            }
+            setSearchHelperText();
+            render();
+            _searchText = query;
+        }
+    };
+
+    var searchDown = function() {
+        var searchResultsLen = _searchCoords.length;
+        if (searchResultsLen > 0) {
+            var idx = _currentSearchResultIndex === searchResultsLen - 1 ? searchResultsLen - 1 : ++_currentSearchResultIndex;
+            var result = _searchCoords[idx];
+            hot.selectCell(result.row, result.col);
+            setSearchHelperText();
+        }
+    };
+
+    var searchUp = function() {
+        if (_searchCoords.length > 0) {
+            var idx = _currentSearchResultIndex > 0 ? --_currentSearchResultIndex : 0;
+            var result = _searchCoords[idx];
+            hot.selectCell(result.row, result.col);
+            setSearchHelperText();
+        }
     };
 
     var clearSearchMatches = function() {
@@ -419,12 +438,12 @@ var NCubeEditor2 = (function ($) {
         }
 
         _searchCoords = [];
-        _currentSearchResultIndex = 0;
+        _currentSearchResultIndex = -1;
     };
 
     var searchCubeData = function(query) {
         _searchCoords = [];
-        _currentSearchResultIndex = 0;
+        _currentSearchResultIndex = -1;
 
         var queryLower = query.toLowerCase();
         var containsQuery = function(value) {
@@ -540,11 +559,10 @@ var NCubeEditor2 = (function ($) {
         {
             var cellId = cellKeys[cellNum];
             var cell = cells[cellId];
-            var cellVal = cell.hasOwnProperty('url') ? cell.url : cell.value;
-            var found = containsQuery(cellVal);
-            cell.isSearchResult = found;
+            var cellVal = getTextCellValue(cell);
+            cell.isSearchResult = cellVal.toLowerCase().indexOf(queryLower) > -1;
 
-            if (found) {
+            if (cell.isSearchResult) {
                 var colIds = cellId.split('_');
                 var r = 0;
                 var c = 0;
@@ -1394,6 +1412,7 @@ var NCubeEditor2 = (function ($) {
         var thWidth = tr.find('th').outerWidth();
         var frozenWidth = thWidth;
         var startingWidth = thWidth;
+        var newWidth;
 
         if (_firstRenderedCol === 0) {
             for (var i = 0; i < colOffset; i++) {
@@ -1403,16 +1422,19 @@ var NCubeEditor2 = (function ($) {
                     frozenWidth += curWidth;
                 }
             }
+        } else if (numFixed > 0) {
+                newWidth = $('.ht_clone_left.handsontable').width();
         }
 
-        var newWidth;
-        if (scrollAmt < (startingWidth - frozenWidth)) {
-            newWidth = startingWidth - scrollAmt;
-        } else {
-            var afterSubtract = frozenWidth || (startingWidth - scrollAmt);
-            newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
+        if (!newWidth) {
+            if (scrollAmt < (startingWidth - frozenWidth)) {
+                newWidth = startingWidth - scrollAmt;
+            } else {
+                var afterSubtract = frozenWidth || (startingWidth - scrollAmt);
+                newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
+            }
         }
-        _topAxisBtn.css({left:newWidth});
+    _topAxisBtn.css({left: newWidth});
     };
 
     var setClipFormatToggleListener = function() {
