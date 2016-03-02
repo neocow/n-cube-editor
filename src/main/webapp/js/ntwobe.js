@@ -1394,6 +1394,7 @@ var NCubeEditor2 = (function ($) {
         var thWidth = tr.find('th').outerWidth();
         var frozenWidth = thWidth;
         var startingWidth = thWidth;
+        var newWidth;
 
         if (_firstRenderedCol === 0) {
             for (var i = 0; i < colOffset; i++) {
@@ -1403,16 +1404,19 @@ var NCubeEditor2 = (function ($) {
                     frozenWidth += curWidth;
                 }
             }
+        } else if (numFixed > 0) {
+                newWidth = $('.ht_clone_left.handsontable').width();
         }
 
-        var newWidth;
-        if (scrollAmt < (startingWidth - frozenWidth)) {
-            newWidth = startingWidth - scrollAmt;
-        } else {
-            var afterSubtract = frozenWidth || (startingWidth - scrollAmt);
-            newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
+        if (!newWidth) {
+            if (scrollAmt < (startingWidth - frozenWidth)) {
+                newWidth = startingWidth - scrollAmt;
+            } else {
+                var afterSubtract = frozenWidth || (startingWidth - scrollAmt);
+                newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
+            }
         }
-        _topAxisBtn.css({left:newWidth});
+    _topAxisBtn.css({left: newWidth});
     };
 
     var setClipFormatToggleListener = function() {
