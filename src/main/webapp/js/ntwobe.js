@@ -340,6 +340,8 @@ var NCubeEditor2 = (function ($) {
         selectSavedOrDefaultCell();
         hot.render();
         setClipFormatToggleListener();
+        _searchField.value = nce.getSearchQuery();
+        runSearch();
     };
 
     var setSearchHelperText = function() {
@@ -400,6 +402,7 @@ var NCubeEditor2 = (function ($) {
             setSearchHelperText();
             render();
             _searchText = query;
+            nce.saveSearchQuery(query);
         }
     };
 
@@ -1435,11 +1438,9 @@ var NCubeEditor2 = (function ($) {
             },
             afterColumnResize: function(currentColumn, newSize, isDoubleClick) {
                 saveColumnWidth(currentColumn, newSize);
-                reload();
             },
             afterRowResize: function(currentRow, newSize, isDoubleClick) {
                 saveRowHeight(currentRow, newSize);
-                reload();
             },
             afterSelection: function(r, c, r2, c2) {
                 var display = '';
