@@ -443,6 +443,7 @@ var NCubeEditor2 = (function ($) {
 
         _searchCoords = [];
         _currentSearchResultIndex = -1;
+        nce.saveSearchQuery(null);
     };
 
     var searchCubeData = function(query) {
@@ -2782,14 +2783,19 @@ var NCubeEditor2 = (function ($) {
 
     var filterOpen = function() {
         filterClear();
-        for (var f = 0, fLen = _filters.length; f < fLen; f++) {
-            var filter = _filters[f];
-            var tr = addNewTableRow();
-            tr.find('.isApplied').prop('checked',filter.isApplied);
-            tr.find('.isIncludeAll').prop('checked',filter.isIncludeAll);
-            tr.find('.column').val(filter.column);
-            tr.find('.comparator').val(filter.comparator);
-            tr.find('.expressionValue').val(filter.expressionValue);
+        var fLen = _filters.length;
+        if (fLen === 0) {
+            addFilter();
+        } else {
+            for (var f = 0; f < fLen; f++) {
+                var filter = _filters[f];
+                var tr = addNewTableRow();
+                tr.find('.isApplied').prop('checked', filter.isApplied);
+                tr.find('.isIncludeAll').prop('checked', filter.isIncludeAll);
+                tr.find('.column').val(filter.column);
+                tr.find('.comparator').val(filter.comparator);
+                tr.find('.expressionValue').val(filter.expressionValue);
+            }
         }
 
         hot.addHook('beforeKeyDown', onBeforeKeyDown);
