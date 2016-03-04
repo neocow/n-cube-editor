@@ -1,7 +1,6 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.util.io.JsonWriter
 import groovy.transform.CompileStatic
 import ncube.grv.exp.NCubeGroovyExpression
@@ -129,7 +128,7 @@ class Visualizer extends NCubeGroovyExpression
 		scope = scope == null ? DEFAULT_SCOPE : scope
 		stackInfo[TARGET_SCOPE] = scope
 
-		NCube startCube = NCubeManager.getCube(applicationID, startCubeName)
+		NCube startCube = getCube(startCubeName)
 
 		stackInfo[TARGET_CUBE] = startCube
 		stack[stackInfo[STACK_KEY] ] = stackInfo
@@ -178,8 +177,8 @@ class Visualizer extends NCubeGroovyExpression
 			stackInfo[TARGET_TRAIT_MAPS] = targetTraitMaps
 		}
 
-		if (!targetCube.name.startsWith(RPM_CLASS)) { //TODO: Can be removed if no exceptions occur
-				throw new Exception('Cube is not an rpm.class: name = ' + targetCube.name +  '.')
+		if (!targetCube.name.startsWith(RPM_CLASS)) {
+				throw new IllegalStateException('Cube is not an rpm.class: name = ' + targetCube.name +  '.')
 		}
 
 		String busType = getFormattedBusType(targetTraitMaps)
@@ -206,16 +205,16 @@ class Visualizer extends NCubeGroovyExpression
 					NCube nextTargetCube = null
 					if ((targetTraits as Map).containsKey(V_ENUM))
 					{
-						nextTargetCube = NCubeManager.getCube(applicationID, RPM_ENUM_DOT + targetTraits[V_ENUM])
+						nextTargetCube = getCube(RPM_ENUM_DOT + targetTraits[V_ENUM])
 					}
 					else if (targetFieldRpmType)
 					{
-						nextTargetCube = NCubeManager.getCube(applicationID, RPM_CLASS_DOT + targetFieldRpmType)
+						nextTargetCube = getCube(RPM_CLASS_DOT + targetFieldRpmType)
 					}
 
 					if (nextTargetCube)
 					{
-						addToStack(targetLevel, levels, stack, stackInfo, [:] as Map, nextTargetCube, targetFieldRpmType, targetFieldName as String, messages)
+						addToStack(targetLevel, levels, stack, stackInfo, [:] as Map, nextTargetCube, targetFieldRpmType, targetFieldName as String)
 					}
 					else{
 						messages << 'No cube exists with name of ' + RPM_ENUM_DOT + nextTargetCube.name + '. It is therefore not included in the visualization.'
@@ -238,7 +237,7 @@ class Visualizer extends NCubeGroovyExpression
 		Map sourceScope = stackInfo[SOURCE_SCOPE] as Map
 
 		if (!targetCubeName.startsWith(RPM_ENUM)) {
-			throw new Exception('Cube is not an rpm.enum cube: ' + targetCubeName +  '.')
+			throw new IllegalStateException('Cube is not an rpm.enum cube: ' + targetCubeName +  '.')
 		}
 
 		if(sourceCube && (!sourceFieldRpmType || helper.isPrimitive(sourceFieldRpmType)))
@@ -266,11 +265,11 @@ class Visualizer extends NCubeGroovyExpression
 
 					if (nextTargetCubeName)
 					{
-						NCube nextTargetCube = NCubeManager.getCube(applicationID, RPM_CLASS_DOT + nextTargetCubeName)
+						NCube nextTargetCube = getCube(RPM_CLASS_DOT + nextTargetCubeName)
 						if (nextTargetCube)
 						{
 							Map nextTargetStackInfo = [:]
-							addToStack(targetLevel, levels, stack, stackInfo, nextTargetStackInfo, nextTargetCube, sourceFieldRpmType, targetFieldName as String, messages)
+							addToStack(targetLevel, levels, stack, stackInfo, nextTargetStackInfo, nextTargetCube, sourceFieldRpmType, targetFieldName as String)
 
 							if (busType == UNSPECIFIED) {
 								busType = getFormattedBusType(nextTargetStackInfo[TARGET_TRAIT_MAPS] as Map)
@@ -283,7 +282,7 @@ class Visualizer extends NCubeGroovyExpression
 				}
 				catch (Exception e)
 				{
-					throw new Exception('Exception caught while loading and processing the cube for enum field ' + targetFieldName + ' in enum ' + targetCube.name + '. ' + e.message, e)
+					throw new IllegalStateException('Exception caught while loading and processing the cube for enum field ' + targetFieldName + ' in enum ' + targetCube.name + '. ' + e.message, e)
 				}
 			}
 		}
@@ -301,9 +300,9 @@ class Visualizer extends NCubeGroovyExpression
 
 	}
 
-	private void trimSelectedLevel(Map levels) {
-		Integer nodeCount = levels[NODE_COUNT] as Integer
-		Integer selectedLevel = levels[SELECTED_LEVEL] as Integer
+	private static void trimSelectedLevel(Map levels) {
+		int nodeCount = levels[NODE_COUNT] as Integer
+		int selectedLevel = levels[SELECTED_LEVEL] as Integer
 		levels[SELECTED_LEVEL] = selectedLevel.compareTo(nodeCount) > 0 ? nodeCount.toString() : selectedLevel.toString()
 	}
 
@@ -319,7 +318,7 @@ class Visualizer extends NCubeGroovyExpression
 		groups[AVAILABLE_GROUPS_ALL_LEVELS] = (groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set).toArray()
 	}
 
-	private void addToStack(Integer targetLevel, Map levels,  Map stack,  Map stackInfo, Map nextTargetStackInfo, NCube nextTargetCube, String rpmType, String targetFieldName, List messages)
+	private void addToStack(Integer targetLevel, Map levels,  Map stack,  Map stackInfo, Map nextTargetStackInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
 	{
 		try
 		{
@@ -345,7 +344,7 @@ class Visualizer extends NCubeGroovyExpression
 		}
 		catch (Exception e)
 		{
-			throw new Exception('Exception caught while loading and processing the class for field ' + stackInfo[SOURCE_FIELD] + ' in class ' + nextTargetCube.name + '. ' + e.message, e)
+			throw new IllegalStateException('Exception caught while loading and processing the class for field ' + stackInfo[SOURCE_FIELD] + ' in class ' + nextTargetCube.name + '. ' + e.message, e)
 		}
 	}
 
@@ -363,7 +362,7 @@ class Visualizer extends NCubeGroovyExpression
 
 	private static String getFormattedBusType(Map traitMaps)
 	{
-		String busType = getBusType(traitMaps)
+		String busType = traitMaps['CLASS_TRAITS']?."$PD_BUS_TYPE"
 		return busType == null ? UNSPECIFIED : busType.toUpperCase()
 	}
 
@@ -456,7 +455,7 @@ class Visualizer extends NCubeGroovyExpression
 
 	private static String getFieldDetails(Map fields, String spaces)
 	{
-		StringBuffer fieldDetails = new StringBuffer()
+		StringBuilder fieldDetails = new StringBuilder()
 		fieldDetails.append('')
 
 		fields.each() { key, value ->
@@ -469,7 +468,7 @@ class Visualizer extends NCubeGroovyExpression
 
 	private static String getTitleClassTraits(Map traitMaps)
 	{
-		StringBuffer traits = new StringBuffer()
+		StringBuilder traits = new StringBuilder()
 		traits.append('<br><br><strong>class traits = </strong><br>')
 
 		List classTraitMap = getClassTraits(traitMaps)
@@ -764,17 +763,6 @@ class Visualizer extends NCubeGroovyExpression
 		return options
 	}
 
-	private static String getBusType(Map traitMaps)
-	{
-		Map traits = traitMaps[CLASS_TRAITS] as Map
-		if (traits)
-		{
-			return traits[PD_BUS_TYPE]
-		}
-
-		return null
-	}
-
 	private static boolean hasVisited(Set visited, String visitedKey)
 	{
 		if (visited.contains(visitedKey))
@@ -812,7 +800,7 @@ class Visualizer extends NCubeGroovyExpression
 	}
 
 	private Set findMissingScope(String startCubeName, Map scope) {
-		NCube startCube = NCubeManager.getCube(applicationID, startCubeName)
+		NCube startCube = getCube(startCubeName)
 
 		Set<String> requiredScope = getRequiredScopeAllReferenced(startCube)
 		Set missingScope = []
@@ -828,7 +816,7 @@ class Visualizer extends NCubeGroovyExpression
 	private Set getRequiredScopeAllReferenced(NCube startCube) {
 		Set requiredScope = getRequiredScope(startCube)
 		startCube.getReferencedCubeNames().each {
-			NCube refCube = NCubeManager.getCube(applicationID, it)
+			NCube refCube = getCube(it)
 			requiredScope.addAll(getRequiredScope(refCube))
 		}
 		requiredScope
@@ -837,7 +825,7 @@ class Visualizer extends NCubeGroovyExpression
 	private Set getOptionalScopeAllReferenced(NCube startCube) {
 		Set optionalScope = startCube.getOptionalScope([:] as Map, [:] as Map)
 		startCube.getReferencedCubeNames().each {
-			NCube refCube = NCubeManager.getCube(applicationID, it)
+			NCube refCube = getCube(it)
 			optionalScope.addAll(refCube.getOptionalScope([:] as Map, [:] as Map))
 		}
 		optionalScope

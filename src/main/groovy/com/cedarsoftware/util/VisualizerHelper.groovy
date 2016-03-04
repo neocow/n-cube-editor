@@ -358,7 +358,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	 * parses the value of the r:extends trait and adds all mixins to the list of classes to process
 	 * COPIED: Copied from Dynamis
 	 */
-	private void processClassMixins(String className, String mixins, LinkedList<String> classesToProcess) {
+	private static void processClassMixins(String className, String mixins, LinkedList<String> classesToProcess) {
 		Matcher matcher = PATTERN_CLASS_EXTENDS_TRAIT.matcher(mixins);
 		if (StringUtilities.isEmpty(mixins) || !matcher.find())
 		{
