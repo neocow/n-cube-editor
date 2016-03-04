@@ -1666,6 +1666,10 @@ var NCubeEditor2 = (function ($) {
                 }
                 td.innerHTML = _defaultCellText;
                 activateLinks(td);
+            } else if (data.defaultCellValueUrl !== null && data.defaultCellValueUrl !== undefined) {
+                td.className += CLASS_HANDSON_CELL_DEFAULT;
+                td.innerHTML = '<a class="nc-anc">' + data.defaultCellValueUrl + '</a>';
+                buildUrlLink(td);
             }
 
             if (row % 2 !== 0) {
