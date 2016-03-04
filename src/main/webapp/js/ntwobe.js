@@ -14,6 +14,7 @@ var NCubeEditor2 = (function ($) {
     var cubeMapRegex = null;
     var axisColumnMap = null;
     var _columnWidths = [];
+    var _rowHeights = [];
     var _cellId = null;
     var _tableCellId = null;
     var _columnList = null;
@@ -339,6 +340,8 @@ var NCubeEditor2 = (function ($) {
         selectSavedOrDefaultCell();
         hot.render();
         setClipFormatToggleListener();
+        _searchField.value = nce.getSearchQuery();
+        runSearch();
     };
 
     var setSearchHelperText = function() {
@@ -399,6 +402,7 @@ var NCubeEditor2 = (function ($) {
             setSearchHelperText();
             render();
             _searchText = query;
+            nce.saveSearchQuery(query);
         }
     };
 
@@ -439,6 +443,7 @@ var NCubeEditor2 = (function ($) {
 
         _searchCoords = [];
         _currentSearchResultIndex = -1;
+        nce.saveSearchQuery(null);
     };
 
     var searchCubeData = function(query) {
@@ -483,9 +488,7 @@ var NCubeEditor2 = (function ($) {
             colLen = colKeys.length;
             rowSpacing /= colLen;
 
-            var id = colKeys[0];
-            var axisOrder = id.substring(0, id.length - 12);
-            rowSpacingHelper.push({axisName:axis.name, order:axisOrder, rowSpacing:rowSpacing, horizAxis:isHorizAxis(axisNum)});
+            rowSpacingHelper.push({axisName:axis.name, order:getAxisId(axis), rowSpacing:rowSpacing, horizAxis:isHorizAxis(axisNum)});
 
             // search all columns for an axis
             for (colNum = 0; colNum < colLen; colNum++)
@@ -619,6 +622,17 @@ var NCubeEditor2 = (function ($) {
         return colLen;
     };
 
+    var getAxisId = function(axis) {
+        if (axis.hasOwnProperty('id')) {
+            return axis.id;
+        }
+
+        var col = Object.keys(axis.columns)[0];
+        var id = col.substring(0, col.length - AXIS_DEFAULT.length);
+        axis.id = id;
+        return id;
+    };
+
     var getAxisColumn = function(axis, colNum) {
         if (axis.columnLength === 0) {
             return;
@@ -644,8 +658,12 @@ var NCubeEditor2 = (function ($) {
         return getColumnHeader(col).id;
     };
 
+    var getAxisIndex = function(axis) {
+        return Object.keys(data.axes).indexOf(axis.name.toLowerCase()) + 1;
+    };
+
     var getAxisDefault = function(axis) {
-        var defaultId = Object.keys(data.axes).indexOf(axis.name.toLowerCase()) + 1 + AXIS_DEFAULT;
+        var defaultId = getAxisIndex(axis) + AXIS_DEFAULT;
         return {id:defaultId, value:DEFAULT_TEXT};
     };
 
@@ -759,10 +777,7 @@ var NCubeEditor2 = (function ($) {
                 return a - b;
             });
 
-            for (i = 0, len = headerInfo.length; i < len; i++) {
-                cellId += headerInfo[i] + '_';
-            }
-            cellId = cellId.slice(0, -1);
+            cellId = headerInfo.join('_');
         } else {
             cellId = getRowHeaderId(row, 0);
         }
@@ -1063,36 +1078,38 @@ var NCubeEditor2 = (function ($) {
 
     var setUpColumnWidths = function()
     {
-        var calcDomWidth = function (value, modifier, type)
-        {
-            if (textWidths.hasOwnProperty(value)) {
-                return textWidths[value] + modifier;
+        var getNewWidth = function(str, oldWidth, font) {
+            var tempWidth = $('<p>' + str + '</p>').canvasMeasureWidth(font);
+            return tempWidth > oldWidth ? tempWidth : oldWidth;
+        };
+
+        var calcDomDims = function (value, type) {
+            if (textDims.hasOwnProperty(value)) {
+                return textDims[value];
             }
             var font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
             var width = 0;
+            var numLines = 1;
             var idx = value.indexOf('\n');
             if (idx < 0) {
-                width = $('<p>' + value + '</p>').canvasMeasureWidth(font);
+                width = getNewWidth(value, width, font);
             } else {
-                var getNewWidth = function(str) {
-                    var tempWidth = $('<p>' + str + '</p>').canvasMeasureWidth(font);
-                    if (tempWidth > width) {
-                        width = tempWidth;
-                    }
-                };
                 var temp2;
                 var temp1 = value;
                 while (idx > -1) {
+                    numLines++;
                     temp2 = value.substring(0, idx);
-                    getNewWidth(temp2);
+                    width = getNewWidth(temp2, width, font);
                     temp1 = temp1.substring(idx + 1);
                     idx = temp1.indexOf('\n');
                 }
-                getNewWidth(temp1);
+                width = getNewWidth(temp1, width, font);
             }
 
-            textWidths[value] = width;
-            return width + modifier;
+            var height = numLines * FONT_HEIGHT + 1;
+            var ret = {width:width, height:height};
+            textDims[value] = ret;
+            return ret;
         };
 
         var findWidth = function(oldWidth, newWidth)
@@ -1121,7 +1138,7 @@ var NCubeEditor2 = (function ($) {
                 width = savedWidths[0 + colOffset];
             } else {
                 var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
-                var buttonWidth = calcDomWidth(axisName, modifier, null);
+                var buttonWidth = calcDomDims(axisName, null).width + modifier;
                 width = findWidth(0, buttonWidth);
             }
             topWidths[columnKeys[0]] = width;
@@ -1134,7 +1151,7 @@ var NCubeEditor2 = (function ($) {
                 } else {
                     var column = columns[colKey];
                     var columnText = getRowHeaderPlainTextForWidth(axis, column);
-                    var firstWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, column.type);
+                    var firstWidth = calcDomDims(columnText, column.type).width + CALC_WIDTH_BASE_MOD;
                     width = findWidth(topWidths[colKey], firstWidth);
                 }
                 topWidths[colKey] = width;
@@ -1161,7 +1178,9 @@ var NCubeEditor2 = (function ($) {
                     } else {
                         var cell = cells[cellKey];
                         var value = getTextCellValue(cell);
-                        width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
+                        var dims = calcDomDims(value, cell.type);
+                        width = dims.width + CALC_WIDTH_BASE_MOD;
+                        setHeightForCellRow(cellKey, dims.height);
                         width = findWidth(topWidths[colId], width);
                     }
 
@@ -1173,7 +1192,7 @@ var NCubeEditor2 = (function ($) {
         var buildWidthArray = function()
         {
             var savedWidths = getSavedColumnWidths();
-            for (var hotCol = 0, hotColLength = getHotSettings().startCols; hotCol < hotColLength; hotCol++)
+            for (var hotCol = 0; hotCol < numColumns; hotCol++)
             {
                 if (hotCol < colOffset)
                 {
@@ -1216,7 +1235,9 @@ var NCubeEditor2 = (function ($) {
                     var cellKey = cellKeys[keyIndex];
                     var cell = cells[cellKey];
                     var value = getTextCellValue(cell);
-                    var width = calcDomWidth(value, CALC_WIDTH_BASE_MOD, cell.type);
+                    var dims = calcDomDims(value, cell.type);
+                    var width = dims.width + CALC_WIDTH_BASE_MOD;
+                    setHeightForCellRow(cellKey, dims.height);
                     correctWidth = findWidth(oldWidth, width);
                     oldWidth = correctWidth;
                 }
@@ -1228,7 +1249,7 @@ var NCubeEditor2 = (function ($) {
         {
             var axisName = axis.name;
             var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
-            var buttonWidth = calcDomWidth(axisName, modifier, null);
+            var buttonWidth = calcDomDims(axisName, null).width + modifier;
             var oldWidth = findWidth(0, buttonWidth);
             var correctWidth = oldWidth;
             var axisColumns = axisColumnMap[axisName];
@@ -1237,44 +1258,94 @@ var NCubeEditor2 = (function ($) {
                 var columnId = axisColumns[axisCol];
                 var column = axis.columns[columnId];
                 var columnText = getRowHeaderPlainTextForWidth(axis, column);
-                var colWidth = calcDomWidth(columnText, CALC_WIDTH_BASE_MOD, column.type);
+                var colWidth = calcDomDims(columnText, column.type).width + CALC_WIDTH_BASE_MOD;
                 correctWidth = findWidth(oldWidth, colWidth);
                 oldWidth = correctWidth;
             }
             return correctWidth;
         };
 
+        var setHeightForCellRow = function(cellId, newHeight) {
+            var cellIdArray = cellId.split('_');
+            for (var i = 0, len = cellIdArray.length; i < len; i++) {
+                var id = cellIdArray[i];
+                if (id.substring(0, id.length - AXIS_DEFAULT.length).indexOf(horizAxisId) > -1) {
+                    cellIdArray.splice(i, 1);
+                    break;
+                }
+            }
+            var rowId = cellIdArray.join('_');
+
+            var prevHeight = heights[rowId] || MIN_ROW_HEIGHT;
+            if (newHeight > prevHeight) {
+                prevHeight = newHeight;
+            }
+            heights[rowId] = prevHeight;
+        };
+
+        var buildHeightArray = function() {
+            var savedHeights = getSavedRowHeights();
+            for (var r = 0; r < numRows; r++) {
+                var saved = savedHeights[r];
+                if (saved) {
+                    _rowHeights.push(saved);
+                } else if (r < 2) {
+                    _rowHeights.push(33);
+                } else {
+                    var headerInfo = [];
+                    for (var i = 0; i < colOffset; i++) {
+                        headerInfo.push(getRowHeaderId(r, i));
+                    }
+                    headerInfo.sort(function(a, b) {
+                        return a - b;
+                    });
+                    var rowId = headerInfo.join('_');
+                    _rowHeights.push(heights[rowId] || MIN_ROW_HEIGHT);
+                }
+            }
+        };
+
         _columnWidths = [];
+        _rowHeights = [];
         var topWidths = {};
-        var textWidths = {};
-        if (axes.length == 1)
-        {
+        var heights = {};
+        var textDims = {};
+        var horizAxisId = getAxisId(axes[colOffset]);
+        if (axes.length == 1) {
             buildSingleAxisWidthArray();
-        }
-        else
-        {
+        } else {
             setupTopWidths();
             buildWidthArray();
         }
-        textWidths = null; // free up memory
+        buildHeightArray();
+        textDims = null; // free up memory
     };
 
     var deleteSavedColumnWidths = function() {
-        delete localStorage[getStorageKey(COLUMN_WIDTHS)];
+        saveOrDeleteValue(null, COLUMN_WIDTHS);
+        saveOrDeleteValue(null, ROW_HEIGHTS);
     };
 
     var getSavedColumnWidths = function() {
         var localWidthVar = localStorage[getStorageKey(COLUMN_WIDTHS)];
-        if (localWidthVar) {
-            return JSON.parse(localWidthVar);
-        }
-        return {};
+        return localWidthVar ? JSON.parse(localWidthVar) : {};
+    };
+
+    var getSavedRowHeights = function() {
+        var localHeightVar = localStorage[getStorageKey(ROW_HEIGHTS)];
+        return localHeightVar ? JSON.parse(localHeightVar) : {};
     };
 
     var saveColumnWidth = function(col, newVal) {
         var saved = getSavedColumnWidths();
         saved[col] = newVal;
-        localStorage[getStorageKey(COLUMN_WIDTHS)] = JSON.stringify(saved);
+        saveOrDeleteValue(saved, getStorageKey(COLUMN_WIDTHS));
+    };
+
+    var saveRowHeight = function(row, newVal) {
+        var saved = getSavedRowHeights();
+        saved[row] = newVal;
+        saveOrDeleteValue(saved, getStorageKey(ROW_HEIGHTS));
     };
 
     var calcColumnHeader = function(index)
@@ -1328,7 +1399,8 @@ var NCubeEditor2 = (function ($) {
             copyPaste: false,
             fillHandle: false,
             colWidths: _columnWidths,
-            rowHeights: [33,33],
+            rowHeights: _rowHeights,
+            autoColumnSize: false,
             autoRowSize: false,
             enterBeginsEditing: false,
             enterMoves: {row: 1, col: 0},
@@ -1367,6 +1439,9 @@ var NCubeEditor2 = (function ($) {
             },
             afterColumnResize: function(currentColumn, newSize, isDoubleClick) {
                 saveColumnWidth(currentColumn, newSize);
+            },
+            afterRowResize: function(currentRow, newSize, isDoubleClick) {
+                saveRowHeight(currentRow, newSize);
             },
             afterSelection: function(r, c, r2, c2) {
                 var display = '';
@@ -2105,7 +2180,9 @@ var NCubeEditor2 = (function ($) {
     // ==================================== Begin Custom HOT Editors ===================================================
 
     var destroyEditor = function() {
-        hot.getActiveEditor().finishEditing(null, null, null, true);
+        if (hot.getActiveEditor()) {
+            hot.getActiveEditor().finishEditing(null, null, null, true);
+        }
         var searchQuery = _searchField.value;
         if (searchQuery !== null && searchQuery.length > 0) {
             var curCell = getSelectedCellRange();
@@ -2706,14 +2783,19 @@ var NCubeEditor2 = (function ($) {
 
     var filterOpen = function() {
         filterClear();
-        for (var f = 0, fLen = _filters.length; f < fLen; f++) {
-            var filter = _filters[f];
-            var tr = addNewTableRow();
-            tr.find('.isApplied').prop('checked',filter.isApplied);
-            tr.find('.isIncludeAll').prop('checked',filter.isIncludeAll);
-            tr.find('.column').val(filter.column);
-            tr.find('.comparator').val(filter.comparator);
-            tr.find('.expressionValue').val(filter.expressionValue);
+        var fLen = _filters.length;
+        if (fLen === 0) {
+            addFilter();
+        } else {
+            for (var f = 0; f < fLen; f++) {
+                var filter = _filters[f];
+                var tr = addNewTableRow();
+                tr.find('.isApplied').prop('checked', filter.isApplied);
+                tr.find('.isIncludeAll').prop('checked', filter.isIncludeAll);
+                tr.find('.column').val(filter.column);
+                tr.find('.comparator').val(filter.comparator);
+                tr.find('.expressionValue').val(filter.expressionValue);
+            }
         }
 
         hot.addHook('beforeKeyDown', onBeforeKeyDown);
