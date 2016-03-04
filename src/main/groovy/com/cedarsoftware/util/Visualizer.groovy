@@ -86,21 +86,16 @@ class Visualizer extends NCubeGroovyExpression
 		Map scope = options.scope as Map
 		helper.ncube = ncube
 
-		try {
-			//TODO: This is a temp location for checking scope. Move check for scope to where traitMaps are obtained.
-			//TODO: Also handle the user adding the required scope key but with a value that results in a no hit.
-			Map map = checkMissingScope(startCubeName, scope)
-			if (map) {
-				return JsonWriter.objectToJson(status: 'missingScope', message: map.message, scope: map.scope)
-			}
-
-			map = getRpmVisualizationMap(startCubeName, scope, selectedGroups, selectedLevel)
-
-			return JsonWriter.objectToJson([status: 'success', map: map, message: map.message])
+		//TODO: This is a temp location for checking scope. Move check for scope to where traitMaps are obtained.
+		//TODO: Also handle the user adding the required scope key but with a value that results in a no hit.
+		Map map = checkMissingScope(startCubeName, scope)
+		if (map) {
+			return JsonWriter.objectToJson(status: 'missingScope', message: map.message, scope: map.scope)
 		}
-		catch (Exception e){
-			throw e
-		}
+
+		map = getRpmVisualizationMap(startCubeName, scope, selectedGroups, selectedLevel)
+
+		return JsonWriter.objectToJson([status: 'success', map: map, message: map.message])
 	}
 
 	private Map getRpmVisualizationMap(String startCubeName, Map scope, Object[] selectedGroups, String selectedLevel)
