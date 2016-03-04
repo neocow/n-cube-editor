@@ -408,41 +408,35 @@ class Visualizer extends NCubeGroovyExpression
 		nodeMap.fromFieldName = sourceFieldName == null ? null : sourceFieldName
 
 		nodeMap.label = getDotSuffix(getEffectiveName(targetCube, traitMaps))
-		nodeMap.title = getTitle(targetCube, getScopedName(traitMaps), targetScope, traitMaps, nodeMap, false) //TODO: Remove title logic when popover fully implemented
-		nodeMap.popover = getTitle(targetCube, getScopedName(traitMaps), targetScope, traitMaps, nodeMap, true)
+		nodeMap.title = targetCube.name
+		nodeMap.desc = getTitle(targetCube, getScopedName(traitMaps), targetScope, traitMaps, nodeMap)
 		nodeMap.group = getGroup(targetCube, busType)
 		nodes.add(nodeMap)
 	}
 
-	//TODO: Remove popover argument when popover fully implemented. Then also remove logic related to title only.
-	private String getTitle(NCube targetCube, String scopedName, Map scope, Map traitMaps, Map nodeMap, boolean popover)
+	private String getTitle(NCube targetCube, String scopedName, Map scope, Map traitMaps, Map nodeMap)
 	{
-		String part1 = ''
-		String part2 = ''
-
-		if (!popover) {
-			part1 = '<strong>Class ' + targetCube.name + '</strong><br><br>'
-		}
+		StringBuilder sb = new StringBuilder()
 
 		if (scopedName != null )
 		{
-			part2 = '<strong>scoped name = </strong>' + scopedName + '<br><br>'
+			sb.append('<strong>scoped name = </strong>' + scopedName + '<br><br>')
 		}
 
-		String part3 = '' + '<strong>scope = </strong>' + scope.toString().replace('{','').replace('}','') + '<br><br>'
+		sb.append('<strong>scope = </strong>' + scope.toString().replace('{','').replace('}','') + '<br><br>')
 
 		String requiredScope = getRequiredScopeAllReferenced(targetCube).toString().replace('[','').replace(']','')
-		String part4 = requiredScope == '' ? '' : '' + '<strong>required scope = </strong>' + requiredScope  + '<br><br>'
+		sb.append(requiredScope == '' ? '' : '' + '<strong>required scope = </strong>' + requiredScope  + '<br><br>')
 
 		String optionalScope = getOptionalScopeAllReferenced(targetCube).toString().replace('[','').replace(']','')
-		String part5 = optionalScope == '' ? '' : '' + '<strong>optional scope = </strong>' + optionalScope  + '<br><br>'
+		sb.append(optionalScope == '' ? '' : '' + '<strong>optional scope = </strong>' + optionalScope  + '<br><br>')
 
-		String part6 = '' + '<strong>level = </strong>' + nodeMap.level.toString() + '<br><br>'
+		sb.append('<strong>level = </strong>' + nodeMap.level.toString() + '<br><br>')
 
-		String part7 = getTitleFields(traitMaps)
-		String part8 = getTitleClassTraits(traitMaps)
+		sb.append(getTitleFields(traitMaps))
+		sb.append(getTitleClassTraits(traitMaps))
 
-		return part1 + part2 + part3 + part4 + part5 + part6 + part7 + part8
+		return sb.toString();
 	}
 
 
