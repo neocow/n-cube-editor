@@ -340,7 +340,7 @@ var NCubeEditor2 = (function ($) {
         selectSavedOrDefaultCell();
         hot.render();
         setClipFormatToggleListener();
-        _searchField.value = nce.getSearchQuery();
+        _searchField.value = nce.getSearchQuery() || '';
         runSearch();
     };
 
@@ -687,14 +687,17 @@ var NCubeEditor2 = (function ($) {
             var columnNumberToGet = Math.floor(rowNum / repeatRowCount) % colLen;
             result = getAxisColumn(axis, columnNumberToGet);
         } else {
-            var ids = _columnIdCombinationsToShow[rowNum].split('_');
-            for (var idx = 0, idLen = ids.length; idx < idLen; idx++) {
-                var curId = ids[idx];
-                var column = axis.columns[curId];
-                if (column !== undefined) {
-                    result = column;
-                    result.id = curId;
-                    break;
+            var ids = _columnIdCombinationsToShow[rowNum];
+            if (ids) {
+                ids = ids.split('_');
+                for (var idx = 0, idLen = ids.length; idx < idLen; idx++) {
+                    var curId = ids[idx];
+                    var column = axis.columns[curId];
+                    if (column !== undefined) {
+                        result = column;
+                        result.id = curId;
+                        break;
+                    }
                 }
             }
         }
@@ -2186,17 +2189,19 @@ var NCubeEditor2 = (function ($) {
         var searchQuery = _searchField.value;
         if (searchQuery !== null && searchQuery.length > 0) {
             var curCell = getSelectedCellRange();
-            var curRow = curCell.startRow;
-            var curCol = curCell.startCol;
-            var prevIdx = _currentSearchResultIndex;
-            searchCubeData(searchQuery);
-            _currentSearchResultIndex = prevIdx;
+            if (curCell) {
+                var curRow = curCell.startRow;
+                var curCol = curCell.startCol;
+                var prevIdx = _currentSearchResultIndex;
+                searchCubeData(searchQuery);
+                _currentSearchResultIndex = prevIdx;
 
-            for (var i = 0, len = _searchCoords.length; i < len; i++) {
-                var curSearchCoord = _searchCoords[i];
-                if (curRow === curSearchCoord.row && curCol === curSearchCoord.col) {
-                    _currentSearchResultIndex = i;
-                    break;
+                for (var i = 0, len = _searchCoords.length; i < len; i++) {
+                    var curSearchCoord = _searchCoords[i];
+                    if (curRow === curSearchCoord.row && curCol === curSearchCoord.col) {
+                        _currentSearchResultIndex = i;
+                        break;
+                    }
                 }
             }
 
