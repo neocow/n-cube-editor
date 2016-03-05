@@ -50,14 +50,38 @@ var Visualizer = (function ($) {
     var _visualizerContent = null;
     var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
+    var _nodeTitle = null;
+    var _nodeDesc = null;
+    var _layout = null;
 
     var init = function (info) {
         if (!_nce) {
             _nce = info;
+
+            _layout = $('#visBody').layout({
+                name: 'visLayout'
+                ,	livePaneResizing:			true
+                ,   east__minSize:              50
+                ,   east__maxSize:              1000
+                ,   east__size:                 250
+                ,   east__closable:             true
+                ,   east__resizeable:           true
+                ,   east__initClosed:           true
+                ,   east__slidable:             true
+                ,   center__triggerEventsOnLoad: true
+                ,   center__maskContents:       true
+                ,   togglerLength_open:         60
+                ,   togglerLength_closed:       '100%'
+                ,	spacing_open:			    5  // ALL panes
+                ,	spacing_closed:			    5 // ALL panes
+            });
+
             _visualizerContent = $('#visualizer-content');
             _visualizerHtmlError = $('#visualizer-error');
             _visualizerInfo = $('#visualizer-info');
             _visualizerNetwork = $('#visualizer-network');
+            _nodeTitle = $('#nodeTitle');
+            _nodeDesc = $('#nodeDesc');
 
             $(window).resize(function() {
                 if (_network) {
@@ -68,7 +92,6 @@ var Visualizer = (function ($) {
             $('#selectedLevel-list').change(function () {
                 reLoad($('#selectedLevel-list').val());
             });
-
 
             $('input:checkbox').change(function () {
                 if ('hierarchical' === this.id) {
@@ -91,79 +114,8 @@ var Visualizer = (function ($) {
                     load();
                 }
             });
-
-            addPopoverListeners();
         }
     };
-
-    function addPopoverListeners()
-    {
-        $('.pop').each(function () {
-            var $elem = $(this);
-            $elem.popover({
-                html: true,
-                container: $elem,
-                trigger: 'hover',
-                title:function() {
-
-                    var title = null;
-                    if (this.id === 'node1')
-                    {
-                        title = '<b>Class <a class="nc-anc">' + _nodes[0].name + '</a></b>';
-                    }
-                    else{
-                        title = 'node 2 title';
-                    }
-                    return title
-                },
-                content: function() {
-                    return _nodes[0].popover
-                }
-            }).click(function(e) {
-                $(this).popover('toggle');
-                jQuery('.popover').attr('tabindex',-1).focus();
-                e.preventDefault();
-            });
-        });
-
-
-        $(document).ready(function () {
-            $('.pop').each(function () {
-                var $elem = $(this);
-                $elem.popover({
-                    placement: 'auto',
-                    trigger: 'hover',
-                    html: true,
-                    container: $elem,
-                    animation: true,
-                    title: 'Name goes here',
-                    content: 'This is the popover content. You should be able to mouse over HERE.'
-                });
-            });
-        });
-
-        $('body').on('blur','.popover',function(){
-            $('a[rel=popover]').popover('hide');
-        });
-
-
-        $('#network').on('hover','.vis-network-tooltip',function(){
-            alert('hello2')
-        });
-
-        $('#network').on('hover','.vis-network-tooltip',function(){
-            alert('hello1')
-        });
-
-
-        $(document).on('click','.nc-anc',function(e){
-            e.preventDefault();
-            $('a[rel=popover]').popover('hide');
-            var cubeName = this.innerHTML;
-            _nce.selectCubeByName(cubeName);
-        });
-
-    }
 
     var reLoad = function (level) {
         trimNetworkData(level);
@@ -358,7 +310,7 @@ var Visualizer = (function ($) {
         return currentlyIncluded
     }
 
-    function  groupIdsEqual(groupId1, groupId2)
+    function groupIdsEqual(groupId1, groupId2)
     {
         var groupId1Prefix = groupId1.split(_groupSuffix)[0];
         var groupId2Prefix = groupId2.split(_groupSuffix)[0];
@@ -387,7 +339,7 @@ var Visualizer = (function ($) {
         select.val('' + _selectedLevel);
     }
 
-    function getVisNetworkHeight(){
+    function getVisNetworkHeight() {
         return  '' + ($(this).height() - $('#network').offset().top);
     }
 
@@ -501,8 +453,7 @@ var Visualizer = (function ($) {
         _networkData = {nodes:nodes, edges:edges};
     }
 
-    function loadNetworkData(jsonMap)
-    {
+    function loadNetworkData(jsonMap) {
         _allGroups = jsonMap.groups.allGroups;
         _availableGroupsAllLevels = jsonMap.groups.availableGroupsAllLevels;
         _selectedGroups = jsonMap.groups.selectedGroups;
@@ -513,88 +464,39 @@ var Visualizer = (function ($) {
         _nodeCount = jsonMap.levels.nodeCount.value;
         _networkOptions = jsonMap.networkOptions;
         _maxLevel = jsonMap.levels.maxLevel.value;
-
-        var jsonMapEdges = jsonMap.edges;
-        var jsonMapNodes = jsonMap.nodes;
-
-        var edges = [];
-        var nodes = [];
-
-        for (var i = 0, iLen = jsonMapEdges.length; i < iLen; i++)
-        {
-            var edge = {};
-            var jsonEdge  = jsonMapEdges[i];
-            edge['from'] = jsonEdge.from;
-            edge['to'] = jsonEdge.to;
-            edge['label'] = jsonEdge.label;
-            edge['level'] = jsonEdge.level;
-            edge['title'] = jsonEdge.title;
-            edge['fromName'] = jsonEdge.fromName;
-            edge['toName'] = jsonEdge.toName;
-            edge['fromFieldName'] = jsonEdge.fromFieldName;
-            edge['title'] = jsonEdge.title;
-            edges.push(edge);
-        }
-
-        for (var j = 0, jLen = jsonMapNodes.length; j < jLen; j++)
-        {
-            var node = {};
-            var jsonNode  = jsonMapNodes[j];
-            node['id'] = jsonNode.id;
-            node['title'] = jsonNode.title;
-            node['popover'] = jsonNode.popover;
-            node['label'] = jsonNode.label;
-            node['scope'] = jsonNode.scope;
-            node['level'] = jsonNode.level;
-            node['name'] = jsonNode.name;
-            node['fromFieldName'] = jsonNode.fromFieldName;
-            node['group'] = jsonNode.group;
-            nodes.push(node);
-        }
-
-        _nodesAllLevels = nodes;
-        _edgesAllLevels = edges;
+        _nodesAllLevels = jsonMap.nodes;
+        _edgesAllLevels = jsonMap.edges;
     }
 
-    var handleCubeSelected = function()
-    {
+    var handleCubeSelected = function() {
         load();
     };
 
-    function clusterDescendantsBySelectedNode(nodeId, immediateDescendantsOnly)
-    {
+    function clusterDescendantsBySelectedNode(nodeId, immediateDescendantsOnly) {
         _network.clusteredNodeIds.push(nodeId);
         clusterDescendants(immediateDescendantsOnly)
     }
 
-    function clusterDescendants(immediateDescendantsOnly)
-    {
+    function clusterDescendants(immediateDescendantsOnly) {
         _network.setData(_networkData);
-
-        for (var i = 0; i < _network.clusteredNodeIds.length; i++)
-        {
+        for (var i = 0; i < _network.clusteredNodeIds.length; i++) {
             var id = _network.clusteredNodeIds[i];
             clusterDescendantsByNodeId(id, immediateDescendantsOnly);
         }
     }
 
-    function clusterDescendantsByNodeId(nodeId, immediateDescendantsOnly)
-    {
+    function clusterDescendantsByNodeId(nodeId, immediateDescendantsOnly) {
         var clusterOptionsByData = getClusterOptionsByNodeId(nodeId);
         _network.clusterDescendants(nodeId, immediateDescendantsOnly, clusterOptionsByData, true)
     }
 
-    function getClusterOptionsByNodeId(nodeId)
-    {
+    function getClusterOptionsByNodeId(nodeId) {
         var clusterOptionsByData;
-        return clusterOptionsByData =
-        {
-            processProperties: function (clusterOptions, childNodes)
-            {
-                var label = getLabel(childNodes, nodeId);
-                var title = getTitle(childNodes, nodeId);
-                clusterOptions.label = label + ' cluster (click to expand)';
-                clusterOptions.title = title + TWO_LINE_BREAKS + '(click to expand)';
+        return clusterOptionsByData = {
+            processProperties: function (clusterOptions, childNodes) {
+                var node = getNodeById(childNodes, nodeId);
+                clusterOptions.label = node.label + ' cluster (double-click to expand)';
+                clusterOptions.title = node.title + TWO_LINE_BREAKS + '(double-click to expand)';
                 return clusterOptions;
             }
         };
@@ -613,29 +515,6 @@ var Visualizer = (function ($) {
             }
         }
         _network.openCluster(clusterNodeId)
-    }
-
-    function getLabel(childNodes, nodeId)
-    {
-        for (var i = 0; i < childNodes.length; i++)
-        {
-            var node = childNodes[i];
-            if (node.id == nodeId) {
-                return node.label;
-            }
-        }
-    }
-
-    function getTitle(childNodes, nodeId)
-    {
-        for (var i = 0; i < childNodes.length; i++)
-        {
-            var node = childNodes[i];
-            if (node.id == nodeId)
-            {
-                return node.title;
-            }
-        }
     }
 
     function formatNetworkOptionsMap(map)
@@ -661,6 +540,14 @@ var Visualizer = (function ($) {
         formatNetworkOptionsMap(options);
         options.height = getVisNetworkHeight();
         options.layout.hierarchical = _hierarchical;
+        options.interaction = {
+            navigationButtons: true,
+            keyboard: {
+                enabled: true,
+                speed: {x: 5, y: 5, zoom: 0.02}
+            },
+            zoomView: true
+        };
 
         if (_network) { // clean up memory
             _network.destroy();
@@ -669,20 +556,43 @@ var Visualizer = (function ($) {
         _network = new vis.Network(container, _networkData, options);
         customizeNetworkForNce(_network);
         _network.clusteredNodeIds = [];
-        _network.on('selectNode', function (params)
-        {
-            if (params.nodes.length == 1)
-            {
-                if (_network.isCluster(params.nodes[0]) == true)
-                {
+
+        _network.on('select', function(params) {
+            var node = getNodeById(_nodes, params.nodes[0]);
+            if (node) {
+                var cubeName = node.name;
+                var an = $('<a/>');
+                an.addClass('nc-anc');
+                an.html(cubeName);
+                an.click(function (e) {
+                    e.preventDefault();
+                    _nce.selectCubeByName(cubeName);
+                });
+                _nodeTitle[0].innerHTML = 'Class ';
+                _nodeTitle.append(an);
+                _nodeDesc[0].innerHTML = node.desc;
+                _layout.open('east');
+            }
+        });
+
+        _network.on('doubleClick', function (params) {
+            if (params.nodes.length === 1) {
+                if (_network.isCluster(params.nodes[0])) {
                     openClusterByClusterNodeId(params.nodes[0]);
-                }
-                else
-                {
+                } else {
                     clusterDescendantsBySelectedNode(params.nodes[0], false);
                 }
             }
         });
+    }
+
+    function getNodeById(nodes, nodeId) {
+        for (var i = 0, len = nodes.length; i < len; i++) {
+            var node = nodes[i];
+            if (node.id === nodeId) {
+                return node;
+            }
+        }
     }
 
     function customizeNetworkForNce(network) {

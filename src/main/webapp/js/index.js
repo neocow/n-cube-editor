@@ -165,7 +165,7 @@ var NCE = (function ($)
 
     function addCurrentCubeTab(insertIdx, cubeInfo, dto) {
         var cubeInfo = cubeInfo || [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
-        var newOpenCube = {cubeKey:getCubeInfoKey(cubeInfo),status:null,position:{},numFrozenCols:null,infoDto:dto||_cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()]};
+        var newOpenCube = {cubeKey:getCubeInfoKey(cubeInfo),status:null,position:{},numFrozenCols:null,searchQuery:null,infoDto:dto||_cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()]};
         if (insertIdx > -1) {
             _openCubes.splice(insertIdx, 0, newOpenCube);
         } else {
@@ -217,6 +217,14 @@ var NCE = (function ($)
 
     function getNumFrozenCols() {
         return getOpenCubeInfoValue('numFrozenCols');
+    }
+
+    function getSearchQuery() {
+        return getOpenCubeInfoValue('searchQuery');
+    }
+
+    function saveSearchQuery(query) {
+        saveOpenCubeInfoValue('searchQuery', query);
     }
 
     function getCubeInfoKey(cubeInfo)
@@ -976,6 +984,8 @@ var NCE = (function ($)
             getViewPosition: getViewPosition,
             getNumFrozenCols: getNumFrozenCols,
             saveNumFrozenCols: saveNumFrozenCols,
+            getSearchQuery: getSearchQuery,
+            saveSearchQuery: saveSearchQuery,
             selectCubeFromAppId: selectCubeFromAppId
         };
     }
