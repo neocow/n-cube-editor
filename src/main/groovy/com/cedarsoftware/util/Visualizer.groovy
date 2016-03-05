@@ -357,7 +357,7 @@ class Visualizer extends NCubeGroovyExpression
 
 	private static String getFormattedBusType(Map traitMaps)
 	{
-		String busType = traitMaps['CLASS_TRAITS']?."$PD_BUS_TYPE"
+		String busType = getBusType(traitMaps)
 		return busType == null ? UNSPECIFIED : busType.toUpperCase()
 	}
 
@@ -750,6 +750,17 @@ class Visualizer extends NCubeGroovyExpression
 								]
 				];
 		return options
+	}
+
+	private static String getBusType(Map traitMaps)
+	{
+		Map traits = traitMaps[CLASS_TRAITS] as Map
+		if (traits)
+		{
+			return traits[PD_BUS_TYPE]
+		}
+
+		return null
 	}
 
 	private static boolean hasVisited(Set visited, String visitedKey)
