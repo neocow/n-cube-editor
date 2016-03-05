@@ -42,61 +42,6 @@
       "fireAll": true,
       "columns": [
         {
-          "id": 2000000000032,
-          "type": "string",
-          "value": "cxml:action"
-        },
-        {
-          "id": 2000000000033,
-          "type": "string",
-          "value": "cxml:mapName"
-        },
-        {
-          "id": 2000000000015,
-          "type": "string",
-          "value": "cxml:path"
-        },
-        {
-          "id": 2000000000034,
-          "type": "string",
-          "value": "cxml:rule"
-        },
-        {
-          "id": 2000000000016,
-          "type": "string",
-          "value": "cxml:xsiType"
-        },
-        {
-          "id": 2000000000001,
-          "type": "string",
-          "value": "ent:code"
-        },
-        {
-          "id": 2000000000002,
-          "type": "string",
-          "value": "ent:list"
-        },
-        {
-          "id": 2000000000051,
-          "type": "string",
-          "value": "faa:code"
-        },
-        {
-          "id": 2000000000046,
-          "type": "string",
-          "value": "oudxml:action"
-        },
-        {
-          "id": 2000000000047,
-          "type": "string",
-          "value": "oudxml:mapName"
-        },
-        {
-          "id": 2000000000048,
-          "type": "string",
-          "value": "oudxml:path"
-        },
-        {
           "id": 2000000000003,
           "type": "string",
           "value": "pd:busType"
@@ -117,34 +62,9 @@
           "value": "pd:riskType"
         },
         {
-          "id": 2000000000044,
-          "type": "string",
-          "value": "r:action"
-        },
-        {
-          "id": 2000000000019,
-          "type": "string",
-          "value": "r:changeable"
-        },
-        {
-          "id": 2000000000043,
-          "type": "string",
-          "value": "r:defaultValue"
-        },
-        {
-          "id": 2000000000050,
-          "type": "string",
-          "value": "r:edge"
-        },
-        {
           "id": 2000000000007,
           "type": "string",
           "value": "r:exists"
-        },
-        {
-          "id": 2000000000008,
-          "type": "string",
-          "value": "r:extends"
         },
         {
           "id": 2000000000009,
@@ -167,131 +87,6 @@
           "value": "r:scopedName"
         },
         {
-          "id": 2000000000013,
-          "type": "string",
-          "value": "rxml:requestPath"
-        },
-        {
-          "id": 2000000000014,
-          "type": "string",
-          "value": "rxml:responsePath"
-        },
-        {
-          "id": 2000000000010,
-          "type": "string",
-          "value": "ud:list"
-        },
-        {
-          "id": 2000000000017,
-          "type": "string",
-          "value": "udxml:path"
-        },
-        {
-          "id": 2000000000036,
-          "type": "string",
-          "value": "udxml:rule"
-        },
-        {
-          "id": 2000000000020,
-          "type": "string",
-          "value": "ui:LookupChild"
-        },
-        {
-          "id": 2000000000021,
-          "type": "string",
-          "value": "ui:LookupParent"
-        },
-        {
-          "id": 2000000000022,
-          "type": "string",
-          "value": "ui:group.LocationSchedule"
-        },
-        {
-          "id": 2000000000023,
-          "type": "string",
-          "value": "ui:group.PolicyCoverage"
-        },
-        {
-          "id": 2000000000024,
-          "type": "string",
-          "value": "ui:group.PremiumAudit"
-        },
-        {
-          "id": 2000000000025,
-          "type": "string",
-          "value": "ui:group.RatingWorksheet"
-        },
-        {
-          "id": 2000000000026,
-          "type": "string",
-          "value": "ui:group.StateSchedule"
-        },
-        {
-          "id": 2000000000011,
-          "type": "string",
-          "value": "ui:label"
-        },
-        {
-          "id": 2000000000042,
-          "type": "string",
-          "value": "ui:optionsFetcher"
-        },
-        {
-          "id": 2000000000052,
-          "type": "string",
-          "value": "ui:optionsfetcher"
-        },
-        {
-          "id": 2000000000027,
-          "type": "string",
-          "value": "ui:order"
-        },
-        {
-          "id": 2000000000049,
-          "type": "string",
-          "value": "ui:placeholder"
-        },
-        {
-          "id": 2000000000054,
-          "type": "string",
-          "value": "ui:sequenceNo"
-        },
-        {
-          "id": 2000000000053,
-          "type": "string",
-          "value": "ui:tooltip"
-        },
-        {
-          "id": 2000000000028,
-          "type": "string",
-          "value": "ui:type"
-        },
-        {
-          "id": 2000000000037,
-          "type": "string",
-          "value": "v:Code"
-        },
-        {
-          "id": 2000000000038,
-          "type": "string",
-          "value": "v:CoverageTypeCode"
-        },
-        {
-          "id": 2000000000039,
-          "type": "string",
-          "value": "v:StatLevel"
-        },
-        {
-          "id": 2000000000040,
-          "type": "string",
-          "value": "v:UDColumn"
-        },
-        {
-          "id": 2000000000041,
-          "type": "string",
-          "value": "v:UDTable"
-        },
-        {
           "id": 2000000000029,
           "type": "string",
           "value": "v:enum"
@@ -305,32 +100,11 @@
           "id": 2000000000031,
           "type": "string",
           "value": "v:min"
-        },
-        {
-          "id": 2000000000045,
-          "type": "string",
-          "value": "v:regexCube"
         }
       ]
     }
   ],
   "cells": [
-    {
-      "id": [
-        1000000000001,
-        2000000000001
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000002
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
     {
       "id": [
         1000000000001,
@@ -374,31 +148,7 @@
     {
       "id": [
         1000000000001,
-        2000000000008
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
         2000000000009
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000010
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000011
       ],
       "type": "exp",
       "value": "@rpm.scope.class.Coverage.classTraits[:]"
@@ -414,46 +164,6 @@
     {
       "id": [
         1000000000001,
-        2000000000013
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000014
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000015
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000016
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000017
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
         2000000000018
       ],
       "type": "exp",
@@ -462,255 +172,7 @@
     {
       "id": [
         1000000000001,
-        2000000000032
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000033
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000034
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000051
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000046
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000047
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000048
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000044
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000019
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000043
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000050
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
         2000000000035
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000036
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000020
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000021
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000022
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000023
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000024
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000025
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000026
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000042
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000052
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000027
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000049
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000054
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000053
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000028
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000037
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000038
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000039
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000040
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000041
       ],
       "type": "exp",
       "value": "@rpm.scope.class.Coverage.classTraits[:]"
@@ -735,14 +197,6 @@
       "id": [
         1000000000001,
         2000000000031
-      ],
-      "type": "exp",
-      "value": "@rpm.scope.class.Coverage.classTraits[:]"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000045
       ],
       "type": "exp",
       "value": "@rpm.scope.class.Coverage.classTraits[:]"

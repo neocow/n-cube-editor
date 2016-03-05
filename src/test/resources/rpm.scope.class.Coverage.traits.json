@@ -67,16 +67,6 @@
       "fireAll": true,
       "columns": [
         {
-          "id": 3000000000001,
-          "type": "string",
-          "value": "r:changeable"
-        },
-        {
-          "id": 3000000000032,
-          "type": "string",
-          "value": "r:defaultValue"
-        },
-        {
           "id": 3000000000002,
           "type": "string",
           "value": "r:exists"
@@ -85,31 +75,6 @@
           "id": 3000000000022,
           "type": "string",
           "value": "r:rpmType"
-        },
-        {
-          "id": 3000000000026,
-          "type": "string",
-          "value": "v:Code"
-        },
-        {
-          "id": 3000000000027,
-          "type": "string",
-          "value": "v:CoverageTypeCode"
-        },
-        {
-          "id": 3000000000028,
-          "type": "string",
-          "value": "v:StatLevel"
-        },
-        {
-          "id": 3000000000029,
-          "type": "string",
-          "value": "v:UDColumn"
-        },
-        {
-          "id": 3000000000030,
-          "type": "string",
-          "value": "v:UDTable"
         },
         {
           "id": 3000000000014,
@@ -125,11 +90,6 @@
           "id": 3000000000016,
           "type": "string",
           "value": "v:min"
-        },
-        {
-          "id": 3000000000035,
-          "type": "string",
-          "value": "v:regexCube"
         }
       ]
     }

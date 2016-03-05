@@ -42,6 +42,11 @@
       "fireAll": true,
       "columns": [
         {
+          "id": 2000000000012,
+          "type": "string",
+          "value": "pd:busType"
+        },
+        {
           "id": 2000000000003,
           "type": "string",
           "value": "pd:code"
@@ -55,11 +60,6 @@
           "id": 2000000000005,
           "type": "string",
           "value": "pd:riskType"
-        },
-        {
-          "id": 2000000000006,
-          "type": "string",
-          "value": "r:extends"
         },
         {
           "id": 2000000000007,
@@ -263,6 +263,38 @@
       ],
       "type": "string",
       "value": "MockCoverage4"
+    },
+    {
+      "id": [
+        1000000000056,
+        2000000000012
+      ],
+      "type": "string",
+      "value": "COVERAGE"
+    },
+    {
+      "id": [
+        1000000000057,
+        2000000000012
+      ],
+      "type": "string",
+      "value": "COVERAGE"
+    },
+    {
+      "id": [
+        1000000000055,
+        2000000000012
+      ],
+      "type": "string",
+      "value": "COVERAGE"
+    },
+    {
+      "id": [
+        1000000000058,
+        2000000000012
+      ],
+      "type": "string",
+      "value": "COVERAGE"
     }
   ]
 }

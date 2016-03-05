@@ -1,0 +1,56 @@
+package com.cedarsoftware.controller
+
+import com.cedarsoftware.ncube.ApplicationID
+import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.service.ncube.NCubeService
+import groovy.transform.CompileStatic
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+
+@CompileStatic
+class TestVisualizer {
+
+    NCubeController nCubeController
+
+    @Before
+    void setUp()
+    {
+        nCubeController = new NCubeController(new NCubeService())
+        List ncubeNames = [
+                'sys.classpath.json',
+                'sys.prototype.json',
+                'rpm.class.Coverage.json',
+                'rpm.class.Limit.json',
+                'rpm.class.Premium.json',
+                'rpm.enum.Coverage.Limits.json',
+                'rpm.enum.Coverage.Premiums.json',
+                'rpm.scope.class.Coverage.classTraits.json',
+                'rpm.scope.class.Coverage.traits.json',
+                'rpm.scope.class.Limit.classTraits.json',
+                'rpm.scope.class.Limit.traits.json',
+                'rpm.scope.class.Premium.classTraits.json',
+                'rpm.scope.class.Premium.traits.json',
+                'rpm.scope.enum.Coverage.Limits.classTraits.json',
+                'rpm.scope.enum.Coverage.Limits.traits.json',
+                'rpm.scope.enum.Coverage.Premiums.classTraits.json',
+                'rpm.scope.enum.Coverage.Premiums.traits.json'
+        ]
+        TestingNCubeManagerHelper.setupEnvironment()
+        TestingNCubeManagerHelper.loadCubes(ncubeNames)
+    }
+
+    @After
+    void tearDown()
+    {
+        NCubeManager.clearCache()
+    }
+
+    @Test
+    void testGetVisualizerJson()
+    {
+        Map options = [startCubeName: 'rpm.class.Coverage', scope: [coverage: 'MockCoverage1']]
+        String visualize = nCubeController.getVisualizerJson(ApplicationID.testAppId, options)
+        println visualize
+    }
+}

@@ -77,11 +77,6 @@
           "value": "pd:code"
         },
         {
-          "id": 2000000000003,
-          "type": "string",
-          "value": "r:extends"
-        },
-        {
           "id": 2000000000004,
           "type": "string",
           "value": "r:name"
@@ -120,14 +115,6 @@
       ],
       "type": "string",
       "value": "??"
-    },
-    {
-      "id": [
-        1000000000001,
-        2000000000003
-      ],
-      "type": "string",
-      "value": "transaction.Actionable"
     },
     {
       "id": [
@@ -200,14 +187,6 @@
       ],
       "type": "string",
       "value": "??"
-    },
-    {
-      "id": [
-        1000000000002,
-        2000000000003
-      ],
-      "type": "string",
-      "value": "transaction.Actionable"
     },
     {
       "id": [
@@ -284,14 +263,6 @@
     {
       "id": [
         1000000000003,
-        2000000000003
-      ],
-      "type": "string",
-      "value": "transaction.Actionable"
-    },
-    {
-      "id": [
-        1000000000003,
         2000000000004
       ],
       "type": "string",
@@ -360,14 +331,6 @@
       ],
       "type": "string",
       "value": "??"
-    },
-    {
-      "id": [
-        1000000000004,
-        2000000000003
-      ],
-      "type": "string",
-      "value": "transaction.Actionable"
     },
     {
       "id": [
@@ -444,14 +407,6 @@
     {
       "id": [
         1000000000005,
-        2000000000003
-      ],
-      "type": "string",
-      "value": "transaction.Actionable"
-    },
-    {
-      "id": [
-        1000000000005,
         2000000000004
       ],
       "type": "string",
@@ -520,14 +475,6 @@
       ],
       "type": "string",
       "value": "??"
-    },
-    {
-      "id": [
-        1000000000006,
-        2000000000003
-      ],
-      "type": "string",
-      "value": "transaction.Actionable"
     },
     {
       "id": [
