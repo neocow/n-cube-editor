@@ -5,16 +5,18 @@ import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.service.ncube.NCubeService
 import groovy.transform.CompileStatic
 import org.junit.After
+import org.junit.AfterClass
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 
 @CompileStatic
 class TestVisualizer {
 
-    NCubeController nCubeController
+    static NCubeController nCubeController
 
-    @Before
-    void setUp()
+    @BeforeClass
+    static void setUp()
     {
         nCubeController = new NCubeController(new NCubeService())
         List ncubeNames = [
@@ -40,8 +42,8 @@ class TestVisualizer {
         TestingNCubeManagerHelper.loadCubes(ncubeNames)
     }
 
-    @After
-    void tearDown()
+    @AfterClass
+    static void tearDown()
     {
         NCubeManager.clearCache()
     }
@@ -50,7 +52,7 @@ class TestVisualizer {
     void testGetVisualizerJson()
     {
         Map options = [startCubeName: 'rpm.class.Coverage', scope: [coverage: 'MockCoverage1']]
-        String visualize = nCubeController.getVisualizerJson(ApplicationID.testAppId, options)
+        Map visualize = nCubeController.getVisualizerJson(ApplicationID.testAppId, options)
         println visualize
     }
 }

@@ -292,7 +292,7 @@ class NCubeController extends BaseController
         }
     }
 
-    String getVisualizerJson(ApplicationID appId, Map options)
+    Map getVisualizerJson(ApplicationID appId, Map options)
     {
         try
         {
@@ -303,7 +303,7 @@ class NCubeController extends BaseController
             Visualizer vis = new Visualizer()
             vis.input = [options:options]
             vis.ncube = nCubeService.getCube(appId, cubeName)
-            return vis.run()
+            return vis.run() as Map
         }
         catch (Exception e)
         {

@@ -90,12 +90,10 @@ class Visualizer extends NCubeGroovyExpression
 		//TODO: Also handle the user adding the required scope key but with a value that results in a no hit.
 		Map map = checkMissingScope(startCubeName, scope)
 		if (map) {
-			return JsonWriter.objectToJson(status: 'missingScope', message: map.message, scope: map.scope)
+			return [status: 'missingScope', message: map.message, scope: map.scope]
 		}
-
 		map = getRpmVisualizationMap(startCubeName, scope, selectedGroups, selectedLevel)
-
-		return JsonWriter.objectToJson([status: 'success', map: map, message: map.message])
+		return [status: 'success', map: map, message: map.message]
 	}
 
 	private Map getRpmVisualizationMap(String startCubeName, Map scope, Object[] selectedGroups, String selectedLevel)
@@ -111,7 +109,7 @@ class Visualizer extends NCubeGroovyExpression
 
 		levels[MAX_LEVEL] = 1
 		levels[NODE_COUNT] = 1
-		levels[SELECTED_LEVEL] = selectedLevel == null ? DEFAULT_LEVEL :  Integer.parseInt(selectedLevel)
+		levels[SELECTED_LEVEL] = selectedLevel == null ? DEFAULT_LEVEL :  Converter.convert(selectedLevel, long.class)
 		stackInfo[TARGET_LEVEL] = 1
 		stackInfo[STACK_KEY] = 1
 
@@ -137,7 +135,7 @@ class Visualizer extends NCubeGroovyExpression
 		trimSelectedGroups(groups)
         String message = messages.size() > 0 ? messages.toString() : null
 
-		return [startCube: startCube.name, networkOptions:getNetworkOptions(), groups: groups, levels: levels, scope:scope, nodes: nodes.toArray(), edges: edges.toArray(), message: message]
+		return [startCube: startCube.name, groups: groups, levels: levels, scope:scope, nodes: nodes.toArray(), edges: edges.toArray(), message: message]
 	}
 
 	private void processCube(Map stack, Set visited, List nodes, List edges, Map groups, Map levels, List messages)
@@ -178,8 +176,8 @@ class Visualizer extends NCubeGroovyExpression
 
 		String busType = getFormattedBusType(targetTraitMaps)
 
-		Integer targetLevel = stackInfo[TARGET_LEVEL] as Integer
-		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, edges, stackInfo[STACK_KEY] as Integer, targetLevel)
+		long targetLevel = stackInfo[TARGET_LEVEL] as long
+		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, edges, stackInfo[STACK_KEY] as long, targetLevel)
 
 		if (hasVisited(visited, targetCube.sha1() + targetScope.toString()))
 		{
@@ -240,7 +238,7 @@ class Visualizer extends NCubeGroovyExpression
 			return
 		}
 
-		Integer targetLevel = stackInfo[TARGET_LEVEL] as Integer
+		long targetLevel = stackInfo[TARGET_LEVEL] as long
 
 		Map targetTraitMaps = stackInfo[TARGET_TRAIT_MAPS] as Map
 		if (!targetTraitMaps) {
@@ -283,7 +281,7 @@ class Visualizer extends NCubeGroovyExpression
 		}
 
 
-		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, edges, stackInfo[STACK_KEY] as Integer, targetLevel)
+		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, edges, stackInfo[STACK_KEY] as long, targetLevel)
 
 		if (hasVisited(visited, targetCube.sha1() + targetScope.toString()))
 		{
@@ -296,8 +294,8 @@ class Visualizer extends NCubeGroovyExpression
 	}
 
 	private static void trimSelectedLevel(Map levels) {
-		int nodeCount = levels[NODE_COUNT] as Integer
-		int selectedLevel = levels[SELECTED_LEVEL] as Integer
+		long nodeCount = levels[NODE_COUNT] as long
+		long selectedLevel = levels[SELECTED_LEVEL] as long
 		levels[SELECTED_LEVEL] = selectedLevel.compareTo(nodeCount) > 0 ? nodeCount.toString() : selectedLevel.toString()
 	}
 
@@ -313,7 +311,7 @@ class Visualizer extends NCubeGroovyExpression
 		groups[AVAILABLE_GROUPS_ALL_LEVELS] = (groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set).toArray()
 	}
 
-	private void addToStack(Integer targetLevel, Map levels,  Map stack,  Map stackInfo, Map nextTargetStackInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
+	private void addToStack(long targetLevel, Map levels,  Map stack,  Map stackInfo, Map nextTargetStackInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
 	{
 		try
 		{
@@ -328,12 +326,12 @@ class Visualizer extends NCubeGroovyExpression
 			nextTargetStackInfo[SOURCE_FIELD] = targetFieldName
 			nextTargetStackInfo[SOURCE_FIELD_RPM_TYPE] = rpmType
 
-			Integer nextTargetTargetLevel = targetLevel + 1
+			long nextTargetTargetLevel = targetLevel + 1
 			nextTargetStackInfo[TARGET_LEVEL] = nextTargetTargetLevel
 
-			Integer maxLevel = levels[MAX_LEVEL] as Integer
+			long maxLevel = levels[MAX_LEVEL] as long
 			levels[MAX_LEVEL] = maxLevel.compareTo(nextTargetTargetLevel) < 0 ? nextTargetTargetLevel : maxLevel
-			levels[NODE_COUNT] = (levels[NODE_COUNT] as Integer) + 1
+			levels[NODE_COUNT] = (levels[NODE_COUNT] as long) + 1
 			nextTargetStackInfo[STACK_KEY] = levels[NODE_COUNT]
 			stack[nextTargetStackInfo[STACK_KEY]] = nextTargetStackInfo
 		}
@@ -362,7 +360,7 @@ class Visualizer extends NCubeGroovyExpression
 	}
 
 	private
-	static void addToEdges(NCube targetCube, NCube sourceCube,  Map targetScope, Map sourceScope, Map targetTraitMaps, Map sourceTraitMaps, String sourceFieldName, List edges, Integer edgeId, Integer level )
+	static void addToEdges(NCube targetCube, NCube sourceCube,  Map targetScope, Map sourceScope, Map targetTraitMaps, Map sourceTraitMaps, String sourceFieldName, List edges, long edgeId, long level )
 	{
 		if (!sourceCube)
 		{
@@ -392,7 +390,7 @@ class Visualizer extends NCubeGroovyExpression
 		edges.add(edgeMap)
 	}
 
-	private void addToNodes(NCube targetCube, Map targetScope, Map traitMaps, Integer level, List nodes, String busType, String sourceFieldName)
+	private void addToNodes(NCube targetCube, Map targetScope, Map traitMaps, long level, List nodes, String busType, String sourceFieldName)
 	{
 		Map nodeMap = [:]
 		nodeMap.id = targetCube.name + '_' + targetScope.toString()
@@ -586,170 +584,6 @@ class Visualizer extends NCubeGroovyExpression
 		}
 
 		return newScope
-	}
-
-	private static Map getNetworkOptions()
-	{
-		//TODO: This could be placed into a cube
-
-		Map options =
-				[
-						height: '100%',
-						nodes:
-								[
-										scaling: [
-												min: 16,
-												max: 32
-										]
-								],
-						edges:
-								[
-										arrows: 'to',
-										color: 'gray',
-										smooth: false,
-										hoverWidth: 3
-								],
-						physics:
-								[
-										barnesHut: [gravitationalConstant: -30000],
-										stabilization: [iterations: 2500],
-								],
-						layout:
-								[
-										hierarchical: false,
-										improvedLayout : true,
-										randomSeed:2
-								],
-						groups:
-								[
-										PRODUCT:
-												[
-														shape: 'box',
-														color: '#FF9900' // orange
-												],
-										RISK:
-												[
-														shape: 'square',
-														color: "#5A1E5C" // purple
-												],
-										COVERAGE:
-												[
-														shape: 'star',
-														color: "#dbe92b" // yellow
-												],
-										CONTAINER:
-												[
-														shape: 'star',
-														color: "#731d1d" // dark red
-												],
-										LIMIT:
-												[
-														shape: 'diamond',
-														color: "#C5000B" // red
-												],
-										DEDUCTIBLE:
-												[
-														shape: 'diamond',
-														color: "#ffc0cb " // pink
-												],
-										PREMIUM:
-												[
-														shape: 'ellipse',
-														color: "#2be998" // green
-												],
-										RATE:
-												[
-														shape: 'ellipse',
-														color: "#2B7CE9" // blue
-												],
-										RATEFACTOR:
-												[
-														shape: 'ellipse',
-														color: "#2bdbe9" // light blue
-												],
-										PARTY:
-												[
-														shape: 'box',
-														color: '#99b299' // light green
-												],
-										PLACE:
-												[
-														shape: 'box',
-														color: '#cdbbce' // light purple
-												],
-										FORM:
-												[
-														shape: 'box',
-														color: '#cdbbce' // light purple
-												],
-										FORMDATA:
-												[
-														shape: 'box',
-														color: '#cdbbce' // light purple
-												],
-										UNSPECIFIED:
-												[
-														shape: 'box',
-														color: '#cdbbce' // light purple
-												],
-										PRODUCT_ENUM :
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										RISK_ENUM :
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										COVERAGE_ENUM :
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										LIMIT_ENUM :
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										PREMIUM_ENUM :
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										RATE_ENUM :
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										RATEFACTOR_ENUM :
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										CONTAINER_ENUM:
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										DEDUCTIBLE_ENUM:
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										PARTY_ENUM:
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-										PLACE_ENUM:
-												[
-														shape: 'dot',
-														color: 'gray'   // gray
-												],
-								]
-				];
-		return options
 	}
 
 	private static String getBusType(Map traitMaps)
