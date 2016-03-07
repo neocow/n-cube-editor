@@ -2240,6 +2240,7 @@ class NCubeController extends BaseController
         {
             map.metaProps[entry.key] = entry.value == null ? 'null' : entry.value.toString()
         }
+        map.displayOrder = col.displayOrder as long
         return map
     }
 
