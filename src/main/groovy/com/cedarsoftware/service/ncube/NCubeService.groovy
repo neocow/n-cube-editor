@@ -468,8 +468,7 @@ class NCubeService
         String lastSuccessful = ""
         try
         {
-            JsonObject ncubes = (JsonObject) JsonReader.jsonToMaps(json)
-            Object[] cubes = ncubes.getArray()
+            Object[] cubes = (Object[]) JsonReader.jsonToJava(json)
             List cubeList = new ArrayList(cubes.length)
 
             for (Object cube : cubes)

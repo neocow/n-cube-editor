@@ -2202,7 +2202,7 @@ class NCubeController extends BaseController
     static Map convertAxis(Axis axis) throws IOException
     {
         String json = JsonWriter.objectToJson(axis, [(JsonWriter.TYPE): false] as Map)
-        Map axisConverted = JsonReader.jsonToMaps(json)
+        Map axisConverted = (Map) JsonReader.jsonToJava(json, [(JsonReader.USE_MAPS):true] as Map)
         axisConverted.'@type' = axis.getClass().getName()
         Object[] cols = axis.getColumns() as Object[]
         axisConverted.remove('idToCol')
