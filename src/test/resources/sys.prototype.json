@@ -2,7 +2,7 @@
   "ncube": "sys.prototype",
   "axes": [
     {
-      "name": "sys.properties",
+      "name": "sys.property",
       "hasDefault": false,
       "type": "DISCRETE",
       "valueType": "STRING",
