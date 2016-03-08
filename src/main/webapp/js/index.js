@@ -838,6 +838,8 @@ var NCE = (function ($)
                 buildTabOverflow(maxTabs, len);
             }
             selectTab(cubeInfo);
+        } else {
+            switchTabPane(null);
         }
     }
 
