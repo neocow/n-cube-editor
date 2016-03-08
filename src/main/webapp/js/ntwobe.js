@@ -341,7 +341,9 @@ var NCubeEditor2 = (function ($) {
         hot.render();
         setClipFormatToggleListener();
         _searchField.value = nce.getSearchQuery() || '';
+        _searchText = '';
         runSearch();
+        searchDown();
     };
 
     var setSearchHelperText = function() {
@@ -406,22 +408,29 @@ var NCubeEditor2 = (function ($) {
         }
     };
 
+    var getSearchResult = function(idx) {
+        var val = _searchCoords[idx].split('_');
+        return {row:parseInt(val[0]), col:parseInt(val[1])};
+    };
+
+    var highlightSearchResult = function(idx) {
+        var result = getSearchResult(idx);
+        hot.selectCell(result.row, result.col);
+        setSearchHelperText();
+    };
+
     var searchDown = function() {
         var searchResultsLen = _searchCoords.length;
         if (searchResultsLen > 0) {
             var idx = _currentSearchResultIndex === searchResultsLen - 1 ? searchResultsLen - 1 : ++_currentSearchResultIndex;
-            var result = _searchCoords[idx];
-            hot.selectCell(result.row, result.col);
-            setSearchHelperText();
+            highlightSearchResult(idx);
         }
     };
 
     var searchUp = function() {
         if (_searchCoords.length > 0) {
             var idx = _currentSearchResultIndex > 0 ? --_currentSearchResultIndex : 0;
-            var result = _searchCoords[idx];
-            hot.selectCell(result.row, result.col);
-            setSearchHelperText();
+            highlightSearchResult(idx);
         }
     };
 
@@ -449,153 +458,31 @@ var NCubeEditor2 = (function ($) {
     var searchCubeData = function(query) {
         _searchCoords = [];
         _currentSearchResultIndex = -1;
-
         var queryLower = query.toLowerCase();
-        var containsQuery = function(value) {
-            if (!value)
-            {
-                return false;
-            }
-            return value.toString().toLowerCase().indexOf(queryLower) > -1;
-        };
-
-        var multiplier = 1;
-        var rowSpacing = numRows - 2;
-        var axisNum, colNum, axisLen, colLen;
-        var rowSpacingHelper = [];
-
-        var isHorizAxis = function(axisNum) {
-            return axisLen > 1 && axisNum === colOffset;
-        };
-
-        var getColumnTableCoords = function() {
-            if (isHorizAxis(axisNum)) {
-                _searchCoords.push({row: 1, col: colOffset + colNum});
-            } else {
-                var rowIdx = colNum * rowSpacing;
-                for (var m = 0; m < multiplier; m++) {
-                    _searchCoords.push({row: rowIdx + 2, col: axisNum});
-                    rowIdx += rowSpacing * colLen;
-                }
-            }
-        };
 
         // search all axes
-        for (axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
+        for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
             var axis = axes[axisNum];
             var cols = axis.columns;
             var colKeys = Object.keys(cols);
-            colLen = colKeys.length;
-            rowSpacing /= colLen;
-
-            rowSpacingHelper.push({axisName:axis.name, order:getAxisId(axis), rowSpacing:rowSpacing, horizAxis:isHorizAxis(axisNum)});
 
             // search all columns for an axis
-            for (colNum = 0; colNum < colLen; colNum++)
-            {
+            for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
                 var col = cols[colKeys[colNum]];
-                col.isSearchResult = false;
-                if (col.hasOwnProperty('name') && containsQuery(col.name))
-                {
-                    col.isSearchResult = true;
-                    getColumnTableCoords();
-                    continue;
-                }
-                if (col.hasOwnProperty('url') && containsQuery(col.url))
-                {
-                    col.isSearchResult = true;
-                    getColumnTableCoords();
-                    continue;
-                }
-
-                if (col.hasOwnProperty('value'))
-                {
-                    var val = col.value;
-                    if (typeof val === 'object')
-                    {
-                        for (var i = 0, iLen = val.length; i < iLen; i++)
-                        {
-                            var curVal = val[i];
-                            if (typeof curVal === 'object')
-                            {
-                                for (var j = 0, jLen = curVal.length; j < jLen; j++)
-                                {
-                                    if (containsQuery(curVal[j]))
-                                    {
-                                        col.isSearchResult = true;
-                                        break;
-                                    }
-                                }
-                                if (col.isSearchResult)
-                                {
-                                    getColumnTableCoords();
-                                    break;
-                                }
-                            }
-                            else if (containsQuery(curVal))
-                            {
-                                col.isSearchResult = true;
-                                getColumnTableCoords();
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (containsQuery(val)) {
-                            col.isSearchResult = true;
-                            getColumnTableCoords();
-                        }
-                    }
-                }
+                var colVal = getRowHeaderPlainTextForWidth(axis, col);
+                col.isSearchResult = colVal.toLowerCase().indexOf(queryLower) > -1;
             }
-            multiplier *= colLen;
         }
-        rowSpacingHelper.sort(function(a, b) {
-            return a.order - b.order;
-        });
 
         // search cells
         var cells = data.cells;
         var cellKeys = Object.keys(cells);
-        for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++)
-        {
+        for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++) {
             var cellId = cellKeys[cellNum];
             var cell = cells[cellId];
             var cellVal = getTextCellValue(cell);
             cell.isSearchResult = cellVal.toLowerCase().indexOf(queryLower) > -1;
-
-            if (cell.isSearchResult) {
-                var colIds = cellId.split('_');
-                var r = 0;
-                var c = 0;
-                for (var colIdNum = 0, colIdLen = colIds.length; colIdNum < colIdLen; colIdNum++) {
-                    var curColId = colIds[colIdNum];
-                    var curHelperObj = rowSpacingHelper[colIdNum];
-                    var curColNum = axisColumnMap[curHelperObj.axisName].indexOf(curColId);
-
-                    if (curHelperObj.horizAxis) {
-                        c = curColNum;
-                    } else {
-                        r += curColNum * curHelperObj.rowSpacing;
-                    }
-                }
-
-                _searchCoords.push({row: r + 2, col: c + (colOffset || 1)});
-            }
         }
-
-        _searchCoords.sort(function(a, b) {
-            var rowA = a.row;
-            var rowB = b.row;
-            if (rowA === rowB) {
-                var colA = a.col;
-                var colB = b.col;
-                return colA - colB;
-            } else {
-                return rowA - rowB;
-            }
-        });
     };
 
     var colorAxisButtons = function ()
@@ -1608,6 +1495,7 @@ var NCubeEditor2 = (function ($) {
                 var column = getColumnHeader(col);
                 td.innerHTML = getRowHeaderValue(axes[colOffset], column);
                 if (column.isSearchResult) {
+                    addToSearchCoords(row, col);
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
             }
@@ -1619,13 +1507,18 @@ var NCubeEditor2 = (function ($) {
         else if (col === 0 || col < colOffset) {
             var rowHeader = getRowHeader(row, col);
             var axis = axes[col];
+            var shouldAddToSearchResults = false;
             if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = getRowHeaderValue(axis, rowHeader);
+                shouldAddToSearchResults = true;
             }
             td.className += CLASS_HANDSON_TABLE_HEADER;
             if (getRowHeader(row, col).isSearchResult) {
+                if (shouldAddToSearchResults) {
+                    addToSearchCoords(row, col);
+                }
                 td.className += CLASS_HANDSON_SEARCH_RESULT;
             }
 
@@ -1641,6 +1534,7 @@ var NCubeEditor2 = (function ($) {
             td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData) {
                 if (cellData.isSearchResult) {
+                    addToSearchCoords(row, col);
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
 
@@ -1677,6 +1571,13 @@ var NCubeEditor2 = (function ($) {
             }
 
             cellProperties.editor = CellEditor;
+        }
+    };
+
+    var addToSearchCoords = function(row, col) {
+        var val = row + '_' + col;
+        if (_searchCoords.indexOf(val) === -1) {
+            _searchCoords.push(val);
         }
     };
 
@@ -2201,7 +2102,7 @@ var NCubeEditor2 = (function ($) {
                 _currentSearchResultIndex = prevIdx;
 
                 for (var i = 0, len = _searchCoords.length; i < len; i++) {
-                    var curSearchCoord = _searchCoords[i];
+                    var curSearchCoord = getSearchResult(i);
                     if (curRow === curSearchCoord.row && curCol === curSearchCoord.col) {
                         _currentSearchResultIndex = i;
                         break;
