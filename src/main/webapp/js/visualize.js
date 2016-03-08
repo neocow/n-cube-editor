@@ -42,7 +42,6 @@ var Visualizer = (function ($) {
     var _nodeCount = null;
     var _groupSuffix = null;
     var _startCube = null;
-    var _networkOptions = null;
     var _hierarchical = false;
     var _selectedLevel = null;
     var _visualizerInfo = null;
@@ -163,14 +162,14 @@ var Visualizer = (function ($) {
             };
 
 
-            var result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options], {noResolveRefs: true});
+            var result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
             if (result.status === false) {
                 _visualizerContent.hide();
                 _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
                 return;
             }
 
-            var json = JSON.parse(result.data);
+            var json = result.data;
 
             if (json.status === 'success') {
                 if (json.message !== null) {
@@ -461,9 +460,8 @@ var Visualizer = (function ($) {
         _groupSuffix = jsonMap.groups.groupSuffix;
         _scope = jsonMap.scope;
         _startCube = jsonMap.startCube.substring(jsonMap.startCube.lastIndexOf('.') + 1);
-        _nodeCount = jsonMap.levels.nodeCount.value;
-        _networkOptions = jsonMap.networkOptions;
-        _maxLevel = jsonMap.levels.maxLevel.value;
+        _nodeCount = jsonMap.levels.nodeCount;
+        _maxLevel = jsonMap.levels.maxLevel;
         _nodesAllLevels = jsonMap.nodes;
         _edgesAllLevels = jsonMap.edges;
     }
@@ -517,36 +515,130 @@ var Visualizer = (function ($) {
         _network.openCluster(clusterNodeId)
     }
 
-    function formatNetworkOptionsMap(map)
-    {
-        for (var key in map) {
-            var value = map[key];
-            if (value === Object(value)) {
-                if (typeof value['value'] !== 'undefined') {
-                    map[key] = value['value'];
-                }
-                else {
-                    formatNetworkOptionsMap(value);
-                }
-            }
-        }
-        delete map['@type'];
-    }
-
     function draw()
     {
         var container = document.getElementById('network');
-        var options = _networkOptions;
-        formatNetworkOptionsMap(options);
-        options.height = getVisNetworkHeight();
-        options.layout.hierarchical = _hierarchical;
-        options.interaction = {
-            navigationButtons: true,
-            keyboard: {
-                enabled: true,
-                speed: {x: 5, y: 5, zoom: 0.02}
+        var options = {
+            height: getVisNetworkHeight(),
+            interaction: {
+                navigationButtons: true,
+                keyboard: {
+                    enabled: true,
+                    speed: {x: 5, y: 5, zoom: 0.02}
+                },
+                zoomView: true
             },
-            zoomView: true
+            nodes: {
+                scaling: {
+                    min: 16,
+                    max: 32
+                }
+            },
+            edges: {
+                arrows: 'to',
+                color: 'gray',
+                smooth: true,
+                hoverWidth: 3
+            },
+            physics: {
+                barnesHut: {gravitationalConstant: -30000},
+                stabilization: {iterations: 2500}
+            },
+            layout: {
+                hierarchical: _hierarchical,
+                improvedLayout : true,
+                randomSeed:2
+            },
+            groups: {  //TODO: Add other bus types
+                PRODUCT: {
+                    shape: 'box',
+                    color: '#FF9900' // orange
+                },
+                RISK: {
+                    shape: 'square',
+                    color: "#5A1E5C" // purple
+                },
+                COVERAGE: {
+                    shape: 'star',
+                    color: "#dbe92b" // yellow
+                },
+                CONTAINER: {
+                    shape: 'star',
+                    color: "#731d1d" // dark red
+                },
+                LIMIT: {
+                    shape: 'diamond',
+                    color: "#C5000B" // red
+                },
+                DEDUCTIBLE: {
+                    shape: 'diamond',
+                    color: "#ffc0cb " // pink
+                },
+                PREMIUM: {
+                    shape: 'ellipse',
+                    color: "#2be998" // green
+                },
+                RATE: {
+                    shape: 'ellipse',
+                    color: "#2B7CE9" // blue
+                },
+                RATEFACTOR: {
+                    shape: 'ellipse',
+                    color: "#2bdbe9" // light blue
+                },
+                PARTY: {
+                    shape: 'box',
+                    color: '#004000' // dark green
+                },
+                PLACE: {
+                    shape: 'box',
+                    color: '#481849' // dark purple
+                },
+                PRODUCT_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                RISK_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                COVERAGE_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                LIMIT_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                PREMIUM_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                RATE_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                RATEFACTOR_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                CONTAINER_ENUM: {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                DEDUCTIBLE_ENUM: {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                PARTY_ENUM: {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                PLACE_ENUM: {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                }
+            }
         };
 
         if (_network) { // clean up memory
