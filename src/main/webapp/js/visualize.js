@@ -517,26 +517,19 @@ var Visualizer = (function ($) {
         _network.openCluster(clusterNodeId)
     }
 
-    function formatNetworkOptionsMap(map)
-    {
-        for (var key in map) {
-            var value = map[key];
-            if (value === Object(value)) {
-                if (typeof value['value'] !== 'undefined') {
-                    map[key] = value['value'];
-                }
-                else {
-                    formatNetworkOptionsMap(value);
-                }
-            }
-        }
-        delete map['@type'];
-    }
-
     function draw()
     {
         var container = document.getElementById('network');
         var options = {
+            height: getVisNetworkHeight(),
+            interaction: {
+                navigationButtons: true,
+                keyboard: {
+                    enabled: true,
+                    speed: {x: 5, y: 5, zoom: 0.02}
+                },
+                zoomView: true
+            },
             nodes: {
                 scaling: {
                     min: 16,
@@ -554,7 +547,7 @@ var Visualizer = (function ($) {
                 stabilization: {iterations: 2500}
             },
             layout: {
-                hierarchical: hierarchical,
+                hierarchical: _hierarchical,
                 improvedLayout : true,
                 randomSeed:2
             },
@@ -648,17 +641,6 @@ var Visualizer = (function ($) {
                     color: 'gray'   // gray
                 }
             }
-        };
-        //formatNetworkOptionsMap(options);
-        options.height = getVisNetworkHeight();
-        options.layout.hierarchical = _hierarchical;
-        options.interaction = {
-            navigationButtons: true,
-            keyboard: {
-                enabled: true,
-                speed: {x: 5, y: 5, zoom: 0.02}
-            },
-            zoomView: true
         };
 
         if (_network) { // clean up memory
