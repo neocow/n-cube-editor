@@ -1535,7 +1535,6 @@ var NCE = (function ($)
 
     function loadCube()
     {
-        console.log('fired');
         saveState();
         try
         {
