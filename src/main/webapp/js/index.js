@@ -838,6 +838,8 @@ var NCE = (function ($)
                 buildTabOverflow(maxTabs, len);
             }
             selectTab(cubeInfo);
+        } else {
+            switchTabPane(null);
         }
     }
 
@@ -1535,7 +1537,6 @@ var NCE = (function ($)
 
     function loadCube()
     {
-        console.log('fired');
         saveState();
         try
         {

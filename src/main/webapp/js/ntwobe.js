@@ -515,6 +515,9 @@ var NCubeEditor2 = (function ($) {
         }
 
         var col = Object.keys(axis.columns)[0];
+        if (!col) {
+            return;
+        }
         var id = col.substring(0, col.length - AXIS_DEFAULT.length);
         axis.id = id;
         return id;

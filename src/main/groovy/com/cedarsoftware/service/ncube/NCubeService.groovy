@@ -199,6 +199,11 @@ class NCubeService
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + cubeName + "' not found for app: " + appId)
         }
 
+        if (StringUtilities.isEmpty(axisName))
+        {
+            axisName = refAxisName
+        }
+
         long maxId = -1
         Iterator<Axis> i = nCube.getAxes().iterator()
         while (i.hasNext())
