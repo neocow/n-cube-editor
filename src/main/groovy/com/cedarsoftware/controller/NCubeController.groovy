@@ -292,7 +292,7 @@ class NCubeController extends BaseController
         }
     }
 
-    String getVisualizerJson(ApplicationID appId, Map options)
+    Map getVisualizerJson(ApplicationID appId, Map options)
     {
         try
         {
@@ -303,7 +303,7 @@ class NCubeController extends BaseController
             Visualizer vis = new Visualizer()
             vis.input = [options:options]
             vis.ncube = nCubeService.getCube(appId, cubeName)
-            return vis.run()
+            return vis.run() as Map
         }
         catch (Exception e)
         {
@@ -1579,7 +1579,8 @@ class NCubeController extends BaseController
                     'n-cube-old':[html:'html/ncube.html',img:'img/letter-o.png'],
                     'JSON':[html:'html/jsonEditor.html',img:'img/letter-j.png'],
                     'Details':[html:'html/details.html',img:'img/letter-d.png'],
-                    'Test':[html:'html/test.html',img:'img/letter-t.png']
+                    'Test':[html:'html/test.html',img:'img/letter-t.png'],
+                    'Visualizer':[html:'html/visualize.html', img:'img/letter-v.png']
             ]
         }
     }
@@ -2202,7 +2203,7 @@ class NCubeController extends BaseController
     static Map convertAxis(Axis axis) throws IOException
     {
         String json = JsonWriter.objectToJson(axis, [(JsonWriter.TYPE): false] as Map)
-        Map axisConverted = JsonReader.jsonToMaps(json)
+        Map axisConverted = (Map) JsonReader.jsonToJava(json, [(JsonReader.USE_MAPS):true] as Map)
         axisConverted.'@type' = axis.getClass().getName()
         Object[] cols = axis.getColumns() as Object[]
         axisConverted.remove('idToCol')
