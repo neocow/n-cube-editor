@@ -1579,8 +1579,8 @@ class NCubeController extends BaseController
                     'n-cube-old':[html:'html/ncube.html',img:'img/letter-o.png'],
                     'JSON':[html:'html/jsonEditor.html',img:'img/letter-j.png'],
                     'Details':[html:'html/details.html',img:'img/letter-d.png'],
-                    'Test':[html:'html/test.html',img:'img/letter-t.png',
-                    'Visualizer':[html:'html/visualize.js', img:'img/letter-v.png']]
+                    'Test':[html:'html/test.html',img:'img/letter-t.png'],
+                    'Visualizer':[html:'html/visualize.html', img:'img/letter-v.png']
             ]
         }
     }
