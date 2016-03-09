@@ -972,9 +972,8 @@ var NCubeEditor2 = (function ($) {
 
     var setUpColumnWidths = function()
     {
-        var getNewWidth = function(str, oldWidth, font) {
-            var tempWidth = $('<p>' + str + '</p>').canvasMeasureWidth(font);
-            return tempWidth > oldWidth ? tempWidth : oldWidth;
+        var getStringWidth = function(str, font) {
+            return $('<p>' + str + '</p>').canvasMeasureWidth(font);
         };
 
         var calcDomDims = function (value, type) {
@@ -983,25 +982,30 @@ var NCubeEditor2 = (function ($) {
             }
             var font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
             var width = 0;
-            var numLines = 1;
+            var lineWidths = [];
             var idx = value.indexOf('\n');
             if (idx < 0) {
-                width = getNewWidth(value, width, font);
+                width = getStringWidth(value, font);
+                lineWidths.push(width);
+                width = findWidth(0, width);
             } else {
                 var temp2;
                 var temp1 = value;
+                var tempWidth;
                 while (idx > -1) {
-                    numLines++;
                     temp2 = value.substring(0, idx);
-                    width = getNewWidth(temp2, width, font);
+                    tempWidth = getStringWidth(temp2, font);
+                    lineWidths.push(tempWidth);
+                    width = findWidth(width, tempWidth);
                     temp1 = temp1.substring(idx + 1);
                     idx = temp1.indexOf('\n');
                 }
-                width = getNewWidth(temp1, width, font);
+                tempWidth = getStringWidth(temp1, font);
+                lineWidths.push(tempWidth);
+                width = findWidth(width, tempWidth);
             }
 
-            var height = numLines * FONT_HEIGHT + 1;
-            var ret = {width:width, height:height};
+            var ret = {width:width, lineWidths:lineWidths};
             textDims[value] = ret;
             return ret;
         };
@@ -1074,8 +1078,8 @@ var NCubeEditor2 = (function ($) {
                         var value = getTextCellValue(cell);
                         var dims = calcDomDims(value, cell.type);
                         width = dims.width + CALC_WIDTH_BASE_MOD;
-                        setHeightForCellRow(cellKey, dims.height);
                         width = findWidth(topWidths[colId], width);
+                        setHeightForCellRow(cellKey, width, dims);
                     }
 
                     topWidths[colId] = width;
@@ -1131,8 +1135,8 @@ var NCubeEditor2 = (function ($) {
                     var value = getTextCellValue(cell);
                     var dims = calcDomDims(value, cell.type);
                     var width = dims.width + CALC_WIDTH_BASE_MOD;
-                    setHeightForCellRow(cellKey, dims.height);
                     correctWidth = findWidth(oldWidth, width);
+                    setHeightForCellRow(cellKey, correctWidth, dims);
                     oldWidth = correctWidth;
                 }
                 _columnWidths.push(correctWidth);
@@ -1159,7 +1163,7 @@ var NCubeEditor2 = (function ($) {
             return correctWidth;
         };
 
-        var setHeightForCellRow = function(cellId, newHeight) {
+        var setHeightForCellRow = function(cellId, colWidth, dims) {
             var cellIdArray = cellId.split('_');
             for (var i = 0, len = cellIdArray.length; i < len; i++) {
                 var id = cellIdArray[i];
@@ -1169,7 +1173,13 @@ var NCubeEditor2 = (function ($) {
                 }
             }
             var rowId = cellIdArray.join('_');
+            var lineWidths = dims.lineWidths;
+            var totalLines = 0;
+            for (var lineIdx = 0, numLines = lineWidths.length; lineIdx < numLines; lineIdx++) {
+                totalLines += Math.ceil(lineWidths[lineIdx] / colWidth);
+            }
 
+            var newHeight = totalLines * FONT_HEIGHT + 1;
             var prevHeight = heights[rowId] || MIN_ROW_HEIGHT;
             if (newHeight > prevHeight) {
                 prevHeight = newHeight;
