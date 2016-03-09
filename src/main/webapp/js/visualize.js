@@ -908,7 +908,9 @@ var Visualizer = (function ($) {
         var keys = Object.keys(_savedScope);
         for (var i = 0, len = keys.length; i < len; i++) {
             var expression = _savedScope[keys[i]];
-            scopeText += expression.key + ':' + expression.value + ', ';
+            if (expression.isApplied) {
+                scopeText += expression.key + ':' + expression.value + ', ';
+            }
         }
         scopeText = scopeText.substring(0, scopeText.length - 2);
         return scopeText;
