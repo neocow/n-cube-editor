@@ -2214,7 +2214,7 @@ class NCubeController extends BaseController
             Map col = columnToMap(actualCol)
             CellInfo cellInfo = new CellInfo(actualCol.getValue())
             String value = cellInfo.value
-            if (axis.valueType == AxisValueType.DATE && axis.type != AxisType.SET)
+            if (axis.valueType == AxisValueType.DATE && axis.type != AxisType.SET && value != null)
             {
                 value = NO_QUOTES_REGEX.matcher(value).replaceAll("")
             }
