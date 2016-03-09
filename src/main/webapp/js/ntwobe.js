@@ -366,6 +366,7 @@ var NCubeEditor2 = (function ($) {
             } else {
                 delay(function() {
                     runSearch();
+                    searchDown();
                 }, 500);
             }
         });
@@ -3233,14 +3234,6 @@ var NCubeEditor2 = (function ($) {
 
     var storeHiddenColumns = function() {
         saveOrDeleteValue(_hiddenColumns, getStorageKey(HIDDEN_COLUMNS));
-    };
-
-    var saveOrDeleteValue = function(obj, storageKey) {
-        if (obj && Object.keys(obj).length > 0) {
-            localStorage[storageKey] = JSON.stringify(obj);
-        } else {
-            delete localStorage[storageKey];
-        }
     };
 
     // =============================================== End Column Hiding ===============================================
