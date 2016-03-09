@@ -115,12 +115,23 @@ var Visualizer = (function ($) {
     function buildScopeFromText(scopeString) {
         var newScope = {};
         var tuples = scopeString.split(',');
-        for (var i = 0; i < tuples.length; i++) {
+        for (var i = 0, iLen = tuples.length; i < iLen; i++) {
             var tuple = tuples[i].split(':');
             var key = tuple[0].trim();
             var value = tuple[1].trim();
             newScope[key] = value;
-            _savedScope[key] = {isApplied:true, key:key, value:value};
+            var shouldInsertNewExpression = true;
+            for (var j = 0, jLen = _savedScope.length; j < jLen; j++) {
+                var expression = _savedScope[j];
+                if (expression.isApplied && expression.key === key) {
+                    expression.value = value;
+                    shouldInsertNewExpression = false;
+                    break;
+                }
+            }
+            if (shouldInsertNewExpression) {
+                _savedScope.push = {isApplied: true, key: key, value: value};
+            }
         }
         saveScope();
         return newScope;
@@ -818,7 +829,7 @@ var Visualizer = (function ($) {
     }
 
     function scopeBuilderSave() {
-        _savedScope = {};
+        _savedScope = [];
         var trs = _scopeBuilderTable.find('tr.scope-expression');
         for (var trIdx = 0, trLen = trs.length; trIdx < trLen; trIdx++) {
             var tr = $(trs[trIdx]);
@@ -826,7 +837,7 @@ var Visualizer = (function ($) {
             scopeExpression.isApplied = tr.find('.isApplied').prop('checked');
             scopeExpression.key = tr.find('.expressionKey').val();
             scopeExpression.value = tr.find('.expressionValue').val();
-            _savedScope[scopeExpression.key] = scopeExpression;
+            _savedScope.push(scopeExpression);
         }
 
         saveScope();
@@ -882,9 +893,8 @@ var Visualizer = (function ($) {
 
     function scopeBuilderOpen() {
         scopeBuilderClear();
-        var keys = Object.keys(_savedScope);
-        for (var i = 0, len = keys.length; i < len; i++) {
-            var expression = _savedScope[keys[i]];
+        for (var i = 0, len = _savedScope.length; i < len; i++) {
+            var expression = _savedScope[i];
             var tr = addNewScopeBuilderTableRow();
             tr.find('.isApplied').prop('checked', expression.isApplied);
             tr.find('.expressionKey').val(expression.key);
@@ -905,9 +915,8 @@ var Visualizer = (function ($) {
     function buildScopeText() {
         _savedScope = getSavedScope();
         var scopeText = '';
-        var keys = Object.keys(_savedScope);
-        for (var i = 0, len = keys.length; i < len; i++) {
-            var expression = _savedScope[keys[i]];
+        for (var i = 0, len = _savedScope.length; i < len; i++) {
+            var expression = _savedScope[i];
             if (expression.isApplied) {
                 scopeText += expression.key + ':' + expression.value + ', ';
             }

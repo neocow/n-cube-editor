@@ -86,18 +86,18 @@ var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
 var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 
-var DEFAULT_SCOPE = {
-    context: {
+var DEFAULT_SCOPE = [
+    {
         isApplied: 'true',
         key: 'context',
         value: 'Edit'
     },
-    action: {
+    {
         isApplied: 'true',
         key: 'action',
         value: 'Edit'
     }
-};
+];
 
 var KEY_CODES = {
     MOUSE_LEFT: 1,
