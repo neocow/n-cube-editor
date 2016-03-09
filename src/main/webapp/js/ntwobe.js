@@ -1900,11 +1900,12 @@ var NCubeEditor2 = (function ($) {
 
         li = $('<li/>');
         an = $('<a href="#">');
-        an[0].innerHTML = "Revert column widths";
+        an[0].innerHTML = "Revert column / row sizing";
         if (localStorage[getStorageKey(COLUMN_WIDTHS)]) {
             an.click(function (e) {
                 e.preventDefault();
-                delete localStorage[getStorageKey(COLUMN_WIDTHS)]
+                saveOrDeleteValue(null, getStorageKey(COLUMN_WIDTHS));
+                saveOrDeleteValue(null, getStorageKey(ROW_HEIGHTS));
                 reload();
             });
         } else {
