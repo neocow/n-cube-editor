@@ -863,7 +863,7 @@ var Visualizer = (function ($) {
     }
 
     // TODO - extract to cube
-    var availableScopeKeys = ['context','action','state','date','product','coverage','risk','classCode','programType','lob','businessUnit','producer'];
+    var availableScopeKeys = ['context','action','state','date','product','coverage','risk','classCode','programType','lob','businessUnit','producer','policyControlDate','quoteDate','LocationState'];
     function addNewScopeBuilderTableRow() {
         var tr = $('<tr/>').prop('class','scope-expression');
         var appliedCheckbox = $('<input/>').prop({type:'checkbox', class:'isApplied'});
