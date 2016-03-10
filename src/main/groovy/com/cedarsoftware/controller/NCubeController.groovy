@@ -1456,31 +1456,39 @@ class NCubeController extends BaseController
         }
     }
 
-    void acceptTheirs(ApplicationID appId, String cubeName, String branchSha1)
+    int acceptTheirs(ApplicationID appId, Object[] cubeNames, Object[] branchSha1)
     {
         try
         {
             appId = addTenant(appId)
-            isAllowed(appId, cubeName, Delta.Type.UPDATE)
-            nCubeService.acceptTheirs(appId, cubeName, branchSha1, getUserForDatabase())
+            for (int i = 0; i < cubeNames.length; i++)
+            {
+                isAllowed(appId, (String)cubeNames[i], Delta.Type.UPDATE)
+            }
+            return nCubeService.acceptTheirs(appId, cubeNames, branchSha1, getUserForDatabase())
         }
         catch (Exception e)
         {
             fail(e)
+            return 0
         }
     }
 
-    void acceptMine(ApplicationID appId, String cubeName, String headSha1)
+    int acceptMine(ApplicationID appId, Object[] cubeNames, Object[] headSha1)
     {
         try
         {
             appId = addTenant(appId)
-            isAllowed(appId, cubeName, Delta.Type.UPDATE)
-            nCubeService.acceptMine(appId, cubeName, getUserForDatabase())
+            for (int i = 0; i < cubeNames.length; i++)
+            {
+                isAllowed(appId, (String)cubeNames[i], Delta.Type.UPDATE)
+            }
+            return nCubeService.acceptMine(appId, cubeNames, getUserForDatabase())
         }
         catch (Exception e)
         {
             fail(e)
+            return 0
         }
     }
 
