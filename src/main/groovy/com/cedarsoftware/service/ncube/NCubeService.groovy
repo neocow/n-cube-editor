@@ -118,14 +118,14 @@ class NCubeService
         NCubeManager.deleteBranch(appId);
     }
 
-    void acceptTheirs(ApplicationID appId, String cubeName, String branchSha1, String username)
+    int acceptTheirs(ApplicationID appId, Object[] cubeNames, Object[] branchSha1, String username)
     {
-        NCubeManager.mergeAcceptTheirs(appId, cubeName, branchSha1, username)
+        NCubeManager.mergeAcceptTheirs(appId, cubeNames, branchSha1, username)
     }
 
-    void acceptMine(ApplicationID appId, String cubeName, String username)
+    int acceptMine(ApplicationID appId, Object[] cubeNames, String username)
     {
-        NCubeManager.mergeAcceptMine(appId, cubeName, username)
+        NCubeManager.mergeAcceptMine(appId, cubeNames, username)
     }
 
     void createCube(ApplicationID appId, NCube ncube, String username)
