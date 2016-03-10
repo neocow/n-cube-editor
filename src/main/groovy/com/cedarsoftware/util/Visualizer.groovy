@@ -61,6 +61,7 @@ class Visualizer extends NCubeGroovyExpression
 	private static final String SPACE = '&nbsp;'
 
 	public static final String CELL_INFO_SUFFIX = '_CELL_INFO'
+	public static final String SOURCE_SCOPE_KEY_PREFIX = 'source'
 
 	private VisualizerHelper helper = new VisualizerHelper()
 
@@ -575,7 +576,11 @@ class Visualizer extends NCubeGroovyExpression
 		}
 		else
 		{
-			String newScopeKey = getDotSuffix(sourceFieldRpmType).toLowerCase()
+			String newScopeKey = sourceFieldRpmType.toLowerCase()
+			String oldValue = scope[newScopeKey]
+			if (oldValue){
+				newScope[SOURCE_SCOPE_KEY_PREFIX + sourceFieldRpmType] = oldValue
+			}
 			newScope[newScopeKey] = targetFieldName
 		}
 
