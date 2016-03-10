@@ -4,8 +4,6 @@ import com.cedarsoftware.ncube.NCube
 import groovy.transform.CompileStatic
 import ncube.grv.exp.NCubeGroovyExpression
 
-import java.text.Collator
-
 /**
  * Creates the json used to create a visualization of the rpm cubes associated with a given rpm cube.
  */
@@ -178,9 +176,14 @@ class Visualizer extends NCubeGroovyExpression
 		long targetLevel = stackInfo[TARGET_LEVEL] as long
 		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, stackInfo[STACK_KEY] as long, targetLevel)
 
-		if (hasVisited(targetCube.sha1() + targetScope.toString()))
+		String visitedKey = targetCube.sha1() + targetScope.toString()
+		if (visited.contains(visitedKey))
 		{
 			return
+		}
+		else
+		{
+			visited << visitedKey
 		}
 
 		(groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set) << busType
@@ -282,9 +285,14 @@ class Visualizer extends NCubeGroovyExpression
 
 		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, stackInfo[STACK_KEY] as long, targetLevel)
 
-		if (hasVisited(targetCube.sha1() + targetScope.toString()))
+		String visitedKey = targetCube.sha1() + targetScope.toString()
+		if (visited.contains(visitedKey))
 		{
 			return
+		}
+		else
+		{
+			visited << visitedKey
 		}
 
 		(groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set) << busType
@@ -455,15 +463,15 @@ class Visualizer extends NCubeGroovyExpression
 	{
 		StringBuilder traits = new StringBuilder()
 		traits.append('<br><br><strong>class traits = </strong><br>')
-
-		List classTraitMap = getClassTraits(traitMaps)
-		classTraitMap.each(){
-			String traitt = it as String
-			if (!traitt.contains(CELL_INFO_SUFFIX)) {
-				traits.append(SPACE + traitt + '<br>')
+		Map classTraits = traitMaps[CLASS_TRAITS] as Map
+		classTraits.each { k,v ->
+			String key = k as String
+			String value = v as String
+			if (!key.contains(CELL_INFO_SUFFIX))
+			{
+				traits.append(SPACE + key + ' = ' + value + '<br>')
 			}
 		}
-
 		return traits.toString()
 	}
 
@@ -517,16 +525,6 @@ class Visualizer extends NCubeGroovyExpression
 		}
 
 		return traitInfoString
-	}
-
-	private static List getClassTraits(Map traitMaps)
-	{
-		Map traits = traitMaps[CLASS_TRAITS] as Map
-		List traitsList = [] as List
-		traits.each() { k, v -> traitsList << (k as String) + " = " + (v as String) }
-		traitsList.removeAll { (it as List).contains('null')}
-		List sortedList =  traitsList.toArray().sort(false, Collator.instance) as List
-		return sortedList
 	}
 
 	private static String getNextTargetCubeName(NCube targetCube, Map traitsMap, String sourceFieldRpmType, String targetFieldName)
@@ -591,17 +589,6 @@ class Visualizer extends NCubeGroovyExpression
 		}
 
 		return null
-	}
-
-	private boolean hasVisited(String visitedKey)
-	{
-		if (visited.contains(visitedKey))
-		{
-			return true
-		}
-
-		visited << visitedKey
-		return false
 	}
 
 	private static String getDotSuffix(String value)
