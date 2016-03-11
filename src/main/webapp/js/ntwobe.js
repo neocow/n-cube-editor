@@ -31,6 +31,7 @@ var NCubeEditor2 = (function ($) {
     var _clipboard = null;
     var _clipFormat = CLIP_NCE;
     var _searchField = null;
+    var _searchInfo = null;
     var _searchCoords = null;
     var _currentSearchResultIndex = null;
     var _ncubeContent = null;
@@ -100,6 +101,7 @@ var NCubeEditor2 = (function ($) {
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
             _searchField = document.getElementById('search-field');
+            _searchInfo = $('#search-info');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
             _isRefAxis = $('#isRefAxis');
@@ -347,13 +349,25 @@ var NCubeEditor2 = (function ($) {
     };
 
     var setSearchHelperText = function() {
-        var el = document.getElementById('search-info');
-        var len = _searchCoords.length;
-        var idx = _currentSearchResultIndex + 1;
-        el.innerHTML = len > 0 ? idx + ' of ' + len : '';
+        var query = _searchField.value;
+        if (query !== null && query !== '') {
+            var len = _searchCoords.length;
+            var idx = _currentSearchResultIndex + 1;
+            _searchInfo[0].innerHTML = len > 0 ? idx + ' of ' + len : 'not found';
+        } else {
+            _searchInfo[0].innerHTML = '';
+        }
     };
 
     var addSearchListeners = function() {
+        $(_searchField).focus(function() {
+            hot.addHook('beforeKeyDown', onBeforeKeyDown);
+        });
+
+        $(_searchField).blur(function() {
+            hot.removeHook('beforeKeyDown', onBeforeKeyDown);
+        });
+
         $(_searchField).keyup(function (e) {
             var keyCode = e.keyCode;
             if (keyCode === KEY_CODES.ENTER) {
@@ -389,7 +403,7 @@ var NCubeEditor2 = (function ($) {
             $(this).blur();
         });
 
-        $('#search-info').click(function() {
+        _searchInfo.click(function() {
             _searchField.focus();
         });
     };
@@ -459,31 +473,148 @@ var NCubeEditor2 = (function ($) {
     var searchCubeData = function(query) {
         _searchCoords = [];
         _currentSearchResultIndex = -1;
+
         var queryLower = query.toLowerCase();
+        var multiplier = 1;
+        var rowSpacing = numRows - 2;
+        var axisNum, colNum, axisLen, colLen;
+        var rowSpacingHelper = [];
+
+        var isHorizAxis = function(axisNum) {
+            return axisLen > 1 && axisNum === colOffset;
+        };
+
+        var getColumnTableCoords = function() {
+            if (isHorizAxis(axisNum)) {
+                addToSearchCoords(1, colOffset + colNum);
+            } else {
+                if (getAppliedFilters().length === 0) {
+                    var rowIdx = colNum * rowSpacing;
+                    for (var m = 0; m < multiplier; m++) {
+                        addToSearchCoords(rowIdx + 2, axisNum);
+                        rowIdx += rowSpacing * colLen;
+                    }
+                } else {
+                    var axisOrder = [];
+                    for (var axisIdx = 0; axisIdx < colOffset; axisIdx++) {
+                        axisOrder.push(getAxisId(axes[axisIdx]));
+                    }
+                    for (var cIdx = 0, cLen = _columnIdCombinationsToShow.length; cIdx < cLen; cIdx++) {
+                        var combo = _columnIdCombinationsToShow[cIdx];
+                        var colId = axisColumnMap[axes[axisNum].name][colNum];
+                        var charIdx = combo.indexOf(colId);
+                        if (charIdx > -1) {
+                            var add = cIdx === 0;
+                            if (!add) {
+                                var getAxesOrderedId = function(numericallyOrderedString) {
+                                    var arr = numericallyOrderedString.split('_');
+                                    arr.sort(function(x, y) {
+                                        var xId = getAxisIdFromString(x);
+                                        var yId = getAxisIdFromString(y);
+                                        return axisOrder.indexOf(xId) > axisOrder.indexOf(yId);
+                                    });
+                                    return arr.join('_');
+                                };
+                                var prevCombo = _columnIdCombinationsToShow[cIdx - 1];
+                                var curStr = getAxesOrderedId(combo);
+                                var prevStr = getAxesOrderedId(prevCombo);
+                                var curSubStr = curStr.substring(0, curStr.indexOf(colId));
+                                var prevSubStr = prevStr.substring(0, prevStr.indexOf(colId));
+                                add = curSubStr !== prevSubStr;
+                            }
+                            if (add) {
+                                addToSearchCoords(cIdx + 2, axisNum);
+                            }
+                        }
+                    }
+                }
+            }
+        };
 
         // search all axes
-        for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
+        for (axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
             var axis = axes[axisNum];
             var cols = axis.columns;
             var colKeys = Object.keys(cols);
+            colLen = colKeys.length;
+            rowSpacing /= colLen;
+
+            rowSpacingHelper.push({axisName:axis.name, order:getAxisId(axis), rowSpacing:rowSpacing, horizAxis:isHorizAxis(axisNum)});
 
             // search all columns for an axis
-            for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
+            for (colNum = 0; colNum < colLen; colNum++)
+            {
                 var col = cols[colKeys[colNum]];
                 var colVal = getRowHeaderPlainTextForWidth(axis, col);
-                col.isSearchResult = colVal.toLowerCase().indexOf(queryLower) > -1;
+                col.isSearchResult = false;
+                if (colVal.toLowerCase().indexOf(queryLower) > -1) {
+                    col.isSearchResult = true;
+                    getColumnTableCoords();
+                }
             }
+            multiplier *= colLen;
         }
+        rowSpacingHelper.sort(function(a, b) {
+            return a.order - b.order;
+        });
 
         // search cells
         var cells = data.cells;
         var cellKeys = Object.keys(cells);
-        for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++) {
+        for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++)
+        {
             var cellId = cellKeys[cellNum];
             var cell = cells[cellId];
             var cellVal = getTextCellValue(cell);
             cell.isSearchResult = cellVal.toLowerCase().indexOf(queryLower) > -1;
+
+            if (cell.isSearchResult) {
+                var colIds = cellId.split('_');
+                var r = 0;
+                var c = 0;
+                if (getAppliedFilters().length === 0) {
+                    for (var colIdNum = 0, colIdLen = colIds.length; colIdNum < colIdLen; colIdNum++) {
+                        var curColId = colIds[colIdNum];
+                        var curHelperObj = rowSpacingHelper[colIdNum];
+                        var curColNum = axisColumnMap[curHelperObj.axisName].indexOf(curColId);
+
+                        if (curHelperObj.horizAxis) {
+                            c = curColNum;
+                        } else {
+                            r += curColNum * curHelperObj.rowSpacing;
+                        }
+                    }
+                    addToSearchCoords(r + 2, c + (colOffset || 1));
+                } else {
+                    var topAxis = axes[colOffset];
+                    var topAxisId = getAxisId(topAxis);
+                    for (var cellIdIdx = 0, cellIdLen = colIds.length; cellIdIdx < cellIdLen; cellIdIdx++) {
+                        if (getAxisIdFromString(colIds[cellIdIdx]) === topAxisId) {
+                            var topColId = colIds.splice(cellIdIdx, 1)[0];
+                            c = axisColumnMap[topAxis.name].indexOf(topColId);
+                            var colIdCombo = colIds.join('_');
+                            r = _columnIdCombinationsToShow.indexOf(colIdCombo);
+                            addToSearchCoords(r + 2, c + (colOffset || 1));
+                            break;
+                        }
+                    }
+                }
+            }
         }
+
+        _searchCoords.sort(function(a, b) {
+            var aa = a.split('_');
+            var ab = b.split('_');
+            var rowA = parseInt(aa[0]);
+            var rowB = parseInt(ab[0]);
+            if (rowA === rowB) {
+                var colA = parseInt(aa[1]);
+                var colB = parseInt(ab[1]);
+                return colA - colB;
+            } else {
+                return rowA - rowB;
+            }
+        });
     };
 
     var colorAxisButtons = function ()
@@ -519,9 +650,13 @@ var NCubeEditor2 = (function ($) {
         if (!col) {
             return;
         }
-        var id = col.substring(0, col.length - AXIS_DEFAULT.length);
+        var id = getAxisIdFromString(col);
         axis.id = id;
         return id;
+    };
+
+    var getAxisIdFromString = function(id) {
+        return id.substring(0, id.length - AXIS_DEFAULT.length);
     };
 
     var getAxisColumn = function(axis, colNum) {
@@ -1509,7 +1644,6 @@ var NCubeEditor2 = (function ($) {
                 var column = getColumnHeader(col);
                 td.innerHTML = getRowHeaderValue(axes[colOffset], column);
                 if (column.isSearchResult) {
-                    addToSearchCoords(row, col);
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
             }
@@ -1521,18 +1655,13 @@ var NCubeEditor2 = (function ($) {
         else if (col === 0 || col < colOffset) {
             var rowHeader = getRowHeader(row, col);
             var axis = axes[col];
-            var shouldAddToSearchResults = false;
-            if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id) {
+            if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (col === 0 || (col > 0 && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = getRowHeaderValue(axis, rowHeader);
-                shouldAddToSearchResults = true;
             }
             td.className += CLASS_HANDSON_TABLE_HEADER;
             if (getRowHeader(row, col).isSearchResult) {
-                if (shouldAddToSearchResults) {
-                    addToSearchCoords(row, col);
-                }
                 td.className += CLASS_HANDSON_SEARCH_RESULT;
             }
 
@@ -1548,7 +1677,6 @@ var NCubeEditor2 = (function ($) {
             td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData) {
                 if (cellData.isSearchResult) {
-                    addToSearchCoords(row, col);
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
 
