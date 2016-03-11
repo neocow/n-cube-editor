@@ -7,6 +7,7 @@ var NCubeEditor2 = (function ($) {
     var numRows = 0;
     var cubeName = null;
     var axes = null;
+    var _axisIdsInOrder = null;
     var colOffset = null;
     var data = null;
     var prefixes = null;
@@ -470,6 +471,16 @@ var NCubeEditor2 = (function ($) {
         nce.saveSearchQuery(null);
     };
 
+    var getAxesOrderedId = function(numericallyOrderedString) {
+        var arr = numericallyOrderedString.split('_');
+        arr.sort(function(x, y) {
+            var xId = getAxisIdFromString(x);
+            var yId = getAxisIdFromString(y);
+            return _axisIdsInOrder.indexOf(xId) - _axisIdsInOrder.indexOf(yId);
+        });
+        return arr.join('_');
+    };
+
     var searchCubeData = function(query) {
         _searchCoords = [];
         _currentSearchResultIndex = -1;
@@ -487,45 +498,35 @@ var NCubeEditor2 = (function ($) {
         var getColumnTableCoords = function() {
             if (isHorizAxis(axisNum)) {
                 addToSearchCoords(1, colOffset + colNum);
-            } else {
-                if (getAppliedFilters().length === 0) {
-                    var rowIdx = colNum * rowSpacing;
-                    for (var m = 0; m < multiplier; m++) {
-                        addToSearchCoords(rowIdx + 2, axisNum);
-                        rowIdx += rowSpacing * colLen;
-                    }
-                } else {
-                    var axisOrder = [];
-                    for (var axisIdx = 0; axisIdx < colOffset; axisIdx++) {
-                        axisOrder.push(getAxisId(axes[axisIdx]));
-                    }
-                    for (var cIdx = 0, cLen = _columnIdCombinationsToShow.length; cIdx < cLen; cIdx++) {
-                        var combo = _columnIdCombinationsToShow[cIdx];
-                        var colId = axisColumnMap[axes[axisNum].name][colNum];
-                        var charIdx = combo.indexOf(colId);
-                        if (charIdx > -1) {
-                            var add = cIdx === 0;
-                            if (!add) {
-                                var getAxesOrderedId = function(numericallyOrderedString) {
-                                    var arr = numericallyOrderedString.split('_');
-                                    arr.sort(function(x, y) {
-                                        var xId = getAxisIdFromString(x);
-                                        var yId = getAxisIdFromString(y);
-                                        return axisOrder.indexOf(xId) > axisOrder.indexOf(yId);
-                                    });
-                                    return arr.join('_');
-                                };
-                                var prevCombo = _columnIdCombinationsToShow[cIdx - 1];
-                                var curStr = getAxesOrderedId(combo);
-                                var prevStr = getAxesOrderedId(prevCombo);
-                                var curSubStr = curStr.substring(0, curStr.indexOf(colId));
-                                var prevSubStr = prevStr.substring(0, prevStr.indexOf(colId));
-                                add = curSubStr !== prevSubStr;
-                            }
-                            if (add) {
-                                addToSearchCoords(cIdx + 2, axisNum);
-                            }
+                return;
+            }
+            if (getAppliedFilters().length === 0) {
+                var rowIdx = colNum * rowSpacing;
+                for (var m = 0; m < multiplier; m++) {
+                    addToSearchCoords(rowIdx + 2, axisNum);
+                    rowIdx += rowSpacing * colLen;
+                }
+                return;
+            }
+            for (var cIdx = 0, cLen = _columnIdCombinationsToShow.length; cIdx < cLen; cIdx++) {
+                var combo = _columnIdCombinationsToShow[cIdx];
+                var colId = axisColumnMap[axes[axisNum].name][colNum];
+                if (combo.indexOf(colId) > -1) {
+                    var add = cIdx === 0;
+                    if (!add) {
+                        var prevCombo = _columnIdCombinationsToShow[cIdx - 1];
+                        if (prevCombo.indexOf(colId) === -1) {
+                            add = true;
+                        } else {
+                            var curStr = getAxesOrderedId(combo);
+                            var prevStr = getAxesOrderedId(prevCombo);
+                            var curSubStr = curStr.substring(0, curStr.indexOf(colId));
+                            var prevSubStr = prevStr.substring(0, prevStr.indexOf(colId));
+                            add = curSubStr !== prevSubStr;
                         }
+                    }
+                    if (add) {
+                        addToSearchCoords(cIdx + 2, axisNum);
                     }
                 }
             }
@@ -933,6 +934,7 @@ var NCubeEditor2 = (function ($) {
 
         var determineAxesOrder = function (cubeAxes) {
             axes = [];
+            _axisIdsInOrder = [];
             var i, len, axis;
             if (hasCustomAxisOrder())
             {
@@ -942,6 +944,7 @@ var NCubeEditor2 = (function ($) {
                     axis = cubeAxes[order[i]];
                     getColumnLength(axis);
                     axes.push(axis);
+                    _axisIdsInOrder.push(getAxisId(axis));
                 }
             }
             else
@@ -972,6 +975,10 @@ var NCubeEditor2 = (function ($) {
                 }
                 horizontal = axes.splice(horizontal, 1);
                 axes.push(horizontal[0]);
+
+                for (i = 0, len = axes.length; i < len; i++) {
+                    _axisIdsInOrder.push(getAxisId(axes[i]));
+                }
             }
         };
 
@@ -1302,7 +1309,7 @@ var NCubeEditor2 = (function ($) {
             var cellIdArray = cellId.split('_');
             for (var i = 0, len = cellIdArray.length; i < len; i++) {
                 var id = cellIdArray[i];
-                if (id.substring(0, id.length - AXIS_DEFAULT.length).indexOf(horizAxisId) > -1) {
+                if (getAxisIdFromString(id).indexOf(horizAxisId) > -1) {
                     cellIdArray.splice(i, 1);
                     break;
                 }
