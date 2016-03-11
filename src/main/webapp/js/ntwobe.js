@@ -191,35 +191,38 @@ var NCubeEditor2 = (function ($) {
                 var isModalDisplayed = $('body').hasClass('modal-open');
                 var focus = $(':focus');
 
-                if (!isModalDisplayed && focus && ['cube-search','cube-search-content','search-field'].indexOf(focus.attr('id')) < 0)
-                {
-                    if (e.metaKey || e.ctrlKey)
-                    {
+                if (!isModalDisplayed && focus && ['cube-search','cube-search-content','search-field'].indexOf(focus.attr('id')) < 0) {
+                    var keyCode = e.keyCode;
+                    if (e.metaKey || e.ctrlKey) {
                         // Control Key (command in the case of Mac)
-                        if (e.keyCode === KEY_CODES.F) {
+                        if (keyCode === KEY_CODES.F) {
                             e.preventDefault();
                             _searchField.focus();
                         }
-                        else if (e.keyCode == KEY_CODES.X) {
+                        else if (keyCode == KEY_CODES.X) {
                             if (CLIP_NCE == _clipFormat) {
                                 editCutCopy(true);  // true = isCut
                             } else {
                                 excelCutCopy(true);
                             }
                         }
-                        else if (e.keyCode == KEY_CODES.C)
+                        else if (keyCode == KEY_CODES.C)
                         {
                             if (CLIP_NCE == _clipFormat) {
                                 editCutCopy(false); // false = copy
                             } else {
                                 excelCutCopy(false);
                             }
-                        } else if (e.keyCode == KEY_CODES.K) {
+                        } else if (keyCode == KEY_CODES.K) {
                             toggleClipFormat(e);
-                        } else if (e.keyCode == KEY_CODES.V) {
+                        } else if (keyCode == KEY_CODES.V) {
                             // Ctrl-V
                             // Point focus to hidden text area so that it will receive the pasted content
                             editPaste();
+                        }
+                    } else {
+                        if (keyCode === KEY_CODES.DELETE) {
+                            editCellClear();
                         }
                     }
                 }
@@ -2309,11 +2312,13 @@ var NCubeEditor2 = (function ($) {
     };
 
     var CellEditor = NcubeBaseEditor.prototype.extend();
-    CellEditor.prototype.open = function() {
-        NcubeBaseEditor.prototype.open.apply(this, arguments);
-
+    CellEditor.prototype.prepare = function(row, col, prop, td, cellProperties) {
+        NcubeBaseEditor.prototype.prepare.apply(this, arguments);
         _tableCellId = getCellId(this.row, this.col);
         _cellId = _tableCellId.split('_');
+    };
+    CellEditor.prototype.open = function() {
+        NcubeBaseEditor.prototype.open.apply(this, arguments);
         editCell();
     };
     CellEditor.prototype.isOpened = function() {
