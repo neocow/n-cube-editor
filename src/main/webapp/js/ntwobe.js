@@ -148,6 +148,7 @@ var NCubeEditor2 = (function ($) {
             _filterModal = $('#filterModal');
             _filterTable = $('#filterTable');
 
+            addSelectAllNoneListeners();
             addAxisEditListeners();
             addColumnEditListeners();
             addColumnHideListeners();
@@ -2866,30 +2867,55 @@ var NCubeEditor2 = (function ($) {
 
     // ============================================== Column Editing== =================================================
 
+    var checkCurrentlyEditedColumn = function() {
+        var el = $(document.activeElement);
+        if (el.is('input')) {
+            el.parent().find('input[type="checkbox"]').prop('checked', 'true');
+            el.blur();
+            el.closest('.modal').focus();
+        }
+    };
+
     var addColumnEditListeners = function() {
-        $('#editColSelectAll').click(function () {
-            checkAll(true, '.editColCheckBox')
+        _editColumnModal.keyup(function(e) {
+            var keyCode = e.keyCode;
+            if (keyCode === KEY_CODES.ENTER) {
+                selectNone();
+                var cols = _columnList.prop('model').columns;
+                for (var i = 0, len = cols.length; i < len; i++) {
+                    cols[i].checked = false;
+                }
+                $(document.activeElement).blur();
+                editColAdd();
+            } else if (keyCode === KEY_CODES.DELETE) {
+                checkCurrentlyEditedColumn();
+                editColDelete();
+            } else if (keyCode === KEY_CODES.ARROW_UP) {
+                checkCurrentlyEditedColumn();
+                editColUp();
+            } else if (keyCode === KEY_CODES.ARROW_DOWN) {
+                checkCurrentlyEditedColumn();
+                editColDown();
+            }
         });
-        $('#editColSelectNone').click(function () {
-            checkAll(false, '.editColCheckBox')
-        });
+
         $('#editColAdd').click(function () {
-            editColAdd()
+            editColAdd();
         });
         $('#editColDelete').click(function () {
-            editColDelete()
+            editColDelete();
         });
         $('#editColUp').click(function () {
-            editColUp()
+            editColUp();
         });
         $('#editColDown').click(function () {
-            editColDown()
+            editColDown();
         });
         $('#editColumnsCancel').click(function () {
-            editColCancel()
+            editColCancel();
         });
         $('#editColumnsSave').click(function () {
-            editColSave()
+            editColSave();
         });
     };
 
@@ -2915,7 +2941,7 @@ var NCubeEditor2 = (function ($) {
         }
         sortColumns(axis);
         loadColumns(axis);
-        var moveBtnAvail = axis.preferredOrder == 1;
+        var moveBtnAvail = axis.preferredOrder === 1;
         if (moveBtnAvail === true) {
             $('#editColUp').show();
             $('#editColDown').show();
@@ -2955,7 +2981,7 @@ var NCubeEditor2 = (function ($) {
             'id': getUniqueId()
         };
 
-        if (loc == -1 || axis.preferredOrder == 0) {
+        if (loc == -1 || axis.preferredOrder === 0) {
             axis.columns.push(newCol);
             loc = input.length - 1;
         } else {
@@ -3234,14 +3260,6 @@ var NCubeEditor2 = (function ($) {
     // =============================================== Begin Column Hiding ==========================================
 
     var addColumnHideListeners = function() {
-        $('#hideColSelectAll').click(function ()
-        {
-            checkAll(true, '.commitCheck')
-        });
-        $('#hideColSelectNone').click(function ()
-        {
-            checkAll(false, '.commitCheck')
-        });
         $('#hideColumnsCancel').click(function ()
         {
             hideColCancel()

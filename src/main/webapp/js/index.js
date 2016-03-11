@@ -1141,13 +1141,6 @@ var NCE = (function ($)
 
     function addListeners()
     {
-        $('.select-all').click(function() {
-            checkAll(true, 'input[type="checkbox"]')
-        });
-        $('.select-none').click(function() {
-            checkAll(false, 'input[type="checkbox"]')
-        });
-
         _openTabsPanel.on('drop dragdrop', function(e) {
             $('.tooltip').hide();
             _tabDragIndicator.hide();
