@@ -215,6 +215,23 @@ var delay = (function(){
     };
 })();
 
+function selectAll() {
+    checkAll(true, 'input[type="checkbox"]');
+}
+
+function selectNone() {
+    checkAll(false, 'input[type="checkbox"]');
+}
+
+function addSelectAllNoneListeners() {
+    $('.select-all').click(function() {
+        selectAll();
+    });
+    $('.select-none').click(function() {
+        selectNone();
+    });
+}
+
 function addModalFilters() {
     $('.modal-filter').each(function() {
         var contentDiv = $(this);
