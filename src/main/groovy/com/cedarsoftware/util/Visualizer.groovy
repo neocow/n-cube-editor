@@ -87,7 +87,7 @@ class Visualizer extends NCubeGroovyExpression
 	{
 		Map options = input.options as Map
 		String startCubeName = options.startCubeName as String
-		Object[] selectedGroups = options.selectedGroups as Object[]
+		Set selectedGroups = options.selectedGroups as Set
 		String selectedLevel = options.selectedLevel as String
 		Map scope = options.scope as Map
 		helper.ncube = ncube
@@ -102,7 +102,7 @@ class Visualizer extends NCubeGroovyExpression
 		return [status: 'success', map: map, message: map.message]
 	}
 
-	private Map getRpmVisualizationMap(String startCubeName, Map scope, Object[] selectedGroups, String selectedLevel)
+	private Map getRpmVisualizationMap(String startCubeName, Map scope, Set selectedGroups, String selectedLevel)
 	{
 		levels[MAX_LEVEL] = 1
 		levels[NODE_COUNT] = 1
@@ -111,7 +111,7 @@ class Visualizer extends NCubeGroovyExpression
 		stackInfo[STACK_KEY] = 1
 
 		groups[ALL_GROUPS] = ALL_GROUPS_MAP
-		groups[SELECTED_GROUPS] = selectedGroups  == null ? ALL_GROUPS_MAP.keySet().toArray() : selectedGroups
+		groups[SELECTED_GROUPS] = selectedGroups  == null ? ALL_GROUPS_MAP.keySet() : selectedGroups
 		groups[AVAILABLE_GROUPS_ALL_LEVELS] = [] as Set
 		groups[GROUP_SUFFIX] = _ENUM
 
@@ -307,15 +307,10 @@ class Visualizer extends NCubeGroovyExpression
 	}
 
 	private void trimSelectedGroups() {
-		List availableSelectedGroups = []
-		List selectedGroups = groups[SELECTED_GROUPS] as List
-		groups[AVAILABLE_GROUPS_ALL_LEVELS].each() {
-			if (selectedGroups.contains(it)) {
-				availableSelectedGroups << it
-			}
-		}
-		groups[SELECTED_GROUPS] = availableSelectedGroups.toArray()
-		groups[AVAILABLE_GROUPS_ALL_LEVELS] = (groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set).toArray()
+		Iterable selected = groups[SELECTED_GROUPS] as Iterable
+		Set available = groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set
+		groups[SELECTED_GROUPS] = available.intersect(selected).toArray()
+		groups[AVAILABLE_GROUPS_ALL_LEVELS] = available.toArray()
 	}
 
 	private void addToStack(long targetLevel, Map nextTargetStackInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
