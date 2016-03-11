@@ -2643,29 +2643,44 @@ var NCubeEditor2 = (function ($) {
         }
 
         var cellInfo = result.data;
+        var value = null;
+        var dataType = null;
+        var isUrl = false;
+        var isCached = false;
+        if (cellInfo.value !== null || cellInfo.dataType !== null || cellInfo.isUrl || cellInfo.isCached) {
+            value = cellInfo.value;
+            dataType = cellInfo.dataType;
+            isUrl = cellInfo.isUrl;
+            isCached = cellInfo.isCached;
+        } else { // use cube defaults if exist
+            isUrl = data.defaultCellValueUrl !== undefined;
+            value = isUrl ? data.defaultCellValueUrl : data.defaultCellValue;
+            dataType = data.defaultCellValueType;
+            isCached = data.defaultCellValueCache;
+        }
         // Set the cell value (String)
-        var cellValue = cellInfo.value ? cellInfo.value : '';
+        var cellValue = value !== null ? value : '';
         _editCellValue.val(cellValue);
-        if (cellInfo.dataType == "null" || !cellInfo.dataType) {
-            cellInfo.dataType = "string";
+        if (dataType === null || !dataType) {
+            dataType = 'string';
         }
 
         // Set the correct entry in the drop-down
-        if (cellInfo.isUrl) {
-            _urlDropdown.val(cellInfo.dataType);
+        if (isUrl) {
+            _urlDropdown.val(dataType);
         } else {
-            _valueDropdown.val(cellInfo.dataType);
+            _valueDropdown.val(dataType);
         }
 
         // Choose the correct data type drop-down (show/hide the other)
-        _urlDropdown.toggle(cellInfo.isUrl);
-        _valueDropdown.toggle(!cellInfo.isUrl);
+        _urlDropdown.toggle(isUrl);
+        _valueDropdown.toggle(!isUrl);
 
         // Set the URL check box
-        _editCellRadioURL.find('input').prop('checked', cellInfo.isUrl);
+        _editCellRadioURL.find('input').prop('checked', isUrl);
 
         // Set the Cache check box state
-        _editCellCache.find('input').prop('checked', cellInfo.isCached);
+        _editCellCache.find('input').prop('checked', isCached);
 
         enabledDisableCheckBoxes(); // reset for form
         _editCellModal.modal('show');
