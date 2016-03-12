@@ -2955,7 +2955,7 @@ var NCubeEditor2 = (function ($) {
             if (content === null || content === '') {
                 return;
             }
-            var vals = content.split(/\t|\n|,/);
+            var vals = content.split(/\t|\n/);
             for (var i = 0, len = vals.length; i < len; i++) {
                 var addedColVal = vals[i];
                 if (addedColVal !== '') {
