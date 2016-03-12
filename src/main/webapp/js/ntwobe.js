@@ -30,6 +30,7 @@ var NCubeEditor2 = (function ($) {
     var _urlDropdown = null;
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
     var _clipboard = null;
+    var _editColClipboard = null;
     var _clipFormat = CLIP_NCE;
     var _searchField = null;
     var _searchInfo = null;
@@ -101,6 +102,7 @@ var NCubeEditor2 = (function ($) {
             _valueDropdown = $('#datatypes-value');
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
+            _editColClipboard = $('#edit-columns-clipboard');
             _searchField = document.getElementById('search-field');
             _searchInfo = $('#search-info');
             _ncubeContent = $('#ncube-content');
@@ -2896,8 +2898,14 @@ var NCubeEditor2 = (function ($) {
     };
 
     var addColumnEditListeners = function() {
-        _editColumnModal.keyup(function(e) {
+        _editColumnModal.keydown(function(e) {
             var keyCode = e.keyCode;
+            if (e.metaKey || e.ctrlKey) {
+                if (keyCode === KEY_CODES.V) {
+                    editColPaste();
+                }
+                return;
+            }
             if (keyCode === KEY_CODES.ENTER) {
                 selectNone();
                 var cols = _columnList.prop('model').columns;
@@ -2936,6 +2944,25 @@ var NCubeEditor2 = (function ($) {
         $('#editColumnsSave').click(function () {
             editColSave();
         });
+    };
+
+    var editColPaste = function() {
+        _editColClipboard.val('');
+        _editColClipboard.focus();
+
+        setTimeout(function() {
+            var content = _editColClipboard.val();
+            if (content === null || content === '') {
+                return;
+            }
+            var vals = content.split(/\t|\n|,/);
+            for (var i = 0, len = vals.length; i < len; i++) {
+                var addedColVal = vals[i];
+                if (addedColVal !== '') {
+                    editColAdd(addedColVal);
+                }
+            }
+        },100);
     };
 
     var editColumns = function(axisName) {
@@ -2985,7 +3012,7 @@ var NCubeEditor2 = (function ($) {
         return _colIds--;
     };
 
-    var editColAdd = function() {
+    var editColAdd = function(addedColVal) {
         var input = $('.editColCheckBox');
         var loc = -1;
         $.each(input, function (index, btn) {
@@ -2996,7 +3023,7 @@ var NCubeEditor2 = (function ($) {
         var axis = _columnList.prop('model');
         var newCol = {
             '@type': 'com.cedarsoftware.ncube.Column',
-            'value': 'newValue',
+            'value': addedColVal === undefined ? 'newValue' : addedColVal,
             'id': getUniqueId()
         };
 
