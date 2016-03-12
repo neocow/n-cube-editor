@@ -2,14 +2,14 @@ package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.NCube
 import groovy.transform.CompileStatic
-import ncube.grv.exp.NCubeGroovyExpression
+import ncube.grv.method.NCubeGroovyController
 
 /**
  * Creates the json used to create a visualization of the rpm cubes associated with a given rpm cube.
  */
 
 @CompileStatic
-class Visualizer extends NCubeGroovyExpression
+class Visualizer extends NCubeGroovyController
 {
 	public static final String RPM_CLASS = 'rpm.class'
 	public static final String RPM_ENUM = 'rpm.enum'
@@ -84,7 +84,7 @@ class Visualizer extends NCubeGroovyExpression
 	 * output     String visualization json
 	 *
 	 */
-	def run()
+	Map buildGraph()
 	{
 		Map options = input.options as Map
 		String startCubeName = options.startCubeName as String
@@ -168,16 +168,12 @@ class Visualizer extends NCubeGroovyExpression
 			stackInfo[TARGET_TRAIT_MAPS] = targetTraitMaps
 		}
 
-		if (!targetCube.name.startsWith(RPM_CLASS)) {
-				throw new IllegalStateException('Cube is not an rpm.class: name = ' + targetCube.name +  '.')
-		}
-
 		String busType = getFormattedBusType(targetTraitMaps)
 
 		long targetLevel = stackInfo[TARGET_LEVEL] as long
 		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, stackInfo[STACK_KEY] as long, targetLevel)
 
-		String visitedKey = targetCube.sha1() + targetScope.toString()
+		String visitedKey = targetCube.name + targetScope.toString()
 		if (visited.contains(visitedKey))
 		{
 			return
@@ -278,7 +274,7 @@ class Visualizer extends NCubeGroovyExpression
 				}
 				catch (Exception e)
 				{
-					throw new IllegalStateException('Exception caught while loading and processing the cube for enum field ' + targetFieldName + ' in enum ' + targetCube.name + '. ' + e.message, e)
+					throw new IllegalStateException('Exception caught while loading and processing the cube for enum field ' + targetFieldName + ' in enum ' + targetCube.name + '.', e)
 				}
 			}
 		}
@@ -286,7 +282,7 @@ class Visualizer extends NCubeGroovyExpression
 
 		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, stackInfo[STACK_KEY] as long, targetLevel)
 
-		String visitedKey = targetCube.sha1() + targetScope.toString()
+		String visitedKey = targetCube.name + targetScope.toString()
 		if (visited.contains(visitedKey))
 		{
 			return

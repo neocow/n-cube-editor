@@ -297,13 +297,17 @@ class NCubeController extends BaseController
         try
         {
             String cubeName = options.startCubeName
+            if (!cubeName.startsWith(Visualizer.RPM_CLASS))
+            {
+                throw new IllegalArgumentException('n-cube name must begin with rpm.class. Name = ' + cubeName)
+            }
             appId = addTenant(appId)
             isAllowed(appId, cubeName, null)
 
             Visualizer vis = new Visualizer()
             vis.input = [options:options]
             vis.ncube = nCubeService.getCube(appId, cubeName)
-            return vis.run() as Map
+            return vis.buildGraph()
         }
         catch (Exception e)
         {
