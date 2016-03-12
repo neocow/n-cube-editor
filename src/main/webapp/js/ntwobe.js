@@ -7,6 +7,7 @@ var NCubeEditor2 = (function ($) {
     var numRows = 0;
     var cubeName = null;
     var axes = null;
+    var _axisIdsInOrder = null;
     var colOffset = null;
     var data = null;
     var prefixes = null;
@@ -31,6 +32,7 @@ var NCubeEditor2 = (function ($) {
     var _clipboard = null;
     var _clipFormat = CLIP_NCE;
     var _searchField = null;
+    var _searchInfo = null;
     var _searchCoords = null;
     var _currentSearchResultIndex = null;
     var _ncubeContent = null;
@@ -100,6 +102,7 @@ var NCubeEditor2 = (function ($) {
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
             _searchField = document.getElementById('search-field');
+            _searchInfo = $('#search-info');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
             _isRefAxis = $('#isRefAxis');
@@ -145,6 +148,7 @@ var NCubeEditor2 = (function ($) {
             _filterModal = $('#filterModal');
             _filterTable = $('#filterTable');
 
+            addSelectAllNoneListeners();
             addAxisEditListeners();
             addColumnEditListeners();
             addColumnHideListeners();
@@ -187,35 +191,38 @@ var NCubeEditor2 = (function ($) {
                 var isModalDisplayed = $('body').hasClass('modal-open');
                 var focus = $(':focus');
 
-                if (!isModalDisplayed && focus && ['cube-search','cube-search-content','search-field'].indexOf(focus.attr('id')) < 0)
-                {
-                    if (e.metaKey || e.ctrlKey)
-                    {
+                if (!isModalDisplayed && focus && ['cube-search','cube-search-content','search-field'].indexOf(focus.attr('id')) < 0) {
+                    var keyCode = e.keyCode;
+                    if (e.metaKey || e.ctrlKey) {
                         // Control Key (command in the case of Mac)
-                        if (e.keyCode === KEY_CODES.F) {
+                        if (keyCode === KEY_CODES.F) {
                             e.preventDefault();
                             _searchField.focus();
                         }
-                        else if (e.keyCode == KEY_CODES.X) {
+                        else if (keyCode == KEY_CODES.X) {
                             if (CLIP_NCE == _clipFormat) {
                                 editCutCopy(true);  // true = isCut
                             } else {
                                 excelCutCopy(true);
                             }
                         }
-                        else if (e.keyCode == KEY_CODES.C)
+                        else if (keyCode == KEY_CODES.C)
                         {
                             if (CLIP_NCE == _clipFormat) {
                                 editCutCopy(false); // false = copy
                             } else {
                                 excelCutCopy(false);
                             }
-                        } else if (e.keyCode == KEY_CODES.K) {
+                        } else if (keyCode == KEY_CODES.K) {
                             toggleClipFormat(e);
-                        } else if (e.keyCode == KEY_CODES.V) {
+                        } else if (keyCode == KEY_CODES.V) {
                             // Ctrl-V
                             // Point focus to hidden text area so that it will receive the pasted content
                             editPaste();
+                        }
+                    } else {
+                        if (keyCode === KEY_CODES.DELETE) {
+                            editCellClear();
                         }
                     }
                 }
@@ -347,13 +354,25 @@ var NCubeEditor2 = (function ($) {
     };
 
     var setSearchHelperText = function() {
-        var el = document.getElementById('search-info');
-        var len = _searchCoords.length;
-        var idx = _currentSearchResultIndex + 1;
-        el.innerHTML = len > 0 ? idx + ' of ' + len : '';
+        var query = _searchField.value;
+        if (query !== null && query !== '') {
+            var len = _searchCoords.length;
+            var idx = _currentSearchResultIndex + 1;
+            _searchInfo[0].innerHTML = len > 0 ? idx + ' of ' + len : 'not found';
+        } else {
+            _searchInfo[0].innerHTML = '';
+        }
     };
 
     var addSearchListeners = function() {
+        $(_searchField).focus(function() {
+            hot.addHook('beforeKeyDown', onBeforeKeyDown);
+        });
+
+        $(_searchField).blur(function() {
+            hot.removeHook('beforeKeyDown', onBeforeKeyDown);
+        });
+
         $(_searchField).keyup(function (e) {
             var keyCode = e.keyCode;
             if (keyCode === KEY_CODES.ENTER) {
@@ -389,7 +408,7 @@ var NCubeEditor2 = (function ($) {
             $(this).blur();
         });
 
-        $('#search-info').click(function() {
+        _searchInfo.click(function() {
             _searchField.focus();
         });
     };
@@ -456,34 +475,151 @@ var NCubeEditor2 = (function ($) {
         nce.saveSearchQuery(null);
     };
 
+    var getAxesOrderedId = function(numericallyOrderedString) {
+        var arr = numericallyOrderedString.split('_');
+        arr.sort(function(x, y) {
+            var xId = getAxisIdFromString(x);
+            var yId = getAxisIdFromString(y);
+            return _axisIdsInOrder.indexOf(xId) - _axisIdsInOrder.indexOf(yId);
+        });
+        return arr.join('_');
+    };
+
     var searchCubeData = function(query) {
         _searchCoords = [];
         _currentSearchResultIndex = -1;
+
         var queryLower = query.toLowerCase();
+        var multiplier = 1;
+        var rowSpacing = numRows - 2;
+        var axisNum, colNum, axisLen, colLen;
+        var rowSpacingHelper = [];
+
+        var isHorizAxis = function(axisNum) {
+            return axisLen > 1 && axisNum === colOffset;
+        };
+
+        var getColumnTableCoords = function() {
+            if (isHorizAxis(axisNum)) {
+                addToSearchCoords(1, colOffset + colNum);
+                return;
+            }
+            if (getAppliedFilters().length === 0) {
+                var rowIdx = colNum * rowSpacing;
+                for (var m = 0; m < multiplier; m++) {
+                    addToSearchCoords(rowIdx + 2, axisNum);
+                    rowIdx += rowSpacing * colLen;
+                }
+                return;
+            }
+            for (var cIdx = 0, cLen = _columnIdCombinationsToShow.length; cIdx < cLen; cIdx++) {
+                var combo = _columnIdCombinationsToShow[cIdx];
+                var colId = axisColumnMap[axes[axisNum].name][colNum];
+                if (combo.indexOf(colId) > -1) {
+                    var add = cIdx === 0;
+                    if (!add) {
+                        var prevCombo = _columnIdCombinationsToShow[cIdx - 1];
+                        if (prevCombo.indexOf(colId) === -1) {
+                            add = true;
+                        } else {
+                            var curStr = getAxesOrderedId(combo);
+                            var prevStr = getAxesOrderedId(prevCombo);
+                            var curSubStr = curStr.substring(0, curStr.indexOf(colId));
+                            var prevSubStr = prevStr.substring(0, prevStr.indexOf(colId));
+                            add = curSubStr !== prevSubStr;
+                        }
+                    }
+                    if (add) {
+                        addToSearchCoords(cIdx + 2, axisNum);
+                    }
+                }
+            }
+        };
 
         // search all axes
-        for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
+        for (axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
             var axis = axes[axisNum];
             var cols = axis.columns;
             var colKeys = Object.keys(cols);
+            colLen = colKeys.length;
+            rowSpacing /= colLen;
+
+            rowSpacingHelper.push({axisName:axis.name, order:getAxisId(axis), rowSpacing:rowSpacing, horizAxis:isHorizAxis(axisNum)});
 
             // search all columns for an axis
-            for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
+            for (colNum = 0; colNum < colLen; colNum++)
+            {
                 var col = cols[colKeys[colNum]];
                 var colVal = getRowHeaderPlainTextForWidth(axis, col);
-                col.isSearchResult = colVal.toLowerCase().indexOf(queryLower) > -1;
+                col.isSearchResult = false;
+                if (colVal.toLowerCase().indexOf(queryLower) > -1) {
+                    col.isSearchResult = true;
+                    getColumnTableCoords();
+                }
             }
+            multiplier *= colLen;
         }
+        rowSpacingHelper.sort(function(a, b) {
+            return a.order - b.order;
+        });
 
         // search cells
         var cells = data.cells;
         var cellKeys = Object.keys(cells);
-        for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++) {
+        for (var cellNum = 0, len = cellKeys.length; cellNum < len; cellNum++)
+        {
             var cellId = cellKeys[cellNum];
             var cell = cells[cellId];
             var cellVal = getTextCellValue(cell);
             cell.isSearchResult = cellVal.toLowerCase().indexOf(queryLower) > -1;
+
+            if (cell.isSearchResult) {
+                var colIds = cellId.split('_');
+                var r = 0;
+                var c = 0;
+                if (getAppliedFilters().length === 0) {
+                    for (var colIdNum = 0, colIdLen = colIds.length; colIdNum < colIdLen; colIdNum++) {
+                        var curColId = colIds[colIdNum];
+                        var curHelperObj = rowSpacingHelper[colIdNum];
+                        var curColNum = axisColumnMap[curHelperObj.axisName].indexOf(curColId);
+
+                        if (curHelperObj.horizAxis) {
+                            c = curColNum;
+                        } else {
+                            r += curColNum * curHelperObj.rowSpacing;
+                        }
+                    }
+                    addToSearchCoords(r + 2, c + (colOffset || 1));
+                } else {
+                    var topAxis = axes[colOffset];
+                    var topAxisId = getAxisId(topAxis);
+                    for (var cellIdIdx = 0, cellIdLen = colIds.length; cellIdIdx < cellIdLen; cellIdIdx++) {
+                        if (getAxisIdFromString(colIds[cellIdIdx]) === topAxisId) {
+                            var topColId = colIds.splice(cellIdIdx, 1)[0];
+                            c = axisColumnMap[topAxis.name].indexOf(topColId);
+                            var colIdCombo = colIds.join('_');
+                            r = _columnIdCombinationsToShow.indexOf(colIdCombo);
+                            addToSearchCoords(r + 2, c + (colOffset || 1));
+                            break;
+                        }
+                    }
+                }
+            }
         }
+
+        _searchCoords.sort(function(a, b) {
+            var aa = a.split('_');
+            var ab = b.split('_');
+            var rowA = parseInt(aa[0]);
+            var rowB = parseInt(ab[0]);
+            if (rowA === rowB) {
+                var colA = parseInt(aa[1]);
+                var colB = parseInt(ab[1]);
+                return colA - colB;
+            } else {
+                return rowA - rowB;
+            }
+        });
     };
 
     var colorAxisButtons = function ()
@@ -519,9 +655,13 @@ var NCubeEditor2 = (function ($) {
         if (!col) {
             return;
         }
-        var id = col.substring(0, col.length - AXIS_DEFAULT.length);
+        var id = getAxisIdFromString(col);
         axis.id = id;
         return id;
+    };
+
+    var getAxisIdFromString = function(id) {
+        return id.substring(0, id.length - AXIS_DEFAULT.length);
     };
 
     var getAxisColumn = function(axis, colNum) {
@@ -798,6 +938,7 @@ var NCubeEditor2 = (function ($) {
 
         var determineAxesOrder = function (cubeAxes) {
             axes = [];
+            _axisIdsInOrder = [];
             var i, len, axis;
             if (hasCustomAxisOrder())
             {
@@ -807,6 +948,7 @@ var NCubeEditor2 = (function ($) {
                     axis = cubeAxes[order[i]];
                     getColumnLength(axis);
                     axes.push(axis);
+                    _axisIdsInOrder.push(getAxisId(axis));
                 }
             }
             else
@@ -837,6 +979,10 @@ var NCubeEditor2 = (function ($) {
                 }
                 horizontal = axes.splice(horizontal, 1);
                 axes.push(horizontal[0]);
+
+                for (i = 0, len = axes.length; i < len; i++) {
+                    _axisIdsInOrder.push(getAxisId(axes[i]));
+                }
             }
         };
 
@@ -1167,7 +1313,7 @@ var NCubeEditor2 = (function ($) {
             var cellIdArray = cellId.split('_');
             for (var i = 0, len = cellIdArray.length; i < len; i++) {
                 var id = cellIdArray[i];
-                if (id.substring(0, id.length - AXIS_DEFAULT.length).indexOf(horizAxisId) > -1) {
+                if (getAxisIdFromString(id).indexOf(horizAxisId) > -1) {
                     cellIdArray.splice(i, 1);
                     break;
                 }
@@ -1509,7 +1655,6 @@ var NCubeEditor2 = (function ($) {
                 var column = getColumnHeader(col);
                 td.innerHTML = getRowHeaderValue(axes[colOffset], column);
                 if (column.isSearchResult) {
-                    addToSearchCoords(row, col);
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
             }
@@ -1521,18 +1666,13 @@ var NCubeEditor2 = (function ($) {
         else if (col === 0 || col < colOffset) {
             var rowHeader = getRowHeader(row, col);
             var axis = axes[col];
-            var shouldAddToSearchResults = false;
-            if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id) {
+            if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (col === 0 || (col > 0 && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = getRowHeaderValue(axis, rowHeader);
-                shouldAddToSearchResults = true;
             }
             td.className += CLASS_HANDSON_TABLE_HEADER;
             if (getRowHeader(row, col).isSearchResult) {
-                if (shouldAddToSearchResults) {
-                    addToSearchCoords(row, col);
-                }
                 td.className += CLASS_HANDSON_SEARCH_RESULT;
             }
 
@@ -1548,7 +1688,6 @@ var NCubeEditor2 = (function ($) {
             td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData) {
                 if (cellData.isSearchResult) {
-                    addToSearchCoords(row, col);
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
 
@@ -2173,11 +2312,13 @@ var NCubeEditor2 = (function ($) {
     };
 
     var CellEditor = NcubeBaseEditor.prototype.extend();
-    CellEditor.prototype.open = function() {
-        NcubeBaseEditor.prototype.open.apply(this, arguments);
-
+    CellEditor.prototype.prepare = function(row, col, prop, td, cellProperties) {
+        NcubeBaseEditor.prototype.prepare.apply(this, arguments);
         _tableCellId = getCellId(this.row, this.col);
         _cellId = _tableCellId.split('_');
+    };
+    CellEditor.prototype.open = function() {
+        NcubeBaseEditor.prototype.open.apply(this, arguments);
         editCell();
     };
     CellEditor.prototype.isOpened = function() {
@@ -2502,29 +2643,44 @@ var NCubeEditor2 = (function ($) {
         }
 
         var cellInfo = result.data;
+        var value = null;
+        var dataType = null;
+        var isUrl = false;
+        var isCached = false;
+        if (cellInfo.value !== null || cellInfo.dataType !== null || cellInfo.isUrl || cellInfo.isCached) {
+            value = cellInfo.value;
+            dataType = cellInfo.dataType;
+            isUrl = cellInfo.isUrl;
+            isCached = cellInfo.isCached;
+        } else { // use cube defaults if exist
+            isUrl = data.defaultCellValueUrl !== undefined;
+            value = isUrl ? data.defaultCellValueUrl : data.defaultCellValue;
+            dataType = data.defaultCellValueType;
+            isCached = data.defaultCellValueCache;
+        }
         // Set the cell value (String)
-        var cellValue = cellInfo.value ? cellInfo.value : '';
+        var cellValue = value !== null ? value : '';
         _editCellValue.val(cellValue);
-        if (cellInfo.dataType == "null" || !cellInfo.dataType) {
-            cellInfo.dataType = "string";
+        if (dataType === null || !dataType) {
+            dataType = 'string';
         }
 
         // Set the correct entry in the drop-down
-        if (cellInfo.isUrl) {
-            _urlDropdown.val(cellInfo.dataType);
+        if (isUrl) {
+            _urlDropdown.val(dataType);
         } else {
-            _valueDropdown.val(cellInfo.dataType);
+            _valueDropdown.val(dataType);
         }
 
         // Choose the correct data type drop-down (show/hide the other)
-        _urlDropdown.toggle(cellInfo.isUrl);
-        _valueDropdown.toggle(!cellInfo.isUrl);
+        _urlDropdown.toggle(isUrl);
+        _valueDropdown.toggle(!isUrl);
 
         // Set the URL check box
-        _editCellRadioURL.find('input').prop('checked', cellInfo.isUrl);
+        _editCellRadioURL.find('input').prop('checked', isUrl);
 
         // Set the Cache check box state
-        _editCellCache.find('input').prop('checked', cellInfo.isCached);
+        _editCellCache.find('input').prop('checked', isCached);
 
         enabledDisableCheckBoxes(); // reset for form
         _editCellModal.modal('show');
@@ -2731,30 +2887,55 @@ var NCubeEditor2 = (function ($) {
 
     // ============================================== Column Editing== =================================================
 
+    var checkCurrentlyEditedColumn = function() {
+        var el = $(document.activeElement);
+        if (el.is('input')) {
+            el.parent().find('input[type="checkbox"]').prop('checked', 'true');
+            el.blur();
+            el.closest('.modal').focus();
+        }
+    };
+
     var addColumnEditListeners = function() {
-        $('#editColSelectAll').click(function () {
-            checkAll(true, '.editColCheckBox')
+        _editColumnModal.keyup(function(e) {
+            var keyCode = e.keyCode;
+            if (keyCode === KEY_CODES.ENTER) {
+                selectNone();
+                var cols = _columnList.prop('model').columns;
+                for (var i = 0, len = cols.length; i < len; i++) {
+                    cols[i].checked = false;
+                }
+                $(document.activeElement).blur();
+                editColAdd();
+            } else if (keyCode === KEY_CODES.DELETE) {
+                checkCurrentlyEditedColumn();
+                editColDelete();
+            } else if (keyCode === KEY_CODES.ARROW_UP) {
+                checkCurrentlyEditedColumn();
+                editColUp();
+            } else if (keyCode === KEY_CODES.ARROW_DOWN) {
+                checkCurrentlyEditedColumn();
+                editColDown();
+            }
         });
-        $('#editColSelectNone').click(function () {
-            checkAll(false, '.editColCheckBox')
-        });
+
         $('#editColAdd').click(function () {
-            editColAdd()
+            editColAdd();
         });
         $('#editColDelete').click(function () {
-            editColDelete()
+            editColDelete();
         });
         $('#editColUp').click(function () {
-            editColUp()
+            editColUp();
         });
         $('#editColDown').click(function () {
-            editColDown()
+            editColDown();
         });
         $('#editColumnsCancel').click(function () {
-            editColCancel()
+            editColCancel();
         });
         $('#editColumnsSave').click(function () {
-            editColSave()
+            editColSave();
         });
     };
 
@@ -2780,7 +2961,7 @@ var NCubeEditor2 = (function ($) {
         }
         sortColumns(axis);
         loadColumns(axis);
-        var moveBtnAvail = axis.preferredOrder == 1;
+        var moveBtnAvail = axis.preferredOrder === 1;
         if (moveBtnAvail === true) {
             $('#editColUp').show();
             $('#editColDown').show();
@@ -2820,7 +3001,7 @@ var NCubeEditor2 = (function ($) {
             'id': getUniqueId()
         };
 
-        if (loc == -1 || axis.preferredOrder == 0) {
+        if (loc == -1 || axis.preferredOrder === 0) {
             axis.columns.push(newCol);
             loc = input.length - 1;
         } else {
@@ -3099,14 +3280,6 @@ var NCubeEditor2 = (function ($) {
     // =============================================== Begin Column Hiding ==========================================
 
     var addColumnHideListeners = function() {
-        $('#hideColSelectAll').click(function ()
-        {
-            checkAll(true, '.commitCheck')
-        });
-        $('#hideColSelectNone').click(function ()
-        {
-            checkAll(false, '.commitCheck')
-        });
         $('#hideColumnsCancel').click(function ()
         {
             hideColCancel()
