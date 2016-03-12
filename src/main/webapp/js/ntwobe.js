@@ -2890,7 +2890,6 @@ var NCubeEditor2 = (function ($) {
     var checkCurrentlyEditedColumn = function() {
         var el = $(document.activeElement);
         if (el.is('input')) {
-            el.parent().find('input[type="checkbox"]').prop('checked', 'true');
             el.blur();
             el.closest('.modal').focus();
         }
