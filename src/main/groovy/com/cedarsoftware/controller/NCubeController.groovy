@@ -1227,7 +1227,11 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             isAllowed(appId, null, null)
-            String absUrl = nCubeService.resolveRelativeUrl(appId, relativeUrl)
+            URL absUrl = nCubeService.resolveRelativeUrl(appId, relativeUrl)
+            if (absUrl == null)
+            {
+                throw new IllegalStateException('Unable to resolve the relative URL (' + relativeUrl + ') to a physical URL, app: ' + appId)
+            }
             return absUrl
         }
         catch (Exception e)

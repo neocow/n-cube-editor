@@ -456,9 +456,9 @@ class NCubeService
         NCubeManager.getReferencedCubeNames(appId, cubeName, references)
     }
 
-    String resolveRelativeUrl(ApplicationID appId, String relativeUrl)
+    URL resolveRelativeUrl(ApplicationID appId, String relativeUrl)
     {
-        return NCubeManager.resolveRelativeUrl(appId, relativeUrl)
+        return NCubeManager.getActualUrl(appId, relativeUrl, [:]);
     }
 
     void clearCache(ApplicationID appId)
