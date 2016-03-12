@@ -38,7 +38,6 @@ import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
 import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -48,7 +47,6 @@ import javax.management.ObjectName
 import javax.servlet.http.HttpServletRequest
 import java.lang.management.ManagementFactory
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.regex.Pattern
 
@@ -92,11 +90,6 @@ class NCubeController extends BaseController
     // TODO: Verify all places that can create a cube are clearing the appVersionsCache
     private static final Map<String, List<String>> appVersions = new ConcurrentHashMap<>()
     private static final Object versionsLock = new Object()
-
-    // Bind to ConcurrentLinkedHashMap because some plugins will need it.
-    private ConcurrentMap<String, Object> futureCache = new ConcurrentLinkedHashMap.Builder<String, Object>()
-            .maximumWeightedCapacity(100)
-            .build()
 
     NCubeController(NCubeService service)
     {
@@ -1227,7 +1220,11 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             isAllowed(appId, null, null)
-            String absUrl = nCubeService.resolveRelativeUrl(appId, relativeUrl)
+            URL absUrl = nCubeService.resolveRelativeUrl(appId, relativeUrl)
+            if (absUrl == null)
+            {
+                throw new IllegalStateException('Unable to resolve the relative URL (' + relativeUrl + ') to a physical URL, app: ' + appId)
+            }
             return absUrl
         }
         catch (Exception e)
