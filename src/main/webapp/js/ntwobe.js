@@ -2901,7 +2901,7 @@ var NCubeEditor2 = (function ($) {
         _editColumnModal.keydown(function(e) {
             var keyCode = e.keyCode;
             if (e.metaKey || e.ctrlKey) {
-                if (keyCode === KEY_CODES.V) {
+                if (keyCode === KEY_CODES.V && !$(e.target).is('input[type="text"]')) {
                     editColPaste();
                 }
                 return;
