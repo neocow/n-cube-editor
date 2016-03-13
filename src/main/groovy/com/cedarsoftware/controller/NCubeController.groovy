@@ -306,6 +306,7 @@ class NCubeController extends BaseController
 
             Visualizer vis = new Visualizer()
             vis.input = [options:options]
+            vis.output = [:]
             vis.ncube = nCubeService.getCube(appId, cubeName)
             return vis.buildGraph()
         }

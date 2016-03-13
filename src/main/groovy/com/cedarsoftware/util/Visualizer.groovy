@@ -336,7 +336,7 @@ class Visualizer extends NCubeGroovyController
 		}
 		catch (Exception e)
 		{
-			throw new IllegalStateException('Exception caught while loading and processing the class for field ' + stackInfo[SOURCE_FIELD] + ' in class ' + nextTargetCube.name + '. ' + e.message, e)
+			throw new IllegalStateException('Exception caught while loading and processing the class for field ' + stackInfo[SOURCE_FIELD] + ' in class ' + nextTargetCube.name + '.', e)
 		}
 	}
 
