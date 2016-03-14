@@ -1288,6 +1288,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
+            isAllowed(appId, null, null)
 
             Set<String> branches = nCubeService.getBranches(appId)
             if (branches == null && branches.isEmpty())
@@ -1751,6 +1752,22 @@ class NCubeController extends BaseController
         JsonWriter.formatJson(json).readLines()
     }
 
+    Object[] getReferenceAxes(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, null, null)
+            List refAxes = nCubeService.getReferenceAxes(appId)
+            return refAxes as Object[]
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return [] as Object[]
+        }
+    }
+
     Map heartBeat(Map openCubes)
     {
         // If remotely accessing server, use the following to get the MBeanServerConnection...
@@ -2036,72 +2053,6 @@ class NCubeController extends BaseController
         }
         return false
     }
-
-//    private void printStackTrace(Throwable t, StringBuilder s) {
-//        // Guard against malicious overrides of Throwable.equals by
-//        // using a Set with identity equality semantics.
-//        Set<Throwable> dejaVu = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>())
-//        dejaVu.add(t)
-//
-//        synchronized (s) {
-//            // Print our stack trace
-//            s.println(this);
-//            StackTraceElement[] trace = getOurStackTrace();
-//            for (StackTraceElement traceElement : trace)
-//                s.println("\tat " + traceElement);
-//
-//            // Print suppressed exceptions, if any
-//            for (Throwable se : getSuppressed())
-//                se.printEnclosedStackTrace(s, trace, SUPPRESSED_CAPTION, "\t", dejaVu);
-//
-//            // Print cause, if any
-//            Throwable ourCause = getCause();
-//            if (ourCause != null)
-//                ourCause.printEnclosedStackTrace(s, trace, CAUSE_CAPTION, "", dejaVu);
-//        }
-//    }
-//
-//    /**
-//     * Print our stack trace as an enclosed exception for the specified
-//     * stack trace.
-//     */
-//    private void printEnclosedStackTrace(PrintStreamOrWriter s,
-//                                         StackTraceElement[] enclosingTrace,
-//                                         String caption,
-//                                         String prefix,
-//                                         Set<Throwable> dejaVu) {
-//        assert Thread.holdsLock(s.lock());
-//        if (dejaVu.contains(this)) {
-//            s.println("\t[CIRCULAR REFERENCE:" + this + "]");
-//        } else {
-//            dejaVu.add(this);
-//            // Compute number of frames in common between this and enclosing trace
-//            StackTraceElement[] trace = getOurStackTrace();
-//            int m = trace.length - 1;
-//            int n = enclosingTrace.length - 1;
-//            while (m >= 0 && n >=0 && trace[m].equals(enclosingTrace[n])) {
-//                m--; n--;
-//            }
-//            int framesInCommon = trace.length - 1 - m;
-//
-//            // Print our stack trace
-//            s.println(prefix + caption + this);
-//            for (int i = 0; i <= m; i++)
-//                s.println(prefix + "\tat " + trace[i]);
-//            if (framesInCommon != 0)
-//                s.println(prefix + "\t... " + framesInCommon + " more");
-//
-//            // Print suppressed exceptions, if any
-//            for (Throwable se : getSuppressed())
-//                se.printEnclosedStackTrace(s, trace, SUPPRESSED_CAPTION,
-//                        prefix +"\t", dejaVu);
-//
-//            // Print cause, if any
-//            Throwable ourCause = getCause();
-//            if (ourCause != null)
-//                ourCause.printEnclosedStackTrace(s, trace, CAUSE_CAPTION, prefix, dejaVu);
-//        }
-//    }
 
     private static String getCauses(Throwable t)
     {
