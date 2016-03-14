@@ -601,7 +601,9 @@ var NCubeEditor2 = (function ($) {
                             c = axisColumnMap[topAxis.name].indexOf(topColId);
                             var colIdCombo = colIds.join('_');
                             r = _columnIdCombinationsToShow.indexOf(colIdCombo);
-                            addToSearchCoords(r + 2, c + (colOffset || 1));
+                            if (r > -1) {
+                                addToSearchCoords(r + 2, c + (colOffset || 1));
+                            }
                             break;
                         }
                     }
