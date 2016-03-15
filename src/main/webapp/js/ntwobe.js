@@ -2891,7 +2891,7 @@ var NCubeEditor2 = (function ($) {
 
     // ============================================== Column Editing== =================================================
 
-    var checkCurrentlyEditedColumn = function() {
+    var focusModal = function() {
         var el = $(document.activeElement);
         if (el.is('input')) {
             el.blur();
@@ -2899,31 +2899,52 @@ var NCubeEditor2 = (function ($) {
         }
     };
 
+    var selectNextInput = function(relativeIdx) {
+        var el = document.activeElement;
+        var inputs = $(el).closest('.modal').find('input[type="text"]');
+        var curIdx = inputs.index(el);
+        var newIdx = curIdx + relativeIdx;
+        if ((relativeIdx > 0 && newIdx < inputs.length) || (relativeIdx < 0 && newIdx >= 0)) {
+            var newInput = $(inputs[newIdx]);
+            newInput.focusin();
+            newInput.select();
+        }
+    };
+
     var addColumnEditListeners = function() {
         _editColumnModal.keydown(function(e) {
             var keyCode = e.keyCode;
+            var isTextInputTarget = $(e.target).is('input[type="text"]');
             if (e.metaKey || e.ctrlKey) {
-                if (keyCode === KEY_CODES.V && !$(e.target).is('input[type="text"]')) {
+                if (keyCode === KEY_CODES.V && !isTextInputTarget) {
                     editColPaste();
                 }
                 return;
             }
             if (keyCode === KEY_CODES.ENTER) {
-                selectNone();
-                var cols = _columnList.prop('model').columns;
-                for (var i = 0, len = cols.length; i < len; i++) {
-                    cols[i].checked = false;
+                var el = document.activeElement;
+                var inputs = $(el).closest('.modal').find('input[type="text"]');
+                var idx = inputs.index(el);
+                $(el).blur();
+                editColAdd(null, idx);
+                return;
+            }
+            if (isTextInputTarget) {
+                if (keyCode === KEY_CODES.ARROW_UP) {
+                    selectNextInput(-1);
+                } else if (keyCode === KEY_CODES.ARROW_DOWN) {
+                    selectNextInput(1);
                 }
-                $(document.activeElement).blur();
-                editColAdd();
-            } else if (keyCode === KEY_CODES.DELETE) {
-                checkCurrentlyEditedColumn();
+                return;
+            }
+            if (keyCode === KEY_CODES.DELETE) {
+                focusModal();
                 editColDelete();
             } else if (keyCode === KEY_CODES.ARROW_UP) {
-                checkCurrentlyEditedColumn();
+                focusModal();
                 editColUp();
             } else if (keyCode === KEY_CODES.ARROW_DOWN) {
-                checkCurrentlyEditedColumn();
+                focusModal();
                 editColDown();
             }
         });
@@ -3014,18 +3035,21 @@ var NCubeEditor2 = (function ($) {
         return _colIds--;
     };
 
-    var editColAdd = function(addedColVal) {
+    var editColAdd = function(addedColVal, addedAtIndex) {
         var input = $('.editColCheckBox');
-        var loc = -1;
-        $.each(input, function (index, btn) {
-            if ($(this).prop('checked')) {
-                loc = index;
-            }
-        });
+        var loc = addedAtIndex;
+        if (loc === undefined || loc === null) {
+            loc = -1;
+            $.each(input, function (index, btn) {
+                if ($(this).prop('checked')) {
+                    loc = index;
+                }
+            });
+        }
         var axis = _columnList.prop('model');
         var newCol = {
             '@type': 'com.cedarsoftware.ncube.Column',
-            'value': addedColVal === undefined ? 'newValue' : addedColVal,
+            'value': addedColVal === undefined || addedColVal === null ? 'newValue' : addedColVal,
             'id': getUniqueId()
         };
 
