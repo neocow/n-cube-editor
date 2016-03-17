@@ -347,7 +347,11 @@ class NCubeController extends BaseController
         }
     }
 
-    Object[] getAppVersions(String app, String status, String branchName)
+    Object[] getAppVersions(String app) {
+        getAppVersions(app, null)
+    }
+
+    Object[] getAppVersions(String app, String status)
     {
         try
         {
@@ -359,10 +363,14 @@ class NCubeController extends BaseController
 
             // Filter out duplicates, remove trailing '-SNAPSHOT' and '-RELEASE'
             Set<String> versions = new LinkedHashSet<>()
-            for (int i=vers.length - 1; i >=0; i--)
+            for (int i = vers.length - 1; i >= 0; i--)
             {
                 String mvnVer = vers[i]
-                versions.add(mvnVer.split('-')[0])
+                String[] verArr = mvnVer.split('-')
+                if (status == null || verArr[1] == status)
+                {
+                    versions.add(verArr[0])
+                }
             }
             return versions.toArray()
         }
