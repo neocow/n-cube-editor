@@ -472,6 +472,11 @@ class NCubeService
         return NCubeManager.getReferenceAxes(appId)
     }
 
+    void updateReferenceAxes(List<AxisRef> axisRefs, String username)
+    {
+        NCubeManager.updateReferenceAxes(axisRefs, username);
+    }
+
     // =========================================== Helper methods ======================================================
 
     static List getCubes(String json)

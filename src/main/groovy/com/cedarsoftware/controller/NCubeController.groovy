@@ -2,6 +2,7 @@ package com.cedarsoftware.controller
 
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.Axis
+import com.cedarsoftware.ncube.AxisRef
 import com.cedarsoftware.ncube.AxisType
 import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.CellInfo
@@ -14,6 +15,7 @@ import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.NCubeTest
+import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.StringValuePair
 import com.cedarsoftware.ncube.exception.AxisOverlapException
@@ -1736,7 +1738,7 @@ class NCubeController extends BaseController
     /**
      * Add the n-cube delta description between the two passed in cubes to the passed in Map.
      */
-    private static LinkedHashMap<String, Object> addDeltaDescription(NCube leftCube, NCube rightCube, LinkedHashMap<String, Object> ret)
+    private static Map<String, Object> addDeltaDescription(NCube leftCube, NCube rightCube, Map<String, Object> ret)
     {
         if (leftCube && rightCube)
         {
@@ -1770,6 +1772,33 @@ class NCubeController extends BaseController
         {
             fail(e)
             return [] as Object[]
+        }
+    }
+
+    void updateReferenceAxes(Object[] axisRefs)
+    {
+        List<AxisRef> axisRefList = axisRefs as List<AxisRef>
+        try
+        {
+            // Ensure access is granted to all APPs and n-cubes involved.
+            for (AxisRef axisRef : axisRefList)
+            {
+                axisRef.srcAppId = addTenant(axisRef.srcAppId)
+                isAllowed(axisRef.srcAppId, axisRef.srcCubeName, Delta.Type.UPDATE)
+                ApplicationID srcApp = axisRef.srcAppId
+                ApplicationID destAppId = new ApplicationID(srcApp.tenant, axisRef.destApp, axisRef.destVersion, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD);
+                isAllowed(destAppId, axisRef.destCubeName, null)
+                if (axisRef.transformApp != null && axisRef.transformVersion != null) {
+                    ApplicationID transformAppId = new ApplicationID(srcApp.getTenant(), axisRef.transformApp, axisRef.transformVersion, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD);
+                    isAllowed(transformAppId, axisRef.transformCubeName, null)
+                }
+            }
+
+            nCubeService.updateReferenceAxes(axisRefList, getUserForDatabase())
+        }
+        catch (Exception e)
+        {
+            fail(e)
         }
     }
 
@@ -1933,11 +1962,11 @@ class NCubeController extends BaseController
     {
         markRequestFailed(getCauses(e))
         if (e instanceof AxisOverlapException ||
-            e instanceof BranchMergeException ||
-            e instanceof CommandCellException ||
-            e instanceof CoordinateNotFoundException ||
-            e instanceof RuleJump ||
-            e instanceof RuleStop)
+                e instanceof BranchMergeException ||
+                e instanceof CommandCellException ||
+                e instanceof CoordinateNotFoundException ||
+                e instanceof RuleJump ||
+                e instanceof RuleStop)
         {
             Throwable t = e
             while (t.getCause() != null)

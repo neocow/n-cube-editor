@@ -3509,81 +3509,7 @@ var NCubeEditor2 = (function ($) {
     // =============================================== Begin Axis Editing ==============================================
 
     var addAxisEditListeners = function() {
-        var getAppsMethod = 'getAppNames';
-        var getVersionsMethod = 'getAppVersions';
-        var cubeSearchMethod = 'search';
-        var searchAxis = 'axis';
-        var searchMethod = 'method';
         var axisTypes = {};
-
-        var populateSelect = function(sel, method, params, defVal, forceRefresh, isInverted) {
-            if (forceRefresh || sel[0].options.length === 0) {
-                sel.empty();
-                var result = nce.call('ncubeController.' + method, params);
-                if (result.status === true) {
-                    var results = result.data;
-                    for (var i = 0, len = results.length; i < len; i++) {
-                        var option = $('<option/>');
-                        var optionValue = results[i];
-                        if (method === cubeSearchMethod) {
-                            optionValue = optionValue.name;
-                        }
-                        option[0].innerHTML = optionValue;
-                        if (isInverted) {
-                            sel.prepend(option);
-                        } else {
-                            sel.append(option);
-                        }
-                    }
-                } else {
-                    nce.showNote('Error calling ' + method + '():<hr class="hr-small"/>' + result.data);
-                }
-            }
-            if (defVal) {
-                sel.val(defVal);
-            } else {
-                sel.prepend($('<option/>'));
-            }
-        };
-
-        var populateSelectFromCube = function(sel, params, searchType, defVal, forceRefresh) {
-            if (forceRefresh || sel[0].options.length === 0) {
-                sel.empty();
-                var result = nce.call('ncubeController.getJson', params, {noResolveRefs:true});
-                if (result.status === true) {
-                    var results = JSON.parse(result.data).axes;
-                    if (searchType === searchMethod) {
-                        for (var idx = 0, iLen = results.length; idx < iLen; idx++) {
-                            var axis = results[idx];
-                            if (['method','methods'].indexOf(axis.name) > -1) {
-                                results = axis.columns;
-                                break;
-                            }
-                        }
-                    }
-                    for (var i = 0, len = results.length; i < len; i++) {
-                        var option = $('<option/>');
-                        var obj = results[i];
-                        var val;
-                        if (searchType === searchMethod) {
-                            val = obj.value;
-                        } else if (searchType === searchAxis) {
-                            val = obj.name;
-                            axisTypes[val] = {axisType:obj.type, valueType:obj.valueType};
-                        }
-                        option[0].innerHTML = val;
-                        sel.append(option);
-                    }
-                } else {
-                    nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
-                }
-            }
-            if (defVal) {
-                sel.val(defVal);
-            } else {
-                sel.prepend($('<option/>'));
-            }
-        };
 
         _isRefAxis.change(function() {
             _refAxisGroup.toggle();
@@ -3592,14 +3518,14 @@ var NCubeEditor2 = (function ($) {
             _addAxisTypeName.parent().find('button').prop('disabled', toggleVal);
             _addAxisValueTypeName.parent().find('button').prop('disabled', toggleVal);
 
-            populateSelect(_refAxisApp, getAppsMethod, [] , null, toggleVal);
+            populateSelect(nce, _refAxisApp, CONTROLLER_METHOD.GET_APP_NAMES, [] , null, toggleVal);
             _refAxisAxis.empty();
         });
         _hasRefFilter.change(function() {
             _refFilterGroup.toggle();
 
             var toggleVal = $(this)[0].checked;
-            populateSelect(_refFilterApp, getAppsMethod, [], null, toggleVal);
+            populateSelect(nce, _refFilterApp, CONTROLLER_METHOD.GET_APP_NAMES, [], null, toggleVal);
             _refFilterMethod.empty();
         });
 
@@ -3607,33 +3533,31 @@ var NCubeEditor2 = (function ($) {
             _refAxisVersion.empty();
             _refAxisCube.empty();
             _refAxisAxis.empty();
-            populateSelect(_refAxisVersion, getVersionsMethod, [$(this).val(), _refAxisStatus.val(), _refAxisBranch.val()], null, true, true);
+            populateSelect(nce, _refAxisVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refAxisStatus.val(), _refAxisBranch.val()], null, true, true);
         });
         _refFilterApp.change(function() {
             _refFilterVersion.empty();
             _refFilterCube.empty();
             _refFilterMethod.empty();
-            populateSelect(_refFilterVersion, getVersionsMethod, [$(this).val(), _refFilterStatus.val(), _refFilterBranch.val()], null, true, true);
+            populateSelect(nce, _refFilterVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refFilterStatus.val(), _refFilterBranch.val()], null, true, true);
         });
 
         _refAxisVersion.change(function() {
             _refAxisCube.empty();
             _refAxisAxis.empty();
-            populateSelect(_refAxisCube, cubeSearchMethod, [appIdFrom(_refAxisApp.val(), $(this).val(), _refAxisStatus.val(), _refAxisBranch.val()), '*', null, true]);
+            populateSelect(nce, _refAxisCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_refAxisApp.val(), $(this).val(), _refAxisStatus.val(), _refAxisBranch.val()), '*', null, true]);
         });
         _refFilterVersion.change(function() {
             _refFilterCube.empty();
             _refFilterMethod.empty();
-            populateSelect(_refFilterCube, cubeSearchMethod, [appIdFrom(_refFilterApp.val(), $(this).val(), _refFilterStatus.val(), _refFilterBranch.val()), '*', null, true]);
+            populateSelect(nce, _refFilterCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_refFilterApp.val(), $(this).val(), _refFilterStatus.val(), _refFilterBranch.val()), '*', null, true]);
         });
 
         _refAxisCube.change(function() {
-            _refAxisAxis.empty();
-            populateSelectFromCube(_refAxisAxis, [appIdFrom(_refAxisApp.val(), _refAxisVersion.val(), _refAxisStatus.val(), _refAxisBranch.val()), _refAxisCube.val(), {mode:'json'}], searchAxis, null, true);
+            axisTypes = populateSelectFromCube(nce, _refAxisAxis, [appIdFrom(_refAxisApp.val(), _refAxisVersion.val(), _refAxisStatus.val(), _refAxisBranch.val()), _refAxisCube.val(), {mode:'json'}], POPULATE_SELECT_FROM_CUBE.AXIS);
         });
         _refFilterCube.change(function() {
-            _refFilterMethod.empty();
-            populateSelectFromCube(_refFilterMethod, [appIdFrom(_refFilterApp.val(), _refFilterVersion.val(), _refFilterStatus.val(), _refFilterBranch.val()), _refFilterCube.val(), {mode:'json'}], searchMethod, null, true);
+            populateSelectFromCube(nce, _refFilterMethod, [appIdFrom(_refFilterApp.val(), _refFilterVersion.val(), _refFilterStatus.val(), _refFilterBranch.val()), _refFilterCube.val(), {mode:'json'}], POPULATE_SELECT_FROM_CUBE.METHOD);
         });
 
         _refAxisAxis.change(function() {
@@ -3641,15 +3565,6 @@ var NCubeEditor2 = (function ($) {
             $('#addAxisTypeName').val(val.axisType);
             $('#addAxisValueTypeName').val(val.valueType);
         });
-    };
-
-    var appIdFrom = function(app, version, status, branch) {
-        return {
-            app: app,
-            version: version,
-            status: status,
-            branch: branch
-        };
     };
 
     var addAxis = function() {
