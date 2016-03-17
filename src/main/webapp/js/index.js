@@ -89,6 +89,13 @@ var NCE = (function ($)
     var _tabDragIndicator = $('#tab-drag-indicator');
     var _appMenu = $('#AppMenu');
     var _versionMenu = $('#VersionMenu');
+    var _batchUpdateAxisReferencesTable = $('#batchUpdateAxisReferencesTable');
+    var _batchUpdateAxisReferencesToggle = $('#batchUpdateAxisReferencesToggle');
+    var _batchUpdateAxisReferencesData = [];
+    var _batchUpdateAxisReferencesApp = $('#batchUpdateAxisReferencesApp');
+    var _batchUpdateAxisReferencesVersion = $('#batchUpdateAxisReferencesVersion');
+    var _batchUpdateAxisReferencesCubeName = $('#batchUpdateAxisReferencesCubeName');
+    var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1249,11 +1256,11 @@ var NCE = (function ($)
         });
         $('#newCubeMenu').click(function ()
         {
-            newCube()
+            newCube();
         });
         $('#newCubeSave').click(function ()
         {
-            newCubeSave()
+            newCubeSave();
         });
         $('#renameCubeOk').click(function ()
         {
@@ -1334,8 +1341,164 @@ var NCE = (function ($)
         {
             clearRevSelection();
         });
+        $('#batchUpdateAxisReferencesMenu').click(function() {
+            batchUpdateAxisReferencesOpen();
+        });
+        $('#batchUpdateAxisReferencesUpdate').click(function() {
+            batchUpdateAxisReferencesUpdate();
+        });
+        _batchUpdateAxisReferencesToggle.change(function() {
+            buildBatchUpdateAxisReferencesTable();
+        });
+        _batchUpdateAxisReferencesApp.change(function() {
+            batchUpdateAxisReferencesAppChanged();
+        });
+        _batchUpdateAxisReferencesVersion.change(function() {
+            batchUpdateAxisReferencesVersionChanged();
+        });
+        _batchUpdateAxisReferencesCubeName.change(function() {
+            batchUpdateAxisReferencesCubeNameChanged();
+        });
 
         addBranchListeners();
+        addSelectAllNoneListeners();
+    }
+
+    function batchUpdateAxisReferencesAppChanged() {
+        _batchUpdateAxisReferencesCubeName.empty();
+        _batchUpdateAxisReferencesAxisName.empty();
+        var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE, head];
+        populateSelect(this, _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
+    }
+
+    function batchUpdateAxisReferencesVersionChanged() {
+        _batchUpdateAxisReferencesAxisName.empty();
+        var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), '*', null, true];
+        populateSelect(this, _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
+    }
+
+    function batchUpdateAxisReferencesCubeNameChanged() {
+        var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
+        populateSelectFromCube(this, _batchUpdateAxisReferencesAxisName, params, POPULATE_SELECT_FROM_CUBE.AXIS);
+    }
+
+    function batchUpdateAxisReferencesOpen() {
+        _batchUpdateAxisReferencesData = [];
+        $('#batchUpdateAxisReferencesInstTitle')[0].innerHTML = 'Instructions - Batch Update Axis References';
+        $('#batchUpdateAxisReferencesInstructions')[0].innerHTML = 'Update the reference axis properties of the checked axes. Updating will only update the rows you have selected. You can toggle between destination and transformation properties';
+
+        populateSelect(this, _batchUpdateAxisReferencesApp, CONTROLLER_METHOD.GET_APP_NAMES, [], null, true);
+
+        showNote('Finding all reference axes, please wait...');
+        setTimeout(function() {
+            var result = call('ncubeController.getReferenceAxes', [getAppId()]);
+            clearError();
+            if (!result.status) {
+                showNote('Unable to load reference axes:<hr class="hr-small"/>' + result.data);
+                return;
+            }
+
+            _batchUpdateAxisReferencesData = result.data;
+            buildBatchUpdateAxisReferencesTable();
+            $('#batchUpdateAxisReferencesModal').modal();
+        },1);
+    }
+
+    function findBatchUpdateAxisReferencesRows() {
+        return _batchUpdateAxisReferencesTable.find('.batch-update-axis-references-entry');
+    }
+
+    function isBatchUpdateAxisReferencesDestinationToggled() {
+        return _batchUpdateAxisReferencesToggle.prop('checked');
+    }
+
+    function buildBatchUpdateAxisReferencesTable() {
+        findBatchUpdateAxisReferencesRows().remove();
+        var isDest = isBatchUpdateAxisReferencesDestinationToggled();
+        $('#batchUpdateAxisReferencesSectionHeader')[0].innerHTML = isDest ? 'Destination Axis' : 'Transform Axis';
+
+        for (var i = 0, len = _batchUpdateAxisReferencesData.length; i < len; i++) {
+            var refAxData = _batchUpdateAxisReferencesData[i];
+            var tr = $('<tr/>').prop('class','batch-update-axis-references-entry');
+            var selectCheckbox = $('<input/>').prop({type:'checkbox', class:'isSelected'});
+            var app, version, cube, axis;
+            if (isDest) {
+                app = refAxData.destApp;
+                version = refAxData.destVersion;
+                cube = refAxData.destCubeName;
+                axis = refAxData.destAxisName;
+            } else {
+                app = refAxData.transformApp;
+                version = refAxData.transformVersion;
+                cube = refAxData.transformCubeName;
+                axis = refAxData.transformAxisName;
+            }
+
+            tr.append($('<td/>').append(selectCheckbox));
+            tr.append($('<td/>').html(refAxData.srcCubeName));
+            tr.append($('<td/>').html(refAxData.srcAxisName));
+            tr.append($('<td/>').html(app).prop('class','app'));
+            tr.append($('<td/>').html(version).prop('class','version'));
+            tr.append($('<td/>').html(cube).prop('class','cubeName'));
+            tr.append($('<td/>').html(axis).prop('class','axisName'));
+
+            _batchUpdateAxisReferencesTable.append(tr);
+        }
+    }
+
+    function batchUpdateAxisReferencesUpdate() {
+        var refAxes = [];
+        var allRows = findBatchUpdateAxisReferencesRows();
+        var checked = allRows.has('input:checked');
+        var newAppVal = _batchUpdateAxisReferencesApp.val();
+        var newVersionVal = _batchUpdateAxisReferencesVersion.val();
+        var newCubeNameVal = _batchUpdateAxisReferencesCubeName.val();
+        var newAxisNameVal = _batchUpdateAxisReferencesAxisName.val();
+        var propPrefix = isBatchUpdateAxisReferencesDestinationToggled() ? 'dest' : 'transform';
+        var appProp = propPrefix + 'App';
+        var versionProp = propPrefix + 'Version';
+        var cubeNameProp = propPrefix + 'CubeName';
+        var axisNameProp = propPrefix + 'AxisName';
+
+        for (var checkedIdx = 0, checkedLen = checked.length; checkedIdx < checkedLen; checkedIdx++) {
+            var refAxIdx = allRows.index(checked[checkedIdx]);
+            var refAx = _batchUpdateAxisReferencesData[refAxIdx];
+            if (newAppVal !== '') {
+                refAx[appProp] = newAppVal;
+                if (newVersionVal !== '') {
+                    refAx[versionProp] = newVersionVal;
+                    if (newCubeNameVal !== '') {
+                        refAx[cubeNameProp] = newCubeNameVal;
+                        if (newAxisNameVal !== '') {
+                            refAx[axisNameProp] = newAxisNameVal;
+                        }
+                    }
+                }
+            }
+            refAxes.push(refAx);
+        }
+        var result = call('ncubeController.updateReferenceAxes', [refAxes]);
+        if (!result.status) {
+            showNote('Unable to update reference axes:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        var axisGrammar = checkedLen === 1 ? 'axis' : 'axes';
+        showNote(checkedLen + ' ' + axisGrammar + ' updated', '', 3000);
+        for (checkedIdx = 0; checkedIdx < checkedLen; checkedIdx++) {
+            var row = $(checked[checkedIdx]);
+            if (newAppVal !== '') {
+                row.find('td.app')[0].innerHTML = newAppVal;
+                if (newVersionVal !== '') {
+                    row.find('td.version')[0].innerHTML = newVersionVal;
+                    if (newCubeNameVal !== '') {
+                        row.find('td.cubeName')[0].innerHTML = newCubeNameVal;
+                        if (newAxisNameVal !== '') {
+                            row.find('td.axisName')[0].innerHTML = newAxisNameVal;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     function loadAppListView()

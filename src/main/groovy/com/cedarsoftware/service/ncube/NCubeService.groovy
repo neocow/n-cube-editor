@@ -474,7 +474,7 @@ class NCubeService
 
     void updateReferenceAxes(List<AxisRef> axisRefs, String username)
     {
-        NCubeManager.updateReferenceAxes(axisRefs, username)
+        NCubeManager.updateReferenceAxes(axisRefs, username);
     }
 
     // =========================================== Helper methods ======================================================

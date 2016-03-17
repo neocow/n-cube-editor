@@ -1775,23 +1775,26 @@ class NCubeController extends BaseController
         }
     }
 
-    void updateReferenceAxes(List<AxisRef> axisRefs)
+    void updateReferenceAxes(Object[] axisRefs)
     {
+        List<AxisRef> axisRefList = axisRefs as List<AxisRef>
         try
         {
             // Ensure access is granted to all APPs and n-cubes involved.
-            for (AxisRef axisRef : axisRefs)
+            for (AxisRef axisRef : axisRefList)
             {
                 axisRef.srcAppId = addTenant(axisRef.srcAppId)
                 isAllowed(axisRef.srcAppId, axisRef.srcCubeName, Delta.Type.UPDATE)
                 ApplicationID srcApp = axisRef.srcAppId
                 ApplicationID destAppId = new ApplicationID(srcApp.tenant, axisRef.destApp, axisRef.destVersion, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD);
                 isAllowed(destAppId, axisRef.destCubeName, null)
-                ApplicationID transformAppId = new ApplicationID(srcApp.getTenant(), axisRef.transformApp, axisRef.transformVersion, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD);
-                isAllowed(transformAppId, axisRef.transformCubeName, null)
+                if (axisRef.transformApp != null && axisRef.transformVersion != null) {
+                    ApplicationID transformAppId = new ApplicationID(srcApp.getTenant(), axisRef.transformApp, axisRef.transformVersion, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD);
+                    isAllowed(transformAppId, axisRef.transformCubeName, null)
+                }
             }
 
-            nCubeService.updateReferenceAxes(axisRefs, getUserForDatabase())
+            nCubeService.updateReferenceAxes(axisRefList, getUserForDatabase())
         }
         catch (Exception e)
         {

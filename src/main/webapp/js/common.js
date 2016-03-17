@@ -235,12 +235,12 @@ function addSelectAllNoneListeners() {
 function addModalFilters() {
     $('.modal-filter').each(function() {
         var contentDiv = $(this);
-        var list = contentDiv.find('.modal-body').find('ul');
+        var list = contentDiv.find('.modal-body').find('ul,table');
 
         var refreshItems = function() {
             input.val('');
             input.focus();
-            items = list.find('li');
+            items = list.is('ul') ? list.find('li') : list.find('tr').has('input[type="checkbox"]');
             items.on('remove', function() {
                 delay(function() {
                     refreshItems();
@@ -281,13 +281,25 @@ function addModalFilters() {
                 } else {
                     items.hide();
                     items.filter(function () {
-                        var li = $(this);
-                        var cb = li.find('input[type="checkbox"]');
-                        var el = li;
-                        if (cb.length > 0) {
-                            el = cb.parent();
+                        var item = $(this);
+                        if (item.is('li')) {
+                            var el = item;
+                            var cb = item.find('input[type="checkbox"]');
+                            if (cb.length > 0) {
+                                el = cb.parent();
+                            }
+                            return el[0].textContent.toLowerCase().indexOf(query) > -1;
                         }
-                        return el[0].textContent.toLowerCase().indexOf(query) > -1;
+                        if (item.is('tr')) {
+                            var tds = item.find('td').filter(function() {
+                                var td = $(this);
+                                if (td.find('input[type="checkbox"]').length > 0) {
+                                    return false;
+                                }
+                                return td[0].textContent.toLowerCase().indexOf(query) > -1;
+                            });
+                            return tds.length > 0;
+                        }
                     }).show();
                 }
             }, e.keyCode === KEY_CODES.ENTER ? 0 : 200);
@@ -334,6 +346,80 @@ function saveOrDeleteValue(obj, storageKey) {
         delete localStorage[storageKey];
     }
 };
+
+function appIdFrom(app, version, status, branch) {
+    return {
+        app: app,
+        version: version,
+        status: status,
+        branch: branch
+    };
+}
+
+function populateSelect(nce, sel, method, params, defVal, forceRefresh, isInverted) {
+    if (forceRefresh || sel[0].options.length === 0) {
+        sel.empty();
+        var result = nce.call('ncubeController.' + method, params);
+        if (result.status === true) {
+            var results = result.data;
+            for (var i = 0, len = results.length; i < len; i++) {
+                var option = $('<option/>');
+                var optionValue = results[i];
+                if (method === CONTROLLER_METHOD.SEARCH) {
+                    optionValue = optionValue.name;
+                }
+                option[0].innerHTML = optionValue;
+                if (isInverted) {
+                    sel.prepend(option);
+                } else {
+                    sel.append(option);
+                }
+            }
+        } else {
+            nce.showNote('Error calling ' + method + '():<hr class="hr-small"/>' + result.data);
+        }
+    }
+    if (defVal) {
+        sel.val(defVal);
+    } else {
+        sel.prepend($('<option/>'));
+    }
+}
+
+function populateSelectFromCube(nce, sel, params, searchType) {
+    var axisTypes = {};
+    sel.empty();
+    var result = nce.call('ncubeController.getJson', params, {noResolveRefs:true});
+    if (result.status === true) {
+        var results = JSON.parse(result.data).axes;
+        if (searchType === POPULATE_SELECT_FROM_CUBE.METHOD) {
+            for (var idx = 0, iLen = results.length; idx < iLen; idx++) {
+                var axis = results[idx];
+                if (['method','methods'].indexOf(axis.name) > -1) {
+                    results = axis.columns;
+                    break;
+                }
+            }
+        }
+        for (var i = 0, len = results.length; i < len; i++) {
+            var option = $('<option/>');
+            var obj = results[i];
+            var val;
+            if (searchType === POPULATE_SELECT_FROM_CUBE.METHOD) {
+                val = obj.value;
+            } else if (searchType === POPULATE_SELECT_FROM_CUBE.AXIS) {
+                val = obj.name;
+                axisTypes[val] = {axisType:obj.type, valueType:obj.valueType};
+            }
+            option[0].innerHTML = val;
+            sel.append(option);
+        }
+    } else {
+        nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
+    }
+    sel.prepend($('<option/>'));
+    return axisTypes;
+}
 
 (function($) {
     $.fn.hasScrollBar = function() {

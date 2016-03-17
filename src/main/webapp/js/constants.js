@@ -86,6 +86,17 @@ var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
 var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 
+var POPULATE_SELECT_FROM_CUBE = {
+    AXIS: 'axis',
+    METHOD: 'method'
+};
+
+var CONTROLLER_METHOD = {
+    GET_APP_NAMES: 'getAppNames',
+    GET_APP_VERSIONS: 'getAppVersions',
+    SEARCH: 'search'
+};
+
 var DEFAULT_SCOPE = [
     {
         isApplied: 'true',
