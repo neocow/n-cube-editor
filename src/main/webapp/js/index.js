@@ -1414,7 +1414,7 @@ var NCE = (function ($)
 
     function buildBatchUpdateAxisReferencesTable() {
         findBatchUpdateAxisReferencesRows().remove();
-        var isDest = isBatchUpdateAxisReferencesDestinationToggled()
+        var isDest = isBatchUpdateAxisReferencesDestinationToggled();
         $('#batchUpdateAxisReferencesSectionHeader')[0].innerHTML = isDest ? 'Destination Axis' : 'Transform Axis';
 
         for (var i = 0, len = _batchUpdateAxisReferencesData.length; i < len; i++) {
