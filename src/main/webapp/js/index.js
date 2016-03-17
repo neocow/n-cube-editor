@@ -1448,7 +1448,8 @@ var NCE = (function ($)
 
     function batchUpdateAxisReferencesUpdate() {
         var refAxes = [];
-        var checked = findBatchUpdateAxisReferencesRows().has('input:checked');
+        var allRows = findBatchUpdateAxisReferencesRows();
+        var checked = allRows.has('input:checked');
         var newAppVal = _batchUpdateAxisReferencesApp.val();
         var newVersionVal = _batchUpdateAxisReferencesVersion.val();
         var newCubeNameVal = _batchUpdateAxisReferencesCubeName.val();
@@ -1460,7 +1461,7 @@ var NCE = (function ($)
         var axisNameProp = propPrefix + 'AxisName';
 
         for (var checkedIdx = 0, checkedLen = checked.length; checkedIdx < checkedLen; checkedIdx++) {
-            var refAxIdx = checked.index(checked[checkedIdx]);
+            var refAxIdx = allRows.index(checked[checkedIdx]);
             var refAx = _batchUpdateAxisReferencesData[refAxIdx];
             if (newAppVal !== '') {
                 refAx[appProp] = newAppVal;
