@@ -3537,13 +3537,13 @@ var NCubeEditor2 = (function ($) {
             _refAxisVersion.empty();
             _refAxisCube.empty();
             _refAxisAxis.empty();
-            populateSelect(nce, _refAxisVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refAxisStatus.val(), _refAxisBranch.val()], null, true, true);
+            populateSelect(nce, _refAxisVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refAxisStatus.val()], null, true, true);
         });
         _refFilterApp.change(function() {
             _refFilterVersion.empty();
             _refFilterCube.empty();
             _refFilterMethod.empty();
-            populateSelect(nce, _refFilterVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refFilterStatus.val(), _refFilterBranch.val()], null, true, true);
+            populateSelect(nce, _refFilterVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refFilterStatus.val()], null, true, true);
         });
 
         _refAxisVersion.change(function() {

@@ -1367,7 +1367,7 @@ var NCE = (function ($)
     function batchUpdateAxisReferencesAppChanged() {
         _batchUpdateAxisReferencesCubeName.empty();
         _batchUpdateAxisReferencesAxisName.empty();
-        var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE, head];
+        var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE];
         populateSelect(this, _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
     }
 
@@ -1878,7 +1878,7 @@ var NCE = (function ($)
     }
 
     function buildVersionsDropdown(listId, inputId) {
-        var result = call("ncubeController.getAppVersions", [_selectedApp, _selectedStatus, _selectedBranch]);
+        var result = call("ncubeController.getAppVersions", [_selectedApp]);
         if (result.status === true)
         {
             buildDropDown(listId, inputId, result.data, function(){});
