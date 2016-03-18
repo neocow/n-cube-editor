@@ -1368,18 +1368,18 @@ var NCE = (function ($)
         _batchUpdateAxisReferencesCubeName.empty();
         _batchUpdateAxisReferencesAxisName.empty();
         var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE];
-        populateSelect(this, _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
+        populateSelect(buildAppState(), _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
     }
 
     function batchUpdateAxisReferencesVersionChanged() {
         _batchUpdateAxisReferencesAxisName.empty();
         var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), '*', null, true];
-        populateSelect(this, _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
+        populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
     }
 
     function batchUpdateAxisReferencesCubeNameChanged() {
         var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
-        populateSelectFromCube(this, _batchUpdateAxisReferencesAxisName, params, POPULATE_SELECT_FROM_CUBE.AXIS);
+        populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, POPULATE_SELECT_FROM_CUBE.AXIS);
     }
 
     function batchUpdateAxisReferencesOpen() {
@@ -1387,7 +1387,7 @@ var NCE = (function ($)
         $('#batchUpdateAxisReferencesInstTitle')[0].innerHTML = 'Instructions - Batch Update Axis References';
         $('#batchUpdateAxisReferencesInstructions')[0].innerHTML = 'Update the reference axis properties of the checked axes. Updating will only update the rows you have selected. You can toggle between destination and transformation properties';
 
-        populateSelect(this, _batchUpdateAxisReferencesApp, CONTROLLER_METHOD.GET_APP_NAMES, [], null, true);
+        populateSelect(buildAppState(), _batchUpdateAxisReferencesApp, CONTROLLER_METHOD.GET_APP_NAMES, [], null, true);
 
         showNote('Finding all reference axes, please wait...');
         setTimeout(function() {

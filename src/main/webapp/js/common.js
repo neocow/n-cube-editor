@@ -345,7 +345,7 @@ function saveOrDeleteValue(obj, storageKey) {
     } else {
         delete localStorage[storageKey];
     }
-};
+}
 
 function appIdFrom(app, version, status, branch) {
     return {
