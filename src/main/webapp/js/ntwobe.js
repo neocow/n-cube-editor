@@ -1530,10 +1530,14 @@ var NCubeEditor2 = (function ($) {
             },
             afterScrollHorizontally: function() {
                 moveTopAxisMenu();
-                saveViewPosition();
+                delay(function() {
+                    saveViewPosition();
+                },PROGRESS_DELAY);
             },
             afterScrollVertically: function() {
-                saveViewPosition();
+                delay(function() {
+                    saveViewPosition();
+                },PROGRESS_DELAY);
             }
         };
     };
