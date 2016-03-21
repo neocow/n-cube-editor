@@ -2667,7 +2667,7 @@ var NCubeEditor2 = (function ($) {
             isCached = data.defaultCellValueCache;
         }
         // Set the cell value (String)
-        var cellValue = value !== null ? value : '';
+        var cellValue = value !== null && value !== undefined ? value : '';
         _editCellValue.val(cellValue);
         if (dataType === null || !dataType) {
             dataType = 'string';
