@@ -339,6 +339,10 @@ function modalsDraggable(shouldBeDraggable) {
     });
 }
 
+function getStorageKey(nce, prefix) {
+    return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + nce.getSelectedCubeName().toLowerCase();
+}
+
 function saveOrDeleteValue(obj, storageKey) {
     if (obj && Object.keys(obj).length > 0) {
         localStorage[storageKey] = JSON.stringify(obj);

@@ -828,7 +828,7 @@ var NCubeEditor2 = (function ($) {
     };
 
     var hasCustomAxisOrder = function() {
-        return localStorage.hasOwnProperty(getStorageKey(AXIS_ORDER));
+        return localStorage.hasOwnProperty(getStorageKey(nce, AXIS_ORDER));
     };
 
     var getAppliedFilters = function() {
@@ -946,7 +946,7 @@ var NCubeEditor2 = (function ($) {
             var i, len, axis;
             if (hasCustomAxisOrder())
             {
-                var order = JSON.parse(localStorage[getStorageKey(AXIS_ORDER)]);
+                var order = JSON.parse(localStorage[getStorageKey(nce, AXIS_ORDER)]);
                 for (i = 0, len = order.length; i < len; i++)
                 {
                     axis = cubeAxes[order[i]];
@@ -1069,7 +1069,7 @@ var NCubeEditor2 = (function ($) {
         var hideColumns = function()
         {
             _hiddenColumns = {};
-            var storageKey = getStorageKey(HIDDEN_COLUMNS);
+            var storageKey = getStorageKey(nce, HIDDEN_COLUMNS);
             if (localStorage.hasOwnProperty(storageKey))
             {
                 _hiddenColumns = JSON.parse(localStorage[storageKey]);
@@ -1381,25 +1381,25 @@ var NCubeEditor2 = (function ($) {
     };
 
     var getSavedColumnWidths = function() {
-        var localWidthVar = localStorage[getStorageKey(COLUMN_WIDTHS)];
+        var localWidthVar = localStorage[getStorageKey(nce, COLUMN_WIDTHS)];
         return localWidthVar ? JSON.parse(localWidthVar) : {};
     };
 
     var getSavedRowHeights = function() {
-        var localHeightVar = localStorage[getStorageKey(ROW_HEIGHTS)];
+        var localHeightVar = localStorage[getStorageKey(nce, ROW_HEIGHTS)];
         return localHeightVar ? JSON.parse(localHeightVar) : {};
     };
 
     var saveColumnWidth = function(col, newVal) {
         var saved = getSavedColumnWidths();
         saved[col] = newVal;
-        saveOrDeleteValue(saved, getStorageKey(COLUMN_WIDTHS));
+        saveOrDeleteValue(saved, getStorageKey(nce, COLUMN_WIDTHS));
     };
 
     var saveRowHeight = function(row, newVal) {
         var saved = getSavedRowHeights();
         saved[row] = newVal;
-        saveOrDeleteValue(saved, getStorageKey(ROW_HEIGHTS));
+        saveOrDeleteValue(saved, getStorageKey(nce, ROW_HEIGHTS));
     };
 
     var calcColumnHeader = function(index)
@@ -2058,11 +2058,11 @@ var NCubeEditor2 = (function ($) {
         li = $('<li/>');
         an = $('<a href="#">');
         an[0].innerHTML = "Revert column / row sizing";
-        if (localStorage[getStorageKey(COLUMN_WIDTHS)]) {
+        if (localStorage[getStorageKey(nce, COLUMN_WIDTHS)]) {
             an.click(function (e) {
                 e.preventDefault();
-                saveOrDeleteValue(null, getStorageKey(COLUMN_WIDTHS));
-                saveOrDeleteValue(null, getStorageKey(ROW_HEIGHTS));
+                saveOrDeleteValue(null, getStorageKey(nce, COLUMN_WIDTHS));
+                saveOrDeleteValue(null, getStorageKey(nce, ROW_HEIGHTS));
                 reload();
             });
         } else {
@@ -2180,7 +2180,7 @@ var NCubeEditor2 = (function ($) {
             if (hasCustomAxisOrder()) {
                 an.click(function (e) {
                     e.preventDefault();
-                    delete localStorage[getStorageKey(AXIS_ORDER)];
+                    delete localStorage[getStorageKey(nce, AXIS_ORDER)];
                     destroyEditor();
                     reload();
                 });
@@ -3453,13 +3453,8 @@ var NCubeEditor2 = (function ($) {
         reload();
     };
 
-    var getStorageKey = function(prefix)
-    {
-        return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + data.ncube.toLowerCase();
-    };
-
     var getSavedFilters = function() {
-        var filters = localStorage[getStorageKey(FILTERS)];
+        var filters = localStorage[getStorageKey(nce, FILTERS)];
         return filters ? JSON.parse(filters) : [];
     };
 
@@ -3469,11 +3464,11 @@ var NCubeEditor2 = (function ($) {
     };
 
     var saveFilters = function() {
-        saveOrDeleteValue(_filters, getStorageKey(FILTERS));
+        saveOrDeleteValue(_filters, getStorageKey(nce, FILTERS));
     };
 
     var storeHiddenColumns = function() {
-        saveOrDeleteValue(_hiddenColumns, getStorageKey(HIDDEN_COLUMNS));
+        saveOrDeleteValue(_hiddenColumns, getStorageKey(nce, HIDDEN_COLUMNS));
     };
 
     // =============================================== End Column Hiding ===============================================
@@ -3505,7 +3500,7 @@ var NCubeEditor2 = (function ($) {
         {
             order.push(axes[i].name.toLowerCase());
         }
-        localStorage[getStorageKey(AXIS_ORDER)] = JSON.stringify(order);
+        localStorage[getStorageKey(nce, AXIS_ORDER)] = JSON.stringify(order);
     };
 
     // =============================================== End Axis Ordering ===============================================
@@ -3652,7 +3647,7 @@ var NCubeEditor2 = (function ($) {
                 storeHiddenColumns();
             }
             if (hasCustomAxisOrder()) {
-                var order = JSON.parse(localStorage[getStorageKey(AXIS_ORDER)]);
+                var order = JSON.parse(localStorage[getStorageKey(nce, AXIS_ORDER)]);
                 axes.splice(order.indexOf(lowerAxisName), 1);
                 storeAxisOrder();
             }
@@ -3783,7 +3778,7 @@ var NCubeEditor2 = (function ($) {
                 storeHiddenColumns();
 
                 if (hasCustomAxisOrder()) {
-                    var order = JSON.parse(localStorage[getStorageKey(AXIS_ORDER)]);
+                    var order = JSON.parse(localStorage[getStorageKey(nce, AXIS_ORDER)]);
                     axes[order.indexOf(oldName)].name = newName;
                     storeAxisOrder();
                 }
