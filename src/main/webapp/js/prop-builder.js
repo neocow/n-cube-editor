@@ -9,6 +9,7 @@
  *      columns             - columns to show on modal
  *          heading         - heading for column
  *          type            - type of input for column, use constant COLUMN_TYPES
+ *          default         - used if column has a default value (such as true for checkbox) for new rows
  *          selectOptions   - if type is SELECT, use for list of options for select input
  */
 
@@ -146,6 +147,8 @@ var PropertyBuilder = (function ($) {
             var inputElement = null;
             if (dataRow) {
                 dataVal = dataRow[key];
+            } else if (column.hasOwnProperty('default')) {
+                dataVal = column.default;
             }
 
             var type = column.type;

@@ -810,6 +810,7 @@ var Visualizer = (function ($) {
             columns: {
                 isApplied: {
                     heading: 'Apply',
+                    default: true,
                     type: PropertyBuilder.COLUMN_TYPES.CHECKBOX
                 },
                 key: {
