@@ -1630,7 +1630,7 @@ var NCubeEditor2 = (function ($) {
             td.style.background = BACKGROUND_CUBE_NAME;
             td.style.color = COLOR_WHITE;
             td.colSpan = 1;
-            cellProperties.readOnly = true;
+            cellProperties.editor = CubeEditor;
             if (col < axes.length - 2) {
                 td.style.borderRight = NONE;
                 td.style.overflow = 'visible';
@@ -1961,6 +1961,30 @@ var NCubeEditor2 = (function ($) {
         });
         li.append(an);
         ul.append(li);
+
+        li = $('<li/>');
+        an = $('<a href="#">');
+        an[0].innerHTML = "Edit axis metadata...";
+        if (isRef) {
+            li.prop('class', 'disabled');
+            an.click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        } else {
+            an.click(function (e) {
+                e.preventDefault();
+                var metaPropertyOptions = {
+                    objectType: METAPROPERTIES.OBJECT_TYPES.AXIS,
+                    objectName: axisName,
+                    axis: axis
+                };
+                openMetaPropertiesBuilder(metaPropertyOptions);
+            });
+        }
+        li.append(an);
+        ul.append(li);
+
         li = $('<div/>').prop({'class': 'divider'});
         ul.append(li);
         li = $('<li/>');
@@ -2356,40 +2380,85 @@ var NCubeEditor2 = (function ($) {
             columnName = getRowHeaderPlainText(row, col);
         }
 
-        openColumnMetaPropertiesBuilder(axis, column, columnName);
+        var metaPropertyOptions = {
+            objectType: METAPROPERTIES.OBJECT_TYPES.COLUMN,
+            objectName: columnName,
+            axis: axis,
+            column: column
+        };
+        openMetaPropertiesBuilder(metaPropertyOptions);
+    };
+
+    var CubeEditor = NcubeBaseEditor.prototype.extend();
+    CubeEditor.prototype.open = function() {
+        NcubeBaseEditor.prototype.open.apply(this, arguments);
+
+        var metaPropertyOptions = {
+            objectType: METAPROPERTIES.OBJECT_TYPES.CUBE,
+            objectName: cubeName,
+        };
+        openMetaPropertiesBuilder(metaPropertyOptions);
     };
 
     // ==================================== End Custom HOT Editors =====================================================
 
     // ==================================== Begin Edit Metaproperties ==================================================
 
-    var getColumnMetaProperties = function(axis, column) {
-        var result = nce.call('ncubeController.getColumnMetaProperties', [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name, column.id]);
+    var getMetaPropertiesControllerInfo = function(metaPropertyOptions) {
+        var getMethod;
+        var setMethod;
+        var params = [nce.getSelectedTabAppId(), nce.getSelectedCubeName()];
+        var objectType = metaPropertyOptions.objectType;
+        if (objectType === METAPROPERTIES.OBJECT_TYPES.COLUMN) {
+            getMethod = CONTROLLER_METHOD.GET_COLUMN_METAPROPERTIES;
+            setMethod = CONTROLLER_METHOD.UPDATE_COLUMN_METAPROPERTIES;
+            params.push(metaPropertyOptions.axis.name);
+            params.push(metaPropertyOptions.column.id);
+        } else if (objectType === METAPROPERTIES.OBJECT_TYPES.AXIS) {
+            getMethod = CONTROLLER_METHOD.GET_AXIS_METAPROPERTIES;
+            setMethod = CONTROLLER_METHOD.UPDATE_AXIS_METAPROPERTIES;
+            params.push(metaPropertyOptions.axis.name);
+        } else {
+            getMethod = CONTROLLER_METHOD.GET_CUBE_METAPROPERTIES;
+            setMethod = CONTROLLER_METHOD.UPDATE_CUBE_METAPROPERTIES;
+        }
+
+        return {
+            getter: getMethod,
+            setter: setMethod,
+            params: params
+        };
+    };
+
+    var getMetaProperties = function(metaPropertyOptions) {
+        var controllerInfo = getMetaPropertiesControllerInfo(metaPropertyOptions);
+        var result = nce.call('ncubeController.' + controllerInfo.getter, controllerInfo.params);
         if (result.status !== true) {
-            nce.showNote("Unable to fetch metaproperties for column '" + columnName + "':<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Unable to fetch metaproperties for " + metaPropertyOptions.objectType + " '" + metaPropertyOptions.objectName + "':<hr class=\"hr-small\"/>" + result.data);
             return null;
         }
         return result.data;
     };
 
-    var updateColumnMetaProperties = function(axis, column, metaProperties) {
+    var updateMetaProperties = function(metaPropertyOptions, metaProperties) {
         var mpMap = {};
         for (var mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
             var prop = metaProperties[mpIdx];
             mpMap[prop.key] = prop.value;
         }
 
-        var result = nce.call('ncubeController.updateColumnMetaProperties', [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name, column.id, mpMap]);
-
+        var controllerInfo = getMetaPropertiesControllerInfo(metaPropertyOptions);
+        controllerInfo.params.push(mpMap);
+        var result = nce.call('ncubeController.' + controllerInfo.setter, controllerInfo.params);
         if (result.status !== true) {
-            nce.showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Unable to update metaproperties for " + metaProperties.objectType + " '" + metaPropertyOptions.objectName + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
         reload();
     };
 
-    var openColumnMetaPropertiesBuilder = function(axis, column, columnName) {
-        var mpData = getColumnMetaProperties(axis, column);
+    var openMetaPropertiesBuilder = function(metaPropertyOptions) {
+        var mpData = getMetaProperties(metaPropertyOptions);
         if (mpData === null) {
             return;
         }
@@ -2402,9 +2471,9 @@ var NCubeEditor2 = (function ($) {
         }
 
         var builderOptions = {
-            title: axis.name + ' - ' + columnName,
-            instructionsTitle: 'Instructions - MetaProperties',
-            instructionsText: 'Add custom properties for this column.',
+            title: 'Metaproperties - ' + metaPropertyOptions.objectName,
+            instructionsTitle: 'Instructions - Metaproperties',
+            instructionsText: 'Add custom properties for this ' + metaPropertyOptions.objectType + '.',
             columns: {
                 key: {
                     heading: 'Key',
@@ -2416,7 +2485,7 @@ var NCubeEditor2 = (function ($) {
                 }
             },
             afterSave: function() {
-                updateColumnMetaProperties(axis, column, metaProperties);
+                updateMetaProperties(metaPropertyOptions, metaProperties);
             }
         };
 

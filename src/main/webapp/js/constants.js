@@ -86,7 +86,12 @@ var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
 var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 var METAPROPERTIES = {
-    COLUMN_BLACKLIST: ['value','url','type','id','name']
+    COLUMN_BLACKLIST: ['value','url','type','id','name'],
+    OBJECT_TYPES: {
+        CUBE: 'cube',
+        AXIS: 'axis',
+        COLUMN: 'column'
+    }
 };
 
 var POPULATE_SELECT_FROM_CUBE = {
@@ -97,7 +102,13 @@ var POPULATE_SELECT_FROM_CUBE = {
 var CONTROLLER_METHOD = {
     GET_APP_NAMES: 'getAppNames',
     GET_APP_VERSIONS: 'getAppVersions',
-    SEARCH: 'search'
+    SEARCH: 'search',
+    GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
+    GET_AXIS_METAPROPERTIES: 'getAxisMetaProperties',
+    GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
+    UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
+    UPDATE_AXIS_METAPROPERTIES: 'updateAxisMetaProperties',
+    UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
 };
 
 var DEFAULT_SCOPE = [
