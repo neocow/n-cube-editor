@@ -2337,14 +2337,94 @@ var NCubeEditor2 = (function ($) {
     ColumnEditor.prototype.open = function() {
         NcubeBaseEditor.prototype.open.apply(this, arguments);
 
-        var axis = this.row === 1 ? axes[colOffset] : axes[this.col];
-        editColumns(axis.name);
-    };
-    ColumnEditor.prototype.isOpened = function() {
-        return $(_editColumnModal).hasClass('in');
+        var row = this.row;
+        var col = this.col;
+        var axis;
+        var column;
+        var columnName;
+
+        if (row === 1) {
+            if (colOffset < 1) {
+                return;
+            }
+            axis = axes[colOffset];
+            column = getColumnHeader(col);
+            columnName = getColumnHeaderValue(col);
+        } else {
+            axis = axes[this.col];
+            column = getRowHeader(row, col);
+            columnName = getRowHeaderPlainText(row, col);
+        }
+
+        openColumnMetaPropertiesBuilder(axis, column, columnName);
     };
 
     // ==================================== End Custom HOT Editors =====================================================
+
+    // ==================================== Begin Edit Metaproperties ==================================================
+
+    var getColumnMetaProperties = function(axis, column) {
+        var result = nce.call('ncubeController.getColumnMetaProperties', [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name, column.id]);
+        if (result.status !== true) {
+            nce.showNote("Unable to fetch metaproperties for column '" + columnName + "':<hr class=\"hr-small\"/>" + result.data);
+            return null;
+        }
+        return result.data;
+    };
+
+    var updateColumnMetaProperties = function(axis, column, metaProperties) {
+        var mpMap = {};
+        for (var mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
+            var prop = metaProperties[mpIdx];
+            mpMap[prop.key] = prop.value;
+        }
+
+        var result = nce.call('ncubeController.updateColumnMetaProperties', [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name, column.id, mpMap]);
+
+        if (result.status !== true) {
+            nce.showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
+            return;
+        }
+        reload();
+    };
+
+    var openColumnMetaPropertiesBuilder = function(axis, column, columnName) {
+        var mpData = getColumnMetaProperties(axis, column);
+        if (mpData === null) {
+            return;
+        }
+        delete mpData['@type'];
+        var metaKeys = Object.keys(mpData);
+        var metaProperties = [];
+        for (var i = 0, len = metaKeys.length; i < len; i++) {
+            var key = metaKeys[i];
+            metaProperties.push({key:key, value:mpData[key]});
+        }
+
+        var builderOptions = {
+            title: axis.name + ' - ' + columnName,
+            instructionsTitle: 'Instructions - MetaProperties',
+            instructionsText: 'Add custom properties for this column.',
+            columns: {
+                key: {
+                    heading: 'Key',
+                    type: PropertyBuilder.COLUMN_TYPES.TEXT
+                },
+                value: {
+                    heading: 'Value',
+                    type: PropertyBuilder.COLUMN_TYPES.TEXT
+                }
+            },
+            afterSave: function() {
+                updateColumnMetaProperties(axis, column, metaProperties);
+            }
+        };
+
+        PropertyBuilder.openBuilderModal(builderOptions, metaProperties);
+    };
+
+    // ===================================== End Edit Metaproperties ===================================================
+
 
     // ==================================== Begin Copy / Paste =========================================================
 
