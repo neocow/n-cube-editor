@@ -743,7 +743,7 @@ var TestEditor = (function ($)
 
         saveAllTests(false);
 
-        param.find('control-label').click();
+        param.find('.control-label').click();
     };
 
     var addNewAssertion = function()
