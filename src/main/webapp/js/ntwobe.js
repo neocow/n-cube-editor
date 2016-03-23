@@ -321,6 +321,7 @@ var NCubeEditor2 = (function ($) {
         _ncubeContent.hide();
         _ncubeHtmlError.show();
         _ncubeHtmlError[0].innerHTML = text;
+        buildTopAxisMenu();
     };
 
     var clearHtmlError = function() {
@@ -1107,8 +1108,10 @@ var NCubeEditor2 = (function ($) {
 
     var buildTopAxisMenu = function() {
         if (_ncubeHtmlError.is(":visible")) {
+            _topAxisBtn.hide();
             return;
         }
+        _topAxisBtn.show();
         if (axes.length < 2) {
             _topAxisBtn.empty();
         } else {
