@@ -2954,7 +2954,8 @@ var NCubeEditor2 = (function ($) {
                 comparator: {
                     heading: 'Comparator',
                     type: PropertyBuilder.COLUMN_TYPES.SELECT,
-                    selectOptions: FILTER_COMPARATOR_LIST
+                    selectOptions: FILTER_COMPARATOR_LIST,
+                    default: FILTER_COMPARATOR_LIST[0]
                 },
                 expressionValue: {
                     heading: 'Comparison Value',
