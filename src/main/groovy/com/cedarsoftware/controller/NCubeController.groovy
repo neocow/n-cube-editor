@@ -355,8 +355,9 @@ class NCubeController extends BaseController
             isAllowed(appId, cubeName, Delta.Type.UPDATE)
             NCube ncube = nCubeService.loadCube(appId, cubeName)
             Axis axis = ncube.getAxis(axisName)
-            axis.addMetaProperties(newMetaProperties)
             axis.clearMetaProperties();
+            axis.addMetaProperties(newMetaProperties)
+            ncube.clearSha1();
             nCubeService.updateNCube(ncube, getUserForDatabase())
             return true
         }
@@ -395,6 +396,7 @@ class NCubeController extends BaseController
             Column column = axis.getColumnById(colId)
             column.clearMetaProperties();
             column.addMetaProperties(newMetaProperties)
+            ncube.clearSha1();
             nCubeService.updateNCube(ncube, getUserForDatabase())
             return true
         }

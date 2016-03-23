@@ -62,6 +62,11 @@ var PropertyBuilder = (function ($) {
             .addClass('modal fade')
             .on('hidden', function() {
                 $(this).remove();
+            })
+            .keyup(function(e) {
+                if (e.keyCode === KEY_CODES.ENTER) {
+                    addTableRow();
+                }
             });
 
         var innerDiv = $('<div/>').addClass('modal-dialog modal-lg');
@@ -178,6 +183,7 @@ var PropertyBuilder = (function ($) {
         tr.append($('<td/>').append(closeBtn));
 
         _table.append(tr);
+        tr.find('input').first().focus();
     }
 
     function clearTableRows() {

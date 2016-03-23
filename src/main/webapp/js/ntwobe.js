@@ -2395,7 +2395,7 @@ var NCubeEditor2 = (function ($) {
 
         var metaPropertyOptions = {
             objectType: METAPROPERTIES.OBJECT_TYPES.CUBE,
-            objectName: cubeName,
+            objectName: cubeName
         };
         openMetaPropertiesBuilder(metaPropertyOptions);
     };
@@ -2486,9 +2486,11 @@ var NCubeEditor2 = (function ($) {
             },
             afterSave: function() {
                 updateMetaProperties(metaPropertyOptions, metaProperties);
+                hot.removeHook('beforeKeyDown', onBeforeKeyDown);
             }
         };
 
+        hot.addHook('beforeKeyDown', onBeforeKeyDown);
         PropertyBuilder.openBuilderModal(builderOptions, metaProperties);
     };
 
