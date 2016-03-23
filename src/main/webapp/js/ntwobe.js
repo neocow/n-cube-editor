@@ -155,7 +155,6 @@ var NCubeEditor2 = (function ($) {
             addColumnEditListeners();
             addColumnHideListeners();
             addEditCellListeners();
-            addFilterListeners();
             addSearchListeners();
             addModalFilters();
             modalsDraggable(true);
@@ -2923,123 +2922,58 @@ var NCubeEditor2 = (function ($) {
 
     // ============================================== Begin Filtering ==================================================
 
-    var addFilterListeners = function() {
-        $('#filterInstTitle')[0].textContent = 'Instructions - Filter Data';
-        $('#filterInstructions')[0].innerHTML = 'Select filters to apply to cell data for ncube.';
-        var tr = $('<tr/>');
-        tr.append($('<td/>').html('Apply'));
-        tr.append($('<td/>').html('Column'));
-        tr.append($('<td/>').html('Comparator'));
-        tr.append($('<td/>').html('Comparison Value'));
-        tr.append($('<td/>').html('Include Empty Cells'));
-        tr.append($('<td/>'));
-        _filterTable.append(tr);
-
-        $('#filterAdd').click(function() {
-            addFilter();
-        });
-        $('#filterClear').click(function () {
-            filterClear();
-        });
-        $('#filterCancel').click(function () {
-            filterClose();
-        });
-        $('#filterSave').click(function () {
-            filterSave();
-        });
+    var filterSave = function() {
+        saveFilters();
+        reload();
     };
 
-    var addNewTableRow = function() {
-        var tr = $('<tr/>').prop('class','filter-expression');
-        var appliedCheckbox = $('<input/>').prop({type:'checkbox', class:'isApplied'});
-        var includeAllCheckbox = $('<input/>').prop({type:'checkbox', class:'isIncludeAll'});
-        var columnSelect = $('<select/>').prop('class','column');
-        var expressionSelect = $('<select/>').prop('class','comparator');
-        var expressionInput = $('<input/>').prop({type:'text', class:'expressionValue'});
-        var closeBtn = $('<span/>').prop({class:'glyphicon glyphicon-remove tab-close-icon', 'aria-hidden':'true'});
-
+    var filterOpen = function() {
+        var columnSelectList = [];
         var columns = axes[colOffset].columns;
         var columnKeys = Object.keys(columns);
         for (var i = 0, len = columnKeys.length; i < len; i++) {
             var colId = columnKeys[i];
-            var opt = $('<option/>');
-            opt.val(colId);
-            opt.text(columns[colId].value);
-            columnSelect.append(opt);
+            columnSelectList.push({key:colId, value:columns[colId].value});
         }
 
-        for (var c = 0, cLen = FILTER_COMPARATOR_LIST.length; c < cLen; c++) {
-            expressionSelect.append($('<option/>').text(FILTER_COMPARATOR_LIST[c]));
-        }
-
-        closeBtn.click(function() {
-            tr.remove();
-        });
-
-        tr.append($('<td/>').append(appliedCheckbox));
-        tr.append($('<td/>').append(columnSelect));
-        tr.append($('<td/>').append(expressionSelect));
-        tr.append($('<td/>').append(expressionInput));
-        tr.append($('<td/>').append(includeAllCheckbox));
-        tr.append($('<td/>').append(closeBtn));
-        _filterTable.append(tr);
-
-        return tr;
-    };
-
-    var addFilter = function() {
-        var tr = addNewTableRow();
-        tr.find('.isApplied').prop('checked','true');
-        tr.find('.isIncludeAll').prop('checked','true');
-    };
-
-    var filterClear = function() {
-        _filterTable.find('tr.filter-expression').remove();
-    };
-
-    var filterSave = function() {
-        _filters = [];
-        var trs = _filterTable.find('tr.filter-expression');
-        for (var trIdx = 0, trLen = trs.length; trIdx < trLen; trIdx++) {
-            var tr = $(trs[trIdx]);
-            var filter = {};
-            filter.isApplied = tr.find('.isApplied').prop('checked');
-            filter.isIncludeAll = tr.find('.isIncludeAll').prop('checked');
-            filter.column = tr.find('.column').val();
-            filter.comparator = tr.find('.comparator').val();
-            filter.expressionValue = tr.find('.expressionValue').val();
-            _filters.push(filter);
-        }
-
-        saveFilters();
-        filterClose();
-        reload();
-    };
-
-    var filterClose = function() {
-        $(_filterModal).modal('hide');
-        hot.removeHook('beforeKeyDown', onBeforeKeyDown);
-    };
-
-    var filterOpen = function() {
-        filterClear();
-        var fLen = _filters.length;
-        if (fLen === 0) {
-            addFilter();
-        } else {
-            for (var f = 0; f < fLen; f++) {
-                var filter = _filters[f];
-                var tr = addNewTableRow();
-                tr.find('.isApplied').prop('checked', filter.isApplied);
-                tr.find('.isIncludeAll').prop('checked', filter.isIncludeAll);
-                tr.find('.column').val(filter.column);
-                tr.find('.comparator').val(filter.comparator);
-                tr.find('.expressionValue').val(filter.expressionValue);
+        var builderOptions = {
+            title: 'Filter Data',
+            instructionsTitle: 'Instructions - Filter Data',
+            instructionsText: 'Select filters to apply to cell data for ncube.',
+            columns: {
+                isApplied: {
+                    heading: 'Apply',
+                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX,
+                    default: true
+                },
+                column: {
+                    heading: 'Column',
+                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
+                    selectOptions: columnSelectList
+                },
+                comparator: {
+                    heading: 'Comparator',
+                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
+                    selectOptions: FILTER_COMPARATOR_LIST
+                },
+                expressionValue: {
+                    heading: 'Comparison Value',
+                    type: PropertyBuilder.COLUMN_TYPES.TEXT
+                },
+                isIncludeAll: {
+                    heading: 'Include Empty Cells',
+                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX,
+                    default: true
+                }
+            },
+            afterSave: function() {
+                filterSave();
+                hot.removeHook('beforeKeyDown', onBeforeKeyDown);
             }
-        }
+        };
 
         hot.addHook('beforeKeyDown', onBeforeKeyDown);
-        $(_filterModal).modal();
+        PropertyBuilder.openBuilderModal(builderOptions, _filters);
     };
 
     // =============================================== End Filtering ===================================================

@@ -68,6 +68,7 @@ var PropertyBuilder = (function ($) {
                     addTableRow();
                 }
             });
+        makeModalDraggable(_modal, true);
 
         var innerDiv = $('<div/>').addClass('modal-dialog modal-lg');
         var contentDiv = $('<div/>').addClass('modal-content');
@@ -165,7 +166,17 @@ var PropertyBuilder = (function ($) {
                 inputElement = $('<select/>');
                 var selectOptions = column.selectOptions;
                 for (var o = 0, oLen = selectOptions.length; o < oLen; o++) {
-                    inputElement.append($('<option/>').text(selectOptions[o]));
+                    var optEl = $('<option/>');
+                    var curOption = selectOptions[o];
+
+                    if (typeof curOption === 'object') {
+                        optEl.val(curOption.key);
+                        optEl.text(curOption.value);
+                    } else {
+                        optEl.text(selectOptions[o]);
+                    }
+
+                    inputElement.append(optEl);
                 }
                 inputElement.val(dataVal);
             } else if (type === COLUMN_TYPES.TEXT) {
