@@ -1106,6 +1106,9 @@ var NCubeEditor2 = (function ($) {
     };
 
     var buildTopAxisMenu = function() {
+        if (_ncubeHtmlError.is(":visible")) {
+            return;
+        }
         if (axes.length < 2) {
             _topAxisBtn.empty();
         } else {
