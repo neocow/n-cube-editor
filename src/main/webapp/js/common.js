@@ -316,27 +316,39 @@ function addModalFilters() {
 
 function modalsDraggable(shouldBeDraggable) {
     $('.modal').each(function() {
-        var modal = $(this);
-        var maxX = modal.width() / 2;
-        var maxY = modal.height() / 2;
-        var prevX = 0;
-        var prevY = 0;
-        modal.draggable({
-            handle: '.modal-header',
-            drag: function(e) {
-                var offset = modal.offset();
-                var posX = offset.left;
-                var posY = offset.top;
-                if ((posX > maxX && posX > prevX) || (posY > maxY && posY > prevY)) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                }
-                prevX = posX;
-                prevY = posY;
-            }
-        });
-        modal.draggable(shouldBeDraggable ? 'enable' : 'disable');
+        makeModalDraggable($(this), shouldBeDraggable);
     });
+}
+
+function makeModalDraggable(modal, shouldBeDraggable) {
+    var maxX = 600;
+    var maxY = 400;
+    var prevX = 0;
+    var prevY = 0;
+    modal.draggable({
+        handle: '.modal-header',
+        drag: function(e) {
+            var offset = modal.offset();
+            var posX = offset.left;
+            var posY = offset.top;
+            var tooFarLeft = posX < -250 && posX < prevX;
+            var tooFarRight = posX > maxX && posX > prevX;
+            var tooFarUp = posY < 0 && posY < prevY;
+            var tooFarDown = posY > maxY && posY > prevY;
+            if (tooFarLeft || tooFarRight || tooFarUp || tooFarDown) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+            prevX = posX;
+            prevY = posY;
+        }
+    });
+    modal.draggable(shouldBeDraggable ? 'enable' : 'disable');
+}
+
+
+function getStorageKey(nce, prefix) {
+    return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + nce.getSelectedCubeName().toLowerCase();
 }
 
 function saveOrDeleteValue(obj, storageKey) {

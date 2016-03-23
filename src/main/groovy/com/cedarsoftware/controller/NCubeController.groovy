@@ -312,6 +312,119 @@ class NCubeController extends BaseController
         }
     }
 
+    boolean updateCubeMetaProperties(ApplicationID appId, String cubeName, Map<String, Object> newMetaProperties)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
+            ncube.clearMetaProperties();
+            ncube.addMetaProperties(newMetaProperties)
+            nCubeService.updateNCube(ncube, getUserForDatabase())
+            return true
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return false
+        }
+    }
+
+    Map getCubeMetaProperties(ApplicationID appId, String cubeName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, null)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
+            return ncube.getMetaProperties()
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    boolean updateAxisMetaProperties(ApplicationID appId, String cubeName, String axisName, Map<String, Object> newMetaProperties)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
+            Axis axis = ncube.getAxis(axisName)
+            axis.clearMetaProperties();
+            axis.addMetaProperties(newMetaProperties)
+            ncube.clearSha1();
+            nCubeService.updateNCube(ncube, getUserForDatabase())
+            return true
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return false
+        }
+    }
+
+    Map getAxisMetaProperties(ApplicationID appId, String cubeName, String axisName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, null)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
+            Axis axis = ncube.getAxis(axisName)
+            return axis.getMetaProperties()
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    boolean updateColumnMetaProperties(ApplicationID appId, String cubeName, String axisName, long colId, Map<String, Object> newMetaProperties)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, Delta.Type.UPDATE)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
+            Axis axis = ncube.getAxis(axisName)
+            Column column = axis.getColumnById(colId)
+            column.clearMetaProperties();
+            column.addMetaProperties(newMetaProperties)
+            ncube.clearSha1();
+            nCubeService.updateNCube(ncube, getUserForDatabase())
+            return true
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return false
+        }
+    }
+
+    Map getColumnMetaProperties(ApplicationID appId, String cubeName, String axisName, long colId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            isAllowed(appId, cubeName, null)
+            NCube ncube = nCubeService.loadCube(appId, cubeName)
+            Axis axis = ncube.getAxis(axisName)
+            Column col = axis.getColumnById(colId)
+            return col.getMetaProperties()
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
     // @Deprecated
     // TODO: Remove
     Object[] getAppNames(String unused1, String unused2)
