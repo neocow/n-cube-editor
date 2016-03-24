@@ -223,7 +223,8 @@ var NCubeEditor2 = (function ($) {
                         }
                     } else {
                         if (keyCode === KEY_CODES.DELETE) {
-                            editCellClear();
+                            nceCutCopyData(getSelectedCellRange(), true);
+                            reload();
                         }
                     }
                 }
