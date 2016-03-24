@@ -2320,17 +2320,18 @@ var NCubeEditor2 = (function ($) {
 
     var keepKeyDownText = function(e) {
         var keycode = e.keyCode;
-        var valid =
+        var validNotNumPad =
             (keycode > 47 && keycode < 58)   || // number keys
             keycode == 32 || keycode == 13   || // spacebar & return key(s) (if you want to allow carriage returns)
             (keycode > 64 && keycode < 91)   || // letter keys
-            (keycode > 95 && keycode < 112)  || // numpad keys
             (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
             (keycode > 218 && keycode < 223);   // [\]' (in order)
 
-        if (valid) {
+        if (validNotNumPad) {
             var addChar = String.fromCharCode(keycode);
             _bufferText += e.shiftKey ? addChar : addChar.toLowerCase();
+        } else if (keycode > 95 && keycode < 112) { //numpad
+            _bufferText += String.fromCharCode(keycode - 48);
         }
     };
 
