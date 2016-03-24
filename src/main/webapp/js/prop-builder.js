@@ -135,8 +135,12 @@ var PropertyBuilder = (function ($) {
         }
         _table.append(headingRow);
 
-        for (var d = 0, dLen = _data.length; d < dLen; d++) {
-            addTableRow(_data[d]);
+        if (_data.length === 0) {
+            addTableRow(); //start with empty row
+        } else {
+            for (var d = 0, dLen = _data.length; d < dLen; d++) {
+                addTableRow(_data[d]);
+            }
         }
 
         return _table;
