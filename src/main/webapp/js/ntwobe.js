@@ -223,7 +223,8 @@ var NCubeEditor2 = (function ($) {
                         }
                     } else {
                         if (keyCode === KEY_CODES.DELETE) {
-                            editCellClear();
+                            nceCutCopyData(getSelectedCellRange(), true);
+                            reload();
                         }
                     }
                 }
@@ -329,9 +330,9 @@ var NCubeEditor2 = (function ($) {
         _ncubeHtmlError.hide();
     };
 
-    var load = function() {
+    var load = function(keepTable) {
         resetCoordinateBar();
-        if (hot) {
+        if (hot && !keepTable) {
             hot.destroy();
             hot = null;
         }
@@ -345,7 +346,9 @@ var NCubeEditor2 = (function ($) {
         clearHtmlError();
 
         handleCubeData(JSON.parse(result.data));
-        hot = new Handsontable(document.getElementById('hot-container'), getHotSettings());
+        if (!hot || !keepTable) {
+            hot = new Handsontable(document.getElementById('hot-container'), getHotSettings());
+        }
         selectSavedOrDefaultCell();
         hot.render();
         setClipFormatToggleListener();
@@ -1456,7 +1459,9 @@ var NCubeEditor2 = (function ($) {
     var getHotSettings = function() {
         return {
             copyPaste: false,
-            fillHandle: false,
+            fillHandle: {
+                autoInsertRow: false
+            },
             colWidths: _columnWidths,
             rowHeights: _rowHeights,
             autoColumnSize: false,
@@ -1543,6 +1548,9 @@ var NCubeEditor2 = (function ($) {
                 delay(function() {
                     saveViewPosition();
                 },PROGRESS_DELAY);
+            },
+            beforeAutofill: function(start, end, data) {
+                autoFillNce(start, end);
             }
         };
     };
@@ -2313,17 +2321,18 @@ var NCubeEditor2 = (function ($) {
 
     var keepKeyDownText = function(e) {
         var keycode = e.keyCode;
-        var valid =
+        var validNotNumPad =
             (keycode > 47 && keycode < 58)   || // number keys
             keycode == 32 || keycode == 13   || // spacebar & return key(s) (if you want to allow carriage returns)
             (keycode > 64 && keycode < 91)   || // letter keys
-            (keycode > 95 && keycode < 112)  || // numpad keys
             (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
             (keycode > 218 && keycode < 223);   // [\]' (in order)
 
-        if (valid) {
+        if (validNotNumPad) {
             var addChar = String.fromCharCode(keycode);
             _bufferText += e.shiftKey ? addChar : addChar.toLowerCase();
+        } else if (keycode > 95 && keycode < 112) { //numpad
+            _bufferText += String.fromCharCode(keycode - 48);
         }
     };
 
@@ -2575,9 +2584,21 @@ var NCubeEditor2 = (function ($) {
             return;
         }
 
-        var cells = [];
-        var range = getSelectedCellRange();
+        var clipData = nceCutCopyData(getSelectedCellRange(), isCut);
+        if (!clipData) {
+            return;
+        }
 
+        if (isCut) {
+            reload();
+        }
+        _clipboard.val(clipData);
+        _clipboard.focusin();
+        _clipboard.select();
+    };
+
+    var nceCutCopyData = function(range, isCut) {
+        var cells = [];
         for (var row = range.startRow; row <= range.endRow; row++) {
             for (var col = range.startCol; col <= range.endCol; col++) {
                 var cellId = getCellId(row, col);
@@ -2593,32 +2614,34 @@ var NCubeEditor2 = (function ($) {
         var result = nce.call("ncubeController.copyCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, isCut]);
         if (!result.status) {
             nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
-            return;
+            return null;
         }
-        if (isCut) {
-            reload();
-        }
-
-        var clipData = result.data;
-        _clipboard.val(CLIP_NCE + clipData);
-        _clipboard.focusin();
-        _clipboard.select();
+        return CLIP_NCE + result.data;
     };
 
     var editPaste = function() {
-        _clipboard.val('');
-        _clipboard.focus();
-
         if (!nce.ensureModifiable('Cannot paste cells.')) {
             return;
         }
 
-        var range = getSelectedCellRange();
+        _clipboard.val('');
+        _clipboard.focus();
 
+        var range = getSelectedCellRange();
         if (!range || range.length < 1) {
             return;
         }
 
+        setTimeout(function() {
+            var content = _clipboard.val();
+            if (!content || content == "") {
+                return;
+            }
+            pasteData(content, range);
+        }, 100);
+    };
+
+    var pasteData = function(content, range) {
         // Location of first selected cell in 2D spreadsheet view.
         var firstRow = range.startRow;
         var firstCol = range.startCol;
@@ -2632,136 +2655,154 @@ var NCubeEditor2 = (function ($) {
 
         var onlyOneCellSelected = firstRow == lastRow && firstCol == lastCol;
 
-        setTimeout(function() {
-            var content = _clipboard.val();
-            if (!content || content == "") {
-                return;
-            }
+        // Parse the clipboard content and build-up coordinates where this content will be pasted.
+        var result;
+        var colNum = firstCol;
+        var rowNum = firstRow;
 
-            // Parse the clipboard content and build-up coordinates where this content will be pasted.
-            var result;
-            var colNum = firstCol;
-            var rowNum = firstRow;
+        if (content.indexOf(CLIP_NCE) == 0) {
+            // NCE clipboard data (allows us to handle all cell types)
+            content = content.slice(CLIP_NCE.length);
+            var clipboard = JSON.parse(content);
 
-            if (content.indexOf(CLIP_NCE) == 0) {
-                // NCE clipboard data (allows us to handle all cell types)
-                content = content.slice(CLIP_NCE.length);
-                var clipboard = JSON.parse(content);
-
-                if (onlyOneCellSelected) {
-                    // Paste full clipboard data to cube (if it fits, otherwise clip to edges)
-                    for (var lineNum = 0, len = clipboard.length; lineNum < len; lineNum++) {
-                        var cellInfo = clipboard[lineNum];
-                        if (cellInfo == null) {
-                            rowNum++;
-                            colNum = firstCol;
-                        } else {
-                            if (colNum < numTableCols) {
-                                // Do attempt to read past edge of 2D grid
-                                var cellId = getCellId(rowNum, colNum);
-                                cellInfo.push(cellId.split('_'));
-                            }
-                            colNum++;
-                        }
-                        if (rowNum >= numTableRows) {
-                            // Do not go past bottom of grid
-                            break;
-                        }
-                    }
-                } else {
-                    // Repeat / Clip case: multiple cells are selected when PASTE invoked, clip pasting to selected
-                    // range. This is the 'fill-mode' of paste (repeating clipboard data to fill selected rectangle)
-                    var clipRect = [[]];  // 2D array
-                    var clipCol = 0;
-                    var clipRow = 0;
-
-                    // Refashion linear clipboard (with nulls as column boundaries) to 2D
-                    for (var k = 0, len = clipboard.length; k < len; k++) {
-                        if (clipboard[k]) {
-                            clipRect[clipRow][clipCol] = clipboard[k];
-                            clipCol++;
-                        } else {
-                            clipCol = 0;
-                            clipRow++;
-                            clipRect[clipRow] = [];
-                        }
-                    }
-                    clipRow++;  // count of rows (not 0 based), e.g. 4 for rows 0-3 (needed for modulo below)
-
-                    rowNum = firstRow;
-                    var clipboard2 = [];
-
-                    for (var r = firstRow; r <= lastRow; r++) {
-                        for (var c = firstCol; c <= lastCol; c++) {
-                            var info = clipRect[(r - firstRow) % clipRow][(c - firstCol) % clipCol];
-                            var cloneCellInfo = info.slice(0);
-                            var cellId = getCellId(r, c);
-                            cloneCellInfo.push(cellId.split('_'));
-                            clipboard2.push(cloneCellInfo);
-                        }
+            if (onlyOneCellSelected) {
+                // Paste full clipboard data to cube (if it fits, otherwise clip to edges)
+                for (var lineNum = 0, len = clipboard.length; lineNum < len; lineNum++) {
+                    var cellInfo = clipboard[lineNum];
+                    if (cellInfo == null) {
                         rowNum++;
-                    }
-                    clipboard = clipboard2;
-                }
-                // Paste cells from database
-                result = nce.call("ncubeController.pasteCellsNce", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), clipboard]);
-            } else {
-                // Normal clipboard data, from Excel, for example
-                var lines = parseExcelClipboard(content);
-                var coords = [];
-                var rowCoords = [];
-                var values = [];
-
-                // If more than one cell is selected, create coords for all selected cells.
-                // Server will repeat values, properly throughout the selected 'clip' region.
-                for (var i = 0; i < lines.length; i++) {
-                    rowCoords = [];
-                    values.push(lines[i]);  // push a whole line of values at once.
-                    colNum = firstCol;
-
-                    for (var j = 0, len = lines[i].length; j < len; j++) {
+                        colNum = firstCol;
+                    } else {
                         if (colNum < numTableCols) {
                             // Do attempt to read past edge of 2D grid
                             var cellId = getCellId(rowNum, colNum);
-                            rowCoords.push(cellId.split('_'));
+                            cellInfo.push(cellId.split('_'));
                         }
                         colNum++;
                     }
-                    coords.push(rowCoords);
-                    rowNum++;
-
-                    if (rowNum > numTableRows) {
+                    if (rowNum >= numTableRows) {
                         // Do not go past bottom of grid
                         break;
                     }
                 }
+            } else {
+                // Repeat / Clip case: multiple cells are selected when PASTE invoked, clip pasting to selected
+                // range. This is the 'fill-mode' of paste (repeating clipboard data to fill selected rectangle)
+                var clipRect = [[]];  // 2D array
+                var clipCol = 0;
+                var clipRow = 0;
 
-                if (!onlyOneCellSelected) {
-                    // Multiple cells are selected when PASTE invoked, clip pasting to selected range.
-                    coords = [];
-                    var addHotIds = [];
-                    for (r = firstRow; r <= lastRow; r++) {
-                        rowCoords = [];
-                        for (c = firstCol; c <= lastCol; c++) {
-                            var cellId = getCellId(r, c);
-                            rowCoords.push(cellId.split('_'));
-                            addHotIds.push(cellId);
-                        }
-                        coords.push(rowCoords);
+                // Refashion linear clipboard (with nulls as column boundaries) to 2D
+                for (var k = 0, len = clipboard.length; k < len; k++) {
+                    if (clipboard[k]) {
+                        clipRect[clipRow][clipCol] = clipboard[k];
+                        clipCol++;
+                    } else {
+                        clipCol = 0;
+                        clipRow++;
+                        clipRect[clipRow] = [];
                     }
                 }
+                clipRow++;  // count of rows (not 0 based), e.g. 4 for rows 0-3 (needed for modulo below)
 
-                // Paste cells from database
-                result = nce.call("ncubeController.pasteCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), values, coords]);
+                rowNum = firstRow;
+                var clipboard2 = [];
+
+                for (var r = firstRow; r <= lastRow; r++) {
+                    for (var c = firstCol; c <= lastCol; c++) {
+                        var info = clipRect[(r - firstRow) % clipRow][(c - firstCol) % clipCol];
+                        var cloneCellInfo = info.slice(0);
+                        var cellId = getCellId(r, c);
+                        cloneCellInfo.push(cellId.split('_'));
+                        clipboard2.push(cloneCellInfo);
+                    }
+                    rowNum++;
+                }
+                clipboard = clipboard2;
+            }
+            // Paste cells from database
+            result = nce.call("ncubeController.pasteCellsNce", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), clipboard]);
+        } else {
+            // Normal clipboard data, from Excel, for example
+            var lines = parseExcelClipboard(content);
+            var coords = [];
+            var rowCoords = [];
+            var values = [];
+
+            // If more than one cell is selected, create coords for all selected cells.
+            // Server will repeat values, properly throughout the selected 'clip' region.
+            for (var i = 0; i < lines.length; i++) {
+                rowCoords = [];
+                values.push(lines[i]);  // push a whole line of values at once.
+                colNum = firstCol;
+
+                for (var j = 0, len = lines[i].length; j < len; j++) {
+                    if (colNum < numTableCols) {
+                        // Do attempt to read past edge of 2D grid
+                        var cellId = getCellId(rowNum, colNum);
+                        rowCoords.push(cellId.split('_'));
+                    }
+                    colNum++;
+                }
+                coords.push(rowCoords);
+                rowNum++;
+
+                if (rowNum > numTableRows) {
+                    // Do not go past bottom of grid
+                    break;
+                }
             }
 
-            if (result.status) {
-                reload();
-            } else {
-                nce.clearError();
-                nce.showNote('Error pasting cells:<hr class="hr-small"/>' + result.data);
+            if (!onlyOneCellSelected) {
+                // Multiple cells are selected when PASTE invoked, clip pasting to selected range.
+                coords = [];
+                var addHotIds = [];
+                for (r = firstRow; r <= lastRow; r++) {
+                    rowCoords = [];
+                    for (c = firstCol; c <= lastCol; c++) {
+                        var cellId = getCellId(r, c);
+                        rowCoords.push(cellId.split('_'));
+                        addHotIds.push(cellId);
+                    }
+                    coords.push(rowCoords);
+                }
             }
-        }, 100);
+
+            // Paste cells from database
+            result = nce.call("ncubeController.pasteCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), values, coords]);
+        }
+
+        if (result.status) {
+            reload(true);
+        } else {
+            nce.clearError();
+            nce.showNote('Error pasting cells:<hr class="hr-small"/>' + result.data);
+        }
+    };
+
+    var autoFillNce = function(start, end) {
+        var copyRange = getSelectedCellRange();
+        var pasteRange = {
+            startRow: start.row,
+            endRow: end.row,
+            startCol: start.col,
+            endCol: end.col
+        };
+
+        if (copyRange.startRow < pasteRange.startRow) { //fill down
+            copyRange.endRow = pasteRange.startRow - 1;
+        } else if (copyRange.endRow > pasteRange.endRow) { //fill up
+            copyRange.startRow = pasteRange.endRow + 1;
+        } else if (copyRange.startCol < pasteRange.startCol) { //fill right
+            copyRange.endCol = pasteRange.startCol - 1;
+        } else if (copyRange.endCol > pasteRange.endCol) { //fill left
+            copyRange.startCol = pasteRange.endCol + 1;
+        }
+
+        var content = nceCutCopyData(copyRange, false);
+        if (content) {
+            pasteData(content, pasteRange);
+        }
     };
 
     // ==================================== End Copy / Paste ===========================================================
@@ -3894,7 +3935,7 @@ var NCubeEditor2 = (function ($) {
     var reload = function() {
         if (hot) {
             var selection = getSelectedCellRange();
-            load();
+            load(true);
 
             if (selection) {
                 hot.selectCell(selection.startRow, selection.startCol, selection.endRow, selection.endCol, true);
