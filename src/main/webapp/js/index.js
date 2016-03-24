@@ -1262,10 +1262,6 @@ var NCE = (function ($)
         {
             newCubeSave();
         });
-        $('#renameCubeOk').click(function ()
-        {
-            renameCubeOk();
-        });
         $('#dupeCubeCopy').click(function ()
         {
             dupeCubeCopy();
