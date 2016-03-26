@@ -2510,9 +2510,31 @@ var NCE = (function ($)
         setTimeout(function() {
             $('#changeVerModal').modal('hide');
             var newSnapVer = $('#changeVerValue').val();
-            var result = call("ncubeController.changeVersionValue", [getAppId(), newSnapVer]);
-            if (result.status === true)
+            var appId = getAppId();
+            var result = call("ncubeController.changeVersionValue", [appId, newSnapVer]);
+            if (result.status)
             {
+                var doesCubeInfoMatchOldVersion = function(cubeInfo) {
+                    return cubeInfo[CUBE_INFO.APP] === appId.app
+                        && cubeInfo[CUBE_INFO.BRANCH] === appId.branch
+                        && cubeInfo[CUBE_INFO.STATUS] === appId.status
+                        && cubeInfo[CUBE_INFO.VERSION] === appId.version
+                };
+
+                for (var i = 0, len = _openCubes.length; i < len; i++) {
+                    var cubeInfo = getCubeInfo(_openCubes[i].cubeKey);
+                    if (doesCubeInfoMatchOldVersion) {
+                        cubeInfo[CUBE_INFO.VERSION] = newSnapVer;
+                        _openCubes[i].cubeKey = getCubeInfoKey(cubeInfo);
+                    }
+                }
+                saveOpenCubeList();
+
+                if (doesCubeInfoMatchOldVersion(_selectedCubeInfo)) {
+                    _selectedCubeInfo[CUBE_INFO.VERSION] = newSnapVer;
+                }
+                buildTabs();
+
                 loadVersions();
                 _selectedVersion = doesItemExist(newSnapVer, _versions) ? newSnapVer : _selectedVersion;
                 loadVersionListView();

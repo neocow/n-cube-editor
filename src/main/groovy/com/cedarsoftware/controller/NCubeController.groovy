@@ -752,6 +752,7 @@ class NCubeController extends BaseController
             appId = addTenant(appId)
             isAllowed(appId, null, Delta.Type.UPDATE)
             nCubeService.changeVersionValue(appId, newSnapVer)
+            appVersions.clear() //empty cache
         }
         catch (Exception e)
         {
