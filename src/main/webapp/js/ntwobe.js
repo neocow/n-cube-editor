@@ -1904,7 +1904,7 @@ var NCubeEditor2 = (function ($) {
             an.click(function (e) {
                 e.preventDefault();
                 var appId = appIdFrom(axis.referenceApp, axis.referenceVersion, axis.referenceStatus, axis.referenceBranch);
-                nce.selectCubeFromAppId(appId, axis.referenceCubeName);
+                nce.selectCubeByName(axis.referenceCubeName, appId);
             });
             li.append(an);
             ul.append(li);
