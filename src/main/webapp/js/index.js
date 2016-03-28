@@ -537,166 +537,172 @@ var NCE = (function ($)
                     .click(function(e) {
                         showReqScope();
                     }))
-        ).append(
-            $('<div/>').addClass('divider')
-        ).append(
-            $('<li/>')
-                .append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Commit...')
-                    .click(function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        li.find('li').not($(this).parent()).find('button').remove();
-                        var buttons = $(this).find('button');
-                        if (buttons.length === 0) {
-                            $(this).append(
-                                $('<button/>')
-                                    .addClass('btn btn-danger btn-xs pull-right')
-                                    .html('Cancel')
-                            ).append(
-                                $('<button/>')
-                                    .addClass('btn btn-primary btn-xs pull-right')
-                                    .html('Confirm')
-                                    .click(function (e) {
-                                        closeTab();
-                                        callCommit(getInfoDto(), getSelectedTabAppId());
-                                    })
-                            );
-                        } else {
-                            buttons.remove();
-                        }
-                    }))
-        ).append(
-            $('<li/>')
-                .append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Rollback...')
-                    .click(function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        li.find('li').not($(this).parent()).find('button').remove();
-                        var buttons = $(this).find('button');
-                        if (buttons.length === 0) {
-                            $(this).append(
-                                $('<button/>')
-                                    .addClass('btn btn-danger btn-xs pull-right')
-                                    .html('Cancel')
-                            ).append(
-                                $('<button/>')
-                                    .addClass('btn btn-primary btn-xs pull-right')
-                                    .html('Confirm')
-                                    .click(function (e) {
-                                        closeTab();
-                                        callRollbackFromTab(getInfoDto());
-                                    })
-                            );
-                        } else {
-                            buttons.remove();
-                        }
-                    }))
-        ).append(
-            $('<li/>')
-                .addClass('dropdown-submenu')
-                .append(
-                $('<a/>')
-                    .prop({href:'#', tabindex:'-1'})
-                    .html('Update')
+        );
+
+        if (cubeInfo[CUBE_INFO.BRANCH] !== head) {
+            dd.append(
+                $('<div/>').addClass('divider')
+            ).append(
+                $('<li/>')
+                    .append(
+                    $('<a/>')
+                        .attr('href', '#')
+                        .html('Commit...')
+                        .click(function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            li.find('li').not($(this).parent()).find('button').remove();
+                            var buttons = $(this).find('button');
+                            if (buttons.length === 0) {
+                                $(this).append(
+                                    $('<button/>')
+                                        .addClass('btn btn-danger btn-xs pull-right')
+                                        .html('Cancel')
+                                ).append(
+                                    $('<button/>')
+                                        .addClass('btn btn-primary btn-xs pull-right')
+                                        .html('Confirm')
+                                        .click(function (e) {
+                                            closeTab();
+                                            callCommit(getInfoDto(), getSelectedTabAppId());
+                                        })
+                                );
+                            } else {
+                                buttons.remove();
+                            }
+                        }))
+            ).append(
+                $('<li/>')
+                    .append(
+                    $('<a/>')
+                        .attr('href', '#')
+                        .html('Rollback...')
+                        .click(function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            li.find('li').not($(this).parent()).find('button').remove();
+                            var buttons = $(this).find('button');
+                            if (buttons.length === 0) {
+                                $(this).append(
+                                    $('<button/>')
+                                        .addClass('btn btn-danger btn-xs pull-right')
+                                        .html('Cancel')
+                                ).append(
+                                    $('<button/>')
+                                        .addClass('btn btn-primary btn-xs pull-right')
+                                        .html('Confirm')
+                                        .click(function (e) {
+                                            closeTab();
+                                            callRollbackFromTab(getInfoDto());
+                                        })
+                                );
+                            } else {
+                                buttons.remove();
+                            }
+                        }))
+            ).append(
+                $('<li/>')
+                    .addClass('dropdown-submenu')
+                    .append(
+                    $('<a/>')
+                        .prop({href: '#', tabindex: '-1'})
+                        .html('Update')
                 ).append(
-                    createBranchesUl(function(branchName) {
+                    createBranchesUl(function (branchName) {
                         callUpdate(branchName);
                     })
-            )
-        ).append(
-            $('<div/>')
-                .addClass('divider')
-        ).append(
-            $('<li/>')
-                .append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Delete...')
-                    .click(function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        li.find('li').not($(this).parent()).find('button').remove();
-                        var buttons = $(this).find('button');
-                        if (buttons.length === 0) {
-                            $(this).append(
-                                $('<button/>')
-                                    .addClass('btn btn-danger btn-xs pull-right')
-                                    .html('Cancel')
-                            ).append(
-                                $('<button/>')
-                                    .addClass('btn btn-primary btn-xs pull-right')
-                                    .html('Confirm')
-                                    .click(function (e) {
-                                        closeTab();
-                                        callDeleteFromTab(getInfoDto().name);
+                )
+            ).append(
+                $('<div/>')
+                    .addClass('divider')
+            ).append(
+                $('<li/>')
+                    .append(
+                    $('<a/>')
+                        .attr('href', '#')
+                        .html('Delete...')
+                        .click(function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            li.find('li').not($(this).parent()).find('button').remove();
+                            var buttons = $(this).find('button');
+                            if (buttons.length === 0) {
+                                $(this).append(
+                                    $('<button/>')
+                                        .addClass('btn btn-danger btn-xs pull-right')
+                                        .html('Cancel')
+                                ).append(
+                                    $('<button/>')
+                                        .addClass('btn btn-primary btn-xs pull-right')
+                                        .html('Confirm')
+                                        .click(function (e) {
+                                            closeTab();
+                                            callDeleteFromTab(getInfoDto().name);
+                                        })
+                                );
+                            } else {
+                                buttons.remove();
+                            }
+                        }))
+            ).append(
+                $('<li/>')
+                    .append(
+                    $('<a/>')
+                        .attr('href', '#')
+                        .html('Duplicate...')
+                        .click(function (e) {
+                            dupeCube();
+                        }))
+            ).append(
+                $('<li/>')
+                    .append(
+                    $('<a/>')
+                        .attr('href', '#')
+                        .html('Rename')
+                        .click(function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            var parent = $(this).parent();
+                            var inputs = parent.find('input');
+                            if (inputs.length === 0) {
+                                var newNameInput = $('<input/>')
+                                    .prop('type', 'text')
+                                    .val(cubeInfo[CUBE_INFO.NAME])
+                                    .addClass('form-control')
+                                    .click(function (ie) {
+                                        ie.preventDefault();
+                                        ie.stopPropagation();
                                     })
-                            );
-                        } else {
-                            buttons.remove();
-                        }
-                    }))
-        ).append(
-            $('<li/>')
-                .append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Duplicate...')
-                    .click(function(e) {
-                        dupeCube();
-                    }))
-        ).append(
-            $('<li/>')
-                .append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Rename')
-                    .click(function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        var parent = $(this).parent();
-                        var inputs = parent.find('input');
-                        if (inputs.length === 0) {
-                            var newNameInput = $('<input/>')
-                                .prop('type','text')
-                                .val(cubeInfo[CUBE_INFO.NAME])
-                                .addClass('form-control')
-                                .click(function (ie) {
-                                    ie.preventDefault();
-                                    ie.stopPropagation();
-                                })
-                                .keyup(function(ie) {
-                                    if (ie.keyCode === KEY_CODES.ENTER) {
-                                        closeTab();
-                                        renameCube(newNameInput.val());
-                                    }
-                                });
-                            parent.append(newNameInput);
-                            $(this).append(
-                                $('<button/>')
-                                    .addClass('btn btn-danger btn-xs pull-right')
-                                    .html('Cancel')
-                            ).append(
-                                $('<button/>')
-                                    .addClass('btn btn-primary btn-xs pull-right')
-                                    .html('Confirm')
-                                    .click(function (e) {
-                                        closeTab();
-                                        renameCube(newNameInput.val());
-                                    })
-                            );
-                            newNameInput[0].focus();
-                        } else {
-                            inputs.remove();
-                            parent.find('button').remove();
-                        }
-                    }))
-        ).append(
+                                    .keyup(function (ie) {
+                                        if (ie.keyCode === KEY_CODES.ENTER) {
+                                            closeTab();
+                                            renameCube(newNameInput.val());
+                                        }
+                                    });
+                                parent.append(newNameInput);
+                                $(this).append(
+                                    $('<button/>')
+                                        .addClass('btn btn-danger btn-xs pull-right')
+                                        .html('Cancel')
+                                ).append(
+                                    $('<button/>')
+                                        .addClass('btn btn-primary btn-xs pull-right')
+                                        .html('Confirm')
+                                        .click(function (e) {
+                                            closeTab();
+                                            renameCube(newNameInput.val());
+                                        })
+                                );
+                                newNameInput[0].focus();
+                            } else {
+                                inputs.remove();
+                                parent.find('button').remove();
+                            }
+                        }))
+            );
+        }
+
+        dd.append(
             $('<div/>')
                 .prop({'class': 'divider'})
         ).append(
