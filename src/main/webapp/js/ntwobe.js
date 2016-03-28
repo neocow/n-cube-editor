@@ -3932,10 +3932,10 @@ var NCubeEditor2 = (function ($) {
         hot.render();
     };
 
-    var reload = function() {
+    var reload = function(keepTable) {
         if (hot) {
             var selection = getSelectedCellRange();
-            load(true);
+            load(keepTable);
 
             if (selection) {
                 hot.selectCell(selection.startRow, selection.startCol, selection.endRow, selection.endCol, true);
