@@ -992,8 +992,7 @@ var NCE = (function ($)
             getNumFrozenCols: getNumFrozenCols,
             saveNumFrozenCols: saveNumFrozenCols,
             getSearchQuery: getSearchQuery,
-            saveSearchQuery: saveSearchQuery,
-            selectCubeFromAppId: selectCubeFromAppId
+            saveSearchQuery: saveSearchQuery
         };
     }
 
@@ -1017,15 +1016,21 @@ var NCE = (function ($)
         _cubeCount[0].textContent = Object.keys(_cubeList).length;
     }
 
-    function selectCubeByName(cubeName)
+    function selectCubeByName(cubeName, differentAppId)
     {
         if (!cubeName) {
             return;
         }
-        _selectedCubeName = getProperCubeName(cubeName);
-        localStorage[SELECTED_CUBE] = cubeName;
+        var cubeInfo;
+        if (differentAppId) {
+            _selectedCubeName = cubeName;
+            cubeInfo = [differentAppId.app, differentAppId.version, differentAppId.status, differentAppId.branch, cubeName];
+        } else {
+            _selectedCubeName = getProperCubeName(cubeName);
+            cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName];
+        }
 
-        var cubeInfo = [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName];
+        localStorage[SELECTED_CUBE] = cubeName;
         var cis = getCubeInfoKey(cubeInfo);
         var found = false;
         for (var i = 0, len = _openCubes.length; i < len; i++) {
@@ -1050,26 +1055,9 @@ var NCE = (function ($)
         }
         if (!found) {
             setActiveTabViewType(_defaultTab);
-            addCurrentCubeTab();
+            addCurrentCubeTab(null, cubeInfo);
         }
         saveState();
-    }
-
-    function selectCubeFromAppId(appId, cubeName) {
-        var app = appId.app;
-        var version = appId.version;
-        var branch = appId.branch;
-        var status = appId.status;
-        var appChanged = _selectedApp !== app;
-        var verChanged = _selectedVersion !== version;
-        var staChanged = _selectedStatus !== status;
-        var braChanged = _selectedBranch !== branch;
-        _selectedApp = app;
-        _selectedVersion = version;
-        _selectedBranch = branch;
-        _selectedStatus = status;
-
-        selectCubeByName(cubeName);
     }
 
     function runSearch()
