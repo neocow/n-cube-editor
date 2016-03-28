@@ -1797,6 +1797,8 @@ var NCE = (function ($)
                 _selectedVersion = null;
                 _selectedStatus = null;
             }
+            localStorage[SELECTED_VERSION] = _selectedVersion;
+            localStorage[SELECTED_STATUS] = _selectedStatus;
         }
     }
 
