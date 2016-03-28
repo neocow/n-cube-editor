@@ -1052,6 +1052,7 @@ var NCE = (function ($)
         }
         if (!found) {
             setActiveTabViewType(_defaultTab);
+            cubeInfo.push(getActiveTabViewType());
             addCurrentCubeTab(null, cubeInfo);
         }
         saveState();
