@@ -659,9 +659,6 @@ var NCE = (function ($)
                     .click(function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (!ensureModifiable('Unable to rename cube.')) {
-                            return;
-                        }
                         var parent = $(this).parent();
                         var inputs = parent.find('input');
                         if (inputs.length === 0) {
@@ -2331,7 +2328,7 @@ var NCE = (function ($)
             showNote('No n-cube selected. Nothing to duplicate.');
             return;
         }
-        if (isHeadSelected())
+        if (isSelectedCubeInHead())
         {
             selectBranch();
             return false;
@@ -3511,12 +3508,15 @@ var NCE = (function ($)
         }
     }
 
-    function isHeadSelected()
-    {
-        var appId = getSelectedTabAppId();
-        var branch = appId ? appId.branch : _selectedBranch;
-        return head === branch;
+    function isHeadSelected() {
+        return head === _selectedBranch;
     }
+
+    function isSelectedCubeInHead() {
+        var appId = getSelectedTabAppId();
+        return appId ? appId.branch === head : true;
+    }
+
     /**
      * Get the ApplicationID based on the user's selections.  Tenant is sent not sent (server will fill
      * that in based on authentication.
