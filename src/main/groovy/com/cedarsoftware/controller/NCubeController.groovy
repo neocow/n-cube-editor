@@ -735,6 +735,7 @@ class NCubeController extends BaseController
             appId = addTenant(appId)
             isAllowed(appId, null, Delta.Type.UPDATE)
             nCubeService.releaseCubes(appId, newSnapVer)
+            appVersions[appId.app].clear()
         }
         catch (Exception e)
         {
@@ -752,7 +753,7 @@ class NCubeController extends BaseController
             appId = addTenant(appId)
             isAllowed(appId, null, Delta.Type.UPDATE)
             nCubeService.changeVersionValue(appId, newSnapVer)
-            appVersions.clear() //empty cache
+            appVersions[appId.app].clear()
         }
         catch (Exception e)
         {
@@ -1391,6 +1392,7 @@ class NCubeController extends BaseController
             isAllowed(appId, null, null)
             nCubeService.clearCache(appId)
             appCache.clear()
+            appVersions.clear()
         }
         catch (Exception e)
         {
