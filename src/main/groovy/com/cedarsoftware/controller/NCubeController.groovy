@@ -41,7 +41,6 @@ import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble
 import groovy.transform.CompileStatic
-import javafx.application.Application
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
