@@ -98,6 +98,7 @@ var NCE = (function ($)
     var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
+    var _releaseMenu = $('#ReleaseMenu');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1288,9 +1289,14 @@ var NCE = (function ($)
         {
             showReqScopeClose();
         });
-        $('#releaseCubesOk').click(function ()
-        {
+        _releaseCubesMenu.click(function () {
+            releaseCubes();
+        });
+        $('#releaseCubesOk').click(function () {
             releaseCubesOk();
+        });
+        _changeVersionMenu.click(function () {
+            changeVersion();
         });
         $('#changeVerOk').click(function ()
         {
@@ -1490,29 +1496,9 @@ var NCE = (function ($)
 
     function enableDisableReleaseMenu() {
         if (canReleaseForApp()) {
-            _releaseCubesMenu.parent().removeClass('disabled');
-            _releaseCubesMenu.unbind('click');
-            _releaseCubesMenu.click(function (e) {
-                releaseCubes();
-            });
-            _changeVersionMenu.parent().removeClass('disabled');
-            _changeVersionMenu.unbind('click');
-            _changeVersionMenu.click(function (e) {
-                changeVersion();
-            });
+            _releaseMenu.show();
         } else {
-            _releaseCubesMenu.parent().addClass('disabled');
-            _releaseCubesMenu.unbind('click');
-            _releaseCubesMenu.click(function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-            _changeVersionMenu.parent().addClass('disabled');
-            _changeVersionMenu.unbind('click');
-            _changeVersionMenu.click(function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            });
+            _releaseMenu.hide();
         }
     }
 
