@@ -99,6 +99,7 @@ var NCE = (function ($)
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
     var _releaseMenu = $('#ReleaseMenu');
+    var _branchCommit = $('#branchCommit');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1489,24 +1490,37 @@ var NCE = (function ($)
         }
     }
 
-    function canReleaseForApp() {
-        var result = call('ncubeController.checkPermissions', [getAppId(), null, 'release']);
+    function checkAppPermission(action) {
+        var result = call('ncubeController.checkPermissions', [getAppId(), null, action]);
         return result.data;
     }
 
     function enableDisableReleaseMenu() {
-        if (canReleaseForApp()) {
+        if (checkAppPermission(PERMISSION_ACTION.RELEASE)) {
             _releaseMenu.show();
         } else {
             _releaseMenu.hide();
         }
     }
 
+    function enableDisableCommitBranch() {
+        if (checkAppPermission(PERMISSION_ACTION.COMMIT)) {
+            _branchCommit.show();
+        } else {
+            _branchCommit.hide();
+        }
+    }
+
+    function handleAppPermissions() {
+        enableDisableReleaseMenu();
+        enableDisableCommitBranch();
+    }
+
     function loadAppListView()
     {
         var ul = _appMenu.parent().find('.dropdown-menu');
         ul.empty();
-        enableDisableReleaseMenu();
+        handleAppPermissions();
 
         $.each(_apps, function (index, value)
         {
@@ -1519,7 +1533,7 @@ var NCE = (function ($)
                 _selectedApp = value;
                 _appMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
 
-                enableDisableReleaseMenu();
+                handleAppPermissions();
 
                 setVersionListLoading();
                 setCubeListLoading();

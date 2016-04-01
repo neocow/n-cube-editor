@@ -80,7 +80,8 @@ class NCubeController extends BaseController
         UPDATE,
         DELETE,
         RELEASE,
-        READ
+        READ,
+        COMMIT
     }
 
     private static final Logger LOG = LogManager.getLogger(NCubeController.class)
@@ -1570,7 +1571,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            isAllowed(appId, toPermissionsString(['cube':cubeName]), ACTION.UPDATE)
+            isAllowed(appId, toPermissionsString(['cube':cubeName]), ACTION.COMMIT)
             Object[] infoDtos = search(appId, cubeName, null, true);
             List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
             return committedCubes.toArray()
@@ -1592,11 +1593,11 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            isAllowed(appId, null, ACTION.UPDATE)
+            isAllowed(appId, null, ACTION.COMMIT)
             List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos, getUserForDatabase())
             for (NCubeInfoDto ncube : committedCubes)
             {
-                isAllowed(appId, toPermissionsString(['cube':ncube.name]), ACTION.UPDATE)
+                isAllowed(appId, toPermissionsString(['cube':ncube.name]), ACTION.COMMIT)
             }
             return committedCubes.toArray()
         }
