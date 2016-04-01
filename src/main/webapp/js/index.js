@@ -96,6 +96,8 @@ var NCE = (function ($)
     var _batchUpdateAxisReferencesVersion = $('#batchUpdateAxisReferencesVersion');
     var _batchUpdateAxisReferencesCubeName = $('#batchUpdateAxisReferencesCubeName');
     var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
+    var _changeVersionMenu = $('#changeVerMenu');
+    var _releaseCubesMenu = $('#releaseCubesMenu');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1286,17 +1288,9 @@ var NCE = (function ($)
         {
             showReqScopeClose();
         });
-        $('#releaseCubesMenu').click(function ()
-        {
-            releaseCubes();
-        });
         $('#releaseCubesOk').click(function ()
         {
             releaseCubesOk();
-        });
-        $('#changeVerMenu').click(function ()
-        {
-            changeVersion();
         });
         $('#changeVerOk').click(function ()
         {
@@ -1489,10 +1483,44 @@ var NCE = (function ($)
         }
     }
 
+    function canReleaseForApp() {
+        var result = call('ncubeController.checkPermissions', [getAppId(), null, 'release']);
+        return result.data;
+    }
+
+    function enableDisableReleaseMenu() {
+        if (canReleaseForApp()) {
+            _releaseCubesMenu.parent().removeClass('disabled');
+            _releaseCubesMenu.unbind('click');
+            _releaseCubesMenu.click(function (e) {
+                releaseCubes();
+            });
+            _changeVersionMenu.parent().removeClass('disabled');
+            _changeVersionMenu.unbind('click');
+            _changeVersionMenu.click(function (e) {
+                changeVersion();
+            });
+        } else {
+            _releaseCubesMenu.parent().addClass('disabled');
+            _releaseCubesMenu.unbind('click');
+            _releaseCubesMenu.click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            _changeVersionMenu.parent().addClass('disabled');
+            _changeVersionMenu.unbind('click');
+            _changeVersionMenu.click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
+    }
+
     function loadAppListView()
     {
         var ul = _appMenu.parent().find('.dropdown-menu');
         ul.empty();
+        enableDisableReleaseMenu();
 
         $.each(_apps, function (index, value)
         {
@@ -1504,6 +1532,8 @@ var NCE = (function ($)
                 localStorage[SELECTED_APP] = value;
                 _selectedApp = value;
                 _appMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
+
+                enableDisableReleaseMenu();
 
                 setVersionListLoading();
                 setCubeListLoading();
