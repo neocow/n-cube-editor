@@ -144,53 +144,47 @@ class NCubeController extends BaseController
         try
         {
             ApplicationID bootVersion = new ApplicationID(appId.tenant, appId.app, '0.0.0', ReleaseStatus.SNAPSHOT.toString(), ApplicationID.HEAD)
-            String uid = getUser();
-
             NCube permCube = nCubeService.getCube(bootVersion, 'sys.permissions')
+            NCube userCube = nCubeService.getCube(bootVersion, 'sys.usergroups')
 
             // default permission for action against resource
             boolean hasPermission = permCube.getCell(['resource': resource, 'action': action, 'group': null])
-            if (hasPermission == null) {
-                hasPermission = permCube.getCell(['resource': null, 'action': action, 'group': null])
-            }
 
             // handle exceptions
-            String exceptionList = permCube.getCell(['resource': resource, 'action': action, 'group': 'exceptions']).toString()
-            if (exceptionList == "null") {
+            Axis groupAxis = permCube.getAxis('group')
+            Boolean permissionFromGroup = null
+            for (Column groupColumn : groupAxis.getColumnsWithoutDefault())
+            {
+                String colName = groupColumn.getValue()
+                Boolean isGroupActive = permCube.getCell(['resource': resource, 'action': action, 'group': colName])
+                if (isGroupActive != null && isUserInGroup(userCube, colName))
+                {
+                    permissionFromGroup = permissionFromGroup || isGroupActive
+                }
+            }
+            if (permissionFromGroup == null)
+            {
                 return hasPermission
             }
-            if (exceptionList.contains(uid)) { // found user instead of group
-                return hasPermission ^ true
-            }
-
-            // cycle through groups to find user
-            NCube userGroupsCube = nCubeService.getCube(bootVersion, 'sys.usergroups')
-            String[] exceptionGroups = exceptionList.split(',')
-            for (String group : exceptionGroups)
-            {
-                try
-                {
-                    boolean isUserInGroup = userGroupsCube.getCell(['role': group, 'users': null])
-                    String userExceptionList = userGroupsCube.getCell(['role': group, 'users': 'exceptions'])
-                    isUserInGroup ^= userExceptionList.contains(uid)
-
-                    if (hasPermission ^ isUserInGroup) {
-                        return true
-                    }
-                }
-                catch (CoordinateNotFoundException ignore)
-                {
-                    // group does not exist
-                }
-            }
-
-            return hasPermission
+            return hasPermission ^ permissionFromGroup
         }
         catch (Exception e)
         {
             LOG.warn("Missing " + 'sys.permissions' + " cube in the 0.0.0 version for the app: " + appId.app + ', exception ' + e.getMessage())
             return true
         }
+    }
+
+    private boolean isUserInGroup(NCube userCube, String groupName)
+    {
+        boolean defaultInGroup = userCube.getCell(['role': groupName, 'users': null])
+        boolean isException = userCube.getCell(['role': groupName, 'users': getUser()])
+
+        if (isException == null)
+        {
+            return defaultInGroup
+        }
+        return defaultInGroup ^ isException
     }
 
     private String toPermissionsString(Map<String, String> options)
