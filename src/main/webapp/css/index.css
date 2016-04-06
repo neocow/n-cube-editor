@@ -580,11 +580,7 @@ span.selected-count {
 }
 
 #appIdMenu {
-    background-color: #2474b8;
-    border-color: #1f639c;
-    color: white;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 5px;
 }
 
 #appIdMenu li {
@@ -596,5 +592,5 @@ span.selected-count {
 }
 
 #appIdMenu .open a.dropdown-toggle, #appIdMenu li a.dropdown-toggle:hover, #appIdMenu li a.dropdown-toggle:focus {
-    background-color: #1f639c;
+    background-color: #777777;
 }
