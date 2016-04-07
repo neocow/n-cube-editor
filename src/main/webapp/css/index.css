@@ -580,10 +580,10 @@ span.selected-count {
 }
 
 #appIdMenu {
-    padding: 5px;
+    padding: 5px 5px 10px;
 }
 
-#appIdMenu li {
+#appIdMenu li, #appIdMenu button {
     width: 100%;
 }
 
