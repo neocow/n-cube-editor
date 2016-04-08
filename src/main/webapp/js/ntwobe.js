@@ -2855,12 +2855,14 @@ var NCubeEditor2 = (function ($) {
         var dataType = null;
         var isUrl = false;
         var isCached = false;
+        var isDefault = false;
         if (cellInfo.value !== null || cellInfo.dataType !== null || cellInfo.isUrl || cellInfo.isCached) {
             value = cellInfo.value;
             dataType = cellInfo.dataType;
             isUrl = cellInfo.isUrl;
             isCached = cellInfo.isCached;
         } else { // use cube defaults if exist
+            isDefault = true;
             isUrl = data.defaultCellValueUrl !== undefined;
             value = isUrl ? data.defaultCellValueUrl : data.defaultCellValue;
             dataType = data.defaultCellValueType;
@@ -2895,17 +2897,19 @@ var NCubeEditor2 = (function ($) {
         if (modifiable) {
             _editCellCancel.show();
             _editCellClear.show();
+
+            $(_editCellModal).one('shown.bs.modal', function () {
+                if (_bufferText.trim() !== '') {
+                    _editCellValue.val(isDefault ? _bufferText : (cellValue + _bufferText));
+                } else if (isDefault) {
+                    _editCellValue.select();
+                }
+            });
         } else {
             _editCellCancel.hide();
             _editCellClear.hide();
         }
         _editCellModal.modal('show');
-
-        if (_bufferText.trim() !== '') {
-            $(_editCellModal).one('shown.bs.modal', function () {
-                _editCellValue.val(cellValue + _bufferText);
-            });
-        }
     };
 
     var editCellClear = function() {
