@@ -110,13 +110,7 @@ class NCubeController extends BaseController
         System.out = new ThreadAwarePrintStream()
     }
 
-    private String getUserForDatabase()
-    {
-        String user = getUser()
-        return StringUtilities.length(user) > 10 ? user.substring(0, 10) : user;
-    }
-
-    private static String getUser()
+    protected static String getUserForDatabase()
     {
         String user = null
         HttpServletRequest request = JsonCommandServlet.servletRequest.get()
@@ -136,6 +130,7 @@ class NCubeController extends BaseController
             user = System.getProperty("user.name")
         }
 
+        NCubeManager.setUserId(user)
         return user
     }
 
@@ -245,7 +240,7 @@ class NCubeController extends BaseController
     private boolean isUserInGroup(NCube userCube, String groupName)
     {
         boolean defaultInGroup = userCube.getCell(['role': groupName, 'users': null])
-        boolean isException = userCube.getCell(['role': groupName, 'users': getUser()])
+        boolean isException = userCube.getCell(['role': groupName, 'users': getUserForDatabase()])
         return defaultInGroup || isException
     }
 
