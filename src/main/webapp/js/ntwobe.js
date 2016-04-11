@@ -24,6 +24,8 @@ var NCubeEditor2 = (function ($) {
     var _editCellModal = null;
     var _editCellValue = null;
     var _editCellCache = null;
+    var _editCellCancel = null;
+    var _editCellClear = null;
     var _editCellRadioURL = null;
     var _editColumnModal = null;
     var _valueDropdown = null;
@@ -97,6 +99,8 @@ var NCubeEditor2 = (function ($) {
             _editCellModal = $('#editCellModal');
             _editCellValue = $('#editCellValue');
             _editCellCache = $('#editCellCache');
+            _editCellCancel = $('#editCellCancel');
+            _editCellClear = $('#editCellClear');
             _editCellRadioURL = $('#editCellRadioURL');
             _editColumnModal = $('#editColumnsModal');
             _valueDropdown = $('#datatypes-value');
@@ -2810,10 +2814,10 @@ var NCubeEditor2 = (function ($) {
     // ==================================== Everything to do with Cell Editing =========================================
 
     var addEditCellListeners = function() {
-        $('#editCellClear').click(function() {
+        _editCellClear.click(function() {
             editCellClear();
         });
-        $('#editCellCancel').click(function() {
+        _editCellCancel.click(function() {
             editCellCancel();
         });
         $('#editCellOk').click(function() {
@@ -2836,12 +2840,11 @@ var NCubeEditor2 = (function ($) {
     };
 
     var editCell = function() {
-        if (!nce.ensureModifiable('Cell cannot be updated.')) {
-            return;
-        }
+        var appId = nce.getSelectedTabAppId();
+        var permissionResult = nce.call('ncubeController.checkPermissions', [appId, cubeName, 'update']);
+        var modifiable = nce.ensureModifiable() && permissionResult.data === true;
 
-        var result = nce.call("ncubeController.getCellNoExecute", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _cellId]);
-
+        var result = nce.call("ncubeController.getCellNoExecute", [appId, cubeName, _cellId]);
         if (result.status === false) {
             nce.showNote('Unable to fetch the cell contents: ' + result.data);
             return;
@@ -2852,12 +2855,14 @@ var NCubeEditor2 = (function ($) {
         var dataType = null;
         var isUrl = false;
         var isCached = false;
+        var isDefault = false;
         if (cellInfo.value !== null || cellInfo.dataType !== null || cellInfo.isUrl || cellInfo.isCached) {
             value = cellInfo.value;
             dataType = cellInfo.dataType;
             isUrl = cellInfo.isUrl;
             isCached = cellInfo.isCached;
         } else { // use cube defaults if exist
+            isDefault = true;
             isUrl = data.defaultCellValueUrl !== undefined;
             value = isUrl ? data.defaultCellValueUrl : data.defaultCellValue;
             dataType = data.defaultCellValueType;
@@ -2888,17 +2893,26 @@ var NCubeEditor2 = (function ($) {
         _editCellCache.find('input').prop('checked', isCached);
 
         enabledDisableCheckBoxes(); // reset for form
-        _editCellModal.modal('show');
+        _editCellModal.find('input,textarea,select').attr('disabled', !modifiable);
+        if (modifiable) {
+            _editCellCancel.show();
+            _editCellClear.show();
 
-        if (_bufferText.trim() !== '') {
             $(_editCellModal).one('shown.bs.modal', function () {
-                _editCellValue.val(cellValue + _bufferText);
+                if (_bufferText.trim() !== '') {
+                    _editCellValue.val(isDefault ? _bufferText : (cellValue + _bufferText));
+                } else if (isDefault) {
+                    _editCellValue.select();
+                }
             });
+        } else {
+            _editCellCancel.hide();
+            _editCellClear.hide();
         }
+        _editCellModal.modal('show');
     };
 
     var editCellClear = function() {
-        _editCellModal.modal('hide');
         var result = nce.call("ncubeController.updateCell", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _cellId, null]);
 
         if (result.status === false) {
@@ -2908,8 +2922,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         delete data.cells[_tableCellId];
-        _cellId = null;
-        destroyEditor();
+        editCellCancel()
     };
 
     var editCellCancel = function() {
@@ -2919,6 +2932,13 @@ var NCubeEditor2 = (function ($) {
     };
 
     var editCellOK = function() {
+        var appId = nce.getSelectedTabAppId();
+        var permissionResult = nce.call('ncubeController.checkPermissions', [appId, cubeName, 'update']);
+        var modifiable = nce.ensureModifiable() && permissionResult.data === true;
+        if (!modifiable) {
+            editCellCancel();
+            return;
+        }
         var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
         cellInfo.isUrl = _editCellRadioURL.find('input').prop('checked');
         cellInfo.value = _editCellValue.val();
@@ -2926,7 +2946,7 @@ var NCubeEditor2 = (function ($) {
         cellInfo.isCached = _editCellCache.find('input').prop('checked');
         _editCellModal.modal('hide');
 
-        var result = nce.call("ncubeController.updateCell", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _cellId, cellInfo]);
+        var result = nce.call("ncubeController.updateCell", [appId, cubeName, _cellId, cellInfo]);
 
         if (result.status === false) {
             _cellId = null;

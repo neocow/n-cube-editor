@@ -2576,9 +2576,12 @@ var NCE = (function ($)
 
     function ensureModifiable(operation)
     {
+        if (!operation) {
+            operation = '';
+        }
         clearError();
         var appId = getSelectedTabAppId() || getAppId();
-        if (!appId.app || !appId.version || !_selectedCubeName || !appId.status)
+        if (!appId.app || !appId.version || !_selectedCubeName || !appId.status || !appId.branch)
         {
             showNote(operation + ' No n-cube selected.');
             return false;
@@ -2588,9 +2591,9 @@ var NCE = (function ($)
             showNote(operation + ' Only a SNAPSHOT version can be modified.');
             return false;
         }
-        if (isHeadSelected())
+        if (appId.branch === head)
         {
-            selectBranch();
+            showNote(operation + ' HEAD branch cannot be modified.');
             return false;
         }
 
