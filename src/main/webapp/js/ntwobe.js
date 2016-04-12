@@ -65,6 +65,7 @@ var NCubeEditor2 = (function ($) {
     var _refFilterMethod = null;
     var _isRefAxisUpdate = null;
     var _hasRefFilterUpdate = null;
+    var _updateAxisModal = null;
     var _updateAxisName = null;
     var _updateAxisTypeName = null;
     var _updateAxisValueTypeName = null;
@@ -132,6 +133,7 @@ var NCubeEditor2 = (function ($) {
             _refFilterMethod = $('#refFilterMethod');
             _isRefAxisUpdate = $('#isRefAxisUpdate');
             _hasRefFilterUpdate = $('#hasRefFilterUpdate');
+            _updateAxisModal = $('#updateAxisModal');
             _updateAxisName = $('#updateAxisName');
             _updateAxisTypeName = $('#updateAxisTypeName');
             _updateAxisValueTypeName = $('#updateAxisValueTypeName');
@@ -1994,7 +1996,8 @@ var NCubeEditor2 = (function ($) {
                 var metaPropertyOptions = {
                     objectType: METAPROPERTIES.OBJECT_TYPES.AXIS,
                     objectName: axisName,
-                    axis: axis
+                    axis: axis,
+                    readonly: !nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE)
                 };
                 openMetaPropertiesBuilder(metaPropertyOptions);
             });
@@ -2402,7 +2405,8 @@ var NCubeEditor2 = (function ($) {
             objectType: METAPROPERTIES.OBJECT_TYPES.COLUMN,
             objectName: columnName,
             axis: axis,
-            column: column
+            column: column,
+            readonly: !nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/' + axis.name, PERMISSION_ACTION.UPDATE)
         };
         openMetaPropertiesBuilder(metaPropertyOptions);
     };
@@ -2413,7 +2417,8 @@ var NCubeEditor2 = (function ($) {
 
         var metaPropertyOptions = {
             objectType: METAPROPERTIES.OBJECT_TYPES.CUBE,
-            objectName: cubeName
+            objectName: cubeName,
+            readonly: !nce.checkPermissions(nce.getSelectedTabAppId(), cubeName, PERMISSION_ACTION.UPDATE)
         };
         openMetaPropertiesBuilder(metaPropertyOptions);
     };
@@ -2502,6 +2507,7 @@ var NCubeEditor2 = (function ($) {
                     type: PropertyBuilder.COLUMN_TYPES.TEXT
                 }
             },
+            readonly: metaPropertyOptions.readonly,
             afterSave: function() {
                 updateMetaProperties(metaPropertyOptions, metaProperties);
                 hot.removeHook('beforeKeyDown', onBeforeKeyDown);
@@ -2841,8 +2847,7 @@ var NCubeEditor2 = (function ($) {
 
     var editCell = function() {
         var appId = nce.getSelectedTabAppId();
-        var permissionResult = nce.call('ncubeController.checkPermissions', [appId, cubeName, 'update']);
-        var modifiable = nce.ensureModifiable() && permissionResult.data === true;
+        var modifiable = nce.checkPermissions(appId, cubeName, PERMISSION_ACTION.UPDATE)
 
         var result = nce.call("ncubeController.getCellNoExecute", [appId, cubeName, _cellId]);
         if (result.status === false) {
@@ -2933,8 +2938,7 @@ var NCubeEditor2 = (function ($) {
 
     var editCellOK = function() {
         var appId = nce.getSelectedTabAppId();
-        var permissionResult = nce.call('ncubeController.checkPermissions', [appId, cubeName, 'update']);
-        var modifiable = nce.ensureModifiable() && permissionResult.data === true;
+        var modifiable = nce.checkPermissions(appId, cubeName, PERMISSION_ACTION.UPDATE);
         if (!modifiable) {
             editCellCancel();
             return;
@@ -3146,11 +3150,14 @@ var NCubeEditor2 = (function ($) {
     };
 
     var editColumns = function(axisName) {
-        if (!nce.ensureModifiable('Columns cannot be edited.')) {
+        var appId = nce.getSelectedTabAppId();
+        var modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
+        if (!modifiable) {
+            nce.showNote('Columns cannot be edited.');
             return false;
         }
 
-        var result = nce.call("ncubeController.getAxis", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
+        var result = nce.call("ncubeController.getAxis", [appId, cubeName, axisName]);
         var axis;
         if (result.status === true) {
             axis = result.data;
@@ -3720,7 +3727,9 @@ var NCubeEditor2 = (function ($) {
     };
 
     var addAxis = function() {
-        if (!nce.ensureModifiable('Axis cannot be added.')) {
+        var modifiable = nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/*', PERMISSION_ACTION.ADD);
+        if (!modifiable) {
+            nce.showNote('Axis cannot be added.');
             return;
         }
 
@@ -3744,7 +3753,11 @@ var NCubeEditor2 = (function ($) {
         $('#addAxisModal').modal('hide');
         var axisName = _addAxisName.val();
         var appId = nce.getSelectedTabAppId();
-        var cubeName = nce.getSelectedCubeName();
+        var modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.ADD);
+        if (!modifiable) {
+            nce.showNote('Cannot add axis ' + axisName);
+            return;
+        }
         var params;
         if (_isRefAxis[0].checked) {
             var refAppId = appIdFrom(_refAxisApp.val(), _refAxisVersion.val(), _refAxisStatus.val(), _refAxisBranch.val());
@@ -3779,7 +3792,9 @@ var NCubeEditor2 = (function ($) {
     };
 
     var deleteAxis = function(axisName) {
-        if (!nce.ensureModifiable('Axis cannot be deleted.')) {
+        var modifiable = nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/' + axisName, PERMISSION_ACTION.DELETE);
+        if (!modifiable) {
+            nce.showNote('Axis cannot be deleted.');
             return;
         }
 
@@ -3813,11 +3828,16 @@ var NCubeEditor2 = (function ($) {
     };
 
     var updateAxis = function(axisName) {
-        if (!nce.ensureModifiable('Axis cannot be updated.')) {
-            return false;
+        var appId = nce.getSelectedTabAppId();
+        var modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
+        _updateAxisModal.find('input').attr('disabled', !modifiable);
+        if (modifiable) {
+            $('#updateAxisOk').show();
+        } else {
+            $('#updateAxisOk').hide();
         }
 
-        var result = nce.call("ncubeController.getAxis", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
+        var result = nce.call("ncubeController.getAxis", [appId, cubeName, axisName]);
         var axis;
         if (result.status === true) {
             axis = result.data;
@@ -3882,14 +3902,14 @@ var NCubeEditor2 = (function ($) {
         }
 
         _axisName = axisName;
-        $('#updateAxisModal').modal({
+        _updateAxisModal.modal({
             keyboard: true
         });
     };
 
     var showAxisSortOption = function(axis) {
         $('#updateAxisSortOrderRow').show();
-        _updateAxisSortOrder.prop({'checked': axis.preferredOrder == 0, 'disabled': false});
+        _updateAxisSortOrder.prop({'checked': axis.preferredOrder === 0});
     };
 
     var hideAxisSortOption = function() {
@@ -3898,7 +3918,7 @@ var NCubeEditor2 = (function ($) {
 
     var showAxisDefaultColumnOption = function(axis) {
         $('#updateAxisDefaultColRow').show();
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol != null, 'disabled': false});
+        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol !== null});
     };
 
     var hideAxisDefaultColumnOption = function() {
@@ -3907,7 +3927,7 @@ var NCubeEditor2 = (function ($) {
 
     var showAxisFireAllOption = function(axis) {
         $('#updateAxisFireAllRow').show();
-        $('#updateAxisFireAll').prop({'checked': axis.fireAll == true, 'disabled': false});
+        $('#updateAxisFireAll').prop({'checked': axis.fireAll === true});
     };
 
     var hideAxisFireAllOption = function() {
@@ -3915,12 +3935,12 @@ var NCubeEditor2 = (function ($) {
     };
 
     var updateAxisOk = function() {
-        $('#updateAxisModal').modal('hide');
+        _updateAxisModal.modal('hide');
         var axisName = $('#updateAxisName').val();
         var hasDefault = $('#updateAxisDefaultCol').prop('checked');
         var sortOrder = _updateAxisSortOrder.prop('checked');
         var fireAll = $('#updateAxisFireAll').prop('checked');
-        var result = nce.call("ncubeController.updateAxis", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _axisName, axisName, hasDefault, sortOrder, fireAll]);
+        var result = nce.call("ncubeController.updateAxis", [nce.getSelectedTabAppId(), cubeName, _axisName, axisName, hasDefault, sortOrder, fireAll]);
         if (result.status === true) {
             var oldName = _axisName.toLowerCase();
             var newName = axisName.toLowerCase();
