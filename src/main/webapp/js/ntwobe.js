@@ -3727,7 +3727,7 @@ var NCubeEditor2 = (function ($) {
     };
 
     var addAxis = function() {
-        var modifiable = nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/*', PERMISSION_ACTION.ADD);
+        var modifiable = nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/*', PERMISSION_ACTION.UPDATE);
         if (!modifiable) {
             nce.showNote('Axis cannot be added.');
             return;
@@ -3753,7 +3753,7 @@ var NCubeEditor2 = (function ($) {
         $('#addAxisModal').modal('hide');
         var axisName = _addAxisName.val();
         var appId = nce.getSelectedTabAppId();
-        var modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.ADD);
+        var modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
         if (!modifiable) {
             nce.showNote('Cannot add axis ' + axisName);
             return;
@@ -3792,7 +3792,7 @@ var NCubeEditor2 = (function ($) {
     };
 
     var deleteAxis = function(axisName) {
-        var modifiable = nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/' + axisName, PERMISSION_ACTION.DELETE);
+        var modifiable = nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
         if (!modifiable) {
             nce.showNote('Axis cannot be deleted.');
             return;
