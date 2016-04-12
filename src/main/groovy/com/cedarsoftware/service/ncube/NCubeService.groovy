@@ -8,6 +8,7 @@ import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.NCubeManager.ACTION
 import com.cedarsoftware.ncube.ReferenceAxisLoader
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.io.JsonObject
@@ -470,6 +471,16 @@ class NCubeService
     void updateReferenceAxes(List<AxisRef> axisRefs)
     {
         NCubeManager.updateReferenceAxes(axisRefs);
+    }
+
+    boolean assertPermissions(ApplicationID appId, String resource, ACTION action)
+    {
+        NCubeManager.assertPermissions(appId, resource, action ?: ACTION.READ)
+    }
+
+    boolean checkPermissions(ApplicationID appId, String resource, ACTION action)
+    {
+        NCubeManager.checkPermissions(appId, resource, action)
     }
 
     // =========================================== Helper methods ======================================================

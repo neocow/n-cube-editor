@@ -999,7 +999,8 @@ var NCE = (function ($)
             getNumFrozenCols: getNumFrozenCols,
             saveNumFrozenCols: saveNumFrozenCols,
             getSearchQuery: getSearchQuery,
-            saveSearchQuery: saveSearchQuery
+            saveSearchQuery: saveSearchQuery,
+            checkPermissions: checkPermissions
         };
     }
 
@@ -1488,6 +1489,11 @@ var NCE = (function ($)
                 }
             }
         }
+    }
+
+    function checkPermissions(appId, resource, action) {
+        var permissionResult = call('ncubeController.checkPermissions', [appId, resource, action]);
+        return ensureModifiable() && permissionResult.data === true;
     }
 
     function checkAppPermission(action) {

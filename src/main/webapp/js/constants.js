@@ -126,7 +126,10 @@ var DEFAULT_SCOPE = [
 
 var PERMISSION_ACTION = {
     RELEASE: 'release',
-    COMMIT: 'commit'
+    COMMIT: 'commit',
+    ADD: 'add',
+    UPDATE: 'update',
+    DELETE: 'delete'
 };
 
 var KEY_CODES = {
