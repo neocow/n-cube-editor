@@ -786,7 +786,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             String resourceName = cubeName + '/' +axisName
-            nCubeService.assertPermissions(appId, resourceName, ACTION.DELETE)
+            nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
             nCubeService.deleteAxis(appId, cubeName, axisName)
         }
         catch (Exception e)
