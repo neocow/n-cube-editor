@@ -201,7 +201,7 @@ div#west div.panel-body {
 }
 
 #ncube-list-div div.panel-body {
-    height:calc(100% - 96px);
+    height:calc(100% - 260px);
 }
 
 div#east div.panel-body {

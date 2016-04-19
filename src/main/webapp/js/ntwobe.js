@@ -923,6 +923,7 @@ var NCubeEditor2 = (function ($) {
                         }
                     }
                     combos = tempCombos;
+                    combos.sort();
                 }
             }
         } else {
