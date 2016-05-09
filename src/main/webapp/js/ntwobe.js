@@ -639,7 +639,7 @@ var NCubeEditor2 = (function ($) {
     {
         var button = $('button.axis-btn').filter(function()
         {
-            var buttonAxisName = $(this)[0].textContent.toLowerCase();
+            var buttonAxisName = $(this)[0].textContent.trim().toLowerCase();
             return _hiddenColumns.hasOwnProperty(buttonAxisName);
         });
         button.removeClass('btn-primary');
