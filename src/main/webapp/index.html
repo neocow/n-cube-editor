@@ -553,13 +553,19 @@
                         <input class="form-control" type="text" placeholder="" id="releaseCubesAppName" readonly/>
                     </div>
                     <div class="form-group">
+                        <label>What kind of version is this?</label>
+                        <button class="btn btn-primary" id="releaseCubesVersionMajor">Major</button>
+                        <button class="btn btn-primary" id="releaseCubesVersionMinor">Minor</button>
+                        <button class="btn btn-primary" id="releaseCubesVersionPatch">Patch</button>
+                    </div>
+                    <div class="form-group">
                         <label for="releaseCubesVersion">New SNAPSHOT Version</label>
-                        <input class="form-control" type="text" placeholder="Enter version number n.n.n here" id="releaseCubesVersion"/>
+                        <input class="form-control" type="text" placeholder="Version number n.n.n" id="releaseCubesVersion" readonly/>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't release</button>
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
                 <button id="releaseCubesOk" class="btn btn-primary">Release</button>
             </div>
         </div>

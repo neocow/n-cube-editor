@@ -98,6 +98,7 @@ var NCE = (function ($)
     var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
+    var _releaseCubesVersion = $('#releaseCubesVersion');
     var _releaseMenu = $('#ReleaseMenu');
     var _branchCommit = $('#branchCommit');
 
@@ -1350,8 +1351,27 @@ var NCE = (function ($)
             batchUpdateAxisReferencesCubeNameChanged();
         });
 
+        $('#releaseCubesVersionMajor').click(function() {
+            _releaseCubesVersion.val(getNextVersion(VERSION.MAJOR));
+        });
+        $('#releaseCubesVersionMinor').click(function() {
+            _releaseCubesVersion.val(getNextVersion(VERSION.MINOR));
+        });
+        $('#releaseCubesVersionPatch').click(function() {
+            _releaseCubesVersion.val(getNextVersion(VERSION.PATCH));
+        });
+
         addBranchListeners();
         addSelectAllNoneListeners();
+    }
+
+    function getNextVersion(partChanged) {
+        var version = _selectedVersion.split('.');
+        version[partChanged] = parseInt(version[partChanged]) + 1;
+        for (var i = partChanged + 1, len = version.length; i < len; i++) {
+            version[i] = 0;
+        }
+        return version.join('.')
     }
 
     function batchUpdateAxisReferencesAppChanged() {
@@ -2497,6 +2517,7 @@ var NCE = (function ($)
 
         $('#releaseCubesLabel')[0].textContent = 'Release ' + _selectedApp + ' ' + _selectedVersion + ' SNAPSHOT ?';
         $('#releaseCubesAppName').val(_selectedApp);
+        _releaseCubesVersion.val('');
         $('#releaseCubesModal').modal();
     }
 
@@ -2504,7 +2525,7 @@ var NCE = (function ($)
     {
         setTimeout(function() {
             $('#releaseCubesModal').modal('hide');
-            var newSnapVer = $('#releaseCubesVersion').val();
+            var newSnapVer = _releaseCubesVersion.val();
             var result = call("ncubeController.releaseCubes", [getAppId(), newSnapVer]);
             if (result.status === true)
             {
