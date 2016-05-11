@@ -678,7 +678,7 @@ var NCubeEditor2 = (function ($) {
     };
 
     var getAxisColumn = function(axis, colNum) {
-        if (axis.columnLength === 0) {
+        if (axis.columnLength === 0 || colNum < 0) {
             return;
         }
 
@@ -806,7 +806,10 @@ var NCubeEditor2 = (function ($) {
     };
 
     var getRowHeaderId = function(row, col) {
-        return getRowHeader(row, col).id;
+        var header = getRowHeader(row, col);
+        if (header) {
+            return header.id;
+        }
     };
 
     var getCellId = function(row, col) {
