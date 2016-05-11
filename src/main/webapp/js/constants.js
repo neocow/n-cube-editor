@@ -81,6 +81,12 @@ var STATUS = {
     SNAPSHOT: 'SNAPSHOT'
 };
 
+var VERSION = {
+    MAJOR: 0,
+    MINOR: 1,
+    PATCH: 2
+};
+
 var URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];

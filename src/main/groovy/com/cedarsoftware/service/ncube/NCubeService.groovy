@@ -483,6 +483,11 @@ class NCubeService
         NCubeManager.checkPermissions(appId, resource, action)
     }
 
+    String getAppLockedBy(ApplicationID appId)
+    {
+        NCubeManager.getAppLockedBy(appId)
+    }
+
     // =========================================== Helper methods ======================================================
 
     static List getCubes(String json)
