@@ -45,6 +45,12 @@ var NCE = (function ($)
     {
         _openCubes = []
     }
+    var _visitedBranches = localStorage[VISITED_BRANCHES];
+    if (_visitedBranches === undefined) {
+        _visitedBranches = {};
+    } else {
+        _visitedBranches = JSON.parse(_visitedBranches);
+    }
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
@@ -100,6 +106,7 @@ var NCE = (function ($)
     var _releaseCubesVersion = $('#releaseCubesVersion');
     var _releaseMenu = $('#ReleaseMenu');
     var _branchCommit = $('#branchCommit');
+    var _branchQuickSelectHeader = $('#branchQuickSelectHeader');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1390,6 +1397,12 @@ var NCE = (function ($)
             e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.PATCH));
         });
+        $('#btnClearBranchQuickSelect').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            clearVisitedBranchesList(_selectedApp);
+            buildBranchQuickSelectMenu(_selectedApp);
+        });
 
         addBranchListeners();
         addSelectAllNoneListeners();
@@ -1578,6 +1591,7 @@ var NCE = (function ($)
         var ul = _appMenu.parent().find('.dropdown-menu');
         ul.empty();
         handleAppPermissions();
+        buildBranchQuickSelectMenu(_selectedApp);
 
         $.each(_apps, function (index, value)
         {
@@ -1602,6 +1616,7 @@ var NCE = (function ($)
                     loadNCubeListView();
                     runSearch();
                     buildMenu();
+                    buildBranchQuickSelectMenu(value);
                 }, PROGRESS_DELAY);
             });
 
@@ -1613,6 +1628,68 @@ var NCE = (function ($)
         {
             _appMenu[0].innerHTML = '<button class="btn-sm btn-primary">' + _selectedApp + '&nbsp;<b class="caret"></b></button>';
         }
+    }
+
+    function buildBranchQuickSelectMenu(app) {
+        var ul = _branchQuickSelectHeader.parent();
+        var idx = ul.find('li').index(_branchQuickSelectHeader);
+        ul.find('li:gt(' + idx + ')').remove();
+
+        var list = getVisitedBranchesList(app);
+        for (var i = 0, len = list.length; i < len; i++) {
+            (function() {
+                var branchName = list[i];
+                var li = $('<li/>');
+                var an = $('<a/>');
+                an.attr('href', '#');
+                an[0].innerHTML = branchName;
+                an.click(function () {
+                    changeBranch(branchName);
+                });
+                li.append(an);
+                ul.append(li);
+            })();
+        }
+    }
+
+    function addToVisitedBranchesList(app, branch) {
+        if (branch === head) {
+            return;
+        }
+        var list = getVisitedBranchesList(app);
+        var oldIdx = list.indexOf(branch);
+        if (oldIdx > -1) {
+            list.splice(oldIdx, 1);
+        }
+        list.splice(1, 0, branch);
+        _visitedBranches[app] = list.join(TAB_SEPARATOR);
+        saveVisitedBranchesList();
+    }
+
+    function removeFromVisitedBranchesList(app, branch) {
+        var list = getVisitedBranchesList(app);
+        var oldIdx = list.indexOf(branch);
+        if (oldIdx > -1) {
+            list.splice(oldIdx, 1);
+        }
+        _visitedBranches[app] = list.join(TAB_SEPARATOR);
+        saveVisitedBranchesList();
+    }
+
+    function clearVisitedBranchesList(app) {
+        delete _visitedBranches[app];
+        saveVisitedBranchesList();
+    }
+
+    function saveVisitedBranchesList() {
+        localStorage[VISITED_BRANCHES] = JSON.stringify(_visitedBranches);
+    }
+
+    function getVisitedBranchesList(app) {
+        if (_visitedBranches.hasOwnProperty(app)) {
+            return _visitedBranches[app].split(TAB_SEPARATOR);
+        }
+        return [head];
     }
 
     function saveState()
@@ -2919,6 +2996,7 @@ var NCE = (function ($)
              branchName = head;
          }
         saveSelectedBranch(branchName);
+        addToVisitedBranchesList(_selectedApp, branchName);
         _selectBranchModal.modal('hide');
 
         setTimeout(function() {
@@ -2932,6 +3010,7 @@ var NCE = (function ($)
             runSearch();
             buildMenu();
             clearError();
+            buildBranchQuickSelectMenu(_selectedApp);
         }, PROGRESS_DELAY);
         clearError();
         showNote('Changing branch to: ' + branchName, 'Please wait...');
@@ -3305,11 +3384,13 @@ var NCE = (function ($)
     {
         $('#deleteBranchModal').modal('hide');
         clearError();
+        var appId = getAppId();
 
-        var result = call('ncubeController.deleteBranch', [getAppId()]);
-        changeBranch(head);
-        if (!result.status)
-        {
+        var result = call('ncubeController.deleteBranch', [appId]);
+        if (result.status) {
+            removeFromVisitedBranchesList(_selectedApp, appId.branch);
+            changeBranch(head);
+        } else {
             showNote('Unable to delete branch:<hr class="hr-small"/>' + result.data);
         }
     }

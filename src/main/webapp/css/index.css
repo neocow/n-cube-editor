@@ -589,6 +589,11 @@ span.selected-count {
     width: 100%;
 }
 
+#btnClearBranchQuickSelect {
+    width: 25% !important;
+    margin-right: 5px;
+}
+
 #appIdMenu li a.dropdown-toggle {
     padding: 5px 0;
 }
