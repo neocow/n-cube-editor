@@ -1351,13 +1351,16 @@ var NCE = (function ($)
             batchUpdateAxisReferencesCubeNameChanged();
         });
 
-        $('#releaseCubesVersionMajor').click(function() {
+        $('#releaseCubesVersionMajor').click(function(e) {
+            e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.MAJOR));
         });
-        $('#releaseCubesVersionMinor').click(function() {
+        $('#releaseCubesVersionMinor').click(function(e) {
+            e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.MINOR));
         });
-        $('#releaseCubesVersionPatch').click(function() {
+        $('#releaseCubesVersionPatch').click(function(e) {
+            e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.PATCH));
         });
 
