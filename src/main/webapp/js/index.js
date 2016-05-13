@@ -45,14 +45,19 @@ var NCE = (function ($)
     {
         _openCubes = []
     }
+    var _visitedBranches = localStorage[VISITED_BRANCHES];
+    if (_visitedBranches === undefined) {
+        _visitedBranches = {};
+    } else {
+        _visitedBranches = JSON.parse(_visitedBranches);
+    }
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
     var _selectedBranch;
     if (localStorage.getItem(SELECTED_BRANCH) == null)
     {
-        localStorage[SELECTED_BRANCH] = head;
-        _selectedBranch = head;
+        saveSelectedBranch(head);
     }
     else
     {
@@ -101,6 +106,7 @@ var NCE = (function ($)
     var _releaseCubesVersion = $('#releaseCubesVersion');
     var _releaseMenu = $('#ReleaseMenu');
     var _branchCommit = $('#branchCommit');
+    var _branchQuickSelectHeader = $('#branchQuickSelectHeader');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -192,6 +198,34 @@ var NCE = (function ($)
                 return i;
             }
         }
+    }
+
+    function saveSelectedApp(app) {
+        if (app !== undefined) {
+            _selectedApp = app;
+        }
+        localStorage[SELECTED_APP] = _selectedApp;
+    }
+    
+    function saveSelectedVersion(version) {
+        if (version !== undefined) {
+            _selectedVersion = version;
+        }
+        localStorage[SELECTED_VERSION] = _selectedVersion;
+    }
+
+    function saveSelectedStatus(status) {
+        if (status !== undefined) {
+            _selectedStatus = status;
+        }
+        localStorage[SELECTED_STATUS] = _selectedStatus;
+    }
+    
+    function saveSelectedBranch(branch) {
+        if (branch !== undefined) {
+            _selectedBranch = branch;
+        }
+        localStorage[SELECTED_BRANCH] = _selectedBranch;
     }
 
     function saveOpenCubeInfoValue(property, value) {
@@ -1351,14 +1385,23 @@ var NCE = (function ($)
             batchUpdateAxisReferencesCubeNameChanged();
         });
 
-        $('#releaseCubesVersionMajor').click(function() {
+        $('#releaseCubesVersionMajor').click(function(e) {
+            e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.MAJOR));
         });
-        $('#releaseCubesVersionMinor').click(function() {
+        $('#releaseCubesVersionMinor').click(function(e) {
+            e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.MINOR));
         });
-        $('#releaseCubesVersionPatch').click(function() {
+        $('#releaseCubesVersionPatch').click(function(e) {
+            e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.PATCH));
+        });
+        $('#btnClearBranchQuickSelect').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            clearVisitedBranchesList(_selectedApp);
+            buildBranchQuickSelectMenu(_selectedApp);
         });
 
         addBranchListeners();
@@ -1548,6 +1591,7 @@ var NCE = (function ($)
         var ul = _appMenu.parent().find('.dropdown-menu');
         ul.empty();
         handleAppPermissions();
+        buildBranchQuickSelectMenu(_selectedApp);
 
         $.each(_apps, function (index, value)
         {
@@ -1556,8 +1600,7 @@ var NCE = (function ($)
             an.attr('href','#');
             an[0].innerHTML = value;
             an.click(function() {
-                localStorage[SELECTED_APP] = value;
-                _selectedApp = value;
+                saveSelectedApp(value);
                 _appMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
 
                 handleAppPermissions();
@@ -1573,6 +1616,7 @@ var NCE = (function ($)
                     loadNCubeListView();
                     runSearch();
                     buildMenu();
+                    buildBranchQuickSelectMenu(value);
                 }, PROGRESS_DELAY);
             });
 
@@ -1584,6 +1628,68 @@ var NCE = (function ($)
         {
             _appMenu[0].innerHTML = '<button class="btn-sm btn-primary">' + _selectedApp + '&nbsp;<b class="caret"></b></button>';
         }
+    }
+
+    function buildBranchQuickSelectMenu(app) {
+        var ul = _branchQuickSelectHeader.parent();
+        var idx = ul.find('li').index(_branchQuickSelectHeader);
+        ul.find('li:gt(' + idx + ')').remove();
+
+        var list = getVisitedBranchesList(app);
+        for (var i = 0, len = list.length; i < len; i++) {
+            (function() {
+                var branchName = list[i];
+                var li = $('<li/>');
+                var an = $('<a/>');
+                an.attr('href', '#');
+                an[0].innerHTML = branchName;
+                an.click(function () {
+                    changeBranch(branchName);
+                });
+                li.append(an);
+                ul.append(li);
+            })();
+        }
+    }
+
+    function addToVisitedBranchesList(app, branch) {
+        if (branch === head) {
+            return;
+        }
+        var list = getVisitedBranchesList(app);
+        var oldIdx = list.indexOf(branch);
+        if (oldIdx > -1) {
+            list.splice(oldIdx, 1);
+        }
+        list.splice(1, 0, branch);
+        _visitedBranches[app] = list.join(TAB_SEPARATOR);
+        saveVisitedBranchesList();
+    }
+
+    function removeFromVisitedBranchesList(app, branch) {
+        var list = getVisitedBranchesList(app);
+        var oldIdx = list.indexOf(branch);
+        if (oldIdx > -1) {
+            list.splice(oldIdx, 1);
+        }
+        _visitedBranches[app] = list.join(TAB_SEPARATOR);
+        saveVisitedBranchesList();
+    }
+
+    function clearVisitedBranchesList(app) {
+        delete _visitedBranches[app];
+        saveVisitedBranchesList();
+    }
+
+    function saveVisitedBranchesList() {
+        localStorage[VISITED_BRANCHES] = JSON.stringify(_visitedBranches);
+    }
+
+    function getVisitedBranchesList(app) {
+        if (_visitedBranches.hasOwnProperty(app)) {
+            return _visitedBranches[app].split(TAB_SEPARATOR);
+        }
+        return [head];
     }
 
     function saveState()
@@ -1621,10 +1727,8 @@ var NCE = (function ($)
             an.attr('href','#');
             an[0].innerHTML = value;
             an.click(function() {
-                localStorage[SELECTED_VERSION] = version;
-                _selectedVersion = version;
-                localStorage[SELECTED_STATUS] = status;
-                _selectedStatus = status;
+                saveSelectedVersion(version);
+                saveSelectedStatus(status);
                 _versionMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
 
                 setCubeListLoading();
@@ -1848,14 +1952,12 @@ var NCE = (function ($)
             var version = (_versions && _versions.length > 0) ? _versions[_versions.length - 1] : null;
             if (version) {
                 var arr = version.split('-');
-                _selectedVersion = arr[0];
-                _selectedStatus = arr[1];
+                saveSelectedVersion(arr[0]);
+                saveSelectedStatus(arr[1]);
             } else {
-                _selectedVersion = null;
-                _selectedStatus = null;
+                saveSelectedVersion(null);
+                saveSelectedStatus(null);
             }
-            localStorage[SELECTED_VERSION] = _selectedVersion;
-            localStorage[SELECTED_STATUS] = _selectedStatus;
         }
     }
 
@@ -1890,16 +1992,15 @@ var NCE = (function ($)
         }
         if (!_selectedApp && _apps)
         {
-            _selectedApp = _apps[0];
-            localStorage[SELECTED_APP] = _selectedApp;
+            saveSelectedApp(_apps[0]);
         }
         if (!_apps)
         {
-            _selectedApp = localStorage[SELECTED_APP] = null;
+            saveSelectedApp(null);
         }
         else if (!doesItemExist(_selectedApp, _apps) && _apps.length > 0)
         {
-            _selectedApp = _apps[0];
+            saveSelectedApp(_apps[0]);
         }
     }
 
@@ -2529,14 +2630,14 @@ var NCE = (function ($)
             var result = call("ncubeController.releaseCubes", [getAppId(), newSnapVer]);
             if (result.status === true)
             {
-                var saveSelectedVersion = _selectedVersion;
+                updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
+                saveSelectedVersion(newSnapVer);
                 loadVersions();
                 loadVersionListView();
                 loadNCubes();
                 loadNCubeListView();
                 loadCube();
                 runSearch();
-
             }
             else
             {
@@ -2562,31 +2663,10 @@ var NCE = (function ($)
         setTimeout(function() {
             $('#changeVerModal').modal('hide');
             var newSnapVer = $('#changeVerValue').val();
-            var appId = getAppId();
-            var result = call("ncubeController.changeVersionValue", [appId, newSnapVer]);
+            var result = call("ncubeController.changeVersionValue", [getAppId(), newSnapVer]);
             if (result.status)
             {
-                var doesCubeInfoMatchOldVersion = function(cubeInfo) {
-                    return cubeInfo[CUBE_INFO.APP] === appId.app
-                        && cubeInfo[CUBE_INFO.BRANCH] === appId.branch
-                        && cubeInfo[CUBE_INFO.STATUS] === appId.status
-                        && cubeInfo[CUBE_INFO.VERSION] === appId.version
-                };
-
-                for (var i = 0, len = _openCubes.length; i < len; i++) {
-                    var cubeInfo = getCubeInfo(_openCubes[i].cubeKey);
-                    if (doesCubeInfoMatchOldVersion) {
-                        cubeInfo[CUBE_INFO.VERSION] = newSnapVer;
-                        _openCubes[i].cubeKey = getCubeInfoKey(cubeInfo);
-                    }
-                }
-                saveOpenCubeList();
-
-                if (doesCubeInfoMatchOldVersion(_selectedCubeInfo)) {
-                    _selectedCubeInfo[CUBE_INFO.VERSION] = newSnapVer;
-                }
-                buildTabs();
-
+                updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
                 loadVersions();
                 _selectedVersion = doesItemExist(newSnapVer, _versions) ? newSnapVer : _selectedVersion;
                 loadVersionListView();
@@ -2600,6 +2680,42 @@ var NCE = (function ($)
                 showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
             }
         }, PROGRESS_DELAY);
+    }
+
+    function updateCubeInfoInOpenCubeList(cubeInfoPart, newValue) {
+        var appId = getAppId();
+
+        var doesCubeInfoMatchOldAppId = function(cubeInfo) {
+            var doesAppMatch = cubeInfo[CUBE_INFO.APP] === appId.app;
+            var doesVersionMatch = cubeInfo[CUBE_INFO.VERSION] === appId.version;
+            var doesStatusMatch = cubeInfo[CUBE_INFO.STATUS] === appId.status;
+            var doesBranchMatch = cubeInfo[CUBE_INFO.BRANCH] === appId.branch;
+
+            switch (cubeInfoPart) {
+                case CUBE_INFO.APP:
+                    return doesAppMatch;
+                case CUBE_INFO.VERSION:
+                    return doesAppMatch && doesVersionMatch;
+                case CUBE_INFO.STATUS:
+                    return doesAppMatch && doesVersionMatch && doesStatusMatch;
+                case CUBE_INFO.BRANCH:
+                    return doesAppMatch && doesVersionMatch && doesStatusMatch && doesBranchMatch;
+            };
+        };
+
+        for (var i = 0, len = _openCubes.length; i < len; i++) {
+            var cubeInfo = getCubeInfo(_openCubes[i].cubeKey);
+            if (doesCubeInfoMatchOldAppId(cubeInfo)) {
+                cubeInfo[cubeInfoPart] = newValue;
+                _openCubes[i].cubeKey = getCubeInfoKey(cubeInfo);
+            }
+        }
+        saveOpenCubeList();
+
+        if (doesCubeInfoMatchOldAppId(_selectedCubeInfo)) {
+            _selectedCubeInfo[cubeInfoPart] = newValue;
+        }
+        buildTabs();
     }
 
     function ensureModifiable(operation)
@@ -2879,8 +2995,8 @@ var NCE = (function ($)
          {
              branchName = head;
          }
-        _selectedBranch = branchName;
-        localStorage[SELECTED_BRANCH] = branchName;
+        saveSelectedBranch(branchName);
+        addToVisitedBranchesList(_selectedApp, branchName);
         _selectBranchModal.modal('hide');
 
         setTimeout(function() {
@@ -2894,6 +3010,7 @@ var NCE = (function ($)
             runSearch();
             buildMenu();
             clearError();
+            buildBranchQuickSelectMenu(_selectedApp);
         }, PROGRESS_DELAY);
         clearError();
         showNote('Changing branch to: ' + branchName, 'Please wait...');
@@ -3267,11 +3384,13 @@ var NCE = (function ($)
     {
         $('#deleteBranchModal').modal('hide');
         clearError();
+        var appId = getAppId();
 
-        var result = call('ncubeController.deleteBranch', [getAppId()]);
-        changeBranch(head);
-        if (!result.status)
-        {
+        var result = call('ncubeController.deleteBranch', [appId]);
+        if (result.status) {
+            removeFromVisitedBranchesList(_selectedApp, appId.branch);
+            changeBranch(head);
+        } else {
             showNote('Unable to delete branch:<hr class="hr-small"/>' + result.data);
         }
     }
