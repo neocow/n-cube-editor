@@ -253,7 +253,7 @@ class Visualizer extends NCubeGroovyController
 			{
 				try
 				{
-					String nextTargetCubeName = getNextTargetCubeName(targetCube, targetTraitMaps, sourceFieldRpmType, targetFieldName as String)
+					String nextTargetCubeName = getNextTargetCubeName(sourceCube, sourceTraitMaps, sourceFieldRpmType, targetFieldName as String)
 
 					if (nextTargetCubeName)
 					{
@@ -519,11 +519,11 @@ class Visualizer extends NCubeGroovyController
 		return traitInfoString
 	}
 
-	private static String getNextTargetCubeName(NCube targetCube, Map traitsMap, String sourceFieldRpmType, String targetFieldName)
+	private static String getNextTargetCubeName(NCube sourceCube, Map sourceTraitsMap, String sourceFieldRpmType, String targetFieldName)
 	{
-		if (targetCube.getAxis('TRAIT').contains(R_SCOPED_NAME))
+		if (sourceCube.getAxis('TRAIT').contains(R_SCOPED_NAME))
 		{
-			if (traitsMap[CLASS_TRAITS][R_SCOPED_NAME] == null)
+			if (sourceTraitsMap[CLASS_TRAITS][R_SCOPED_NAME] == null)
 			{
 				return null
 			}
@@ -552,18 +552,13 @@ class Visualizer extends NCubeGroovyController
  */
 	private static Map getScopeRelativeToSource(NCube targetCube, String sourceFieldRpmType, String targetFieldName, Map<String, Object> scope)
 	{
-		if (!targetCube.getAxis('TRAIT').contains(R_SCOPED_NAME))
-		{
-			return scope
-		}
-
 		Map<String, Object> newScope = new CaseInsensitiveMap<>(scope)
 
 		if (targetCube.name.startsWith(RPM_ENUM))
 		{
 			newScope[SOURCE_FIELD_NAME] = targetFieldName
 		}
-		else
+		else if (targetCube.getAxis('TRAIT').contains(R_SCOPED_NAME))
 		{
 			String newScopeKey = sourceFieldRpmType.toLowerCase()
 			String oldValue = scope[newScopeKey]
@@ -571,6 +566,10 @@ class Visualizer extends NCubeGroovyController
 				newScope[SOURCE_SCOPE_KEY_PREFIX + sourceFieldRpmType] = oldValue
 			}
 			newScope[newScopeKey] = targetFieldName
+		}
+		else
+		{
+			return scope
 		}
 
 		return newScope
