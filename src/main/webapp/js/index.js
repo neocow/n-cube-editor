@@ -977,21 +977,22 @@ var NCE = (function ($)
                     _defaultTab = pageId;
                 }
 
-                var div = $('<div/>').prop({class:'tab-pane', id:pageId});
-                var tabHeight = $('#ncube-tabs').outerHeight();
-                div.attr({style:'overflow:hidden;height:calc(100% - ' + tabHeight + 'px);'});
-                _mainTabPanel.append(div);
+                if (_mainTabPanel.find('div#' + pageId).length === 0) {
+                    var div = $('<div/>').prop({class: 'tab-pane', id: pageId});
+                    var tabHeight = $('#ncube-tabs').outerHeight();
+                    div.attr({style: 'overflow:hidden;height:calc(100% - ' + tabHeight + 'px);'});
+                    _mainTabPanel.append(div);
 
-                var iframeId = 'iframe_' + pageId;
-                var iframe = $('<iframe id="' + iframeId + '"/>');
-                div.append(iframe);
+                    var iframeId = 'iframe_' + pageId;
+                    var iframe = $('<iframe id="' + iframeId + '"/>');
+                    div.append(iframe);
 
-                var html = value['html'];
-                if (!html.startsWith('http:') && !html.startsWith('https:'))
-                {
-                    html += '?appId=' + JSON.stringify(getAppId());
+                    var html = value['html'];
+                    if (!html.startsWith('http:') && !html.startsWith('https:')) {
+                        html += '?appId=' + JSON.stringify(getAppId());
+                    }
+                    iframe.attr({style: 'position:relative;height:100%;width:100%', src: html});
                 }
-                iframe.attr({style:'position:relative;height:100%;width:100%', src:html});
             }
         });
     }
