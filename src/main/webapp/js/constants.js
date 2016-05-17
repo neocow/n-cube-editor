@@ -132,6 +132,7 @@ var DEFAULT_SCOPE = [
 ];
 
 var PERMISSION_ACTION = {
+    ADMIN: 'admin',
     COMMIT: 'commit',
     READ: 'read',
     RELEASE: 'release',
