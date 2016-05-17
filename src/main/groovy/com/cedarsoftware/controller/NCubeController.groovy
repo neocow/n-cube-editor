@@ -128,6 +128,14 @@ class NCubeController extends BaseController
 
     boolean checkPermissions(ApplicationID appId, String resource, String action)
     {
+        if (action == NCubeManager.ROLE_ADMIN) {
+            try {
+                nCubeService.isAdmin(appId)
+                return true
+            } catch (SecurityException e) {
+                return false
+            }
+        }
         return nCubeService.checkPermissions(appId, resource, action == null ? ACTION.READ : ACTION.valueOf(action.toUpperCase()))
     }
 
@@ -1331,6 +1339,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
+            nCubeService.isAdmin(appId)
             nCubeService.clearCache(appId)
             appCache.clear()
             appVersions.clear()

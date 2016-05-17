@@ -107,6 +107,7 @@ var NCE = (function ($)
     var _releaseMenu = $('#ReleaseMenu');
     var _branchCommit = $('#branchCommit');
     var _branchQuickSelectHeader = $('#branchQuickSelectHeader');
+    var _clearCache = $('#clearCache');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1344,7 +1345,7 @@ var NCE = (function ($)
         {
             clearStorage();
         });
-        $('#clearCache').click(function()
+        _clearCache.click(function()
         {
             clearCache();
         });
@@ -1581,10 +1582,20 @@ var NCE = (function ($)
             _branchCommit.hide();
         }
     }
+    
+    function enableDisableClearCache() {
+        var li = _clearCache.parent();
+        if (checkAppPermission(PERMISSION_ACTION.ADMIN)) {
+            li.removeClass('disabled');
+        } else {
+            li.addClass('disabled');
+        }
+    }
 
     function handleAppPermissions() {
         enableDisableReleaseMenu();
         enableDisableCommitBranch();
+        enableDisableClearCache();
     }
 
     function loadAppListView()
