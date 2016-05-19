@@ -76,8 +76,8 @@ var PropertyBuilder = (function ($) {
         var innerDiv = $('<div/>').addClass('modal-dialog modal-lg');
         var contentDiv = $('<div/>').addClass('modal-content');
 
-        innerDiv.append(contentDiv);
         _modal.append(innerDiv);
+        innerDiv.append(contentDiv);
         return contentDiv;
     }
 
@@ -132,11 +132,11 @@ var PropertyBuilder = (function ($) {
         var columnKeys = Object.keys(columns);
         _options.columnKeys = columnKeys;
         var headingRow = $('<tr/>');
+        _table.append(headingRow);
         for (var c = 0, cLen = columnKeys.length; c < cLen; c++) {
             var column = columns[columnKeys[c]];
             headingRow.append($('<td/>').html(column.heading).css(TD_CSS));
         }
-        _table.append(headingRow);
 
         if (_data.length === 0) {
             addTableRow(); //start with empty row
@@ -198,9 +198,9 @@ var PropertyBuilder = (function ($) {
         closeBtn.click(function() {
             tr.remove();
         });
+        _table.append(tr);
         tr.append($('<td/>').append(closeBtn));
 
-        _table.append(tr);
         tr.find('input').first().focus();
     }
 
