@@ -106,16 +106,19 @@ var POPULATE_SELECT_FROM_CUBE = {
     METHOD: 'method'
 };
 
+var CONTROLLER = 'ncubeController.';
 var CONTROLLER_METHOD = {
     GET_APP_NAMES: 'getAppNames',
     GET_APP_VERSIONS: 'getAppVersions',
-    SEARCH: 'search',
     GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_AXIS_METAPROPERTIES: 'getAxisMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
+    RELEASE_BRANCH: 'releaseBranch',
+    SEARCH: 'search',
+    SET_LOCK_FOR_APP: 'setLockForApp',
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_AXIS_METAPROPERTIES: 'updateAxisMetaProperties',
-    UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
+    UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties'
 };
 
 var DEFAULT_SCOPE = [
