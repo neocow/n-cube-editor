@@ -113,6 +113,7 @@ var NCE = (function ($)
     var _selectBranchModal = $('#selectBranchModal');
     var _commitModal = $('#commitRollbackModal');
     var _diffModal = $('#diffOutputModal');
+    var _releaseCubesModal = $('#releaseCubesModal');
 
     initialize();
 
@@ -1489,6 +1490,7 @@ var NCE = (function ($)
                 axis = refAxData.transformAxisName;
             }
 
+            _batchUpdateAxisReferencesTable.append(tr);
             tr.append($('<td/>').append(selectCheckbox));
             tr.append($('<td/>').html(refAxData.srcCubeName));
             tr.append($('<td/>').html(refAxData.srcAxisName));
@@ -1496,8 +1498,6 @@ var NCE = (function ($)
             tr.append($('<td/>').html(version).prop('class','version'));
             tr.append($('<td/>').html(cube).prop('class','cubeName'));
             tr.append($('<td/>').html(axis).prop('class','axisName'));
-
-            _batchUpdateAxisReferencesTable.append(tr);
         }
     }
 
@@ -1632,8 +1632,8 @@ var NCE = (function ($)
                 }, PROGRESS_DELAY);
             });
 
-            li.append(an);
             ul.append(li);
+            li.append(an);
         });
 
         if (_selectedApp)
@@ -1658,8 +1658,8 @@ var NCE = (function ($)
                 an.click(function () {
                     changeBranch(branchName);
                 });
-                li.append(an);
                 ul.append(li);
+                li.append(an);
             })();
         }
     }
@@ -1754,8 +1754,8 @@ var NCE = (function ($)
                 }, PROGRESS_DELAY);
             });
 
-            li.append(an);
             ul.prepend(li);
+            li.append(an);
         });
 
         if (_selectedVersion)
@@ -1801,8 +1801,8 @@ var NCE = (function ($)
             }
 
             a.attr('itemName', loName);
-            li.append(a);
             _listOfCubes.append(li);
+            li.append(a);
 
 
             if (filter && infoDto.pos != null && infoDto.endPos != null)
@@ -2109,10 +2109,10 @@ var NCE = (function ($)
             });
             var label = $('<label/>').prop({class: 'checkbox no-margins'});
             label[0].textContent = cubeName;
-            checkbox.prependTo(label); // <=== create input without the closing tag
-            div.append(label);
-            li.append(div);
             ul.append(li);
+            li.append(div);
+            div.append(label);
+            checkbox.prependTo(label); // <=== create input without the closing tag
         }
         $('#deleteCubeModal').modal();
     }
@@ -2239,10 +2239,10 @@ var NCE = (function ($)
                 var checkbox = $('<input>').prop({class:'restoreCheck', type:'checkbox'});
                 var label = $('<label/>').prop({class: 'checkbox no-margins'});
                 label[0].textContent = value.name;
-                checkbox.prependTo(label); // <=== create input without the closing tag
-                div.append(label);
-                li.append(div);
                 ul.append(li);
+                li.append(div);
+                div.append(label);
+                checkbox.prependTo(label); // <=== create input without the closing tag
             });
             $('#restoreCubeModal').modal();
         }
@@ -2301,8 +2301,23 @@ var NCE = (function ($)
             $.each(result.data, function (index, infoDto)
             {
                 var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
+                var div = $('<div/>').prop({class: 'container-fluid'});
                 var anchorHtml = $('<a href="#" style="margin:0 10px 0 0"/>');
                 var anchorJson = $('<a href="#" style="margin:0 10px 0 0"/>');
+
+                ul.append(li);
+                li.append(anchorHtml);
+                li.append(anchorJson);
+                li.append(div);
+
+                var labelB = $('<label/>').prop({class: 'col-xs-1'});
+                div.append(labelB);
+                labelB.css('padding', 0);
+                labelB.css('margin', 0);
+                labelB.css('margin-right', '10px');
+                labelB.css('width', '12%');
+                labelB.append(anchorHtml);
+                labelB.append(anchorJson);
 
                 var kbd1 = $('<kbd/>');
                 kbd1[0].textContent = 'HTML';
@@ -2311,23 +2326,12 @@ var NCE = (function ($)
                 var kbd2 = $('<kbd/>');
                 kbd2[0].textContent = 'JSON';
                 anchorJson.append(kbd2);
-
-                li.append(anchorHtml);
-                li.append(anchorJson);
-
-                var labelB = $('<label/>').prop({class: 'col-xs-1'});
-                labelB.css('padding', 0);
-                labelB.css('margin', 0);
-                labelB.css('margin-right', '10px');
-                labelB.css('width', '12%');
-                labelB.append(anchorHtml);
-                labelB.append(anchorJson);
-
-                var div = $('<div/>').prop({class: 'container-fluid'});
+                
                 var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
                 checkbox.attr('data-cube-id', infoDto.id);
                 checkbox.attr('data-rev-id', infoDto.revision);
                 var label = $('<label/>').prop({class: 'checkbox no-margins col-xs-10'});
+                div.append(label);
                 var text = 'rev: ' + infoDto.revision + '&nbsp;&nbsp;&nbsp;';
                 if (infoDto.notes && infoDto.notes != "")
                 {
@@ -2344,9 +2348,6 @@ var NCE = (function ($)
                 }
                 label[0].innerHTML = text;
                 checkbox.prependTo(label);
-                div.append(labelB);
-                div.append(label);
-                li.append(div);
 
                 anchorHtml.click(function ()
                 {
@@ -2374,7 +2375,6 @@ var NCE = (function ($)
                         oldJson.document.title = title + '.json';
                     }
                 });
-                ul.append(li);
             });
         }
         else
@@ -2577,8 +2577,8 @@ var NCE = (function ($)
                     showRefsFromCubeClose();
                     selectCubeByName(value);
                 });
-                li.append(anchor);
                 ul.append(li);
+                li.append(anchor);
             });
         }
         else
@@ -2631,13 +2631,13 @@ var NCE = (function ($)
         $('#releaseCubesLabel')[0].textContent = 'Release ' + _selectedApp + ' ' + _selectedVersion + ' SNAPSHOT ?';
         $('#releaseCubesAppName').val(_selectedApp);
         _releaseCubesVersion.val('');
-        $('#releaseCubesModal').modal();
+        _releaseCubesModal.modal();
     }
 
     function releaseCubesOk()
     {
         setTimeout(function() {
-            $('#releaseCubesModal').modal('hide');
+            _releaseCubesModal.modal('hide');
             var newSnapVer = _releaseCubesVersion.val();
             var result = call("ncubeController.releaseCubes", [getAppId(), newSnapVer]);
             if (result.status === true)
@@ -2959,8 +2959,8 @@ var NCE = (function ($)
             {
                 changeBranch(name);
             });
-            li.append(anchor);
             ul.append(li);
+            li.append(anchor);
         });
 
         _selectBranchModal.modal('show');
@@ -3079,6 +3079,9 @@ var NCE = (function ($)
         $.each(branchChanges, function (index, infoDto)
         {
             var li = $('<li/>').prop({class: 'list-group-item skinny-lr no-margins'});
+            ul.append(li);
+            var div = $('<div/>').prop({class:'container-fluid'});
+            li.append(div);
             li.css('padding-left', 0);
 
             var anchorDiff = $('<a href="#"/>');
@@ -3088,18 +3091,19 @@ var NCE = (function ($)
                 leftInfoDto.branch = 'HEAD';
                 diffCubes(leftInfoDto, infoDto, infoDto.name);
             });
-            var kbd = $('<kbd/>');
-            kbd[0].textContent = 'Compare';
-            anchorDiff.append(kbd);
             var labelB = $('<label/>').prop({class: 'col-xs-1', style:'margin:0;margin-right:20px'});
+            div.append(labelB);
             labelB.css('padding', 0);
             labelB.css('margin', 0);
             labelB.css('margin-right', '10px');
             labelB.append(anchorDiff);
+            var kbd = $('<kbd/>');
+            kbd[0].textContent = 'Compare';
+            anchorDiff.append(kbd);
 
-            var div = $('<div/>').prop({class:'container-fluid'});
             var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
             var label = $('<label/>').prop({class: 'checkbox no-margins col-xs-10'});
+            div.append(label);
             label[0].textContent = infoDto.name;
 
             if (infoDto.revision < 0)
@@ -3140,10 +3144,6 @@ var NCE = (function ($)
                 }
             }
             checkbox.prependTo(label); // <=== create input without the closing tag
-            div.append(labelB);
-            div.append(label);
-            li.append(div);
-            ul.append(li);
         });
 
         selectAll();
@@ -3430,10 +3430,10 @@ var NCE = (function ($)
             var checkbox = $('<input>').prop({type:'checkbox'});
             var label = $('<label/>').prop({class: 'radio no-margins'});
             label[0].textContent = cubeName;
-            checkbox.prependTo(label); // <=== create input without the closing tag
-            div.append(label);
-            li.append(div);
             ul.append(li);
+            li.append(div);
+            div.append(label);
+            checkbox.prependTo(label); // <=== create input without the closing tag
         });
         $('#mergeBranchModal').modal('show');
     }
@@ -3624,9 +3624,9 @@ var NCE = (function ($)
             var divRight = $('<div class="innerR"/>');
             divLeft[0].innerHTML = _diffLastResult.leftHtml;
             divRight[0].innerHTML = _diffLastResult.rightHtml;
+            _diffOutput.append(div);
             div.append(divLeft);
             div.append(divRight);
-            _diffOutput.append(div);
         }
         else
         {
