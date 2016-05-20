@@ -77,7 +77,6 @@ class NCubeController extends BaseController
 {
 
     private static final Logger LOG = LogManager.getLogger(NCubeController.class)
-    private static final Pattern VERSION_REGEX = ~/[.]/
     private static final Pattern IS_NUMBER_REGEX = ~/^[\d,.e+-]+$/
     private static final Pattern NO_QUOTES_REGEX = ~/"/
     private NCubeService nCubeService;
@@ -524,20 +523,7 @@ class NCubeController extends BaseController
             {
                 String s1 = (String) o1
                 String s2 = (String) o2
-                return getVersionValue(s1) - getVersionValue(s2)
-            }
-
-            int getVersionValue(String v)
-            {
-                String[] pieces = VERSION_REGEX.split(v)
-                if (pieces.length != 3)
-                {
-                    return 0
-                }
-                int major = Integer.valueOf(pieces[0]) * 1000 * 1000
-                int minor = Integer.valueOf(pieces[1]) * 1000
-                int rev = Integer.valueOf(pieces[2].split('-')[0])
-                return major + minor + rev
+                return ApplicationID.getVersionValue(s1) - ApplicationID.getVersionValue(s2)
             }
         })
     }
