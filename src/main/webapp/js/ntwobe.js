@@ -1640,6 +1640,7 @@ var NCubeEditor2 = (function ($) {
     };
 
     var categoryRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+        Handsontable.renderers.TextRenderer.apply(this, arguments);
         td.className = '';
         if (_firstRenderedCol === null) {
             _firstRenderedCol = col;
