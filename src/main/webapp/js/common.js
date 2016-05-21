@@ -134,8 +134,8 @@ function buildDropDown(listId, inputId, list, callback)
             $(inputId).val(anchor.html());
             callback(anchor.html());
         });
-        ul.append(li);
         li.append(anchor);
+        ul.append(li);
     });
 }
 
@@ -305,8 +305,8 @@ function addModalFilters() {
             }, e.keyCode === KEY_CODES.ENTER ? 0 : 200);
         });
 
-        contentDiv.find('.modal-header').after(div);
         div.append(input);
+        contentDiv.find('.modal-header').after(div);
 
         contentDiv.parent().parent().on('shown.bs.modal', function(){
             refreshItems();

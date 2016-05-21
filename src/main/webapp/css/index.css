@@ -339,15 +339,6 @@ span.selected-count {
     overflow-x: hidden;
 }
 
-#releaseCubesProgressBar {
-    width: 0;
-    -webkit-transition: none;
-    -moz-transition: none;
-    -ms-transition: none;
-    -o-transition: none;
-    transition: none;
-}
-
 #fadeMe1 {
     opacity: 1.0;
     background: #D1C5B7;

@@ -90,7 +90,6 @@ var NCubeEditor2 = (function ($) {
     var _filterTable = null;
     var _columnIdCombinationsToShow = null;
     var _searchText = null;
-    var _hotContainer = null;
 
     var init = function(info) {
         if (!nce) {
@@ -156,7 +155,6 @@ var NCubeEditor2 = (function ($) {
             _topAxisBtn = $('#topAxisBtn');
             _filterModal = $('#filterModal');
             _filterTable = $('#filterTable');
-            _hotContainer = $('#hot-container');
 
             addSelectAllNoneListeners();
             addAxisEditListeners();
@@ -243,7 +241,7 @@ var NCubeEditor2 = (function ($) {
                     var winWidth = $(this).width();
                     if (hot) {
                         hot.updateSettings({
-                            height: $(this).height() - _hotContainer.offset().top,
+                            height: $(this).height() - $('#hot-container').offset().top,
                             width: winWidth
                         });
                     }
@@ -355,7 +353,7 @@ var NCubeEditor2 = (function ($) {
 
         handleCubeData(JSON.parse(result.data));
         if (!hot || !keepTable) {
-            hot = new Handsontable(_hotContainer[0], getHotSettings());
+            hot = new Handsontable(document.getElementById('hot-container'), getHotSettings());
         }
         selectSavedOrDefaultCell();
         hot.render();
@@ -1134,7 +1132,7 @@ var NCubeEditor2 = (function ($) {
             var frozen = getNumFrozenCols();
             var idx = colOffset > frozen ? colOffset : frozen;
             idx += 2;
-            var tr = _hotContainer.find('div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')');
+            var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')');
             var offset = tr.offset();
             _topAxisBtn.css({top: offset.top + 1, left: offset.left + 1});
         }
@@ -1496,7 +1494,7 @@ var NCubeEditor2 = (function ($) {
             currentColClassName: CLASS_HANDSON_CURRENT_ROW,
             outsideClickDeselects: false,
             height: function() {
-                return $(window).height() - _hotContainer.offset().top;
+                return $(window).height() - $("#hot-container").offset().top;
             },
             width: function() {
                 return $(window).width();
@@ -1585,7 +1583,7 @@ var NCubeEditor2 = (function ($) {
 
     var moveTopAxisMenu = function() {
         var numFixed = getNumFrozenCols();
-        var tr = _hotContainer.find('div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1)');
+        var tr = $('#hot-container > div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1)');
         var scrollAmt = $('.ht_master .wtHolder').scrollLeft();
         var thWidth = tr.find('th').outerWidth();
         var frozenWidth = thWidth;
@@ -1601,7 +1599,7 @@ var NCubeEditor2 = (function ($) {
                 }
             }
         } else if (numFixed > 0) {
-            newWidth = $('.ht_clone_left.handsontable').width();
+                newWidth = $('.ht_clone_left.handsontable').width();
         }
 
         if (!newWidth) {
@@ -1612,11 +1610,11 @@ var NCubeEditor2 = (function ($) {
                 newWidth = afterSubtract < thWidth ? thWidth : afterSubtract;
             }
         }
-        _topAxisBtn.css({left: newWidth});
+    _topAxisBtn.css({left: newWidth});
     };
 
     var setClipFormatToggleListener = function() {
-        _hotContainer.find('div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(2) > th').click(function(e) {
+        $('#hot-container > div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(2) > th').click(function(e) {
             toggleClipFormat(e);
         });
     };
@@ -1640,6 +1638,7 @@ var NCubeEditor2 = (function ($) {
     };
 
     var categoryRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+        Handsontable.renderers.TextRenderer.apply(this, arguments);
         td.className = '';
         if (_firstRenderedCol === null) {
             _firstRenderedCol = col;
@@ -1891,13 +1890,11 @@ var NCubeEditor2 = (function ($) {
     };
 
     var buildAxisMenu = function(axis, element) {
-        $(element).empty();
         var axisName = axis.name;
         var isRef = axis.isRef;
         var axisIndex = findIndexOfAxisName(axisName);
 
         var div = $('<div/>').prop({class: 'btn-group axis-menu'});
-        $(element).append(div);
         var button = $('<button/>').prop({type:'button', class:'btn-sm btn-primary dropdown-toggle axis-btn'})
             .attr('data-toggle', 'dropdown');
         var name = $('<span/>').innerHTML = isRef ? axisName + NBSP + '<span class="glyphicon glyphicon-share-alt"></span>' : axisName;
@@ -1907,7 +1904,6 @@ var NCubeEditor2 = (function ($) {
         div.append(button);
 
         var ul = $('<ul/>').prop({class: 'dropdown-menu', role: 'menu'});
-        $(div).append(ul);
         var li;
         var an;
 
@@ -1920,8 +1916,8 @@ var NCubeEditor2 = (function ($) {
                 var appId = appIdFrom(axis.referenceApp, axis.referenceVersion, axis.referenceStatus, axis.referenceBranch);
                 nce.selectCubeByName(axis.referenceCubeName, appId);
             });
-            ul.append(li);
             li.append(an);
+            ul.append(li);
             li = $('<li/>');
             an = $('<a href="#">');
             an[0].innerHTML = "Break reference";
@@ -1955,8 +1951,8 @@ var NCubeEditor2 = (function ($) {
                     buttons.remove();
                 }
             });
-            ul.append(li);
             li.append(an);
+            ul.append(li);
             li = $('<div/>').prop({'class': 'divider'});
             ul.append(li);
         }
@@ -1968,8 +1964,8 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             updateAxis(axisName)
         });
-        ul.append(li);
         li.append(an);
+        ul.append(li);
         li = $('<li/>');
         an = $('<a href="#">');
         an[0].innerHTML = "Add Axis...";
@@ -1977,8 +1973,8 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             addAxis();
         });
-        ul.append(li);
         li.append(an);
+        ul.append(li);
         li = $('<li/>');
         an = $('<a href="#">');
         an[0].innerHTML = "Delete Axis...";
@@ -1986,8 +1982,8 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             deleteAxis(axisName)
         });
-        ul.append(li);
         li.append(an);
+        ul.append(li);
 
         li = $('<li/>');
         an = $('<a href="#">');
@@ -2010,8 +2006,8 @@ var NCubeEditor2 = (function ($) {
                 openMetaPropertiesBuilder(metaPropertyOptions);
             });
         }
-        ul.append(li);
         li.append(an);
+        ul.append(li);
 
         li = $('<div/>').prop({'class': 'divider'});
         ul.append(li);
@@ -2030,8 +2026,8 @@ var NCubeEditor2 = (function ($) {
                 editColumns(axisName)
             });
         }
-        ul.append(li);
         li.append(an);
+        ul.append(li);
 
         if (axisIndex === colOffset) {
             li = $('<div/>').prop({'class': 'divider'});
@@ -2043,8 +2039,8 @@ var NCubeEditor2 = (function ($) {
                 e.preventDefault();
                 filterOpen();
             });
-            ul.append(li);
             li.append(an);
+            ul.append(li);
 
             li = $('<li/>');
             an = $('<a href="#">');
@@ -2064,8 +2060,8 @@ var NCubeEditor2 = (function ($) {
                     e.stopPropagation();
                 });
             }
-            ul.append(li);
             li.append(an);
+            ul.append(li);
         }
 
         li = $('<div/>').prop({'class': 'divider'});
@@ -2077,8 +2073,8 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             hideColumns(axisName)
         });
-        ul.append(li);
         li.append(an);
+        ul.append(li);
 
         var lowerAxisName = axisName.toLowerCase();
         li = $('<li/>');
@@ -2104,8 +2100,8 @@ var NCubeEditor2 = (function ($) {
                 e.stopPropagation();
             });
         }
-        ul.append(li);
         li.append(an);
+        ul.append(li);
 
         li = $('<li/>');
         an = $('<a href="#">');
@@ -2125,8 +2121,8 @@ var NCubeEditor2 = (function ($) {
                 e.stopPropagation();
             });
         }
-        ul.append(li);
         li.append(an);
+        ul.append(li);
 
         li = $('<div/>').prop({'class': 'divider'});
         ul.append(li);
@@ -2157,10 +2153,10 @@ var NCubeEditor2 = (function ($) {
                     setFrozenColumns(parseInt(val));
                 }
             })
-            ;
-        ul.append(li);
-        li.append(an);
+        ;
         an.append(newNameInput);
+        li.append(an);
+        ul.append(li);
 
         var axesLength = axes.length;
         if (axisIndex !== colOffset)
@@ -2172,7 +2168,6 @@ var NCubeEditor2 = (function ($) {
             ul.append(li);
             li = $('<li/>');
             var btnGroup = $('<div/>').prop({'class': 'btn-group btn-group-sm indent-axis-buttons'}).attr({'role': 'group'});
-            ul.append(li);
             li.append(btnGroup);
             var btn, span;
             //Move Left
@@ -2193,18 +2188,18 @@ var NCubeEditor2 = (function ($) {
                     moveAxis(axisIndex, axisIndex - 1)
                 });
             }
-            btnGroup.append(btn);
             btn.append(span);
+            btnGroup.append(btn);
             //Move Up
             btn = $('<button/>').prop({type:'button', class:'btn btn-default'}).attr({'aria-label': 'Move Up'});
             span = $('<span/>').prop({'class': 'glyphicon glyphicon-arrow-up'}).attr({'aria-hidden': 'true'});
-            btnGroup.append(btn);
             btn.append(span);
             btn.click(function (e) {
                 e.preventDefault();
                 clearFilters();
                 moveAxis(axisIndex, colOffset)
             });
+            btnGroup.append(btn);
             //Move Right
             btn = $('<button/>').prop({type:'button', class:'btn btn-default'}).attr({'aria-label': 'Move Right'});
             span = $('<span/>').prop({'class': 'glyphicon glyphicon-arrow-right'}).attr({'aria-hidden': 'true'});
@@ -2223,8 +2218,9 @@ var NCubeEditor2 = (function ($) {
                     moveAxis(axisIndex, axisIndex + 1)
                 });
             }
-            btnGroup.append(btn);
             btn.append(span);
+            btnGroup.append(btn);
+            ul.append(li);
 
             li = $('<li/>');
             an = $('<a href="#">');
@@ -2243,9 +2239,13 @@ var NCubeEditor2 = (function ($) {
                     e.stopPropagation();
                 });
             }
-            ul.append(li);
             li.append(an);
+            ul.append(li);
         }
+
+        $(div).append(ul);
+        $(element).empty();
+        $(element).append(div);
     };
 
     //====================================== coordinate bar functions ==================================================
@@ -3483,14 +3483,14 @@ var NCubeEditor2 = (function ($) {
                 }
 
                 inputText.val(prefix + item.value);
-                _columnList.append(rowDiv);
-                rowDiv.append(div);
-                div.append(span);
                 span.append(inputBtn);
+                div.append(span);
                 if (axis.type.name == 'RULE') {
                     div.append(inputName);
                 }
                 div.append(inputText);
+                rowDiv.append(div);
+                _columnList.append(rowDiv);
             }
         });
     };
@@ -3572,11 +3572,11 @@ var NCubeEditor2 = (function ($) {
             var inputBtn = $('<input/>').prop({class: "commitCheck", type: "checkbox"});
             inputBtn.attr("data-id", itemId);
             inputBtn[0].checked = !_hiddenColumns[lowerAxisName] || !_hiddenColumns[lowerAxisName][itemId];
-            _hideColumnsList.append(listItem);
             listItem.append(rowDiv);
             rowDiv.append(rowLabel);
             rowLabel.append(inputBtn);
             rowLabel.append(label);
+            _hideColumnsList.append(listItem);
         });
     };
 
