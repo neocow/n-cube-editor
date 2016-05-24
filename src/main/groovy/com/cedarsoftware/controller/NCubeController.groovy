@@ -1392,8 +1392,11 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            Object[] infoDtos = search(appId, cubeName, null, true);
-            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos)
+            Map options = [:]
+            options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
+            options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
+            List<NCubeInfoDto> list = nCubeService.search(appId, cubeName, null, options)
+            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, list.toArray())
             return committedCubes.toArray()
         }
         catch (BranchMergeException e)

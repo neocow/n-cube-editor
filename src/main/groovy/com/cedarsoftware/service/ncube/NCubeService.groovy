@@ -43,13 +43,16 @@ class NCubeService
 
     List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching, Map options)
     {
-        if (!cubeNamePattern.startsWith('*'))
+        if (!options[NCubeManager.SEARCH_EXACT_MATCH_NAME])
         {
-            cubeNamePattern = '*' + cubeNamePattern
-        }
-        if (!cubeNamePattern.endsWith('*'))
-        {
-            cubeNamePattern = cubeNamePattern + '*'
+            if (!cubeNamePattern.startsWith('*'))
+            {
+                cubeNamePattern = '*' + cubeNamePattern
+            }
+            if (!cubeNamePattern.endsWith('*'))
+            {
+                cubeNamePattern = cubeNamePattern + '*'
+            }
         }
 
         return NCubeManager.search(appId, cubeNamePattern, contentMatching, options)
