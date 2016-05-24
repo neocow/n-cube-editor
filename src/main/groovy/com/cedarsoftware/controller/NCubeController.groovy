@@ -1392,7 +1392,10 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            Object[] infoDtos = search(appId, cubeName, null, true);
+            Map options = [:]
+            options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
+            options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
+            List<NCubeInfoDto> infoDtos = nCubeService.search(appId, cubeName, null, options)
             List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos)
             return committedCubes.toArray()
         }
