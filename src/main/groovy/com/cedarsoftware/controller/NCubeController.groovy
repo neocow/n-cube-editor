@@ -1392,7 +1392,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            Map options = [:] as Map
+            Map options = [:]
             options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
             options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
             List<NCubeInfoDto> list = nCubeService.search(appId, cubeName, null, options)
