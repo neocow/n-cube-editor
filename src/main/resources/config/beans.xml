@@ -101,7 +101,8 @@
           p:url="jdbc:oracle:thin:@dm01np-scan.td.afg:1521/app_ncubed.dev.gai.com"
           p:username="nce"
           p:password="quality"
-          p:initialSize="5"
+          p:jdbcInterceptors="com.cedarsoftware.util.PoolInterceptor"
+          p:initialSize="10"
           p:minIdle="10"
           p:maxIdle="50"
           p:maxActive="100"
@@ -118,13 +119,14 @@
           p:validationQuery="select 1 from dual">
     </bean>
 
-
     <beans profile="mysql">
+
         <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
               p:driverClassName="com.mysql.jdbc.Driver"
               p:url="jdbc:mysql://localhost:3306/ncube"
               p:username="ncube"
               p:password="ncube"
+              p:jdbcInterceptors="com.cedarsoftware.util.PoolInterceptor"
               p:initialSize="5"
               p:minIdle="5"
               p:maxIdle="10"
@@ -150,6 +152,7 @@
               p:url="jdbc:oracle:thin:@dm01np-scan.td.afg:1521/app_ncubed.dev.gai.com"
               p:username="nce"
               p:password="quality"
+              p:jdbcInterceptors="com.cedarsoftware.util.PoolInterceptor"
               p:initialSize="5"
               p:minIdle="5"
               p:maxIdle="10"
@@ -175,6 +178,7 @@
               p:url="jdbc:oracle:thin:@dm01-scan.td.afg:1521/app_ncubep.prod.gai.com"
               p:username="nce"
               p:password="quality"
+              p:jdbcInterceptors="com.cedarsoftware.util.PoolInterceptor"
               p:initialSize="5"
               p:minIdle="5"
               p:maxIdle="10"

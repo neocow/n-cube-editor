@@ -33,6 +33,7 @@ import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
 import com.cedarsoftware.util.CaseInsensitiveSet
 import com.cedarsoftware.util.Converter
+import com.cedarsoftware.util.PoolInterceptor
 import com.cedarsoftware.util.Visualizer
 import com.cedarsoftware.util.InetAddressUtilities
 import com.cedarsoftware.util.StringUtilities
@@ -75,7 +76,6 @@ import java.util.regex.Pattern
 @CompileStatic
 class NCubeController extends BaseController
 {
-
     private static final Logger LOG = LogManager.getLogger(NCubeController.class)
     private static final Pattern IS_NUMBER_REGEX = ~/^[\d,.e+-]+$/
     private static final Pattern NO_QUOTES_REGEX = ~/"/
@@ -1813,6 +1813,7 @@ class NCubeController extends BaseController
         // App server name and version
         Map serverStats = [:]
         putIfNotNull(serverStats, 'Server Info', getAttribute(mbs, 'Catalina:type=Server', 'serverInfo'))
+        putIfNotNull(serverStats, 'Java version', getAttribute(mbs, 'JMImplementation:type=MBeanServerDelegate', 'ImplementationVersion'))
         putIfNotNull(serverStats, 'JVM Route', getAttribute(mbs, 'Catalina:type=Engine', 'jvmRoute'))
 
         putIfNotNull(serverStats, 'hostname, servlet', getServletHostname())
@@ -1865,7 +1866,6 @@ class NCubeController extends BaseController
         putIfNotNull(serverStats, 'Physical Memory', (machMem.round(2)) + ' GB')
 
         // JVM
-        putIfNotNull(serverStats, 'Java version', getAttribute(mbs, 'JMImplementation:type=MBeanServerDelegate', 'ImplementationVersion'))
         putIfNotNull(serverStats, 'Loaded class count', getAttribute(mbs, 'java.lang:type=ClassLoading', 'LoadedClassCount'))
 
         // JVM Memory
@@ -1876,6 +1876,10 @@ class NCubeController extends BaseController
         putIfNotNull(serverStats, 'Heap size (-Xmx)', (maxMem.round(1)) + ' MB')
         putIfNotNull(serverStats, 'Used memory', (usedMem.round(1)) + ' MB')
         putIfNotNull(serverStats, 'Free memory', (freeMem.round(1)) + ' MB')
+
+        putIfNotNull(serverStats, 'JDBC Pool size', PoolInterceptor.size.get())
+        putIfNotNull(serverStats, 'JDBC Pool active', PoolInterceptor.active.get())
+        putIfNotNull(serverStats, 'JDBC Pool idle', PoolInterceptor.idle.get())
 
         putIfNotNull(results, 'serverStats', serverStats)
 
