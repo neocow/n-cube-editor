@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="highlightjs/idea.css"/>
     <script src="highlightjs/highlight.pack.js"></script>
 
-    <script src="handsontable/handsontable.full.min.js"></script>
+    <script src="handsontable/handsontable.full.js"></script>
     <link rel="stylesheet" media="screen" href="handsontable/handsontable.full.min.css">
 </head>
 <body class="noselect" id="mainBody">
@@ -197,7 +197,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't add</button>
+                <button id="addAxisCancel" class="btn">Cancel</button>
                 <button id="addAxisOk" class="btn btn-primary">Add</button>
             </div>
         </div>
@@ -225,8 +225,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't delete</button>
-                <button id="deleteAxisOk" class="btn btn-primary">Delete</button>
+                <button id="deleteAxisCancel" class="btn">Cancel</button>
+                <button id="deleteAxisOk" class="btn btn-primary">Delete Axis</button>
             </div>
         </div>
     </div>
