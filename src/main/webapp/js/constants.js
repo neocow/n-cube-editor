@@ -88,6 +88,15 @@ var VERSION = {
     PATCH: 2
 };
 
+var AXIS_SUBTYPES = {
+    EXPRESSION: 'EXPRESSION',
+    STRING: 'STRING'
+};
+var AXIS_TYPE_LIST = {
+    GENERAL_SUBTYPE: ['STRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'],
+    RULE_SUBTYPE: ['EXPRESSION'],
+    TYPE: ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE']
+};
 var URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
@@ -108,16 +117,28 @@ var POPULATE_SELECT_FROM_CUBE = {
 
 var CONTROLLER = 'ncubeController.';
 var CONTROLLER_METHOD = {
+    ADD_AXIS: 'addAxis',
+    BREAK_AXIS_REFERENCE: 'breakAxisReference',
+    COPY_CELLS: 'copyCells',
+    DELETE_AXIS: 'deleteAxis',
     GET_APP_NAMES: 'getAppNames',
     GET_APP_VERSIONS: 'getAppVersions',
-    GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
+    GET_AXIS: 'getAxis',
     GET_AXIS_METAPROPERTIES: 'getAxisMetaProperties',
+    GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
+    GET_JSON: 'getJson',
+    MOVE_BRANCH: 'moveBranch',
+    PASTE_CELLS: 'pasteCells',
     RELEASE_BRANCH: 'releaseBranch',
+    RESOLVE_RELATIVE_URL: 'resolveRelativeUrl',
     SEARCH: 'search',
     SET_LOCK_FOR_APP: 'setLockForApp',
-    UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
+    UPDATE_AXIS: 'updateAxis',
+    UPDATE_AXIS_COLUMNS: 'updateAxisColumns',
     UPDATE_AXIS_METAPROPERTIES: 'updateAxisMetaProperties',
+    UPDATE_CELL: 'updateCell',
+    UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties'
 };
 
