@@ -1809,7 +1809,7 @@ var NCE = (function ($)
         var classes = [];
         var innerHtml;
 
-        if (filter && infoDto.pos !== null && infoDto.endPos !== null) {
+        if (filter && infoDto.pos !== null && infoDto.pos !== undefined && infoDto.endPos !== null && infoDto.endPos !== undefined) {
             innerHtml = cubeName.substring(0, infoDto.pos);
             innerHtml += '<span class="search-hilite">';
             innerHtml += cubeName.substring(infoDto.pos, infoDto.endPos);
