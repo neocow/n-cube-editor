@@ -365,6 +365,8 @@ var NCubeEditor2 = (function ($) {
         handleCubeData(JSON.parse(result.data));
         if (!hot) {
             hot = new Handsontable(_hotContainer[0], getHotSettings());
+        } else {
+            render();
         }
         selectSavedOrDefaultCell();
         setClipFormatToggleListener();
@@ -3074,7 +3076,9 @@ var NCubeEditor2 = (function ($) {
             }
         });
 
-        $('#editColAdd').on('click', editColAdd);
+        $('#editColAdd').on('click', function() {
+            editColAdd(null, null);
+        });
         $('#editColDelete').on('click', editColDelete);
         $('#editColUp').on('click', editColUp);
         $('#editColDown').on('click', editColDown);
