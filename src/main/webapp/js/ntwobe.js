@@ -3076,7 +3076,9 @@ var NCubeEditor2 = (function ($) {
             }
         });
 
-        $('#editColAdd').on('click', editColAdd);
+        $('#editColAdd').on('click', function() {
+            editColAdd(null, null);
+        });
         $('#editColDelete').on('click', editColDelete);
         $('#editColUp').on('click', editColUp);
         $('#editColDown').on('click', editColDown);
