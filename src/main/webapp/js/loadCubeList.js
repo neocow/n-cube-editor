@@ -32,7 +32,7 @@ onmessage = function(e) {
 
     if (req.response) {
         searchResults = JSON.parse(req.response);
-        if (searchResults.status === true) {
+        if (searchResults.status) {
             cubes = {};
             results = searchResults.data;
             for (i = 0, len = results.length; i < len; ++i) {
