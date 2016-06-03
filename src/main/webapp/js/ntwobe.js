@@ -365,6 +365,8 @@ var NCubeEditor2 = (function ($) {
         handleCubeData(JSON.parse(result.data));
         if (!hot) {
             hot = new Handsontable(_hotContainer[0], getHotSettings());
+        } else {
+            render();
         }
         selectSavedOrDefaultCell();
         setClipFormatToggleListener();
