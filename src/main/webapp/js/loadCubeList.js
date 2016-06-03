@@ -12,37 +12,39 @@
  * @author John DeRegnaucourt
  */
 
-onmessage = function(e)
-{
+onmessage = function(e) {
     var args = e.data;
     var filter = args[0];
     var content = args[1];
     var appId = args[2];
+    var regex = args[3];
     var hasFilter = filter && filter.length > 0;
     var appIdString = JSON.stringify(appId);
     var req = new XMLHttpRequest();
+    var searchResults;
+    var cubes;
+    var results;
+    var i;
+    var len;
 
     req.open("POST", getSearchUrl(), false);
     req.send('[' + appIdString + ',"' + filter + '","' + content + '",true]');
 
-    if (req.response)
-    {
-        var searchResults = JSON.parse(req.response);
-        if (searchResults.status === true)
-        {
-            var cubes = {};
-            var results = searchResults.data;
-            var len = results.length;
-            for (var i = 0; i < len; ++i)
-            {
+    if (req.response) {
+        searchResults = JSON.parse(req.response);
+        if (searchResults.status === true) {
+            cubes = {};
+            results = searchResults.data;
+            for (i = 0, len = results.length; i < len; ++i) {
                 var infoDto = results[i];
                 cubes[infoDto.name.toLowerCase()] = infoDto;
-                if (hasFilter)
-                {
-                    var idx = infoDto.name.toLowerCase().indexOf(filter.toLowerCase());
-                    if (idx >= 0)
-                    {   // record starting location of cube name filter, so UI can display highlighted matching text
-                        infoDto.pos = idx;
+                if (hasFilter) {
+                    if (regex) {
+                        var array = regex.exec(infoDto.name);
+                        if (array) {
+                            infoDto.pos = array.index;
+                            infoDto.endPos = array.index + array[0].length;
+                        }
                     }
                 }
             }
@@ -51,11 +53,11 @@ onmessage = function(e)
         }
     }
 
-    function getSearchUrl()
-    {
+    function getSearchUrl() {
         var regexp = /\/([^\/]+)\//g;
         var match = regexp.exec(location.pathname);
         var url;
+        var ctx;
 
         if (match == null || match.length != 2)
         {
@@ -63,7 +65,7 @@ onmessage = function(e)
         }
         else
         {
-            var ctx = match[1];
+            ctx = match[1];
             url = location.protocol + '//' + location.hostname + ":" + location.port + "/" + ctx;
         }
         url += '/cmd/ncubeController/search';
