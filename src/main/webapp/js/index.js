@@ -1113,15 +1113,16 @@ var NCE = (function ($)
 
     function runSearch()
     {
+        var nameFilter, list, pattern, regex;
         if (!_searchContent.val() || _searchContent.val() === '')
         {   // Perform filter client-side only (no server call)
             var mainList = _cubeList;
             if (_searchNames.val() && _searchNames.val() !== '')
             {   // If there is content to filter by, then use it.
-                var nameFilter = _searchNames.val();
-                var list = [];
-                var pattern = wildcardToRegexString(nameFilter);
-                var regex = new RegExp(pattern, "i");
+                nameFilter = _searchNames.val();
+                list = [];
+                pattern = wildcardToRegexString(nameFilter);
+                regex = new RegExp(pattern, "i");
 
                 $.each(_cubeList, function (key, info)
                 {
@@ -1156,6 +1157,11 @@ var NCE = (function ($)
         }
         else
         {   // Do server side search as content was specified
+            if (_searchNames.val() && _searchNames.val() !== '') {
+                nameFilter = _searchNames.val();
+                pattern = wildcardToRegexString(nameFilter);
+                regex = new RegExp(pattern, 'i');
+            }
             _searchThread.postMessage(
                 [
                     _searchNames.val(),
@@ -1165,7 +1171,8 @@ var NCE = (function ($)
                         "version": _selectedVersion,
                         "status": _selectedStatus,
                         "branch": _selectedBranch
-                    }
+                    },
+                    regex
                 ]);
         }
     }
@@ -1809,7 +1816,7 @@ var NCE = (function ($)
         var classes = [];
         var innerHtml;
 
-        if (filter && infoDto.pos !== null && infoDto.endPos !== null) {
+        if (filter && infoDto.pos !== null && infoDto.pos !== undefined && infoDto.endPos !== null && infoDto.endPos !== undefined) {
             innerHtml = cubeName.substring(0, infoDto.pos);
             innerHtml += '<span class="search-hilite">';
             innerHtml += cubeName.substring(infoDto.pos, infoDto.endPos);
