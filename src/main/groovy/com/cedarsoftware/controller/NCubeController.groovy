@@ -168,7 +168,7 @@ class NCubeController extends BaseController
         }
     }
 
-    void setLockForApp(ApplicationID appId, boolean shouldLock)
+    void lockApp(ApplicationID appId, boolean shouldLock)
     {
         try
         {

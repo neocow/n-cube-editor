@@ -2654,7 +2654,7 @@ var NCE = (function ($)
             return;
         }
         result = null;
-        result = call(CONTROLLER + CONTROLLER_METHOD.SET_LOCK_FOR_APP, [appId, !isLocked]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, !isLocked]);
         if (result.status) {
             setLockUnlockMenuText(!isLocked);
             setGetAppLockedByMenuText()
@@ -2749,7 +2749,7 @@ var NCE = (function ($)
             setReleaseCubesProgress(0, 'Error checking lock: ' + result.data, true);
             return;
         }
-        result = call(CONTROLLER + CONTROLLER_METHOD.SET_LOCK_FOR_APP, [appId, true], {callback: function() {
+        result = call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, true], {callback: function() {
             if (result.status) {
                 setTimeout(function() {
                         lockAppForReleaseCallback(appId, newSnapVer);
@@ -2816,7 +2816,7 @@ var NCE = (function ($)
         var result;
         setReleaseCubesProgress(100, 'Unlocking app... ');
         appId.branch = head;
-        result = call(CONTROLLER + CONTROLLER_METHOD.SET_LOCK_FOR_APP, [appId, false], {callback: function() {
+        result = call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, false], {callback: function() {
             if (result.status) {
                 setReleaseCubesProgress(100, 'Success!', true);
                 updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
