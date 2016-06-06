@@ -140,6 +140,81 @@ class NCubeController extends BaseController
 
     // ============================================= Begin API =========================================================
 
+    String getAppLockedBy(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            return nCubeService.getAppLockedBy(appId);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
+    boolean isAppLocked(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            String lockedBy = nCubeService.getAppLockedBy(appId)
+            return lockedBy != null
+        }
+        catch (Exception e)
+        {
+            fail(e);
+            return false
+        }
+    }
+
+    void setLockForApp(ApplicationID appId, boolean shouldLock)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            if (shouldLock)
+            {
+                nCubeService.lockApp(appId)
+            }
+            else
+            {
+                nCubeService.unlockApp(appId);
+            }
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
+    void moveBranch(ApplicationID appId, String newSnapVer)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            nCubeService.moveBranch(appId, newSnapVer)
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
+    void releaseVersion(ApplicationID appId, String newSnapVer)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            nCubeService.releaseVersion(appId, newSnapVer)
+            appVersions[appId.app].clear()
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
     Object[] search(ApplicationID appId, String cubeNamePattern, String content, boolean active)
     {
         try

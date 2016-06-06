@@ -496,6 +496,26 @@ class NCubeService
         NCubeManager.getAppLockedBy(appId)
     }
 
+    void lockApp(ApplicationID appId)
+    {
+        NCubeManager.lockApp(appId)
+    }
+
+    void unlockApp(ApplicationID appId)
+    {
+        NCubeManager.unlockApp(appId)
+    }
+
+    int moveBranch(ApplicationID appId, String newSnapVer)
+    {
+        NCubeManager.moveBranch(appId, newSnapVer)
+    }
+
+    int releaseVersion(ApplicationID appId, String newSnapVer)
+    {
+        NCubeManager.releaseVersion(appId, newSnapVer)
+    }
+
     // =========================================== Helper methods ======================================================
 
     static List getCubes(String json)
