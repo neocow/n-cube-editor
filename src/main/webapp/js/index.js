@@ -103,6 +103,8 @@ var NCE = (function ($)
     var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
+    var _lockUnlockAppMenu = $('#lockUnlockAppMenu');
+    var _getAppLockedByMenu = $('#getAppLockedByMenu');
     var _releaseCubesVersion = $('#releaseCubesVersion');
     var _releaseMenu = $('#ReleaseMenu');
     var _branchCommit = $('#branchCommit');
@@ -1342,14 +1344,8 @@ var NCE = (function ($)
         {
             showReqScopeClose();
         });
-        _releaseCubesMenu.click(function () {
-            releaseCubes();
-        });
         _releaseCubesOk.click(function () {
             releaseCubesOk();
-        });
-        _changeVersionMenu.click(function () {
-            changeVersion();
         });
         $('#changeVerOk').click(function ()
         {
@@ -1580,35 +1576,63 @@ var NCE = (function ($)
         return result.data;
     }
 
-    function enableDisableReleaseMenu() {
-        if (checkAppPermission(PERMISSION_ACTION.RELEASE)) {
-            _releaseMenu.show();
+    function enableDisableReleaseMenu(canReleaseApp) {
+        if (canReleaseApp) {
+            _releaseCubesMenu.on('click', releaseCubes);
+            _changeVersionMenu.on('click', changeVersion);
+            _releaseCubesMenu.parent().removeClass('disabled');
+            _changeVersionMenu.parent().removeClass('disabled');
         } else {
-            _releaseMenu.hide();
+            _releaseCubesMenu.off('click');
+            _changeVersionMenu.off('click');
+            _releaseCubesMenu.parent().addClass('disabled');
+            _changeVersionMenu.parent().addClass('disabled');
         }
     }
 
-    function enableDisableCommitBranch() {
-        if (checkAppPermission(PERMISSION_ACTION.COMMIT)) {
+    function enableDisableCommitBranch(canCommitOnApp) {
+        if (canCommitOnApp) {
             _branchCommit.show();
         } else {
             _branchCommit.hide();
         }
     }
     
-    function enableDisableClearCache() {
-        var li = _clearCache.parent();
-        if (checkAppPermission(PERMISSION_ACTION.ADMIN)) {
-            li.removeClass('disabled');
+    function enableDisableClearCache(isAppAdmin) {
+        if (isAppAdmin) {
+            _clearCache.parent().removeClass('disabled');
         } else {
-            li.addClass('disabled');
+            _clearCache.parent().addClass('disabled');
+        }
+    }
+
+    function enableDisableLockMenu(isAppAdmin) {
+        var appId = getAppId();
+        var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [appId]);
+        var isLocked = result.data;
+
+        setLockUnlockMenuText(isLocked);
+        setGetAppLockedByMenuText();
+        if (isAppAdmin) {
+            _lockUnlockAppMenu.on('click', function(){
+                lockUnlockApp(!isLocked);
+            });
+            _lockUnlockAppMenu.parent().removeClass('disabled');
+        } else {
+            _lockUnlockAppMenu.off('click');
+            _lockUnlockAppMenu.parent().addClass('disabled');
         }
     }
 
     function handleAppPermissions() {
-        enableDisableReleaseMenu();
-        enableDisableCommitBranch();
-        enableDisableClearCache();
+        var isAppAdmin = checkAppPermission(PERMISSION_ACTION.ADMIN);
+        var canReleaseApp = checkAppPermission(PERMISSION_ACTION.RELEASE);
+        var canCommitOnApp = checkAppPermission(PERMISSION_ACTION.COMMIT);
+
+        enableDisableReleaseMenu(canReleaseApp);
+        enableDisableCommitBranch(canCommitOnApp);
+        enableDisableClearCache(isAppAdmin);
+        enableDisableLockMenu(isAppAdmin);
     }
 
     function loadAppListView()
@@ -2615,6 +2639,42 @@ var NCE = (function ($)
     function showReqScopeClose()
     {
         $('#showReqScopeModal').modal('hide');
+    }
+
+    function setLockUnlockMenuText(isLocked) {
+        var lockUnlockMenuText = isLocked ? 'Unlock ' : 'Lock ';
+        lockUnlockMenuText += _selectedApp;
+        _lockUnlockAppMenu[0].innerHTML = lockUnlockMenuText;
+    }
+
+    function lockUnlockApp(shouldLock) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.SET_LOCK_FOR_APP, [getAppId(), shouldLock]);
+        if (result.status) {
+            setLockUnlockMenuText(shouldLock);
+            setGetAppLockedByMenuText()
+        } else {
+            showNote("Unable to change lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + result.data);
+        }
+    }
+
+    function getAppLockedBy() {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_LOCKED_BY, [getAppId()]);
+        if (result.status) {
+            return result.data;
+        } else {
+            showNote("Unable to change lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + result.data);
+        }
+    }
+
+    function setGetAppLockedByMenuText() {
+        var lockedUser = getAppLockedBy();
+        var menuText;
+        if (lockedUser) {
+            menuText = 'Locked by ' + lockedUser;
+        } else {
+            menuText = '';
+        }
+        _getAppLockedByMenu[0].innerHTML = menuText;
     }
 
     //////////////////////////////////////////   BEGIN RELEASE PROCESS   ///////////////////////////////////////////////

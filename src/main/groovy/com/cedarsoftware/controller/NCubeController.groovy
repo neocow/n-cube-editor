@@ -140,6 +140,19 @@ class NCubeController extends BaseController
 
     // ============================================= Begin API =========================================================
 
+    String getAppLockedBy(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            return nCubeService.getAppLockedBy(appId);
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
     boolean isAppLocked(ApplicationID appId)
     {
         try

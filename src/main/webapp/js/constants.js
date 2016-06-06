@@ -122,6 +122,7 @@ var CONTROLLER_METHOD = {
     CHECK_PERMISSIONS: 'checkPermissions',
     COPY_CELLS: 'copyCells',
     DELETE_AXIS: 'deleteAxis',
+    GET_APP_LOCKED_BY: 'getAppLockedBy',
     GET_APP_NAMES: 'getAppNames',
     GET_APP_VERSIONS: 'getAppVersions',
     GET_AXIS: 'getAxis',
