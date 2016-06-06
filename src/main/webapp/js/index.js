@@ -1607,16 +1607,12 @@ var NCE = (function ($)
     }
 
     function enableDisableLockMenu(isAppAdmin) {
-        var appId = getAppId();
-        var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [appId]);
-        var isLocked = result.data;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [getAppId()]);
 
-        setLockUnlockMenuText(isLocked);
+        setLockUnlockMenuText(result.data);
         setGetAppLockedByMenuText();
         if (isAppAdmin) {
-            _lockUnlockAppMenu.on('click', function(){
-                lockUnlockApp(!isLocked);
-            });
+            _lockUnlockAppMenu.on('click', lockUnlockApp);
             _lockUnlockAppMenu.parent().removeClass('disabled');
         } else {
             _lockUnlockAppMenu.off('click');
@@ -2647,10 +2643,20 @@ var NCE = (function ($)
         _lockUnlockAppMenu[0].innerHTML = lockUnlockMenuText;
     }
 
-    function lockUnlockApp(shouldLock) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.SET_LOCK_FOR_APP, [getAppId(), shouldLock]);
+    function lockUnlockApp() {
+        var appId = getAppId();
+        var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [appId]);
+        var isLocked;
         if (result.status) {
-            setLockUnlockMenuText(shouldLock);
+            isLocked = result.data;
+        } else {
+            showNote("Unable to check lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + result.data);
+            return;
+        }
+        result = null;
+        result = call(CONTROLLER + CONTROLLER_METHOD.SET_LOCK_FOR_APP, [appId, !isLocked]);
+        if (result.status) {
+            setLockUnlockMenuText(!isLocked);
             setGetAppLockedByMenuText()
         } else {
             showNote("Unable to change lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + result.data);
