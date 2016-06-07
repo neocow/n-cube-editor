@@ -1584,14 +1584,14 @@ var NCE = (function ($)
     }
 
     function enableDisableReleaseMenu(canReleaseApp) {
+        _releaseCubesMenu.off('click');
+        _changeVersionMenu.off('click');
         if (canReleaseApp) {
             _releaseCubesMenu.on('click', releaseCubes);
             _changeVersionMenu.on('click', changeVersion);
             _releaseCubesMenu.parent().removeClass('disabled');
             _changeVersionMenu.parent().removeClass('disabled');
         } else {
-            _releaseCubesMenu.off('click');
-            _changeVersionMenu.off('click');
             _releaseCubesMenu.parent().addClass('disabled');
             _changeVersionMenu.parent().addClass('disabled');
         }
@@ -1615,18 +1615,19 @@ var NCE = (function ($)
 
     function enableDisableLockMenu(isAppAdmin) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [getAppId()]);
+        var isLocked;
         if (result.status) {
-            setLockUnlockMenuText(result.data);
-            setGetAppLockedByMenuText();
+            setLockUnlockMenuText(isLocked);
+            setGetAppLockedByMenuText(isLocked);
         } else {
             showNote('Unable to check lock for app \'' + _selectedApp + '\':<hr class="hr-small"/>' + result.data);
         }
 
+        _lockUnlockAppMenu.off('click');
         if (isAppAdmin) {
             _lockUnlockAppMenu.on('click', lockUnlockApp);
             _lockUnlockAppMenu.parent().removeClass('disabled');
         } else {
-            _lockUnlockAppMenu.off('click');
             _lockUnlockAppMenu.parent().addClass('disabled');
         }
     }
@@ -2668,7 +2669,7 @@ var NCE = (function ($)
         result = call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, !isLocked]);
         if (result.status) {
             setLockUnlockMenuText(!isLocked);
-            setGetAppLockedByMenuText()
+            setGetAppLockedByMenuText(!isLocked);
         } else {
             showNote("Unable to change lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + result.data);
         }
@@ -2683,15 +2684,8 @@ var NCE = (function ($)
         }
     }
 
-    function setGetAppLockedByMenuText() {
-        var lockedUser = getAppLockedBy();
-        var menuText;
-        if (lockedUser) {
-            menuText = 'Locked by ' + lockedUser;
-        } else {
-            menuText = '';
-        }
-        _getAppLockedByMenu[0].innerHTML = menuText;
+    function setGetAppLockedByMenuText(isLocked) {
+        _getAppLockedByMenu[0].innerHTML = isLocked ? 'Locked by ' + getAppLockedBy() : '';
     }
 
     //////////////////////////////////////////   BEGIN RELEASE PROCESS   ///////////////////////////////////////////////
