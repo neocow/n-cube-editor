@@ -1567,13 +1567,20 @@ var NCE = (function ($)
     }
 
     function checkPermissions(appId, resource, action) {
-        var permissionResult = call(CONTROLLER + CONTROLLER_METHOD.CHECK_PERMISSIONS, [appId, resource, action]);
-        return ensureModifiable() && permissionResult.data === true;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.CHECK_PERMISSIONS, [appId, resource, action]);
+        if (result.status) {
+            return ensureModifiable() && result.data;
+        }
+        showNote('Unable to check permissions:<hr class="hr-small"/>' + result.data);
+        return false;
     }
 
     function checkAppPermission(action) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.CHECK_PERMISSIONS, [getAppId(), null, action]);
-        return result.data;
+        if (result.status) {
+            return result.data;
+        }
+        showNote('Unable to check app permissions:<hr class="hr-small"/>' + result.data);
     }
 
     function enableDisableReleaseMenu(canReleaseApp) {
@@ -1608,9 +1615,13 @@ var NCE = (function ($)
 
     function enableDisableLockMenu(isAppAdmin) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [getAppId()]);
+        if (result.status) {
+            setLockUnlockMenuText(result.data);
+            setGetAppLockedByMenuText();
+        } else {
+            showNote('Unable to check lock for app \'' + _selectedApp + '\':<hr class="hr-small"/>' + result.data);
+        }
 
-        setLockUnlockMenuText(result.data);
-        setGetAppLockedByMenuText();
         if (isAppAdmin) {
             _lockUnlockAppMenu.on('click', lockUnlockApp);
             _lockUnlockAppMenu.parent().removeClass('disabled');
