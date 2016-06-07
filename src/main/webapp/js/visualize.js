@@ -568,40 +568,48 @@ var Visualizer = (function ($) {
             },
             groups: {  //TODO: Add other bus types
                 PRODUCT: {
-                    shape: 'box',
-                    color: '#FF9900' // orange
+                    shape: 'image',
+                    image: 'img/product.png'
                 },
                 RISK: {
-                    shape: 'square',
-                    color: "#5A1E5C" // purple
+                    shape: 'image',
+                    image: 'img/risk.png'
                 },
                 COVERAGE: {
-                    shape: 'star',
-                    color: "#dbe92b" // yellow
+                    shape: 'image',
+                    image: 'img/coverage.png'
                 },
                 CONTAINER: {
                     shape: 'star',
                     color: "#731d1d" // dark red
                 },
                 LIMIT: {
-                    shape: 'diamond',
-                    color: "#C5000B" // red
+                    shape: 'image',
+                    image: 'img/limit.png'
                 },
                 DEDUCTIBLE: {
-                    shape: 'diamond',
-                    color: "#ffc0cb " // pink
+                    shape: 'image',
+                    image: 'img/deductible.png'
                 },
                 PREMIUM: {
-                    shape: 'ellipse',
-                    color: "#2be998" // green
+                    shape: 'image',
+                    image: 'img/premium.png'
                 },
                 RATE: {
-                    shape: 'ellipse',
-                    color: "#2B7CE9" // blue
+                    shape: 'image',
+                    image: 'img/rate.png'
+                },
+                ROLE: {
+                    shape: 'image',
+                    image: 'img/role.png'
+                },
+                ROLE_PLAYER: {
+                    shape: 'image',
+                    image: 'img/role_player.png'
                 },
                 RATEFACTOR: {
-                    shape: 'ellipse',
-                    color: "#2bdbe9" // light blue
+                    shape: 'image',
+                    image: 'img/rate_factor.png'
                 },
                 PARTY: {
                     shape: 'box',
