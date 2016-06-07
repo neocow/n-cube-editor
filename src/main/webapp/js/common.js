@@ -369,33 +369,37 @@ function appIdFrom(app, version, status, branch) {
 }
 
 function populateSelect(nce, sel, method, params, defVal, forceRefresh, isInverted) {
+    var result;
+    var results;
+    var options;
+    var option;
     if (forceRefresh || sel[0].options.length === 0) {
         sel.empty();
-        var result = nce.call('ncubeController.' + method, params);
-        if (result.status === true) {
-            var results = result.data;
+        options = '';
+        result = nce.call(CONTROLLER + method, params);
+        if (result.status) {
+            results = result.data;
             for (var i = 0, len = results.length; i < len; i++) {
-                var option = $('<option/>');
+                var option = '<option>';
                 var optionValue = results[i];
                 if (method === CONTROLLER_METHOD.SEARCH) {
                     optionValue = optionValue.name;
                 }
-                option[0].innerHTML = optionValue;
+                option += optionValue;
+                option += '</option>';
                 if (isInverted) {
-                    sel.prepend(option);
+                    options = option + options;
                 } else {
-                    sel.append(option);
+                    options += option;
                 }
             }
         } else {
             nce.showNote('Error calling ' + method + '():<hr class="hr-small"/>' + result.data);
         }
     }
-    if (defVal) {
-        sel.val(defVal);
-    } else {
-        sel.prepend($('<option/>'));
-    }
+    options = '<option></option>' + options;
+    sel.append(options);
+    sel.val(defVal ? defVal : null);
 }
 
 function populateSelectFromCube(nce, sel, params, searchType) {
