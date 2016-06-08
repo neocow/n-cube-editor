@@ -3017,6 +3017,7 @@ var NCubeEditor2 = (function ($) {
             title: 'Filter Data',
             instructionsTitle: 'Instructions - Filter Data',
             instructionsText: 'Select filters to apply to cell data for ncube.',
+            readonly: nce.getFilterOutBlankRows(),
             columns: {
                 isApplied: {
                     heading: 'Apply',
