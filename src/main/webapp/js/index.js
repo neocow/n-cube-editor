@@ -1641,7 +1641,7 @@ var NCE = (function ($)
         enableDisableReleaseMenu(canReleaseApp);
         enableDisableCommitBranch(canCommitOnApp);
         enableDisableClearCache(isAppAdmin);
-        enableDisableLockMenu(isAppAdmin);
+        // enableDisableLockMenu(isAppAdmin);
     }
 
     function loadAppListView()
