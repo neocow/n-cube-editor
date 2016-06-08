@@ -2773,7 +2773,8 @@ var NCE = (function ($)
             setReleaseCubesProgress(0, 'Error checking lock: ' + result.data, true);
             return;
         }
-        result = call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, true], {callback: function() {
+        
+        call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, true], {callback: function(result) {
             if (result.status) {
                 setTimeout(function() {
                         lockAppForReleaseCallback(appId, newSnapVer);
@@ -2804,11 +2805,10 @@ var NCE = (function ($)
     function moveBranch(appId, newSnapVer, branchNames, branchIdx) {
         var len = branchNames.length;
         var progress = Math.round(branchIdx / (len + 1) * 100);
-        var result;
 
         appId.branch = branchNames[branchIdx];
         setReleaseCubesProgress(progress, 'Processing branch ' + (branchIdx + 1) + ' of ' + len + ': ' + appId.branch);
-        result = call(CONTROLLER + CONTROLLER_METHOD.MOVE_BRANCH, [appId, newSnapVer], {callback: function() {
+        call(CONTROLLER + CONTROLLER_METHOD.MOVE_BRANCH, [appId, newSnapVer], {callback: function(result) {
             if (result.status) {
                 if (branchIdx < len - 1) {
                     moveBranch(appId, newSnapVer, branchNames, branchIdx + 1);
@@ -2824,10 +2824,9 @@ var NCE = (function ($)
     function releaseVersion(appId, newSnapVer) {
         var len = _branchNames.length;
         var progress = Math.round((len - 1) / len * 100);
-        var result;
 
         setReleaseCubesProgress(progress, 'Processing release of HEAD...');
-        result = call(CONTROLLER + CONTROLLER_METHOD.RELEASE_VERSION, [appId, newSnapVer], {callback: function() {
+        call(CONTROLLER + CONTROLLER_METHOD.RELEASE_VERSION, [appId, newSnapVer], {callback: function(result) {
             if (result.status) {
                 finalizeRelease(appId, newSnapVer);
             } else {
@@ -2837,10 +2836,9 @@ var NCE = (function ($)
     }
 
     function finalizeRelease(appId, newSnapVer) {
-        var result;
         setReleaseCubesProgress(100, 'Unlocking app... ');
         appId.branch = head;
-        result = call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, false], {callback: function() {
+        call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, false], {callback: function(result) {
             if (result.status) {
                 setReleaseCubesProgress(100, 'Success!', true);
                 updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
