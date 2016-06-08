@@ -192,7 +192,15 @@ var NCE = (function ($)
 
     function addCurrentCubeTab(insertIdx, cubeInfo, dto) {
         var cubeInfo = cubeInfo || [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
-        var newOpenCube = {cubeKey:getCubeInfoKey(cubeInfo),status:null,position:{},numFrozenCols:null,searchQuery:null,infoDto:dto||_cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()]};
+        var newOpenCube = {
+            cubeKey: getCubeInfoKey(cubeInfo),
+            status: null,
+            position: {},
+            numFrozenCols: null,
+            searchQuery: null,
+            infoDto: dto||_cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()],
+            filterOutBlankRows: false
+        };
         if (insertIdx > -1) {
             _openCubes.splice(insertIdx, 0, newOpenCube);
         } else {
@@ -249,37 +257,45 @@ var NCE = (function ($)
     }
 
     function getInfoDto() {
-        return getOpenCubeInfoValue('infoDto');
+        return getOpenCubeInfoValue(SAVED_INFO.INFO_DTO);
     }
 
     function saveInfoDto(dto) {
-        saveOpenCubeInfoValue('infoDto', dto);
+        saveOpenCubeInfoValue(SAVED_INFO.INFO_DTO, dto);
     }
 
     function saveViewPosition(position) {
-        var savedPos = getOpenCubeInfoValue('position');
+        var savedPos = getOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION);
         savedPos[getActiveTabViewType()] = position;
-        saveOpenCubeInfoValue('position', savedPos);
+        saveOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION, savedPos);
     }
 
     function getViewPosition() {
-        return getOpenCubeInfoValue('position')[getActiveTabViewType()];
+        return getOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION)[getActiveTabViewType()];
+    }
+
+    function saveFilterOutBlankRows(shouldFilterOutBlankRows) {
+        saveOpenCubeInfoValue(SAVED_INFO.FILTER_OUT_BLANK_ROWS, shouldFilterOutBlankRows);
+    }
+
+    function getFilterOutBlankRows() {
+        return getOpenCubeInfoValue(SAVED_INFO.FILTER_OUT_BLANK_ROWS);
     }
 
     function saveNumFrozenCols(num) {
-        saveOpenCubeInfoValue('numFrozenCols', num);
+        saveOpenCubeInfoValue(SAVED_INFO.NUMBER_OF_FROZEN_COLUMNS, num);
     }
 
     function getNumFrozenCols() {
-        return getOpenCubeInfoValue('numFrozenCols');
+        return getOpenCubeInfoValue(SAVED_INFO.NUMBER_OF_FROZEN_COLUMNS);
     }
 
     function getSearchQuery() {
-        return getOpenCubeInfoValue('searchQuery');
+        return getOpenCubeInfoValue(SAVED_INFO.SEARCH_QUERY);
     }
 
     function saveSearchQuery(query) {
-        saveOpenCubeInfoValue('searchQuery', query);
+        saveOpenCubeInfoValue(SAVED_INFO.SEARCH_QUERY, query);
     }
 
     function getCubeInfoKey(cubeInfo)
@@ -1046,6 +1062,8 @@ var NCE = (function ($)
             saveNumFrozenCols: saveNumFrozenCols,
             getSearchQuery: getSearchQuery,
             saveSearchQuery: saveSearchQuery,
+            getFilterOutBlankRows: getFilterOutBlankRows,
+            saveFilterOutBlankRows: saveFilterOutBlankRows,
             checkPermissions: checkPermissions
         };
     }
@@ -1641,7 +1659,7 @@ var NCE = (function ($)
         enableDisableReleaseMenu(canReleaseApp);
         enableDisableCommitBranch(canCommitOnApp);
         enableDisableClearCache(isAppAdmin);
-        // enableDisableLockMenu(isAppAdmin);
+        enableDisableLockMenu(isAppAdmin);
     }
 
     function loadAppListView()
