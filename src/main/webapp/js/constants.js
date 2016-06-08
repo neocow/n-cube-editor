@@ -77,6 +77,14 @@ var CUBE_INFO = {
     TAB_VIEW: 5
 };
 
+var SAVED_INFO = {
+    FILTER_OUT_BLANK_ROWS: 'filterOutBlankRows',
+    INFO_DTO: 'infoDto',
+    NUMBER_OF_FROZEN_COLUMNS: 'numFrozenCols',
+    SEARCH_QUERY: 'searchQuery',
+    VIEW_POSITION: 'position'
+};
+
 var STATUS = {
     RELEASE: 'RELEASE',
     SNAPSHOT: 'SNAPSHOT'

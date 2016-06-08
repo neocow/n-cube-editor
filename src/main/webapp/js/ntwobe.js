@@ -926,10 +926,10 @@ var NCubeEditor2 = (function ($) {
         return false;
     }
 
-    function getFirstFilteredCellsFromData() {
+    function getFilteredCellsFromData(filterNum) {
         var combos = [];
         var colIdReplaceIdx;
-        var filter = getAppliedFilters()[0];
+        var filter = getAppliedFilters()[filterNum];
         if (filter.isIncludeAll) {
             var dAxes = data.axes;
             var dKeys = Object.keys(dAxes);
@@ -1054,9 +1054,26 @@ var NCubeEditor2 = (function ($) {
                         totalRows *= getColumnLength(axes[axisNum]);
                     }
                     numRows = totalRows + 2;
+                } else if (nce.getFilterOutBlankRows()) {
+                    var curFilterResult, filteredColNum, filterResultIdx, filterResultLen, curFilterResultCombo;
+                    _columnIdCombinationsToShow = null;
+                    _columnIdCombinationsToShow = [];
+                    for (filteredColNum = 0; filteredColNum < colLen; filteredColNum++) {
+                        curFilterResult = null;
+                        curFilterResult = getFilteredCellsFromData(filteredColNum).idCombinations;
+                        for (filterResultIdx = 0, filterResultLen = curFilterResult.length; filterResultIdx < filterResultLen; filterResultIdx++) {
+                            curFilterResultCombo = curFilterResult[filterResultIdx];
+                            if (_columnIdCombinationsToShow.indexOf(curFilterResultCombo) < 0) {
+                                _columnIdCombinationsToShow.push(curFilterResultCombo);
+                            }
+                        }
+                    }
+                    _columnIdCombinationsToShow.sort();
+                    numRows = _columnIdCombinationsToShow.length + 2;
                 } else {
-                    var resultFromFirstFilter = getFirstFilteredCellsFromData();
+                    var resultFromFirstFilter = getFilteredCellsFromData(0);
                     var colIdReplaceIdx = resultFromFirstFilter.idReplaceIdx;
+                    _columnIdCombinationsToShow = null;
                     _columnIdCombinationsToShow = resultFromFirstFilter.idCombinations;
 
                     for (var f = appliedFilters[0].isIncludeAll ? 0 : 1, fLen = appliedFilters.length; f < fLen; f++) {
@@ -1972,6 +1989,11 @@ var NCubeEditor2 = (function ($) {
             closeAxisMenu();
             filterOpen();
         });
+        div.find('a.anc-filter-blank-rows').on('click', function (e) {
+            e.preventDefault();
+            closeAxisMenu();
+            filterOutBlankRows();
+        });
         div.find('a.anc-clear-filters').on('click', function (e) {
             e.preventDefault();
             if (_filters.length === 0) {
@@ -2059,6 +2081,29 @@ var NCubeEditor2 = (function ($) {
         });
     }
 
+    function filterOutBlankRows() {
+        var topAxis = axes[colOffset];
+        var columns = topAxis.columns;
+        var columnKeys = Object.keys(columns);
+        var colIdx, colLen, colFilter, colId;
+
+        clearFilters();
+        nce.saveFilterOutBlankRows(true);
+        for (colIdx = 0, colLen = columnKeys.length; colIdx < colLen; colIdx++) {
+            colId = columnKeys[colIdx];
+            colFilter = null;
+            colFilter = {
+                isApplied: true,
+                column: colId,
+                comparator: '!=',
+                expressionValue: '',
+                isIncludeAll: false
+            };
+            _filters.push(colFilter);
+        }
+        filterSave();
+    }
+
     function editAxisMetadata(axis) {
         var axisName = axis.name;
         var metaPropertyOptions = {
@@ -2137,6 +2182,7 @@ var NCubeEditor2 = (function ($) {
 
         if (isTopAxis) {
             html += '<li><a href="#" class="anc-filter-data">Filter Data...</a></li>';
+            html += '<li><a href="#" class="anc-filter-blank-rows">Filter Out Blank Rows</a></li>';
             html += '<li';
             if (_filters.length === 0) {
                 html += ' class="disabled"';
@@ -2971,6 +3017,7 @@ var NCubeEditor2 = (function ($) {
             title: 'Filter Data',
             instructionsTitle: 'Instructions - Filter Data',
             instructionsText: 'Select filters to apply to cell data for ncube.',
+            readonly: nce.getFilterOutBlankRows(),
             columns: {
                 isApplied: {
                     heading: 'Apply',
@@ -3558,8 +3605,10 @@ var NCubeEditor2 = (function ($) {
     }
 
     function clearFilters() {
+        _filters = null;
         _filters = [];
         saveFilters();
+        nce.saveFilterOutBlankRows(false);
     }
 
     function saveFilters() {
