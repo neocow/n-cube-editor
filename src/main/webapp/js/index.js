@@ -1617,6 +1617,7 @@ var NCE = (function ($)
         var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [getAppId()]);
         var isLocked;
         if (result.status) {
+            isLocked = result.data;
             setLockUnlockMenuText(isLocked);
             setGetAppLockedByMenuText(isLocked);
         } else {
