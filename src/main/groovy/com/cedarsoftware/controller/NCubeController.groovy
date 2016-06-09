@@ -16,7 +16,6 @@ import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.NCubeManager.ACTION
 import com.cedarsoftware.ncube.NCubeTest
-import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.StringValuePair
 import com.cedarsoftware.ncube.exception.AxisOverlapException
@@ -127,14 +126,6 @@ class NCubeController extends BaseController
 
     boolean checkPermissions(ApplicationID appId, String resource, String action)
     {
-        if (action == NCubeManager.ROLE_ADMIN) {
-            try {
-                nCubeService.isAdmin(appId)
-                return true
-            } catch (SecurityException e) {
-                return false
-            }
-        }
         return nCubeService.checkPermissions(appId, resource, action == null ? ACTION.READ : ACTION.valueOf(action.toUpperCase()))
     }
 
@@ -1400,7 +1391,10 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            nCubeService.isAdmin(appId)
+            if (!nCubeService.isAdmin(appId))
+            {
+                return
+            }
             nCubeService.clearCache(appId)
             appCache.clear()
             appVersions.clear()
