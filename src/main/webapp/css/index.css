@@ -333,7 +333,7 @@ span.selected-count {
     padding: 0 2px;
 }
 
-.navbar-nav>li>.dropdown-menu {
+.navbar-nav>li>.dropdown-menu:not(.has-submenu) {
     max-height: 450px;
     overflow-y: auto;
     overflow-x: hidden;

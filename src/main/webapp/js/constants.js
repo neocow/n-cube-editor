@@ -135,9 +135,13 @@ var CONTROLLER_METHOD = {
     GET_APP_VERSIONS: 'getAppVersions',
     GET_AXIS: 'getAxis',
     GET_AXIS_METAPROPERTIES: 'getAxisMetaProperties',
+    GET_BRANCH_CHANGES: 'getBranchChanges',
+    GET_BRANCH_CHANGES_FROM_BRANCH: 'getBranchChangesFromBranch',
+    GET_BRANCHES: 'getBranches',
     GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
     GET_JSON: 'getJson',
+    IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     LOCK_APP: 'lockApp',
     MOVE_BRANCH: 'moveBranch',
@@ -148,6 +152,9 @@ var CONTROLLER_METHOD = {
     UPDATE_AXIS: 'updateAxis',
     UPDATE_AXIS_COLUMNS: 'updateAxisColumns',
     UPDATE_AXIS_METAPROPERTIES: 'updateAxisMetaProperties',
+    UPDATE_BRANCH: 'updateBranch',
+    UPDATE_BRANCH_CUBE: 'updateBranchCube',
+    UPDATE_BRANCH_CUBES: 'updateBranchCubes',
     UPDATE_CELL: 'updateCell',
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties'
@@ -167,7 +174,6 @@ var DEFAULT_SCOPE = [
 ];
 
 var PERMISSION_ACTION = {
-    ADMIN: 'admin',
     COMMIT: 'commit',
     READ: 'read',
     RELEASE: 'release',

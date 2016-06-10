@@ -88,9 +88,9 @@ class NCubeService
         return NCubeManager.getBranches(appId)
     }
 
-    List<NCubeInfoDto> getBranchChanges(ApplicationID appId)
+    List<NCubeInfoDto> getBranchChanges(ApplicationID appId, String branchName)
     {
-        return NCubeManager.getBranchChangesFromDatabase(appId)
+        return NCubeManager.getBranchChangesFromDatabase(appId, branchName)
     }
 
     List<NCubeInfoDto> commitBranch(ApplicationID appId, Object[] infoDtos)
