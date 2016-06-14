@@ -108,6 +108,7 @@ var NCE = (function ($)
     var _releaseCubesVersion = $('#releaseCubesVersion');
     var _releaseMenu = $('#ReleaseMenu');
     var _branchCommit = $('#branchCommit');
+    var _commitRollbackList = $('#commitRollbackList');
     var _branchQuickSelectHeader = $('#branchQuickSelectHeader');
     var _clearCache = $('#clearCache');
     var _releaseCubesProgressDiv = $('#releaseCubesProgressDiv');
@@ -117,12 +118,15 @@ var NCE = (function ($)
     var _releaseCubesProgressPct = null;
     var _releaseCubesProgressText = null;
     var isReleasePending = false;
+    var _branchCompareUpdateMenu = $('#branchCompareUpdate');
+    var _branchCompareUpdateList = $('#branchCompareUpdateList');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
     var _commitModal = $('#commitRollbackModal');
     var _diffModal = $('#diffOutputModal');
     var _releaseCubesModal = $('#releaseCubesModal');
+    var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
 
     initialize();
 
@@ -1601,6 +1605,14 @@ var NCE = (function ($)
         showNote('Unable to check app permissions:<hr class="hr-small"/>' + result.data);
     }
 
+    function checkIsAppAdmin() {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_ADMIN, [getAppId()]);
+        if (result.status) {
+            return result.data;
+        }
+        showNote('Unable to check for admin permissions:<hr class="hr-small"/>' + result.data);
+    }
+
     function enableDisableReleaseMenu(canReleaseApp) {
         _releaseCubesMenu.off('click');
         _changeVersionMenu.off('click');
@@ -1652,7 +1664,7 @@ var NCE = (function ($)
     }
 
     function handleAppPermissions() {
-        var isAppAdmin = checkAppPermission(PERMISSION_ACTION.ADMIN);
+        var isAppAdmin = checkIsAppAdmin();
         var canReleaseApp = checkAppPermission(PERMISSION_ACTION.RELEASE);
         var canCommitOnApp = checkAppPermission(PERMISSION_ACTION.COMMIT);
 
@@ -1661,12 +1673,20 @@ var NCE = (function ($)
         enableDisableClearCache(isAppAdmin);
         enableDisableLockMenu(isAppAdmin);
     }
+    
+    function buildBranchUpdateMenu() {
+        var li = _branchCompareUpdateMenu.parent();
+        getBranchNames(true);
+        li.find('ul').remove();
+        li.append(createBranchesUl(compareUpdateBranch));
+    }
 
     function loadAppListView()
     {
         var ul = _appMenu.parent().find('.dropdown-menu');
         ul.empty();
         handleAppPermissions();
+        buildBranchUpdateMenu();
         buildBranchQuickSelectMenu(_selectedApp);
 
         $.each(_apps, function (index, value)
@@ -1691,6 +1711,7 @@ var NCE = (function ($)
                     loadNCubes();
                     runSearch();
                     buildMenu();
+                    buildBranchUpdateMenu();
                     buildBranchQuickSelectMenu(value);
                 }, PROGRESS_DELAY);
             });
@@ -3049,6 +3070,9 @@ var NCE = (function ($)
             setTimeout(function() { selectBranch(); }, PROGRESS_DELAY);
             showNote('Getting list of branches...');
         });
+        $('#branchCompareUpdateOk').on('click', function() {
+            branchCompareUpdateOk();
+        });
         $('#branchCommit').click(function()
         {
             setTimeout(function() { commitBranch(true); }, PROGRESS_DELAY);
@@ -3121,7 +3145,7 @@ var NCE = (function ($)
     {
         if (refresh || _branchNames.length === 0)
         {
-            var result = call("ncubeController.getBranches", [getAppId()]);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCHES, [getAppId()]);
             if (!result.status)
             {
                 showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
@@ -3221,6 +3245,143 @@ var NCE = (function ($)
         showNote('Changing branch to: ' + branchName, 'Please wait...');
     }
 
+    function compareUpdateBranch(branchName) {
+        var result, branchChanges;
+        clearError();
+
+        if (isHeadSelected())
+        {
+            showNote('You cannot update HEAD.');
+            return;
+        }
+
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FROM_BRANCH, [getAppId(), branchName]);
+        if (!result.status) {
+            showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        $('#branchCompareUpdateLabel')[0].innerHTML = 'Update ' + _selectedBranch + ' from ' + branchName;
+        branchChanges = result.data;
+        branchChanges.sort(function compare(a,b) {
+            return a.name.localeCompare(b.name);
+        });
+
+        _branchCompareUpdateModal.prop({changes: branchChanges, branchName: branchName});
+        buildUlForCompare(_branchCompareUpdateList, branchName, branchChanges, 'updateCheck');
+
+        selectAll();
+        _branchCompareUpdateModal.modal();
+    }
+
+    function buildUlForCompare(ul, updateFromBranchName, branchChanges, inputClass) {
+        ul.empty();
+        ul.append(buildHtmlListForCompare(branchChanges, inputClass));
+        ul.find('a.compare').on('click', function() {
+            var li = $(this).parent().parent().parent();
+            var ul = li.parent();
+            var idx = ul.children().index(li);
+            var infoDto = branchChanges[idx];
+            var leftInfoDto = $.extend(true, {}, infoDto);
+            leftInfoDto.branch = updateFromBranchName;
+            diffCubes(leftInfoDto, infoDto, infoDto.name);
+        });
+    }
+
+    function branchCompareUpdateOk() {
+        var branchChanges = _branchCompareUpdateModal.prop('changes');
+        var branchName = _branchCompareUpdateModal.prop('branchName');
+        var input = _branchCompareUpdateList.find('.updateCheck');
+        var changes = [];
+
+        $.each(input, function (index, label) {
+            if ($(this).is(':checked')) {
+                changes.push(branchChanges[index].name);
+            }
+        });
+
+        _commitModal.modal('hide');
+        callUpdateBranchCubes(changes, branchName);
+    }
+
+    function callUpdateBranchCubes(cubeNames, branchName) {
+        showNote('Updating selected cubes...', 'Please wait...');
+        setTimeout(function() {
+            var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH_CUBES, [getAppId(), cubeNames, branchName]);
+            var note;
+
+            clearError();
+            if (!result.status) {
+                showNote(result.data);
+                return;
+            }
+
+            loadNCubes();
+            runSearch();
+            reloadCube();
+
+            note = 'Successfully updated ' + result.data.length + ' cube(s).<hr class="hr-small"/>';
+            note += '<b style="color:cornflowerblue">Updated cubes:</b><br>';
+            $.each(result.data, function(idx, infoDto) {
+                note += infoDto.name + '<br>';
+            });
+            showNote(note);
+        }, PROGRESS_DELAY);
+    }
+
+    function buildHtmlListForCompare(branchChanges, inputClass) {
+        var i, len, infoDto;
+        var html = '';
+        for (i = 0, len = branchChanges.length; i < len; i++) {
+            infoDto = branchChanges[i];
+
+            html += '<li class="list-group-item skinny-lr no-margins" style="padding-left:0;">';
+            html += '<div class="container-fluid">';
+
+            html += '<label class="col-xs-1" style="padding:0;margin:0 10px 0 0;">';
+            html += '<a href="#" class="compare"><kbd>Compare</kbd></a>';
+            html += '</label>';
+
+            html += '<label class="checkbox no-margins col-xs-10 ' + getLabelDisplayClassForInfoDto(infoDto) + '">';
+            html += '<input class="' + inputClass + '" type="checkbox">';
+            html += infoDto.name;
+            html += '</label>';
+
+            html += '</div></li>';
+        }
+        return html;
+    }
+    
+    function getLabelDisplayClassForInfoDto(infoDto) {
+        if (infoDto.revision < 0) {
+            return 'cube-deleted';
+        }
+        
+        if (!infoDto.headSha1) {
+            if (infoDto.sha1) {
+                return 'cube-added';
+            }
+            if (infoDto.changeType === 'D') {
+                    return 'cube-deleted';
+            }
+            if (infoDto.changeType === 'R') {
+                return 'cube-restored';
+            }
+        }
+        
+        if (infoDto.headSha1 != infoDto.sha1) {
+            return 'cube-modified';
+        }
+        if (infoDto.changeType === 'D') {
+            return 'cube-deleted';
+        }
+        if (infoDto.changeType == 'R') {
+            return 'cube-restored';
+        }
+        
+        return '';
+    }
+
     function commitBranch(state)
     {
         clearError();
@@ -3248,7 +3409,7 @@ var NCE = (function ($)
             return;
         }
 
-        var result = call("ncubeController.getBranchChanges", [getAppId()]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES, [getAppId()]);
 
         if (!result.status || !result.data)
         {
@@ -3266,78 +3427,7 @@ var NCE = (function ($)
             });
 
         _commitModal.prop('changes', branchChanges);
-        var ul = $('#commitRollbackList');
-        ul.empty();
-
-        $.each(branchChanges, function (index, infoDto)
-        {
-            var li = $('<li/>').prop({class: 'list-group-item skinny-lr no-margins'});
-            ul.append(li);
-            var div = $('<div/>').prop({class:'container-fluid'});
-            li.append(div);
-            li.css('padding-left', 0);
-
-            var anchorDiff = $('<a href="#"/>');
-            anchorDiff.click(function(e)
-            {
-                var leftInfoDto = $.extend(true, {}, infoDto);
-                leftInfoDto.branch = 'HEAD';
-                diffCubes(leftInfoDto, infoDto, infoDto.name);
-            });
-            var labelB = $('<label/>').prop({class: 'col-xs-1', style:'margin:0;margin-right:20px'});
-            div.append(labelB);
-            labelB.css('padding', 0);
-            labelB.css('margin', 0);
-            labelB.css('margin-right', '10px');
-            labelB.append(anchorDiff);
-            var kbd = $('<kbd/>');
-            kbd[0].textContent = 'Compare';
-            anchorDiff.append(kbd);
-
-            var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
-            var label = $('<label/>').prop({class: 'checkbox no-margins col-xs-10'});
-            div.append(label);
-            label[0].textContent = infoDto.name;
-
-            if (infoDto.revision < 0)
-            {
-                label.addClass('cube-deleted');
-            }
-            else if (!infoDto.headSha1)
-            {
-                if (infoDto.sha1)
-                {
-                    label.addClass('cube-added');
-                }
-                else
-                {
-                    if (infoDto.changeType == 'D')
-                    {
-                        label.addClass('cube-deleted');
-                    }
-                    else if (infoDto.changeType == 'R')
-                    {
-                        label.addClass('cube-restored');
-                    }
-                }
-            }
-            else
-            {
-                if (infoDto.headSha1 != infoDto.sha1)
-                {
-                    label.addClass('cube-modified');
-                }
-                else if (infoDto.changeType == 'D')
-                {
-                    label.addClass('cube-deleted');
-                }
-                else if (infoDto.changeType == 'R')
-                {
-                    label.addClass('cube-restored');
-                }
-            }
-            checkbox.prependTo(label); // <=== create input without the closing tag
-        });
+        buildUlForCompare(_commitRollbackList, head, branchChanges, 'commitCheck');
 
         selectAll();
         _commitModal.modal('show');
@@ -3346,7 +3436,7 @@ var NCE = (function ($)
     function commitOk()
     {
         var branchChanges = _commitModal.prop('changes');
-        var input = $('#commitRollbackList').find('.commitCheck');
+        var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
 
         $.each(input, function (index, label)
@@ -3398,7 +3488,7 @@ var NCE = (function ($)
     function rollbackOk()
     {
         var branchChanges = _commitModal.prop('changes');
-        var input = $('#commitRollbackList').find('.commitCheck');
+        var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
         $.each(input, function (index, label)
         {
@@ -3466,17 +3556,16 @@ var NCE = (function ($)
         }, PROGRESS_DELAY);
     }
 
-    function callUpdate(sourceBranch)
-    {
+    function callUpdate(sourceBranch) {
+        var appId, result, map, updateMap, mergeMap, updates, upMap, merges, mMap, conflicts, names, note, i;
         clearError();
-        var appId;
-        var result;
+        
         if (sourceBranch !== undefined) {
             appId = getSelectedTabAppId();
-            result = call('ncubeController.updateBranchCube', [appId, _selectedCubeName, sourceBranch]);
+            result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH_CUBE, [appId, _selectedCubeName, sourceBranch]);
         } else  {
             appId = getAppId();
-            result = call('ncubeController.updateBranch', [appId]);
+            result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId]);
         }
         if (!result.status)
         {
@@ -3484,13 +3573,13 @@ var NCE = (function ($)
             return;
         }
 
-        var map = result.data;
-        var updateMap = map['updates'];
-        var mergeMap = map['merges'];
+        map = result.data;
+        updateMap = map['updates'];
+        mergeMap = map['merges'];
         _conflictMap = map['conflicts'];
-        var updates = 0;
-        var merges = 0;
-        var conflicts = 0;
+        updates = 0;
+        merges = 0;
+        conflicts = 0;
 
         if (updateMap && updateMap['@items'])
         {
@@ -3506,11 +3595,10 @@ var NCE = (function ($)
             conflicts = countKeys(_conflictMap);
         }
 
-        var note = '<b>Branch Updated:</b><hr class="hr-small"/>' + updates + ' cubes <b>updated</b><br>' + merges + ' cubes <b>merged</b><br>' + conflicts + ' cubes in <b>conflict</b>';
-        var i;
+        note = '<b>Branch Updated:</b><hr class="hr-small"/>' + updates + ' cubes <b>updated</b><br>' + merges + ' cubes <b>merged</b><br>' + conflicts + ' cubes in <b>conflict</b>';
         if (updates > 0)
         {
-            var upMap = updateMap['@items'];
+            upMap = updateMap['@items'];
             note += '<hr class="hr-small"/><b style="color:cornflowerblue">Updated cube names:</b><br>';
             upMap.sort(function(a, b)
             {   // sort case-insensitively, use client-side CPU
@@ -3525,7 +3613,7 @@ var NCE = (function ($)
         }
         if (merges > 0)
         {
-            var mMap = mergeMap['@items'];
+            mMap = mergeMap['@items'];
             note += '<hr class="hr-small"/><b style="color:#D4AF37">Merged cube names:</b><br>';
             mMap.sort(function(a, b)
             {   // sort case-insensitively, use client-side CPU
@@ -3541,7 +3629,7 @@ var NCE = (function ($)
         if (conflicts > 0)
         {
             note += '<hr class="hr-small"/><b style="color:#F08080">Cubes in conflict:</b><br>';
-            var names = Object.keys(_conflictMap);
+            names = Object.keys(_conflictMap);
             names.sort(function(a, b)
             {   // sort case-insensitively, use client-side CPU
                 var lowA = a.toLowerCase();

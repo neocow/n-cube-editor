@@ -93,6 +93,8 @@ class NCubeController extends BaseController
     private static final Map<String, List<String>> appVersions = new ConcurrentHashMap<>()
     private static final Object versionsLock = new Object()
 
+    private static final Map<String, List<String>> appBranches = new ConcurrentHashMap<>()
+
     NCubeController(NCubeService service)
     {
         nCubeService = service;
@@ -126,11 +128,28 @@ class NCubeController extends BaseController
 
     boolean checkPermissions(ApplicationID appId, String resource, String action)
     {
-        if (action == NCubeManager.ROLE_ADMIN)
+        try
         {
+            appId = addTenant(appId)
+            return nCubeService.checkPermissions(appId, resource, action == null ? ACTION.READ : ACTION.valueOf(action.toUpperCase()))
+        }
+        catch (Exception e)
+        {
+            fail(e);
+        }
+    }
+
+    boolean isAppAdmin(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
             return nCubeService.isAdmin(appId)
         }
-        return nCubeService.checkPermissions(appId, resource, action == null ? ACTION.READ : ACTION.valueOf(action.toUpperCase()))
+        catch (Exception e)
+        {
+            fail(e);
+        }
     }
 
     // ============================================= Begin API =========================================================
@@ -140,7 +159,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            return nCubeService.getAppLockedBy(appId);
+            return nCubeService.getAppLockedBy(appId)
         }
         catch (Exception e)
         {
@@ -1402,6 +1421,7 @@ class NCubeController extends BaseController
             nCubeService.clearCache(appId)
             appCache.clear()
             appVersions.clear()
+            appBranches.clear()
         }
         catch (Exception e)
         {
@@ -1415,6 +1435,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             nCubeService.createBranch(appId)
+            appBranches[appId.app + appId.version + appId.status] << appId.branch
         }
         catch (Exception e)
         {
@@ -1424,14 +1445,30 @@ class NCubeController extends BaseController
 
     Object[] getBranches(ApplicationID appId)
     {
+        String branchesCacheKey = appId.app + appId.version + appId.status
         try
         {
+            if (appBranches.containsKey(branchesCacheKey))
+            {
+                List<String> branchList = appBranches[branchesCacheKey]
+                branchList.remove(ApplicationID.HEAD)
+                Object[] branchNames = branchList.toArray()
+                caseInsensitiveSort(branchNames)
+                def head = ['HEAD'] as Object[]
+                return head.plus(branchNames)
+            }
+
             appId = addTenant(appId)
             Set<String> branches = nCubeService.getBranches(appId)
+            List<String> branchList = new ArrayList<String>()
             if (branches == null && branches.isEmpty())
             {
+                branchList << ApplicationID.HEAD
+                appBranches[branchesCacheKey] = branchList
                 return [ApplicationID.HEAD] as Object[]
             }
+            branchList.addAll(branches)
+            appBranches[branchesCacheKey] = branchList
             branches.remove(ApplicationID.HEAD)
             Object[] branchNames = branches.toArray()
             caseInsensitiveSort(branchNames)
@@ -1450,7 +1487,23 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            List<NCubeInfoDto> branchChanges = nCubeService.getBranchChanges(appId)
+            List<NCubeInfoDto> branchChanges = nCubeService.getBranchChanges(appId, ApplicationID.HEAD)
+            return branchChanges.toArray()
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    Object[] getBranchChangesFromBranch(ApplicationID appId, String branchName)
+    {
+        try
+        {
+            //TODO change to new manager method
+            appId = addTenant(appId)
+            List<NCubeInfoDto> branchChanges = nCubeService.getBranchChanges(appId, branchName)
             return branchChanges.toArray()
         }
         catch (Exception e)
@@ -1548,12 +1601,28 @@ class NCubeController extends BaseController
         }
     }
 
+    Object updateBranchCubes(ApplicationID appId, Object[] cubeNames, String sourceBranch)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            // TODO - add in manager
+            throw new IllegalStateException('Functionality not yet implemented.')
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
     void deleteBranch(ApplicationID appId)
     {
         try
         {
             appId = addTenant(appId)
             nCubeService.deleteBranch(appId)
+            appBranches[appId.app + appId.version + appId.status].remove(appId.branch)
         }
         catch(Exception e)
         {
