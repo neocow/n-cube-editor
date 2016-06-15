@@ -50,6 +50,7 @@ class Visualizer extends NCubeGroovyController
 	public static final String ALL_GROUPS = 'allGroups'
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
 	public static final Map ALL_GROUPS_MAP = [PRODUCT:'Product', FORM:'Form', FORMDATA:'Form data', RISK:'Risk', COVERAGE:'Coverage', CONTAINER:'Container', DEDUCTIBLE:'Deductible', LIMIT:'Limit', RATE:'Rate', RATEFACTOR:'Rate factor', PREMIUM:'Premium', PARTY:'Party', PLACE:'Place', UNSPECIFIED:'Unspecified']
+	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLE_PLAYER']
 
 	public static final String STACK_KEY = 'stackKey'
 	
@@ -390,6 +391,37 @@ class Visualizer extends NCubeGroovyController
 
 	private void addToNodes(NCube targetCube, Map targetScope, Map traitMaps, long level, String busType, String sourceFieldName)
 	{
+		int maxLineLength = 16
+		String nodeGroup = getGroup(targetCube, busType)
+		StringBuilder sb = new StringBuilder()
+		if (GROUPS_TO_SHOW_IN_TITLE.contains(nodeGroup))
+		{
+			String label = ALL_GROUPS_MAP[nodeGroup]
+			int len = label.length()
+			sb.append(label)
+			sb.append('\n')
+			sb.append('-'.multiply(Math.floor(len * 1.2)))
+			sb.append('\n')
+		}
+
+		String labelName = getDotSuffix(getEffectiveName(targetCube, traitMaps))
+		String[] splitName = labelName.split("(?=\\p{Upper})")
+		String line = ''
+		for (String part : splitName)
+		{
+			if (line.length() + part.length() < maxLineLength)
+			{
+				line += part
+			}
+			else
+			{
+				sb.append(line)
+				sb.append('\n')
+				line = part
+			}
+		}
+		sb.append(line)
+
 		Map nodeMap = [:]
 		nodeMap.id = targetCube.name + '_' + targetScope.toString()
 		nodeMap.scope = targetScope.toString()
@@ -397,10 +429,10 @@ class Visualizer extends NCubeGroovyController
 		nodeMap.name = targetCube.name
 		nodeMap.fromFieldName = sourceFieldName == null ? null : sourceFieldName
 
-		nodeMap.label = getDotSuffix(getEffectiveName(targetCube, traitMaps))
+		nodeMap.label = sb.toString()
 		nodeMap.title = targetCube.name
 		nodeMap.desc = getTitle(targetCube, getScopedName(traitMaps), targetScope, traitMaps, nodeMap)
-		nodeMap.group = getGroup(targetCube, busType)
+		nodeMap.group = nodeGroup
 		nodes.add(nodeMap)
 	}
 
