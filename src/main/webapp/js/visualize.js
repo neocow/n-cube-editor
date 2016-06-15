@@ -546,9 +546,13 @@ var Visualizer = (function ($) {
                 zoomView: true
             },
             nodes: {
+                value: 24,
                 scaling: {
-                    min: 16,
-                    max: 32
+                    min: 24,
+                    max: 24,
+                    label: {
+                        enabled: false
+                    }
                 }
             },
             edges: {
@@ -568,48 +572,54 @@ var Visualizer = (function ($) {
             },
             groups: {  //TODO: Add other bus types
                 PRODUCT: {
-                    shape: 'image',
-                    image: 'img/product.png'
+                    shape: 'box',
+                    color: '#DAE4FA'
                 },
                 RISK: {
-                    shape: 'image',
-                    image: 'img/risk.png'
+                    shape: 'box',
+                    color: '#759BEC'
                 },
                 COVERAGE: {
-                    shape: 'image',
-                    image: 'img/coverage.png'
+                    shape: 'box',
+                    color: '#113275',
+                    font: {
+                        color: '#FFFFFF'
+                    }
                 },
                 CONTAINER: {
                     shape: 'star',
                     color: "#731d1d" // dark red
                 },
                 LIMIT: {
-                    shape: 'image',
-                    image: 'img/limit.png'
+                    shape: 'ellipse',
+                    color: '#FFFF99'
                 },
                 DEDUCTIBLE: {
-                    shape: 'image',
-                    image: 'img/deductible.png'
+                    shape: 'ellipse',
+                    color: '#FFFF99'
                 },
                 PREMIUM: {
-                    shape: 'image',
-                    image: 'img/premium.png'
+                    shape: 'circle',
+                    color: '#0B930B',
+                    font: {
+                        color: '#FFFFFF'
+                    }
                 },
                 RATE: {
-                    shape: 'image',
-                    image: 'img/rate.png'
+                    shape: 'ellipse',
+                    color: '#EAC259'
                 },
                 ROLE: {
-                    shape: 'image',
-                    image: 'img/role.png'
+                    shape: 'box',
+                    color: '#F59D56'
                 },
                 ROLE_PLAYER: {
-                    shape: 'image',
-                    image: 'img/role_player.png'
+                    shape: 'box',
+                    color: '#F2F2F2'
                 },
                 RATEFACTOR: {
-                    shape: 'image',
-                    image: 'img/rate_factor.png'
+                    shape: 'ellipse',
+                    color: '#EAC259'
                 },
                 PARTY: {
                     shape: 'box',
