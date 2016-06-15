@@ -583,7 +583,7 @@ var Visualizer = (function ($) {
                     shape: 'box',
                     color: '#113275',
                     font: {
-                        color: '#FFFFFF'
+                        color: '#D8D8D8'
                     }
                 },
                 CONTAINER: {
@@ -602,7 +602,7 @@ var Visualizer = (function ($) {
                     shape: 'circle',
                     color: '#0B930B',
                     font: {
-                        color: '#FFFFFF'
+                        color: '#D8D8D8'
                     }
                 },
                 RATE: {
