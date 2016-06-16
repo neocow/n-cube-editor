@@ -1814,7 +1814,6 @@ var NCE = (function ($)
     }
 
     function loadVersionListView() {
-        console.time('loadVersionListViewNew');
         var versions, version, i, len, ul, html;
         html = '';
         versions = loadVersions();
@@ -1831,7 +1830,6 @@ var NCE = (function ($)
         if (_selectedVersion) {
             _versionMenu[0].innerHTML = '<button class="btn-sm btn-primary">' + _selectedVersion + '-' + _selectedStatus + '&nbsp;<b class="caret"></b></button>';
         }
-        console.timeEnd('loadVersionListViewNew');
     }
     
     function onVersionClick(e) {
