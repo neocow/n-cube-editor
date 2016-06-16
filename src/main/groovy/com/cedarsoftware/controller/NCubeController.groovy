@@ -1741,10 +1741,6 @@ class NCubeController extends BaseController
             NCube menuCube = nCubeService.getCube(appId, 'sys.menu')
             return menuCube.getCell([:])
         }
-        catch (SecurityException e)
-        {
-            return null
-        }
         catch (Exception e)
         {
             LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage())
