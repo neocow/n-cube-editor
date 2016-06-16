@@ -610,3 +610,9 @@ span.selected-count {
 #appIdMenu .open a.dropdown-toggle, #appIdMenu li a.dropdown-toggle:hover, #appIdMenu li a.dropdown-toggle:focus {
     background-color: #777777;
 }
+
+.panel-frame {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
