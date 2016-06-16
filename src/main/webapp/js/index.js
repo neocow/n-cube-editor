@@ -84,6 +84,7 @@ var NCE = (function ($)
     var _searchLastKeyTime = Date.now();
     var _searchKeyPressed = false;
     var _diffLastResult = null;
+    var _diffHtmlResult = null;
     var _diffLeftName = '';
     var _diffRightName = '';
     var _menuOptions = [];
@@ -825,19 +826,20 @@ var NCE = (function ($)
     }
 
     function createBranchesUl(func) {
+        var html, bnIdx, bnLen, branchesUl;
         var branchNames = getBranchNames();
-        var branchesUl = $('<ul/>').addClass('dropdown-menu');
-        for (var bnIdx = 0, bnLen = branchNames.length; bnIdx < bnLen; bnIdx++) {
-            (function() {
-                var branchName = branchNames[bnIdx];
-                branchesUl.append($('<li/>').append(
-                        $('<a/>').attr('href', '#').html(branchName).click(function () {
-                            return func(branchName);
-                        })
-                    )
-                );
-            })();
+
+        html = '<ul class="dropdown-menu">';
+        for (bnIdx = 0, bnLen = branchNames.length; bnIdx < bnLen; bnIdx++) {
+            html += '<li><a href="#">';
+            html += branchNames[bnIdx];
+            html += '</a></li>';
         }
+        
+        branchesUl = $(html);
+        branchesUl.find('a').on('click', function() {
+            return func(this.innerHTML);
+        });
         return branchesUl;
     }
 
@@ -1243,8 +1245,8 @@ var NCE = (function ($)
         });
 
         // 'Close' for the Diff Modal
-        $('#diffModalClose').click(function() {
-            _diffModal.css('display', 'none');
+        $('#diffModalClose').on('click', function() {
+            diffShow(false);
         });
 
         $('#diffDesc').click(function() {
@@ -3812,103 +3814,153 @@ var NCE = (function ($)
     // =============================================== End Branching ===================================================
 
     // ============================================== Cube Comparison ==================================================
-    function diffCubes(leftInfo, rightInfo, title)
-    {
+    
+    function diffCubes(leftInfo, rightInfo, title) {
         clearError();
-
-        var result = call('ncubeController.fetchBranchDiffs', [leftInfo, rightInfo], {noResolveRefs:true});
-        if (result.status !== true)
-        {
-            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        setupDiff(result.data, leftInfo.branch, rightInfo.branch, title);
+        call(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:descriptiveDiffCallback});
+        call(CONTROLLER + CONTROLLER_METHOD.FETCH_HTML_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:htmlDiffCallback});
+        setupDiff(leftInfo.branch, rightInfo.branch, title);
     }
 
-    function diffCubeRevs(id1, id2, leftName, rightName, title)
-    {
+    function diffCubeRevs(id1, id2, leftName, rightName, title) {
         clearError();
-
-        var result = call('ncubeController.fetchRevDiffs', [id1, id2], {noResolveRefs:true});
-        if (result.status !== true)
-        {
-            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        setupDiff(result.data, leftName, rightName, title);
+        call(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:descriptiveDiffCallback});
+        call(CONTROLLER + CONTROLLER_METHOD.FETCH_HTML_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:htmlDiffCallback});
+        setupDiff(leftName, rightName, title);
     }
 
-    function setupDiff(diffResult, leftName, rightName, title)
-    {
-        var titleElem = $('#diffTitle');
-
-        titleElem[0].innerHTML = title;
-        _diffLastResult = diffResult;
+    function setupDiff(leftName, rightName, title) {
+        _diffOutput.empty();
+        $('#diffTitle')[0].innerHTML = title;
+        _diffLastResult = 'Loading...';
+        _diffHtmlResult = 'Loading...';
         _diffLeftName = leftName;
         _diffRightName = rightName;
         diffLoad(DIFF_DESCRIPTIVE);
-
-        // Display Diff Modal
-        _diffModal.css('display', 'block');
+        diffShow(true);
+    }
+    
+    function diffShow(shouldShow) {
+        if (shouldShow) {
+            _diffModal.show();
+        } else {
+            _diffModal.hide();
+        }
     }
 
-    function diffLoad(viewType)
-    {
+    function diffLoad(viewType) {
         _diffOutput.empty();
-        var leftJson = _diffLastResult.left['@items'];
-        var rightJson = _diffLastResult.right['@items'];
-
-        if (viewType == DIFF_INLINE || viewType == DIFF_SIDE_BY_SIDE)
-        {
-            // create a SequenceMatcher instance that diffs the two sets of lines
-            var sm = new difflib.SequenceMatcher(leftJson, rightJson);
-
-            // get the opcodes from the SequenceMatcher instance
-            // opcodes is a list of 3-tuples describing what changes should be made to the base text
-            // in order to yield the new text
-            var opcodes = sm.get_opcodes();
-
-            // build the diff view and add it to the current DOM
-            _diffOutput[0].appendChild(diffview.buildView({
-                baseTextLines: leftJson,
-                newTextLines: rightJson,
-                opcodes: opcodes,
-                // set the display titles for each resource
-                baseTextName: _diffLeftName,
-                newTextName: _diffRightName,
-                contextSize: 3,
-                viewType: viewType
-            }));
-            _diffOutput.find('.author').remove();
+        switch(viewType) {
+            case DIFF_INLINE:
+            case DIFF_SIDE_BY_SIDE:
+                diffInlineOrSideBySide(viewType);
+                break;
+            case DIFF_DESCRIPTIVE:
+                diffDescriptive();
+                break;
+            case DIFF_VISUAL:
+                diffVisual();
+                break;
+            default:
+                console.log('Error -> Unknown DIFF type');
+                break;
         }
-        else if (viewType == DIFF_DESCRIPTIVE)
-        {
-            var textArea = $('<textarea style="width:100%;height:100%;box-sizing:border-box" ondblclick="this.focus();this.select()" readonly/>');
-            var str = _diffLastResult.delta;
-            if (!str || str == '')
-            {
+    }
+    
+    function diffDescriptive() {
+        var str;
+        var stillLoading = typeof _diffLastResult !== 'object';
+
+        if (stillLoading) {
+            str = _diffLastResult;
+        } else {
+            str = _diffLastResult.delta;
+            if (!str || str == '') {
                 str = 'No difference';
             }
-            textArea[0].innerHTML = str;
-            _diffOutput.append(textArea);
         }
-        else if (viewType == DIFF_VISUAL)
-        {
-            var div = $('<div style="width:100%;height:100%;box-sizing:border-box;" />');
-            var divLeft = $('<div class="innerL"/>');
-            var divRight = $('<div class="innerR"/>');
-            divLeft[0].innerHTML = _diffLastResult.leftHtml;
-            divRight[0].innerHTML = _diffLastResult.rightHtml;
-            _diffOutput.append(div);
-            div.append(divLeft);
-            div.append(divRight);
+        _diffOutput[0].innerHTML = str;
+
+        if (stillLoading) {
+            setTimeout(function () {
+                _diffOutput.empty();
+                diffDescriptive();
+            }, PROGRESS_DELAY);
         }
-        else
-        {
-            console.log('Error -> Unknown DIFF type');
+    }
+    
+    function diffInlineOrSideBySide(viewType) {
+        var leftJson, rightJson, sm, opcodes;
+        var stillLoading = typeof _diffLastResult !== 'object';
+
+        if (stillLoading) {
+        _diffOutput[0].innerHtml = _diffLastResult;
+            setTimeout(function () {
+                _diffOutput.empty();
+                diffInlineOrSideBySide(viewType);
+            }, PROGRESS_DELAY);
+            return;
         }
+
+        leftJson = _diffLastResult.left['@items'];
+        rightJson = _diffLastResult.right['@items'];
+        
+        // create a SequenceMatcher instance that diffs the two sets of lines
+        sm = new difflib.SequenceMatcher(leftJson, rightJson);
+
+        // get the opcodes from the SequenceMatcher instance
+        // opcodes is a list of 3-tuples describing what changes should be made to the base text
+        // in order to yield the new text
+        opcodes = sm.get_opcodes();
+
+        // build the diff view and add it to the current DOM
+        _diffOutput[0].appendChild(diffview.buildView({
+            baseTextLines: leftJson,
+            newTextLines: rightJson,
+            opcodes: opcodes,
+            // set the display titles for each resource
+            baseTextName: _diffLeftName,
+            newTextName: _diffRightName,
+            contextSize: 3,
+            viewType: viewType
+        }));
+        _diffOutput.find('.author').remove();
+    }
+    
+    function diffVisual() {
+        var html = '';
+        var stillLoading = typeof _diffHtmlResult !== 'object';
+
+        if (stillLoading) {
+            html += _diffHtmlResult;
+        } else {
+            html += '<div class="innerL">' + _diffHtmlResult.leftHtml + '</div>';
+            html += '<div class="innerR">' + _diffHtmlResult.rightHtml + '</div>';
+        }
+        _diffOutput[0].innerHTML = html;
+        
+        if (stillLoading) {
+            setTimeout(function () {
+                _diffOutput.empty();
+                diffVisual();
+            }, PROGRESS_DELAY);
+        }
+    }
+
+    function descriptiveDiffCallback(result) {
+        if (!result.status) {
+            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        _diffLastResult = result.data;
+    }
+
+    function htmlDiffCallback(result) {
+        if (!result.status) {
+            showNote('Unable to fetch visual comparison of cube:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        _diffHtmlResult = result.data;
     }
 
     // ============================================ End Cube Comparison ================================================
