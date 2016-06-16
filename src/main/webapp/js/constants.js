@@ -148,6 +148,7 @@ var CONTROLLER_METHOD = {
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
     GET_JSON: 'getJson',
     GET_MENU: 'getMenu',
+    GET_VERSIONS: 'getVersions',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     LOCK_APP: 'lockApp',

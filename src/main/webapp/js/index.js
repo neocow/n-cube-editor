@@ -25,8 +25,6 @@ var NCE = (function ($)
     var _searchThread;
     var _heartBeatThread;
     var _cubeList = {};
-    var _apps = [];
-    var _versions = [];
     var _openCubes = localStorage[OPEN_CUBES];
     try
     {
@@ -108,6 +106,7 @@ var NCE = (function ($)
     var _lockUnlockAppMenu = $('#lockUnlockAppMenu');
     var _getAppLockedByMenu = $('#getAppLockedByMenu');
     var _releaseCubesVersion = $('#releaseCubesVersion');
+    var _branchMenu = $('#BranchMenu');
     var _releaseMenu = $('#ReleaseMenu');
     var _branchCommit = $('#branchCommit');
     var _commitRollbackList = $('#commitRollbackList');
@@ -122,6 +121,9 @@ var NCE = (function ($)
     var isReleasePending = false;
     var _branchCompareUpdateMenu = $('#branchCompareUpdate');
     var _branchCompareUpdateList = $('#branchCompareUpdateList');
+    var _branchList = $('#branchList');
+    var _newBranchName = $('#newBranchName');
+    var _branchNameWarning = $('#branchNameWarning');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -139,11 +141,9 @@ var NCE = (function ($)
             setupMainSplitter();
             startWorkers();
             showActiveBranch();
-            loadAppNames();
-            loadVersions();
-            loadNCubes();
             loadAppListView();
             loadVersionListView();
+            loadNCubes();
             buildMenu();
             clearSearch();
             loop();
@@ -828,12 +828,11 @@ var NCE = (function ($)
 
     function createBranchesUl(func) {
         var html, bnIdx, bnLen, branchesUl;
-        var branchNames = getBranchNames();
 
         html = '<ul class="dropdown-menu">';
-        for (bnIdx = 0, bnLen = branchNames.length; bnIdx < bnLen; bnIdx++) {
+        for (bnIdx = 0, bnLen = _branchNames.length; bnIdx < bnLen; bnIdx++) {
             html += '<li><a href="#">';
-            html += branchNames[bnIdx];
+            html += _branchNames[bnIdx];
             html += '</a></li>';
         }
         
@@ -1320,11 +1319,9 @@ var NCE = (function ($)
                     _selectedCubeName = state.cube;
                     _selectedBranch = state.branch;
                     showActiveBranch();
-                    loadAppNames();
-                    loadVersions();
-                    loadNCubes();
                     loadAppListView();
                     loadVersionListView();
+                    loadNCubes();
                     selectCubeByName(_selectedCubeName);
                     buildMenu();
                 }
@@ -1685,7 +1682,7 @@ var NCE = (function ($)
     
     function buildBranchUpdateMenu() {
         var li = _branchCompareUpdateMenu.parent();
-        getBranchNames(true);
+        getBranchNames();
         li.find('ul').remove();
         li.append(createBranchesUl(compareUpdateBranch));
     }
@@ -1698,9 +1695,8 @@ var NCE = (function ($)
         buildBranchUpdateMenu();
         buildBranchQuickSelectMenu(_selectedApp);
 
-        $.each(_apps, function (index, value)
-        {
-            var li = $('<li/>');
+        $.each(loadAppNames(), function (index, value)
+        {            var li = $('<li/>');
             var an = $('<a/>');
             an.attr('href','#');
             an[0].innerHTML = value;
@@ -1715,7 +1711,7 @@ var NCE = (function ($)
 
                 setTimeout(function()
                 {   // Allow selection widget to update before loading content
-                    loadVersions();
+                    loadAppListView();
                     loadVersionListView();
                     loadNCubes();
                     runSearch();
@@ -1817,43 +1813,45 @@ var NCE = (function ($)
             cube: _selectedCubeName}, title);
     }
 
-    function loadVersionListView()
-    {
-        var ul = _versionMenu.parent().find('.dropdown-menu');
+    function loadVersionListView() {
+        console.time('loadVersionListViewNew');
+        var versions, version, i, len, ul, html;
+        html = '';
+        versions = loadVersions();
+        for (i = 0, len = versions.length; i < len; i++) {
+            version = versions[i];
+            html = '<li><a href="#">' + version + '</a></li>' + html;
+        }
+
+        ul = _versionMenu.parent().find('.dropdown-menu');
         ul.empty();
+        ul.append(html);
+        ul.find('a').on('click', onVersionClick);
 
-        $.each(_versions, function (index, value)
-        {
-            var arr = value.split('-');
-            var version = arr[0];
-            var status = arr[1];
-            var li = $('<li/>');
-            var an = $('<a/>');
-            an.attr('href','#');
-            an[0].innerHTML = value;
-            an.click(function() {
-                saveSelectedVersion(version);
-                saveSelectedStatus(status);
-                _versionMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
-
-                setCubeListLoading();
-
-                setTimeout(function()
-                {   // Allow bootstrap-selection widget to update before loading content
-                    loadNCubes();
-                    runSearch();
-                    buildMenu();
-                }, PROGRESS_DELAY);
-            });
-
-            ul.prepend(li);
-            li.append(an);
-        });
-
-        if (_selectedVersion)
-        {
+        if (_selectedVersion) {
             _versionMenu[0].innerHTML = '<button class="btn-sm btn-primary">' + _selectedVersion + '-' + _selectedStatus + '&nbsp;<b class="caret"></b></button>';
         }
+        console.timeEnd('loadVersionListViewNew');
+    }
+    
+    function onVersionClick(e) {
+        var arr, version, status, value;
+        value = e.target.textContent;
+        arr = value.split('-');
+        version = arr[0];
+        status = arr[1];
+        saveSelectedVersion(version);
+        saveSelectedStatus(status);
+        _versionMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
+
+        setCubeListLoading();
+
+        setTimeout(function()
+        {   // Allow bootstrap-selection widget to update before loading content
+            loadNCubes();
+            runSearch();
+            buildMenu();
+        }, PROGRESS_DELAY);
     }
 
     function getActiveTab()
@@ -2021,82 +2019,60 @@ var NCE = (function ($)
         return nameToChk in _cubeList;
     }
 
-    function loadVersions()
-    {
-        _versions = [];
+    function loadVersions() {
+        var result, version, arr, len;
+        var versions = [];
         clearError();
-        if (!_selectedApp)
-        {
+        if (!_selectedApp) {
             showNote('Unable to load versions, no n-cube App selected.');
             return;
         }
-        var result = call("ncubeController.getVersions", [_selectedApp]);
-        if (result.status === true)
-        {
-            $.each(result.data, function (index, value)
-            {
-                _versions[index] = value;
-            });
-        }
-        else
-        {
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_VERSIONS, [_selectedApp]);
+        if (result.status) {
+            versions = result.data;
+        } else {
             showNote('Unable to load versions:<hr class="hr-small"/>' + result.data);
         }
-        if (!_selectedVersion || !doesVersionExist(_selectedVersion, _selectedStatus))
-        {
-            var version = (_versions && _versions.length > 0) ? _versions[_versions.length - 1] : null;
+        
+        if (!_selectedVersion || !doesVersionExist(versions, _selectedVersion, _selectedStatus)) {
+            len = versions.length;
+            version = len > 0 ? versions[len - 1] : null;
             if (version) {
-                var arr = version.split('-');
-                saveSelectedVersion(arr[0]);
-                saveSelectedStatus(arr[1]);
-            } else {
-                saveSelectedVersion(null);
-                saveSelectedStatus(null);
+                arr = version.split('-');
             }
+            saveSelectedVersion(version ? arr[0] : null);
+            saveSelectedStatus(version ? arr[1] : null);
         }
+        
+        return versions;
     }
 
-    function doesVersionExist(selVer, selStatus)
-    {
+    function doesVersionExist(versions, selVer, selStatus) {
+        var i, len;
         var chkVer = selVer + '-' + selStatus;
-        for (var i=0; i < _versions.length; i++)
-        {
-            if (_versions[i] == chkVer)
-            {
+        for (i = 0, len = versions.length; i < len; i++) {
+            if (versions[i] === chkVer) {
                 return true;
             }
         }
         return false;
     }
 
-    function loadAppNames()
-    {
-        _apps = [];
+    function loadAppNames() {
+        var result;
+        var apps = [];
         clearError();
-        var result = call("ncubeController.getAppNames", [_selectedStatus, _selectedBranch]);
-        if (result.status === true)
-        {
-            $.each(result.data, function (index, value)
-            {
-                _apps[index] = value;
-            });
-        }
-        else
-        {
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_NAMES, [_selectedStatus, _selectedBranch]);
+        if (result.status) {
+            apps = result.data;
+        } else {
             showNote('Unable to load n-cube Apps:<hr class="hr-small"/>' + result.data);
         }
-        if (!_selectedApp && _apps)
-        {
-            saveSelectedApp(_apps[0]);
+        
+        if (apps.length > 0 && (!_selectedApp || !doesItemExist(_selectedApp, apps))) {
+            saveSelectedApp(apps[0]);
         }
-        if (!_apps)
-        {
-            saveSelectedApp(null);
-        }
-        else if (!doesItemExist(_selectedApp, _apps) && _apps.length > 0)
-        {
-            saveSelectedApp(_apps[0]);
-        }
+        return apps;
     }
 
     function newCube()
@@ -2112,7 +2088,7 @@ var NCE = (function ($)
         $('#newCubeStatus').val('SNAPSHOT');
         $('#newCubeVersion').val(_selectedVersion);
         $('#newCubeName').val('');
-        buildDropDown('#newCubeAppList', '#newCubeAppName', _apps, function (app)
+        buildDropDown('#newCubeAppList', '#newCubeAppName', loadAppNames(), function (app)
         {
             buildVersionsDropdown('#existVersionList', '#newCubeVersion');
         });
@@ -2121,13 +2097,10 @@ var NCE = (function ($)
     }
 
     function buildVersionsDropdown(listId, inputId) {
-        var result = call("ncubeController.getAppVersions", [_selectedApp]);
-        if (result.status === true)
-        {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [_selectedApp]);
+        if (result.status) {
             buildDropDown(listId, inputId, result.data, function(){});
-        }
-        else
-        {
+        } else {
             showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
         }
     }
@@ -2151,11 +2124,9 @@ var NCE = (function ($)
         {
             _selectedApp = appName;
             _selectedVersion = appId.version;
-            loadAppNames();
-            loadNCubes();
-            loadVersions();
             loadAppListView();
             loadVersionListView();
+            loadNCubes();
             clearSearch();
             selectCubeByName(cubeName);
         }
@@ -2595,7 +2566,7 @@ var NCE = (function ($)
         $('#dupeCubeVersion').val(_selectedVersion);
         $('#dupeCubeName').val(_selectedCubeName);
         $('#dupeCubeLabel')[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
-        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', _apps, function (app)
+        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', loadAppNames(), function (app)
         {
             buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion');
         });
@@ -2618,11 +2589,9 @@ var NCE = (function ($)
         var result = call("ncubeController.duplicateCube", [getAppId(), destAppId, _selectedCubeName, newName]);
         if (result.status === true)
         {
-            loadAppNames();
             _selectedApp = newApp;
             loadAppListView();
             _selectedStatus = STATUS.SNAPSHOT;
-            loadVersions();
             _selectedVersion = newVersion;
             loadVersionListView();
             loadNCubes();
@@ -2816,11 +2785,13 @@ var NCE = (function ($)
     }
 
     function lockAppForReleaseCallback(appId, newSnapVer) {
-        setReleaseCubesProgress(0, 'Updating branch names...');
-        getBranchNames(true);
+        var branchName, i, len;
         var branchNamesWithoutHead = [];
-        for (var i = 0, len = _branchNames.length; i < len; i++) {
-            var branchName = _branchNames[i];
+        setReleaseCubesProgress(0, 'Updating branch names...');
+        getBranchNames();
+        
+        for (i = 0, len = _branchNames.length; i < len; i++) {
+            branchName = _branchNames[i];
             if (branchName !== head) {
                 branchNamesWithoutHead.push(branchName);
             }
@@ -2873,7 +2844,6 @@ var NCE = (function ($)
                 setReleaseCubesProgress(100, 'Success!', true);
                 updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
                 saveSelectedVersion(newSnapVer);
-                loadVersions();
                 loadVersionListView();
                 loadNCubes();
                 loadCube();
@@ -2907,8 +2877,7 @@ var NCE = (function ($)
             if (result.status)
             {
                 updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
-                loadVersions();
-                _selectedVersion = doesItemExist(newSnapVer, _versions) ? newSnapVer : _selectedVersion;
+                _selectedVersion = doesItemExist(newSnapVer, loadVersions()) ? newSnapVer : _selectedVersion;
                 loadVersionListView();
                 loadNCubes();
                 loadCube();
@@ -3118,9 +3087,8 @@ var NCE = (function ($)
         {
             createBranch();
         });
-        $('#branchNameWarning').find('button').click(function()
-        {
-            $('#branchNameWarning').hide();
+        _branchNameWarning.find('button').on('click', function() {
+            _branchNameWarning.hide();
         });
         $('#compareCubes').click(function(e)
         {
@@ -3145,48 +3113,40 @@ var NCE = (function ($)
         });
     }
 
-    function showActiveBranch()
-    {
-        $('#BranchMenu')[0].innerHTML = '<button class="btn-sm btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>';
+    function showActiveBranch() {
+        _branchMenu[0].innerHTML = '<button class="btn-sm btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>';
     }
 
-    function getBranchNames(refresh)
-    {
-        if (refresh || _branchNames.length === 0)
-        {
-            var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCHES, [getAppId()]);
-            if (!result.status)
-            {
-                showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
-                return [];
-            }
-            _branchNames = result.data;
+    function getBranchNames() {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCHES, [getAppId()]);
+        if (!result.status) {
+            showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
+            return [];
         }
+        _branchNames = null;
+        _branchNames = result.data;
         return _branchNames;
     }
 
-    function selectBranch()
-    {
+    function selectBranch() {
+        var branchNames, ul, listHtml, i, len, name;
         clearError();
-        $('#newBranchName').val("");
-        $('#branchNameWarning').hide();
+        _newBranchName.val('');
+        _branchNameWarning.hide();
 
-        var branchNames = getBranchNames(true);
-        var ul = $('#branchList');
-        ul.empty();
-        var listhtml = '';
+        branchNames = getBranchNames();
+        listHtml = '';
 
-        for (var i = 0, len = branchNames.length; i < len; i++) {
-            var name = branchNames[i];
-            if (!name) {
-                name = head;
-            }
-            listhtml += '<li class="list-group-item skinny-lr"><a href="#"><kbd>' + name + '</kbd></a></li>';
+        for (i = 0, len = branchNames.length; i < len; i++) {
+            name = branchNames[i] || head;
+            listHtml += '<li class="list-group-item skinny-lr"><a href="#"><kbd>' + name + '</kbd></a></li>';
         }
 
-        ul.append(listhtml);
+        ul = _branchList;
+        ul.empty();
+        ul.append(listHtml);
         ul.find('li').find('a').on('click', function() {
-            var branchName = $(this).find('kbd').html();
+            var branchName = $(this).find('kbd')[0].textContent;
             changeBranch(branchName);
         });
 
@@ -3197,12 +3157,12 @@ var NCE = (function ($)
     {
         clearError();
 
-        var branchName = $('#newBranchName').val();
+        var branchName = _newBranchName.val();
         var validName = /^[a-zA-Z_][0-9a-zA-Z_.-]*$/i;
 
         if (!branchName || !validName.test(branchName) || head.toLowerCase() == branchName.toLowerCase())
         {
-            $('#branchNameWarning').show();
+            _branchNameWarning.show();
             return;
         }
 
@@ -3240,11 +3200,9 @@ var NCE = (function ($)
 
         setTimeout(function() {
             showActiveBranch();
-            loadAppNames();
-            loadVersions();
-            loadNCubes();
             loadAppListView();
             loadVersionListView();
+            loadNCubes();
             runSearch();
             buildMenu();
             clearError();
