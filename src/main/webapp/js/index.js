@@ -73,6 +73,7 @@ var NCE = (function ($)
     var _selectedCubeInfo = localStorage[SELECTED_CUBE_INFO];
     _selectedCubeInfo = _selectedCubeInfo ? JSON.parse(_selectedCubeInfo) : [];
     var _defaultTab = null;
+    var _appTitle = $('#appTitle');
     var _searchNames = $('#cube-search');
     var _searchContent = $('#cube-search-content');
     var _cubeCount = $('#ncubeCount');
@@ -982,13 +983,16 @@ var NCE = (function ($)
     }
 
     function buildMenu() {
-        var result = call('ncubeController.getMenu',[getAppId()]);
-        if (result.status !== true) {
+        var menu, pageId, tabHeight, iframeHtml, menuKeys, key, value, i, len;
+        var html = '';
+        var appId = getAppId();
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_MENU,[appId]);
+        if (!result.status) {
             showNote('Unable to load menu.' + result.data);
             return;
         }
-        var menu = result.data;
-        $('#appTitle')[0].innerHTML = menu[CONFIG_TITLE];
+        menu = result.data;
+        _appTitle[0].innerHTML = menu[CONFIG_TITLE];
         _defaultTab = menu[CONFIG_DEFAULT_TAB];
         if (_defaultTab) {
             _defaultTab = _defaultTab.replace(/\s/g,'_') + PAGE_ID;
@@ -998,11 +1002,14 @@ var NCE = (function ($)
         }
         _menuOptions = null;
         _menuOptions = [];
-        $.each(menu, function (key, value)
-        {
-            if (!key.startsWith('~') && !key.startsWith('@') && !key.startsWith('#'))
-            {
-                var pageId = key.replace(/\s/g,'_') + PAGE_ID;
+
+        menuKeys = Object.keys(menu);
+        for (i = 0, len = menuKeys.length; i < len; i++) {
+            key = menuKeys[i];
+            value = null;
+            value = menu[key];
+            if (['~','@','#'].indexOf(key[0]) < 0) {
+                pageId = key.replace(/\s/g,'_') + PAGE_ID;
                 _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
                 if (!_activeTabViewType) {
                     setActiveTabViewType(pageId);
@@ -1010,32 +1017,32 @@ var NCE = (function ($)
                 }
 
                 if (_mainTabPanel.find('div#' + pageId).length === 0) {
-                    var div = $('<div/>').prop({class: 'tab-pane', id: pageId});
-                    var tabHeight = $('#ncube-tabs').outerHeight();
-                    div.attr({style: 'overflow:hidden;height:calc(100% - ' + tabHeight + 'px);'});
-                    _mainTabPanel.append(div);
-
-                    var iframeId = 'iframe_' + pageId;
-                    var iframe = $('<iframe id="' + iframeId + '"/>');
-                    div.append(iframe);
-
-                    var html = value['html'];
-                    if (!html.startsWith('http:') && !html.startsWith('https:')) {
-                        html += '?appId=' + JSON.stringify(getAppId());
+                    if (tabHeight === undefined) {
+                        tabHeight = _openTabsPanel.outerHeight();
                     }
-                    iframe.attr({style: 'position:relative;height:100%;width:100%', src: html});
+                    iframeHtml = value['html'];
+                    if (!iframeHtml.startsWith('http:') && !iframeHtml.startsWith('https:')) {
+                        iframeHtml += '?appId=' + JSON.stringify(appId).replace(/\"/g, '&quot;');
+                    }
+
+                    html += '<div class="tab-pane" id="' + pageId + '" '
+                        + 'style="overflow:hidden;height:calc(100% - ' + tabHeight + 'px);">';
+                    html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + iframeHtml + '">';
+                    html += '</iframe></div>';
                 }
             }
-        });
+        }
+
+        if (html.length > 0) {
+            _mainTabPanel.append(html);
+        }
     }
 
-    function getCubeMap()
-    {
+    function getCubeMap() {
         return _cubeList;
     }
 
-    function buildAppState()
-    {
+    function buildAppState() {
         return {
             call: call,
             clearError: clearError,
@@ -3771,42 +3778,34 @@ var NCE = (function ($)
         diffCubes(leftInfoDto, infoDto, conflictedCube);
     }
 
-    function acceptTheirs()
-    {
+    function acceptTheirs() {
+        var result;
         var conflictedCubes = getAllSelectedConflicts();
-        if (!conflictedCubes)
-        {
+        if (!conflictedCubes) {
             return;
         }
 
-        var result = call('ncubeController.acceptTheirs', [getAppId(), conflictedCubes.cubeNames, conflictedCubes.branchSha1]);
-        if (result.status === true)
-        {
+        result = call(CONTROLLER + CONTROLLER_METHOD.ACCEPT_THEIRS, [getAppId(), conflictedCubes.cubeNames, conflictedCubes.branchSha1]);
+        if (result.status) {
             showNote(result.data.value + ' cubes updated in your branch with cube from HEAD', 'Note', 5000);
             $('#mergeList').find('input:checked').parent().parent().parent().remove();
-        }
-        else
-        {
+        } else {
             showNote('Unable to update your branch cubes from HEAD:<hr class="hr-small"/>');
         }
     }
 
-    function acceptMine()
-    {
+    function acceptMine() {
+        var result;
         var conflictedCubes = getAllSelectedConflicts();
-        if (!conflictedCubes)
-        {
+        if (!conflictedCubes) {
             return;
         }
 
-        var result = call('ncubeController.acceptMine', [getAppId(), conflictedCubes.cubeNames, conflictedCubes.headSha1]);
-        if (result.status === true)
-        {
+        result = call(CONTROLLER + CONTROLLER_METHOD.ACCEPT_MINE, [getAppId(), conflictedCubes.cubeNames, conflictedCubes.headSha1]);
+        if (result.status) {
             showNote(result.data.value + ' cubes updated to overwrite-on-commit.', 'Note', 5000);
             $('#mergeList').find('input:checked').parent().parent().parent().remove();
-        }
-        else
-        {
+        } else {
             showNote('Unable to update your branch cubes to overwrite-on-commit:<hr class="hr-small"/>');
         }
     }
@@ -3883,7 +3882,7 @@ var NCE = (function ($)
 
         if (stillLoading) {
             setTimeout(function () {
-                _diffOutput.empty();
+                emptyDiffOutput();
                 diffDescriptive();
             }, PROGRESS_DELAY);
         }
@@ -3896,7 +3895,7 @@ var NCE = (function ($)
         if (stillLoading) {
         _diffOutput[0].innerHtml = _diffLastResult;
             setTimeout(function () {
-                _diffOutput.empty();
+                emptyDiffOutput();
                 diffInlineOrSideBySide(viewType);
             }, PROGRESS_DELAY);
             return;
@@ -3941,10 +3940,14 @@ var NCE = (function ($)
         
         if (stillLoading) {
             setTimeout(function () {
-                _diffOutput.empty();
+                emptyDiffOutput();
                 diffVisual();
             }, PROGRESS_DELAY);
         }
+    }
+
+    function emptyDiffOutput() {
+        _diffOutput.empty();
     }
 
     function descriptiveDiffCallback(result) {

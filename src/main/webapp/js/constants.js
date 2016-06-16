@@ -125,6 +125,8 @@ var POPULATE_SELECT_FROM_CUBE = {
 
 var CONTROLLER = 'ncubeController.';
 var CONTROLLER_METHOD = {
+    ACCEPT_MINE: 'acceptMine',
+    ACCEPT_THEIRS: 'acceptTheirs',
     ADD_AXIS: 'addAxis',
     BREAK_AXIS_REFERENCE: 'breakAxisReference',
     CHECK_PERMISSIONS: 'checkPermissions',
@@ -145,6 +147,7 @@ var CONTROLLER_METHOD = {
     GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
     GET_JSON: 'getJson',
+    GET_MENU: 'getMenu',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     LOCK_APP: 'lockApp',
