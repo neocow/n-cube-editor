@@ -816,8 +816,13 @@ var NCE = (function ($)
     }
 
     function trimText(el){
+        var value, len;
         if (el.scrollWidth > el.offsetWidth) {
-            var value = el.innerHTML;
+            value = el.innerHTML;
+            len = value.length;
+            if (len > 30) {
+                value = value.substr(len - 30);
+            }
             do {
                 value = '...' + value.substr(4);
                 el.innerHTML = value;
