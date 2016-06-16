@@ -396,7 +396,7 @@ span.selected-count {
     /* 100% = dialog height, 120px = header + footer */
     width:100%;
     height: calc(100% - 120px);
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .navbar-custom {

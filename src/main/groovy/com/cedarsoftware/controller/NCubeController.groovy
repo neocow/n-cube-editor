@@ -1809,34 +1809,30 @@ class NCubeController extends BaseController
         }
     }
 
-    Map<String, Object> fetchRevDiffs(long cubeId1, long cubeId2)
+    private Map<String, Object> fetchJsonDiffs(NCube leftCube, NCube rightCube)
+    {
+        Map<String, Object> ret = [left:[''], right:[''], delta:'']
+        try
+        {
+            ret.left = jsonToLines(leftCube.toFormattedJson())
+            ret.right = jsonToLines(rightCube.toFormattedJson())
+        }
+        catch (Exception ignored) { }
+
+        return addDeltaDescription(leftCube, rightCube, ret)
+    }
+
+    Map<String, Object> fetchJsonRevDiffs(long cubeId1, long cubeId2)
     {
         try
         {
-            Map<String, Object> ret = [left:[''], right:[''], leftHtml: '', rightHtml: '', delta:'']
-            NCube leftCube = null
-            try
-            {
-                leftCube = nCubeService.loadCubeById(cubeId1)
-                ApplicationID appId = leftCube.getApplicationID()
-                appId = addTenant(appId)
-                ret.left = jsonToLines(leftCube.toFormattedJson())
-                ret.leftHtml = toHtmlWithColumnHints(leftCube)
-            }
-            catch (Exception ignored) { }
+            NCube leftCube = nCubeService.loadCubeById(cubeId1)
+            addTenant(leftCube.getApplicationID())
 
-            NCube rightCube = null
-            try
-            {
-                rightCube = nCubeService.loadCubeById(cubeId2)
-                ApplicationID appId = rightCube.getApplicationID()
-                appId = addTenant(appId)
-                ret.right = jsonToLines(rightCube.toFormattedJson())
-                ret.rightHtml = toHtmlWithColumnHints(rightCube)
-            }
-            catch (Exception ignored) { }
+            NCube rightCube = nCubeService.loadCubeById(cubeId2)
+            addTenant(rightCube.getApplicationID())
 
-            return addDeltaDescription(leftCube, rightCube, ret)
+            return fetchJsonDiffs(leftCube, rightCube)
         }
         catch (Exception e)
         {
@@ -1845,34 +1841,66 @@ class NCubeController extends BaseController
         }
     }
 
-    Map<String, Object> fetchBranchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
+    Map<String, Object> fetchJsonBranchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
     {
         try
         {
-            leftInfoDto.tenant = getTenant()
-            rightInfoDto.tenant = getTenant()
-            ApplicationID leftAppId = leftInfoDto.applicationID
-            ApplicationID rightAppId = rightInfoDto.applicationID
-            Map<String, Object> ret = [left:[''], right:[''], leftHtml: '', rightHtml: '', delta:'']
-            NCube leftCube = null
-            try
-            {
-                leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
-                ret.left = jsonToLines(leftCube.toFormattedJson())
-                ret.leftHtml = toHtmlWithColumnHints(leftCube)
-            }
-            catch (Exception ignored) { }
+            ApplicationID leftAppId = addTenant(leftInfoDto.applicationID)
+            ApplicationID rightAppId = addTenant(rightInfoDto.applicationID)
+            NCube leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
+            NCube rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
 
-            NCube rightCube = null
-            try
-            {
-                rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
-                ret.right = jsonToLines(rightCube.toFormattedJson())
-                ret.rightHtml = toHtmlWithColumnHints(rightCube)
-            }
-            catch (Exception ignored) { }
+            return fetchJsonDiffs(leftCube, rightCube)
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
 
-            return addDeltaDescription(leftCube, rightCube, ret)
+    private Map<String, String> fetchHtmlDiffs(NCube leftCube, NCube rightCube)
+    {
+        Map<String, String> ret = [leftHtml: '', rightHtml: '']
+        try
+        {
+            ret.leftHtml = toHtmlWithColumnHints(leftCube)
+            ret.rightHtml = toHtmlWithColumnHints(rightCube)
+        }
+        catch (Exception ignored) { }
+
+        return ret
+    }
+
+    Map<String, String> fetchHtmlRevDiffs(long cubeId1, long cubeId2)
+    {
+        try
+        {
+            NCube leftCube = nCubeService.loadCubeById(cubeId1)
+            addTenant(leftCube.getApplicationID())
+
+            NCube rightCube = nCubeService.loadCubeById(cubeId2)
+            addTenant(rightCube.getApplicationID())
+
+            return fetchHtmlDiffs(leftCube, rightCube)
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
+    Map<String, String> fetchHtmlBranchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
+    {
+        try
+        {
+            ApplicationID leftAppId = addTenant(leftInfoDto.applicationID)
+            ApplicationID rightAppId = addTenant(rightInfoDto.applicationID)
+            NCube leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
+            NCube rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
+
+            return fetchHtmlDiffs(leftCube, rightCube)
         }
         catch (Exception e)
         {
@@ -1893,7 +1921,7 @@ class NCubeController extends BaseController
             delta.each {
                 Delta d ->
                     s.append(d.description)
-                    s.append('\n')
+                    s.append('<br/>')
             }
             ret.delta = s.toString()
         }
