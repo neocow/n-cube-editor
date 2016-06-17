@@ -84,23 +84,10 @@ class NCubeController extends BaseController
     private static String inetHostname = null
     private static AtomicDouble processLoadPeak = new AtomicDouble(0.0d)
     private static AtomicDouble systemLoadPeak = new AtomicDouble(0.0d)
-    // TODO: Caches (should access mem_cache in future)
+
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appCache = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appBranches = new ConcurrentHashMap<>()
-
-    /**
-     * Useful for collections that need a case-insenstive comparator
-     */
-    static class CaseInsensitiveComparator implements Comparator
-    {
-        int compare(Object o1, Object o2)
-        {
-            String s1 = o1 as String
-            String s2 = o2 as String
-            return s1.compareToIgnoreCase(s2)
-        }
-    }
 
     NCubeController(NCubeService service)
     {
@@ -230,7 +217,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             nCubeService.releaseVersion(appId, newSnapVer)
-            clearVersions(appId.app)
+            clearVersionCache(appId.app)
         }
         catch (Exception e)
         {
@@ -567,16 +554,16 @@ class NCubeController extends BaseController
     {
         try
         {
-            Set<String> appVers = getVersionsCache(app)
-            if (appVers.size() > 0)
+            Object[] appVers = getCachedVersions(app)
+            if (appVers.length > 0)
             {   // return from cache
-                return appVers.toArray()
+                return appVers
             }
 
             Map<String, List<String>> versionMap = nCubeService.getVersions(getTenant(), app)
             addAllToVersionCache(app, versionMap.RELEASE, '-RELEASE')
             addAllToVersionCache(app, versionMap.SNAPSHOT, '-SNAPSHOT')
-            return appVers.toArray()
+            return getCachedVersions(app)
         }
         catch (Exception e)
         {
@@ -588,6 +575,11 @@ class NCubeController extends BaseController
     /**
      * App cache Management
      */
+    private static Object[] getCachedApps(String tenant)
+    {
+        return getAppCache(tenant).toArray()
+    }
+
     private static void addToAppCache(String tenant, String appName)
     {
         getAppCache(tenant).add(appName)
@@ -596,11 +588,6 @@ class NCubeController extends BaseController
     private static void addAllToAppCache(String tenant, List<String> appNames)
     {
         getAppCache(tenant).addAll(appNames)
-    }
-
-    private static Object[] getCachedApps(String tenant)
-    {
-        return getAppCache(tenant).toArray()
     }
 
     private static void clearAppCache(String tenant)
@@ -627,7 +614,12 @@ class NCubeController extends BaseController
     /**
      * Versions Cache Management
      */
-    private static void clearVersions(String app)
+    private Object[] getCachedVersions(String app)
+    {
+        return getVersionsCache(app).toArray()
+    }
+
+    private static void clearVersionCache(String app)
     {
         getVersionsCache(app).clear()
     }
@@ -637,22 +629,26 @@ class NCubeController extends BaseController
         getVersionsCache(appId.app).add(appId.version + '-' + appId.status)
     }
 
-    private static void addAllToVersionCache(String key, List<String> versions, String suffix)
+    private static void addAllToVersionCache(String app, List<String> versions, String suffix)
     {
-        Set<String> set = getVersionsCache(key)
+        Set<String> set = getVersionsCache(app)
         for (String version : versions)
         {
             set.add(version + suffix)
         }
     }
 
-    private static Set<String> getVersionsCache(String key)
+    private static Set<String> getVersionsCache(String app)
     {
-        ConcurrentSkipListSet versions = new ConcurrentSkipListSet<>(new VersionComparator())
-        ConcurrentSkipListSet versionsRef = appVersions.putIfAbsent(key, versions)
-        if (versionsRef != null)
+        ConcurrentSkipListSet<String> versions = appVersions[app]
+        if (versions == null)
         {
-            versions = versionsRef
+            versions = new ConcurrentSkipListSet<>(new VersionComparator())
+            ConcurrentSkipListSet versionsRef = appVersions.putIfAbsent(app, versions)
+            if (versionsRef != null)
+            {
+                versions = versionsRef
+            }
         }
         return versions
     }
@@ -669,11 +665,79 @@ class NCubeController extends BaseController
         {
             long v1 = ApplicationID.getVersionValue(s1)
             long v2 = ApplicationID.getVersionValue(s2)
-            long diff = v1 - v2
+            long diff = v2 - v1    // Reverse order (high revisions will show first)
             if (diff != 0)
             {
                 return diff
             }
+            return s1.compareToIgnoreCase(s2)
+        }
+    }
+
+    /**
+     * Branch cache management
+     */
+    private static Object[] getBranchesFromCache(ApplicationID appId)
+    {
+        return getBranchCache(getBranchCacheKey(appId)).toArray()
+    }
+
+    private static void addBranchToCache(ApplicationID appId)
+    {
+        getBranchCache(getBranchCacheKey(appId)).add(appId.branch)
+    }
+
+    private static void addBranchesToCache(ApplicationID appId, Collection<String> branches)
+    {
+        getBranchCache(getBranchCacheKey(appId)).addAll(branches)
+    }
+
+    private static void removeBranchFromCache(ApplicationID appId)
+    {
+        getBranchCache(getBranchCacheKey(appId)).remove(appId.branch)
+    }
+
+    private static clearBranchCache(ApplicationID appId)
+    {
+        getBranchCache(getBranchCacheKey(appId)).clear()
+    }
+
+    private static Set<String> getBranchCache(String key)
+    {
+        ConcurrentSkipListSet<String> set = appBranches[key]
+        if (set == null)
+        {
+            set = new ConcurrentSkipListSet<>(new BranchComparator())
+            ConcurrentSkipListSet setRef = appBranches.putIfAbsent(key, set)
+            if (setRef != null)
+            {
+                set = setRef
+            }
+        }
+        return set
+    }
+
+    private static String getBranchCacheKey(ApplicationID appId)
+    {
+        return appId.tenant + '/' + appId.app + '/' + appId.version + '/' + appId.status
+    }
+
+    /**
+     * Comparator for comparing branches, which places 'HEAD' always first.
+     */
+    static class BranchComparator implements Comparator<String>
+    {
+        int compare(String s1, String s2)
+        {
+            boolean s1IsHead = ApplicationID.HEAD.equalsIgnoreCase(s1)
+            boolean s2IsHead = ApplicationID.HEAD.equalsIgnoreCase(s2)
+            if (s1IsHead && !s2IsHead)
+                return -1
+            if (!s1IsHead && s2IsHead)
+                return 1
+            if (s1IsHead && s2IsHead)
+                return 0
+
             return s1.compareToIgnoreCase(s2)
         }
     }
@@ -831,7 +895,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             nCubeService.releaseCubes(appId, newSnapVer)
-            clearVersions(appId.app)
+            clearVersionCache(appId.app)
         }
         catch (Exception e)
         {
@@ -848,7 +912,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             nCubeService.changeVersionValue(appId, newSnapVer)
-            clearVersions(appId.app)
+            clearVersionCache(appId.app)
         }
         catch (Exception e)
         {
@@ -1459,8 +1523,8 @@ class NCubeController extends BaseController
             }
             nCubeService.clearCache(appId)
             clearAppCache(appId.tenant)
-            clearVersions(appId.app)
-            getCache(getBranchCacheKey(appId), appBranches).clear()
+            clearVersionCache(appId.app)
+            clearBranchCache(appId)
         }
         catch (Exception e)
         {
@@ -1474,7 +1538,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             nCubeService.createBranch(appId)
-            getCache(getBranchCacheKey(appId), appBranches).add(appId.branch)
+            addBranchToCache(appId)
         }
         catch (Exception e)
         {
@@ -1486,25 +1550,18 @@ class NCubeController extends BaseController
     {
         try
         {
-            Set<String> branches = getCache(getBranchCacheKey(appId), appBranches)
-
-            if (branches.isEmpty())
-            {   // 1st request for branches, fetch and load cache
-                synchronized (branches)
-                {
-                    if (branches.isEmpty())
-                    {
-                        appId = addTenant(appId)
-                        Set<String> realBranches = nCubeService.getBranches(appId)
-                        branches.addAll(realBranches)
-                        branches.remove(ApplicationID.HEAD)
-                    }
-                }
+            appId = addTenant(appId)
+            Object[] branches = getBranchesFromCache(appId)
+            if (branches.length > 0)
+            {
+                return branches
             }
 
-            List<String> branchList = new ArrayList(branches)
-            branchList.add(0, ApplicationID.HEAD)
-            return branchList as Object[]
+            Set<String> realBranches = nCubeService.getBranches(appId)
+            realBranches.add(ApplicationID.HEAD)
+            clearBranchCache(appId)
+            addBranchesToCache(appId, realBranches)
+            return getBranchesFromCache(appId)
         }
         catch (Exception e)
         {
@@ -1653,7 +1710,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             nCubeService.deleteBranch(appId)
-            getCache(getBranchCacheKey(appId), appBranches).remove(appId.branch)
+            removeBranchFromCache(appId)
         }
         catch(Exception e)
         {
@@ -2472,27 +2529,6 @@ class NCubeController extends BaseController
             }
         })
         return items
-    }
-
-    private static String getBranchCacheKey(ApplicationID appId)
-    {
-        return appId.tenant + '/' + appId.app + '/' + appId.version + '/' + appId.status
-    }
-
-    private static Set<String> getCache(String key, ConcurrentMap<String, ConcurrentSkipListSet<String>> container)
-    {
-        ConcurrentSkipListSet<String> set = container[key]
-
-        if (set == null)
-        {
-            set = new ConcurrentSkipListSet<>(new CaseInsensitiveComparator())
-            ConcurrentSkipListSet setRef = container.putIfAbsent(key, set)
-            if (setRef != null)
-            {
-                set = setRef
-            }
-        }
-        return set
     }
 
     private static String getInetHostname()
