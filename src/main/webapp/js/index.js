@@ -1824,7 +1824,7 @@ var NCE = (function ($)
         versions = loadVersions();
         for (i = 0, len = versions.length; i < len; i++) {
             version = versions[i];
-            html = '<li><a href="#">' + version + '</a></li>' + html;
+            html += '<li><a href="#">' + version + '</a></li>';
         }
 
         ul = _versionMenu.parent().find('.dropdown-menu');
