@@ -3048,8 +3048,7 @@ var NCE = (function ($)
         // Main menu options
         $('#branchSelect').click(function()
         {
-            setTimeout(function() { selectBranch(); }, PROGRESS_DELAY);
-            showNote('Getting list of branches...');
+            selectBranch();
         });
         $('#branchCompareUpdateOk').on('click', function() {
             branchCompareUpdateOk();
