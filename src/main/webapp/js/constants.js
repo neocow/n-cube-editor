@@ -77,6 +77,10 @@ var CUBE_INFO = {
     TAB_VIEW: 5
 };
 
+var MAX_TEMP = 10000000;
+var REGEX_ANY_TAG = /(<([^>]+)>)/ig;
+var REGEX_HR_TAG = /(<hr([^>]+)>)/ig;
+
 var SAVED_INFO = {
     FILTER_OUT_BLANK_ROWS: 'filterOutBlankRows',
     INFO_DTO: 'infoDto',
