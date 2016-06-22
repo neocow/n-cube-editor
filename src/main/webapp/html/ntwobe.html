@@ -251,7 +251,7 @@
                         <div class="form-group">
                             <div class="checkbox">
                                 <label>
-                                    <input id="isRefAxisUpdate" type="checkbox" disabled="true"> Reference Axis
+                                    <input id="isRefAxisUpdate" type="checkbox" disabled="disabled"> Reference Axis
                                 </label>
                             </div>
                         </div>
@@ -298,7 +298,7 @@
                             <div class="form-group">
                                 <div class="checkbox">
                                     <label>
-                                        <input id="hasRefFilterUpdate" type="checkbox" disabled="true"> Transform
+                                        <input id="hasRefFilterUpdate" type="checkbox" disabled="disabled"> Transform
                                     </label>
                                 </div>
                             </div>
@@ -455,6 +455,39 @@
                 <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
                 <button id="hideColumnsCancel" class="btn btn-default btn-sm">Cancel</button>
                 <button id="hideColumnsSave" class="btn btn-primary btn-sm">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Large Cube Hide Columns Modal -->
+<div id="setUpHideModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="setUpHideLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="setUpHideLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body" style="overflow-y: auto;height:500px">
+                <div class="panel-group" role="tablist" aria-multiselectable="true">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="setUpHideHeadingOne">
+                            <h4 class="panel-title">
+                                <a id="setUpHideInstTitle" data-toggle="collapse" data-parent="#accordion" href="#hideCollapseOne"
+                                   aria-expanded="true" aria-controls="hideCollapseOne">Instructions</a>
+                            </h4>
+                        </div>
+                        <div id="setUpHideCollapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="isoHeadingOne">
+                            <div id="setUpHideColInstructions" class="panel-body"></div>
+                        </div>
+                    </div>
+                </div>
+                <ul id="setUpHideList" class="list-group">
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="setUpHideCancel" class="btn btn-default btn-sm">Close</button>
             </div>
         </div>
     </div>
