@@ -140,7 +140,7 @@ class NCubeService
         {
             throw new IllegalArgumentException(ncube.name + ' was previously deleted. Use restore instead.')
         }
-        NCubeManager.updateCube(appId, ncube)
+        NCubeManager.updateCube(appId, ncube, true)
     }
 
     boolean deleteCubes(ApplicationID appId, Object[] cubeNames)
@@ -188,7 +188,7 @@ class NCubeService
         }
         Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY, maxId + 1)
         ncube.addAxis(axis)
-        NCubeManager.updateCube(appId, ncube)
+        NCubeManager.updateCube(appId, ncube, false)
     }
 
     void addAxis(ApplicationID appId, String cubeName, String axisName, ApplicationID refAppId, String refCubeName, String refAxisName, ApplicationID transformAppId, String transformCubeName, String transformMethodName)
@@ -233,7 +233,7 @@ class NCubeService
 
         Axis axis = new Axis(axisName, maxId + 1, false, refAxisLoader)
         nCube.addAxis(axis)
-        NCubeManager.updateCube(appId, nCube)
+        NCubeManager.updateCube(appId, nCube, false)
     }
 
     /**
@@ -253,7 +253,7 @@ class NCubeService
         }
 
         ncube.deleteAxis(axisName)
-        NCubeManager.updateCube(appId, ncube)
+        NCubeManager.updateCube(appId, ncube, false)
     }
 
     /**
@@ -298,7 +298,7 @@ class NCubeService
         }
 
         ncube.clearSha1();
-        NCubeManager.updateCube(appId, ncube)
+        NCubeManager.updateCube(appId, ncube, false)
     }
 
     /**
@@ -314,7 +314,7 @@ class NCubeService
 
         // Update default column setting (if changed)
         ncube.breakAxisReference(axisName);
-        NCubeManager.updateCube(appId, ncube)
+        NCubeManager.updateCube(appId, ncube, false)
     }
 
     /**
@@ -349,7 +349,7 @@ class NCubeService
         }
 
         ncube.updateColumn(id, axis.convertStringToColumnValue(value))
-        NCubeManager.updateCube(appId, ncube)
+        NCubeManager.updateCube(appId, ncube, false)
     }
 
     /**
@@ -359,7 +359,7 @@ class NCubeService
     void updateNCube(NCube ncube)
     {
         ApplicationID appId = ncube.getApplicationID()
-        NCubeManager.updateCube(appId, ncube)
+        NCubeManager.updateCube(appId, ncube, false)
     }
 
     boolean renameCube(ApplicationID appId, String oldName, String newName)
@@ -399,7 +399,7 @@ class NCubeService
                 }
             }
 
-            NCubeManager.updateCube(appId, ncube)
+            NCubeManager.updateCube(appId, ncube, true)
         }
     }
 
