@@ -396,7 +396,7 @@ var NCubeEditor2 = (function ($) {
         $('#setUpHideLabel')[0].innerHTML = cubeName + ' - Viewable Area Is Too Large';
         $('#setUpHideColInstructions')[0].innerHTML = 'Select an axis to hide columns and shrink the workable area for '
             + 'this cube. You can hide columns on multiple axes. The viewable row limitation is set at '
-            + MAX_VISIBLE_ROWS + '. You are currently trying to view ' + numRows + ' rows.';
+            + MAX_VISIBLE_ROWS.toLocaleString() + '. You are currently trying to view ' + numRows.toLocaleString() + ' rows.';
 
         for (i = 0; i < colOffset; i++) {
             axis = null;
