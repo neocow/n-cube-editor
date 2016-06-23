@@ -723,7 +723,11 @@ class NCubeController extends BaseController
             if (s1IsHead && s2IsHead)
                 return 0
 
-            return s1.compareTo(s2)
+            if (s1.equalsIgnoreCase(s2))
+            {
+                return s1.compareTo(s2)
+            }
+            return s1.compareToIgnoreCase(s2)
         }
     }
 
