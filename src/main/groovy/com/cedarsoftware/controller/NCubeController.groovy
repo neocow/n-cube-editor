@@ -319,22 +319,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             NCube ncube = nCubeService.loadCube(appId, cubeName)
-            String mode = options.mode
-            switch(mode)
-            {
-                case "json":
-                    return ncube.toFormattedJson()
-                case "json-pretty":
-                    return JsonWriter.formatJson(ncube.toFormattedJson())
-                case "json-index":
-                    return ncube.toFormattedJson([indexFormat:true] as Map)
-                case "json-index-pretty":
-                    return JsonWriter.formatJson(ncube.toFormattedJson([indexFormat:true] as Map))
-                case "html":
-                    return ncube.toHtml()
-                default:
-                    throw new IllegalArgumentException("getJson() - unknown mode: " + mode)
-            }
+            return formatCube(ncube, options)
         }
         catch (Exception e)
         {
@@ -738,6 +723,10 @@ class NCubeController extends BaseController
             if (s1IsHead && s2IsHead)
                 return 0
 
+            if (s1.equalsIgnoreCase(s2))
+            {
+                return s1.compareTo(s2)
+            }
             return s1.compareToIgnoreCase(s2)
         }
     }
@@ -1752,22 +1741,8 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             NCube ncube = nCubeService.loadCubeById(id)
-
-            switch(mode)
-            {
-                case "json":
-                    return ncube.toFormattedJson()
-                case "json-pretty":
-                    return JsonWriter.formatJson(ncube.toFormattedJson())
-                case "json-index":
-                    return ncube.toFormattedJson([indexFormat:true] as Map)
-                case "json-index-pretty":
-                    return JsonWriter.formatJson(ncube.toFormattedJson([indexFormat:true] as Map))
-                case "html":
-                    return ncube.toHtml()
-                default:
-                    throw new IllegalArgumentException("loadCubeById() - unknown mode: " + mode)
-            }
+            nCubeService.assertPermissions(appId, ncube.name, ACTION.READ)
+            return formatCube(ncube, [mode: mode])
         }
         catch (Exception e)
         {
@@ -2529,6 +2504,32 @@ class NCubeController extends BaseController
             }
         })
         return items
+    }
+
+    private static String formatCube(NCube ncube, Map options)
+    {
+        String mode = options.mode
+        if ('html' == mode)
+        {
+            return ncube.toHtml()
+        }
+
+        Map formatOptions = [:]
+        if (mode.contains('index'))
+        {
+            formatOptions.indexFormat = true
+        }
+        if (mode.contains('nocells'))
+        {
+            formatOptions.nocells = true
+        }
+
+        String json = ncube.toFormattedJson(formatOptions)
+        if (mode.contains('pretty'))
+        {
+            return JsonWriter.formatJson(json)
+        }
+        return json
     }
 
     private static String getInetHostname()
