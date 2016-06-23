@@ -135,11 +135,7 @@ class NCubeService
         {
             throw new IllegalArgumentException(ncube.name + ' exists.')
         }
-        list = NCubeManager.search(appId, ncube.name, null, [(NCubeManager.SEARCH_DELETED_RECORDS_ONLY):true])
-        if (!list.isEmpty())
-        {
-            throw new IllegalArgumentException(ncube.name + ' was previously deleted. Use restore instead.')
-        }
+
         NCubeManager.updateCube(appId, ncube, true)
     }
 
