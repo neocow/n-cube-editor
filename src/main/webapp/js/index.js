@@ -1819,12 +1819,11 @@ var NCE = (function ($)
     }
 
     function loadVersionListView() {
-        var versions, version, i, len, ul, html;
+        var versions, i, len, ul, html;
         html = '';
         versions = loadVersions();
         for (i = 0, len = versions.length; i < len; i++) {
-            version = versions[i];
-            html += '<li><a href="#">' + version + '</a></li>';
+            html += '<li><a href="#">' + versions[i] + '</a></li>';
         }
 
         ul = _versionMenu.parent().find('.dropdown-menu');
@@ -2023,8 +2022,7 @@ var NCE = (function ($)
     }
 
     function loadVersions() {
-        var result, version, arr, len;
-        var versions = [];
+        var result, arr, versions;
         clearError();
         if (!_selectedApp) {
             showNote('Unable to load versions, no n-cube App selected.');
@@ -2035,16 +2033,15 @@ var NCE = (function ($)
             versions = result.data;
         } else {
             showNote('Unable to load versions:<hr class="hr-small"/>' + result.data);
+            return;
         }
         
         if (!_selectedVersion || !doesVersionExist(versions, _selectedVersion, _selectedStatus)) {
-            len = versions.length;
-            version = len > 0 ? versions[len - 1] : null;
-            if (version) {
-                arr = version.split('-');
+            if (versions.length > 0) {
+                arr = versions[0].split('-');
             }
-            saveSelectedVersion(version ? arr[0] : null);
-            saveSelectedStatus(version ? arr[1] : null);
+            saveSelectedVersion(arr ? arr[0] : null);
+            saveSelectedStatus(arr ? arr[1] : null);
         }
         
         return versions;

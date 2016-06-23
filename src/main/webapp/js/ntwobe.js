@@ -14,8 +14,10 @@ var NCubeEditor2 = (function ($) {
     var cubeMap = null;
     var cubeMapRegex = null;
     var axisColumnMap = null;
-    var _columnWidths = [];
-    var _rowHeights = [];
+    var _expressionLinks = {};
+    var _textDims = {};
+    var _columnWidths = null;
+    var _rowHeights = null;
     var _cellId = null;
     var _tableCellId = null;
     var _columnList = null;
@@ -308,7 +310,7 @@ var NCubeEditor2 = (function ($) {
             }
         });
 
-        if (s.length > 0) {
+        if (s.length) {
             s = s.substring(0, s.length - 1);
         }
         s = '\\b(' + s + ')\\b';
@@ -381,7 +383,7 @@ var NCubeEditor2 = (function ($) {
         if (query !== null && query !== '') {
             var len = _searchCoords.length;
             var idx = _currentSearchResultIndex + 1;
-            _searchInfo[0].innerHTML = len > 0 ? idx + ' of ' + len : 'not found';
+            _searchInfo[0].innerHTML = len ? idx + ' of ' + len : 'not found';
         } else {
             _searchInfo[0].innerHTML = '';
         }
@@ -449,7 +451,7 @@ var NCubeEditor2 = (function ($) {
     function runSearch() {
         var query = _searchField.value;
         if (_searchText !== query) {
-            if (query && query.length > 0) {
+            if (query && query.length) {
                 searchCubeData(query);
             } else {
                 clearSearchMatches();
@@ -474,15 +476,15 @@ var NCubeEditor2 = (function ($) {
 
     function searchDown() {
         var searchResultsLen = _searchCoords.length;
-        if (searchResultsLen > 0) {
+        if (searchResultsLen) {
             var idx = _currentSearchResultIndex === searchResultsLen - 1 ? searchResultsLen - 1 : ++_currentSearchResultIndex;
             highlightSearchResult(idx);
         }
     }
 
     function searchUp() {
-        if (_searchCoords.length > 0) {
-            var idx = _currentSearchResultIndex > 0 ? --_currentSearchResultIndex : 0;
+        if (_searchCoords.length) {
+            var idx = _currentSearchResultIndex ? --_currentSearchResultIndex : 0;
             highlightSearchResult(idx);
         }
     }
@@ -539,7 +541,7 @@ var NCubeEditor2 = (function ($) {
                 addToSearchCoords(1, colOffset + colNum);
                 return;
             }
-            if (getAppliedFilters().length === 0) {
+            if (!getAppliedFilters().length) {
                 var rowIdx = colNum * rowSpacing;
                 for (var m = 0; m < multiplier; m++) {
                     addToSearchCoords(rowIdx + 2, axisNum);
@@ -551,7 +553,7 @@ var NCubeEditor2 = (function ($) {
                 var combo = _columnIdCombinationsToShow[cIdx];
                 var colId = axisColumnMap[axes[axisNum].name][colNum];
                 if (combo.indexOf(colId) > -1) {
-                    var add = cIdx === 0;
+                    var add = !cIdx;
                     if (!add) {
                         var prevCombo = _columnIdCombinationsToShow[cIdx - 1];
                         if (prevCombo.indexOf(colId) === -1) {
@@ -612,7 +614,7 @@ var NCubeEditor2 = (function ($) {
                 var colIds = cellId.split('_');
                 var r = 0;
                 var c = 0;
-                if (getAppliedFilters().length === 0) {
+                if (!getAppliedFilters().length) {
                     for (var colIdNum = 0, colIdLen = colIds.length; colIdNum < colIdLen; colIdNum++) {
                         var curColId = colIds[colIdNum];
                         var curHelperObj = rowSpacingHelper[colIdNum];
@@ -701,7 +703,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getAxisColumn(axis, colNum) {
-        if (axis.columnLength === 0 || colNum < 0) {
+        if (!axis.columnLength || colNum < 0) {
             return;
         }
 
@@ -735,53 +737,61 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getRowHeader(row, col) {
-        var result;
         var rowNum = row - 2;
         if (rowNum < 0 || col < 0 || col > axes.length) {
             return;
         }
 
-        var axis = axes[col];
-        if (getAppliedFilters().length === 0) {
-            var colLen = getColumnLength(axis);
-            var repeatRowCount = (numRows - 2) / colLen;
+        return getAppliedFilters().length ? getFilteredRowHeader(col, rowNum) : getUnFilteredRowHeader(col, rowNum);
+    }
 
-            for (var axisNum = 0; axisNum < col; axisNum++) {
-                var tempAxis = axes[axisNum];
-                var colCount = getColumnLength(tempAxis);
-                repeatRowCount /= colCount;
-            }
-            var columnNumberToGet = Math.floor(rowNum / repeatRowCount) % colLen;
-            result = getAxisColumn(axis, columnNumberToGet);
-        } else {
-            var ids = _columnIdCombinationsToShow[rowNum];
-            if (ids) {
-                ids = ids.split('_');
-                for (var idx = 0, idLen = ids.length; idx < idLen; idx++) {
-                    var curId = ids[idx];
-                    var column = axis.columns[curId];
-                    if (column !== undefined) {
-                        result = column;
-                        result.id = curId;
-                        break;
-                    }
+    function getFilteredRowHeader(col, rowNum) {
+        var ids, idx, idLen, result, curId, column, axis;
+        axis = axes[col];
+        ids = _columnIdCombinationsToShow[rowNum];
+        if (ids) {
+            ids = ids.split('_');
+            for (idx = 0, idLen = ids.length; idx < idLen; idx++) {
+                curId = ids[idx];
+                column = axis.columns[curId];
+                if (column) {
+                    result = column;
+                    result.id = curId;
+                    return result;
                 }
             }
         }
+    }
 
-        return result;
+    function getUnFilteredRowHeader(col, rowNum) {
+        var axisNum, tempAxis, colCount, columnNumberToGet;
+        var axis = axes[col];
+        var colLen = getColumnLength(axis);
+        var repeatRowCount = (numRows - 2) / colLen;
+
+        for (axisNum = 0; axisNum < col; axisNum++) {
+            tempAxis = axes[axisNum];
+            colCount = getColumnLength(tempAxis);
+            repeatRowCount /= colCount;
+        }
+        columnNumberToGet = Math.floor(rowNum / repeatRowCount) % colLen;
+        return getAxisColumn(axis, columnNumberToGet);
+    }
+
+    function getStringFromDate(date) {
+        return date.substring(0, date.indexOf('T'));
+    }
+    
+    function getDateRangeString(range) {
+        var v1 = getStringFromDate(range[0]);
+        var v2 = getStringFromDate(range[1]);
+        return '[' + v1 + ' - ' + v2 + ')';
     }
 
     function getRowHeaderValue(axis, rowHeader) {
-        var getDateRangeString = function(range) {
-            var v1 = range[0].substring(0, range[0].indexOf('T'));
-            var v2 = range[1].substring(0, range[1].indexOf('T'));
-            return '[' + v1 + ' - ' + v2 + ')';
-        };
-
+        var temp, i, len;
         var rule = '';
         var val = '';
-
         var type = axis.type.toLowerCase();
         var valueType = axis.valueType.toLowerCase();
 
@@ -793,8 +803,8 @@ var NCubeEditor2 = (function ($) {
         if (valueType === 'date' && val !== DEFAULT_TEXT) {
             if (typeof val === 'object') {
                 if (typeof val[0] === 'object') {
-                    var temp = '';
-                    for (var i = 0, len = val.length; i < len; i++) {
+                    temp = '';
+                    for (i = 0, len = val.length; i < len; i++) {
                         temp += getDateRangeString(val[i]) + ', ';
                     }
                     val = temp.slice(0, temp.lastIndexOf(', '));
@@ -815,17 +825,13 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getRowHeaderPlainTextForWidth(axis, rowHeader) {
-        var regexAnyTag = /(<([^>]+)>)/ig;
-        var regexHr = /(<hr([^>]+)>)/ig;
         var val = getRowHeaderValue(axis, rowHeader);
-        return val.replace(regexHr, '\n').replace(regexAnyTag, '');
+        return val.replace(REGEX_HR_TAG, '\n').replace(REGEX_ANY_TAG, '');
     }
 
     function getRowHeaderPlainText(row, col) {
-        var regexAnyTag = /(<([^>]+)>)/ig;
-        var regexHr = /(<hr([^>]+)>)/ig;
         var val = getRowHeaderValue(axes[col], getRowHeader(row, col));
-        return val.replace(regexHr, ' - ').replace(regexAnyTag, '');
+        return val.replace(REGEX_HR_TAG, ' - ').replace(REGEX_ANY_TAG, '');
     }
 
     function getRowHeaderId(row, col) {
@@ -868,41 +874,38 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getAppliedFilters() {
+        var curFilter, i, len;
         var appliedFilters = [];
-        for (var i = 0, len = _filters.length; i < len; i++) {
-            var curFilter = _filters[i];
+        for (i = 0, len = _filters.length; i < len; i++) {
+            curFilter = _filters[i];
             if (curFilter.isApplied) {
                 appliedFilters.push(curFilter);
             }
         }
-
         return appliedFilters;
     }
 
     function getCellsByColumnId(colId) {
+        var i, len, key;
         var allCells = data.cells;
         var cellKeys = Object.keys(allCells);
         var columnCells = {};
-        for (var i = 0, len = cellKeys.length; i < len; i++) {
-            var key = cellKeys[i];
+        for (i = 0, len = cellKeys.length; i < len; i++) {
+            key = cellKeys[i];
             if (key.indexOf(colId) > -1) {
-                var cell = allCells[key];
-                columnCells[key] = cell;
+                columnCells[key] = allCells[key];
             }
         }
-
-        allCells = null;
-        cellKeys = null;
         return columnCells;
     }
 
     function doesCellMatchFilterExpression(cell, filter) {
+        var cellVal, expVal;
         if (!filter.isIncludeAll && cell === undefined) {
             return false;
         }
-        var cellVal = getTextCellValue(cell);
-        cell = null;
-        var expVal = filter.expressionValue;
+        cellVal = getTextCellValue(cell);
+        expVal = filter.expressionValue;
         switch (filter.comparator) {
             case '=':
                 return cellVal === expVal;
@@ -936,7 +939,7 @@ var NCubeEditor2 = (function ($) {
             for (var a = 0, aLen = dKeys.length; a < aLen; a++) {
                 var axis = dAxes[dKeys[a]];
                 if (axis.columns[filter.column]) {
-                    colIdReplaceIdx = combos.length === 0 ? 0 : combos[0].length;
+                    colIdReplaceIdx = combos.length ? combos[0].length : 0;
                 } else {
                     var tempCombos = [];
                     var columns = axis.columns;
@@ -944,7 +947,7 @@ var NCubeEditor2 = (function ($) {
                     for (var colIdx = 0, colLen = colKeys.length; colIdx < colLen; colIdx++) {
                         var colId = colKeys[colIdx];
                         var comboLen = combos.length;
-                        if (comboLen === 0) {
+                        if (!comboLen) {
                             tempCombos.push(colId);
                         } else {
                             for (var comboIdx = 0; comboIdx < comboLen; comboIdx++) {
@@ -965,7 +968,7 @@ var NCubeEditor2 = (function ($) {
                 if (doesCellMatchFilterExpression(colCell, filter)) {
                     colIdReplaceIdx = colCellKey.indexOf(filter.column);
                     var axisColId = colCellKey.replace(filter.column,'').replace('__','');
-                    if (axisColId.indexOf('_') === 0) {
+                    if (!axisColId.indexOf('_')) {
                         axisColId = axisColId.substring(1);
                     } else if (axisColId.substring(axisColId.length - 1) === '_') {
                         axisColId = axisColId.substring(0, axisColId.length - 1);
@@ -1043,13 +1046,13 @@ var NCubeEditor2 = (function ($) {
                 numColumns = colOffset;
 
                 var colLen = getColumnLength(horizAxis);
-                if (colLen === 0) {
+                if (!colLen) {
                     numColumns++;
                 }
 
                 numColumns += colLen;
 
-                if (appliedFilters.length === 0) {
+                if (!appliedFilters.length) {
                     for (var axisNum = 0; axisNum < colOffset; axisNum++) {
                         totalRows *= getColumnLength(axes[axisNum]);
                     }
@@ -1078,7 +1081,7 @@ var NCubeEditor2 = (function ($) {
 
                     for (var f = appliedFilters[0].isIncludeAll ? 0 : 1, fLen = appliedFilters.length; f < fLen; f++) {
                         var filter = appliedFilters[f];
-                        var addIn = colIdReplaceIdx === 0 ? filter.column + '_' : '_' + filter.column;
+                        var addIn = !colIdReplaceIdx ? filter.column + '_' : '_' + filter.column;
 
                         for (var comboIdx = 0, comboLen = _columnIdCombinationsToShow.length; comboIdx < comboLen; comboIdx++) {
                             var combo = _columnIdCombinationsToShow[comboIdx];
@@ -1151,6 +1154,10 @@ var NCubeEditor2 = (function ($) {
             }
         };
 
+        if (Object.keys(_expressionLinks).length > MAX_TEMP) {
+            _expressionLinks = null;
+            _expressionLinks = {};
+        }
         _searchCoords = null;
         _searchCoords = [];
         _currentSearchResultIndex = 0;
@@ -1184,260 +1191,239 @@ var NCubeEditor2 = (function ($) {
         }
     }
 
+    ///////////////////////////////////////////   BEGIN WIDTH HEIGHT   /////////////////////////////////////////////////
+
     function setUpColumnWidths() {
-        var getStringWidth = function(str, font) {
-            return $('<p>' + str + '</p>').canvasMeasureWidth(font);
-        };
-
-        var calcDomDims = function (value, type) {
-            if (textDims.hasOwnProperty(value)) {
-                return textDims[value];
-            }
-            var font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
-            var width = 0;
-            var lineWidths = [];
-            var idx = value.indexOf('\n');
-            if (idx < 0) {
-                width = getStringWidth(value, font);
-                lineWidths.push(width);
-                width = findWidth(0, width);
-            } else {
-                var temp2;
-                var temp1 = value;
-                var tempWidth;
-                while (idx > -1) {
-                    temp2 = value.substring(0, idx);
-                    tempWidth = getStringWidth(temp2, font);
-                    lineWidths.push(tempWidth);
-                    width = findWidth(width, tempWidth);
-                    temp1 = temp1.substring(idx + 1);
-                    idx = temp1.indexOf('\n');
-                }
-                tempWidth = getStringWidth(temp1, font);
-                lineWidths.push(tempWidth);
-                width = findWidth(width, tempWidth);
-            }
-
-            var ret = {width:width, lineWidths:lineWidths};
-            textDims[value] = ret;
-            return ret;
-        };
-
-        var findWidth = function(oldWidth, newWidth)
-        {
-            if (oldWidth == undefined) oldWidth = 0;
-            if (newWidth == undefined) newWidth = 0;
-            if (oldWidth > MAX_COL_WIDTH || newWidth > MAX_COL_WIDTH)
-            {
-                return MAX_COL_WIDTH
-            }
-            else
-            {
-                return Math.max(MIN_COL_WIDTH, oldWidth, newWidth);
-            }
-        };
-
-        var setupTopWidths = function()
-        {
-            var savedWidths = getSavedColumnWidths();
-            var axis = axes[colOffset];
-            var axisName = axis.name;
-            var columns = axis.columns;
-            var columnKeys = axisColumnMap[axisName];
-            var width;
-            if (savedWidths.hasOwnProperty(0 + colOffset)) {
-                width = savedWidths[0 + colOffset];
-            } else {
-                var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
-                var buttonWidth = calcDomDims(axisName, null).width + modifier;
-                width = findWidth(0, buttonWidth);
-            }
-            topWidths[columnKeys[0]] = width;
-
-            for (var colIndex = 0, colLength = columnKeys.length; colIndex < colLength; colIndex++)
-            {
-                var colKey = columnKeys[colIndex];
-                if (savedWidths.hasOwnProperty(colIndex + colOffset)) {
-                    width = savedWidths[colIndex + colOffset];
-                } else {
-                    var column = columns[colKey];
-                    var columnText = getRowHeaderPlainTextForWidth(axis, column);
-                    var firstWidth = calcDomDims(columnText, column.type).width + CALC_WIDTH_BASE_MOD;
-                    width = findWidth(topWidths[colKey], firstWidth);
-                }
-                topWidths[colKey] = width;
-            }
-
-            if (columnKeys.length == 0)
-            {
-                _columnWidths.push(MIN_COL_WIDTH);
-            }
-            else
-            {
-                var firstColId = columnKeys[0];
-                var colPrefix = firstColId.slice(0,-10);
-                var regex = new RegExp(colPrefix + "(?:\\d{10})");
-                var cells = data.cells;
-                var cellKeys = Object.keys(cells);
-                var topKeys = Object.keys(topWidths);
-                for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
-                    var cellKey = cellKeys[keyIndex];
-                    var colId = regex.exec(cellKey)[0];
-                    var hotColIdx = topKeys.indexOf(colId) + colOffset;
-                    if (savedWidths.hasOwnProperty(hotColIdx)) {
-                        width = savedWidths[hotColIdx];
-                    } else {
-                        var cell = cells[cellKey];
-                        var value = getTextCellValue(cell);
-                        var dims = calcDomDims(value, cell.type);
-                        width = dims.width + CALC_WIDTH_BASE_MOD;
-                        width = findWidth(topWidths[colId], width);
-                        setHeightForCellRow(cellKey, width, dims);
-                    }
-
-                    topWidths[colId] = width;
-                }
-            }
-        };
-
-        var buildWidthArray = function()
-        {
-            var savedWidths = getSavedColumnWidths();
-            for (var hotCol = 0; hotCol < numColumns; hotCol++)
-            {
-                if (hotCol < colOffset)
-                {
-                    var width;
-                    if (savedWidths.hasOwnProperty(hotCol)) {
-                        width = savedWidths[hotCol];
-                    } else {
-                        width = findWidestColumn(axes[hotCol]);
-                    }
-                    _columnWidths.push(width);
-                }
-                else
-                {
-                    var columnHeaderId = getColumnHeaderId(hotCol);
-                    _columnWidths.push(topWidths[columnHeaderId]);
-                }
-            }
-        };
-
-        var buildSingleAxisWidthArray = function()
-        {
-            var savedWidths = getSavedColumnWidths();
-
-            // header width
-            if (savedWidths.hasOwnProperty(0)) {
-                _columnWidths.push(savedWidths[0]);
-            } else {
-                _columnWidths.push(findWidestColumn(axes[0]));
-            }
-
-            // cell width
-            if (savedWidths.hasOwnProperty(1)) {
-                _columnWidths.push(savedWidths[1]);
-            } else {
-                var correctWidth;
-                var oldWidth = 0;
-                var cells = data.cells;
-                var cellKeys = Object.keys(cells);
-                for (var keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
-                    var cellKey = cellKeys[keyIndex];
-                    var cell = cells[cellKey];
-                    var value = getTextCellValue(cell);
-                    var dims = calcDomDims(value, cell.type);
-                    var width = dims.width + CALC_WIDTH_BASE_MOD;
-                    correctWidth = findWidth(oldWidth, width);
-                    setHeightForCellRow(cellKey, correctWidth, dims);
-                    oldWidth = correctWidth;
-                }
-                _columnWidths.push(correctWidth);
-            }
-        };
-
-        var findWidestColumn = function (axis)
-        {
-            var axisName = axis.name;
-            var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
-            var buttonWidth = calcDomDims(axisName, null).width + modifier;
-            var oldWidth = findWidth(0, buttonWidth);
-            var correctWidth = oldWidth;
-            var axisColumns = axisColumnMap[axisName];
-            for (var axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++)
-            {
-                var columnId = axisColumns[axisCol];
-                var column = axis.columns[columnId];
-                var columnText = getRowHeaderPlainTextForWidth(axis, column);
-                var colWidth = calcDomDims(columnText, column.type).width + CALC_WIDTH_BASE_MOD;
-                correctWidth = findWidth(oldWidth, colWidth);
-                oldWidth = correctWidth;
-            }
-            return correctWidth;
-        };
-
-        var setHeightForCellRow = function(cellId, colWidth, dims) {
-            var cellIdArray = cellId.split('_');
-            for (var i = 0, len = cellIdArray.length; i < len; i++) {
-                var id = cellIdArray[i];
-                if (getAxisIdFromString(id).indexOf(horizAxisId) > -1) {
-                    cellIdArray.splice(i, 1);
-                    break;
-                }
-            }
-            var rowId = cellIdArray.join('_');
-            var lineWidths = dims.lineWidths;
-            var totalLines = 0;
-            for (var lineIdx = 0, numLines = lineWidths.length; lineIdx < numLines; lineIdx++) {
-                totalLines += Math.ceil(lineWidths[lineIdx] / colWidth);
-            }
-
-            var newHeight = totalLines * FONT_HEIGHT + 1;
-            var prevHeight = heights[rowId] || MIN_ROW_HEIGHT;
-            if (newHeight > prevHeight) {
-                prevHeight = newHeight;
-            }
-            heights[rowId] = prevHeight;
-        };
-
-        var buildHeightArray = function() {
-            var savedHeights = getSavedRowHeights();
-            for (var r = 0; r < numRows; r++) {
-                var saved = savedHeights[r];
-                if (saved) {
-                    _rowHeights.push(saved);
-                } else if (r < 2) {
-                    _rowHeights.push(33);
-                } else {
-                    var headerInfo = [];
-                    for (var i = 0; i < colOffset; i++) {
-                        headerInfo.push(getRowHeaderId(r, i));
-                    }
-                    headerInfo.sort(function(a, b) {
-                        return a - b;
-                    });
-                    var rowId = headerInfo.join('_');
-                    _rowHeights.push(heights[rowId] || MIN_ROW_HEIGHT);
-                }
-            }
-        };
-
+        var heights = {};
+        if (Object.keys(_textDims).length > MAX_TEMP) {
+            _textDims = null;
+            _textDims = {};
+        }
         _columnWidths = null;
         _columnWidths = [];
         _rowHeights = null;
         _rowHeights = [];
-        var topWidths = {};
-        var heights = {};
-        var textDims = {};
-        var horizAxisId = getAxisId(axes[colOffset]);
-        if (axes.length == 1) {
-            buildSingleAxisWidthArray();
+        if (axes.length === 1) {
+            buildSingleAxisWidthArray(heights);
         } else {
-            setupTopWidths();
-            buildWidthArray();
+            setupTopWidths(heights);
         }
-        buildHeightArray();
-        textDims = null; // free up memory
+        buildHeightArray(heights);
+    }
+
+    function setupTopWidths(heights) {
+        var width, colIndex, colLength, colKey, column, idxOffset, firstColId, colPrefix, regex;
+        var cells, cellKeys, topKeys, keyIndex, len, cellKey, colId, hotColIdx, cell, value, dims;
+        var topWidths = {};
+        var savedWidths = getSavedColumnWidths();
+        var axis = axes[colOffset];
+        var columns = axis.columns;
+        var columnKeys = axisColumnMap[axis.name];
+        var horizAxisId = getAxisId(axes[colOffset]);
+
+        topWidths[columnKeys[0]] = savedWidths.hasOwnProperty(colOffset)
+            ? savedWidths[colOffset] : getAxisHeaderWidth(axis);
+
+        for (colIndex = 1, colLength = columnKeys.length; colIndex < colLength; colIndex++) {
+            colKey = columnKeys[colIndex];
+            column = columns[colKey];
+            idxOffset = colIndex + colOffset;
+            topWidths[colKey] = savedWidths.hasOwnProperty(idxOffset) 
+                ? savedWidths[idxOffset] : getAxisColumnWidth(axis, column, topWidths[colKey]);
+        }
+
+        if (!columnKeys.length) {
+            _columnWidths.push(MIN_COL_WIDTH);
+        } else {
+            firstColId = columnKeys[0];
+            colPrefix = firstColId.slice(0,-10);
+            regex = new RegExp(colPrefix + "(?:\\d{10})");
+            cells = data.cells;
+            cellKeys = Object.keys(cells);
+            topKeys = Object.keys(topWidths);
+            for (keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
+                cellKey = cellKeys[keyIndex];
+                colId = regex.exec(cellKey)[0];
+                hotColIdx = topKeys.indexOf(colId) + colOffset;
+                if (savedWidths.hasOwnProperty(hotColIdx)) {
+                    width = savedWidths[hotColIdx];
+                } else {
+                    cell = cells[cellKey];
+                    value = getTextCellValue(cell);
+                    dims = calcDomDims(value, cell.type);
+                    width = dims.width + CALC_WIDTH_BASE_MOD;
+                    width = findWidth(topWidths[colId], width);
+                    setHeightForCellRow(heights, horizAxisId, cellKey, width, dims);
+                }
+
+                topWidths[colId] = width;
+            }
+        }
+
+        buildWidthArray(topWidths);
+    }
+    
+    function getAxisHeaderWidth(axis) {
+        var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
+        var buttonWidth = calcDomDims(axis.name, null).width + modifier;
+        return findWidth(0, buttonWidth);
+    }
+    
+    function getAxisColumnWidth(axis, column, prevWidth) {
+        var columnText = getRowHeaderPlainTextForWidth(axis, column);
+        var firstWidth = calcDomDims(columnText, column.type).width + CALC_WIDTH_BASE_MOD;
+        return findWidth(prevWidth, firstWidth);
+    }
+
+    function buildWidthArray(topWidths) {
+        var hotCol, width, columnHeaderId;
+        var savedWidths = getSavedColumnWidths();
+        for (hotCol = 0; hotCol < numColumns; hotCol++) {
+            if (hotCol < colOffset) {
+                width = savedWidths.hasOwnProperty(hotCol) ? savedWidths[hotCol] : findWidestColumn(axes[hotCol]);
+            } else {
+                columnHeaderId = getColumnHeaderId(hotCol);
+                width = topWidths[columnHeaderId];
+            }
+            _columnWidths.push(width);
+        }
+    }
+
+    function buildSingleAxisWidthArray(heights, horizAxisId) {
+        var correctWidth, oldWidth, cells, cellKeys, cellKey, keyIndex, len, cell, value, dims, width;
+        var savedWidths = getSavedColumnWidths();
+
+        // header width
+        _columnWidths.push(savedWidths.hasOwnProperty(0) ? savedWidths[0] : findWidestColumn(axes[0]));
+
+        // cell width
+        if (savedWidths.hasOwnProperty(1)) {
+            _columnWidths.push(savedWidths[1]);
+        } else {
+            oldWidth = 0;
+            cells = data.cells;
+            cellKeys = Object.keys(cells);
+            for (keyIndex = 0, len = cellKeys.length; keyIndex < len; keyIndex++) {
+                cellKey = cellKeys[keyIndex];
+                cell = cells[cellKey];
+                value = getTextCellValue(cell);
+                dims = calcDomDims(value, cell.type);
+                width = dims.width + CALC_WIDTH_BASE_MOD;
+                correctWidth = findWidth(oldWidth, width);
+                setHeightForCellRow(heights, horizAxisId, cellKey, correctWidth, dims);
+                oldWidth = correctWidth;
+            }
+            _columnWidths.push(correctWidth);
+        }
+    }
+
+    function calcDomDims(value, type) {
+        var font, width, lineWidths, idx, temp1, temp2, tempWidth;
+        if (_textDims.hasOwnProperty(value)) {
+            return _textDims[value];
+        }
+        font = CODE_CELL_TYPE_LIST.indexOf(type) > -1 ? FONT_CODE : FONT_CELL;
+        width = 0;
+        lineWidths = [];
+        idx = value.indexOf('\n');
+        if (idx < 0) {
+            width = getStringWidth(value, font);
+            lineWidths.push(width);
+            width = findWidth(0, width);
+        } else {
+            temp1 = value;
+            while (idx > -1) {
+                temp2 = value.substring(0, idx);
+                tempWidth = getStringWidth(temp2, font);
+                lineWidths.push(tempWidth);
+                width = findWidth(width, tempWidth);
+                temp1 = temp1.substring(idx + 1);
+                idx = temp1.indexOf('\n');
+            }
+            tempWidth = getStringWidth(temp1, font);
+            lineWidths.push(tempWidth);
+            width = findWidth(width, tempWidth);
+        }
+
+        var ret = {width:width, lineWidths:lineWidths};
+        _textDims[value] = ret;
+        return ret;
+    }
+
+    function findWidestColumn(axis) {
+        var columnId, column, columnText, colWidth, axisCol, axisColLength;
+        var findWidthFunc = findWidth;
+        var axisName = axis.name;
+        var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
+        var buttonWidth = calcDomDims(axisName, null).width + modifier;
+        var oldWidth = findWidthFunc(0, buttonWidth);
+        var correctWidth = oldWidth;
+        var axisColumns = axisColumnMap[axisName];
+        for (axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++) {
+            columnId = axisColumns[axisCol];
+            column = axis.columns[columnId];
+            columnText = getRowHeaderPlainTextForWidth(axis, column);
+            colWidth = calcDomDims(columnText, column.type).width + CALC_WIDTH_BASE_MOD;
+            correctWidth = findWidthFunc(oldWidth, colWidth);
+            oldWidth = correctWidth;
+        }
+        return correctWidth;
+    }
+
+    function setHeightForCellRow(heights, horizAxisId, cellId, colWidth, dims) {
+        var i, len, id, rowId, lineWidths, totalLines, lineIdx, numLines, newHeight, prevHeight;
+        var cellIdArray = cellId.split('_');
+        for (i = 0, len = cellIdArray.length; i < len; i++) {
+            id = cellIdArray[i];
+            if (getAxisIdFromString(id).indexOf(horizAxisId) > -1) {
+                cellIdArray.splice(i, 1);
+                break;
+            }
+        }
+        rowId = cellIdArray.join('_');
+        lineWidths = dims.lineWidths;
+        totalLines = 0;
+        for (lineIdx = 0, numLines = lineWidths.length; lineIdx < numLines; lineIdx++) {
+            totalLines += Math.ceil(lineWidths[lineIdx] / colWidth);
+        }
+
+        newHeight = totalLines * FONT_HEIGHT + 1;
+        prevHeight = heights[rowId] || MIN_ROW_HEIGHT;
+        if (newHeight > prevHeight) {
+            heights[rowId] = newHeight;
+        }
+    }
+
+    function buildHeightArray(heights) {
+        var headerInfo, rowId, r, i;
+        var savedHeights = getSavedRowHeights();
+        for (r = 0; r < numRows; r++) {
+            if (savedHeights.hasOwnProperty(r)) {
+                _rowHeights.push(savedHeights[r]);
+            } else if (r < 2) {
+                _rowHeights.push(33);
+            } else {
+                headerInfo = [];
+                for (i = 0; i < colOffset; i++) {
+                    headerInfo.push(getRowHeaderId(r, i));
+                }
+                headerInfo.sort();
+                rowId = headerInfo.join('_');
+                headerInfo = null;
+                _rowHeights.push(heights[rowId] || MIN_ROW_HEIGHT);
+            }
+        }
+    }
+
+    function getStringWidth(str, font) {
+        return $('<p>' + str + '</p>').canvasMeasureWidth(font);
+    }
+
+    function findWidth(oldWidth, newWidth) {
+        if (oldWidth > MAX_COL_WIDTH || newWidth > MAX_COL_WIDTH) {
+            return MAX_COL_WIDTH
+        }
+        return Math.max(MIN_COL_WIDTH, oldWidth || 0, newWidth || 0);
     }
 
     function deleteSavedColumnWidths() {
@@ -1467,39 +1453,38 @@ var NCubeEditor2 = (function ($) {
         saveOrDeleteValue(saved, getStorageKey(nce, ROW_HEIGHTS));
     }
 
+    ///////////////////////////////////////////   END WIDTH HEIGHT   ///////////////////////////////////////////////////
+
     function calcColumnHeader(index) {
-        if (axes.length == 1) {
-            if (index == 0) {
-                return '';
-            }
-            return 'A';
+        var dividend, modulo, colName;
+        if (axes.length === 1) {
+            return index ? 'A' : '';
         }
 
         if (index < colOffset) {
             return '';
         }
-        var dividend = (index + 1) - colOffset;
-        var modulo;
-        var colName = '';
 
-        while (dividend > 0) {
+        dividend = (index + 1) - colOffset;
+        colName = '';
+        while (dividend) {
             modulo = (dividend - 1) % 26;
             colName = String.fromCharCode(65 + modulo) + colName;
             dividend = Math.floor((dividend - modulo) / 26);
         }
-
         return colName;
     }
 
     function calcRowHeader(index) {
-        if (index < 1) {
+        var text;
+        if (index > 1) {
+            return index - 1;
+        }
+        if (!index) {
             return '';
         }
-        var text = _clipFormat === CLIP_NCE ? NBSP + 'NCE' + NBSP : 'Excel';
-        if (index === 1) {
-            return '<span class="glyphicon glyphicon-copy" style="font-size:13px"></span>' + NBSP + text;
-        }
-        return index - 1;
+        text = _clipFormat === CLIP_NCE ? NBSP + 'NCE' + NBSP : 'Excel';
+        return '<span class="glyphicon glyphicon-copy" style="font-size:13px"></span>' + NBSP + text;
     }
 
     function setFrozenColumns(numFixed) {
@@ -1561,21 +1546,18 @@ var NCubeEditor2 = (function ($) {
                 saveRowHeight(currentRow, newSize);
             },
             afterSelection: function(r, c, r2, c2) {
+                var axisName, axisVal, axisNum, axis;
                 var display = '';
-                var axisName;
-                var axisVal;
                 if (c >= colOffset) {
-                    if (r === 1) {
-                        display = '<strong>Axis</strong>: ' + axes[colOffset].name + ', <strong>Column</strong>:' + getColumnHeaderValue(c);
-                    } else if (r > 1) {
+                    if (r > 1) {
                         display = '&nbsp;';
-                        for (var axisNum = 0; axisNum < colOffset; axisNum++) {
+                        for (axisNum = 0; axisNum < colOffset; axisNum++) {
                             axisName = axes[axisNum].name;
                             axisVal = getRowHeaderPlainText(r, axisNum);
                             display += '<strong>' + axisName + '</strong>: ' + axisVal + ', ';
                         }
                         if (axes.length > 1) {
-                            var axis = axes[colOffset];
+                            axis = axes[colOffset];
                             axisName = axis.name;
                             axisVal = getRowHeaderPlainTextForWidth(axis, getColumnHeader(c));
                         } else {
@@ -1583,6 +1565,8 @@ var NCubeEditor2 = (function ($) {
                             axisVal = getRowHeaderPlainText(r, 0);
                         }
                         display += '<strong>' + axisName + '</strong>: ' + axisVal;
+                    } else if (r) {
+                        display = '<strong>Axis</strong>: ' + axes[colOffset].name + ', <strong>Column</strong>:' + getColumnHeaderValue(c);
                     }
                 }
                 else if (r > 1) {
@@ -1630,7 +1614,7 @@ var NCubeEditor2 = (function ($) {
         var startingWidth = thWidth;
         var newWidth;
         
-        if (_firstRenderedCol === 0) {
+        if (!_firstRenderedCol) {
             for (var i = 0; i < colOffset; i++) {
                 var curWidth = tr.find('td').eq(i).outerWidth();
                 startingWidth += curWidth;
@@ -1638,7 +1622,7 @@ var NCubeEditor2 = (function ($) {
                     frozenWidth += curWidth;
                 }
             }
-        } else if (numFixed > 0) {
+        } else if (numFixed) {
             newWidth = $('.ht_clone_left.handsontable').width();
         }
         
@@ -1665,14 +1649,14 @@ var NCubeEditor2 = (function ($) {
 
     function setButtonDropdownLocations() {
         $('.dropdown-toggle').on('click', function() {
+            var modalOffset;
             var button = $(this);
             var offset = button.offset();
             var dropDownTop = offset.top + button.outerHeight();
             var dropDownLeft = offset.left;
-            
             var modal = button.closest('.modal-content');
-            if (modal.length > 0) {
-                var modalOffset = modal.offset();
+            if (modal.length) {
+                modalOffset = modal.offset();
                 dropDownTop -= modalOffset.top;
                 dropDownLeft -= modalOffset.left;
             }
@@ -1701,8 +1685,8 @@ var NCubeEditor2 = (function ($) {
         }
 
         // cube name
-        if (row === 0 && (col < colOffset || col === 0)) {
-            if (col === 0) {
+        if (!row && (col < colOffset || !col)) {
+            if (!col) {
                 td.innerHTML = cubeName;
             }
             td.className += CLASS_HANDSON_CELL_CUBE_NAME;
@@ -1717,8 +1701,8 @@ var NCubeEditor2 = (function ($) {
         }
 
         // horizontal axis metadata area
-        else if (row === 0) {
-            if (axes.length > 1 && (col === colOffset || (_firstRenderedCol > 0 && col === _firstRenderedCol))) {
+        else if (!row) {
+            if (axes.length > 1 && (col === colOffset || (_firstRenderedCol && col === _firstRenderedCol))) {
                 td.style.overflow = 'visible';
                 td.colSpan = axes[colOffset].columnLength - _firstRenderedCol;
             }
@@ -1727,33 +1711,33 @@ var NCubeEditor2 = (function ($) {
             cellProperties.readOnly = true;
         }
 
-        // vertical axes metadata area
-        else if (row === 1 && (col < colOffset || col === 0)) {
-            td.style.background = BACKGROUND_AXIS_INFO;
-            td.style.color = COLOR_WHITE;
-            td.style.overflow = 'visible';
-            cellProperties.readOnly = true;
-            buildAxisMenu(axes[col], td);
-        }
-
-        // column headers
         else if (row === 1) {
-            if (axes.length > 1) {
-                var column = getColumnHeader(col);
-                td.innerHTML = getRowHeaderValue(axes[colOffset], column);
-                if (column.isSearchResult) {
-                    td.className += CLASS_HANDSON_SEARCH_RESULT;
+            // vertical axes metadata area
+            if (col < colOffset || !col) {
+                td.style.background = BACKGROUND_AXIS_INFO;
+                td.style.color = COLOR_WHITE;
+                td.style.overflow = 'visible';
+                cellProperties.readOnly = true;
+                buildAxisMenu(axes[col], td);
+            } else {
+                // column headers
+                if (axes.length > 1) {
+                    var column = getColumnHeader(col);
+                    td.innerHTML = getRowHeaderValue(axes[colOffset], column);
+                    if (column.isSearchResult) {
+                        td.className += CLASS_HANDSON_SEARCH_RESULT;
+                    }
                 }
+                td.className += CLASS_HANDSON_TABLE_HEADER;
+                cellProperties.editor = ColumnEditor;
             }
-            td.className += CLASS_HANDSON_TABLE_HEADER;
-            cellProperties.editor = ColumnEditor;
         }
 
         // row headaers
-        else if (col === 0 || col < colOffset) {
+        else if (!col || col < colOffset) {
             var rowHeader = getRowHeader(row, col);
             var axis = axes[col];
-            if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (col === 0 || (col > 0 && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
+            if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (!col || (col && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
                 td.style.borderTop = NONE;
             } else {
                 td.innerHTML = getRowHeaderValue(axis, rowHeader);
@@ -1847,46 +1831,46 @@ var NCubeEditor2 = (function ($) {
     function buildUrlLink(element) {
         // Add click handler that opens clicked cube names
         $(element).find('a').on('click', function (e) {
+            var link, result, msg;
             nce.clearError();
-            var link = this.innerHTML;
-            if (link.indexOf('http:') === 0 || link.indexOf('https:') === 0 || link.indexOf('file:') === 0) {
+            link = this.innerHTML;
+            if (!link.indexOf('http:') || !link.indexOf('https:') || !link.indexOf('file:')) {
                 window.open(link);
             } else {
-                var result = nce.call(CONTROLLER + CONTROLLER_METHOD.RESOLVE_RELATIVE_URL, [nce.getSelectedTabAppId(), link], {noResolveRefs:true});
+                result = nce.call(CONTROLLER + CONTROLLER_METHOD.RESOLVE_RELATIVE_URL, [nce.getSelectedTabAppId(), link], {noResolveRefs:true});
                 if (result.status && result.data) {
                     link = result.data;
                     window.open(link);
                 } else {
-                    var msg = result.data ? result.data : 'Unable to resolve relative URL against entries in sys.classpath';
+                    msg = result.data ? result.data : 'Unable to resolve relative URL against entries in sys.classpath';
                     nce.showNote('Unable to open ' + link + ':<hr class="hr-small"/>' + msg);
                 }
             }
             e.preventDefault();
         });
     }
-
+    
     function buildExpressionLink(url, highlightLanguage) {
+        var found, val, shouldHighlight, highlighted, tempHighlight, top, ancIdx, text, endIdx;
+        if (_expressionLinks.hasOwnProperty(url)) {
+            return _expressionLinks[url];
+        }
         if (url && url.length > 2) {
-            var found = false;
-            var val;
-            var shouldHighlight = highlightLanguage !== NONE;
+            found = false;
+            shouldHighlight = highlightLanguage !== NONE;
         
             url = url.replace(cubeMapRegex, function (matched) {
                 found = true;
                 return '<a class="nc-anc">' + matched + '</a>';
             });
-            val = url;
         
-            if (found) {
-                if (shouldHighlight) {
+            if (shouldHighlight) {
+                if (found) {
                     //highlight in between links
-                    var highlighted = '';
-                    var tempHighlight;
-                    var top;
-                    var ancIdx;
+                    highlighted = '';
                     while ((ancIdx = url.indexOf('<a class="nc-anc">')) > -1) {
-                        var text = url.substring(0, ancIdx);
-                        var endIdx = url.indexOf('</a>') + 4;
+                        text = url.substring(0, ancIdx);
+                        endIdx = url.indexOf('</a>') + 4;
                         tempHighlight = highlightLanguage ? hljs.highlight(highlightLanguage, text, true, top) : hljs.highlightAuto(text);
                         if (highlightLanguage) {
                             top = hljs.highlight(highlightLanguage, url.substring(0, endIdx), true, top).top;
@@ -1898,12 +1882,12 @@ var NCubeEditor2 = (function ($) {
                     tempHighlight = highlightLanguage ? hljs.highlight(highlightLanguage, url, true, top) : hljs.highlightAuto(url);
                     highlighted += tempHighlight.value;
                     val = highlighted;
-                }
-            } else {
-                if (shouldHighlight) {
-                    var highlighted = highlightLanguage ? hljs.highlight(highlightLanguage, url, true) : hljs.highlightAuto(url);
+                } else {
+                    highlighted = highlightLanguage ? hljs.highlight(highlightLanguage, url, true) : hljs.highlightAuto(url);
                     val = highlighted.value;
                 }
+            } else {
+                val = url;
             }
         } else {
             val = url;
@@ -1996,7 +1980,7 @@ var NCubeEditor2 = (function ($) {
         });
         div.find('a.anc-clear-filters').on('click', function (e) {
             e.preventDefault();
-            if (_filters.length === 0) {
+            if (!_filters.length) {
                 e.stopImmediatePropagation();
                 return;
             }
@@ -2050,7 +2034,7 @@ var NCubeEditor2 = (function ($) {
         });
         div.find('button.move-left').on('click', function (e) {
             e.preventDefault();
-            if (axisIndex === 0) {
+            if (!axisIndex) {
                 e.stopImmediatePropagation();
             }
             closeAxisMenu();
@@ -2123,7 +2107,7 @@ var NCubeEditor2 = (function ($) {
     function onBreakReferenceClick(axis, an) {
         var btnsHtml;
         an.parent().find('li').not(an.parent()).find('button').remove();
-        if (an.find('button').length === 0) {
+        if (!an.find('button').length) {
             btnsHtml = '<button class="btn btn-danger btn-xs pull-right axis-menu-button">Cancel</button>';
             btnsHtml += '<button class="btn btn-primary btn-xs pull-right axis-menu-button confirm">Confirm</button>';
             an.append(btnsHtml);
@@ -2184,7 +2168,7 @@ var NCubeEditor2 = (function ($) {
             html += '<li><a href="#" class="anc-filter-data">Filter Data...</a></li>';
             html += '<li><a href="#" class="anc-filter-blank-rows">Filter Out Blank Rows</a></li>';
             html += '<li';
-            if (_filters.length === 0) {
+            if (!_filters.length) {
                 html += ' class="disabled"';
             }
             html += '><a href="#" class="anc-clear-filters">Clear Filters</a></li>';
@@ -2214,7 +2198,7 @@ var NCubeEditor2 = (function ($) {
             html += '<li><div role="group" class="btn-group btn-group-sm indent-axis-buttons">';
 
             html += '<button type="button" class="btn btn-default move-left" aria-label="Move Left"';
-            if (axisIndex === 0) {
+            if (!axisIndex) {
                 html += ' disabled'
             }
             html += '><span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></button>';
@@ -2294,7 +2278,7 @@ var NCubeEditor2 = (function ($) {
             hot.getActiveEditor().finishEditing(null, null, null, true);
         }
         var searchQuery = _searchField.value;
-        if (searchQuery !== null && searchQuery.length > 0) {
+        if (searchQuery !== null && searchQuery.length) {
             var curCell = getSelectedCellRange();
             if (curCell) {
                 var curRow = curCell.startRow;
@@ -3219,7 +3203,7 @@ var NCubeEditor2 = (function ($) {
             'id': getUniqueId()
         };
 
-        if (loc == -1 || axis.preferredOrder === 0) {
+        if (loc === -1 || axis.preferredOrder === 0) {
             axis.columns.push(newCol);
             loc = input.length - 1;
         } else {
@@ -3261,7 +3245,7 @@ var NCubeEditor2 = (function ($) {
         var cols = axis.columns;
         var input = $('.editColCheckBox');
 
-        if (cols && cols.length > 0 && input[0].checked) {
+        if (cols && cols.length && input[0].checked) {
             // Top one checked, cannot move any items up
             return;
         }
@@ -3294,12 +3278,12 @@ var NCubeEditor2 = (function ($) {
         var cols = axis.columns;
         var input = $('.editColCheckBox');
 
-        if (cols && cols.length > 0 && input[cols.length - 1].checked) {
+        if (cols && cols.length && input[cols.length - 1].checked) {
             // Bottom one checked, cannot move any items down
             return;
         }
 
-        for (var i=input.length - 1; i > 0; i--) {
+        for (var i=input.length - 1; i; i--) {
             var tag = input[i];
             cols[i].checked = tag.checked;
             if (!tag.checked) {
@@ -3583,7 +3567,7 @@ var NCubeEditor2 = (function ($) {
             return;
         }
         delete _hiddenColumns[lowerAxisName];
-        if (columnIds.length > 0)
+        if (columnIds.length)
         {
             _hiddenColumns[lowerAxisName] = {};
             for (var i = 0, len = columnIds.length; i < len; i++)
