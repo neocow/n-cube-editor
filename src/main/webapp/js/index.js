@@ -2039,7 +2039,7 @@ var NCE = (function ($)
         
         if (!_selectedVersion || !doesVersionExist(versions, _selectedVersion, _selectedStatus)) {
             len = versions.length;
-            version = len > 0 ? versions[len - 1] : null;
+            version = len > 0 ? versions[0] : null;
             if (version) {
                 arr = version.split('-');
             }
