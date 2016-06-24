@@ -60,6 +60,14 @@ div#editColumnsModal div.panel-group
     position: fixed;
 }
 
+ul#setUpHideList {
+    list-style-type: none;
+}
+
+ul#setUpHideList li {
+    margin-bottom: 10px;
+}
+
 /* begin coord bar and HOT */
 
 #util-container-bar {

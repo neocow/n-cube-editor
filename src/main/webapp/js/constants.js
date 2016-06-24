@@ -32,8 +32,8 @@ var MIN_ROW_HEIGHT = FONT_HEIGHT + 1;
 var FONT_SIZE = '14px';
 var FONT_CELL = FONT_SIZE + ' Helvetica Neue';
 var FONT_CODE = FONT_SIZE + ' Lucida Console';
-var CALC_WIDTH_AXIS_BUTTON_MOD = 45;
-var CALC_WIDTH_REF_AX_BUTTON_MOD = 55;
+var CALC_WIDTH_AXIS_BUTTON_MOD = 50;
+var CALC_WIDTH_REF_AX_BUTTON_MOD = 60;
 var CALC_WIDTH_BASE_MOD = 30;
 var CALC_WIDTH_TAB_OVERFLOW_MOD = 45;
 
@@ -77,6 +77,7 @@ var CUBE_INFO = {
     TAB_VIEW: 5
 };
 
+var MAX_VISIBLE_ROWS = 150000;
 var MAX_TEMP = 10000000;
 var REGEX_ANY_TAG = /(<([^>]+)>)/ig;
 var REGEX_HR_TAG = /(<hr([^>]+)>)/ig;

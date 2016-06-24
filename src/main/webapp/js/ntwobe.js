@@ -93,6 +93,8 @@ var NCubeEditor2 = (function ($) {
     var _columnIdCombinationsToShow = null;
     var _searchText = null;
     var _hotContainer = null;
+    var _setUpHideModal = null;
+    var _setUpHideList = null;
 
     function init(info) {
         if (!nce) {
@@ -159,11 +161,14 @@ var NCubeEditor2 = (function ($) {
             _filterModal = $('#filterModal');
             _filterTable = $('#filterTable');
             _hotContainer = $('#hot-container');
+            _setUpHideModal = $('#setUpHideModal');
+            _setUpHideList = $('#setUpHideList');
 
             addSelectAllNoneListeners();
             addAxisEditListeners();
             addColumnEditListeners();
             addColumnHideListeners();
+            addSetUpHideListeners();
             addEditCellListeners();
             addSearchListeners();
             addModalFilters();
@@ -365,6 +370,12 @@ var NCubeEditor2 = (function ($) {
         clearHtmlError();
 
         handleCubeData(JSON.parse(result.data));
+        if (numRows > MAX_VISIBLE_ROWS) {
+            setUpHide();
+            return;
+        }
+
+        setUpColumnWidths();
         if (!hot) {
             hot = new Handsontable(_hotContainer[0], getHotSettings());
         } else {
@@ -376,6 +387,42 @@ var NCubeEditor2 = (function ($) {
         _searchText = '';
         runSearch();
         searchDown();
+    }
+
+    function setUpHide() {
+        var i, axis, axisName, btnClass;
+        var html = '';
+
+        $('#setUpHideLabel')[0].innerHTML = cubeName + ' - Viewable Area Is Too Large';
+        $('#setUpHideColInstructions')[0].innerHTML = 'Select an axis to hide columns and shrink the workable area for '
+            + 'this cube. You can hide columns on multiple axes. The viewable row limitation is set at '
+            + MAX_VISIBLE_ROWS.toLocaleString() + '. You are currently trying to view ' + numRows.toLocaleString() + ' rows.';
+
+        for (i = 0; i < colOffset; i++) {
+            axis = null;
+            axis = axes[i];
+            axisName = axis.name;
+            btnClass = _hiddenColumns.hasOwnProperty(axisName) ? 'btn-warning' : 'btn-primary';
+            html += '<li><button class="' + btnClass + '">' + axisName + '</button> ';
+            html += axis.columnLength + ' columns';
+            html += '</li>';
+        }
+        _setUpHideList.empty();
+        _setUpHideList.append(html);
+        _setUpHideList.find('button').on('click', function() {
+            _setUpHideModal.modal('hide');
+            hideColumns(this.textContent);
+        });
+
+        _setUpHideModal.modal();
+    }
+
+    function addSetUpHideListeners() {
+        $('#setUpHideCancel').on('click', setUpHideCancel);
+    }
+
+    function setUpHideCancel() {
+        _setUpHideModal.modal('hide');
     }
 
     function setSearchHelperText() {
@@ -430,11 +477,15 @@ var NCubeEditor2 = (function ($) {
     }
 
     function addHotBeforeKeyDown() {
-        hot.addHook('beforeKeyDown', onBeforeKeyDown);
+        if (hot) {
+            hot.addHook('beforeKeyDown', onBeforeKeyDown);
+        }
     }
 
     function removeHotBeforeKeyDown() {
-        hot.removeHook('beforeKeyDown', onBeforeKeyDown);
+        if (hot) {
+            hot.removeHook('beforeKeyDown', onBeforeKeyDown);
+        }
     }
 
     function searchClear() {
@@ -930,29 +981,30 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getFilteredCellsFromData(filterNum) {
+        var dAxes, dKeys, a, aLen, c, cLen, axis, tempCombos, columns, colKeys, colId, comboIdx, comboLen;
+        var colCells, colCellKeys, colCellKey, colCell, axisColId, colIdReplaceIdx;
         var combos = [];
-        var colIdReplaceIdx;
         var filter = getAppliedFilters()[filterNum];
         if (filter.isIncludeAll) {
-            var dAxes = data.axes;
-            var dKeys = Object.keys(dAxes);
-            for (var a = 0, aLen = dKeys.length; a < aLen; a++) {
-                var axis = dAxes[dKeys[a]];
+            dAxes = data.axes;
+            dKeys = Object.keys(dAxes);
+            for (a = 0, aLen = dKeys.length; a < aLen; a++) {
+                axis = dAxes[dKeys[a]];
                 if (axis.columns[filter.column]) {
                     colIdReplaceIdx = combos.length ? combos[0].length : 0;
                 } else {
-                    var tempCombos = [];
-                    var columns = axis.columns;
-                    var colKeys = Object.keys(columns);
-                    for (var colIdx = 0, colLen = colKeys.length; colIdx < colLen; colIdx++) {
-                        var colId = colKeys[colIdx];
-                        var comboLen = combos.length;
-                        if (!comboLen) {
-                            tempCombos.push(colId);
-                        } else {
-                            for (var comboIdx = 0; comboIdx < comboLen; comboIdx++) {
+                    tempCombos = [];
+                    columns = axis.columns;
+                    colKeys = Object.keys(columns);
+                    for (c = 0, cLen = colKeys.length; c < cLen; c++) {
+                        colId = colKeys[c];
+                        comboLen = combos.length;
+                        if (comboLen) {
+                            for (comboIdx = 0; comboIdx < comboLen; comboIdx++) {
                                 tempCombos.push(combos[comboIdx] + '_' + colId);
                             }
+                        } else {
+                            tempCombos.push(colId);
                         }
                     }
                     combos = tempCombos;
@@ -960,14 +1012,14 @@ var NCubeEditor2 = (function ($) {
                 }
             }
         } else {
-            var colCells = getCellsByColumnId(filter.column);
-            var colCellKeys = Object.keys(colCells);
-            for (var c = 0, cLen = colCellKeys.length; c < cLen; c++) {
-                var colCellKey = colCellKeys[c];
-                var colCell = colCells[colCellKey];
+            colCells = getCellsByColumnId(filter.column);
+            colCellKeys = Object.keys(colCells);
+            for (c = 0, cLen = colCellKeys.length; c < cLen; c++) {
+                colCellKey = colCellKeys[c];
+                colCell = colCells[colCellKey];
                 if (doesCellMatchFilterExpression(colCell, filter)) {
                     colIdReplaceIdx = colCellKey.indexOf(filter.column);
-                    var axisColId = colCellKey.replace(filter.column,'').replace('__','');
+                    axisColId = colCellKey.replace(filter.column,'').replace('__','');
                     if (!axisColId.indexOf('_')) {
                         axisColId = axisColId.substring(1);
                     } else if (axisColId.substring(axisColId.length - 1) === '_') {
@@ -981,179 +1033,170 @@ var NCubeEditor2 = (function ($) {
         return {idCombinations:combos, idReplaceIdx:colIdReplaceIdx};
     }
 
+    function determineAxesOrder(cubeAxes) {
+        var i, len, axis, order, keys, horizontal, delta, smallestDelta;
+        axes = null;
+        axes = [];
+        _axisIdsInOrder = null;
+        _axisIdsInOrder = [];
+        if (hasCustomAxisOrder()) {
+            order = JSON.parse(localStorage[getStorageKey(nce, AXIS_ORDER)]);
+            for (i = 0, len = order.length; i < len; i++) {
+                axis = cubeAxes[order[i]];
+                getColumnLength(axis);
+                axes.push(axis);
+                _axisIdsInOrder.push(getAxisId(axis));
+            }
+        } else {
+            keys = Object.keys(cubeAxes);
+            for (i = 0, len = keys.length; i < len; i++) {
+                axes.push(cubeAxes[keys[i]]);
+            }
+
+            axes.sort(function (a, b) {
+                return getColumnLength(b) - getColumnLength(a);
+            });
+
+            smallestDelta = Number.MAX_VALUE;
+            for (i = 0, len = axes.length; i < len; i++) {
+                axis = axes[i];
+                if (headerAxisNames.indexOf(axis.name) > -1) {
+                    horizontal = i;
+                    break;
+                }
+                delta = Math.abs(getColumnLength(axis) - 12);
+                if (delta < smallestDelta) {
+                    smallestDelta = delta;
+                    horizontal = i;
+                }
+            }
+            horizontal = axes.splice(horizontal, 1);
+            axes.push(horizontal[0]);
+
+            for (i = 0, len = axes.length; i < len; i++) {
+                _axisIdsInOrder.push(getAxisId(axes[i]));
+            }
+        }
+    }
+
+    function setUpHideColumns() {
+        var i, axisLength, axis, lowerAxisName, keys, j, len;
+        var storageKey = getStorageKey(nce, HIDDEN_COLUMNS);
+        _hiddenColumns = null;
+        _hiddenColumns = {};
+        if (localStorage.hasOwnProperty(storageKey)) {
+            _hiddenColumns = JSON.parse(localStorage[storageKey]);
+        }
+        for (i = 0, axisLength = axes.length; i < axisLength; i++) {
+            axis = null;
+            axis = axes[i];
+            lowerAxisName = axis.name.toLowerCase();
+            if (_hiddenColumns.hasOwnProperty(lowerAxisName)) {
+                keys = null;
+                keys = Object.keys(_hiddenColumns[lowerAxisName]);
+                for (j = 0, len = keys.length; j < len; j++) {
+                    axis.columnLength--;
+                    delete axis.columns[keys[j]];
+                }
+            }
+        }
+    }
+
+    function setUpAxisColumnMap() {
+        var axisNum, axisLen, axis, axisName, colArray, colKeys, colNum, colLen, defaultColumn, defId;
+        axisColumnMap = null;
+        axisColumnMap = {};
+        for (axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
+            axis = axes[axisNum];
+            axisName = axis.name;
+            axisColumnMap[axisName] = [];
+            colArray = axisColumnMap[axisName];
+            colKeys = Object.keys(axis.columns);
+            for (colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
+                colArray.push(colKeys[colNum]);
+            }
+
+            if (axis.hasDefault) {
+                defaultColumn = getAxisDefault(axis);
+                defId = defaultColumn.id;
+                colArray.push(defId);
+                axis.columns[defId] = defaultColumn;
+            }
+        }
+    }
+
+    function setUpDataTable() {
+        var appliedFilters, horizAxis, colLen, axisNum, axis;
+        var curFilterResult, filteredColNum, filterResultIdx, filterResultLen, curFilterResultCombo;
+        var resultFromFirstFilter, colIdReplaceIdx, f, fLen, filter, addIn, combo, cellId, cell;
+        var totalRows = 1;
+        cubeName = data.ncube;
+        colOffset = axes.length - 1;
+        _filters = null;
+        _filters = getSavedFilters();
+        appliedFilters = getAppliedFilters();
+
+        if (axes.length > 1) {
+            horizAxis = axes[colOffset];
+            numColumns = colOffset;
+            colLen = getColumnLength(horizAxis);
+            if (!colLen) {
+                numColumns++;
+            }
+
+            numColumns += colLen;
+
+            if (!appliedFilters.length) {
+                for (axisNum = 0; axisNum < colOffset; axisNum++) {
+                    totalRows *= getColumnLength(axes[axisNum]);
+                }
+                numRows = totalRows + 2;
+            } else if (nce.getFilterOutBlankRows()) {
+                _columnIdCombinationsToShow = null;
+                _columnIdCombinationsToShow = [];
+                for (filteredColNum = 0; filteredColNum < colLen; filteredColNum++) {
+                    curFilterResult = null;
+                    curFilterResult = getFilteredCellsFromData(filteredColNum).idCombinations;
+                    for (filterResultIdx = 0, filterResultLen = curFilterResult.length; filterResultIdx < filterResultLen; filterResultIdx++) {
+                        curFilterResultCombo = curFilterResult[filterResultIdx];
+                        if (_columnIdCombinationsToShow.indexOf(curFilterResultCombo) < 0) {
+                            _columnIdCombinationsToShow.push(curFilterResultCombo);
+                        }
+                    }
+                }
+                _columnIdCombinationsToShow.sort();
+                numRows = _columnIdCombinationsToShow.length + 2;
+            } else {
+                resultFromFirstFilter = getFilteredCellsFromData(0);
+                colIdReplaceIdx = resultFromFirstFilter.idReplaceIdx;
+                _columnIdCombinationsToShow = null;
+                _columnIdCombinationsToShow = resultFromFirstFilter.idCombinations;
+
+                for (f = appliedFilters[0].isIncludeAll ? 0 : 1, fLen = appliedFilters.length; f < fLen; f++) {
+                    filter = appliedFilters[f];
+                    addIn = !colIdReplaceIdx ? filter.column + '_' : '_' + filter.column;
+
+                    for (var comboIdx = 0, comboLen = _columnIdCombinationsToShow.length; comboIdx < comboLen; comboIdx++) {
+                        combo = _columnIdCombinationsToShow[comboIdx];
+                        cellId = [combo.slice(0, colIdReplaceIdx), addIn, combo.slice(colIdReplaceIdx)].join('');
+                        cell = data.cells[cellId];
+                        if (!doesCellMatchFilterExpression(cell, filter)) {
+                            _columnIdCombinationsToShow.splice(comboIdx, 1);
+                            comboIdx--;
+                            comboLen--;
+                        }
+                    }
+                }
+                numRows = _columnIdCombinationsToShow.length + 2;
+            }
+        } else {
+            axis = axes[0];
+            numColumns = 2;
+            numRows = getColumnLength(axis) + 2;
+        }
+    }
+
     function handleCubeData(cubeData) {
-
-        var determineAxesOrder = function (cubeAxes) {
-            axes = [];
-            _axisIdsInOrder = [];
-            var i, len, axis;
-            if (hasCustomAxisOrder())
-            {
-                var order = JSON.parse(localStorage[getStorageKey(nce, AXIS_ORDER)]);
-                for (i = 0, len = order.length; i < len; i++)
-                {
-                    axis = cubeAxes[order[i]];
-                    getColumnLength(axis);
-                    axes.push(axis);
-                    _axisIdsInOrder.push(getAxisId(axis));
-                }
-            }
-            else
-            {
-                var keys = Object.keys(cubeAxes);
-                for (i = 0, len = keys.length; i < len; i++) {
-                    axes.push(cubeAxes[keys[i]]);
-                }
-
-                var horizontal;
-                axes.sort(function (a, b) {
-                    return getColumnLength(b) - getColumnLength(a);
-                });
-
-                var delta;
-                var smallestDelta = Number.MAX_VALUE;
-                for (i = 0, len = axes.length; i < len; i++) {
-                    axis = axes[i];
-                    if (headerAxisNames.indexOf(axis.name) > -1) {
-                        horizontal = i;
-                        break;
-                    }
-                    delta = Math.abs(getColumnLength(axis) - 12);
-                    if (delta < smallestDelta) {
-                        smallestDelta = delta;
-                        horizontal = i;
-                    }
-                }
-                horizontal = axes.splice(horizontal, 1);
-                axes.push(horizontal[0]);
-
-                for (i = 0, len = axes.length; i < len; i++) {
-                    _axisIdsInOrder.push(getAxisId(axes[i]));
-                }
-            }
-        };
-
-        var setUpDataTable = function() {
-            cubeName = cubeData.ncube;
-            var totalRows = 1;
-            colOffset = axes.length - 1;
-            _filters = getSavedFilters();
-            var appliedFilters = getAppliedFilters();
-
-            if (axes.length > 1) {
-                var horizAxis = axes[colOffset];
-
-                numColumns = colOffset;
-
-                var colLen = getColumnLength(horizAxis);
-                if (!colLen) {
-                    numColumns++;
-                }
-
-                numColumns += colLen;
-
-                if (!appliedFilters.length) {
-                    for (var axisNum = 0; axisNum < colOffset; axisNum++) {
-                        totalRows *= getColumnLength(axes[axisNum]);
-                    }
-                    numRows = totalRows + 2;
-                } else if (nce.getFilterOutBlankRows()) {
-                    var curFilterResult, filteredColNum, filterResultIdx, filterResultLen, curFilterResultCombo;
-                    _columnIdCombinationsToShow = null;
-                    _columnIdCombinationsToShow = [];
-                    for (filteredColNum = 0; filteredColNum < colLen; filteredColNum++) {
-                        curFilterResult = null;
-                        curFilterResult = getFilteredCellsFromData(filteredColNum).idCombinations;
-                        for (filterResultIdx = 0, filterResultLen = curFilterResult.length; filterResultIdx < filterResultLen; filterResultIdx++) {
-                            curFilterResultCombo = curFilterResult[filterResultIdx];
-                            if (_columnIdCombinationsToShow.indexOf(curFilterResultCombo) < 0) {
-                                _columnIdCombinationsToShow.push(curFilterResultCombo);
-                            }
-                        }
-                    }
-                    _columnIdCombinationsToShow.sort();
-                    numRows = _columnIdCombinationsToShow.length + 2;
-                } else {
-                    var resultFromFirstFilter = getFilteredCellsFromData(0);
-                    var colIdReplaceIdx = resultFromFirstFilter.idReplaceIdx;
-                    _columnIdCombinationsToShow = null;
-                    _columnIdCombinationsToShow = resultFromFirstFilter.idCombinations;
-
-                    for (var f = appliedFilters[0].isIncludeAll ? 0 : 1, fLen = appliedFilters.length; f < fLen; f++) {
-                        var filter = appliedFilters[f];
-                        var addIn = !colIdReplaceIdx ? filter.column + '_' : '_' + filter.column;
-
-                        for (var comboIdx = 0, comboLen = _columnIdCombinationsToShow.length; comboIdx < comboLen; comboIdx++) {
-                            var combo = _columnIdCombinationsToShow[comboIdx];
-                            var cellId = [combo.slice(0, colIdReplaceIdx), addIn, combo.slice(colIdReplaceIdx)].join('');
-                            var cell = data.cells[cellId];
-                            if (!doesCellMatchFilterExpression(cell, filter)) {
-                                _columnIdCombinationsToShow.splice(comboIdx, 1);
-                                comboIdx--;
-                                comboLen--;
-                            }
-                        }
-                    }
-                    numRows = _columnIdCombinationsToShow.length + 2;
-                }
-            }
-            else
-            {
-                var axis = axes[0];
-                numColumns = 2;
-                numRows = getColumnLength(axis) + 2;
-            }
-        };
-
-        var setUpAxisColumnMap = function() {
-            axisColumnMap = null;
-            axisColumnMap = {};
-            for (var axisNum = 0, axisLen = axes.length; axisNum < axisLen; axisNum++) {
-                var axis = axes[axisNum];
-                var axisName = axis.name;
-                axisColumnMap[axisName] = [];
-                var colArray = axisColumnMap[axisName];
-                var colKeys = Object.keys(axis.columns);
-                for (var colNum = 0, colLen = colKeys.length; colNum < colLen; colNum++) {
-                    colArray.push(colKeys[colNum]);
-                }
-
-                if (axis.hasDefault) {
-                    var defaultColumn = getAxisDefault(axis);
-                    var defId = defaultColumn.id;
-                    colArray.push(defId);
-                    axis.columns[defId] = defaultColumn;
-                }
-            }
-        };
-
-        var hideColumns = function()
-        {
-            _hiddenColumns = null;
-            _hiddenColumns = {};
-            var storageKey = getStorageKey(nce, HIDDEN_COLUMNS);
-            if (localStorage.hasOwnProperty(storageKey))
-            {
-                _hiddenColumns = JSON.parse(localStorage[storageKey]);
-            }
-            for (var i = 0, axisLength=axes.length; i < axisLength; i++)
-            {
-                var axis = axes[i];
-                var lowerAxisName = axis.name.toLowerCase();
-                if (_hiddenColumns.hasOwnProperty(lowerAxisName))
-                {
-                    var hiddenAxis = _hiddenColumns[lowerAxisName];
-                    var keys = Object.keys(hiddenAxis);
-                    for (var j = 0, len = keys.length; j < len; j++)
-                    {
-                        axis.columnLength--;
-                        var columnId = keys[j];
-                        delete axis.columns[columnId];
-                    }
-                }
-            }
-        };
-
         if (Object.keys(_expressionLinks).length > MAX_TEMP) {
             _expressionLinks = null;
             _expressionLinks = {};
@@ -1167,13 +1210,13 @@ var NCubeEditor2 = (function ($) {
 
         data = cubeData;
         determineAxesOrder(data.axes);
-        hideColumns();
+        setUpHideColumns();
         setUpDataTable();
         setUpAxisColumnMap();
-        setUpColumnWidths();
     }
 
     function buildTopAxisMenu() {
+        var frozen, idx, offset;
         if (_ncubeHtmlError.is(':visible')) {
             _topAxisBtn.hide();
             return;
@@ -1183,10 +1226,10 @@ var NCubeEditor2 = (function ($) {
             _topAxisBtn.empty();
         } else {
             buildAxisMenu(axes[colOffset], _topAxisBtn);
-            var frozen = getNumFrozenCols();
-            var idx = colOffset > frozen ? colOffset : frozen;
+            frozen = getNumFrozenCols();
+            idx = colOffset > frozen ? colOffset : frozen;
             idx += 2;
-            var offset = _hotContainer.find('div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')').offset();
+            offset = _hotContainer.find('div.ht_clone_top.handsontable > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(' + idx + ')').offset();
             _topAxisBtn.css({top: offset.top + 1, left: offset.left + 1});
         }
     }
@@ -1351,7 +1394,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function findWidestColumn(axis) {
-        var columnId, column, columnText, colWidth, axisCol, axisColLength;
+        var columnId, column, columnText, colWidth, axisCol;
         var findWidthFunc = findWidth;
         var axisName = axis.name;
         var modifier = axis.isRef ? CALC_WIDTH_REF_AX_BUTTON_MOD : CALC_WIDTH_AXIS_BUTTON_MOD;
@@ -1359,13 +1402,16 @@ var NCubeEditor2 = (function ($) {
         var oldWidth = findWidthFunc(0, buttonWidth);
         var correctWidth = oldWidth;
         var axisColumns = axisColumnMap[axisName];
-        for (axisCol = 0, axisColLength = axisColumns.length; axisCol < axisColLength; axisCol++) {
-            columnId = axisColumns[axisCol];
-            column = axis.columns[columnId];
-            columnText = getRowHeaderPlainTextForWidth(axis, column);
-            colWidth = calcDomDims(columnText, column.type).width + CALC_WIDTH_BASE_MOD;
-            correctWidth = findWidthFunc(oldWidth, colWidth);
-            oldWidth = correctWidth;
+        var axisColLength = axisColumns.length;
+        if (axisColLength > 1) {
+            for (axisCol = 0; axisCol < axisColLength; axisCol++) {
+                columnId = axisColumns[axisCol];
+                column = axis.columns[columnId];
+                columnText = getRowHeaderPlainTextForWidth(axis, column);
+                colWidth = calcDomDims(columnText, column.type).width + CALC_WIDTH_BASE_MOD;
+                correctWidth = findWidthFunc(oldWidth, colWidth);
+                oldWidth = correctWidth;
+            }
         }
         return correctWidth;
     }
@@ -2274,6 +2320,9 @@ var NCubeEditor2 = (function ($) {
     // ==================================== Begin Custom HOT Editors ===================================================
 
     function destroyEditor() {
+        if (!hot) {
+            return;
+        }
         if (hot.getActiveEditor()) {
             hot.getActiveEditor().finishEditing(null, null, null, true);
         }
@@ -3959,12 +4008,17 @@ var NCubeEditor2 = (function ($) {
         if (hot) {
             var selection = getSelectedCellRange();
             load(keepTable);
+            if (!hot) { // reload could not construct table
+                return;
+            }
 
             if (selection) {
                 hot.selectCell(selection.startRow, selection.startCol, selection.endRow, selection.endCol, true);
             } else {
                 selectSavedOrDefaultCell();
             }
+        } else { // no table exists
+            load();
         }
     }
 
