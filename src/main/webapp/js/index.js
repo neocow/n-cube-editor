@@ -2890,38 +2890,54 @@ var NCE = (function ($)
         }, PROGRESS_DELAY);
     }
 
-    function updateCubeInfoInOpenCubeList(cubeInfoPart, newValue) {
+    function doesCubeInfoMatchOldAppId(cubeInfoPart, cubeInfo) {
         var appId = getAppId();
+        var doesAppMatch = cubeInfo[CUBE_INFO.APP] === appId.app;
+        var doesVersionMatch = cubeInfo[CUBE_INFO.VERSION] === appId.version;
+        var doesStatusMatch = cubeInfo[CUBE_INFO.STATUS] === appId.status;
+        var doesBranchMatch = cubeInfo[CUBE_INFO.BRANCH] === appId.branch;
 
-        var doesCubeInfoMatchOldAppId = function(cubeInfo) {
-            var doesAppMatch = cubeInfo[CUBE_INFO.APP] === appId.app;
-            var doesVersionMatch = cubeInfo[CUBE_INFO.VERSION] === appId.version;
-            var doesStatusMatch = cubeInfo[CUBE_INFO.STATUS] === appId.status;
-            var doesBranchMatch = cubeInfo[CUBE_INFO.BRANCH] === appId.branch;
+        switch (cubeInfoPart) {
+            case CUBE_INFO.APP:
+                return doesAppMatch;
+            case CUBE_INFO.VERSION:
+                return doesAppMatch && doesVersionMatch;
+            case CUBE_INFO.STATUS:
+                return doesAppMatch && doesVersionMatch && doesStatusMatch;
+            case CUBE_INFO.BRANCH:
+                return doesAppMatch && doesVersionMatch && doesStatusMatch && doesBranchMatch;
+        }
+    }
 
-            switch (cubeInfoPart) {
-                case CUBE_INFO.APP:
-                    return doesAppMatch;
-                case CUBE_INFO.VERSION:
-                    return doesAppMatch && doesVersionMatch;
-                case CUBE_INFO.STATUS:
-                    return doesAppMatch && doesVersionMatch && doesStatusMatch;
-                case CUBE_INFO.BRANCH:
-                    return doesAppMatch && doesVersionMatch && doesStatusMatch && doesBranchMatch;
-            };
-        };
-
-        for (var i = 0, len = _openCubes.length; i < len; i++) {
-            var cubeInfo = getCubeInfo(_openCubes[i].cubeKey);
-            if (doesCubeInfoMatchOldAppId(cubeInfo)) {
+    function updateCubeInfoInOpenCubeList(cubeInfoPart, newValue) {
+        var i, len, cubeInfo;
+        for (i = 0, len = _openCubes.length; i < len; i++) {
+            cubeInfo = getCubeInfo(_openCubes[i].cubeKey);
+            if (doesCubeInfoMatchOldAppId(cubeInfoPart, cubeInfo)) {
                 cubeInfo[cubeInfoPart] = newValue;
                 _openCubes[i].cubeKey = getCubeInfoKey(cubeInfo);
             }
         }
         saveOpenCubeList();
 
-        if (doesCubeInfoMatchOldAppId(_selectedCubeInfo)) {
+        if (doesCubeInfoMatchOldAppId(cubeInfoPart, _selectedCubeInfo)) {
             _selectedCubeInfo[cubeInfoPart] = newValue;
+        }
+        buildTabs();
+    }
+
+    function removeCubeInfoInOpenCubeList(cubeInfoPart) {
+        var i, cubeInfo;
+        for (i = _openCubes.length; i--;) {
+            cubeInfo = getCubeInfo(_openCubes[i].cubeKey);
+            if (doesCubeInfoMatchOldAppId(cubeInfoPart, cubeInfo)) {
+                _openCubes.splice(i, 1);
+            }
+        }
+        saveOpenCubeList();
+
+        if (doesCubeInfoMatchOldAppId(cubeInfoPart, _selectedCubeInfo)) {
+            _selectedCubeInfo = _openCubes.length ? getCubeInfo(_openCubes[0].cubeKey) : [];
         }
         buildTabs();
     }
@@ -3635,15 +3651,16 @@ var NCE = (function ($)
         $('#deleteBranchModal').modal();
     }
 
-    function deleteBranchOk()
-    {
+    function deleteBranchOk() {
+        var result;
+        var appId = getAppId();
         $('#deleteBranchModal').modal('hide');
         clearError();
-        var appId = getAppId();
 
-        var result = call('ncubeController.deleteBranch', [appId]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_BRANCH, [appId]);
         if (result.status) {
             removeFromVisitedBranchesList(_selectedApp, appId.branch);
+            removeCubeInfoInOpenCubeList(CUBE_INFO.BRANCH);
             changeBranch(head);
         } else {
             showNote('Unable to delete branch:<hr class="hr-small"/>' + result.data);

@@ -137,6 +137,7 @@ var CONTROLLER_METHOD = {
     CHECK_PERMISSIONS: 'checkPermissions',
     COPY_CELLS: 'copyCells',
     DELETE_AXIS: 'deleteAxis',
+    DELETE_BRANCH: 'deleteBranch',
     FETCH_HTML_BRANCH_DIFFS: 'fetchHtmlBranchDiffs',
     FETCH_HTML_REV_DIFFS: 'fetchHtmlRevDiffs',
     FETCH_JSON_BRANCH_DIFFS: 'fetchJsonBranchDiffs',
