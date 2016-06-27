@@ -140,9 +140,9 @@ var NCE = (function ($)
         {
             setupMainSplitter();
             startWorkers();
-            showActiveBranch();
             loadAppListView();
             loadVersionListView();
+            showActiveBranch();
             loadNCubes();
             buildMenu();
             clearSearch();
@@ -1309,23 +1309,23 @@ var NCE = (function ($)
             if (state)
             {
                 _selectedCubeName = state.cube;
-                if (_selectedApp == state.app &&
-                    _selectedVersion == state.version &&
-                    _selectedStatus == state.status &&
-                    _selectedBranch == state.branch)
+                if (_selectedApp === state.app &&
+                    _selectedVersion === state.version &&
+                    _selectedStatus === state.status &&
+                    _selectedBranch === state.branch)
                 {   // Make Back button WAY faster when only cube name changes - no need to reload other lists.
                     selectCubeByName(_selectedCubeName);
                 }
                 else
                 {
-                    _selectedApp = state.app;
-                    _selectedVersion = state.version;
-                    _selectedStatus = state.status;
+                    saveSelectedApp(state.app);
+                    saveSelectedVersion(state.version);
+                    saveSelectedStatus(state.status);
+                    saveSelectedBranch(state.branch);
                     _selectedCubeName = state.cube;
-                    _selectedBranch = state.branch;
-                    showActiveBranch();
                     loadAppListView();
                     loadVersionListView();
+                    showActiveBranch();
                     loadNCubes();
                     selectCubeByName(_selectedCubeName);
                     buildMenu();
@@ -1380,9 +1380,8 @@ var NCE = (function ($)
         _releaseCubesOk.click(function () {
             releaseCubesOk();
         });
-        $('#changeVerOk').click(function ()
-        {
-            changeVersionOk();
+        $('#changeVerOk').on('click', function () {
+            setTimeout(changeVersionOk, PROGRESS_DELAY);
         });
         $('#clearStorage').click(function()
         {
@@ -1718,6 +1717,7 @@ var NCE = (function ($)
                 {   // Allow selection widget to update before loading content
                     loadAppListView();
                     loadVersionListView();
+                    showActiveBranch();
                     loadNCubes();
                     runSearch();
                     buildMenu();
@@ -1848,8 +1848,9 @@ var NCE = (function ($)
 
         setCubeListLoading();
 
-        setTimeout(function()
-        {   // Allow bootstrap-selection widget to update before loading content
+        setTimeout(function() {
+            // Allow bootstrap-selection widget to update before loading content
+            showActiveBranch();
             loadNCubes();
             runSearch();
             buildMenu();
@@ -2069,7 +2070,7 @@ var NCE = (function ($)
             showNote('Unable to load n-cube Apps:<hr class="hr-small"/>' + result.data);
         }
         
-        if (apps.length > 0 && (!_selectedApp || !doesItemExist(_selectedApp, apps))) {
+        if (apps.length > 0 && (!_selectedApp || apps.indexOf(_selectedApp) === -1)) {
             saveSelectedApp(apps[0]);
         }
         return apps;
@@ -2120,10 +2121,10 @@ var NCE = (function ($)
         appId.version = version;
         appId.app = appName;
         var result = call("ncubeController.createCube", [appId, cubeName]);
-        if (result.status === true)
+        if (result.status)
         {
-            _selectedApp = appName;
-            _selectedVersion = appId.version;
+            saveSelectedApp(appName);
+            saveSelectedVersion(appId.version);
             loadAppListView();
             loadVersionListView();
             loadNCubes();
@@ -2587,12 +2588,12 @@ var NCE = (function ($)
             'branch':_selectedBranch
         };
         var result = call("ncubeController.duplicateCube", [getAppId(), destAppId, _selectedCubeName, newName]);
-        if (result.status === true)
+        if (result.status)
         {
-            _selectedApp = newApp;
+            saveSelectedApp(newApp);
             loadAppListView();
-            _selectedStatus = STATUS.SNAPSHOT;
-            _selectedVersion = newVersion;
+            saveSelectedStatus(STATUS.SNAPSHOT);
+            saveSelectedVersion(newVersion);
             loadVersionListView();
             loadNCubes();
             clearSearch();
@@ -2868,26 +2869,21 @@ var NCE = (function ($)
         $('#changeVerModal').modal();
     }
 
-    function changeVersionOk()
-    {
-        setTimeout(function() {
-            $('#changeVerModal').modal('hide');
-            var newSnapVer = $('#changeVerValue').val();
-            var result = call("ncubeController.changeVersionValue", [getAppId(), newSnapVer]);
-            if (result.status)
-            {
-                updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
-                _selectedVersion = doesItemExist(newSnapVer, loadVersions()) ? newSnapVer : _selectedVersion;
-                loadVersionListView();
-                loadNCubes();
-                loadCube();
-                runSearch();
-            }
-            else
-            {
-                showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
-            }
-        }, PROGRESS_DELAY);
+    function changeVersionOk() {
+        var newSnapVer, result, versions;
+        $('#changeVerModal').modal('hide');
+        newSnapVer = $('#changeVerValue').val();
+        result = call(CONTROLLER + CONTROLLER_METHOD.CHANGE_VERSION_VALUE, [getAppId(), newSnapVer]);
+        if (result.status) {
+            updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
+            saveSelectedVersion(newSnapVer);
+            loadVersionListView();
+            loadNCubes();
+            loadCube();
+            runSearch();
+        } else {
+            showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
+        }
     }
 
     function doesCubeInfoMatchOldAppId(cubeInfoPart, cubeInfo) {
@@ -3129,7 +3125,11 @@ var NCE = (function ($)
     }
 
     function showActiveBranch() {
-        _branchMenu[0].innerHTML = '<button class="btn-sm btn-primary">&nbsp;' + (_selectedBranch || head) + '&nbsp;<b class="caret"></b></button>';
+        var branchNames = getBranchNames();
+        if (branchNames.indexOf(_selectedBranch) === -1) {
+            saveSelectedBranch(head);
+        }
+        _branchMenu[0].innerHTML = '<button class="btn-sm btn-primary">&nbsp;' + _selectedBranch + '&nbsp;<b class="caret"></b></button>';
     }
 
     function getBranchNames() {
@@ -3214,9 +3214,9 @@ var NCE = (function ($)
         _selectBranchModal.modal('hide');
 
         setTimeout(function() {
-            showActiveBranch();
             loadAppListView();
             loadVersionListView();
+            showActiveBranch();
             loadNCubes();
             runSearch();
             buildMenu();
@@ -3974,24 +3974,6 @@ var NCE = (function ($)
             transferObj = createHeartBeatTransferObj();
             _heartBeatThread.postMessage(transferObj, [transferObj.aBuffer]);
         }, 60000);
-    }
-
-    function doesItemExist(item, list)
-    {
-        if (!item)
-        {
-            return false;
-        }
-        var found = false;
-        $.each(list, function (index, value)
-        {
-            if (item.toLowerCase() === value.toLowerCase())
-            {
-                found = true;
-                return;
-            }
-        });
-        return found;
     }
 
     function showNote(msg, title, millis)
