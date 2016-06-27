@@ -22,6 +22,8 @@ var NCubeEditor2 = (function ($) {
     var _tableCellId = null;
     var _columnList = null;
     var _hideColumnsList = null;
+    var _hideColumnsAxisSelect = null;
+    var _hideColumnsModal = null;
     var _hiddenColumns = {};
     var _editCellModal = null;
     var _editCellValue = null;
@@ -102,6 +104,8 @@ var NCubeEditor2 = (function ($) {
 
             _columnList = $('#editColumnsList');
             _hideColumnsList = $('#hideColumnsList');
+            _hideColumnsAxisSelect = $('#hideColumnsAxisSelect');
+            _hideColumnsModal = $('#hideColumnsModal');
             _editCellModal = $('#editCellModal');
             _editCellValue = $('#editCellValue');
             _editCellCache = $('#editCellCache');
@@ -3533,14 +3537,22 @@ var NCubeEditor2 = (function ($) {
     // =============================================== Begin Column Hiding ==========================================
 
     function addColumnHideListeners() {
-        $('#hideColumnsCancel').on('click', hideColCancel);
-        $('#hideColumnsSave').on('click', hideColSave);
+        $('#hideColumnsCancel').on('click', function() {
+            hideColClose();
+        });
+        $('#hideColumnsSave').on('click', function() {
+            hideColSave(true);
+        });
+        _hideColumnsAxisSelect.on('change', function() {
+            hideColSave(false);
+            hideColumns($(this).val());
+        });
     }
 
     function hideColumns(axisName) {
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
         var axis;
-        if (result.status === true) {
+        if (result.status) {
             axis = result.data;
             if (!axis.columns) {
                 axis.columns = [];
@@ -3555,8 +3567,24 @@ var NCubeEditor2 = (function ($) {
         sortColumns(axis);
         loadHiddenColumns(axis);
         $('#hideColumnsLabel')[0].innerHTML = 'Hide ' + axisName + ' columns';
-        addHotBeforeKeyDown();
-        $('#hideColumnsModal').modal();
+
+        if (!_hideColumnsModal.hasClass('in')) {
+            populateHideColumnsAxisSelect(axisName);
+            addHotBeforeKeyDown();
+            _hideColumnsModal.modal();
+        }
+    }
+
+    function populateHideColumnsAxisSelect(axisName) {
+        var i, len;
+        var html = '';
+        for (i = 0, len = axes.length; i < len; i++) {
+            html += '<option>' + axes[i].name + '</option>';
+        }
+        
+        _hideColumnsAxisSelect.empty();
+        _hideColumnsAxisSelect.append(html);
+        _hideColumnsAxisSelect.val(axisName);
     }
 
     function loadHiddenColumns(axis) {
@@ -3597,12 +3625,13 @@ var NCubeEditor2 = (function ($) {
         });
     }
 
-    function hideColCancel() {
-        $('#hideColumnsModal').modal('hide');
+    function hideColClose() {
+        _hideColumnsModal.modal('hide');
         removeHotBeforeKeyDown();
     }
 
-    function hideColSave() {
+    function hideColSave(shouldClose) {
+        var i, len, columnId;
         var axis = _hideColumnsList.prop('model');
         var lowerAxisName = axis.name.toLowerCase();
         var columnIds = [];
@@ -3610,26 +3639,26 @@ var NCubeEditor2 = (function ($) {
             var id = $(this).attr('data-id');
             columnIds.push(id);
         });
-        if (columnIds.length == axis.columns.length)
-        {
+        len = columnIds.length;
+        if (len === axis.columns.length) {
             nce.showNote('Please select at least one column to show.', 'Note', 2000);
             return;
         }
         delete _hiddenColumns[lowerAxisName];
-        if (columnIds.length)
-        {
+        if (len) {
             _hiddenColumns[lowerAxisName] = {};
-            for (var i = 0, len = columnIds.length; i < len; i++)
-            {
-                var columnId = columnIds[i];
+            for (i = 0; i < len; i++) {
+                columnId = columnIds[i];
                 _hiddenColumns[lowerAxisName][columnId] = true;
             }
         }
         storeHiddenColumns();
-        $('#hideColumnsModal').modal('hide');
-        removeHotBeforeKeyDown();
-        destroyEditor();
-        reload();
+
+        if (shouldClose) {
+            hideColClose();
+            destroyEditor();
+            reload();
+        }
     }
 
     function getSavedFilters() {
