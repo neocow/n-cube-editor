@@ -103,6 +103,7 @@ var NCE = (function ($)
     var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
+    var _createSnapshotMenu = $('#createSnapshotMenu');
     var _lockUnlockAppMenu = $('#lockUnlockAppMenu');
     var _getAppLockedByMenu = $('#getAppLockedByMenu');
     var _releaseCubesVersion = $('#releaseCubesVersion');
@@ -124,6 +125,9 @@ var NCE = (function ($)
     var _branchList = $('#branchList');
     var _newBranchName = $('#newBranchName');
     var _branchNameWarning = $('#branchNameWarning');
+    var _createSnapshotLabel = $('#createSnapshotLabel');
+    var _createSnapshotVersion = $('#createSnapshotVersion');
+    var _copyBranchLabel = $('#copyBranchLabel');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -131,6 +135,8 @@ var NCE = (function ($)
     var _diffModal = $('#diffOutputModal');
     var _releaseCubesModal = $('#releaseCubesModal');
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
+    var _createSnapshotModal = $('#createSnapshotModal');
+    var _copyBranchModal = $('#copyBranchModal');
 
     initialize();
 
@@ -1383,6 +1389,9 @@ var NCE = (function ($)
         $('#changeVerOk').on('click', function () {
             setTimeout(changeVersionOk, PROGRESS_DELAY);
         });
+        $('#createSnapshotOk').on('click', function() {
+            createSnapshotFromReleaseOk();
+        });
         $('#clearStorage').click(function()
         {
             clearStorage();
@@ -1440,6 +1449,18 @@ var NCE = (function ($)
         $('#releaseCubesVersionPatch').click(function(e) {
             e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.PATCH));
+        });
+        $('#createSnapshotVersionMajor').click(function(e) {
+            e.preventDefault();
+            _createSnapshotVersion.val(getNextVersion(VERSION.MAJOR));
+        });
+        $('#createSnapshotVersionMinor').click(function(e) {
+            e.preventDefault();
+            _createSnapshotVersion.val(getNextVersion(VERSION.MINOR));
+        });
+        $('#createSnapshotVersionPatch').click(function(e) {
+            e.preventDefault();
+            _createSnapshotVersion.val(getNextVersion(VERSION.PATCH));
         });
         $('#btnClearBranchQuickSelect').click(function(e) {
             e.preventDefault();
@@ -1626,14 +1647,19 @@ var NCE = (function ($)
     function enableDisableReleaseMenu(canReleaseApp) {
         _releaseCubesMenu.off('click');
         _changeVersionMenu.off('click');
+        _createSnapshotMenu.off('click');
+
         if (canReleaseApp) {
             _releaseCubesMenu.on('click', releaseCubes);
             _changeVersionMenu.on('click', changeVersion);
+            _createSnapshotMenu.on('click', createSnapshotFromRelease);
             _releaseCubesMenu.parent().removeClass('disabled');
             _changeVersionMenu.parent().removeClass('disabled');
+            _createSnapshotMenu.parent().removeClass('disabled');
         } else {
             _releaseCubesMenu.parent().addClass('disabled');
             _changeVersionMenu.parent().addClass('disabled');
+            _createSnapshotMenu.parent().addClass('disabled');
         }
     }
 
@@ -2870,7 +2896,7 @@ var NCE = (function ($)
     }
 
     function changeVersionOk() {
-        var newSnapVer, result, versions;
+        var newSnapVer, result;
         $('#changeVerModal').modal('hide');
         newSnapVer = $('#changeVerValue').val();
         result = call(CONTROLLER + CONTROLLER_METHOD.CHANGE_VERSION_VALUE, [getAppId(), newSnapVer]);
@@ -2884,6 +2910,38 @@ var NCE = (function ($)
         } else {
             showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
         }
+    }
+
+    function createSnapshotFromRelease() {
+        clearError();
+        if (_selectedStatus !== STATUS.RELEASE) {
+            showNote('Must select a released version to copy.');
+            return;
+        }
+        _createSnapshotLabel[0].textContent = 'Copy ' + _selectedApp + ' ' + _selectedVersion + '-RELEASE';
+        _createSnapshotModal.modal();
+    }
+
+    function createSnapshotFromReleaseOk() {
+        var result;
+        var origAppId = getAppId();
+        var copyAppId = getAppId();
+        var newSnapVer = _createSnapshotVersion.val();
+        copyAppId.version = newSnapVer;
+        copyAppId.status = STATUS.SNAPSHOT;
+        
+        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId]);
+        if (!result.status) {
+            showNote('Error creating new SNAPSHOT:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+
+        _createSnapshotModal.modal('hide');
+        saveSelectedVersion(newSnapVer);
+        saveSelectedStatus(STATUS.SNAPSHOT);
+        loadVersionListView();
+        loadNCubes();
+        runSearch();
     }
 
     function doesCubeInfoMatchOldAppId(cubeInfoPart, cubeInfo) {
@@ -3092,6 +3150,12 @@ var NCE = (function ($)
         $('#deleteBranchOk').click(function()
         {
             deleteBranchOk();
+        });
+        $('#branchCopy').on('click', function() {
+            copyBranch();
+        });
+        $('#copyBranchOk').on('click', function() {
+            copyBranchOk();
         });
         // From 'Select / Create Branch' Modal
         $('#createBranch').click(function()
@@ -3637,6 +3701,49 @@ var NCE = (function ($)
         }
 
         reloadCube();
+    }
+
+    function copyBranch() {
+        clearError();
+        $('#copyBranchAppName').val(_selectedApp);
+        $('#copyBranchStatus').val(STATUS.SNAPSHOT);
+        $('#copyBranchVersion').val(_selectedVersion);
+        $('#copyBranchName').val('');
+        buildDropDown('#copyBranchAppList', '#copyBranchAppName', loadAppNames(), function (app) {
+            buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
+        });
+        buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
+
+        _copyBranchLabel[0].textContent = 'Copy ' + _selectedApp + ' ' + _selectedVersion + '-' + _selectedStatus + ' ' + _selectedBranch;
+        _copyBranchModal.modal();
+    }
+
+    function copyBranchOk() {
+        var result;
+        var origAppId = getAppId();
+        var copyAppId = {
+            app: $('#copyBranchAppName').val(),
+            version: $('#copyBranchVersion').val(),
+            status: STATUS.SNAPSHOT,
+            branch: $('#copyBranchName').val()
+        };
+        
+        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId]);
+        if (!result.status) {
+            showNote('Unable to copy branch:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        
+        _copyBranchModal.modal('hide');
+        saveSelectedApp(copyAppId.app);
+        saveSelectedVersion(copyAppId.version);
+        saveSelectedStatus(copyAppId.status);
+        saveSelectedBranch(copyAppId.branch);
+        loadAppListView();
+        loadVersionListView();
+        showActiveBranch();
+        loadNCubes();
+        runSearch();
     }
 
     function deleteBranch()
