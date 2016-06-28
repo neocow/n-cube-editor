@@ -76,6 +76,7 @@
                 <ul class="dropdown-menu">
                     <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
                     <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
+                    <li><a href="#" id="createSnapshotMenu">Create SNAPSHOT from RELEASE</a></li>
                     <li class="divider" />
                     <li><a href="#" id="lockUnlockAppMenu"></a></li>
                     <li class="disabled"><a href="#" id="getAppLockedByMenu"></a></li>
@@ -109,6 +110,7 @@
                 <li><a id="branchSelect" href="#">Select/Create Branch...</a></li>
                 <li><a id="branchUpdate" href="#">Update Branch from HEAD</a></li>
                 <li class="dropdown-submenu"><a id="branchCompareUpdate" href="#" tabindex="-1">Compare/Update Branch</a></li>
+                <li><a id="branchCopy" href="#">Copy Branch...</a></li>
                 <li><a id="branchDelete" href="#">Delete Branch</a></li>
                 <li class="divider"></li>
                 <li><a id="branchCommit" href="#">Commit Branch...</a></li>
@@ -395,6 +397,59 @@
     </div>
 </div>
 
+<!-- Copy Branch Modal -->
+<div id="copyBranchModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="copyBranchLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="copyBranchLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="copyBranchAppName">App</label>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="copyBranchAppList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="copyBranchAppName" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newCubeStatus">Status</label>
+                        <input class="form-control" type="text" placeholder="" id="copyBranchStatus" readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label for="copyBranchVersion">Version</label>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="copyBranchVersionList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="copyBranchVersion" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="copyBranchName">New Branch Name</label>
+                        <input class="form-control" type="text" id="copyBranchName" placeholder="Type name here"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <button id="copyBranchOk" class="btn btn-primary">Copy Branch</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Branch Modal -->
 <div id="deleteBranchModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteBranchLabel"
      aria-hidden="true" data-backdrop="static">
@@ -607,6 +662,37 @@
             <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
                 <button id="releaseCubesOk" class="btn btn-primary">Release</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Snapshot Modal -->
+<div id="createSnapshotModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="releaseCubesLabel"
+     aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="createSnapshotLabel" class="modal-title"></h3>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label>What kind of version is this?</label>
+                        <button class="btn btn-primary" id="createSnapshotVersionMajor">Major</button>
+                        <button class="btn btn-primary" id="createSnapshotVersionMinor">Minor</button>
+                        <button class="btn btn-primary" id="createSnapshotVersionPatch">Patch</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="createSnapshotVersion">New SNAPSHOT Version</label>
+                        <input class="form-control" type="text" placeholder="Version number n.n.n" id="createSnapshotVersion" readonly/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                <button id="createSnapshotOk" class="btn btn-primary">Create</button>
             </div>
         </div>
     </div>
