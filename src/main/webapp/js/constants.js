@@ -136,6 +136,7 @@ var CONTROLLER_METHOD = {
     BREAK_AXIS_REFERENCE: 'breakAxisReference',
     CHANGE_VERSION_VALUE: 'changeVersionValue',
     CHECK_PERMISSIONS: 'checkPermissions',
+    COPY_BRANCH: 'copyBranch',
     COPY_CELLS: 'copyCells',
     DELETE_AXIS: 'deleteAxis',
     DELETE_BRANCH: 'deleteBranch',
