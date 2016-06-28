@@ -1584,16 +1584,16 @@ class NCubeController extends BaseController
         }
     }
 
-    void copyBranch(ApplicationID origAppId, ApplicationID copyAppId)
+    void copyBranch(ApplicationID srcAppId, ApplicationID targetAppId)
     {
         try
         {
-            origAppId = addTenant(origAppId)
-            copyAppId = addTenant(copyAppId)
-            nCubeService.copyBranch(origAppId, copyAppId)
-            addToAppCache(copyAppId.tenant, copyAppId.app)
-            addToVersionsCache(copyAppId)
-            addBranchToCache(copyAppId)
+            srcAppId = addTenant(srcAppId)
+            targetAppId = addTenant(targetAppId)
+            nCubeService.copyBranch(srcAppId, targetAppId)
+            addToAppCache(targetAppId.tenant, targetAppId.app)
+            addToVersionsCache(targetAppId)
+            addBranchToCache(targetAppId)
         }
         catch (Exception e)
         {

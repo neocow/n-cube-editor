@@ -83,9 +83,9 @@ class NCubeService
         NCubeManager.createBranch(appId)
     }
 
-    void copyBranch(ApplicationID origAppId, ApplicationID copyAppId)
+    void copyBranch(ApplicationID srcAppId, ApplicationID targetAppId)
     {
-        NCubeManager.copyBranch(origAppId, copyAppId)
+        NCubeManager.copyBranch(srcAppId, targetAppId)
     }
 
     Set<String> getBranches(ApplicationID appId)
