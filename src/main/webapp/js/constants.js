@@ -134,6 +134,7 @@ var CONTROLLER_METHOD = {
     ACCEPT_THEIRS: 'acceptTheirs',
     ADD_AXIS: 'addAxis',
     BREAK_AXIS_REFERENCE: 'breakAxisReference',
+    CHANGE_VERSION_VALUE: 'changeVersionValue',
     CHECK_PERMISSIONS: 'checkPermissions',
     COPY_CELLS: 'copyCells',
     DELETE_AXIS: 'deleteAxis',
