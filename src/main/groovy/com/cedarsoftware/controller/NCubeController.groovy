@@ -1310,6 +1310,55 @@ class NCubeController extends BaseController
         }
     }
 
+    /**
+     * This API will fetch particular cell values (identified by the idArrays) for the passed
+     * in appId and named cube.  The idArrays is an Object[] of Object[]'s:<pre>
+     * [
+     *  [1, 2, 3],
+     *  [4, 5, 6],
+     *  [7, 8, 9],
+     *   ...
+     *]
+     * In the example above, the 1st entry [1, 2, 3] identifies the 1st cell to fetch.  The 2nd entry [4, 5, 6]
+     * identifies the 2nd cell to fetch, and so on.
+     * </pre>
+     * @return Object[] The return value is an Object[] containing Object[]'s with the original coordinate
+     *  as the first entry and the cell value as the 2nd entry:<pre>
+     * [
+     *  [[1, 2, 3], {"type":"int", "value":75}],
+     *  [[4, 5, 6], {"type":"exp", "cache":false, "value":"return 25"}],
+     *  [[7, 8, 9], {"type":"string", "value":"hello"}],
+     *   ...
+     * ]
+     * </pre>
+     */
+    Object[] getCellsNoExecute(ApplicationID appId, String cubeName, Object[] idArrays)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            NCube ncube = nCubeService.getCube(appId, cubeName)
+            Object[] ret = new Object[idArrays.length]
+            Set key = new HashSet()
+            int idx = 0
+
+            idArrays.each { Object[] coord ->
+                coord.each { key.add(Converter.convert(it, Long.class))}
+                CellInfo cellInfo = new CellInfo(ncube.getCellByIdNoExecute(key))
+                cellInfo.collapseToUiSupportedTypes()
+                ret[idx++] = [coord, cellInfo as Map]
+                key.clear()
+            }
+
+            return ret
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return null
+        }
+    }
+
     Map getCellCoordinate(ApplicationID appId, String cubeName, Object[] ids)
     {
         try
@@ -1556,6 +1605,21 @@ class NCubeController extends BaseController
         {
             fail(e)
             return null
+        }
+    }
+
+    int getBranchCount(ApplicationID appId)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            // Run against database as this is used to verify live record counts
+            return nCubeService.getBranchCount(appId)
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return 0
         }
     }
 
