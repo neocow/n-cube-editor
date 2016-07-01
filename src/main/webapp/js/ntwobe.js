@@ -25,6 +25,7 @@ var NCubeEditor2 = (function ($) {
     var _hideColumnsAxisSelect = null;
     var _hideColumnsModal = null;
     var _hiddenColumns = {};
+    var _ghostAxes = null;
     var _editCellModal = null;
     var _editCellValue = null;
     var _editCellCache = null;
@@ -702,17 +703,17 @@ var NCubeEditor2 = (function ($) {
         }
 
         _searchCoords.sort(function(a, b) {
-            var aa = a.split('_');
-            var ab = b.split('_');
-            var rowA = parseInt(aa[0]);
-            var rowB = parseInt(ab[0]);
+            var aa, ab, rowA, rowB, colA, colB;
+            aa = a.split('_');
+            ab = b.split('_');
+            rowA = parseInt(aa[0]);
+            rowB = parseInt(ab[0]);
             if (rowA === rowB) {
-                var colA = parseInt(aa[1]);
-                var colB = parseInt(ab[1]);
+                colA = parseInt(aa[1]);
+                colB = parseInt(ab[1]);
                 return colA - colB;
-            } else {
-                return rowA - rowB;
             }
+            return rowA - rowB;
         });
     }
 
@@ -724,6 +725,12 @@ var NCubeEditor2 = (function ($) {
             })
             .removeClass('btn-primary')
             .addClass('btn-warning');
+        
+        if (hasGhostAxes()) {
+            _topAxisBtn.find('button')
+                .removeClass('btn-primary')
+                .addClass('btn-info');
+        }
     }
 
     function getColumnLength(axis) {
@@ -888,6 +895,11 @@ var NCubeEditor2 = (function ($) {
         var val = getRowHeaderValue(axes[col], getRowHeader(row, col));
         return val.replace(REGEX_HR_TAG, ' - ').replace(REGEX_ANY_TAG, '');
     }
+    
+    function getAxisColumnPlainText(axis, column) {
+        var val = getRowHeaderValue(axis, column);
+        return val.replace(REGEX_HR_TAG, ' - ').replace(REGEX_ANY_TAG, '');
+    }
 
     function getRowHeaderId(row, col) {
         var header = getRowHeader(row, col);
@@ -899,11 +911,18 @@ var NCubeEditor2 = (function ($) {
     function getCellId(row, col) {
         var cellId = '';
         var headerInfo = [];
-        var i;
+        var i, ghostAxisColumns;
+        var ghostKeys = Object.keys(_ghostAxes);
+        var ghostLen = ghostKeys.length;
+        var len = axes.length + ghostLen;
 
-        if (axes.length > 1) {
+        if (len > 1 ) {
             for (i = 0; i < colOffset; i++) {
                 headerInfo.push(getRowHeaderId(row, i));
+            }
+            for (i = 0; i < ghostLen; i++) {
+                ghostAxisColumns = _ghostAxes[ghostKeys[i]].columns;
+                headerInfo.push(Object.keys(ghostAxisColumns)[0]);
             }
             headerInfo.push(getColumnHeaderId(col));
 
@@ -1023,7 +1042,7 @@ var NCubeEditor2 = (function ($) {
                 colCell = colCells[colCellKey];
                 if (doesCellMatchFilterExpression(colCell, filter)) {
                     colIdReplaceIdx = colCellKey.indexOf(filter.column);
-                    axisColId = colCellKey.replace(filter.column,'').replace('__','');
+                    axisColId = colCellKey.replace(filter.column,'').replace('__','_');
                     if (!axisColId.indexOf('_')) {
                         axisColId = axisColId.substring(1);
                     } else if (axisColId.substring(axisColId.length - 1) === '_') {
@@ -1087,10 +1106,11 @@ var NCubeEditor2 = (function ($) {
         var i, axisLength, axis, lowerAxisName, keys, j, len;
         var storageKey = getStorageKey(nce, HIDDEN_COLUMNS);
         _hiddenColumns = null;
-        _hiddenColumns = {};
-        if (localStorage.hasOwnProperty(storageKey)) {
-            _hiddenColumns = JSON.parse(localStorage[storageKey]);
+        if (!localStorage.hasOwnProperty(storageKey)) {
+            _hiddenColumns = {};
+            return;
         }
+        _hiddenColumns = JSON.parse(localStorage[storageKey]);
         for (i = 0, axisLength = axes.length; i < axisLength; i++) {
             axis = null;
             axis = axes[i];
@@ -1104,6 +1124,30 @@ var NCubeEditor2 = (function ($) {
                 }
             }
         }
+    }
+
+    function setUpGhostAxes() {
+        var i;
+        var storageKey = getStorageKey(nce, GHOST_AXES);
+        _ghostAxes = null;
+        if (!localStorage.hasOwnProperty(storageKey)) {
+            _ghostAxes = {};
+            return;
+        }
+        _ghostAxes = JSON.parse(localStorage[storageKey]);
+        for (i = axes.length; i--;) {
+            if (_ghostAxes.hasOwnProperty(axes[i].name)) {
+                axes.splice(i, 1);
+            }
+        }
+    }
+
+    function storeGhostAxes() {
+        saveOrDeleteValue(_ghostAxes, getStorageKey(nce, GHOST_AXES));
+    }
+
+    function hasGhostAxes() {
+        return Object.keys(_ghostAxes).length;
     }
 
     function setUpAxisColumnMap() {
@@ -1214,6 +1258,7 @@ var NCubeEditor2 = (function ($) {
 
         data = cubeData;
         determineAxesOrder(data.axes);
+        setUpGhostAxes();
         setUpHideColumns();
         setUpDataTable();
         setUpAxisColumnMap();
@@ -1596,7 +1641,7 @@ var NCubeEditor2 = (function ($) {
                 saveRowHeight(currentRow, newSize);
             },
             afterSelection: function(r, c, r2, c2) {
-                var axisName, axisVal, axisNum, axis;
+                var axisName, axisVal, axisNum, axis, ghostLen, g, ghostKeys, ghostAxis, ghostAxisColumns;
                 var display = '';
                 if (c >= colOffset) {
                     if (r > 1) {
@@ -1605,6 +1650,17 @@ var NCubeEditor2 = (function ($) {
                             axisName = axes[axisNum].name;
                             axisVal = getRowHeaderPlainText(r, axisNum);
                             display += '<strong>' + axisName + '</strong>: ' + axisVal + ', ';
+                        }
+                        ghostKeys = Object.keys(_ghostAxes);
+                        ghostLen = ghostKeys.length;
+                        if (ghostLen) {
+                            for (g = 0; g < ghostLen; g++) {
+                                ghostAxis = null;
+                                ghostAxis = _ghostAxes[ghostKeys[g]];
+                                ghostAxisColumns = ghostAxis.columns;
+                                display += '<strong>' + ghostAxis.name + '</strong>: '
+                                    + getAxisColumnPlainText(ghostAxis, ghostAxisColumns[Object.keys(ghostAxisColumns)[0]]) + ', ';
+                            }
                         }
                         if (axes.length > 1) {
                             axis = axes[colOffset];
@@ -2048,6 +2104,7 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             if (!_hiddenColumns.hasOwnProperty(axisLower)) {
                 e.stopImmediatePropagation();
+                return;
             }
             closeAxisMenu();
             delete _hiddenColumns[axisLower];
@@ -2059,6 +2116,7 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             if (!localStorage[columnWidthStorageKey]) {
                 e.stopImmediatePropagation();
+                return;
             }
             closeAxisMenu();
             saveOrDeleteValue(null, columnWidthStorageKey);
@@ -2086,6 +2144,7 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             if (!axisIndex) {
                 e.stopImmediatePropagation();
+                return;
             }
             closeAxisMenu();
             moveAxis(axisIndex, axisIndex - 1);
@@ -2100,6 +2159,7 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             if (axisIndex === axes.length - 2) {
                 e.stopImmediatePropagation();
+                return;
             }
             closeAxisMenu();
             moveAxis(axisIndex, axisIndex + 1);
@@ -2108,9 +2168,33 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             if (!hasCustomAxisOrder()) {
                 e.stopImmediatePropagation();
+                return;
             }
             closeAxisMenu();
             delete localStorage[getStorageKey(nce, AXIS_ORDER)];
+            reload();
+        });
+        div.find('a.anc-hide-axis').on('click', function (e) {
+            e.preventDefault();
+            if (axis.columnLength !== 1) {
+                e.stopImmediatePropagation();
+                return;
+            }
+            closeAxisMenu();
+            _ghostAxes[axisName] = axis;
+            storeGhostAxes();
+            reload();
+        });
+        div.find('a.anc-show-all-axes').on('click', function (e) {
+            e.preventDefault();
+            if (!hasGhostAxes()) {
+                e.stopImmediatePropagation();
+                return;
+            }
+            closeAxisMenu();
+            _ghostAxes = null;
+            _ghostAxes = {};
+            storeGhostAxes();
             reload();
         });
     }
@@ -2238,11 +2322,24 @@ var NCubeEditor2 = (function ($) {
         html += '><a href="#" class="anc-revert-sizing">Revert Column / Row Sizing</a></li>';
         html += '<li class="divider"/>';
 
-        html += '<li><a href="#" class="anc-frozen-columns"># Frozen Columns:';
-        html += '<input type="text" class="form-control frozen-cols-input" value="' + getNumFrozenCols() + '"/>'
-        html += '</a></li>';
+        if (isTopAxis) {
+            html += '<li';
+            if (!hasGhostAxes()) {
+                html += ' class="disabled"';
+            }
+            html += '><a href="#" class="anc-show-all-axes">Show All Axes</a></li>';
+        } else {
+            html += '<li><a href="#" class="anc-frozen-columns"># Frozen Columns:';
+            html += '<input type="text" class="form-control frozen-cols-input" value="' + getNumFrozenCols() + '"/>'
+            html += '</a></li>';
 
-        if (!isTopAxis) {
+            html += '<li class="divider"/>';
+            html += '<li';
+            if (axis.columnLength !== 1) {
+                html += ' class="disabled"';
+            }
+            html += '><a href="#" class="anc-hide-axis">Hide Axis</a></li>';
+
             html += '<li class="divider"/>';
             html += '<li><a href="#" class="dropdown-header">Move Axis</a></li>';
             html += '<li><div role="group" class="btn-group btn-group-sm indent-axis-buttons">';
