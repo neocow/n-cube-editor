@@ -42,8 +42,12 @@
         <version.spring>4.2.5.RELEASE</version.spring>
         <version.servlet>3.1.0</version.servlet>
         <version.java>1.7</version.java>
+        <version.tomcat>8.0.32</version.tomcat>
         <version.mysql>5.1.38</version.mysql>
         <version.tuckey>4.0.4</version.tuckey>
+        <version.plugin.gcloud>2.0.9.111.v20160527</version.plugin.gcloud>
+        <version.plugin.appengine>1.9.38</version.plugin.appengine>
+        <version.plugin.jetty>9.3.10.v20160621</version.plugin.jetty>
         <version.plugin.compiler>3.5.1</version.plugin.compiler>
         <version.plugin.nexus>1.6.6</version.plugin.nexus>
         <version.plugin.deploy>2.8.2</version.plugin.deploy>
@@ -87,6 +91,33 @@
 
     <build>
         <plugins>
+
+            <plugin>
+                <groupId>com.google.appengine</groupId>
+                <artifactId>gcloud-maven-plugin</artifactId>
+                <version>${version.plugin.gcloud}</version>
+                <configuration>
+                    <gcloud_directory>/workspace/google-cloud-sdk</gcloud_directory>
+                    <verbosity>debug</verbosity>
+                    <version>specific_version</version>
+                    <promote>true</promote>
+                    <log_level>info</log_level>
+                    <max_module_instances>2</max_module_instances>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.google.appengine</groupId>
+                <artifactId>appengine-maven-plugin</artifactId>
+                <version>${version.plugin.appengine}</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>${version.plugin.jetty}</version>
+            </plugin>
+
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${version.plugin.compiler}</version>
@@ -181,12 +212,6 @@
                     <warName>n-cube-editor</warName>
                     <webXml>src\main\webapp\WEB-INF\web.xml</webXml>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>com.google.appengine</groupId>
-                <artifactId>appengine-maven-plugin</artifactId>
-                <version>1.9.38</version>
             </plugin>
 
         </plugins>
@@ -312,10 +337,11 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jdbc</artifactId>
-            <version>8.0.32</version>
+            <version>${version.tomcat}</version>
         </dependency>
 
     </dependencies>
