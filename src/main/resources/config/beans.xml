@@ -75,9 +75,9 @@
 
     <!--<bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"-->
           <!--p:driverClassName="com.mysql.jdbc.Driver"-->
-          <!--p:url="jdbc:mysql://mysqldev.cwge6txtewt5.us-east-1.rds.amazonaws.com:3306/ncube"-->
+          <!--p:url="jdbc:mysql://nce-cluster.cluster-cftwensx3e0t.us-east-1.rds.amazonaws.com:3306/ncube"-->
           <!--p:username="ncube"-->
-          <!--p:password="ncube"-->
+          <!--p:password="ncubencube"-->
           <!--p:initialSize="5"-->
           <!--p:minIdle="5"-->
           <!--p:maxIdle="10"-->
