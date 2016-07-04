@@ -1848,6 +1848,9 @@ var NCE = (function ($)
         var versions, i, len, ul, html;
         html = '';
         versions = loadVersions();
+        if (!versions)
+            return;
+
         for (i = 0, len = versions.length; i < len; i++) {
             html += '<li><a href="#">' + versions[i] + '</a></li>';
         }
