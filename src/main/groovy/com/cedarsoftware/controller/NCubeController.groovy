@@ -1883,7 +1883,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage())
-            return ['~Title':'Configuration Editor',
+            return ['~Title':'Enterprise Configurator',
                     'n-cube':[html:'html/ntwobe.html',img:'img/letter-n.png'],
                     'n-cube-old':[html:'html/ncube.html',img:'img/letter-o.png'],
                     'JSON':[html:'html/jsonEditor.html',img:'img/letter-j.png'],
