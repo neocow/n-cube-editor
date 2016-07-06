@@ -45,13 +45,20 @@ class NCubeService
     {
         if (!options[NCubeManager.SEARCH_EXACT_MATCH_NAME])
         {
-            if (!cubeNamePattern.startsWith('*'))
+            if (cubeNamePattern)
             {
-                cubeNamePattern = '*' + cubeNamePattern
-            }
-            if (!cubeNamePattern.endsWith('*'))
-            {
-                cubeNamePattern = cubeNamePattern + '*'
+                if (!cubeNamePattern.startsWith('*'))
+                {
+                    cubeNamePattern = '*' + cubeNamePattern
+                }
+                if (!cubeNamePattern.endsWith('*'))
+                {
+                    cubeNamePattern = cubeNamePattern + '*'
+                }
+                if ('*' == cubeNamePattern)
+                {
+                    cubeNamePattern = null
+                }
             }
         }
 
