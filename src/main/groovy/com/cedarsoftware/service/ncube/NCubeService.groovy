@@ -85,11 +85,6 @@ class NCubeService
         return NCubeManager.getVersions(tenant, app)
     }
 
-    void createBranch(ApplicationID appId)
-    {
-        NCubeManager.createBranch(appId)
-    }
-
     void copyBranch(ApplicationID srcAppId, ApplicationID targetAppId)
     {
         NCubeManager.copyBranch(srcAppId, targetAppId)

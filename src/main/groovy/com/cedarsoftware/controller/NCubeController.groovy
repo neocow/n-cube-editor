@@ -1575,7 +1575,7 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            nCubeService.createBranch(appId)
+            nCubeService.copyBranch(appId.asHead(), appId)
             addBranchToCache(appId)
         }
         catch (Exception e)
