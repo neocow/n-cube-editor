@@ -16,6 +16,7 @@ import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.NCubeManager.ACTION
 import com.cedarsoftware.ncube.NCubeTest
+import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.StringValuePair
 import com.cedarsoftware.ncube.exception.AxisOverlapException
@@ -490,6 +491,11 @@ class NCubeController extends BaseController
             }
 
             List<String> appNames = nCubeService.getAppNames(tenant)
+            if (appNames.size() == 0) {
+                ApplicationID defaultAppId = new ApplicationID(tenant, ApplicationID.DEFAULT_APP, '1.0.0', ReleaseStatus.SNAPSHOT.toString(), 'DEFAULT_BRANCH')
+                createCube(defaultAppId, 'defaultNewAppCube')
+                clearVersionCache(defaultAppId.app)
+            }
             addAllToAppCache(tenant, appNames)
             return getCachedApps(tenant)
         }
