@@ -98,6 +98,10 @@ var NCubeEditor2 = (function ($) {
     var _hotContainer = null;
     var _setUpHideModal = null;
     var _setUpHideList = null;
+    var _moveAxesModal = null;
+    var _moveAxesList = null;
+    var _moveAxesLabel = null;
+    var _moveAxesInstructions = null;
 
     function init(info) {
         if (!nce) {
@@ -168,12 +172,17 @@ var NCubeEditor2 = (function ($) {
             _hotContainer = $('#hot-container');
             _setUpHideModal = $('#setUpHideModal');
             _setUpHideList = $('#setUpHideList');
+            _moveAxesModal = $('#moveAxesModal');
+            _moveAxesList = $('#moveAxesList');
+            _moveAxesLabel = $('#moveAxesLabel');
+            _moveAxesInstructions = $('#moveAxesInstructions');
 
             addSelectAllNoneListeners();
             addAxisEditListeners();
             addColumnEditListeners();
             addColumnHideListeners();
             addSetUpHideListeners();
+            addMoveAxesListeners();
             addEditCellListeners();
             addSearchListeners();
             addModalFilters();
@@ -2197,6 +2206,11 @@ var NCubeEditor2 = (function ($) {
             storeGhostAxes();
             reload();
         });
+        div.find('a.anc-move-axis').on('click', function(e) {
+            e.preventDefault();
+            closeAxisMenu();
+            moveAxes();
+        });
     }
 
     function filterOutBlankRows() {
@@ -2341,7 +2355,7 @@ var NCubeEditor2 = (function ($) {
             html += '><a href="#" class="anc-hide-axis">Hide Axis</a></li>';
 
             html += '<li class="divider"/>';
-            html += '<li><a href="#" class="dropdown-header">Move Axis</a></li>';
+            html += '<li><a href="#" class="anc-move-axis" class="dropdown-header">Move Axis</a></li>';
             html += '<li><div role="group" class="btn-group btn-group-sm indent-axis-buttons">';
 
             html += '<button type="button" class="btn btn-default move-left" aria-label="Move Left"';
@@ -3782,6 +3796,51 @@ var NCubeEditor2 = (function ($) {
 
     // =============================================== Begin Axis Ordering =============================================
 
+    function moveAxes() {
+        var i;
+        var html = '';
+
+        _moveAxesLabel[0].innerHTML = cubeName + ' - Reorder Axes';
+        _moveAxesInstructions[0].innerHTML = 'Drag column names to rearrange the order in which they appear.'
+            + ' The last axis will appear horizontally in the table.';
+
+        for (i = 0; i <= colOffset; i++) {
+            html += '<li class="ui-state-default">' + axes[i].name + '</li>';
+        }
+        _moveAxesList.empty();
+        _moveAxesList.append(html);
+
+        _moveAxesModal.modal();
+    }
+
+    function addMoveAxesListeners() {
+        $('#moveAxesCancel').on('click', moveAxesClose);
+        $('#moveAxesOk').on('click', moveAxesOk);
+        _moveAxesList.sortable({
+            placeholder: "ui-state-highlight"
+        });
+        _moveAxesList.disableSelection();
+    }
+
+    function moveAxesClose() {
+        _moveAxesModal.modal('hide');
+    }
+
+    function moveAxesOk() {
+        var i, len;
+        var order = [];
+        var lis = _moveAxesList.find('li');
+        for (i = 0, len = lis.length; i < len; i++) {
+            order.push(lis[i].textContent.toLowerCase());
+        }
+
+        storeAxisOrder(order);
+        deleteSavedColumnWidths();
+        moveAxesClose();
+        destroyEditor();
+        reload();
+    }
+
     function moveAxis(fromIndex, toIndex) {
         axes.splice(toIndex, 0, axes.splice(fromIndex, 1)[0]);
         storeAxisOrder();
@@ -3791,18 +3850,23 @@ var NCubeEditor2 = (function ($) {
     }
 
     function findIndexOfAxisName(axisName) {
-        for (var i = 0, len = axes.length; i < len; i++) {
-            if (axes[i].name.toLowerCase() === axisName.toLowerCase()) {
+        var i, len;
+        var lower = axisName.toLowerCase();
+        for (i = 0, len = axes.length; i < len; i++) {
+            if (axes[i].name.toLowerCase() === lower) {
                 return i;
             }
         }
         return -1;
     }
 
-    function storeAxisOrder() {
-        var order = [];
-        for (var i = 0, len = axes.length; i < len; i++) {
-            order.push(axes[i].name.toLowerCase());
+    function storeAxisOrder(order) {
+        var i, len;
+        if (!order) {
+            order = [];
+            for (i = 0, len = axes.length; i < len; i++) {
+                order.push(axes[i].name.toLowerCase());
+            }
         }
         localStorage[getStorageKey(nce, AXIS_ORDER)] = JSON.stringify(order);
     }

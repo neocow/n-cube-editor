@@ -254,3 +254,18 @@ ul#setUpHideList li {
     display: table-cell;
     width: 100%
 }
+
+#moveAxesList { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+#moveAxesList li { margin: 0 5px 5px 5px; padding: 5px; font-size: 1.2em; }
+html>body #moveAxesList li { height: 1.5em; line-height: 1.2em; }
+.ui-state-default {
+    border: 1px solid #d3d3d3;
+    background: #e6e6e6 url("../images/ui-bg_glass_75_e6e6e6_1x400.png") 50% 50% repeat-x;
+    font-weight: normal;
+    color: #555555;
+}
+.ui-state-highlight {
+    border: 1px solid #fcefa1;
+    background: #fbf9ee url("../images/ui-bg_glass_55_fbf9ee_1x400.png") 50% 50% repeat-x;
+    color: #363636;
+}
