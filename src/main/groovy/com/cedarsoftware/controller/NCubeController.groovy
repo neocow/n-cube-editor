@@ -1348,8 +1348,12 @@ class NCubeController extends BaseController
             Set key = new HashSet()
             int idx = 0
 
-            idArrays.each { Object[] coord ->
-                coord.each { key.add(Converter.convert(it, Long.class))}
+            for (coord in idArrays)
+            {
+                for (item in coord)
+                {
+                    key.add(Converter.convert(item, Long.class))
+                }
                 CellInfo cellInfo = new CellInfo(ncube.getCellByIdNoExecute(key))
                 cellInfo.collapseToUiSupportedTypes()
                 ret[idx++] = [coord, cellInfo as Map]
