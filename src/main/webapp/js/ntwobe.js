@@ -375,8 +375,8 @@ var NCubeEditor2 = (function ($) {
             hot = null;
         }
 
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:'json-index'}], {noResolveRefs:true});
-        if (result.status === false) {
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:'json-index-nocells'}], {noResolveRefs:true});
+        if (!result.status) {
             showHtmlError('Failed to load JSON for cube, error: ' + result.data);
             return;
         }
@@ -392,6 +392,7 @@ var NCubeEditor2 = (function ($) {
         setUpColumnWidths();
         if (!hot) {
             hot = new Handsontable(_hotContainer[0], getHotSettings());
+            loadCellRows();
         } else {
             render();
         }
@@ -401,6 +402,56 @@ var NCubeEditor2 = (function ($) {
         _searchText = '';
         runSearch();
         searchDown();
+    }
+
+    function loadCellRows(start) {
+        var r, rLen, c, cLen;
+        var ids = [];
+        if (!start) {
+            start = 2;
+        }
+        if (start >= numRows - 2) {
+            return;
+        }
+
+        cLen = axes[colOffset].columnLength + colOffset;
+
+        for (r = 0, rLen = Math.min(500, numRows - start); r < rLen; r++) {
+            for (c = colOffset; c < cLen; c++) {
+                ids.push(getCellIdAsArray(r + start, c));
+            }
+        }
+        
+        if (ids.length) {
+            nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELLS_NO_EXECUTE,
+                [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), ids],
+                {noResolveRefs: true, callback: function(result) {
+                    if (result.status) {
+                        loadCellRowsCallback(result.data);
+                        render();
+                        loadCellRows(rLen + start);
+                    } else {
+                        nce.showNote('Error getting cells:' + result.data);
+                    }
+                }});
+        }
+    }
+    
+    function loadCellRowsCallback(cells) {
+        var i, len, cell, cellId, cellObj;
+        for (i = 0, len = cells.length; i < len; i++) {
+            cell = null;
+            cellId = null;
+            cellObj = null;
+            cell = cells[i]['@items'];
+            cellId = cell[0].sort().join('_');
+            cellObj = cell[1];
+
+            if (cellObj.type) {
+                delete cellObj['@type'];
+                data.cells[cellId] = cellObj;
+            }
+        }
     }
 
     function setUpHide() {
@@ -946,6 +997,27 @@ var NCubeEditor2 = (function ($) {
 
         headerInfo = null;
         return cellId;
+    }
+
+    function getCellIdAsArray(row, col) {
+        var headerInfo = [];
+        var i, ghostAxisColumns;
+        var ghostKeys = Object.keys(_ghostAxes);
+        var ghostLen = ghostKeys.length;
+        var len = axes.length + ghostLen;
+
+        if (len > 1 ) {
+            for (i = 0; i < colOffset; i++) {
+                headerInfo.push(parseInt(getRowHeaderId(row, i)));
+            }
+            for (i = 0; i < ghostLen; i++) {
+                ghostAxisColumns = _ghostAxes[ghostKeys[i]].columns;
+                headerInfo.push(parseInt(Object.keys(ghostAxisColumns)[0]));
+            }
+            headerInfo.push(parseInt(getColumnHeaderId(col)));
+            return headerInfo;
+        }
+        return [parseInt(getRowHeaderId(row, 0))];
     }
 
     function getCellData(row, col) {

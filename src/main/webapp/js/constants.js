@@ -153,6 +153,7 @@ var CONTROLLER_METHOD = {
     GET_BRANCH_CHANGES: 'getBranchChanges',
     GET_BRANCH_CHANGES_FROM_BRANCH: 'getBranchChangesFromBranch',
     GET_BRANCHES: 'getBranches',
+    GET_CELLS_NO_EXECUTE: 'getCellsNoExecute',
     GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
     GET_JSON: 'getJson',
