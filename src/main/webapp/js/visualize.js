@@ -613,7 +613,7 @@ var Visualizer = (function ($) {
                     shape: 'box',
                     color: '#F59D56'
                 },
-                ROLE_PLAYER: {
+                ROLEPLAYER: {
                     shape: 'box',
                     color: '#F2F2F2'
                 },
@@ -654,6 +654,14 @@ var Visualizer = (function ($) {
                     color: 'gray'   // gray
                 },
                 RATEFACTOR_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                ROLE_ENUM : {
+                    shape: 'dot',
+                    color: 'gray'   // gray
+                },
+                ROLEPLAYER_ENUM : {
                     shape: 'dot',
                     color: 'gray'   // gray
                 },

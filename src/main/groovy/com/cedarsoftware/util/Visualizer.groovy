@@ -49,8 +49,8 @@ class Visualizer extends NCubeGroovyController
 	public static final String _ENUM = '_ENUM'
 	public static final String ALL_GROUPS = 'allGroups'
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
-	public static final Map ALL_GROUPS_MAP = [PRODUCT:'Product', FORM:'Form', FORMDATA:'Form data', RISK:'Risk', COVERAGE:'Coverage', CONTAINER:'Container', DEDUCTIBLE:'Deductible', LIMIT:'Limit', RATE:'Rate', RATEFACTOR:'Rate factor', PREMIUM:'Premium', PARTY:'Party', PLACE:'Place', UNSPECIFIED:'Unspecified']
-	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLE_PLAYER']
+	public static final Map ALL_GROUPS_MAP = [PRODUCT:'Product', FORM:'Form', FORMDATA:'Form data', RISK:'Risk', COVERAGE:'Coverage', CONTAINER:'Container', DEDUCTIBLE:'Deductible', LIMIT:'Limit', RATE:'Rate', RATEFACTOR:'Rate Factor', PREMIUM:'Premium', PARTY:'Party', PLACE:'Place', ROLE:'Role', ROLEPLAYER:'Role Player', UNSPECIFIED:'Unspecified']
+	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLEPLAYER', 'ROLE']
 
 	public static final String STACK_KEY = 'stackKey'
 	
@@ -59,7 +59,6 @@ class Visualizer extends NCubeGroovyController
 
 	private static final String SPACE = '&nbsp;'
 
-	public static final String CELL_INFO_SUFFIX = '_CELL_INFO'
 	public static final String SOURCE_SCOPE_KEY_PREFIX = 'source'
 
 	private VisualizerHelper helper = new VisualizerHelper()
@@ -491,10 +490,7 @@ class Visualizer extends NCubeGroovyController
 		classTraits.each { k,v ->
 			String key = k as String
 			String value = v as String
-			if (!key.contains(CELL_INFO_SUFFIX))
-			{
-				traits.append(SPACE + key + ' = ' + value + '<br>')
-			}
+			traits.append(SPACE + key + ' = ' + value + '<br>')
 		}
 		return traits.toString()
 	}
