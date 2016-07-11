@@ -10,6 +10,11 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class VisualizerInfo
 {
+	String startCubeName
+	Map scope
+	List nodes
+	List edges
+
     long maxLevel
 	long nodeCount
 	long selectedLevel

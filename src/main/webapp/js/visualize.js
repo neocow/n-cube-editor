@@ -193,7 +193,7 @@ var Visualizer = (function ($) {
                     _nce.showNote(json.message);
                 }
                 _loadedCubeName = _nce.getSelectedCubeName();
-                loadNetworkData(json.map);
+                loadNetworkData(json.visInfo);
                 trimNetworkData(null);
                 draw();
                 loadSelectedLevelListView();
@@ -208,7 +208,7 @@ var Visualizer = (function ($) {
             else if (json.status === 'missingScope') {
                 _nce.showNote(json.message);
                 _loadedCubeName = _nce.getSelectedCubeName();
-                _scope = json.scope;
+                _scope = json.visInfo.scope;
                 loadScopeView();
                 _visualizerContent.show();
                 _visualizerInfo.hide();
@@ -469,18 +469,18 @@ var Visualizer = (function ($) {
         _networkData = {nodes:nodes, edges:edges};
     }
 
-    function loadNetworkData(jsonMap) {
-        _allGroups = jsonMap.visInfo.allGroups;
-        _availableGroupsAllLevels = jsonMap.visInfo.availableGroupsAllLevels['@items'];
-        _selectedGroups = jsonMap.visInfo.selectedGroups['@items'];
-        _selectedLevel = jsonMap.visInfo.selectedLevel;
-        _groupSuffix = jsonMap.visInfo.groupSuffix;
-        _scope = jsonMap.scope;
-        _startCube = jsonMap.startCube.substring(jsonMap.startCube.lastIndexOf('.') + 1);
-        _nodeCount = jsonMap.visInfo.nodeCount;
-        _maxLevel = jsonMap.visInfo.maxLevel;
-        _nodesAllLevels = jsonMap.nodes['@items'];
-        _edgesAllLevels = jsonMap.edges['@items'];
+    function loadNetworkData(visInfo) {
+        _allGroups = visInfo.allGroups;
+        _availableGroupsAllLevels = visInfo.availableGroupsAllLevels['@items'];
+        _selectedGroups = visInfo.selectedGroups['@items'];
+        _selectedLevel = visInfo.selectedLevel;
+        _groupSuffix = visInfo.groupSuffix;
+        _scope = visInfo.scope;
+        _startCube = visInfo.startCubeName.substring(visInfo.startCubeName.lastIndexOf('.') + 1);
+        _nodeCount = visInfo.nodeCount;
+        _maxLevel = visInfo.maxLevel;
+        _nodesAllLevels = visInfo.nodes['@items'];
+        _edgesAllLevels = visInfo.edges['@items'];
     }
 
     var handleCubeSelected = function() {
