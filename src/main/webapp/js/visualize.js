@@ -470,17 +470,17 @@ var Visualizer = (function ($) {
     }
 
     function loadNetworkData(jsonMap) {
-        _allGroups = jsonMap.groups.allGroups;
-        _availableGroupsAllLevels = jsonMap.groups.availableGroupsAllLevels;
-        _selectedGroups = jsonMap.groups.selectedGroups;
-        _selectedLevel = jsonMap.levels.selectedLevel;
-        _groupSuffix = jsonMap.groups.groupSuffix;
+        _allGroups = jsonMap.visInfo.allGroups;
+        _availableGroupsAllLevels = jsonMap.visInfo.availableGroupsAllLevels['@items'];
+        _selectedGroups = jsonMap.visInfo.selectedGroups['@items'];
+        _selectedLevel = jsonMap.visInfo.selectedLevel;
+        _groupSuffix = jsonMap.visInfo.groupSuffix;
         _scope = jsonMap.scope;
         _startCube = jsonMap.startCube.substring(jsonMap.startCube.lastIndexOf('.') + 1);
-        _nodeCount = jsonMap.levels.nodeCount;
-        _maxLevel = jsonMap.levels.maxLevel;
-        _nodesAllLevels = jsonMap.nodes;
-        _edgesAllLevels = jsonMap.edges;
+        _nodeCount = jsonMap.visInfo.nodeCount;
+        _maxLevel = jsonMap.visInfo.maxLevel;
+        _nodesAllLevels = jsonMap.nodes['@items'];
+        _edgesAllLevels = jsonMap.edges['@items'];
     }
 
     var handleCubeSelected = function() {

@@ -30,21 +30,13 @@ class Visualizer extends NCubeGroovyController
 	public static final String AXIS_NAME = 'name'
 	public static final String AXIS_TRAIT = 'trait'
 
-	public static final String MAX_LEVEL = 'maxLevel'
-	public static final String NODE_COUNT = 'nodeCount'
-	public static final String SELECTED_LEVEL = 'selectedLevel'
-
-	public static final String SELECTED_GROUPS = 'selectedGroups'
-	public static final String AVAILABLE_GROUPS_ALL_LEVELS = 'availableGroupsAllLevels'
-	public static final String GROUP_SUFFIX = 'groupSuffix'
 	public static final String _ENUM = '_ENUM'
-	public static final String ALL_GROUPS = 'allGroups'
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
 	public static final Map ALL_GROUPS_MAP = [PRODUCT:'Product', FORM:'Form', FORMDATA:'Form data', RISK:'Risk', COVERAGE:'Coverage', CONTAINER:'Container', DEDUCTIBLE:'Deductible', LIMIT:'Limit', RATE:'Rate', RATEFACTOR:'Rate Factor', PREMIUM:'Premium', PARTY:'Party', PLACE:'Place', ROLE:'Role', ROLEPLAYER:'Role Player', UNSPECIFIED:'Unspecified']
 	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLEPLAYER', 'ROLE']
 
 	public static final Map DEFAULT_SCOPE = [context: 'Edit', action: 'Edit']
-	public static final String DEFAULT_LEVEL = 2
+	public static final long DEFAULT_LEVEL = 2
 
 	private static final String SPACE = '&nbsp;'
 
@@ -52,8 +44,7 @@ class Visualizer extends NCubeGroovyController
 
 	private VisualizerHelper helper = new VisualizerHelper()
 
-	private Map levels = [:]
-	private Map groups = [:]
+	private VisualizerInfo visInfo = new VisualizerInfo()
 	private List nodes = []
 	private List edges = []
 	private List messages = []
@@ -70,7 +61,7 @@ class Visualizer extends NCubeGroovyController
 	 *            Object[] selectedGroups, indicates which groups should be included in the visualization
 	 *            Object selectedLevel, indicates the depth of traversal from the start cube
 	 *
-	 * output     String visualization json
+	 * output     Map visualization map
 	 *
 	 */
 	Map buildGraph()
@@ -94,14 +85,14 @@ class Visualizer extends NCubeGroovyController
 
 	private Map getRpmVisualizationMap(String startCubeName, Map scope, Set selectedGroups, String selectedLevel)
 	{
-		levels[MAX_LEVEL] = 1
-		levels[NODE_COUNT] = 1
-		levels[SELECTED_LEVEL] = selectedLevel == null ? DEFAULT_LEVEL :  Converter.convert(selectedLevel, long.class)
+		visInfo.maxLevel = 1
+		visInfo.nodeCount = 1
+		visInfo.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL :  Converter.convert(selectedLevel, long.class) as long
 
-		groups[ALL_GROUPS] = ALL_GROUPS_MAP
-		groups[SELECTED_GROUPS] = selectedGroups  == null ? ALL_GROUPS_MAP.keySet() : selectedGroups
-		groups[AVAILABLE_GROUPS_ALL_LEVELS] = [] as Set
-		groups[GROUP_SUFFIX] = _ENUM
+		visInfo.allGroups = ALL_GROUPS_MAP
+		visInfo.selectedGroups = selectedGroups  == null ? ALL_GROUPS_MAP.keySet() : selectedGroups
+		visInfo.availableGroupsAllLevels = []
+		visInfo.groupSuffix = _ENUM
 
 		scope = scope == null ? DEFAULT_SCOPE : scope
 		NCube startCube = getCube(startCubeName)
@@ -121,7 +112,7 @@ class Visualizer extends NCubeGroovyController
 		trimSelectedGroups()
         String message = messages.size() > 0 ? messages.toString() : null
 
-		return [startCube: startCube.name, groups: groups, levels: levels, scope:scope, nodes: nodes.toArray(), edges: edges.toArray(), message: message]
+		return [startCube: startCube.name, visInfo: visInfo, scope:scope, nodes: nodes, edges: edges, message: message]
 	}
 
 	private void processCube(VisualizerRelInfo relInfo)
@@ -161,7 +152,7 @@ class Visualizer extends NCubeGroovyController
 			visited << visitedKey
 		}
 
-		(groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set) << busType
+		visInfo.availableGroupsAllLevels << busType
 		addToNodes(relInfo, busType)
 
 		targetTraitMaps.each{ k, v ->
@@ -175,7 +166,7 @@ class Visualizer extends NCubeGroovyController
 				if (!helper.isPrimitive(targetFieldRpmType))
 				{
 					NCube nextTargetCube = null
-					if ((targetTraits as Map).containsKey(V_ENUM))
+					if (targetTraits.containsKey(V_ENUM))
 					{
 						nextTargetCube = getCube(RPM_ENUM_DOT + targetTraits[V_ENUM])
 					}
@@ -264,22 +255,19 @@ class Visualizer extends NCubeGroovyController
 			visited << visitedKey
 		}
 
-		(groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set) << busType
+		visInfo.availableGroupsAllLevels << busType
 		addToNodes(relInfo, busType)
 
 	}
 
 	private void trimSelectedLevel() {
-		long nodeCount = levels[NODE_COUNT] as long
-		long selectedLevel = levels[SELECTED_LEVEL] as long
-		levels[SELECTED_LEVEL] = selectedLevel.compareTo(nodeCount) > 0 ? nodeCount.toString() : selectedLevel.toString()
+		long nodeCount = visInfo.nodeCount
+		long selectedLevel = visInfo.selectedLevel
+		visInfo.selectedLevel = selectedLevel.compareTo(nodeCount) > 0 ? nodeCount : selectedLevel
 	}
 
 	private void trimSelectedGroups() {
-		Iterable selected = groups[SELECTED_GROUPS] as Iterable
-		Set available = groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set
-		groups[SELECTED_GROUPS] = available.intersect(selected).toArray()
-		groups[AVAILABLE_GROUPS_ALL_LEVELS] = available.toArray()
+		visInfo.selectedGroups = visInfo.availableGroupsAllLevels.intersect(visInfo.selectedGroups)
 	}
 
 	private VisualizerRelInfo addToStack(VisualizerRelInfo relInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
@@ -303,10 +291,10 @@ class Visualizer extends NCubeGroovyController
 			long nextTargetTargetLevel = relInfo.targetLevel + 1
 			nextRelInfo.targetLevel = nextTargetTargetLevel
 
-			long maxLevel = levels[MAX_LEVEL] as long
-			levels[MAX_LEVEL] = maxLevel.compareTo(nextTargetTargetLevel) < 0 ? nextTargetTargetLevel : maxLevel
-			levels[NODE_COUNT] = (levels[NODE_COUNT] as long) + 1
-			nextRelInfo.id = levels[NODE_COUNT] as long
+			long maxLevel = visInfo.maxLevel
+			visInfo.maxLevel = maxLevel.compareTo(nextTargetTargetLevel) < 0 ? nextTargetTargetLevel : maxLevel
+			visInfo.nodeCount = visInfo.nodeCount + 1
+			nextRelInfo.id = visInfo.nodeCount
 
 			stack.push(nextRelInfo)
 			return nextRelInfo
