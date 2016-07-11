@@ -375,10 +375,6 @@ public class VisualizerHelper extends NCubeGroovyController {
 				if (!"#NOT_DEFINED".equals(val))
 				{
 					traits.put((String) column.getValue(), val);
-					//MODIFIED: Add cell info to trait map as well.
-					Object valNoExecute = ncube.getCellByIdNoExecute(ncube.getCoordinateKey(coord))
-					traits.put( (column.getValue() as String) + CELL_INFO_SUFFIX, new CellInfo(valNoExecute));
-
 				}
 			}
 			catch(CoordinateNotFoundException ignored)
