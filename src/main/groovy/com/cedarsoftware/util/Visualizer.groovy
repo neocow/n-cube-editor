@@ -44,6 +44,9 @@ class Visualizer extends NCubeGroovyController
 
 	private VisualizerHelper helper = new VisualizerHelper()
 
+	public static final String STATUS_MISSING_SCOPE = 'missingScope'
+	public static final String STATUS_SUCCESS = 'success'
+
 	private List messages = []
 	private Set visited = []
 
@@ -86,13 +89,13 @@ class Visualizer extends NCubeGroovyController
 		//TODO: Also handle the user adding the required scope key but with a value that results in a no hit.
 		if (hasMissingScope(visInfo))
 		{
-			return [status: 'missingScope', visInfo: visInfo, message: messages.toString()]
+			return [status: STATUS_MISSING_SCOPE, visInfo: visInfo, message: messages.toString()]
 		}
 
 		getRpmVisualization(visInfo)
 
 		String message = messages.size() > 0 ? messages.toString() : null
-		return [status: 'success', visInfo: visInfo, message: message]
+		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
 
 	private void getRpmVisualization(VisualizerInfo visInfo)
@@ -205,7 +208,7 @@ class Visualizer extends NCubeGroovyController
 			relInfo.targetTraitMaps = targetTraitMaps
 		}
 
-		String busType = 'UNSPECIFIED'
+		String busType = UNSPECIFIED
 
 		targetTraitMaps.each { k, v ->
 			String targetFieldName = k as String
@@ -284,7 +287,6 @@ class Visualizer extends NCubeGroovyController
 			nextRelInfo.sourceFieldName = targetFieldName
 			nextRelInfo.sourceFieldRpmType = rpmType
 
-
 			long nextTargetTargetLevel = relInfo.targetLevel + 1
 			nextRelInfo.targetLevel = nextTargetTargetLevel
 
@@ -331,7 +333,6 @@ class Visualizer extends NCubeGroovyController
 		NCube targetCube = relInfo.targetCube
 		String sourceFieldName = relInfo.sourceFieldName
 		Map sourceTraitMaps = relInfo.sourceTraitMaps
-
 
 		Map edgeMap = [:]
 		String sourceCubeEffectiveName = getEffectiveName(sourceCube, sourceTraitMaps)
@@ -523,7 +524,7 @@ class Visualizer extends NCubeGroovyController
 
 	private static String getNextTargetCubeName(VisualizerRelInfo relInfo, String targetFieldName)
 	{
-		if (relInfo.sourceCube.getAxis('TRAIT').contains(R_SCOPED_NAME))
+		if (relInfo.sourceCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME))
 		{
 			if (relInfo.sourceTraitMaps[CLASS_TRAITS][R_SCOPED_NAME] == null)
 			{
@@ -560,7 +561,7 @@ class Visualizer extends NCubeGroovyController
 		{
 			newScope[SOURCE_FIELD_NAME] = targetFieldName
 		}
-		else if (targetCube.getAxis('TRAIT').contains(R_SCOPED_NAME))
+		else if (targetCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME))
 		{
 			String newScopeKey = sourceFieldRpmType.toLowerCase()
 			String oldValue = scope[newScopeKey]
