@@ -50,7 +50,7 @@ class Visualizer extends NCubeGroovyController
 	private List messages = []
 	private Set visited = []
 
-	Deque<VisualizerRelInfo> stack = new ArrayDeque<VisualizerRelInfo>()
+	Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
 
 	/**
 	 * Provides the information used to visualize rpm cubes associated with a given rpm cube.
@@ -129,12 +129,12 @@ class Visualizer extends NCubeGroovyController
 
 	private void processClassCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		NCube targetCube = relInfo.targetCube
+		String targetCubeName = relInfo.targetCube.name
 		Map targetScope = relInfo.targetScope
 
 		Map targetTraitMaps = relInfo.targetTraitMaps
 		if (!targetTraitMaps) {
-			targetTraitMaps = helper.getTraitMaps(targetCube.name, targetScope)
+			targetTraitMaps = helper.getTraitMaps(targetCubeName, targetScope)
 			relInfo.targetTraitMaps = targetTraitMaps
 		}
 
@@ -142,14 +142,9 @@ class Visualizer extends NCubeGroovyController
 
 		addToEdges(visInfo, relInfo)
 
-		String visitedKey = targetCube.name + targetScope.toString()
-		if (visited.contains(visitedKey))
+		if (!visited.add(targetCubeName + targetScope.toString()))
 		{
 			return
-		}
-		else
-		{
-			visited << visitedKey
 		}
 
 		visInfo.availableGroupsAllLevels << busType
@@ -245,14 +240,9 @@ class Visualizer extends NCubeGroovyController
 
 		addToEdges(visInfo, relInfo)
 
-		String visitedKey = targetCubeName + targetScope.toString()
-		if (visited.contains(visitedKey))
+		if (!visited.add(targetCubeName + targetScope.toString()))
 		{
 			return
-		}
-		else
-		{
-			visited << visitedKey
 		}
 
 		visInfo.availableGroupsAllLevels << busType
