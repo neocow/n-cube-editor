@@ -5,7 +5,7 @@ import groovy.transform.CompileStatic
 import ncube.grv.method.NCubeGroovyController
 
 /**
- * Creates the json used to create a visualization of the rpm cubes associated with a given rpm cube.
+ * Provides the information used to visualize rpm cubes associated with a given rpm cube.
  */
 
 @CompileStatic
@@ -24,38 +24,19 @@ class Visualizer extends NCubeGroovyController
 	public static final String V_MAX = 'v:max'
 	public static final String PD_BUS_TYPE = 'pd:busType'
 
-	public static final String TARGET_CUBE = 'targetCube'
-	public static final String TARGET_TRAIT_MAPS = 'targetTraitMaps'
-	public static final String SOURCE_CUBE = 'sourceCube'
-	public static final String SOURCE_TRAIT_MAPS = 'sourceTraitMaps'
-	public static final String SOURCE_FIELD = 'sourceField'
 	public static final String SOURCE_FIELD_NAME = 'sourceFieldName'
-	public static final String SOURCE_FIELD_RPM_TYPE = 'sourceFieldRpmType'
-	public static final String SOURCE_SCOPE = 'sourceScope'
-	public static final String TARGET_SCOPE = 'targetScope'
 
 	public static final String AXIS_FIELD = 'field'
 	public static final String AXIS_NAME = 'name'
 	public static final String AXIS_TRAIT = 'trait'
-	
-	public static final String MAX_LEVEL = 'maxLevel'
-	public static final String NODE_COUNT = 'nodeCount'
-	public static final String TARGET_LEVEL = 'targetLevel'
-	public static final String SELECTED_LEVEL = 'selectedLevel'
 
-	public static final String SELECTED_GROUPS = 'selectedGroups'
-	public static final String AVAILABLE_GROUPS_ALL_LEVELS = 'availableGroupsAllLevels'
-	public static final String GROUP_SUFFIX = 'groupSuffix'
 	public static final String _ENUM = '_ENUM'
-	public static final String ALL_GROUPS = 'allGroups'
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
 	public static final Map ALL_GROUPS_MAP = [PRODUCT:'Product', FORM:'Form', FORMDATA:'Form data', RISK:'Risk', COVERAGE:'Coverage', CONTAINER:'Container', DEDUCTIBLE:'Deductible', LIMIT:'Limit', RATE:'Rate', RATEFACTOR:'Rate Factor', PREMIUM:'Premium', PARTY:'Party', PLACE:'Place', ROLE:'Role', ROLEPLAYER:'Role Player', UNSPECIFIED:'Unspecified']
 	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLEPLAYER', 'ROLE']
 
-	public static final String EDGE_ID = 'edgeId'
-	
 	public static final Map DEFAULT_SCOPE = [context: 'Edit', action: 'Edit']
-	public static final String DEFAULT_LEVEL = 2
+	public static final long DEFAULT_LEVEL = 2
 
 	private static final String SPACE = '&nbsp;'
 
@@ -63,122 +44,115 @@ class Visualizer extends NCubeGroovyController
 
 	private VisualizerHelper helper = new VisualizerHelper()
 
-	private Map levels = [:]
-	private Map groups = [:]
-	private List nodes = []
-	private List edges = []
+	public static final String STATUS_MISSING_SCOPE = 'missingScope'
+	public static final String STATUS_SUCCESS = 'success'
+
 	private List messages = []
 	private Set visited = []
-	private Map cubeInfo = [:]
-	Deque stack = new ArrayDeque<>()
+
+	Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
 
 	/**
-	 * Creates the json used to create a visualization of the rpm cubes associated with a given rpm cube.
+	 * Provides the information used to visualize rpm cubes associated with a given rpm cube.
 	 *
 	 * input:
 	 * 	          String startCubeName, name of the starting cube
 	 *            Map scope
-	 *            Object[] selectedGroups, indicates which groups should be included in the visualization
-	 *            Object selectedLevel, indicates the depth of traversal from the start cube
+	 *            Set selectedGroups, indicates which groups should be included in the visualization
+	 *            String selectedLevel, indicates the depth of traversal from the start cube
 	 *
-	 * output     String visualization json
+	 * output     Map containing status, messages and visualizer information
 	 *
 	 */
 	Map buildGraph()
 	{
 		Map options = input.options as Map
-		String startCubeName = options.startCubeName as String
-		Set selectedGroups = options.selectedGroups as Set
-		String selectedLevel = options.selectedLevel as String
-		Map scope = options.scope as Map
 		helper.ncube = ncube
+
+		VisualizerInfo visInfo = new VisualizerInfo()
+		visInfo.startCubeName = options.startCubeName as String
+		Map scope = options.scope as Map
+		visInfo.scope = scope == null ? DEFAULT_SCOPE : scope
+		visInfo.allGroups = ALL_GROUPS_MAP
+		visInfo.availableGroupsAllLevels = []
+		visInfo.groupSuffix = _ENUM
+		Set selectedGroups = options.selectedGroups as Set
+		visInfo.selectedGroups = selectedGroups  == null ? ALL_GROUPS_MAP.keySet() : selectedGroups
+		String selectedLevel = options.selectedLevel as String
+		visInfo.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL :  Converter.convert(selectedLevel, long.class) as long
+		visInfo.maxLevel = 1
+		visInfo.nodeCount = 1
+		visInfo.nodes = []
+		visInfo.edges = []
 
 		//TODO: This is a temp location for checking scope. Move check for scope to where traitMaps are obtained.
 		//TODO: Also handle the user adding the required scope key but with a value that results in a no hit.
-		Map map = checkMissingScope(startCubeName, scope)
-		if (map) {
-			return [status: 'missingScope', message: map.message, scope: map.scope]
+		if (hasMissingScope(visInfo))
+		{
+			return [status: STATUS_MISSING_SCOPE, visInfo: visInfo, message: messages.toString()]
 		}
-		map = getRpmVisualizationMap(startCubeName, scope, selectedGroups, selectedLevel)
-		return [status: 'success', map: map, message: map.message]
+
+		getRpmVisualization(visInfo)
+
+		String message = messages.size() > 0 ? messages.toString() : null
+		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
 
-	private Map getRpmVisualizationMap(String startCubeName, Map scope, Set selectedGroups, String selectedLevel)
+	private void getRpmVisualization(VisualizerInfo visInfo)
 	{
-		levels[MAX_LEVEL] = 1
-		levels[NODE_COUNT] = 1
-		levels[SELECTED_LEVEL] = selectedLevel == null ? DEFAULT_LEVEL :  Converter.convert(selectedLevel, long.class)
-
-		groups[ALL_GROUPS] = ALL_GROUPS_MAP
-		groups[SELECTED_GROUPS] = selectedGroups  == null ? ALL_GROUPS_MAP.keySet() : selectedGroups
-		groups[AVAILABLE_GROUPS_ALL_LEVELS] = [] as Set
-		groups[GROUP_SUFFIX] = _ENUM
-
-		scope = scope == null ? DEFAULT_SCOPE : scope
-		NCube startCube = getCube(startCubeName)
-
-		stack.push([(TARGET_CUBE): startCube, (TARGET_SCOPE): scope, (TARGET_LEVEL): 1, (EDGE_ID): 1])
+		VisualizerRelInfo relInfo = new VisualizerRelInfo()
+		relInfo.targetCube =  getCube(visInfo.startCubeName)
+		relInfo.targetScope = visInfo.scope
+		relInfo.targetLevel = 1
+		relInfo.id = 1
+		stack.push(relInfo)
 
 		while(!stack.empty) {
-			cubeInfo = stack.pop()
-			processCube()
+			processCube(visInfo, stack.pop())
 		}
 
-		trimSelectedLevel()
-		trimSelectedGroups()
-        String message = messages.size() > 0 ? messages.toString() : null
-
-		return [startCube: startCube.name, groups: groups, levels: levels, scope:scope, nodes: nodes.toArray(), edges: edges.toArray(), message: message]
+		trimSelectedLevel(visInfo)
+		trimSelectedGroups(visInfo)
 	}
 
-	private void processCube()
+	private void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		if ((cubeInfo[TARGET_CUBE] as NCube).name.startsWith(RPM_CLASS))
+		if (relInfo.targetCube.name.startsWith(RPM_CLASS))
 		{
-			processClassCube()
+			processClassCube(visInfo, relInfo)
 		}
 		else
 		{
-			processEnumCube()
+			processEnumCube(visInfo, relInfo)
 		}
 	}
 
-	private void processClassCube()
+	private void processClassCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		NCube targetCube = cubeInfo[TARGET_CUBE] as NCube
-		Map targetScope = cubeInfo[TARGET_SCOPE] as Map
+		String targetCubeName = relInfo.targetCube.name
+		Map targetScope = relInfo.targetScope
 
-		NCube sourceCube = cubeInfo[SOURCE_CUBE] as NCube
-		Map sourceTraitMaps = cubeInfo[SOURCE_TRAIT_MAPS] as Map
-		String sourceFieldName =  cubeInfo[SOURCE_FIELD] as String
-		Map sourceScope = cubeInfo[SOURCE_SCOPE] as Map
-
-
-		Map targetTraitMaps = cubeInfo[TARGET_TRAIT_MAPS] as Map
+		Map targetTraitMaps = relInfo.targetTraitMaps
 		if (!targetTraitMaps) {
-			targetTraitMaps = helper.getTraitMaps(targetCube.name, targetScope)
-			cubeInfo[TARGET_TRAIT_MAPS] = targetTraitMaps
+			targetTraitMaps = helper.getTraitMaps(targetCubeName, targetScope)
+			relInfo.targetTraitMaps = targetTraitMaps
 		}
 
 		String busType = getFormattedBusType(targetTraitMaps)
 
-		long targetLevel = cubeInfo[TARGET_LEVEL] as long
-		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, cubeInfo[EDGE_ID] as long, targetLevel)
+		addToEdges(visInfo, relInfo)
 
-		String visitedKey = targetCube.name + targetScope.toString()
-		if (visited.contains(visitedKey))
+		if (!visited.add(targetCubeName + targetScope.toString()))
 		{
 			return
 		}
-		else
-		{
-			visited << visitedKey
-		}
 
-		(groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set) << busType
-		addToNodes(targetCube, targetScope, targetTraitMaps, targetLevel, busType, sourceFieldName)
+		visInfo.availableGroupsAllLevels << busType
+		addToNodes(visInfo, relInfo, busType)
 
-		targetTraitMaps.each{ targetFieldName, targetTraits ->
+		targetTraitMaps.each{ k, v ->
+			String targetFieldName = k as String
+			Map targetTraits = v as Map
 			Boolean exists = targetTraits[R_EXISTS]
 			if (!CLASS_TRAITS.equals(targetFieldName) && exists)
 			{
@@ -187,7 +161,7 @@ class Visualizer extends NCubeGroovyController
 				if (!helper.isPrimitive(targetFieldRpmType))
 				{
 					NCube nextTargetCube = null
-					if ((targetTraits as Map).containsKey(V_ENUM))
+					if (targetTraits.containsKey(V_ENUM))
 					{
 						nextTargetCube = getCube(RPM_ENUM_DOT + targetTraits[V_ENUM])
 					}
@@ -198,7 +172,7 @@ class Visualizer extends NCubeGroovyController
 
 					if (nextTargetCube)
 					{
-						addToStack(targetLevel, nextTargetCube, targetFieldRpmType, targetFieldName as String)
+						addToStack(visInfo, relInfo, nextTargetCube, targetFieldRpmType, targetFieldName)
 					}
 					else{
 						messages << 'No cube exists with name of ' + RPM_ENUM_DOT + nextTargetCube.name + '. It is therefore not included in the visualization.'
@@ -208,54 +182,48 @@ class Visualizer extends NCubeGroovyController
 		}
 	}
 
-	private void processEnumCube ()
+	private void processEnumCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		NCube targetCube = cubeInfo[TARGET_CUBE] as NCube
-		Map targetScope = cubeInfo[TARGET_SCOPE] as Map
-		String targetCubeName = targetCube.name
-
-		NCube sourceCube =  cubeInfo[SOURCE_CUBE] as NCube
-		Map sourceTraitMaps = cubeInfo[SOURCE_TRAIT_MAPS] as Map
-		String sourceFieldName = cubeInfo[SOURCE_FIELD] as String
-		String sourceFieldRpmType =  cubeInfo[SOURCE_FIELD_RPM_TYPE] as String
-		Map sourceScope = cubeInfo[SOURCE_SCOPE] as Map
+	 	Map targetScope = relInfo.targetScope
+		String targetCubeName = relInfo.targetCube.name
+		String sourceFieldRpmType =  relInfo.sourceFieldRpmType
 
 		if (!targetCubeName.startsWith(RPM_ENUM)) {
 			throw new IllegalStateException('Cube is not an rpm.enum cube: ' + targetCubeName +  '.')
 		}
 
-		if(sourceCube && (!sourceFieldRpmType || helper.isPrimitive(sourceFieldRpmType)))
+		if(relInfo.sourceCube && (!sourceFieldRpmType || helper.isPrimitive(sourceFieldRpmType)))
 		{
 			return
 		}
 
-		long targetLevel = cubeInfo[TARGET_LEVEL] as long
-
-		Map targetTraitMaps = cubeInfo[TARGET_TRAIT_MAPS] as Map
+		Map targetTraitMaps = relInfo.targetTraitMaps
 		if (!targetTraitMaps) {
-			targetTraitMaps = helper.getTraitMaps(targetCube.name, targetScope)
-			cubeInfo[TARGET_TRAIT_MAPS] = targetTraitMaps
+			targetTraitMaps = helper.getTraitMaps(targetCubeName, targetScope)
+			relInfo.targetTraitMaps = targetTraitMaps
 		}
 
-		String busType = 'UNSPECIFIED'
+		String busType = UNSPECIFIED
 
-		targetTraitMaps.each { targetFieldName, targetTraits ->
+		targetTraitMaps.each { k, v ->
+			String targetFieldName = k as String
+			Map targetTraits = v as Map
 			Boolean exists = targetTraits[R_EXISTS]
 			if (!CLASS_TRAITS.equals(targetFieldName) && exists)
 			{
 				try
 				{
-					String nextTargetCubeName = getNextTargetCubeName(sourceCube, sourceTraitMaps, sourceFieldRpmType, targetFieldName as String)
+					String nextTargetCubeName = getNextTargetCubeName(relInfo, targetFieldName)
 
 					if (nextTargetCubeName)
 					{
 						NCube nextTargetCube = getCube(RPM_CLASS_DOT + nextTargetCubeName)
 						if (nextTargetCube)
 						{
-							Map nextTargetcubeInfo = addToStack(targetLevel, nextTargetCube, sourceFieldRpmType, targetFieldName as String)
+							VisualizerRelInfo nextTargetRelInfo = addToStack(visInfo, relInfo, nextTargetCube, relInfo.sourceFieldRpmType, targetFieldName)
 
 							if (busType == UNSPECIFIED) {
-								busType = getFormattedBusType(nextTargetcubeInfo[TARGET_TRAIT_MAPS] as Map)
+								busType = getFormattedBusType(nextTargetRelInfo.targetTraitMaps)
 							}
 						}
 						else{
@@ -265,74 +233,64 @@ class Visualizer extends NCubeGroovyController
 				}
 				catch (Exception e)
 				{
-					throw new IllegalStateException('Exception caught while loading and processing the cube for enum field ' + targetFieldName + ' in enum ' + targetCube.name + '.', e)
+					throw new IllegalStateException('Exception caught while loading and processing the cube for enum field ' + targetFieldName + ' in enum ' + targetCubeName + '.', e)
 				}
 			}
 		}
 
+		addToEdges(visInfo, relInfo)
 
-		addToEdges(targetCube, sourceCube, targetScope, sourceScope, targetTraitMaps, sourceTraitMaps, sourceFieldName, cubeInfo[EDGE_ID] as long, targetLevel)
-
-		String visitedKey = targetCube.name + targetScope.toString()
-		if (visited.contains(visitedKey))
+		if (!visited.add(targetCubeName + targetScope.toString()))
 		{
 			return
 		}
-		else
-		{
-			visited << visitedKey
-		}
 
-		(groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set) << busType
-		addToNodes(targetCube, targetScope, targetTraitMaps, targetLevel, busType, sourceFieldName)
+		visInfo.availableGroupsAllLevels << busType
+		addToNodes(visInfo, relInfo, busType)
 
 	}
 
-	private void trimSelectedLevel() {
-		long nodeCount = levels[NODE_COUNT] as long
-		long selectedLevel = levels[SELECTED_LEVEL] as long
-		levels[SELECTED_LEVEL] = selectedLevel.compareTo(nodeCount) > 0 ? nodeCount.toString() : selectedLevel.toString()
+	private static void trimSelectedLevel(VisualizerInfo visInfo) {
+		long nodeCount = visInfo.nodeCount
+		long selectedLevel = visInfo.selectedLevel
+		visInfo.selectedLevel = selectedLevel.compareTo(nodeCount) > 0 ? nodeCount : selectedLevel
 	}
 
-	private void trimSelectedGroups() {
-		Iterable selected = groups[SELECTED_GROUPS] as Iterable
-		Set available = groups[AVAILABLE_GROUPS_ALL_LEVELS] as Set
-		groups[SELECTED_GROUPS] = available.intersect(selected).toArray()
-		groups[AVAILABLE_GROUPS_ALL_LEVELS] = available.toArray()
+	private static void trimSelectedGroups(VisualizerInfo visInfo) {
+		visInfo.selectedGroups = visInfo.availableGroupsAllLevels.intersect(visInfo.selectedGroups)
 	}
 
-	private Map addToStack(long targetLevel, NCube nextTargetCube, String rpmType, String targetFieldName)
+	private VisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
 	{
 		try
 		{
-			NCube nextSourceCube = cubeInfo[TARGET_CUBE] as NCube
+			NCube nextSourceCube = relInfo.targetCube
 
-			Map nextCubeInfo = [:]
-			nextCubeInfo[TARGET_CUBE] = nextTargetCube
-			nextCubeInfo[TARGET_SCOPE] = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, cubeInfo[TARGET_SCOPE] as Map)
-			nextCubeInfo[TARGET_TRAIT_MAPS] =  helper.getTraitMaps(nextTargetCube.name, nextCubeInfo[TARGET_SCOPE] as Map)
+			VisualizerRelInfo nextRelInfo = new VisualizerRelInfo()
+			nextRelInfo.targetCube = nextTargetCube
+			nextRelInfo.targetScope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.targetScope)
+			nextRelInfo.targetTraitMaps =  helper.getTraitMaps(nextTargetCube.name, nextRelInfo.targetScope)
 
-			nextCubeInfo[SOURCE_CUBE] = nextSourceCube
-			nextCubeInfo[SOURCE_SCOPE] = cubeInfo[TARGET_SCOPE] as Map
-			nextCubeInfo[SOURCE_TRAIT_MAPS] = cubeInfo[TARGET_TRAIT_MAPS]
-			nextCubeInfo[SOURCE_FIELD] = targetFieldName
-			nextCubeInfo[SOURCE_FIELD_RPM_TYPE] = rpmType
+			nextRelInfo.sourceCube = nextSourceCube
+			nextRelInfo.sourceScope = relInfo.targetScope
+			nextRelInfo.sourceTraitMaps = relInfo.targetTraitMaps
+			nextRelInfo.sourceFieldName = targetFieldName
+			nextRelInfo.sourceFieldRpmType = rpmType
 
+			long nextTargetTargetLevel = relInfo.targetLevel + 1
+			nextRelInfo.targetLevel = nextTargetTargetLevel
 
-			long nextTargetTargetLevel = targetLevel + 1
-			nextCubeInfo[TARGET_LEVEL] = nextTargetTargetLevel
+			long maxLevel = visInfo.maxLevel
+			visInfo.maxLevel = maxLevel.compareTo(nextTargetTargetLevel) < 0 ? nextTargetTargetLevel : maxLevel
+			visInfo.nodeCount += 1
+			nextRelInfo.id = visInfo.nodeCount
 
-			long maxLevel = levels[MAX_LEVEL] as long
-			levels[MAX_LEVEL] = maxLevel.compareTo(nextTargetTargetLevel) < 0 ? nextTargetTargetLevel : maxLevel
-			levels[NODE_COUNT] = (levels[NODE_COUNT] as long) + 1
-			nextCubeInfo[EDGE_ID] = levels[NODE_COUNT] as long
-
-			stack.push(nextCubeInfo)
-			return nextCubeInfo
+			stack.push(nextRelInfo)
+			return nextRelInfo
 		}
 		catch (Exception e)
 		{
-			throw new IllegalStateException('Exception caught while loading and processing the class for field ' + cubeInfo[SOURCE_FIELD] + ' in class ' + nextTargetCube.name + '.', e)
+			throw new IllegalStateException('Exception caught while loading and processing the class for field ' + relInfo.sourceFieldName + ' in class ' + nextTargetCube.name + '.', e)
 		}
 	}
 
@@ -354,23 +312,28 @@ class Visualizer extends NCubeGroovyController
 		return busType == null ? UNSPECIFIED : busType.toUpperCase()
 	}
 
-	private void addToEdges(NCube targetCube, NCube sourceCube,  Map targetScope, Map sourceScope, Map targetTraitMaps, Map sourceTraitMaps, String sourceFieldName, long edgeId,long level )
+	private static void addToEdges(VisualizerInfo visInfo, VisualizerRelInfo relInfo )
 	{
+		NCube sourceCube = relInfo.sourceCube
 		if (!sourceCube)
 		{
 			return
 		}
 
+		NCube targetCube = relInfo.targetCube
+		String sourceFieldName = relInfo.sourceFieldName
+		Map sourceTraitMaps = relInfo.sourceTraitMaps
+
 		Map edgeMap = [:]
 		String sourceCubeEffectiveName = getEffectiveName(sourceCube, sourceTraitMaps)
-		String targetCubeEffectiveName = getEffectiveName(targetCube, targetTraitMaps)
-		edgeMap.id = edgeId.toString()
-		edgeMap.from = sourceCube.name + '_' + sourceScope.toString()
-		edgeMap.to = targetCube.name + '_' + targetScope.toString()
+		String targetCubeEffectiveName = getEffectiveName(targetCube, relInfo.targetTraitMaps)
+		edgeMap.id = String.valueOf(relInfo.id)
+		edgeMap.from = sourceCube.name + '_' + relInfo.sourceScope.toString()
+		edgeMap.to = targetCube.name + '_' + relInfo.targetScope.toString()
 		edgeMap.fromName = sourceCubeEffectiveName
 		edgeMap.toName = targetCubeEffectiveName
 		edgeMap.fromFieldName = sourceFieldName
-		edgeMap.level = level.toString()
+		edgeMap.level = String.valueOf(relInfo.targetLevel)
 		edgeMap.label = ''
 		String vMin = sourceTraitMaps[sourceFieldName][V_MIN]
 		String vMax = sourceTraitMaps[sourceFieldName][V_MAX]
@@ -381,11 +344,17 @@ class Visualizer extends NCubeGroovyController
 		else{
 			edgeMap.title = ''
 		}
-		edges.add(edgeMap)
+		visInfo.edges << edgeMap
 	}
 
-	private void addToNodes(NCube targetCube, Map targetScope, Map traitMaps, long level, String busType, String sourceFieldName)
+	private void addToNodes(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String busType)
 	{
+		NCube targetCube = relInfo.targetCube
+		String targetCubeName = targetCube.name
+		Map targetTraitMaps = relInfo.targetTraitMaps
+		Map targetScope = relInfo.targetScope
+		String sourceFieldName = relInfo.sourceFieldName
+
 		int maxLineLength = 16
 		String nodeGroup = getGroup(targetCube, busType)
 		StringBuilder sb = new StringBuilder()
@@ -399,7 +368,7 @@ class Visualizer extends NCubeGroovyController
 			sb.append('\n')
 		}
 
-		String labelName = getDotSuffix(getEffectiveName(targetCube, traitMaps))
+		String labelName = getDotSuffix(getEffectiveName(targetCube, targetTraitMaps))
 		String[] splitName = labelName.split("(?=\\p{Upper})")
 		String line = ''
 		for (String part : splitName)
@@ -420,15 +389,15 @@ class Visualizer extends NCubeGroovyController
 		Map nodeMap = [:]
 		nodeMap.id = targetCube.name + '_' + targetScope.toString()
 		nodeMap.scope = targetScope.toString()
-		nodeMap.level = level.toString()
-		nodeMap.name = targetCube.name
+		nodeMap.level = String.valueOf(relInfo.targetLevel)
+		nodeMap.name = targetCubeName
 		nodeMap.fromFieldName = sourceFieldName == null ? null : sourceFieldName
 
 		nodeMap.label = sb.toString()
-		nodeMap.title = targetCube.name
-		nodeMap.desc = getTitle(targetCube, getScopedName(traitMaps), targetScope, traitMaps, nodeMap)
+		nodeMap.title = targetCubeName
+		nodeMap.desc = getTitle(targetCube, getScopedName(targetTraitMaps), targetScope, targetTraitMaps, nodeMap)
 		nodeMap.group = nodeGroup
-		nodes.add(nodeMap)
+		visInfo.nodes << nodeMap
 	}
 
 	private String getTitle(NCube targetCube, String scopedName, Map scope, Map traitMaps, Map nodeMap)
@@ -543,17 +512,17 @@ class Visualizer extends NCubeGroovyController
 		return traitInfoString
 	}
 
-	private static String getNextTargetCubeName(NCube sourceCube, Map sourceTraitsMap, String sourceFieldRpmType, String targetFieldName)
+	private static String getNextTargetCubeName(VisualizerRelInfo relInfo, String targetFieldName)
 	{
-		if (sourceCube.getAxis('TRAIT').contains(R_SCOPED_NAME))
+		if (relInfo.sourceCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME))
 		{
-			if (sourceTraitsMap[CLASS_TRAITS][R_SCOPED_NAME] == null)
+			if (relInfo.sourceTraitMaps[CLASS_TRAITS][R_SCOPED_NAME] == null)
 			{
 				return null
 			}
 			else
 			{
-				return sourceFieldRpmType
+				return relInfo.sourceFieldRpmType
 			}
 		}
 
@@ -582,7 +551,7 @@ class Visualizer extends NCubeGroovyController
 		{
 			newScope[SOURCE_FIELD_NAME] = targetFieldName
 		}
-		else if (targetCube.getAxis('TRAIT').contains(R_SCOPED_NAME))
+		else if (targetCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME))
 		{
 			String newScopeKey = sourceFieldRpmType.toLowerCase()
 			String oldValue = scope[newScopeKey]
@@ -612,27 +581,32 @@ class Visualizer extends NCubeGroovyController
 
 	private static String getDotSuffix(String value)
 	{
-		if (value.lastIndexOf('.') == -1) {
+		int lastIndexOfDot = value.lastIndexOf('.')
+		if (lastIndexOfDot == -1) {
 			return value
 		}
 
-		return value.substring(value.lastIndexOf('.') + 1);
+		return value.substring(lastIndexOfDot + 1);
 	}
 
-	private Map checkMissingScope(String cubeName, Map scope ) {
-		Set missingScope = findMissingScope(cubeName, scope)
+	private boolean hasMissingScope(VisualizerInfo visInfo ) {
+		String startCubeName = visInfo.startCubeName
+		Map scope = visInfo.scope
+		Set missingScope = findMissingScope(startCubeName, scope)
 		if (missingScope) {
 			Map expandedScope = scope == null ? new CaseInsensitiveMap(DEFAULT_SCOPE) : new CaseInsensitiveMap(scope)
 			String missingScopeString = ''
 			missingScope.each {
-				expandedScope[it] = '????'
-				missingScopeString = missingScopeString + it + ', '
+				String key = it as String
+				expandedScope[key] = '????'
+				missingScopeString = missingScopeString + key + ', '
 			}
 			missingScopeString = missingScopeString.substring(0, missingScopeString.size() - 2)
-			String message = 'Loading the visualization for ' + cubeName + ' requires additional scope to be provided. Please add scope value(s) for the following scope key(s): ' + missingScopeString + '.'
-			return [message: message, scope: expandedScope]
+			messages << 'Loading the visualization for ' + startCubeName + ' requires additional scope to be provided. Please add scope value(s) for the following scope key(s): ' + missingScopeString + '.'
+			visInfo.scope = expandedScope
+			return true
 		}
-		return null
+		return false
 	}
 
 	private Set findMissingScope(String startCubeName, Map scope) {
