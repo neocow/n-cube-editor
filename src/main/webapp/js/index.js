@@ -2859,6 +2859,26 @@ var NCE = (function ($)
         setReleaseCubesProgress(progress, 'Processing release of HEAD...');
         call(CONTROLLER + CONTROLLER_METHOD.RELEASE_VERSION, [appId, newSnapVer], {callback: function(result) {
             if (result.status) {
+                copyReleasedHeadToNewSnapshot(appId, newSnapVer, progress);
+            } else {
+                setReleaseCubesProgress(progress, 'Error: ' + result.data, true);
+            }
+        }});
+    }
+
+    function copyReleasedHeadToNewSnapshot(appId, newSnapVer, progress) {
+        var copyAppId = {
+            app: appId.app,
+            version: newSnapVer,
+            status: STATUS.SNAPSHOT,
+            branch: head
+        };
+        appId.branch = head;
+        appId.status = STATUS.RELEASE;
+
+        setReleaseCubesProgress(progress, 'Creating new SNAPSHOT from HEAD...');
+        call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [appId, copyAppId], {callback: function(result) {
+            if (result.status) {
                 finalizeRelease(appId, newSnapVer);
             } else {
                 setReleaseCubesProgress(progress, 'Error: ' + result.data, true);
@@ -2868,7 +2888,6 @@ var NCE = (function ($)
 
     function finalizeRelease(appId, newSnapVer) {
         setReleaseCubesProgress(100, 'Unlocking app... ');
-        appId.branch = head;
         call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, false], {callback: function(result) {
             if (result.status) {
                 setReleaseCubesProgress(100, 'Success!', true);
