@@ -46,11 +46,6 @@
 
     </aop:config>
 
-    <!--
-    p:username="execdash"
-    p:password="puCupRaQaZe3"
-    -->
-
     <bean id="connectionProvider" class="com.cedarsoftware.util.SpringConnectionProvider">
         <constructor-arg ref="ncubeDataSource" />
     </bean>
@@ -69,42 +64,19 @@
     </bean>
 
     <!--
-        When using mysql as your test database, set an environment variable spring.profiles.active=mysql
-        The profiles list can be comma separated if you need more than one profile
+        Set NCE_JDBC_DRIVER, NCE_JDBC_URL, NCE_JDBC_USER, NCE_JDBC_PWD, and NCE_POOL_QUERY as environment
+        variables or system properties.
     -->
 
-    <!--<bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"-->
-          <!--p:driverClassName="com.mysql.jdbc.Driver"-->
-          <!--p:url="jdbc:mysql://ncube.cu3mjpgbdi3p.us-east-1.rds.amazonaws.com:3306/ncube"-->
-          <!--p:username="ncube"-->
-          <!--p:password="xxx"-->
-          <!--p:initialSize="5"-->
-          <!--p:minIdle="5"-->
-          <!--p:maxIdle="10"-->
-          <!--p:maxActive="100"-->
-          <!--p:maxWait="120000"-->
-          <!--p:jmxEnabled="true"-->
-          <!--p:removeAbandoned="true"-->
-          <!--p:removeAbandonedTimeout="180"-->
-          <!--p:testOnBorrow="true"-->
-          <!--p:testOnReturn="false"-->
-          <!--p:testWhileIdle="false"-->
-          <!--p:timeBetweenEvictionRunsMillis="30000"-->
-          <!--p:minEvictableIdleTimeMillis="30000"-->
-          <!--p:validationInterval="60000"-->
-          <!--p:validationQuery="/* ping */">-->
-    <!--</bean>-->
-
-    <bean id="ncubeDataSource" destroy-method="close"
-          class="org.apache.tomcat.jdbc.pool.DataSource"
-          p:driverClassName="oracle.jdbc.driver.OracleDriver"
-          p:url="jdbc:oracle:thin:@dm01np-scan.td.afg:1521/app_ncubed.dev.gai.com"
-          p:username="nce"
-          p:password="quality"
+    <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
+          p:driverClassName="#{systemEnvironment['NCE_JDBC_DRIVER'] ?: systemProperties['NCE_JDBC_DRIVER'] ?: 'oracle.jdbc.driver.OracleDriver'}"
+          p:url="#{systemEnvironment['NCE_JDBC_URL'] ?: systemProperties['NCE_JDBC_URL'] ?: 'jdbc:oracle:thin:@dm01np-scan.td.afg:1521/app_ncubed.dev.gai.com'}"
+          p:username="#{systemEnvironment['NCE_JDBC_USER'] ?: systemProperties['NCE_JDBC_USER'] ?: 'nce'}"
+          p:password="#{systemEnvironment['NCE_JDBC_PWD'] ?: systemProperties['NCE_JDBC_PWD'] ?: 'quality'}"
           p:jdbcInterceptors="com.cedarsoftware.util.PoolInterceptor"
-          p:initialSize="10"
-          p:minIdle="10"
-          p:maxIdle="50"
+          p:initialSize="5"
+          p:minIdle="5"
+          p:maxIdle="10"
           p:maxActive="100"
           p:maxWait="120000"
           p:jmxEnabled="true"
@@ -116,87 +88,7 @@
           p:timeBetweenEvictionRunsMillis="30000"
           p:minEvictableIdleTimeMillis="30000"
           p:validationInterval="60000"
-          p:validationQuery="select 1 from dual">
+          p:validationQuery="#{systemEnvironment['NCE_POOL_QUERY'] ?: systemProperties['NCE_POOL_QUERY'] ?: 'select 1 from dual'}">
     </bean>
 
-    <beans profile="mysql">
-
-        <bean id="ncubeDataSource" destroy-method="close" class="org.apache.tomcat.jdbc.pool.DataSource"
-              p:driverClassName="com.mysql.jdbc.Driver"
-              p:url="jdbc:mysql://localhost:3306/ncube"
-              p:username="ncube"
-              p:password="ncube"
-              p:jdbcInterceptors="com.cedarsoftware.util.PoolInterceptor"
-              p:initialSize="5"
-              p:minIdle="5"
-              p:maxIdle="10"
-              p:maxActive="100"
-              p:maxWait="120000"
-              p:jmxEnabled="true"
-              p:removeAbandoned="true"
-              p:removeAbandonedTimeout="180"
-              p:testOnBorrow="true"
-              p:testOnReturn="false"
-              p:testWhileIdle="false"
-              p:timeBetweenEvictionRunsMillis="30000"
-              p:minEvictableIdleTimeMillis="30000"
-              p:validationInterval="60000"
-              p:validationQuery="/* ping */">
-        </bean>
-    </beans>
-
-    <beans profile="exa-dev">
-        <bean id="ncubeDataSource" destroy-method="close"
-              class="org.apache.tomcat.jdbc.pool.DataSource"
-              p:driverClassName="oracle.jdbc.driver.OracleDriver"
-              p:url="jdbc:oracle:thin:@dm01np-scan.td.afg:1521/app_ncubed.dev.gai.com"
-              p:username="nce"
-              p:password="quality"
-              p:jdbcInterceptors="com.cedarsoftware.util.PoolInterceptor"
-              p:initialSize="5"
-              p:minIdle="5"
-              p:maxIdle="10"
-              p:maxActive="100"
-              p:maxWait="120000"
-              p:jmxEnabled="true"
-              p:removeAbandoned="true"
-              p:removeAbandonedTimeout="180"
-              p:testOnBorrow="true"
-              p:testOnReturn="false"
-              p:testWhileIdle="false"
-              p:timeBetweenEvictionRunsMillis="30000"
-              p:minEvictableIdleTimeMillis="30000"
-              p:validationInterval="60000"
-              p:validationQuery="select 1 from dual">
-        </bean>
-    </beans>
-
-    <beans profile="exa-prod">
-        <bean id="ncubeDataSource" destroy-method="close"
-              class="org.apache.tomcat.jdbc.pool.DataSource"
-              p:driverClassName="oracle.jdbc.driver.OracleDriver"
-              p:url="jdbc:oracle:thin:@dm01-scan.td.afg:1521/app_ncubep.prod.gai.com"
-              p:username="nce"
-              p:password="quality"
-              p:jdbcInterceptors="com.cedarsoftware.util.PoolInterceptor"
-              p:initialSize="5"
-              p:minIdle="5"
-              p:maxIdle="10"
-              p:maxActive="100"
-              p:maxWait="120000"
-              p:jmxEnabled="true"
-              p:removeAbandoned="true"
-              p:removeAbandonedTimeout="180"
-              p:testOnBorrow="true"
-              p:testOnReturn="false"
-              p:testWhileIdle="false"
-              p:timeBetweenEvictionRunsMillis="30000"
-              p:minEvictableIdleTimeMillis="30000"
-              p:validationInterval="60000"
-              p:validationQuery="select 1 from dual">
-        </bean>
-    </beans>
-
-
-<!-- to add cpr provider -->
 </beans>
