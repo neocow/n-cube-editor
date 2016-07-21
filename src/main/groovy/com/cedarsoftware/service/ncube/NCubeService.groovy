@@ -538,8 +538,12 @@ class NCubeService
 
         NCubeInfoDto branchDto = list.first()     // only 1 because we used exact match
         list = NCubeManager.search(appId.asHead(), cubeName, null, options)
-        if (list.size() != 1)
-        {
+        if (list.size() == 0)
+        {   // New n-cube - up-todate because it does not yet exist in HEAD - the branch n-cube is the Creator.
+            return true
+        }
+        else if (list.size() != 1)
+        {   // Should never happen
             return false
         }
 
