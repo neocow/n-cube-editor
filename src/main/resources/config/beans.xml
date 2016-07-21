@@ -29,7 +29,7 @@
             <tx:method name="has*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="does*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="search*" propagation="REQUIRED" read-only="true"/>
-            <tx:method name="loadCube*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="load*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="resolveRelativeUrl" propagation="REQUIRED" read-only="true"/>
             <tx:method name="assert*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="check*" propagation="REQUIRED" read-only="true"/>
