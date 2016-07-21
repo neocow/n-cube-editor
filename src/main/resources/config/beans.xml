@@ -24,12 +24,16 @@
 
     <tx:advice id="ncubeTxAdvice" transaction-manager="ncubeTransactionManager">
         <tx:attributes>
-            <tx:method name="*" propagation="REQUIRED"/>
             <tx:method name="get*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="is*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="has*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="does*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="search*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="loadCube*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="resolveRelativeUrl" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="assert*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="check*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="*" propagation="REQUIRED"/>
         </tx:attributes>
     </tx:advice>
 
