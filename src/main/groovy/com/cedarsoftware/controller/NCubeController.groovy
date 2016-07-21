@@ -2233,6 +2233,19 @@ class NCubeController extends BaseController
         return results
     }
 
+    boolean isCubeUpToDate(ApplicationID appId, String cubeName)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            return nCubeService.isCubeUpToDate(appId, cubeName)
+        }
+        catch (Exception e)
+        {
+            fail(e)
+        }
+    }
+
     // ============================================= End API ===========================================================
 
     // ===================================== utility (non-API) methods =================================================
