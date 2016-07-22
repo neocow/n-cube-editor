@@ -524,6 +524,33 @@ class NCubeService
         NCubeManager.releaseVersion(appId, newSnapVer)
     }
 
+    boolean isCubeUpToDate(ApplicationID appId, String cubeName)
+    {
+        Map options = [:]
+        options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
+        options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
+
+        List<NCubeInfoDto> list = NCubeManager.search(appId, cubeName, null, options)
+        if (list.size() != 1)
+        {
+            return false
+        }
+
+        NCubeInfoDto branchDto = list.first()     // only 1 because we used exact match
+        list = NCubeManager.search(appId.asHead(), cubeName, null, options)
+        if (list.size() == 0)
+        {   // New n-cube - up-todate because it does not yet exist in HEAD - the branch n-cube is the Creator.
+            return true
+        }
+        else if (list.size() != 1)
+        {   // Should never happen
+            return false
+        }
+
+        NCubeInfoDto headDto = list.first()     // only 1 because we used exact match
+        return StringUtilities.equalsIgnoreCase(branchDto.headSha1, headDto.sha1)
+    }
+
     // =========================================== Helper methods ======================================================
 
     static List getCubes(String json)
