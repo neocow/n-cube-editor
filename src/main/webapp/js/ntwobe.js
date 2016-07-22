@@ -365,6 +365,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function load(keepTable) {
+        var result;
         resetCoordinateBar();
         if (hot && !keepTable) {
             killHotEditor();
@@ -375,12 +376,11 @@ var NCubeEditor2 = (function ($) {
             hot = null;
         }
 
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:'json-index-nocells'}], {noResolveRefs:true});
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:'json-index-nocells'}], {noResolveRefs:true});
         if (!result.status) {
             showHtmlError('Failed to load JSON for cube, error: ' + result.data);
             return;
         }
-
         clearHtmlError();
 
         handleCubeData(JSON.parse(result.data));
@@ -392,10 +392,10 @@ var NCubeEditor2 = (function ($) {
         setUpColumnWidths();
         if (!hot) {
             hot = new Handsontable(_hotContainer[0], getHotSettings());
-            loadCellRows();
         } else {
             render();
         }
+        loadCellRows();
         selectSavedOrDefaultCell();
         setClipFormatToggleListener();
         _searchField.value = nce.getSearchQuery() || '';
@@ -404,40 +404,39 @@ var NCubeEditor2 = (function ($) {
         searchDown();
     }
 
-    function loadCellRows(start) {
-        var r, rLen, c, cLen;
+    function loadCellRows() {
+        var r, c, cLen, curId, start, end, result, curTime;
         var ids = [];
-        if (!start) {
-            start = 2;
-        }
-        if (start >= numRows - 2) {
+        if (!hot) {
             return;
         }
-
+        
+        start = Math.max(2, hot.rowOffset());
         cLen = axes[colOffset].columnLength + colOffset;
+        end = Math.min(start + hot.countRenderedRows(), numRows);
 
-        for (r = 0, rLen = Math.min(500, numRows - start); r < rLen; r++) {
+        for (r = start; r <= end; r++) {
             for (c = colOffset; c < cLen; c++) {
-                ids.push(getCellIdAsArray(r + start, c));
+                curId = null;
+                curId = getCellIdAsArray(r, c);
+                if (!data.cells.hasOwnProperty(curId.join('_'))) {
+                    ids.push(curId);
+                }
             }
         }
         
         if (ids.length) {
-            nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELLS_NO_EXECUTE,
-                [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), ids],
-                {noResolveRefs: true, callback: function(result) {
-                    if (result.status) {
-                        loadCellRowsCallback(result.data);
-                        render();
-                        loadCellRows(rLen + start);
-                    } else {
-                        nce.showNote('Error getting cells:' + result.data);
-                    }
-                }});
+            result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELLS_NO_EXECUTE, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), ids], {noResolveRefs:true});
+            if (result.status) {
+                addCellsToData(result.data);
+                render();
+            } else {
+                nce.showNote('Error getting cells:' + result.data);
+            }
         }
     }
     
-    function loadCellRowsCallback(cells) {
+    function addCellsToData(cells) {
         var i, len, cell, cellId, cellObj;
         for (i = 0, len = cells.length; i < len; i++) {
             cell = null;
@@ -491,14 +490,14 @@ var NCubeEditor2 = (function ($) {
     }
 
     function setSearchHelperText() {
+        var len, idx, html;
         var query = _searchField.value;
         if (query !== null && query !== '') {
-            var len = _searchCoords.length;
-            var idx = _currentSearchResultIndex + 1;
-            _searchInfo[0].innerHTML = len ? idx + ' of ' + len : 'not found';
-        } else {
-            _searchInfo[0].innerHTML = '';
+            len = _searchCoords.length;
+            idx = _currentSearchResultIndex + 1;
+            html = len ? idx + ' of ' + len : 'not found';
         }
+        _searchInfo[0].innerHTML = html || '';
     }
 
     function addSearchListeners() {
@@ -1765,17 +1764,19 @@ var NCubeEditor2 = (function ($) {
             },
             afterScrollHorizontally: function() {
                 moveTopAxisMenu();
-                delay(saveViewPosition, PROGRESS_DELAY);
             },
             afterScrollVertically: function() {
-                delay(saveViewPosition, PROGRESS_DELAY);
+                delay(function() {
+                    saveViewPosition();
+                    loadCellRows();
+                }, PROGRESS_DELAY);
             },
             beforeAutofill: function(start, end, data) {
                 autoFillNce(start, end);
             }
         };
     }
-
+    
     function saveViewPosition(row, col) {
         var wth = $('.wtHolder');
         var r;
@@ -4285,12 +4286,12 @@ var NCubeEditor2 = (function ($) {
     }
 
     function selectSavedOrDefaultCell() {
+        var pos, row, col, left, top, wth;
         if (!hot) {
             return;
         }
         
-        var pos = nce.getViewPosition();
-        var row, col, left, top;
+        pos = nce.getViewPosition();
         if (typeof pos === 'object') {
             row = pos.row;
             col = pos.col;
@@ -4302,7 +4303,7 @@ var NCubeEditor2 = (function ($) {
         }
         
         hot.selectCell(row, col);
-        var wth = $('.wtHolder')[0];
+        wth = $('.wtHolder')[0];
         wth.scrollLeft = left || 0;
         wth.scrollTop = top || 0;
     }

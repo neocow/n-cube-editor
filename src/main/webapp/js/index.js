@@ -2826,7 +2826,7 @@ var NCE = (function ($)
                 branchNamesWithoutHead.push(branchName);
             }
         }
-        if (branchNamesWithoutHead.length > 0) {
+        if (branchNamesWithoutHead.length) {
             moveBranch(appId, newSnapVer, branchNamesWithoutHead, 0);
         } else {
             releaseVersion(appId, newSnapVer);
