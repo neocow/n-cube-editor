@@ -18,7 +18,6 @@ import com.cedarsoftware.ncube.NCubeManager.ACTION
 import com.cedarsoftware.ncube.NCubeTest
 import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
-import com.cedarsoftware.ncube.StringValuePair
 import com.cedarsoftware.ncube.exception.AxisOverlapException
 import com.cedarsoftware.ncube.exception.BranchMergeException
 import com.cedarsoftware.ncube.exception.CommandCellException
@@ -31,6 +30,7 @@ import com.cedarsoftware.ncube.formatters.TestResultsFormatter
 import com.cedarsoftware.service.ncube.NCubeService
 import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
+import com.cedarsoftware.util.CaseInsensitiveMap
 import com.cedarsoftware.util.CaseInsensitiveSet
 import com.cedarsoftware.util.Converter
 import com.cedarsoftware.util.PoolInterceptor
@@ -1110,7 +1110,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             NCube ncube = nCubeService.getCube(appId, cubeName)
-            Map<String, Object> coord = test.createCoord()
+            Map<String, Object> coord = test.getCoordWithValues()
             boolean success = true
             Map output = new LinkedHashMap()
             Map args = [input:coord, output:output, ncube:ncube]
@@ -1183,7 +1183,8 @@ class NCubeController extends BaseController
             {
                 return null
             }
-            return NCubeTestReader.convert(s).toArray()
+            List<NCubeTest> tests = NCubeTestReader.convert(s)
+            return tests.toArray()
         }
         catch (Exception e)
         {
@@ -1225,13 +1226,12 @@ class NCubeController extends BaseController
             Set<String> items = ncube.getRequiredScope([:], [:])
             int size = items == null ? 0 : items.size()
 
-            StringValuePair<CellInfo>[] coords = new StringValuePair[size]
+            Map<String, CellInfo> coords = new CaseInsensitiveMap<>()
             if (size > 0)
             {
-                int i = 0;
                 for (String s : items)
                 {
-                    coords[i++] = new StringValuePair(s, null)
+                    coords[s] = (CellInfo)null
                 }
             }
 
