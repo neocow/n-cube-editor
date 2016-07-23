@@ -101,14 +101,6 @@ var TestEditor = (function ($)
                 e.preventDefault();
                 createNewTestMenu();
             });
-            $('#generateTestsLink').click(function (e)
-            {
-                e.preventDefault();
-                if (nce.ensureModifiable("Unable to generate tests."))
-                {
-                    loadTestListView("ncubeController.generateTests", true);
-                }
-            });
 
             _createNewTestModal.on('shown.bs.modal', function () {
                 $('#createNewTestField').focus();

@@ -1210,27 +1210,6 @@ class NCubeController extends BaseController
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
-    Object[] generateTests(ApplicationID appId, String cubeName)
-    {
-        try
-        {
-            appId = addTenant(appId)
-            NCube ncube = nCubeService.getCube(appId, cubeName)
-            Object[] list = ncube.generateNCubeTests().toArray()
-            nCubeService.updateTestData(appId, cubeName, new NCubeTestWriter().format(list))
-            return list
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return null
-        }
-    }
-
-    /**
-     * In-place update of a cell.  'Value' is the final (converted) object type to be stored
-     * in the indicated (by colIds) cell.
-     */
     NCubeTest createNewTest(ApplicationID appId, String cubeName, String testName)
     {
         try
