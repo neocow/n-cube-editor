@@ -797,9 +797,11 @@ var TestEditor = (function ($)
                 _testLayoutCenter.find('> .well').animate({
                     scrollTop: _testResultsDiv.offset().top
                 }, 200);
-                nce.loadNCubes();
-                nce.loadNCubeListView();
-                nce.runSearch();
+
+                // Only uncomment when running tests that create n-cubes and you want the list to auto-refresh.
+                //nce.loadNCubes();
+                //nce.loadNCubeListView();
+                //nce.runSearch();
             }, 1);
         }
         catch (e)
