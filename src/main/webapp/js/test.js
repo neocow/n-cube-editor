@@ -101,14 +101,6 @@ var TestEditor = (function ($)
                 e.preventDefault();
                 createNewTestMenu();
             });
-            $('#generateTestsLink').click(function (e)
-            {
-                e.preventDefault();
-                if (nce.ensureModifiable("Unable to generate tests."))
-                {
-                    loadTestListView("ncubeController.generateTests", true);
-                }
-            });
 
             _createNewTestModal.on('shown.bs.modal', function () {
                 $('#createNewTestField').focus();
@@ -357,12 +349,10 @@ var TestEditor = (function ($)
 
             if (coordinate)
             {
-                $.each(coordinate, function (index, item)
+                $.each(coordinate, function (key, value)
                 {
-                    var key = item['key'];
                     if (key.substring(0, 1) != "@")
                     {
-                        var value = item['value'];
                         var isUrl = (value == null || value.isUrl == null) ? false : value.isUrl;
                         var v = (value == null || value.value == null) ? null : value.value;
                         var dataType = (value == null || value.dataType == null) ? null : value.dataType;
@@ -807,8 +797,11 @@ var TestEditor = (function ($)
                 _testLayoutCenter.find('> .well').animate({
                     scrollTop: _testResultsDiv.offset().top
                 }, 200);
-                nce.loadNCubes();
-                nce.loadNCubeListView();
+
+                // Only uncomment when running tests that create n-cubes and you want the list to auto-refresh.
+                //nce.loadNCubes();
+                //nce.loadNCubeListView();
+                //nce.runSearch();
             }, 1);
         }
         catch (e)
@@ -869,15 +862,12 @@ var TestEditor = (function ($)
     var retrieveParameters = function()
     {
         var parameters = _testParameters.find("> div[parameter-id]");
-        var coord = new Array(parameters.length);
+        var coord = {};
 
         $.each(parameters, function (index, value)
         {
-            var pair = {};
             var v = $(value);
-            pair['key'] = v.attr("parameter-id");
-            pair['value'] = retrieveCellInfo(v, true);
-            coord[index] = pair;
+            coord[v.attr("parameter-id")] = retrieveCellInfo(v, true);
         });
 
         return coord;
@@ -1186,27 +1176,23 @@ var TestEditor = (function ($)
         newTest["@type"] = "com.cedarsoftware.ncube.NCubeTest";
         newTest["name"] = newTestName;
 
-        var parameters = [];
+        var parameters = {};
 
-        $.each(test["coord"], function(index, item) {
-            var pair = {};
-            pair["key"] = item["key"];
-            var cell = item["value"];
+        $.each(test["coord"], function(key, value)
+        {
             var newCell = {};
 
-            if (!cell)
+            if (!value)
             {
-                pair["value"] = null;
+                parameters[key] = null;
             }
             else
             {
-                $.each(cell, function(key, value) {
-                    newCell[key] = value;
+                $.each(value, function(key1, value1) {
+                    newCell[key1] = value1;
                 });
-                pair["value"] = newCell;
+                parameters[key] = newCell;
             }
-
-            parameters.push(pair);
         });
 
         newTest["coord"] = parameters;

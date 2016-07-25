@@ -1010,7 +1010,6 @@ var NCE = (function ($)
                 setActiveTabViewType(_defaultTab);
             }
         }
-        _menuOptions = null;
         _menuOptions = [];
 
         menuKeys = Object.keys(menu);
@@ -1079,6 +1078,7 @@ var NCE = (function ($)
             showNote: showNote,
             loadNCubes: loadNCubes,
             loadNCubeListView: loadNCubeListView,
+            runSearch: runSearch,
             saveViewPosition: saveViewPosition,
             getViewPosition: getViewPosition,
             getNumFrozenCols: getNumFrozenCols,
