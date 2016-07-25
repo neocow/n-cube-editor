@@ -365,7 +365,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function load(keepTable) {
-        var result;
+        var result, mode;
         resetCoordinateBar();
         if (hot && !keepTable) {
             killHotEditor();
@@ -376,7 +376,8 @@ var NCubeEditor2 = (function ($) {
             hot = null;
         }
 
-        result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:'json-index-nocells'}], {noResolveRefs:true});
+        mode = shouldLoadAllCells() ? JSON_MODE.INDEX : JSON_MODE.INDEX_NOCELLS;
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:mode}], {noResolveRefs:true});
         if (!result.status) {
             showHtmlError('Failed to load JSON for cube, error: ' + result.data);
             return;
@@ -395,7 +396,9 @@ var NCubeEditor2 = (function ($) {
         } else {
             render();
         }
-        loadCellRows();
+        if (!shouldLoadAllCells()) {
+            loadCellRows();
+        }
         selectSavedOrDefaultCell();
         setClipFormatToggleListener();
         _searchField.value = nce.getSearchQuery() || '';
@@ -403,17 +406,22 @@ var NCubeEditor2 = (function ($) {
         runSearch();
         searchDown();
     }
+    
+    function shouldLoadAllCells() {
+        return nce.getFilterOutBlankRows();
+    }
 
     function loadCellRows() {
-        var r, c, cLen, curId, start, end, result, curTime;
-        var ids = [];
+        var r, c, cLen, curId, start, end, result, shouldLoadAll, ids;
         if (!hot) {
             return;
         }
-        
-        start = Math.max(2, hot.rowOffset());
+
+        ids = [];
+        shouldLoadAll = shouldLoadAllCells();
+        start = shouldLoadAll ? 2 : Math.max(2, hot.rowOffset());
         cLen = axes[colOffset].columnLength + colOffset;
-        end = Math.min(start + hot.countRenderedRows(), numRows);
+        end = shouldLoadAll ? numRows : Math.min(start + hot.countRenderedRows(), numRows);
 
         for (r = start; r <= end; r++) {
             for (c = colOffset; c < cLen; c++) {
@@ -430,7 +438,7 @@ var NCubeEditor2 = (function ($) {
             if (result.status) {
                 addCellsToData(result.data);
                 setUpColumnWidths(false, start, end);
-                render();
+                runSearch(true);
             } else {
                 nce.showNote('Error getting cells:' + result.data);
             }
@@ -562,11 +570,11 @@ var NCubeEditor2 = (function ($) {
         _searchField.focus();
     }
 
-    function runSearch() {
+    function runSearch(forceSearch) {
         var query = _searchField.value;
-        if (_searchText !== query) {
+        if (forceSearch || _searchText !== query) {
             if (query && query.length) {
-                searchCubeData(query);
+                searchCubeData(query, false);
             } else {
                 clearSearchMatches();
             }
@@ -635,10 +643,12 @@ var NCubeEditor2 = (function ($) {
         return arr.join('_');
     }
 
-    function searchCubeData(query) {
+    function searchCubeData(query, shouldResetSearchResultIdx) {
         _searchCoords = null;
         _searchCoords = [];
-        _currentSearchResultIndex = -1;
+        if (shouldResetSearchResultIdx) {
+            _currentSearchResultIndex = -1;
+        }
 
         var queryLower = query.toLowerCase();
         var multiplier = 1;
@@ -1013,7 +1023,7 @@ var NCubeEditor2 = (function ($) {
                 headerInfo.push(parseInt(Object.keys(ghostAxisColumns)[0]));
             }
             headerInfo.push(parseInt(getColumnHeaderId(col)));
-            return headerInfo;
+            return headerInfo.sort();
         }
         return [parseInt(getRowHeaderId(row, 0))];
     }
@@ -1961,7 +1971,7 @@ var NCubeEditor2 = (function ($) {
         else {
             var cellData = getCellData(row, col);
             td.className += CLASS_HANDSON_CELL_BASIC;
-            if (cellData) {
+            if (cellData && cellData.type) {
                 if (cellData.isSearchResult) {
                     td.className += CLASS_HANDSON_SEARCH_RESULT;
                 }
@@ -1977,7 +1987,7 @@ var NCubeEditor2 = (function ($) {
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
                     td.innerHTML = val.substring(0, val.indexOf('T'));
-                } else if (cellData.type) {
+                } else {
                     td.innerHTML = buildExpressionLink('' + cellData.value);
                     activateLinks(td);
                 }
@@ -2537,7 +2547,7 @@ var NCubeEditor2 = (function ($) {
                 var curRow = curCell.startRow;
                 var curCol = curCell.startCol;
                 var prevIdx = _currentSearchResultIndex;
-                searchCubeData(searchQuery);
+                searchCubeData(searchQuery, true);
                 _currentSearchResultIndex = prevIdx;
 
                 for (var i = 0, len = _searchCoords.length; i < len; i++) {

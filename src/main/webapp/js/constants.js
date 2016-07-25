@@ -35,7 +35,7 @@ var FONT_CELL = FONT_SIZE + ' Helvetica Neue';
 var FONT_CODE = FONT_SIZE + ' Lucida Console';
 var CALC_WIDTH_AXIS_BUTTON_MOD = 50;
 var CALC_WIDTH_REF_AX_BUTTON_MOD = 60;
-var CALC_WIDTH_BASE_MOD = 30;
+var CALC_WIDTH_BASE_MOD = 40;
 var CALC_WIDTH_TAB_OVERFLOW_MOD = 45;
 
 var CONFIG_TITLE = '~Title';
@@ -176,6 +176,11 @@ var CONTROLLER_METHOD = {
     UPDATE_CELL: 'updateCell',
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties'
+};
+
+var JSON_MODE = {
+    INDEX: 'json-index',
+    INDEX_NOCELLS: 'json-index-nocells'
 };
 
 var DEFAULT_SCOPE = [
