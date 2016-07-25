@@ -423,7 +423,7 @@ var NCubeEditor2 = (function ($) {
         cLen = axes[colOffset].columnLength + colOffset;
         end = shouldLoadAll ? numRows : Math.min(start + hot.countRenderedRows(), numRows);
 
-        for (r = start; r <= end; r++) {
+        for (r = start; r < end; r++) {
             for (c = colOffset; c < cLen; c++) {
                 curId = null;
                 curId = getCellIdAsArray(r, c);
