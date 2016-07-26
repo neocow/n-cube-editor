@@ -584,7 +584,12 @@ var NCE = (function ($)
                     .prop({href:'#', tabindex:'-1'})
                     .html('Compare')
             ).append(
-                createBranchesUl(function(branchName) {
+                createBranchesUl({
+                    app: cubeInfo[CUBE_INFO.APP],
+                    version: cubeInfo[CUBE_INFO.VERSION],
+                    status: cubeInfo[CUBE_INFO.STATUS],
+                    branch: cubeInfo[CUBE_INFO.BRANCH]
+                }, function(branchName) {
                     var infoDto = getInfoDto();
                     var leftInfoDto = $.extend(true, {}, infoDto);
                     leftInfoDto.branch = branchName;
@@ -689,7 +694,12 @@ var NCE = (function ($)
                         .prop({href: '#', tabindex: '-1'})
                         .html('Update')
                 ).append(
-                    createBranchesUl(function (branchName) {
+                    createBranchesUl({
+                        app: cubeInfo[CUBE_INFO.APP],
+                        version: cubeInfo[CUBE_INFO.VERSION],
+                        status: cubeInfo[CUBE_INFO.STATUS],
+                        branch: cubeInfo[CUBE_INFO.BRANCH]
+                    }, function (branchName) {
                         callUpdate(branchName);
                     })
                 )
@@ -840,13 +850,14 @@ var NCE = (function ($)
         }
     }
 
-    function createBranchesUl(func) {
-        var html, bnIdx, bnLen, branchesUl;
+    function createBranchesUl(appId, func) {
+        var html, bnIdx, bnLen, branchesUl, branchNames;
 
+        branchNames = getBranchNamesByAppId(appId);
         html = '<ul class="dropdown-menu">';
-        for (bnIdx = 0, bnLen = _branchNames.length; bnIdx < bnLen; bnIdx++) {
+        for (bnIdx = 0, bnLen = branchNames.length; bnIdx < bnLen; bnIdx++) {
             html += '<li><a href="#">';
-            html += _branchNames[bnIdx];
+            html += branchNames[bnIdx];
             html += '</a></li>';
         }
         
@@ -1727,9 +1738,8 @@ var NCE = (function ($)
     
     function buildBranchUpdateMenu() {
         var li = _branchCompareUpdateMenu.parent();
-        getBranchNames();
         li.find('ul').remove();
-        li.append(createBranchesUl(compareUpdateBranch));
+        li.append(createBranchesUl(getAppId(), compareUpdateBranch));
     }
 
     function loadAppListView()
@@ -3234,14 +3244,18 @@ var NCE = (function ($)
     }
 
     function getBranchNames() {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCHES, [getAppId()]);
+        _branchNames = null;
+        _branchNames = getBranchNamesByAppId(getAppId());
+        return _branchNames;
+    }
+    
+    function getBranchNamesByAppId(appId) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCHES, [appId]);
         if (!result.status) {
             showNote('Unable to get branches:<hr class="hr-small"/>' + result.data);
             return [];
         }
-        _branchNames = null;
-        _branchNames = result.data;
-        return _branchNames;
+        return result.data;
     }
 
     function selectBranch() {
