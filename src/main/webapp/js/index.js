@@ -101,6 +101,8 @@ var NCE = (function ($)
     var _batchUpdateAxisReferencesVersion = $('#batchUpdateAxisReferencesVersion');
     var _batchUpdateAxisReferencesCubeName = $('#batchUpdateAxisReferencesCubeName');
     var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
+    var _batchUpdateAxisReferencesSectionHeader = $('#batchUpdateAxisReferencesSectionHeader');
+    var _batchUpdateAxisReferencesAxisMethodNameColumnHeader = $('#batchUpdateAxisReferencesAxisMethodNameColumnHeader');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
     var _createSnapshotMenu = $('#createSnapshotMenu');
@@ -137,6 +139,7 @@ var NCE = (function ($)
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
     var _createSnapshotModal = $('#createSnapshotModal');
     var _copyBranchModal = $('#copyBranchModal');
+    var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
 
     initialize();
 
@@ -1427,6 +1430,9 @@ var NCE = (function ($)
         });
         _batchUpdateAxisReferencesToggle.change(function() {
             buildBatchUpdateAxisReferencesTable();
+            if (_batchUpdateAxisReferencesCubeName.val()) {
+                batchUpdateAxisReferencesCubeNameChanged();
+            }
         });
         _batchUpdateAxisReferencesApp.change(function() {
             batchUpdateAxisReferencesAppChanged();
@@ -1496,11 +1502,14 @@ var NCE = (function ($)
     }
 
     function batchUpdateAxisReferencesCubeNameChanged() {
-        var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
-        populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, POPULATE_SELECT_FROM_CUBE.AXIS);
+        var params, axisOrMethod;
+        params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
+        axisOrMethod = isBatchUpdateAxisReferencesDestinationToggled() ? POPULATE_SELECT_FROM_CUBE.AXIS : POPULATE_SELECT_FROM_CUBE.METHOD;
+        populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, axisOrMethod);
     }
 
     function batchUpdateAxisReferencesOpen() {
+        _batchUpdateAxisReferencesData = null;
         _batchUpdateAxisReferencesData = [];
         $('#batchUpdateAxisReferencesInstTitle')[0].innerHTML = 'Instructions - Batch Update Axis References';
         $('#batchUpdateAxisReferencesInstructions')[0].innerHTML = 'Update the reference axis properties of the checked axes. Updating will only update the rows you have selected. You can toggle between destination and transformation properties';
@@ -1509,16 +1518,17 @@ var NCE = (function ($)
 
         showNote('Finding all reference axes, please wait...');
         setTimeout(function() {
-            var result = call('ncubeController.getReferenceAxes', [getAppId()]);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCE_AXES, [getAppId()]);
             clearError();
             if (!result.status) {
                 showNote('Unable to load reference axes:<hr class="hr-small"/>' + result.data);
                 return;
             }
 
+            _batchUpdateAxisReferencesData = null;
             _batchUpdateAxisReferencesData = result.data;
             buildBatchUpdateAxisReferencesTable();
-            $('#batchUpdateAxisReferencesModal').modal();
+            _batchUpdateAxisReferencesModal.modal();
         },1);
     }
 
@@ -1531,15 +1541,15 @@ var NCE = (function ($)
     }
 
     function buildBatchUpdateAxisReferencesTable() {
+        var i, len, isDest, refAxData, html, app, version, cube, axis;
         findBatchUpdateAxisReferencesRows().remove();
-        var isDest = isBatchUpdateAxisReferencesDestinationToggled();
-        $('#batchUpdateAxisReferencesSectionHeader')[0].innerHTML = isDest ? 'Destination Axis' : 'Transform Axis';
+        isDest = isBatchUpdateAxisReferencesDestinationToggled();
+        _batchUpdateAxisReferencesSectionHeader[0].innerHTML = isDest ? 'Destination Axis' : 'Transform Axis';
+        _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = isDest ? 'Axis Name' : 'Method Name';
+        html = '';
 
-        for (var i = 0, len = _batchUpdateAxisReferencesData.length; i < len; i++) {
-            var refAxData = _batchUpdateAxisReferencesData[i];
-            var tr = $('<tr/>').prop('class','batch-update-axis-references-entry');
-            var selectCheckbox = $('<input/>').prop({type:'checkbox', class:'isSelected'});
-            var app, version, cube, axis;
+        for (i = 0, len = _batchUpdateAxisReferencesData.length; i < len; i++) {
+            refAxData = _batchUpdateAxisReferencesData[i];
             if (isDest) {
                 app = refAxData.destApp;
                 version = refAxData.destVersion;
@@ -1549,21 +1559,25 @@ var NCE = (function ($)
                 app = refAxData.transformApp;
                 version = refAxData.transformVersion;
                 cube = refAxData.transformCubeName;
-                axis = refAxData.transformAxisName;
+                axis = refAxData.transformMethodName;
             }
 
-            _batchUpdateAxisReferencesTable.append(tr);
-            tr.append($('<td/>').append(selectCheckbox));
-            tr.append($('<td/>').html(refAxData.srcCubeName));
-            tr.append($('<td/>').html(refAxData.srcAxisName));
-            tr.append($('<td/>').html(app).prop('class','app'));
-            tr.append($('<td/>').html(version).prop('class','version'));
-            tr.append($('<td/>').html(cube).prop('class','cubeName'));
-            tr.append($('<td/>').html(axis).prop('class','axisName'));
+            html += '<tr class="batch-update-axis-references-entry">';
+            html += '<td><input type="checkbox" class="isSelected" /></td>';
+            html += '<td>' + refAxData.srcCubeName + '</td>';
+            html += '<td>' + refAxData.srcAxisName + '</td>';
+            html += '<td class="app">' + (app || '') + '</td>';
+            html += '<td class="version">' + (version || '') + '</td>';
+            html += '<td class="cubeName">' + (cube || '') + '</td>';
+            html += '<td class="axisName">' + (axis || '') + '</td>';
+            html += '</tr>';
         }
+
+        _batchUpdateAxisReferencesTable.append(html);
     }
 
     function batchUpdateAxisReferencesUpdate() {
+        var checkedIdx, checkedLen, refAxIdx, refAx, result, row;
         var refAxes = [];
         var allRows = findBatchUpdateAxisReferencesRows();
         var checked = allRows.has('input:checked');
@@ -1577,9 +1591,10 @@ var NCE = (function ($)
         var cubeNameProp = propPrefix + 'CubeName';
         var axisNameProp = propPrefix + 'AxisName';
 
-        for (var checkedIdx = 0, checkedLen = checked.length; checkedIdx < checkedLen; checkedIdx++) {
-            var refAxIdx = allRows.index(checked[checkedIdx]);
-            var refAx = _batchUpdateAxisReferencesData[refAxIdx];
+        for (checkedIdx = 0, checkedLen = checked.length; checkedIdx < checkedLen; checkedIdx++) {
+            refAxIdx = allRows.index(checked[checkedIdx]);
+            refAx = null;
+            refAx = _batchUpdateAxisReferencesData[refAxIdx];
             if (newAppVal !== '') {
                 refAx[appProp] = newAppVal;
                 if (newVersionVal !== '') {
@@ -1594,15 +1609,15 @@ var NCE = (function ($)
             }
             refAxes.push(refAx);
         }
-        var result = call('ncubeController.updateReferenceAxes', [refAxes]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_REFERENCE_AXES, [refAxes]);
         if (!result.status) {
             showNote('Unable to update reference axes:<hr class="hr-small"/>' + result.data);
             return;
         }
-        var axisGrammar = checkedLen === 1 ? 'axis' : 'axes';
-        showNote(checkedLen + ' ' + axisGrammar + ' updated', '', 3000);
+        showNote(checkedLen + ' ' + (checkedLen === 1 ? 'axis' : 'axes') + ' updated', '', 3000);
         for (checkedIdx = 0; checkedIdx < checkedLen; checkedIdx++) {
-            var row = $(checked[checkedIdx]);
+            row = null;
+            row = $(checked[checkedIdx]);
             if (newAppVal !== '') {
                 row.find('td.app')[0].innerHTML = newAppVal;
                 if (newVersionVal !== '') {
