@@ -33,8 +33,11 @@ class PoolInterceptor extends JdbcInterceptor
 
     void reset(ConnectionPool connectionPool, PooledConnection pooledConnection)
     {
-        size.set(connectionPool.getSize())
-        active.set(connectionPool.getActive())
-        idle.set(connectionPool.getIdle())
+        if (connectionPool)
+        {
+            size.set(connectionPool.getSize())
+            active.set(connectionPool.getActive())
+            idle.set(connectionPool.getIdle())
+        }
     }
 }

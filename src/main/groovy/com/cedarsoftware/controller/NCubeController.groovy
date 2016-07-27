@@ -33,12 +33,12 @@ import com.cedarsoftware.util.ArrayUtilities
 import com.cedarsoftware.util.CaseInsensitiveMap
 import com.cedarsoftware.util.CaseInsensitiveSet
 import com.cedarsoftware.util.Converter
-import com.cedarsoftware.util.PoolInterceptor
-import com.cedarsoftware.util.Visualizer
 import com.cedarsoftware.util.InetAddressUtilities
+import com.cedarsoftware.util.PoolInterceptor
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
+import com.cedarsoftware.util.Visualizer
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble
@@ -87,7 +87,7 @@ class NCubeController extends BaseController
     private static String inetHostname = null
     private static AtomicDouble processLoadPeak = new AtomicDouble(0.0d)
     private static AtomicDouble systemLoadPeak = new AtomicDouble(0.0d)
-    private final MemcachedClient memcachedClient
+    final MemcachedClient memcachedClient
 
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appCache = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
@@ -98,7 +98,7 @@ class NCubeController extends BaseController
         nCubeService = service;
         System.err = new ThreadAwarePrintStreamErr()
         System.out = new ThreadAwarePrintStream()
-        memcachedClient = new MemcachedClient(AddrUtil.getAddresses(memcachedServers))
+//        memcachedClient = new MemcachedClient(AddrUtil.getAddresses(memcachedServers))
     }
 
     protected static String getUserForDatabase()
