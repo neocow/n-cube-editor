@@ -12,6 +12,7 @@
         <constructor-arg>
             <bean class="com.cedarsoftware.service.ncube.NCubeService" />
         </constructor-arg>
+        <constructor-arg value="#{systemEnvironment['NCE_MEMCACHED_SERVERS'] ?: systemProperties['NCE_MEMCACHED_SERVERS'] ?: '127.0.0.1:11211'}"/>
     </bean>
 
     <bean name="setUser" class="com.cedarsoftware.controller.BeforeAdviceSetUser">

@@ -43,6 +43,8 @@ import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble
 import groovy.transform.CompileStatic
+import net.spy.memcached.AddrUtil
+import net.spy.memcached.MemcachedClient
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -85,16 +87,18 @@ class NCubeController extends BaseController
     private static String inetHostname = null
     private static AtomicDouble processLoadPeak = new AtomicDouble(0.0d)
     private static AtomicDouble systemLoadPeak = new AtomicDouble(0.0d)
+    private final MemcachedClient memcachedClient
 
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appCache = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appBranches = new ConcurrentHashMap<>()
 
-    NCubeController(NCubeService service)
+    NCubeController(NCubeService service, String memcachedServers)
     {
         nCubeService = service;
         System.err = new ThreadAwarePrintStreamErr()
         System.out = new ThreadAwarePrintStream()
+        memcachedClient = new MemcachedClient(AddrUtil.getAddresses(memcachedServers))
     }
 
     protected static String getUserForDatabase()
@@ -566,27 +570,27 @@ class NCubeController extends BaseController
     /**
      * App cache Management
      */
-    private static Object[] getCachedApps(String tenant)
+    private Object[] getCachedApps(String tenant)
     {
         return getAppCache(tenant).toArray()
     }
 
-    private static void addToAppCache(String tenant, String appName)
+    private void addToAppCache(String tenant, String appName)
     {
         getAppCache(tenant).add(appName)
     }
 
-    private static void addAllToAppCache(String tenant, List<String> appNames)
+    private void addAllToAppCache(String tenant, List<String> appNames)
     {
         getAppCache(tenant).addAll(appNames)
     }
 
-    private static void clearAppCache(String tenant)
+    private void clearAppCache(String tenant)
     {
         getAppCache(tenant).clear()
     }
 
-    private static Set<String> getAppCache(String tenant)
+    private Set<String> getAppCache(String tenant)
     {
         tenant = tenant.toLowerCase()
         ConcurrentSkipListSet apps = new ConcurrentSkipListSet<>(new Comparator() {
@@ -1580,7 +1584,7 @@ class NCubeController extends BaseController
             srcAppId = addTenant(srcAppId)
             targetAppId = addTenant(targetAppId)
             nCubeService.copyBranch(srcAppId, targetAppId)
-            if (getAppCache(tenant).size() != 0)
+            if (ArrayUtilities.size(getCachedApps(tenant)) > 0)
             {
                 addToAppCache(targetAppId.tenant, targetAppId.app)
             }
