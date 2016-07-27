@@ -17,7 +17,7 @@ class TestVisualizer {
     @BeforeClass
     static void setUp()
     {
-        nCubeController = new NCubeController(new NCubeService())
+        nCubeController = new NCubeController(new NCubeService(), "127.0.0.1:11211")
         List ncubeNames = [
                 'sys.classpath.json',
                 'sys.prototype.json',
