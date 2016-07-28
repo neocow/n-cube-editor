@@ -909,7 +909,11 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getStringFromDate(date) {
-        return date.substring(0, date.indexOf('T'));
+        var idx = date.indexOf('T');
+        if (idx > -1) {
+            return date.substring(0, idx);
+        }
+        return date;
     }
     
     function getDateRangeString(range) {
@@ -942,7 +946,7 @@ var NCubeEditor2 = (function ($) {
                     val = getDateRangeString(val);
                 }
             } else {
-                val = val.substring(0, val.indexOf('T'));
+                val = getStringFromDate(val);
             }
         }
         if (val === undefined) {
@@ -2002,7 +2006,7 @@ var NCubeEditor2 = (function ($) {
                     activateLinks(td);
                 } else if ('date' === cellData.type) {
                     var val = cellData.value;
-                    td.innerHTML = val.substring(0, val.indexOf('T'));
+                    td.innerHTML = getStringFromDate(val);
                 } else {
                     td.innerHTML = buildExpressionLink('' + cellData.value);
                     activateLinks(td);
@@ -2047,7 +2051,7 @@ var NCubeEditor2 = (function ($) {
                 val = cellData.url;
             } else if ('date' === cellData.type) {
                 val = cellData.value;
-                val = val.substring(0, val.indexOf('T'));
+                val = getStringFromDate(val);
             } else if (cellData.type) {
                 val = cellData.value;
             }
