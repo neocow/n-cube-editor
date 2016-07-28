@@ -158,6 +158,7 @@ var CONTROLLER_METHOD = {
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
     GET_JSON: 'getJson',
     GET_MENU: 'getMenu',
+    GET_REFERENCE_AXES: 'getReferenceAxes',
     GET_VERSIONS: 'getVersions',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
@@ -175,7 +176,8 @@ var CONTROLLER_METHOD = {
     UPDATE_BRANCH_CUBES: 'updateBranchCubes',
     UPDATE_CELL: 'updateCell',
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
-    UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties'
+    UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
+    UPDATE_REFERENCE_AXES: 'updateReferenceAxes'
 };
 
 var JSON_MODE = {

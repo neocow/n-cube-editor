@@ -1129,7 +1129,7 @@ var NCubeEditor2 = (function ($) {
             for (c = 0, cLen = colCellKeys.length; c < cLen; c++) {
                 colCellKey = colCellKeys[c];
                 colCell = colCells[colCellKey];
-                if (doesCellMatchFilterExpression(colCell, filter)) {
+                if (doesCellMatchFilterExpression(colCell, filter) && !isCellHidden(colCellKey)) {
                     colIdReplaceIdx = colCellKey.indexOf(filter.column);
                     axisColId = colCellKey.replace(filter.column,'').replace('__','_');
                     if (!axisColId.indexOf('_')) {
@@ -1143,6 +1143,22 @@ var NCubeEditor2 = (function ($) {
         }
 
         return {idCombinations:combos, idReplaceIdx:colIdReplaceIdx};
+    }
+
+    function isCellHidden(cellId) {
+        var hiddenAxisKeys, hiddenAxis, a, aLen, c, cLen, idArray;
+        idArray = cellId.split('_');
+        cLen = idArray.length;
+        hiddenAxisKeys = Object.keys(_hiddenColumns);
+        for (a = 0, aLen = hiddenAxisKeys.length; a < aLen; a++) {
+            hiddenAxis = _hiddenColumns[hiddenAxisKeys[a]];
+            for (c = 0; c < cLen; c++) {
+                if (hiddenAxis.hasOwnProperty(idArray[c])) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     function determineAxesOrder(cubeAxes) {
