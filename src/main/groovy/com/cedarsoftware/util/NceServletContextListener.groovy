@@ -36,21 +36,25 @@ class NceServletContextListener implements ServletContextListener
 
     void contextInitialized(ServletContextEvent servletContextEvent)
     {
+//        println '===> Starting NCE <==='
     }
 
     void contextDestroyed(ServletContextEvent event)
     {
+//        println '===> Stopping NCE <==='
+//
 //        WebApplicationContext springContext = WebApplicationContextUtils.getWebApplicationContext(event.getServletContext())
 //        NCubeController controller = (NCubeController) springContext.getBean("ncubeController")
 //        if (controller == null)
 //        {
-//            LOG.info('controller not found')
+//            println 'controller not found'
 //        }
 //        else
 //        {
-//            LOG.info('===> shutting down NCE <===')
+//            println '===> shutting down NCE <==='
 //        }
-//        println controller.memcachedClient
+//
+//        println 'memcachedClient = ' + controller.memcachedClient
 //        controller.getMemcachedClient().shutdown()
     }
 }
