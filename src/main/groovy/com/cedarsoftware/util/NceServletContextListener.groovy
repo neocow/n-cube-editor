@@ -36,25 +36,38 @@ class NceServletContextListener implements ServletContextListener
 
     void contextInitialized(ServletContextEvent servletContextEvent)
     {
-//        println '===> Starting NCE <==='
+//        myprint '=====> Starting NCE'
+//        WebApplicationContext springContext = WebApplicationContextUtils.getWebApplicationContext(event.getServletContext())
+//        NCubeController controller = (NCubeController) springContext.getBean("ncubeController")
+//        myprint '=====> controller: ' + controller
+//        myprint '=====> controller.memcachedClient: ' + controller.getMemcachedClient()
     }
 
     void contextDestroyed(ServletContextEvent event)
     {
-//        println '===> Stopping NCE <==='
-//
-//        WebApplicationContext springContext = WebApplicationContextUtils.getWebApplicationContext(event.getServletContext())
-//        NCubeController controller = (NCubeController) springContext.getBean("ncubeController")
-//        if (controller == null)
+//        try
 //        {
-//            println 'controller not found'
-//        }
-//        else
-//        {
-//            println '===> shutting down NCE <==='
-//        }
+//            myprint '=====> Stopping NCE'
 //
-//        println 'memcachedClient = ' + controller.memcachedClient
-//        controller.getMemcachedClient().shutdown()
+//            WebApplicationContext springContext = WebApplicationContextUtils.getWebApplicationContext(event.getServletContext())
+//            NCubeController controller = (NCubeController) springContext.getBean("ncubeController")
+//            myprint '=====> controller: ' + controller
+//            myprint '=====> controller.memcachedClient: ' + controller.getMemcachedClient()
+//            if (controller && controller.getMemcachedClient())
+//            {
+//                myprint '=====> shutting down memcached client'
+//                controller.memcachedClient.shutdown()
+//            }
+//        }
+//        catch (Exception e)
+//        {
+//            e.printStackTrace()
+//        }
+    }
+
+    void myprint(String msg)
+    {
+        println ''
+        println msg
     }
 }

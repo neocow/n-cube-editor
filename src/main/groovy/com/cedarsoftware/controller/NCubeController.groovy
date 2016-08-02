@@ -87,7 +87,7 @@ class NCubeController extends BaseController
     private static String inetHostname = null
     private static AtomicDouble processLoadPeak = new AtomicDouble(0.0d)
     private static AtomicDouble systemLoadPeak = new AtomicDouble(0.0d)
-    final MemcachedClient memcachedClient
+    private MemcachedClient memcachedClient
 
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appCache = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
