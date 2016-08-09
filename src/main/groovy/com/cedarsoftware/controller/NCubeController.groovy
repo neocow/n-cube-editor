@@ -263,6 +263,11 @@ class NCubeController extends BaseController
         }
     }
 
+    int getSearchCount(ApplicationID appId, String cubeNamePattern = null, String content = null, boolean active = true)
+    {
+        return search(appId, cubeNamePattern, content, active).length
+    }
+
     void restoreCubes(ApplicationID appId, Object[] cubeNames)
     {
         try
