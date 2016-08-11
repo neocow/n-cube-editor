@@ -1284,20 +1284,20 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean updateCellAt(ApplicationID appId, String cubeName, Map coordinate, Object value)
+    boolean updateCellAt(ApplicationID appId, String cubeName, Map coordinate, CellInfo cellInfo)
     {
         try
         {
             appId = addTenant(appId)
             NCube ncube = nCubeService.getCube(appId, cubeName)
 
-            if (value == null)
+            if (cellInfo == null)
             {
                 ncube.removeCell(coordinate)
             }
             else
             {
-                ncube.setCell(value, coordinate)
+                ncube.setCell(cellInfo.recreate(), coordinate)
             }
             nCubeService.updateNCube(ncube)
             return true
