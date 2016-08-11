@@ -2209,6 +2209,11 @@ var NCubeEditor2 = (function ($) {
             closeAxisMenu();
             onAxisSourceClick(axis);
         });
+        div.find('a.anc-axis-transform').on('click', function(e) {
+            e.preventDefault();
+            closeAxisMenu();
+            onAxisTransformClick(axis);
+        });
         div.find('a.anc-break-reference').on('click', function(e) {
             e.preventDefault();
             e.stopImmediatePropagation();
@@ -2416,6 +2421,11 @@ var NCubeEditor2 = (function ($) {
         nce.selectCubeByName(axis.referenceCubeName, appId);
     }
 
+    function onAxisTransformClick(axis) {
+        var appId = appIdFrom(axis.transformApp, axis.transformVersion, axis.transformStatus, axis.transformBranch);
+        nce.selectCubeByName(axis.transformCubeName, appId);
+    }
+
     function onBreakReferenceClick(axis, an) {
         var btnsHtml;
         an.parent().find('li').not(an.parent()).find('button').remove();
@@ -2455,6 +2465,11 @@ var NCubeEditor2 = (function ($) {
 
         if (isRef) {
             html += '<li><a href="#" class="anc-axis-source">Go to Axis Source</a></li>';
+            html += '<li';
+            if (!axis.transformApp) {
+                html += ' class="disabled"';
+            }
+            html += '><a href="#" class="anc-axis-transform">Go to Axis Transform</a></li>';
             html += '<li><a href="#" class="anc-break-reference">Break Reference</a></li>';
             html += '<li class="divider"/>';
         }
