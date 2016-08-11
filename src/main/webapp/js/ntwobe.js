@@ -102,6 +102,9 @@ var NCubeEditor2 = (function ($) {
     var _moveAxesList = null;
     var _moveAxesLabel = null;
     var _moveAxesInstructions = null;
+    var _searchOptionsLabel = null;
+    var _searchOptionsModal = null;
+    var _searchOptionsLoadAllData = null;
 
     function init(info) {
         if (!nce) {
@@ -176,6 +179,9 @@ var NCubeEditor2 = (function ($) {
             _moveAxesList = $('#moveAxesList');
             _moveAxesLabel = $('#moveAxesLabel');
             _moveAxesInstructions = $('#moveAxesInstructions');
+            _searchOptionsLabel = $('#searchOptionsLabel');
+            _searchOptionsModal = $('#searchOptionsModal');
+            _searchOptionsLoadAllData = $('#searchOptionsLoadAllData');
 
             addSelectAllNoneListeners();
             addAxisEditListeners();
@@ -197,6 +203,12 @@ var NCubeEditor2 = (function ($) {
             $('#deleteAxisOk').on('click', deleteAxisOk);
             $('#updateAxisMenu').on('click', updateAxis);
             $('#updateAxisOk').on('click', updateAxisOk);
+            $('#searchOptionsCancel').on('click', function() {
+                searchOptionsClose();
+            });
+            $('#searchOptionsOk').on('click', function() {
+                searchOptionsOk();
+            });
             _editCellModal.on('shown.bs.modal', onEditCellModalShown);
 
             $(document).on('keydown', onWindowKeyDown);
@@ -266,6 +278,14 @@ var NCubeEditor2 = (function ($) {
         
         render();
         setUtilityBarDisplay();
+    }
+    
+    function getShouldLoadAllForSearch() {
+        return nce.getShouldLoadAllForSearch() || false;
+    }
+    
+    function saveShouldLoadAllForSearch(shouldLoadAllForSearch) {
+        nce.saveShouldLoadAllForSearch(shouldLoadAllForSearch);
     }
 
     function getNumFrozenCols() {
@@ -408,7 +428,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function shouldLoadAllCells() {
-        return nce.getFilterOutBlankRows();
+        return nce.getFilterOutBlankRows() || getShouldLoadAllForSearch() || getSavedFilters().length;
     }
 
     function loadCellRows() {
@@ -529,6 +549,11 @@ var NCubeEditor2 = (function ($) {
             }
         });
 
+        $('#search-btn-options').on('click', function() {
+            searchOptionsOpen();
+            $(this).blur();
+        });
+
         $('#search-btn-down').on('click', function() {
             searchDown();
             $(this).blur();
@@ -557,6 +582,26 @@ var NCubeEditor2 = (function ($) {
         if (hot) {
             hot.removeHook('beforeKeyDown', onBeforeKeyDown);
         }
+    }
+    
+    function searchOptionsOpen() {
+        $('#searchOptionsLabel')[0].innerHTML = 'Instructions - Batch Update Axis References';
+        _searchOptionsLoadAllData[0].checked = getShouldLoadAllForSearch();
+        addHotBeforeKeyDown();
+        _searchOptionsModal.modal();
+    }
+
+    function searchOptionsClose() {
+        _searchOptionsModal.modal('hide');
+        removeHotBeforeKeyDown();
+        destroyEditor();
+    }
+    
+    function searchOptionsOk() {
+        var shouldLoadAllData = _searchOptionsLoadAllData[0].checked;
+        saveShouldLoadAllForSearch(shouldLoadAllData);
+        searchOptionsClose();
+        reload();
     }
 
     function searchClear() {

@@ -319,6 +319,14 @@ var NCE = (function ($)
         return getOpenCubeInfoValue(SAVED_INFO.NUMBER_OF_FROZEN_COLUMNS);
     }
 
+    function saveShouldLoadAllForSearch(shouldLoadAllForSearch) {
+        saveOpenCubeInfoValue(SAVED_INFO.SHOULD_LOAD_ALL_FOR_SEARCH, shouldLoadAllForSearch);
+    }
+
+    function getShouldLoadAllForSearch() {
+        return getOpenCubeInfoValue(SAVED_INFO.SHOULD_LOAD_ALL_FOR_SEARCH);
+    }
+
     function getSearchQuery() {
         return getOpenCubeInfoValue(SAVED_INFO.SEARCH_QUERY);
     }
@@ -1136,6 +1144,8 @@ var NCE = (function ($)
             saveSearchQuery: saveSearchQuery,
             getFilterOutBlankRows: getFilterOutBlankRows,
             saveFilterOutBlankRows: saveFilterOutBlankRows,
+            getShouldLoadAllForSearch: getShouldLoadAllForSearch,
+            saveShouldLoadAllForSearch: saveShouldLoadAllForSearch,
             checkPermissions: checkPermissions
         };
     }

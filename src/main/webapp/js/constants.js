@@ -88,7 +88,8 @@ var SAVED_INFO = {
     INFO_DTO: 'infoDto',
     NUMBER_OF_FROZEN_COLUMNS: 'numFrozenCols',
     SEARCH_QUERY: 'searchQuery',
-    VIEW_POSITION: 'position'
+    SHOULD_LOAD_ALL_FOR_SEARCH: 'shouldLoadAllForSearch',
+    VIEW_POSITION: 'position',
 };
 
 var STATUS = {
