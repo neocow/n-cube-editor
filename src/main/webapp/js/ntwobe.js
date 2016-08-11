@@ -2733,16 +2733,18 @@ var NCubeEditor2 = (function ($) {
     }
 
     function updateMetaProperties(metaPropertyOptions, metaProperties) {
-        var mpMap = {};
-        for (var mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
-            var prop = metaProperties[mpIdx];
+        var mpMap, mpIdx, mpLen, prop, controllerInfo, result;
+        mpMap = {};
+        for (mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
+            prop = null;
+            prop = metaProperties[mpIdx];
             mpMap[prop.key] = prop.value;
         }
 
-        var controllerInfo = getMetaPropertiesControllerInfo(metaPropertyOptions);
+        controllerInfo = getMetaPropertiesControllerInfo(metaPropertyOptions);
         controllerInfo.params.push(mpMap);
-        var result = nce.call(CONTROLLER + controllerInfo.setter, controllerInfo.params);
-        if (result.status !== true) {
+        result = nce.call(CONTROLLER + controllerInfo.setter, controllerInfo.params);
+        if (!result.status) {
             nce.showNote("Unable to update metaproperties for " + metaProperties.objectType + " '" + metaPropertyOptions.objectName + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
@@ -2750,19 +2752,20 @@ var NCubeEditor2 = (function ($) {
     }
 
     function openMetaPropertiesBuilder(metaPropertyOptions) {
-        var mpData = getMetaProperties(metaPropertyOptions);
+        var mpData, metaKeys, metaProperties, i, len, key, builderOptions, val, mpObj, isObj;
+        mpData = getMetaProperties(metaPropertyOptions);
         if (mpData === null) {
             return;
         }
         delete mpData['@type'];
-        var metaKeys = Object.keys(mpData);
-        var metaProperties = [];
-        for (var i = 0, len = metaKeys.length; i < len; i++) {
-            var key = metaKeys[i];
+        metaKeys = Object.keys(mpData);
+        metaProperties = [];
+        for (i = 0, len = metaKeys.length; i < len; i++) {
+            key = metaKeys[i];
             metaProperties.push({key:key, value:mpData[key]});
         }
 
-        var builderOptions = {
+        builderOptions = {
             title: 'Metaproperties - ' + metaPropertyOptions.objectName,
             instructionsTitle: 'Instructions - Metaproperties',
             instructionsText: 'Add custom properties for this ' + metaPropertyOptions.objectType + '.',

@@ -1600,9 +1600,12 @@ class NCubeController extends BaseController
             {
                 addToVersionsCache(targetAppId)
             }
-            if ( getBranchCache(getBranchCacheKey(targetAppId)).size() != 0)
+            if (getBranchesFromCache(targetAppId).size() != 0)
             {
                 addBranchToCache(targetAppId)
+                if (targetAppId.version != '0.0.0') {
+                    addBranchToCache(targetAppId.asVersion('0.0.0'));
+                }
             }
         }
         catch (Exception e)
@@ -2214,8 +2217,7 @@ class NCubeController extends BaseController
                     ApplicationID appId = new ApplicationID("x", pieces[0], pieces[1], pieces[2], pieces[3])
                     appId = addTenant(appId)
                     String cubeName = pieces[4]
-                    Object status = nCubeService.getUpToDateStatus(appId, cubeName)
-                    putIfNotNull(compareResults, cubeId, status)
+                    putIfNotNull(compareResults, cubeId, isCubeUpToDate(appId, cubeName))
                 }
             }
         }
@@ -2228,6 +2230,9 @@ class NCubeController extends BaseController
     {
         try
         {
+            if (appId.branch == ApplicationID.HEAD) {
+                return true
+            }
             appId = addTenant(appId)
             return nCubeService.isCubeUpToDate(appId, cubeName)
         }

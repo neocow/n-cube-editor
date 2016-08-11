@@ -450,4 +450,10 @@ function populateSelectFromCube(nce, sel, params, searchType) {
         jQuery._cachedCanvas.font = font;
         return jQuery._cachedCanvas.measureText(this[0].innerText).width;
     };
+
+    $(document).on('shown.bs.tooltip', function (e) {
+        setTimeout(function () {
+            $(e.target).tooltip('hide');
+        }, 10000);
+    });
 })(jQuery);
