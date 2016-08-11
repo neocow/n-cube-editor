@@ -1284,7 +1284,7 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean setCell(ApplicationID appId, String cubeName, Map coordinate, Object value)
+    boolean updateCellAt(ApplicationID appId, String cubeName, Map coordinate, Object value)
     {
         try
         {
