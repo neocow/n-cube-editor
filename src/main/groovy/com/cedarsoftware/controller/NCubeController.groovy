@@ -1284,6 +1284,31 @@ class NCubeController extends BaseController
         }
     }
 
+    boolean setCell(ApplicationID appId, String cubeName, Map coordinate, Object value)
+    {
+        try
+        {
+            appId = addTenant(appId)
+            NCube ncube = nCubeService.getCube(appId, cubeName)
+
+            if (value == null)
+            {
+                ncube.removeCell(coordinate)
+            }
+            else
+            {
+                ncube.setCell(value, coordinate)
+            }
+            nCubeService.updateNCube(ncube)
+            return true
+        }
+        catch(Exception e)
+        {
+            fail(e)
+            return false
+        }
+    }
+
     Object getCellNoExecute(ApplicationID appId, String cubeName, Object[] ids)
     {
         try
