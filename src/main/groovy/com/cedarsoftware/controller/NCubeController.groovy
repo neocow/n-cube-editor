@@ -1600,7 +1600,7 @@ class NCubeController extends BaseController
             {
                 addToVersionsCache(targetAppId)
             }
-            if (getBranchCache(getBranchCacheKey(targetAppId)).size() != 0)
+            if (getBranchesFromCache(targetAppId).size() != 0)
             {
                 addBranchToCache(targetAppId)
                 if (targetAppId.version != '0.0.0') {
