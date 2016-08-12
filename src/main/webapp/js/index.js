@@ -412,7 +412,7 @@ var NCE = (function ($)
     function showOutOfSyncNoticeForCube(cubeInfo) {
         var openCube = _openCubes[getOpenCubeIndex(cubeInfo)];
         if (!openCube.hasShownStatusMessage) {
-            showNote(cubeInfo[CUBE_INFO.NAME] + ' is not up-to-date!', 'Out-of-Sync Warning', 5000);
+            showNote(cubeInfo[CUBE_INFO.NAME] + ' is out-of-date (newer version exists in HEAD). Update this n-cube or your branch to pick up changes.', 'Out-of-Date', 5000);
             openCube.hasShownStatusMessage = true;
             saveOpenCubeList();
         }
@@ -3990,7 +3990,7 @@ var NCE = (function ($)
     }
     
     function callAcceptMineTheirs(options) {
-        var result = call(CONTROLLER + options.controllerMethod, [getAppId(), options.cubeNames, optionssha1s]);
+        var result = call(CONTROLLER + options.controllerMethod, [getAppId(), options.cubeNames, options.sha1s]);
         if (result.status) {
             showNote(result.data.value + ' ' + options.successMsg, 'Note', 5000);
             $('#mergeList').find('input:checked').parent().parent().parent().remove();
