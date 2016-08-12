@@ -206,14 +206,14 @@ var NCE = (function ($)
     }
 
     function addCurrentCubeTab(insertIdx, cubeInfo, dto) {
-        var cubeInfo = cubeInfo || [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
+        cubeInfo = cubeInfo || [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
         var newOpenCube = {
             cubeKey: getCubeInfoKey(cubeInfo),
             status: null,
             position: {},
             numFrozenCols: null,
             searchQuery: null,
-            infoDto: dto||_cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()],
+            infoDto: dto ||_cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()],
             filterOutBlankRows: false
         };
         if (insertIdx > -1) {
@@ -872,9 +872,10 @@ var NCE = (function ($)
                     .attr('href','#')
                     .html('Close Others')
                     .click(function() {
+                        var cubeInfo = _selectedCubeInfo;
                         li.tooltip('destroy');
                         removeAllTabs();
-                        addCurrentCubeTab();
+                        addCurrentCubeTab(null, cubeInfo);
                     }))
         );
 
