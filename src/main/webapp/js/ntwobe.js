@@ -585,7 +585,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function searchOptionsOpen() {
-        $('#searchOptionsLabel')[0].innerHTML = 'Instructions - Batch Update Axis References';
+        $('#searchOptionsLabel')[0].innerHTML = 'Search Options - ' + cubeName;
         _searchOptionsLoadAllData[0].checked = getShouldLoadAllForSearch();
         addHotBeforeKeyDown();
         _searchOptionsModal.modal();
