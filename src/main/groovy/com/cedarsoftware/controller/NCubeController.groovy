@@ -2023,8 +2023,8 @@ class NCubeController extends BaseController
     {
         try
         {
-            ApplicationID leftAppId = addTenant(leftInfoDto.applicationID)
-            ApplicationID rightAppId = addTenant(rightInfoDto.applicationID)
+            ApplicationID leftAppId = new ApplicationID(getTenant(), leftInfoDto.app, leftInfoDto.version, leftInfoDto.status, leftInfoDto.branch)
+            ApplicationID rightAppId = new ApplicationID(getTenant(), rightInfoDto.app, rightInfoDto.version, rightInfoDto.status, rightInfoDto.branch)
             NCube leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
             NCube rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
 
@@ -2073,8 +2073,8 @@ class NCubeController extends BaseController
     {
         try
         {
-            ApplicationID leftAppId = addTenant(leftInfoDto.applicationID)
-            ApplicationID rightAppId = addTenant(rightInfoDto.applicationID)
+            ApplicationID leftAppId = new ApplicationID(getTenant(), leftInfoDto.app, leftInfoDto.version, leftInfoDto.status, leftInfoDto.branch)
+            ApplicationID rightAppId = new ApplicationID(getTenant(), rightInfoDto.app, rightInfoDto.version, rightInfoDto.status, rightInfoDto.branch)
             NCube leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
             NCube rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
 
