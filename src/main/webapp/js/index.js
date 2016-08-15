@@ -3791,7 +3791,7 @@ var NCE = (function ($)
             }
             note += cubeName + '<br>';
             if (shouldUpdateStatus) {
-                for (o = 0, oLen = _openCubes.length; o < len; o++) {
+                for (o = 0, oLen = _openCubes.length; o < oLen; o++) {
                     openCube = null;
                     openCube = _openCubes[o];
                     openCubeInfo = null;
