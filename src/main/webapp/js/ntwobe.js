@@ -2433,11 +2433,13 @@ var NCubeEditor2 = (function ($) {
             btnsHtml = '<button class="btn btn-danger btn-xs pull-right axis-menu-button">Cancel</button>';
             btnsHtml += '<button class="btn btn-primary btn-xs pull-right axis-menu-button confirm">Confirm</button>';
             an.append(btnsHtml);
-            an.find('button.confirm').on('click', function () {
+            an.find('button.confirm').on('click', function (e) {
+                var result;
+                e.preventDefault();
                 $(this).parent().parent().parent().parent().removeClass('open');
                 $(this).parent().parent().find('button').remove();
                 $('div.dropdown-backdrop').hide();
-                var result = nce.call(CONTROLLER + CONTROLLER_METHOD.BREAK_AXIS_REFERENCE, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
+                result = nce.call(CONTROLLER + CONTROLLER_METHOD.BREAK_AXIS_REFERENCE, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name]);
                 if (result.status) {
                     closeAxisMenu();
                     reload();
