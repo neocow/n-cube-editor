@@ -494,40 +494,31 @@ var NCE = (function ($)
     }
 
     function addTab(cubeInfo, status) {
+        var imgSrc, x, xLen, opt, html;
         deselectTab();
-        var imgSrc;
-        for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
-            var opt = _menuOptions[x];
+        for (x = 0, xLen = _menuOptions.length; x < xLen; x++) {
+            opt = _menuOptions[x];
             if (opt.pageId === cubeInfo[CUBE_INFO.TAB_VIEW]) {
                 imgSrc = opt.imgSrc;
                 break;
             }
         }
-        var link = $('<a/>')
-            .attr('href','#')
-            .attr('draggable', false)
-            .addClass('dropdown-toggle ncube-tab-top-level')
-            .addClass(status)
-            .html(getTabImage(imgSrc)
-                + '<span class="tab-text">' + cubeInfo[CUBE_INFO.NAME] + '</span>'
-                + '<span class="click-space"><span class="big-caret"></span></span>'
-                + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
-            );
-        link.attr('data-toggle', 'dropdown');
-        var li = $('<li/>');
-        function closeTab() {
-            li.removeClass('open');
-            li.tooltip('hide');
-            li.find('button').remove();
-            li.find('input').remove();
-            $('div.dropdown-backdrop').hide();
-        }
 
-        li.addClass('active');
-        li.addClass('dropdown');
-        li.attr('id', getCubeInfoKey(cubeInfo).replace(/\./g,'_'));
-        li.attr('draggable', true);
-        li.on("dragstart", function(e) {
+        html = '<li class="active dropdown" draggable="true" id="' + getCubeInfoKey(cubeInfo).replace(/\./g,'_') + '">';
+        html += '<a href="#" draggable="false" class="dropdown-toggle ncube-tab-top-level ';
+        html += status + '" data-toggle="dropdown">';
+        html += getTabImage(imgSrc);
+        html += '<span class="tab-text">' + cubeInfo[CUBE_INFO.NAME] + '</span>';
+        html += '<span class="click-space"><span class="big-caret"></span></span>';
+        html += '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>';
+        html += '</a></li>';
+
+        _openTabList.first().append(html);
+        addListenersToTab(findTabByCubeInfo(cubeInfo), cubeInfo);
+    }
+
+    function addListenersToTab(li, cubeInfo) {
+        li.on('dragstart', function(e) {
             _draggingTabCubeInfo = cubeInfo;
         });
         li.tooltip({
@@ -541,23 +532,28 @@ var NCE = (function ($)
         });
         li.click(function(e) {
             // only show dropdown when clicking the caret, not just the tab
-            var target = $(e.target);
-            var isClose = target.hasClass('glyphicon-remove');
-            var isDroptdown = target.hasClass('click-space') || target.hasClass('big-caret');
+            var target, isClose, isDropdown, xthis;
+            target = $(e.target);
+            isClose = target.hasClass('glyphicon-remove');
+            isDropdown = target.hasClass('click-space') || target.hasClass('big-caret');
+            xthis = $(this);
 
             if (isClose) {
-                li.tooltip('destroy');
+                xthis.tooltip('destroy');
                 removeTab(cubeInfo);
             } else {
-               if (isDroptdown) { // clicking caret for dropdown
-                    $(this).find('.ncube-tab-top-level')
+                if (isDropdown) { // clicking caret for dropdown
+                    if (!xthis.find('ul').length) {
+                        addTabDropdownList(xthis, cubeInfo);
+                    }
+                    xthis.find('.ncube-tab-top-level')
                         .addClass('dropdown-toggle')
                         .attr('data-toggle', 'dropdown');
                     $(document).one('click', function() { // prevent tooltip and dropdown from remaining on screen
-                        closeTab();
+                        closeTab(xthis);
                     });
                 } else { // when clicking tab show tab, not dropdown
-                   $(this).find('.ncube-tab-top-level')
+                    xthis.find('.ncube-tab-top-level')
                         .removeClass('dropdown-toggle')
                         .attr('data-toggle', '')
                         .tab('show');
@@ -569,321 +565,15 @@ var NCE = (function ($)
                 }
             }
         });
-
-        var dd = $('<ul/>');
-        dd.addClass('dropdown-menu tab-menu');
-
-        for (var menuIdx = 0, menuLen = _menuOptions.length; menuIdx < menuLen; menuIdx++) {
-            (function() {
-                var menuOption = _menuOptions[menuIdx];
-                var pageId = menuOption.pageId;
-                var imgHtml = getTabImage(menuOption.imgSrc);
-
-                var anc = $('<a/>')
-                    .attr('href', '#')
-                    .html(imgHtml + NBSP + menuOption.key)
-                    .click(function (e) {
-                        clearError();
-                        setActiveTabViewType(pageId);
-                        var ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType()];
-                        var cia2 = getCubeInfoKey(ci2);
-                        var tabIdx = getOpenCubeIndex(ci2);
-                        var isCtrlKey = e.metaKey || e.ctrlKey;
-                        if (isCtrlKey) {
-                            e.stopImmediatePropagation();
-                            e.preventDefault();
-                        }
-
-                        if (tabIdx > -1) { // already open
-                            e.preventDefault();
-                            e.stopPropagation();
-                            closeTab();
-                            selectTab(ci2);
-                        } else {
-                            tabIdx = getOpenCubeIndex(cubeInfo);
-                            if (isCtrlKey) { // open new tab
-                                li.removeClass('open');
-                                li.tooltip('hide');
-                                addCurrentCubeTab(tabIdx, ci2, getInfoDto());
-                            } else { // use current tab
-                                cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
-                                _openCubes[tabIdx].cubeKey = cia2;
-                                saveOpenCubeList();
-                                li.attr('id', cia2.replace(/\./g,'_'));
-                                var img = link.find('img');
-                                if (img.length > 0) {
-                                    img.attr('src', menuOption.imgSrc);
-                                }
-                                li.find('a').removeClass(CLASS_ACTIVE_VIEW);
-                                $(this).addClass(CLASS_ACTIVE_VIEW);
-                            }
-                            switchTabPane(getActiveTabViewType());
-                        }
-                    });
-
-                dd.append($('<li/>').append(anc));
-            })();
-        }
-
-        dd.append(
-            $('<div/>').addClass('divider')
-        ).append(
-            $('<li/>')
-                .addClass('dropdown-submenu')
-                .append(
-                $('<a/>')
-                    .prop({href:'#', tabindex:'-1'})
-                    .html('Compare')
-            ).append(
-                createBranchesUl({
-                    app: cubeInfo[CUBE_INFO.APP],
-                    version: cubeInfo[CUBE_INFO.VERSION],
-                    status: cubeInfo[CUBE_INFO.STATUS],
-                    branch: cubeInfo[CUBE_INFO.BRANCH]
-                }, function(branchName) {
-                    var infoDto = getInfoDto();
-                    var leftInfoDto = $.extend(true, {}, infoDto);
-                    leftInfoDto.branch = branchName;
-                    diffCubes(leftInfoDto, infoDto, infoDto.name);
-                })
-            )
-        ).append(
-            $('<li/>')
-                .append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Revision History...')
-                    .click(function(e) {
-                        revisionHistory();
-                    }))
-        ).append(
-            $('<li/>')
-                .append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Show Outbound References')
-                    .click(function(e) {
-                        showRefsFromCube();
-                    }))
-        ).append(
-            $('<li/>')
-                .append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Show Required Scope')
-                    .click(function(e) {
-                        showReqScope();
-                    }))
-        );
-
-        if (cubeInfo[CUBE_INFO.BRANCH] !== head) {
-            dd.append(
-                $('<div/>').addClass('divider')
-            ).append(
-                $('<li/>')
-                    .append(
-                    $('<a/>')
-                        .attr('href', '#')
-                        .html('Commit...')
-                        .click(function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            li.find('li').not($(this).parent()).find('button').remove();
-                            var buttons = $(this).find('button');
-                            if (buttons.length === 0) {
-                                $(this).append(
-                                    $('<button/>')
-                                        .addClass('btn btn-danger btn-xs pull-right')
-                                        .html('Cancel')
-                                ).append(
-                                    $('<button/>')
-                                        .addClass('btn btn-primary btn-xs pull-right')
-                                        .html('Confirm')
-                                        .click(function (e) {
-                                            closeTab();
-                                            callCommit(getInfoDto(), getSelectedTabAppId());
-                                        })
-                                );
-                            } else {
-                                buttons.remove();
-                            }
-                        }))
-            ).append(
-                $('<li/>')
-                    .append(
-                    $('<a/>')
-                        .attr('href', '#')
-                        .html('Rollback...')
-                        .click(function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            li.find('li').not($(this).parent()).find('button').remove();
-                            var buttons = $(this).find('button');
-                            if (buttons.length === 0) {
-                                $(this).append(
-                                    $('<button/>')
-                                        .addClass('btn btn-danger btn-xs pull-right')
-                                        .html('Cancel')
-                                ).append(
-                                    $('<button/>')
-                                        .addClass('btn btn-primary btn-xs pull-right')
-                                        .html('Confirm')
-                                        .click(function (e) {
-                                            closeTab();
-                                            callRollbackFromTab(getInfoDto());
-                                        })
-                                );
-                            } else {
-                                buttons.remove();
-                            }
-                        }))
-            ).append(
-                $('<li/>')
-                    .addClass('dropdown-submenu')
-                    .append(
-                    $('<a/>')
-                        .prop({href: '#', tabindex: '-1'})
-                        .html('Update')
-                ).append(
-                    createBranchesUl({
-                        app: cubeInfo[CUBE_INFO.APP],
-                        version: cubeInfo[CUBE_INFO.VERSION],
-                        status: cubeInfo[CUBE_INFO.STATUS],
-                        branch: cubeInfo[CUBE_INFO.BRANCH]
-                    }, function (branchName) {
-                        callUpdate(branchName);
-                    })
-                )
-            ).append(
-                $('<div/>')
-                    .addClass('divider')
-            ).append(
-                $('<li/>')
-                    .append(
-                    $('<a/>')
-                        .attr('href', '#')
-                        .html('Delete...')
-                        .click(function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            li.find('li').not($(this).parent()).find('button').remove();
-                            var buttons = $(this).find('button');
-                            if (buttons.length === 0) {
-                                $(this).append(
-                                    $('<button/>')
-                                        .addClass('btn btn-danger btn-xs pull-right')
-                                        .html('Cancel')
-                                ).append(
-                                    $('<button/>')
-                                        .addClass('btn btn-primary btn-xs pull-right')
-                                        .html('Confirm')
-                                        .click(function (e) {
-                                            closeTab();
-                                            callDeleteFromTab(getInfoDto().name);
-                                        })
-                                );
-                            } else {
-                                buttons.remove();
-                            }
-                        }))
-            ).append(
-                $('<li/>')
-                    .append(
-                    $('<a/>')
-                        .attr('href', '#')
-                        .html('Duplicate...')
-                        .click(function (e) {
-                            dupeCube();
-                        }))
-            ).append(
-                $('<li/>')
-                    .append(
-                    $('<a/>')
-                        .attr('href', '#')
-                        .html('Rename')
-                        .click(function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            var parent = $(this).parent();
-                            var inputs = parent.find('input');
-                            if (inputs.length === 0) {
-                                var newNameInput = $('<input/>')
-                                    .prop('type', 'text')
-                                    .val(cubeInfo[CUBE_INFO.NAME])
-                                    .addClass('form-control')
-                                    .click(function (ie) {
-                                        ie.preventDefault();
-                                        ie.stopPropagation();
-                                    })
-                                    .keyup(function (ie) {
-                                        if (ie.keyCode === KEY_CODES.ENTER) {
-                                            closeTab();
-                                            renameCube(newNameInput.val());
-                                        }
-                                    });
-                                parent.append(newNameInput);
-                                $(this).append(
-                                    $('<button/>')
-                                        .addClass('btn btn-danger btn-xs pull-right')
-                                        .html('Cancel')
-                                ).append(
-                                    $('<button/>')
-                                        .addClass('btn btn-primary btn-xs pull-right')
-                                        .html('Confirm')
-                                        .click(function (e) {
-                                            closeTab();
-                                            renameCube(newNameInput.val());
-                                        })
-                                );
-                                newNameInput[0].focus();
-                            } else {
-                                inputs.remove();
-                                parent.find('button').remove();
-                            }
-                        }))
-            );
-        }
-
-        dd.append(
-            $('<div/>')
-                .prop({'class': 'divider'})
-        ).append(
-            $('<li/>').append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Close')
-                    .click(function() {
-                        li.tooltip('destroy');
-                        removeTab(cubeInfo);
-                    }))
-        ).append(
-            $('<li/>').append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Close All')
-                    .click(function() {
-                        li.tooltip('destroy');
-                        removeAllTabs();
-                        switchTabPane(null);
-                    }))
-        ).append(
-            $('<li/>').append(
-                $('<a/>')
-                    .attr('href','#')
-                    .html('Close Others')
-                    .click(function() {
-                        var cubeInfo = _selectedCubeInfo;
-                        li.tooltip('destroy');
-                        removeAllTabs();
-                        addCurrentCubeTab(null, cubeInfo);
-                    }))
-        );
-
-        li.append(link);
-        li.append(dd);
-        _openTabList.first().append(li);
-
         trimText(li.find('.tab-text')[0]);
+    }
+
+    function closeTab(li) {
+        li.removeClass('open');
+        li.tooltip('hide');
+        li.find('button').remove();
+        li.find('input').remove();
+        $('div.dropdown-backdrop').hide();
     }
 
     function trimText(el){
@@ -899,6 +589,219 @@ var NCE = (function ($)
                 el.innerHTML = value;
             }
             while (el.scrollWidth > el.offsetWidth);
+        }
+    }
+
+    function addTabDropdownList(li, cubeInfo) {
+        var html, menuIdx, menuLen, menuOption, pageId, imgHtml;
+        html = '<ul class="dropdown-menu tab-menu">';
+
+        // view type menu options
+        for (menuIdx = 0, menuLen = _menuOptions.length; menuIdx < menuLen; menuIdx++) {
+            menuOption = _menuOptions[menuIdx];
+            pageId = menuOption.pageId;
+            imgHtml = getTabImage(menuOption.imgSrc);
+
+            html += '<li><a href="#" class="anc-view-type" data-pageid="' + pageId + '" data-imgsrc="' + menuOption.imgSrc + '">';
+            html += imgHtml + NBSP + menuOption.key;
+            html += '</a></li>';
+        }
+
+        html += '<div class="divider"/>';
+        html += '<li class="dropdown-submenu li-compare-cube"><a href="#" tabindex="-1">Compare</a></li>';
+        html += '<li><a href="#" class="anc-revision-history">Revision History...</a></li>';
+        html += '<li><a href="#" class="anc-show-outbound-references">Show Outbound References</a></li>';
+        html += '<li><a href="#" class="anc-show-required-scope">Show Required Scope</a></li>';
+        html += '<div class="divider"/>';
+
+        if (cubeInfo[CUBE_INFO.BRANCH] !== head) {
+            html += '<li><a href="#" class="anc-commit-cube">Commit...</a></li>';
+            html += '<li><a href="#" class="anc-rollback-cube">Rollback...</a></li>';
+            html += '<li class="dropdown-submenu li-update-cube"><a href="#" tabindex="-1">Update</a></li>';
+            html += '<div class="divider"/>';
+            html += '<li><a href="#" class="anc-delete-cube">Delete...</a></li>';
+            html += '<li><a href="#" class="anc-duplicate-cube">Duplicate...</a></li>';
+            html += '<li><a href="#" class="anc-rename-cube">Rename...</a></li>';
+            html += '<div class="divider"/>';
+        }
+
+        html += '<li><a href="#" class="anc-close-cube">Close</a></li>';
+        html += '<li><a href="#" class="anc-close-all">Close All</a></li>';
+        html += '<li><a href="#" class="anc-close-others">Close Others</a></li>';
+
+        html += '</ul>';
+        li.append(html);
+
+        // add listeners
+        li.find('a.anc-view-type').on('click', function(e) {
+            onViewTypeClick(e, $(this), cubeInfo);
+        });
+        li.find('a.anc-revision-history').on('click', function() {
+            revisionHistory();
+        });
+        li.find('a.anc-show-outbound-references').on('click', function() {
+            showRefsFromCube();
+        });
+        li.find('a.anc-show-required-scope').on('click', function() {
+            showReqScope();
+        });
+        li.find('a.anc-commit-cube').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            addMenuConfirmationButtons(li, $(this), function() {
+                callCommit(getInfoDto(), getSelectedTabAppId());
+            });
+        });
+        li.find('a.anc-rollback-cube').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            addMenuConfirmationButtons(li, $(this), function() {
+                callRollbackFromTab(getInfoDto());
+            });
+        });
+        li.find('a.anc-delete-cube').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            addMenuConfirmationButtons(li, $(this), function() {
+                callDeleteFromTab(getInfoDto().name);
+            });
+        });
+        li.find('a.anc-duplicate-cube').on('click', function() {
+            dupeCube();
+        });
+        li.find('a.anc-rename-cube').on('click', function(e) {
+            var parent, inputs, newNameInput, anc;
+            e.preventDefault();
+            e.stopPropagation();
+            anc = $(this);
+            parent = anc.parent();
+            inputs = parent.find('input');
+            if (inputs.length) {
+                inputs.remove();
+                parent.find('button').remove();
+            } else {
+                newNameInput = $('<input/>')
+                    .prop('type', 'text')
+                    .val(cubeInfo[CUBE_INFO.NAME])
+                    .addClass('form-control')
+                    .click(function (ie) {
+                        ie.preventDefault();
+                        ie.stopPropagation();
+                    })
+                    .keyup(function (ie) {
+                        if (ie.keyCode === KEY_CODES.ENTER) {
+                            closeTab();
+                            renameCube(newNameInput.val());
+                        }
+                    });
+                parent.append(newNameInput);
+                html = '<button class="btn btn-danger btn-xs pull-right">Cancel</button>';
+                html += '<button class="btn btn-primary btn-xs pull-right btn-menu-confirm">Confirm</button>';
+                anc.append(html);
+                anc.find('button.btn-menu-confirm').on('click', function () {
+                    closeTab(li);
+                    renameCube(newNameInput.val());
+                });
+                newNameInput[0].focus();
+            }
+        });
+        li.find('a.anc-close-cube').on('click', function() {
+            li.tooltip('destroy');
+            removeTab(cubeInfo);
+        });
+        li.find('a.anc-close-all').on('click', function() {
+            li.tooltip('destroy');
+            removeAllTabs();
+            switchTabPane(null);
+        });
+        li.find('a.anc-close-others').on('click', function() {
+            li.tooltip('destroy');
+            removeAllTabs();
+            addCurrentCubeTab(null, cubeInfo);
+        });
+
+        // add branch subdropdown where needed
+        li.find('li.li-compare-cube').append(
+            createBranchesUl({
+                app: cubeInfo[CUBE_INFO.APP],
+                version: cubeInfo[CUBE_INFO.VERSION],
+                status: cubeInfo[CUBE_INFO.STATUS],
+                branch: cubeInfo[CUBE_INFO.BRANCH]
+            }, function(branchName) {
+                var infoDto, leftInfoDto;
+                infoDto = getInfoDto();
+                leftInfoDto = $.extend(true, {}, infoDto);
+                leftInfoDto.branch = branchName;
+                diffCubes(leftInfoDto, infoDto, infoDto.name);
+            })
+        );
+        li.find('li.li-update-cube').append(
+            createBranchesUl({
+                app: cubeInfo[CUBE_INFO.APP],
+                version: cubeInfo[CUBE_INFO.VERSION],
+                status: cubeInfo[CUBE_INFO.STATUS],
+                branch: cubeInfo[CUBE_INFO.BRANCH]
+            }, function(branchName) {
+                callUpdate(branchName);
+            })
+        );
+    }
+
+    function addMenuConfirmationButtons(li, anc, actionFunc) {
+        var buttons, html;
+        li.find('li').not(anc.parent()).find('button').remove();
+        buttons = anc.find('button');
+        if (buttons.length) {
+            buttons.remove();
+        } else {
+            html = '<button class="btn btn-danger btn-xs pull-right">Cancel</button>';
+            html += '<button class="btn btn-primary btn-xs pull-right btn-menu-confirm">Confirm</button>';
+            anc.append(html);
+            anc.find('button.btn-menu-confirm').on('click', function () {
+                closeTab(li);
+                actionFunc();
+            });
+        }
+    }
+    
+    function onViewTypeClick(e, anc, cubeInfo) {
+        var ci2, cia2, tabIdx, isCtrlKey, li, img;
+        clearError();
+        li = anc.parent().parent().parent();
+        setActiveTabViewType(anc.data('pageid'));
+        ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType()];
+        cia2 = getCubeInfoKey(ci2);
+        tabIdx = getOpenCubeIndex(ci2);
+        isCtrlKey = e.metaKey || e.ctrlKey;
+        if (isCtrlKey) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+        }
+
+        if (tabIdx > -1) { // already open
+            e.preventDefault();
+            e.stopPropagation();
+            closeTab(li);
+            selectTab(ci2);
+        } else {
+            tabIdx = getOpenCubeIndex(cubeInfo);
+            if (isCtrlKey) { // open new tab
+                li.removeClass('open');
+                li.tooltip('hide');
+                addCurrentCubeTab(tabIdx, ci2, getInfoDto());
+            } else { // use current tab
+                cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
+                _openCubes[tabIdx].cubeKey = cia2;
+                saveOpenCubeList();
+                li.attr('id', cia2.replace(/\./g,'_'));
+                img = li.find('a.ncube-tab-top-level img');
+                if (img.length > 0) {
+                    img.attr('src', anc.data('imgsrc'));
+                }
+                li.find('a').removeClass(CLASS_ACTIVE_VIEW);
+                anc.addClass(CLASS_ACTIVE_VIEW);
+            }
+            switchTabPane(getActiveTabViewType());
         }
     }
 
