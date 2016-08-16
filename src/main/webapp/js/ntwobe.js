@@ -213,7 +213,19 @@ var NCubeEditor2 = (function ($) {
 
             $(document).on('keydown', onWindowKeyDown);
 
+            $(document).on('show.bs.modal', function() {
+                nce.freezePage(true);
+            });
+
+            $(document).on('hide.bs.modal', function() {
+                nce.freezePage(false);
+            });
+
             $(window).on('resize', function () {
+                if (nce.isPageFrozen()) {
+                    nce.freezePage(false);
+                    nce.freezePage(true);
+                }
                 delay(hotResize, PROGRESS_DELAY);
             });
         }

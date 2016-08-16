@@ -1050,8 +1050,38 @@ var NCE = (function ($)
             saveFilterOutBlankRows: saveFilterOutBlankRows,
             getShouldLoadAllForSearch: getShouldLoadAllForSearch,
             saveShouldLoadAllForSearch: saveShouldLoadAllForSearch,
-            checkPermissions: checkPermissions
+            checkPermissions: checkPermissions,
+            freezePage: freezePage,
+            isPageFrozen: isPageFrozen
         };
+    }
+
+    function freezePage(shouldFreeze) {
+        function createOverlayForDiv(div) {
+            var overlayDiv, offset;
+            offset = div.offset();
+            overlayDiv = $('<div/>')
+                .addClass('backdrop-overlay')
+                .css({top:offset.top, height: div.outerHeight()+1, left:offset.left, width: div.outerWidth()+1});
+            div.append(overlayDiv);
+        }
+
+        function overlayDivsInit() {
+            createOverlayForDiv($('header.navbar-fixed-top'));
+            createOverlayForDiv($('#west'));
+            createOverlayForDiv($('#ncube-tabs'));
+            createOverlayForDiv($('div.ui-layout-resizer'));
+        }
+
+        if (shouldFreeze) {
+            overlayDivsInit();
+        } else {
+            $('div.backdrop-overlay').remove();
+        }
+    }
+    
+    function isPageFrozen() {
+        return $('div.backdrop-overlay').length;
     }
 
     function reloadCube()

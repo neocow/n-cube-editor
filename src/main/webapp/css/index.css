@@ -616,3 +616,10 @@ span.selected-count {
     height: 100%;
     width: 100%;
 }
+
+.backdrop-overlay {
+    opacity: .5;
+    position: fixed;
+    z-index: 1040;
+    background-color: #000;
+}
