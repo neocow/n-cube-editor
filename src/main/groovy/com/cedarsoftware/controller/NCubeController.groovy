@@ -43,7 +43,6 @@ import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble
 import groovy.transform.CompileStatic
-import net.spy.memcached.AddrUtil
 import net.spy.memcached.MemcachedClient
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -99,6 +98,12 @@ class NCubeController extends BaseController
         System.err = new ThreadAwarePrintStreamErr()
         System.out = new ThreadAwarePrintStream()
 //        memcachedClient = new MemcachedClient(AddrUtil.getAddresses(memcachedServers))
+
+        // Temporarily set the proxy this way until HOSTING has these values passed in via -D
+        Properties props = System.getProperties();
+        props.setProperty("http.proxyHost", "squid.td.afg");
+        props.setProperty("http.proxyPort", "3128");
+
     }
 
     protected static String getUserForDatabase()
