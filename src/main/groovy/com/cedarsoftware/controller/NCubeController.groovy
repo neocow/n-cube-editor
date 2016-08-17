@@ -101,7 +101,7 @@ class NCubeController extends BaseController
 
         // Temporarily set the proxy this way until HOSTING has these values passed in via -D
         Properties props = System.getProperties();
-        props.setProperty("http.proxyHost", "squid.td.afg");
+        props.setProperty("http.proxyHost", "10.50.136.63");
         props.setProperty("http.proxyPort", "3128");
 
     }
@@ -1122,6 +1122,11 @@ class NCubeController extends BaseController
     {
         try
         {
+            Properties props = System.getProperties();
+            String server = props.getProperty("http.proxyHost");
+            String port = props.getProperty("http.proxyPort");
+            LOG.info('proxy server: ' + server + ', proxy port: ' + port)
+
             appId = addTenant(appId)
             NCube ncube = nCubeService.getCube(appId, cubeName)
             Map<String, Object> coord = test.getCoordWithValues()
