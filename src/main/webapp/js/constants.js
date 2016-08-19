@@ -144,6 +144,7 @@ var CONTROLLER_METHOD = {
     COPY_CELLS: 'copyCells',
     DELETE_AXIS: 'deleteAxis',
     DELETE_BRANCH: 'deleteBranch',
+    DUPLICATE_CUBE: 'duplicateCube',
     FETCH_HTML_BRANCH_DIFFS: 'fetchHtmlBranchDiffs',
     FETCH_HTML_REV_DIFFS: 'fetchHtmlRevDiffs',
     FETCH_JSON_BRANCH_DIFFS: 'fetchJsonBranchDiffs',

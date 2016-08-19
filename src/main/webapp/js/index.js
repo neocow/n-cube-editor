@@ -130,6 +130,11 @@ var NCE = (function ($)
     var _createSnapshotLabel = $('#createSnapshotLabel');
     var _createSnapshotVersion = $('#createSnapshotVersion');
     var _copyBranchLabel = $('#copyBranchLabel');
+    var _dupeCubeAppName = $('#dupeCubeAppName');
+    var _dupeCubeVersion = $('#dupeCubeVersion');
+    var _dupeCubeName = $('#dupeCubeName');
+    var _dupeCubeBranch = $('#dupeCubeBranch');
+    var _dupeCubeLabel = $('#dupeCubeLabel');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -140,6 +145,7 @@ var NCE = (function ($)
     var _createSnapshotModal = $('#createSnapshotModal');
     var _copyBranchModal = $('#copyBranchModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
+    var _dupeCubeModal = $('#dupeCubeModal');
 
     initialize();
 
@@ -2124,16 +2130,16 @@ var NCE = (function ($)
         $('#newCubeName').val('');
         buildDropDown('#newCubeAppList', '#newCubeAppName', loadAppNames(), function (app)
         {
-            buildVersionsDropdown('#existVersionList', '#newCubeVersion');
+            buildVersionsDropdown('#existVersionList', '#newCubeVersion', app);
         });
         buildVersionsDropdown('#existVersionList', '#newCubeVersion');
         $('#newCubeModal').modal();
     }
 
-    function buildVersionsDropdown(listId, inputId) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [_selectedApp]);
+    function buildVersionsDropdown(listId, inputId, app, callback) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app || _selectedApp]);
         if (result.status) {
-            buildDropDown(listId, inputId, result.data, function(){});
+            buildDropDown(listId, inputId, result.data, callback);
         } else {
             showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
         }
@@ -2582,8 +2588,7 @@ var NCE = (function ($)
         }
     }
 
-    function dupeCube()
-    {
+    function dupeCube() {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
@@ -2596,44 +2601,51 @@ var NCE = (function ($)
             return false;
         }
 
-        $('#dupeCubeAppName').val(_selectedApp);
-        $('#dupeCubeVersion').val(_selectedVersion);
-        $('#dupeCubeName').val(_selectedCubeName);
-        $('#dupeCubeLabel')[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
-        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', loadAppNames(), function (app)
-        {
-            buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion');
+        _dupeCubeAppName.val(_selectedApp);
+        _dupeCubeVersion.val(_selectedVersion);
+        _dupeCubeName.val(_selectedCubeName);
+        _dupeCubeBranch.val(_selectedBranch);
+        _dupeCubeLabel[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
+        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', loadAppNames(), function (app) {
+            buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', app, function() {
+                buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
+            });
+            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:app, version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
         });
-        buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion');
-        $('#dupeCubeModal').modal();
+        buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', _selectedApp, function() {
+            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
+        });
+        buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNames());
+        _dupeCubeModal.modal();
     }
 
-    function dupeCubeCopy()
-    {
-        $('#dupeCubeModal').modal('hide');
-        var newName = $('#dupeCubeName').val();
-        var newApp = $('#dupeCubeAppName').val();
-        var newVersion = $('#dupeCubeVersion').val();
-        var destAppId = {
+    function dupeCubeCopy() {
+        var result, newName, newApp, newVersion, newBranch, destAppId;
+        _dupeCubeModal.modal('hide');
+        newName = _dupeCubeName.val();
+        newApp = _dupeCubeAppName.val();
+        newVersion = _dupeCubeVersion.val();
+        newBranch = _dupeCubeBranch.val();
+        destAppId = {
             'app':newApp,
             'version':newVersion,
             'status':STATUS.SNAPSHOT,
-            'branch':_selectedBranch
+            'branch':newBranch
         };
-        var result = call("ncubeController.duplicateCube", [getAppId(), destAppId, _selectedCubeName, newName]);
-        if (result.status)
-        {
+        result = call(CONTROLLER + CONTROLLER_METHOD.DUPLICATE_CUBE, [getAppId(), destAppId, _selectedCubeName, newName]);
+        if (result.status) {
             saveSelectedApp(newApp);
             loadAppListView();
             saveSelectedStatus(STATUS.SNAPSHOT);
             saveSelectedVersion(newVersion);
             loadVersionListView();
+            saveSelectedBranch(newBranch);
+            showActiveBranch();
             loadNCubes();
             clearSearch();
             selectCubeByName(newName);
-        }
-        else
-        {
+            buildMenu();
+        } else {
             showNote("Unable to duplicate n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
@@ -3746,7 +3758,7 @@ var NCE = (function ($)
         $('#copyBranchVersion').val(_selectedVersion);
         $('#copyBranchName').val('');
         buildDropDown('#copyBranchAppList', '#copyBranchAppName', loadAppNames(), function (app) {
-            buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
+            buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion', app);
         });
         buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
 

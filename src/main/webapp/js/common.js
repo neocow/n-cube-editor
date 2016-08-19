@@ -132,7 +132,9 @@ function buildDropDown(listId, inputId, list, callback)
         {   // User clicked on a dropdown entry, copy its text to input field
             e.preventDefault();
             $(inputId).val(anchor.html());
-            callback(anchor.html());
+            if (callback) {
+                callback(anchor.html());
+            }
         });
         ul.append(li);
         li.append(anchor);
