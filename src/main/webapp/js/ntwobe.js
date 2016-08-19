@@ -2505,7 +2505,7 @@ var NCubeEditor2 = (function ($) {
         html += '><a href="#" class="anc-edit-columns">Edit Columns...</a></li>';
         html += '<li class="divider"/>';
 
-        if (isTopAxis) {
+        if (isTopAxis && axes.length > 1) {
             html += '<li><a href="#" class="anc-filter-data">Filter Data...</a></li>';
             html += '<li><a href="#" class="anc-filter-blank-rows">Filter Out Blank Rows</a></li>';
             html += '<li';
