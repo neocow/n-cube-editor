@@ -38,8 +38,10 @@ var CALC_WIDTH_REF_AX_BUTTON_MOD = 60;
 var CALC_WIDTH_BASE_MOD = 40;
 var CALC_WIDTH_TAB_OVERFLOW_MOD = 45;
 
-var CONFIG_TITLE = '~Title';
-var CONFIG_DEFAULT_TAB = '~DefaultTab';
+var CONFIG_DEFAULT_TAB = 'default-tab';
+var CONFIG_NAV_MENU = 'nav-menu';
+var CONFIG_TAB_MENU = 'tab-menu';
+var CONFIG_TITLE = 'title';
 var PAGE_ID = 'PageId';
 
 var AXIS_DEFAULT = '002147483647';

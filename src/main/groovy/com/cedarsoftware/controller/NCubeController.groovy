@@ -1925,19 +1925,24 @@ class NCubeController extends BaseController
         try
         {
             appId = addTenant(appId)
-            NCube menuCube = nCubeService.getCube(appId, 'sys.menu')
+            NCube menuCube = nCubeService.getCube(appId.asVersion('0.0.0'), 'sys.menu')
+            if (menuCube == null) {
+                menuCube = nCubeService.getCube(appId.asVersion('0.0.0').asHead(), 'sys.menu')
+            }
             return menuCube.getCell([:])
         }
         catch (Exception e)
         {
-            LOG.info("Unable to load sys.menu (sys.menu cube likely not in appId: " + appId.toString() + ", exception: " + e.getMessage())
-            return ['~Title':'Enterprise Configurator',
-                    'n-cube':[html:'html/ntwobe.html',img:'img/letter-n.png'],
-                    'n-cube-old':[html:'html/ncube.html',img:'img/letter-o.png'],
-                    'JSON':[html:'html/jsonEditor.html',img:'img/letter-j.png'],
-                    'Details':[html:'html/details.html',img:'img/letter-d.png'],
-                    'Test':[html:'html/test.html',img:'img/letter-t.png'],
-                    'Visualizer':[html:'html/visualize.html', img:'img/letter-v.png']
+            LOG.info('Unable to load sys.menu (sys.menu cube likely not in appId: ' + appId.toString() + ', exception: ' + e.getMessage())
+            return ['title':'Enterprise Configurator',
+                    'tab-menu':
+                            ['n-cube':[html:'html/ntwobe.html',img:'img/letter-n.png'],
+                            'n-cube-old':[html:'html/ncube.html',img:'img/letter-o.png'],
+                            'JSON':[html:'html/jsonEditor.html',img:'img/letter-j.png'],
+                            'Details':[html:'html/details.html',img:'img/letter-d.png'],
+                            'Test':[html:'html/test.html',img:'img/letter-t.png'],
+                            'Visualizer':[html:'html/visualize.html', img:'img/letter-v.png']],
+                    'nav-menu':[:]
             ]
         }
     }
