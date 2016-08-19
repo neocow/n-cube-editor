@@ -98,12 +98,6 @@ class NCubeController extends BaseController
         System.err = new ThreadAwarePrintStreamErr()
         System.out = new ThreadAwarePrintStream()
 //        memcachedClient = new MemcachedClient(AddrUtil.getAddresses(memcachedServers))
-
-        // Temporarily set the proxy this way until HOSTING has these values passed in via -D
-        Properties props = System.getProperties();
-        props.setProperty("http.proxyHost", "10.50.136.63");
-        props.setProperty("http.proxyPort", "3128");
-
     }
 
     protected static String getUserForDatabase()
