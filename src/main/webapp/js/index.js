@@ -87,6 +87,7 @@ var NCE = (function ($)
     var _diffLeftName = '';
     var _diffRightName = '';
     var _menuOptions = [];
+    var _menuList = $('#menuList');
     var _tabOverflow = $('#tab-overflow');
     var _branchNames = [];
     var _conflictMap = [];
@@ -130,6 +131,11 @@ var NCE = (function ($)
     var _createSnapshotLabel = $('#createSnapshotLabel');
     var _createSnapshotVersion = $('#createSnapshotVersion');
     var _copyBranchLabel = $('#copyBranchLabel');
+    var _dupeCubeAppName = $('#dupeCubeAppName');
+    var _dupeCubeVersion = $('#dupeCubeVersion');
+    var _dupeCubeName = $('#dupeCubeName');
+    var _dupeCubeBranch = $('#dupeCubeBranch');
+    var _dupeCubeLabel = $('#dupeCubeLabel');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -140,6 +146,7 @@ var NCE = (function ($)
     var _createSnapshotModal = $('#createSnapshotModal');
     var _copyBranchModal = $('#copyBranchModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
+    var _dupeCubeModal = $('#dupeCubeModal');
 
     initialize();
 
@@ -640,6 +647,8 @@ var NCE = (function ($)
             html += '<div class="divider"/>';
         }
 
+        html += '<li><a href="#" class="anc-go-to-context">Go to Context</a></li>';
+        html += '<div class="divider"/>';
         html += '<li><a href="#" class="anc-close-cube">Close</a></li>';
         html += '<li><a href="#" class="anc-close-all">Close All</a></li>';
         html += '<li><a href="#" class="anc-close-others">Close Others</a></li>';
@@ -733,6 +742,18 @@ var NCE = (function ($)
             li.tooltip('destroy');
             removeAllTabs();
             addCurrentCubeTab(null, cubeInfo);
+        });
+        li.find('a.anc-go-to-context').on('click', function() {
+            saveSelectedApp(cubeInfo[CUBE_INFO.APP]);
+            loadAppListView();
+            saveSelectedStatus(cubeInfo[CUBE_INFO.STATUS]);
+            saveSelectedVersion(cubeInfo[CUBE_INFO.VERSION]);
+            loadVersionListView();
+            saveSelectedBranch(cubeInfo[CUBE_INFO.BRANCH]);
+            showActiveBranch();
+            loadNCubes();
+            clearSearch();
+            buildMenu();
         });
 
         // add branch subdropdown where needed
@@ -969,10 +990,8 @@ var NCE = (function ($)
     }
 
     function buildMenu() {
-        var menu, pageId, tabHeight, iframeHtml, menuKeys, key, value, i, len;
-        var html = '';
-        var appId = getAppId();
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_MENU,[appId]);
+        var menu, result;
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_MENU, [getAppId()]);
         if (!result.status) {
             showNote('Unable to load menu.' + result.data);
             return;
@@ -986,39 +1005,87 @@ var NCE = (function ($)
                 setActiveTabViewType(_defaultTab);
             }
         }
-        _menuOptions = [];
+        
+        buildViewsFromTabMenu(menu);
+        buildNavigationMenu(menu);
+    }
+    
+    function buildNavigationMenu(menu) {
+        var navMenu, html, i, len, menuKeys, heading, menuOptions, optionsKeys, linkText, linkVal, o, oLen;
+        _menuList.empty();
+        html = '';
+        navMenu = menu[CONFIG_NAV_MENU];
+        if (!navMenu) {
+            return;
+        }
+        
+        delete navMenu['@type'];
+        menuKeys = Object.keys(navMenu);
+        for (i = 0, len = menuKeys.length; i < len; i++) {
+            heading = menuKeys[i];
+            menuOptions = null;
+            menuOptions = navMenu[heading];
+            html += '<li class="dropdown">';
+            html += '<a href="#" class="dropdown-toggle" data-toggle="dropdown">';
+            html += heading + '</a>';
+            html += '<ul class="dropdown-menu">';
 
-        menuKeys = Object.keys(menu);
+            delete menuOptions['@type'];
+            optionsKeys = Object.keys(menuOptions);
+            for (o = 0, oLen = optionsKeys.length; o < oLen; o++) {
+                linkText = optionsKeys[o];
+                linkVal = null;
+                linkVal = menuOptions[linkText];
+
+                html += '<li><a href="' + linkVal.html + '">' + linkText + '</a>';
+                if (linkVal.hasOwnProperty('divider')) {
+                    html += '<div class="divider"/>';
+                }
+            }
+
+            html += '</ul></li>'
+        }
+        
+        _menuList.append(html);
+    }
+    
+    function buildViewsFromTabMenu(menu) {
+        var tabMenu, menuKeys, i, len, key, value, pageId, tabHeight, iframeHtml, html, appId;
+        
+        _menuOptions = [];
+        tabMenu = menu[CONFIG_TAB_MENU];
+        delete tabMenu['@type'];
+        html = '';
+        appId = getAppId();
+
+        menuKeys = Object.keys(tabMenu);
         for (i = 0, len = menuKeys.length; i < len; i++) {
             key = menuKeys[i];
             value = null;
-            value = menu[key];
-            if (['~','@','#'].indexOf(key[0]) < 0) {
-                pageId = key.replace(/\s/g,'_') + PAGE_ID;
-                _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
-                if (!_activeTabViewType) {
-                    setActiveTabViewType(pageId);
-                    _defaultTab = pageId;
+            value = tabMenu[key];
+            pageId = key.replace(/\s/g,'_') + PAGE_ID;
+            _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
+            if (!_activeTabViewType) {
+                setActiveTabViewType(pageId);
+                _defaultTab = pageId;
+            }
+
+            if (!_mainTabPanel.find('div#' + pageId).length) {
+                if (tabHeight === undefined) {
+                    tabHeight = _openTabsPanel.outerHeight();
+                }
+                iframeHtml = value['html'];
+                if (!iframeHtml.startsWith('http:') && !iframeHtml.startsWith('https:')) {
+                    iframeHtml += '?appId=' + JSON.stringify(appId).replace(/\"/g, '&quot;');
                 }
 
-                if (_mainTabPanel.find('div#' + pageId).length === 0) {
-                    if (tabHeight === undefined) {
-                        tabHeight = _openTabsPanel.outerHeight();
-                    }
-                    iframeHtml = value['html'];
-                    if (!iframeHtml.startsWith('http:') && !iframeHtml.startsWith('https:')) {
-                        iframeHtml += '?appId=' + JSON.stringify(appId).replace(/\"/g, '&quot;');
-                    }
-
-                    html += '<div class="tab-pane" id="' + pageId + '" '
-                        + 'style="overflow:hidden;height:calc(100% - ' + tabHeight + 'px);">';
-                    html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + iframeHtml + '">';
-                    html += '</iframe></div>';
-                }
+                html += '<div class="tab-pane" id="' + pageId + '" ' + 'style="overflow:hidden;height:calc(100% - ' + tabHeight + 'px);">';
+                html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + iframeHtml + '">';
+                html += '</iframe></div>';
             }
         }
 
-        if (html.length > 0) {
+        if (html.length) {
             _mainTabPanel.append(html);
         }
     }
@@ -2139,16 +2206,16 @@ var NCE = (function ($)
         $('#newCubeName').val('');
         buildDropDown('#newCubeAppList', '#newCubeAppName', loadAppNames(), function (app)
         {
-            buildVersionsDropdown('#existVersionList', '#newCubeVersion');
+            buildVersionsDropdown('#existVersionList', '#newCubeVersion', app);
         });
         buildVersionsDropdown('#existVersionList', '#newCubeVersion');
         $('#newCubeModal').modal();
     }
 
-    function buildVersionsDropdown(listId, inputId) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [_selectedApp]);
+    function buildVersionsDropdown(listId, inputId, app, callback) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app || _selectedApp]);
         if (result.status) {
-            buildDropDown(listId, inputId, result.data, function(){});
+            buildDropDown(listId, inputId, result.data, callback);
         } else {
             showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
         }
@@ -2597,8 +2664,7 @@ var NCE = (function ($)
         }
     }
 
-    function dupeCube()
-    {
+    function dupeCube() {
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
         {
@@ -2611,44 +2677,51 @@ var NCE = (function ($)
             return false;
         }
 
-        $('#dupeCubeAppName').val(_selectedApp);
-        $('#dupeCubeVersion').val(_selectedVersion);
-        $('#dupeCubeName').val(_selectedCubeName);
-        $('#dupeCubeLabel')[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
-        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', loadAppNames(), function (app)
-        {
-            buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion');
+        _dupeCubeAppName.val(_selectedApp);
+        _dupeCubeVersion.val(_selectedVersion);
+        _dupeCubeName.val(_selectedCubeName);
+        _dupeCubeBranch.val(_selectedBranch);
+        _dupeCubeLabel[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
+        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', loadAppNames(), function (app) {
+            buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', app, function() {
+                buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
+            });
+            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:app, version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
         });
-        buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion');
-        $('#dupeCubeModal').modal();
+        buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', _selectedApp, function() {
+            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
+        });
+        buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNames());
+        _dupeCubeModal.modal();
     }
 
-    function dupeCubeCopy()
-    {
-        $('#dupeCubeModal').modal('hide');
-        var newName = $('#dupeCubeName').val();
-        var newApp = $('#dupeCubeAppName').val();
-        var newVersion = $('#dupeCubeVersion').val();
-        var destAppId = {
+    function dupeCubeCopy() {
+        var result, newName, newApp, newVersion, newBranch, destAppId;
+        _dupeCubeModal.modal('hide');
+        newName = _dupeCubeName.val();
+        newApp = _dupeCubeAppName.val();
+        newVersion = _dupeCubeVersion.val();
+        newBranch = _dupeCubeBranch.val();
+        destAppId = {
             'app':newApp,
             'version':newVersion,
             'status':STATUS.SNAPSHOT,
-            'branch':_selectedBranch
+            'branch':newBranch
         };
-        var result = call("ncubeController.duplicateCube", [getAppId(), destAppId, _selectedCubeName, newName]);
-        if (result.status)
-        {
+        result = call(CONTROLLER + CONTROLLER_METHOD.DUPLICATE_CUBE, [getAppId(), destAppId, _selectedCubeName, newName]);
+        if (result.status) {
             saveSelectedApp(newApp);
             loadAppListView();
             saveSelectedStatus(STATUS.SNAPSHOT);
             saveSelectedVersion(newVersion);
             loadVersionListView();
+            saveSelectedBranch(newBranch);
+            showActiveBranch();
             loadNCubes();
             clearSearch();
             selectCubeByName(newName);
-        }
-        else
-        {
+            buildMenu();
+        } else {
             showNote("Unable to duplicate n-cube '" + _selectedCubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
@@ -3761,7 +3834,7 @@ var NCE = (function ($)
         $('#copyBranchVersion').val(_selectedVersion);
         $('#copyBranchName').val('');
         buildDropDown('#copyBranchAppList', '#copyBranchAppName', loadAppNames(), function (app) {
-            buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
+            buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion', app);
         });
         buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
 

@@ -533,15 +533,6 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="dupeCubeName">New n-cube Name</label>
-                        <input class="form-control" type="text" id="dupeCubeName" placeholder="Type name here"/>
-                    </div>
-                    <div class="form-group">
-                        <label for="dupeCubeStatus">New status</label>
-                        <input class="form-control" type="text" placeholder="" id="dupeCubeStatus" value="SNAPSHOT"
-                               readonly/>
-                    </div>
-                    <div class="form-group">
                         <label for="dupeCubeVersion">New version</label>
 
                         <div class="input-group">
@@ -553,6 +544,28 @@
                             </div>
                             <input id="dupeCubeVersion" type="text" class="form-control">
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dupeCubeStatus">New status</label>
+                        <input class="form-control" type="text" placeholder="" id="dupeCubeStatus" value="SNAPSHOT"
+                               readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label for="dupeCubeBranch">New branch</label>
+
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">Choose<span class="caret"></span></button>
+                                <ul id="dupeCubeBranchList" class="dropdown-menu">
+                                </ul>
+                            </div>
+                            <input id="dupeCubeBranch" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dupeCubeName">New n-cube name</label>
+                        <input class="form-control" type="text" id="dupeCubeName" placeholder="Type name here"/>
                     </div>
                 </form>
             </div>
