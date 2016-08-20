@@ -277,12 +277,22 @@ var NCE = (function ($)
     }
 
     function saveOpenCubeInfoValue(property, value) {
-        _openCubes[getOpenCubeIndex(_selectedCubeInfo)][property] = value;
-        saveOpenCubeList();
+        var cube = _openCubes[getOpenCubeIndex(_selectedCubeInfo)];
+        if (cube)
+        {
+            cube[property] = value;
+            saveOpenCubeList();
+        }
     }
 
-    function getOpenCubeInfoValue(property) {
-        return _openCubes[getOpenCubeIndex(_selectedCubeInfo)][property];
+    function getOpenCubeInfoValue(property)
+    {
+        var cube = _openCubes[getOpenCubeIndex(_selectedCubeInfo)];
+        if (cube)
+        {
+            return cube[property];
+        }
+        return null;
     }
 
     function getInfoDto() {
@@ -425,17 +435,22 @@ var NCE = (function ($)
     }
 
     function checkCubeCurrent(cubeInfo) {
-        var appId, result;
+        var appId, result, cube;
         appId = appIdFrom(cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH]);
         result = call(CONTROLLER + CONTROLLER_METHOD.IS_CUBE_CURRENT, [appId, cubeInfo[CUBE_INFO.NAME]], {noResolveRefs:true});
         if (!result.status) {
             showNote('Unable to check if out-of-date:<hr class="hr-small"/>' + result.data);
             return;
         }
-        _openCubes[getOpenCubeIndex(cubeInfo)]['status'] = result.data ? null : CLASS_OUT_OF_SYNC;
-        saveOpenCubeList();
-        if (!result.data) {
-            showOutOfSyncNoticeForCube(cubeInfo);
+        cube = _openCubes[getOpenCubeIndex(cubeInfo)];
+        if (cube)
+        {
+            cube['status'] = result.data ? null : CLASS_OUT_OF_SYNC;
+            saveOpenCubeList();
+            if (!result.data)
+            {
+                showOutOfSyncNoticeForCube(cubeInfo);
+            }
         }
     }
     
