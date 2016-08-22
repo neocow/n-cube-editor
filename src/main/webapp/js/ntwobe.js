@@ -1968,6 +1968,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function categoryRenderer(instance, td, row, col, prop, value, cellProperties) {
+        var axis, column, rowHeader, cellData, val, columnDefault;
         Handsontable.renderers.TextRenderer.apply(this, arguments);
         cellProperties.editor = NcubeBaseEditor;
         td.className = '';
@@ -2013,7 +2014,7 @@ var NCubeEditor2 = (function ($) {
             } else {
                 // column headers
                 if (axes.length > 1) {
-                    var column = getColumnHeader(col);
+                    column = getColumnHeader(col);
                     td.innerHTML = getRowHeaderValue(axes[colOffset], column);
                     if (column.isSearchResult) {
                         td.className += CLASS_HANDSON_SEARCH_RESULT;
@@ -2026,8 +2027,8 @@ var NCubeEditor2 = (function ($) {
 
         // row headaers
         else if (!col || col < colOffset) {
-            var rowHeader = getRowHeader(row, col);
-            var axis = axes[col];
+            rowHeader = getRowHeader(row, col);
+            axis = axes[col];
             if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (!col || (col && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
                 td.style.borderTop = NONE;
             } else {
@@ -2046,7 +2047,7 @@ var NCubeEditor2 = (function ($) {
 
         // otherwise in cell data
         else {
-            var cellData = getCellData(row, col);
+            cellData = getCellData(row, col);
             td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData && cellData.type) {
                 if (cellData.isSearchResult) {
@@ -2062,23 +2063,31 @@ var NCubeEditor2 = (function ($) {
                     td.innerHTML = buildExpressionLink('' + cellData.value, 'groovy');
                     activateLinks(td);
                 } else if ('date' === cellData.type) {
-                    var val = cellData.value;
+                    val = cellData.value;
                     td.innerHTML = getStringFromDate(val);
                 } else {
                     td.innerHTML = buildExpressionLink('' + cellData.value);
                     activateLinks(td);
                 }
-            } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
-                td.className += CLASS_HANDSON_CELL_DEFAULT;
-                if (_defaultCellText === null) {
-                    _defaultCellText = buildExpressionLink('' + data.defaultCellValue, NONE);
+            } else {
+                columnDefault = getCalculatedColumnDefault(row, col)
+                if (columnDefault !== null) {
+                    td.className += CLASS_HANDSON_COLUMN_DEFAULT;
+                    columnDefault = buildExpressionLink('' + columnDefault, NONE);
+                    td.innerHTML = columnDefault;
+                    activateLinks(td);
+                } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
+                    td.className += CLASS_HANDSON_CELL_DEFAULT;
+                    if (_defaultCellText === null) {
+                        _defaultCellText = buildExpressionLink('' + data.defaultCellValue, NONE);
+                    }
+                    td.innerHTML = _defaultCellText;
+                    activateLinks(td);
+                } else if (data.defaultCellValueUrl !== null && data.defaultCellValueUrl !== undefined) {
+                    td.className += CLASS_HANDSON_CELL_DEFAULT;
+                    td.innerHTML = '<a class="nc-anc">' + data.defaultCellValueUrl + '</a>';
+                    buildUrlLink(td);
                 }
-                td.innerHTML = _defaultCellText;
-                activateLinks(td);
-            } else if (data.defaultCellValueUrl !== null && data.defaultCellValueUrl !== undefined) {
-                td.className += CLASS_HANDSON_CELL_DEFAULT;
-                td.innerHTML = '<a class="nc-anc">' + data.defaultCellValueUrl + '</a>';
-                buildUrlLink(td);
             }
 
             if (row % 2 !== 0) {
@@ -2087,6 +2096,29 @@ var NCubeEditor2 = (function ($) {
 
             cellProperties.editor = CellEditor;
         }
+    }
+
+    function getCalculatedColumnDefault(row, col) {
+        var column, columnDefault, tempColumnDefault, i;
+        column = getColumnHeader(col);
+        columnDefault = getColumnDefault(column);
+
+        for (i = 0; i < colOffset; i++) {
+            column = null;
+            column = getRowHeader(row, i);
+            tempColumnDefault = null;
+            tempColumnDefault = getColumnDefault(column);
+            if (columnDefault === null) {
+                columnDefault = tempColumnDefault;
+            } else if (tempColumnDefault !== null && columnDefault !== tempColumnDefault) {
+                return null;
+            }
+        }
+        return columnDefault;
+    }
+
+    function getColumnDefault(column) {
+        return column.hasOwnProperty(METAPROPERTIES.DEFAULT_VALUE) ? column[METAPROPERTIES.DEFAULT_VALUE] : null;
     }
 
     function addToSearchCoords (row, col) {
@@ -2870,14 +2902,15 @@ var NCubeEditor2 = (function ($) {
     // ==================================== Begin Copy / Paste =========================================================
 
     function getSelectedCellRange() {
-        var cellRange = hot.getSelected(); // index of the currently selected cells as an array [startRow, startCol, endRow, endCol]
+        var row1, row2, col1, col2, cellRange;
+        cellRange = hot.getSelected(); // index of the currently selected cells as an array [startRow, startCol, endRow, endCol]
         if (!cellRange) {
             return null;
         }
-        var row1 = cellRange[0];
-        var row2 = cellRange[2];
-        var col1 = cellRange[1];
-        var col2 = cellRange[3];
+        row1 = cellRange[0];
+        row2 = cellRange[2];
+        col1 = cellRange[1];
+        col2 = cellRange[3];
         return {
             startRow: Math.min(row1, row2),
             startCol: Math.min(col1, col2),
@@ -2887,20 +2920,19 @@ var NCubeEditor2 = (function ($) {
     }
 
     function excelCutCopy(isCut) {
+        var clipData, range, cells, row, col, content, cellId, result;
         if (isCut && !nce.ensureModifiable('Cannot cut / copy cells.')) {
             return;
         }
 
-        var clipData = '';
-        var range = getSelectedCellRange();
-        var cells = [];
+        clipData = '';
+        range = getSelectedCellRange();
+        cells = [];
 
-        for (var row = range.startRow; row <= range.endRow; row++)
-        {
-            for (var col = range.startCol; col <= range.endCol; col++)
-            {
-                var content = getTableTextCellValue(row, col);
-                var cellId = getCellId(row, col);
+        for (row = range.startRow; row <= range.endRow; row++) {
+            for (col = range.startCol; col <= range.endCol; col++) {
+                content = getTableTextCellValue(row, col);
+                cellId = getCellId(row, col);
                 if (cellId) {
                     cells.push(cellId.split('_'));
                 }
@@ -2908,14 +2940,12 @@ var NCubeEditor2 = (function ($) {
                 if (content.indexOf('\n') > -1) {
                     // Must quote if newline (and double any quotes inside)
                     clipData += '"' + content.replace(/"/g, '""') + '"';
-                }
-                else
-                {
+                } else {
                     clipData += content;
                 }
 
-                if (col < range.endCol)
-                {   // Only add tab on last - 1 (otherwise paste will overwrite data in next column)
+                if (col < range.endCol) {
+                    // Only add tab on last - 1 (otherwise paste will overwrite data in next column)
                     clipData += '\t';
                 }
             }
@@ -2925,7 +2955,7 @@ var NCubeEditor2 = (function ($) {
         cells.splice(cells.length - 1, 1);
 
         if (isCut) {
-            var result = nce.call("ncubeController.copyCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, true]);
+            result = nce.call("ncubeController.copyCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, true]);
             if (!result.status) {
                 nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
                 return;
@@ -2939,11 +2969,12 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editCutCopy(isCut) {
+        var clipData;
         if (isCut && !nce.ensureModifiable('Cannot cut / copy cells.')) {
             return;
         }
 
-        var clipData = nceCutCopyData(getSelectedCellRange(), isCut);
+        clipData = nceCutCopyData(getSelectedCellRange(), isCut);
         if (!clipData) {
             return;
         }
@@ -3191,21 +3222,22 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editCell() {
+        var cellInfo, value, dataType, isUrl, isCached, isDefault, cellValue, selectedCell, columnDefault;
         var appId = nce.getSelectedTabAppId();
         var modifiable = nce.checkPermissions(appId, cubeName, PERMISSION_ACTION.UPDATE);
 
-        var result = nce.call("ncubeController.getCellNoExecute", [appId, cubeName, _cellId]);
-        if (result.status === false) {
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE, [appId, cubeName, _cellId]);
+        if (!result.status) {
             nce.showNote('Unable to fetch the cell contents: ' + result.data);
             return;
         }
 
-        var cellInfo = result.data;
-        var value = null;
-        var dataType = null;
-        var isUrl = false;
-        var isCached = false;
-        var isDefault = false;
+        cellInfo = result.data;
+        value = null;
+        dataType = null;
+        isUrl = false;
+        isCached = false;
+        isDefault = false;
         if (cellInfo.value !== null || cellInfo.dataType !== null || cellInfo.isUrl || cellInfo.isCached) {
             value = cellInfo.value;
             dataType = cellInfo.dataType;
@@ -3213,13 +3245,20 @@ var NCubeEditor2 = (function ($) {
             isCached = cellInfo.isCached;
         } else { // use cube defaults if exist
             isDefault = true;
-            isUrl = data.defaultCellValueUrl !== undefined;
-            value = isUrl ? data.defaultCellValueUrl : data.defaultCellValue;
-            dataType = data.defaultCellValueType;
-            isCached = data.defaultCellValueCache;
+            selectedCell = getSelectedCellRange();
+            columnDefault = getCalculatedColumnDefault(selectedCell.startRow, selectedCell.startCol);
+            if (columnDefault !== null) {
+                value = columnDefault;
+                dataType = 'string';
+            } else {
+                isUrl = data.defaultCellValueUrl !== undefined;
+                value = isUrl ? data.defaultCellValueUrl : data.defaultCellValue;
+                dataType = data.defaultCellValueType;
+                isCached = data.defaultCellValueCache;
+            }
         }
         // Set the cell value (String)
-        var cellValue = value !== null && value !== undefined ? value : '';
+        cellValue = value !== null && value !== undefined ? value : '';
         _editCellValue.val(cellValue);
         if (dataType === null || !dataType) {
             dataType = 'string';
@@ -4391,8 +4430,9 @@ var NCubeEditor2 = (function ($) {
     }
 
     function reload(keepTable) {
+        var selection;
         if (hot) {
-            var selection = getSelectedCellRange();
+            selection = getSelectedCellRange();
             load(keepTable);
             if (!hot) { // reload could not construct table
                 return;

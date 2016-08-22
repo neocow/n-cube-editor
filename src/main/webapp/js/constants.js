@@ -60,6 +60,7 @@ var CLASS_HANDSON_CELL_CUBE_NAME = ' cube-name';
 var CLASS_HANDSON_CELL_DEFAULT = ' tableDefault';
 var CLASS_HANDSON_CELL_ODD_ROW = ' oddRow';
 var CLASS_HANDSON_CELL_URL = ' url';
+var CLASS_HANDSON_COLUMN_DEFAULT = ' columnDefault';
 var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 
 var CLASS_CONFLICT = 'conflict';
@@ -91,7 +92,7 @@ var SAVED_INFO = {
     NUMBER_OF_FROZEN_COLUMNS: 'numFrozenCols',
     SEARCH_QUERY: 'searchQuery',
     SHOULD_LOAD_ALL_FOR_SEARCH: 'shouldLoadAllForSearch',
-    VIEW_POSITION: 'position',
+    VIEW_POSITION: 'position'
 };
 
 var STATUS = {
@@ -120,6 +121,7 @@ var CODE_CELL_TYPE_LIST = ['exp', 'method'];
 var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 var METAPROPERTIES = {
     COLUMN_BLACKLIST: ['value','url','type','id','name'],
+    DEFAULT_VALUE: 'default_value',
     OBJECT_TYPES: {
         CUBE: 'cube',
         AXIS: 'axis',
@@ -159,6 +161,7 @@ var CONTROLLER_METHOD = {
     GET_BRANCH_CHANGES: 'getBranchChanges',
     GET_BRANCH_CHANGES_FROM_BRANCH: 'getBranchChangesFromBranch',
     GET_BRANCHES: 'getBranches',
+    GET_CELL_NO_EXECUTE: 'getCellNoExecute',
     GET_CELLS_NO_EXECUTE: 'getCellsNoExecute',
     GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',

@@ -179,6 +179,9 @@ ul#setUpHideList li {
 .handsontable .tableDefault, .handsontable .tableDefault a {
     color: #CCC;
 }
+.handsontable .columnDefault, .handsontable .columnDefault a {
+    color: #B4CDCD;
+}
 
 .dropdown-menu {
     position: fixed;
