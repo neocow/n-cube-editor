@@ -890,13 +890,16 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getAxisColumn(axis, colNum) {
+        var key, obj;
         if (!axis.columnLength || colNum < 0) {
             return;
         }
 
-        var key = axisColumnMap[axis.name][colNum];
-        var obj = axis.columns[key];
-        obj.id = key;
+        key = axisColumnMap[axis.name][colNum];
+        obj = axis.columns[key];
+        if (obj) {
+            obj.id = key;
+        }
 
         return obj;
     }
@@ -2005,6 +2008,7 @@ var NCubeEditor2 = (function ($) {
 
         else if (row === 1) {
             // vertical axes metadata area
+            axis = axes[colOffset];
             if (col < colOffset || !col) {
                 td.style.background = BACKGROUND_AXIS_INFO;
                 td.style.color = COLOR_WHITE;
@@ -2015,13 +2019,16 @@ var NCubeEditor2 = (function ($) {
                 // column headers
                 if (axes.length > 1) {
                     column = getColumnHeader(col);
-                    td.innerHTML = getRowHeaderValue(axes[colOffset], column);
+                    td.innerHTML = getRowHeaderValue(axis, column);
                     if (column.isSearchResult) {
                         td.className += CLASS_HANDSON_SEARCH_RESULT;
                     }
                 }
                 td.className += CLASS_HANDSON_TABLE_HEADER;
                 cellProperties.editor = ColumnEditor;
+                if (axis.isRef) {
+                    cellProperties.readOnly = true;
+                }
             }
         }
 
@@ -3470,9 +3477,11 @@ var NCubeEditor2 = (function ($) {
         _editColumnModal.on('keydown', function(e) {
             var keyCode = e.keyCode;
             var isTextInputTarget = $(e.target).is('input[type="text"]');
-            if (e.metaKey || e.ctrlKey) {
-                if (keyCode === KEY_CODES.V && !isTextInputTarget) {
+            if ((e.metaKey || e.ctrlKey) && !isTextInputTarget) {
+                if (keyCode === KEY_CODES.V) {
                     editColPaste();
+                } else if (keyCode === KEY_CODES.C) {
+                    editColCopy();
                 }
                 return;
             }
@@ -3533,6 +3542,20 @@ var NCubeEditor2 = (function ($) {
                 }
             }
         },100);
+    }
+
+    function editColCopy() {
+        var clipData, i, len, inputs;
+        inputs = $('.editColCheckBox:checked');
+        clipData = '';
+        for (i = 0, len = inputs.length; i < len; i++ ) {
+            clipData += $(inputs[i]).parent().parent().find('input[type="text"]').val();
+            clipData += '\n';
+        }
+
+        _editColClipboard.val(clipData);
+        _editColClipboard.focusin();
+        _editColClipboard.select();
     }
 
     function editColumns(axisName) {
