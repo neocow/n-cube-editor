@@ -2005,6 +2005,7 @@ var NCubeEditor2 = (function ($) {
 
         else if (row === 1) {
             // vertical axes metadata area
+            axis = axes[colOffset];
             if (col < colOffset || !col) {
                 td.style.background = BACKGROUND_AXIS_INFO;
                 td.style.color = COLOR_WHITE;
@@ -2015,13 +2016,16 @@ var NCubeEditor2 = (function ($) {
                 // column headers
                 if (axes.length > 1) {
                     column = getColumnHeader(col);
-                    td.innerHTML = getRowHeaderValue(axes[colOffset], column);
+                    td.innerHTML = getRowHeaderValue(axis, column);
                     if (column.isSearchResult) {
                         td.className += CLASS_HANDSON_SEARCH_RESULT;
                     }
                 }
                 td.className += CLASS_HANDSON_TABLE_HEADER;
                 cellProperties.editor = ColumnEditor;
+                if (axis.isRef) {
+                    cellProperties.readOnly = true;
+                }
             }
         }
 
