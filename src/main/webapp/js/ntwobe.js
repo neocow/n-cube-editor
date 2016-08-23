@@ -890,13 +890,16 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getAxisColumn(axis, colNum) {
+        var key, obj;
         if (!axis.columnLength || colNum < 0) {
             return;
         }
 
-        var key = axisColumnMap[axis.name][colNum];
-        var obj = axis.columns[key];
-        obj.id = key;
+        key = axisColumnMap[axis.name][colNum];
+        obj = axis.columns[key];
+        if (obj) {
+            obj.id = key;
+        }
 
         return obj;
     }
