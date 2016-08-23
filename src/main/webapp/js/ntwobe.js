@@ -3477,9 +3477,11 @@ var NCubeEditor2 = (function ($) {
         _editColumnModal.on('keydown', function(e) {
             var keyCode = e.keyCode;
             var isTextInputTarget = $(e.target).is('input[type="text"]');
-            if (e.metaKey || e.ctrlKey) {
-                if (keyCode === KEY_CODES.V && !isTextInputTarget) {
+            if ((e.metaKey || e.ctrlKey) && !isTextInputTarget) {
+                if (keyCode === KEY_CODES.V) {
                     editColPaste();
+                } else if (keyCode === KEY_CODES.C) {
+                    editColCopy();
                 }
                 return;
             }
@@ -3540,6 +3542,20 @@ var NCubeEditor2 = (function ($) {
                 }
             }
         },100);
+    }
+
+    function editColCopy() {
+        var clipData, i, len, inputs;
+        inputs = $('.editColCheckBox:checked');
+        clipData = '';
+        for (i = 0, len = inputs.length; i < len; i++ ) {
+            clipData += $(inputs[i]).parent().parent().find('input[type="text"]').val();
+            clipData += '\n';
+        }
+
+        _editColClipboard.val(clipData);
+        _editColClipboard.focusin();
+        _editColClipboard.select();
     }
 
     function editColumns(axisName) {
