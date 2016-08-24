@@ -312,7 +312,7 @@ class NCubeController extends BaseController
         }
     }
 
-    private String toHtmlWithColumnHints(NCube ncube)
+    private static String toHtmlWithColumnHints(NCube ncube)
     {
         ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns')
     }

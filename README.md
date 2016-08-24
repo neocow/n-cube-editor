@@ -9,8 +9,6 @@ n-cube-editor is a web-based GUI editor for editing and managing n-cubes.
   <version>0.5.0</version>
 </dependency>
 ```
-Like **n-cube-editor** and find it useful? **Tip** bitcoin: 1MeozsfDpUALpnu3DntHWXxoPJXvSAXmQA
-
 #### Licensing
 Copyright 2012-2016 Cedar Software, LLC
 
@@ -24,7 +22,8 @@ YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/in
 and <a href="https://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>,
 innovative and intelligent tools for profiling Java and .NET applications.
 
-[![Alt text](https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcS-ZOCfy4ezfTmbGat9NYuyfe-aMwbo3Czx3-kUfKreRKche2f8fg "IntellijIDEA")](https://www.jetbrains.com/idea/)
+<a href="https://www.jetbrains.com/idea/"><img alt="Intellij IDEA from JetBrains" src="https://s-media-cache-ak0.pinimg.com/236x/bd/f4/90/bdf49052dd79aa1e1fc2270a02ba783c.jpg" data-canonical-src="https://s-media-cache-ak0.pinimg.com/236x/bd/f4/90/bdf49052dd79aa1e1fc2270a02ba783c.jpg" width="100" height="100" /></a>
+**Intellij IDEA**
 ___
 ### Version History
 * 0.5.0-SNAPSHOT
