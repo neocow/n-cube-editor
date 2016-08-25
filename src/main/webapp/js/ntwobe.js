@@ -2851,7 +2851,13 @@ var NCubeEditor2 = (function ($) {
         for (mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
             prop = null;
             prop = metaProperties[mpIdx];
-            mpMap[prop.key] = prop.value;
+            mpMap[prop.key] = {
+                '@type': GROOVY_CLASS.CELL_INFO,
+                isUrl: false,
+                isCached: false,
+                value: prop.value,
+                dataType: prop.dataType
+            };
         }
 
         controllerInfo = getMetaPropertiesControllerInfo(metaPropertyOptions);
@@ -2865,7 +2871,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function openMetaPropertiesBuilder(metaPropertyOptions) {
-        var mpData, metaKeys, metaProperties, i, len, key, builderOptions, val, mpObj, isObj;
+        var mpData, metaKeys, metaProperties, i, len, key, builderOptions, val;
         mpData = getMetaProperties(metaPropertyOptions);
         if (mpData === null) {
             return;
@@ -2875,7 +2881,13 @@ var NCubeEditor2 = (function ($) {
         metaProperties = [];
         for (i = 0, len = metaKeys.length; i < len; i++) {
             key = metaKeys[i];
-            metaProperties.push({key:key, value:mpData[key]});
+            val = null;
+            val = mpData[key];
+            if (typeof val === 'object') {
+                metaProperties.push({key:key, dataType:val.dataType, value:val.value});
+            } else {
+                metaProperties.push({key:key, dataType:'string', value:val});
+            }
         }
 
         builderOptions = {
@@ -2886,6 +2898,12 @@ var NCubeEditor2 = (function ($) {
                 key: {
                     heading: 'Key',
                     type: PropertyBuilder.COLUMN_TYPES.TEXT
+                },
+                dataType: {
+                    heading: 'Type',
+                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
+                    default: 'string',
+                    selectOptions: METAPROPERTIES.DATA_TYPE_LIST
                 },
                 value: {
                     heading: 'Value',
@@ -3327,19 +3345,23 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editCellOK() {
+        var cellInfo, result;
         var appId = nce.getSelectedTabAppId();
         var modifiable = nce.checkPermissions(appId, cubeName, PERMISSION_ACTION.UPDATE);
         if (!modifiable) {
             editCellClose();
             return;
         }
-        var cellInfo = {'@type':'com.cedarsoftware.ncube.CellInfo'};
-        cellInfo.isUrl = _editCellRadioURL.find('input').prop('checked');
-        cellInfo.value = _editCellValue.val();
-        cellInfo.dataType = cellInfo.isUrl ? _urlDropdown.val() : _valueDropdown.val();
-        cellInfo.isCached = _editCellCache.find('input').prop('checked');
 
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_CELL, [appId, cubeName, _cellId, cellInfo]);
+        cellInfo = {
+            '@type': GROOVY_CLASS.CELL_INFO,
+            isUrl: _editCellRadioURL.find('input').is(':checked'),
+            value: _editCellValue.val(),
+            dataType: this.isUrl ? _urlDropdown.val() : _valueDropdown.val(),
+            isCached: _editCellCache.find('input').prop('checked')
+        };
+
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_CELL, [appId, cubeName, _cellId, cellInfo]);
         if (!result.status) {
             nce.showNote('Unable to update cell:<hr class="hr-small"/>' + result.data);
             return;
