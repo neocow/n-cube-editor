@@ -385,7 +385,7 @@ class NCubeController extends BaseController
         {
             appId = addTenant(appId)
             NCube ncube = nCubeService.loadCube(appId, cubeName)
-            return ncube.getMetaProperties()
+            return valuesToCellInfo(ncube.getMetaProperties())
         }
         catch (Exception e)
         {
@@ -425,7 +425,7 @@ class NCubeController extends BaseController
             nCubeService.assertPermissions(appId, resourceName, null)
             NCube ncube = nCubeService.loadCube(appId, cubeName)
             Axis axis = ncube.getAxis(axisName)
-            return axis.getMetaProperties()
+            return valuesToCellInfo(axis.getMetaProperties())
         }
         catch (Exception e)
         {
@@ -467,13 +467,30 @@ class NCubeController extends BaseController
             NCube ncube = nCubeService.loadCube(appId, cubeName)
             Axis axis = ncube.getAxis(axisName)
             Column col = axis.getColumnById(colId)
-            return col.getMetaProperties()
+            return valuesToCellInfo(col.getMetaProperties())
         }
         catch (Exception e)
         {
             fail(e)
             return null
         }
+    }
+
+    Map<String, CellInfo> valuesToCellInfo(Map<String, Object> metaProps)
+    {
+        Map<String, CellInfo> map = [:] as Map
+        for (item in metaProps.entrySet())
+        {
+            if (item.value instanceof CellInfo)
+            {
+                map[item.key] = item.value as CellInfo
+            }
+            else
+            {
+                map[item.key] = new CellInfo(item.value)
+            }
+        }
+        return map
     }
 
     // @Deprecated

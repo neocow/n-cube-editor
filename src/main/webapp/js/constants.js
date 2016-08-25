@@ -126,7 +126,25 @@ var METAPROPERTIES = {
         CUBE: 'cube',
         AXIS: 'axis',
         COLUMN: 'column'
-    }
+    },
+    DATA_TYPE_LIST: [
+        {key: 'string', value: 'String'},
+        {key: 'long', value: 'Integer'},
+        {key: 'date', value: 'Date'},
+        {key: 'boolean', value: 'Boolean'},
+        {key: 'bigdec', value: 'Decimal Financial'},
+        {key: 'double', value: 'Decimal Engineering'},
+        {key: 'exp', value: 'Expression'},
+        {key: 'template', value: 'Template'},
+        {key: 'binary', value: 'Binary'},
+        {key: 'latlon', value: 'Lat/Lon'},
+        {key: 'point2d', value: '2-D Point'},
+        {key: 'point3d', value: '3-D Point'}
+    ]
+};
+
+var GROOVY_CLASS = {
+    CELL_INFO: 'com.cedarsoftware.ncube.CellInfo'
 };
 
 var POPULATE_SELECT_FROM_CUBE = {
