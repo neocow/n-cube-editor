@@ -124,7 +124,7 @@ class NCubeController extends BaseController
         return user
     }
 
-    boolean checkPermissions(ApplicationID appId, String resource, String action)
+    Boolean checkPermissions(ApplicationID appId, String resource, String action)
     {
         try
         {
@@ -134,10 +134,11 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
+            return null
         }
     }
 
-    boolean isAppAdmin(ApplicationID appId)
+    Boolean isAppAdmin(ApplicationID appId)
     {
         try
         {
@@ -147,7 +148,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -167,7 +168,7 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean isAppLocked(ApplicationID appId)
+    Boolean isAppLocked(ApplicationID appId)
     {
         try
         {
@@ -178,7 +179,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -361,7 +362,7 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean updateCubeMetaProperties(ApplicationID appId, String cubeName, Map<String, Object> newMetaProperties)
+    Boolean updateCubeMetaProperties(ApplicationID appId, String cubeName, Map<String, Object> newMetaProperties)
     {
         try
         {
@@ -375,7 +376,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -394,7 +395,7 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean updateAxisMetaProperties(ApplicationID appId, String cubeName, String axisName, Map<String, Object> newMetaProperties)
+    Boolean updateAxisMetaProperties(ApplicationID appId, String cubeName, String axisName, Map<String, Object> newMetaProperties)
     {
         try
         {
@@ -412,7 +413,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -434,7 +435,7 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean updateColumnMetaProperties(ApplicationID appId, String cubeName, String axisName, long colId, Map<String, Object> newMetaProperties)
+    Boolean updateColumnMetaProperties(ApplicationID appId, String cubeName, String axisName, long colId, Map<String, Object> newMetaProperties)
     {
         try
         {
@@ -453,7 +454,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -811,7 +812,7 @@ class NCubeController extends BaseController
      * Delete an n-cube (SNAPSHOT only).
      * @return boolean true if successful, otherwise a String error message.
      */
-    boolean deleteCubes(ApplicationID appId, Object[] cubeNames)
+    Boolean deleteCubes(ApplicationID appId, Object[] cubeNames)
     {
         try
         {
@@ -830,7 +831,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -1279,7 +1280,7 @@ class NCubeController extends BaseController
     /**
      * In-place update of a cell.
      */
-    boolean updateCell(ApplicationID appId, String cubeName, Object[] ids, CellInfo cellInfo)
+    Boolean updateCell(ApplicationID appId, String cubeName, Object[] ids, CellInfo cellInfo)
     {
         try
         {
@@ -1301,11 +1302,11 @@ class NCubeController extends BaseController
         catch(Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
-    boolean updateCellAt(ApplicationID appId, String cubeName, Map coordinate, CellInfo cellInfo)
+    Boolean updateCellAt(ApplicationID appId, String cubeName, Map coordinate, CellInfo cellInfo)
     {
         try
         {
@@ -1326,7 +1327,7 @@ class NCubeController extends BaseController
         catch(Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -1471,7 +1472,7 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean pasteCellsNce(ApplicationID appId, String cubeName, Object[] clipboard)
+    Boolean pasteCellsNce(ApplicationID appId, String cubeName, Object[] clipboard)
     {
         try
         {
@@ -1521,11 +1522,11 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
-    boolean pasteCells(ApplicationID appId, String cubeName, Object[] values, Object[] coords)
+    Boolean pasteCells(ApplicationID appId, String cubeName, Object[] values, Object[] coords)
     {
         try
         {
@@ -1571,7 +1572,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -1975,7 +1976,7 @@ class NCubeController extends BaseController
         }
     }
 
-    boolean clearDefaultCell(ApplicationID appId, String cubeName)
+    Boolean clearDefaultCell(ApplicationID appId, String cubeName)
     {
         try
         {
@@ -1988,11 +1989,11 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
-    boolean updateDefaultCell(ApplicationID appId, String cubeName, CellInfo cellInfo)
+    Boolean updateDefaultCell(ApplicationID appId, String cubeName, CellInfo cellInfo)
     {
         try
         {
@@ -2009,7 +2010,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
-            return false
+            return null
         }
     }
 
@@ -2277,7 +2278,7 @@ class NCubeController extends BaseController
         return results
     }
 
-    boolean isCubeUpToDate(ApplicationID appId, String cubeName)
+    Boolean isCubeUpToDate(ApplicationID appId, String cubeName)
     {
         try
         {
@@ -2290,6 +2291,7 @@ class NCubeController extends BaseController
         catch (Exception e)
         {
             fail(e)
+            return null
         }
     }
 
