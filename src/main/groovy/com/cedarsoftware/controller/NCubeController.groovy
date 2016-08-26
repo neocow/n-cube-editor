@@ -476,14 +476,14 @@ class NCubeController extends BaseController
         }
     }
 
-    Map<String, CellInfo> valuesToCellInfo(Map<String, Object> metaProps)
+    private static Map<String, CellInfo> valuesToCellInfo(Map<String, Object> metaProps)
     {
         Map<String, CellInfo> map = [:] as Map
         for (item in metaProps.entrySet())
         {
             if (item.value instanceof CellInfo)
             {
-                map[item.key] = item.value as CellInfo
+                map[item.key] = (CellInfo) item.value
             }
             else
             {
