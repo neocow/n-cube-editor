@@ -2077,12 +2077,16 @@ var NCubeEditor2 = (function ($) {
                     activateLinks(td);
                 }
             } else {
-                columnDefault = getCalculatedColumnDefault(row, col)
+                columnDefault = getCalculatedColumnDefault(row, col);
                 if (columnDefault !== null) {
                     td.className += CLASS_HANDSON_COLUMN_DEFAULT;
-                    columnDefault = buildExpressionLink('' + columnDefault, NONE);
-                    td.innerHTML = columnDefault;
-                    activateLinks(td);
+                    if (columnDefault.type === 'date') {
+                        td.innerHTML = getStringFromDate(columnDefault.value);
+                    } else {
+                        columnDefault = buildExpressionLink('' + columnDefault, NONE);
+                        td.innerHTML = columnDefault;
+                        activateLinks(td);
+                    }
                 } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
                     td.className += CLASS_HANDSON_CELL_DEFAULT;
                     if (_defaultCellText === null) {
@@ -2853,8 +2857,8 @@ var NCubeEditor2 = (function ($) {
             prop = metaProperties[mpIdx];
             mpMap[prop.key] = {
                 '@type': GROOVY_CLASS.CELL_INFO,
-                isUrl: false,
-                isCached: false,
+                isUrl: prop.isUrl,
+                isCached: prop.isCached,
                 value: prop.value,
                 dataType: prop.dataType
             };
@@ -2884,9 +2888,21 @@ var NCubeEditor2 = (function ($) {
             val = null;
             val = mpData[key];
             if (typeof val === 'object') {
-                metaProperties.push({key:key, dataType:val.dataType, value:val.value});
+                metaProperties.push({
+                    key: key,
+                    dataType: val.dataType,
+                    isUrl: val.isUrl,
+                    isCached: val.isCached,
+                    value: val.value
+                });
             } else {
-                metaProperties.push({key:key, dataType:'string', value:val});
+                metaProperties.push({
+                    key: key,
+                    dataType: 'string',
+                    isUrl: false,
+                    isCached: false,
+                    value: val
+                });
             }
         }
 
@@ -2904,6 +2920,14 @@ var NCubeEditor2 = (function ($) {
                     type: PropertyBuilder.COLUMN_TYPES.SELECT,
                     default: 'string',
                     selectOptions: METAPROPERTIES.DATA_TYPE_LIST
+                },
+                isUrl: {
+                    heading: 'Url',
+                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX
+                },
+                isCached: {
+                    heading: 'Cached',
+                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX
                 },
                 value: {
                     heading: 'Value',
@@ -3345,7 +3369,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editCellOK() {
-        var cellInfo, result;
+        var cellInfo, result, isUrl;
         var appId = nce.getSelectedTabAppId();
         var modifiable = nce.checkPermissions(appId, cubeName, PERMISSION_ACTION.UPDATE);
         if (!modifiable) {
@@ -3353,11 +3377,12 @@ var NCubeEditor2 = (function ($) {
             return;
         }
 
+        isUrl = _editCellRadioURL.find('input').is(':checked');
         cellInfo = {
             '@type': GROOVY_CLASS.CELL_INFO,
-            isUrl: _editCellRadioURL.find('input').is(':checked'),
+            isUrl: isUrl,
             value: _editCellValue.val(),
-            dataType: this.isUrl ? _urlDropdown.val() : _valueDropdown.val(),
+            dataType: isUrl ? _urlDropdown.val() : _valueDropdown.val(),
             isCached: _editCellCache.find('input').prop('checked')
         };
 
