@@ -35,7 +35,7 @@ class NCubeControllerAdvice
         controller = ncubeController
     }
 
-    @Around("com.cedarsoftware.controller.NCubeController.*(..)")
+    @Around("execution(* com.cedarsoftware.controller.NCubeController.*(..))")
     def advise(ProceedingJoinPoint pjp)
     {
         try
@@ -49,7 +49,7 @@ class NCubeControllerAdvice
         }
         catch (Exception e)
         {
-            // If there were any exceptions, signal command servlet
+            // If there were any exceptions, signal controller (which signals command servlet)
             controller.fail(e)
             return null
         }

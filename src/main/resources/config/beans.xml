@@ -38,16 +38,12 @@
         </tx:attributes>
     </tx:advice>
 
+    <aop:aspectj-autoproxy/>
+
     <aop:config>
 
         <aop:pointcut id="ncubeServiceMethods" expression="execution(* com.cedarsoftware.service.ncube.NCubeService.*(..))"/>
         <aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>
-
-        <aop:aspect ref="controllerAdvice">
-            <aop:around
-                pointcut="execution(* com.cedarsoftware.controller.NCubeController.*(..))"
-                method="advise"/>
-        </aop:aspect>
 
     </aop:config>
 
