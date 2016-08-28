@@ -48,7 +48,6 @@ import net.spy.memcached.MemcachedClient
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.SpringApplication
 
 import javax.management.MBeanServer
 import javax.management.ObjectName
@@ -97,10 +96,10 @@ class NCubeController extends BaseController
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appBranches = new ConcurrentHashMap<>()
 
-    public static void main(String[] args)
-    {
-        SpringApplication.run(NCubeController.class, args)
-    }
+//    public static void main(String[] args)
+//    {
+//        SpringApplication.run(NCubeController.class, args)
+//    }
 
     NCubeController()
     {
