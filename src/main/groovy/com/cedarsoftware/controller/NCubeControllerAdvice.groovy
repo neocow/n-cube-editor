@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
+import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * Before Advice that sets user ID on current thread.
@@ -28,12 +29,10 @@ import org.aspectj.lang.annotation.Aspect
 @Aspect
 class NCubeControllerAdvice
 {
+    @Autowired
     NCubeController controller
 
-    NCubeControllerAdvice(NCubeController ncubeController)
-    {
-        controller = ncubeController
-    }
+    NCubeControllerAdvice() { }
 
     @Around("execution(* com.cedarsoftware.controller.NCubeController.*(..))")
     def advise(ProceedingJoinPoint pjp)

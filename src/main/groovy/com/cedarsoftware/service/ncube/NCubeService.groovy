@@ -17,6 +17,8 @@ import com.cedarsoftware.util.io.JsonWriter
 import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.springframework.stereotype.Service
+
 /**
  * RESTful Ajax/JSON API for editor application
  *
@@ -37,6 +39,7 @@ import org.apache.logging.log4j.Logger
  *         limitations under the License.
  */
 @CompileStatic
+@Service
 class NCubeService
 {
     private static final Logger LOG = LogManager.getLogger(NCubeService.class)

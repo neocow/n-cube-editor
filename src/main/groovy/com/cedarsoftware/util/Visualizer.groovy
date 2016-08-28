@@ -8,6 +8,7 @@ import ncube.grv.method.NCubeGroovyController
  * Provides the information used to visualize rpm cubes associated with a given rpm cube.
  */
 
+// TODO: This code needs to be moved out of NCE and pulled-in via Grapes.
 @CompileStatic
 class Visualizer extends NCubeGroovyController
 {

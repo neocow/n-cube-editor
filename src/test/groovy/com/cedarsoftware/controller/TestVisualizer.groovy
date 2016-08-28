@@ -2,12 +2,10 @@ package com.cedarsoftware.controller
 
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.service.ncube.NCubeService
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Ignore
-import org.junit.Test
 
 @CompileStatic
 class TestVisualizer {
@@ -17,7 +15,7 @@ class TestVisualizer {
     @BeforeClass
     static void setUp()
     {
-        nCubeController = new NCubeController(new NCubeService(), "127.0.0.1:11211")
+        nCubeController = new NCubeController()
         List ncubeNames = [
                 'sys.classpath.json',
                 'sys.prototype.json',

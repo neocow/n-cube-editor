@@ -4,19 +4,17 @@
        xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns:p="http://www.springframework.org/schema/p"
        xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
   	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+  	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
   	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
 
-    <bean name="ncubeController" class="com.cedarsoftware.controller.NCubeController">
-        <constructor-arg>
-            <bean class="com.cedarsoftware.service.ncube.NCubeService" />
-        </constructor-arg>
-        <constructor-arg value="#{systemEnvironment['NCE_MEMCACHED_SERVERS'] ?: systemProperties['NCE_MEMCACHED_SERVERS'] ?: '127.0.0.1:11211'}"/>
-    </bean>
+    <context:annotation-config />
+    <context:component-scan base-package="com.cedarsoftware" />
+    <aop:aspectj-autoproxy/>
 
-    <bean name="controllerAdvice" class="com.cedarsoftware.controller.NCubeControllerAdvice">
-        <constructor-arg ref="ncubeController"/>
+    <bean name="ncubeController" class="com.cedarsoftware.controller.NCubeController">
     </bean>
 
     <bean id="ncubeTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
@@ -37,8 +35,6 @@
             <tx:method name="*" propagation="REQUIRED"/>
         </tx:attributes>
     </tx:advice>
-
-    <aop:aspectj-autoproxy/>
 
     <aop:config>
 

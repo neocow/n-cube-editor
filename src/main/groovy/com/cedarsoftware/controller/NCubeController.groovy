@@ -36,6 +36,7 @@ import com.cedarsoftware.util.Converter
 import com.cedarsoftware.util.InetAddressUtilities
 import com.cedarsoftware.util.PoolInterceptor
 import com.cedarsoftware.util.StringUtilities
+import com.cedarsoftware.util.SystemUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.Visualizer
@@ -46,6 +47,8 @@ import groovy.transform.CompileStatic
 import net.spy.memcached.MemcachedClient
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.SpringApplication
 
 import javax.management.MBeanServer
 import javax.management.ObjectName
@@ -81,6 +84,8 @@ class NCubeController extends BaseController
     private static final Logger LOG = LogManager.getLogger(NCubeController.class)
     private static final Pattern IS_NUMBER_REGEX = ~/^[\d,.e+-]+$/
     private static final Pattern NO_QUOTES_REGEX = ~/"/
+
+    @Autowired
     private NCubeService nCubeService
     private static String servletHostname = null
     private static String inetHostname = null
@@ -92,11 +97,21 @@ class NCubeController extends BaseController
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appBranches = new ConcurrentHashMap<>()
 
-    NCubeController(NCubeService service, String memcachedServers)
+    public static void main(String[] args)
     {
-        nCubeService = service;
+        SpringApplication.run(NCubeController.class, args)
+    }
+
+    NCubeController()
+    {
         System.err = new ThreadAwarePrintStreamErr()
         System.out = new ThreadAwarePrintStream()
+
+        String memcachedServers = SystemUtilities.getExternalVariable('NCE_MEMCACHED_SERVERS')
+        if (StringUtilities.isEmpty(memcachedServers))
+        {
+            memcachedServers = '127.0.0.1:11211'
+        }
 //        memcachedClient = new MemcachedClient(AddrUtil.getAddresses(memcachedServers))
     }
 
