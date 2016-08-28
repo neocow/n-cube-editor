@@ -15,7 +15,7 @@
         <constructor-arg value="#{systemEnvironment['NCE_MEMCACHED_SERVERS'] ?: systemProperties['NCE_MEMCACHED_SERVERS'] ?: '127.0.0.1:11211'}"/>
     </bean>
 
-    <bean name="setUser" class="com.cedarsoftware.controller.BeforeAdviceSetUser">
+    <bean name="controllerAdvice" class="com.cedarsoftware.controller.NCubeControllerAdvice">
         <constructor-arg ref="ncubeController"/>
     </bean>
 
@@ -43,10 +43,10 @@
         <aop:pointcut id="ncubeServiceMethods" expression="execution(* com.cedarsoftware.service.ncube.NCubeService.*(..))"/>
         <aop:advisor advice-ref="ncubeTxAdvice" pointcut-ref="ncubeServiceMethods"/>
 
-        <aop:aspect ref="setUser">
-            <aop:before
+        <aop:aspect ref="controllerAdvice">
+            <aop:around
                 pointcut="execution(* com.cedarsoftware.controller.NCubeController.*(..))"
-                method="setUserOnThread"/>
+                method="advise"/>
         </aop:aspect>
 
     </aop:config>

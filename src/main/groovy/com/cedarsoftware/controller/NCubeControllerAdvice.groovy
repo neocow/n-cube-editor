@@ -1,6 +1,9 @@
 package com.cedarsoftware.controller
 
 import groovy.transform.CompileStatic
+import org.aspectj.lang.ProceedingJoinPoint
+import org.aspectj.lang.annotation.Around
+import org.aspectj.lang.annotation.Aspect
 
 /**
  * Before Advice that sets user ID on current thread.
@@ -22,17 +25,33 @@ import groovy.transform.CompileStatic
  *         limitations under the License.
  */
 @CompileStatic
-class BeforeAdviceSetUser
+@Aspect
+class NCubeControllerAdvice
 {
     NCubeController controller
 
-    BeforeAdviceSetUser(NCubeController ncubeController)
+    NCubeControllerAdvice(NCubeController ncubeController)
     {
         controller = ncubeController
     }
 
-    void setUserOnThread()
+    @Around("com.cedarsoftware.controller.NCubeController.*(..)")
+    def advise(ProceedingJoinPoint pjp)
     {
-        controller.getUserForDatabase()
+        try
+        {
+            // Place user on ThreadLocal
+            controller.getUserForDatabase()
+
+            // Execute method
+            def ret = pjp.proceed()
+            return ret
+        }
+        catch (Exception e)
+        {
+            // If there were any exceptions, signal command servlet
+            controller.fail(e)
+            return null
+        }
     }
 }
