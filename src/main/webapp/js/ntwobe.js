@@ -2083,7 +2083,7 @@ var NCubeEditor2 = (function ($) {
                     if (columnDefault.type === 'date') {
                         td.innerHTML = getStringFromDate(columnDefault.value);
                     } else {
-                        columnDefault = buildExpressionLink('' + columnDefault, NONE);
+                        columnDefault = buildExpressionLink('' + columnDefault.value, NONE);
                         td.innerHTML = columnDefault;
                         activateLinks(td);
                     }
@@ -2121,7 +2121,7 @@ var NCubeEditor2 = (function ($) {
             tempColumnDefault = getColumnDefault(column);
             if (columnDefault === null) {
                 columnDefault = tempColumnDefault;
-            } else if (tempColumnDefault !== null && columnDefault !== tempColumnDefault) {
+            } else if (columnDefault && tempColumnDefault && (columnDefault.value !== tempColumnDefault.value || columnDefault.type !== tempColumnDefault.type)) {
                 return null;
             }
         }
@@ -2129,7 +2129,12 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getColumnDefault(column) {
-        return column.hasOwnProperty(METAPROPERTIES.DEFAULT_VALUE) ? column[METAPROPERTIES.DEFAULT_VALUE] : null;
+        var val;
+        if (column.hasOwnProperty(METAPROPERTIES.DEFAULT_VALUE)) {
+            val = column[METAPROPERTIES.DEFAULT_VALUE];
+            return typeof val === 'object' ? val : {type:'string', value:val};
+        }
+        return null;
     }
 
     function addToSearchCoords (row, col) {
@@ -3297,8 +3302,8 @@ var NCubeEditor2 = (function ($) {
             selectedCell = getSelectedCellRange();
             columnDefault = getCalculatedColumnDefault(selectedCell.startRow, selectedCell.startCol);
             if (columnDefault !== null) {
-                value = columnDefault;
-                dataType = 'string';
+                value = columnDefault.value;
+                dataType = columnDefault.type;
             } else {
                 isUrl = data.defaultCellValueUrl !== undefined;
                 value = isUrl ? data.defaultCellValueUrl : data.defaultCellValue;
