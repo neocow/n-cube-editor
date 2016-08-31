@@ -8,6 +8,40 @@
     <description>n-cube Web Editor / Manager</description>
     <url>https://github.com/jdereg/n-cube-editor</url>
 
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${version.plugin.gpg}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <keyname>${gpg.keyname}</keyname>
+                                    <passphrase>${gpg.passphrase}</passphrase>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -40,9 +74,9 @@
 
     <properties>
         <version.java-util>1.24.0</version.java-util>
-        <version.json-io>4.6.0</version.json-io>
+        <version.json-io>4.7.0</version.json-io>
         <version.ncube>3.4.88</version.ncube>
-        <version.json-command-servlet>1.3.2</version.json-command-servlet>
+        <version.json-command-servlet>1.3.3</version.json-command-servlet>
         <version.log4j>2.5</version.log4j>
         <version.groovy>2.4.7</version.groovy>
         <version.junit>4.12</version.junit>
@@ -53,6 +87,7 @@
         <version.mysql>5.1.38</version.mysql>
         <version.tuckey>4.0.4</version.tuckey>
         <version.spymemcached>2.12.1</version.spymemcached>
+        <version.plugin.assembly>2.6</version.plugin.assembly>
         <version.plugin.gcloud>2.0.9.111.v20160527</version.plugin.gcloud>
         <version.plugin.appengine>1.9.38</version.plugin.appengine>
         <version.plugin.jetty>9.3.10.v20160621</version.plugin.jetty>
@@ -63,10 +98,11 @@
         <version.plugin.javadoc>2.10.3</version.plugin.javadoc>
         <version.plugin.gpg>1.6</version.plugin.gpg>
         <version.plugin.release>2.5.3</version.plugin.release>
-        <version.plugin.war>2.6</version.plugin.war>
+        <version.plugin.war>3.0.0</version.plugin.war>
         <version.plugin.groovy.eclipse.compiler>2.9.2-01</version.plugin.groovy.eclipse.compiler>
         <version.plugin.groovy.eclipse.batch>2.4.3-01</version.plugin.groovy.eclipse.batch>
         <version.plugin.gmavenplus>1.5</version.plugin.gmavenplus>
+        <version.plugin.surefire>2.19.1</version.plugin.surefire>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -127,27 +163,41 @@
             </plugin>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${version.plugin.compiler}</version>
-                <configuration>
-                    <source>${version.java}</source>
-                    <target>${version.java}</target>
-                    <compilerId>groovy-eclipse-compiler</compilerId>
-                    <!-- <verbose>true</verbose> -->
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-eclipse-compiler</artifactId>
-                        <version>${version.plugin.groovy.eclipse.compiler}</version>
-                    </dependency>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
 
-                    <dependency>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-eclipse-batch</artifactId>
-                        <version>${version.plugin.groovy.eclipse.batch}</version>
-                    </dependency>
-                </dependencies>
+            <plugin>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>${version.plugin.gmavenplus}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>addSources</goal>
+                            <goal>addTestSources</goal>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>groovydoc</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>groovydoc</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -165,37 +215,32 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${version.plugin.javadoc}</version>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${version.plugin.assembly}</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/groovydoc.xml</descriptor>
+                    </descriptors>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>attach-javadocs</id>
+                        <id>javadoc</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
 
-            <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-gpg-plugin</artifactId>-->
-            <!--<version>${version.plugin.gpg}</version>-->
-            <!--<executions>-->
-            <!--<execution>-->
-            <!--<id>sign-artifacts</id>-->
-            <!--<phase>verify</phase>-->
-            <!--<goals>-->
-            <!--<goal>sign</goal>-->
-            <!--</goals>-->
-            <!--<configuration>-->
-            <!--<keyname>${gpg.keyname}</keyname>-->
-            <!--<passphrase>${gpg.passphrase}</passphrase>-->
-            <!--</configuration>-->
-            <!--</execution>-->
-            <!--</executions>-->
-            <!--</plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${version.plugin.surefire}</version>
+                <configuration>
+                    <forkCount>2</forkCount>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
@@ -212,7 +257,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.6</version>
+                <version>${version.plugin.war}</version>
                 <configuration>
                     <packagingExcludes>**/*CprLocal.properties</packagingExcludes>
                     <archiveClasses>false</archiveClasses>

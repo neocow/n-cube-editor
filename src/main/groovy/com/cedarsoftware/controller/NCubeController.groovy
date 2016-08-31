@@ -1798,7 +1798,7 @@ class NCubeController extends BaseController
 
         while (true)
         {
-            stackTraces.push([msg: t.getLocalizedMessage(), trace: t.getStackTrace()])
+            stackTraces.push([msg: t.getLocalizedMessage(), trace: t.getStackTrace()] as Map)
             t = t.getCause()
             if (t == null)
             {
