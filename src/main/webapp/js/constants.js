@@ -186,10 +186,12 @@ var CONTROLLER_METHOD = {
     GET_JSON: 'getJson',
     GET_MENU: 'getMenu',
     GET_REFERENCE_AXES: 'getReferenceAxes',
+    GET_REVISION_HISTORY: 'getRevisionHistory',
     GET_VERSIONS: 'getVersions',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     IS_CUBE_CURRENT: 'isCubeUpToDate',
+    LOAD_CUBE_BY_ID: 'loadCubeById',
     LOCK_APP: 'lockApp',
     MOVE_BRANCH: 'moveBranch',
     PASTE_CELLS: 'pasteCells',
@@ -210,8 +212,10 @@ var CONTROLLER_METHOD = {
 };
 
 var JSON_MODE = {
+    HTML: 'html',
     INDEX: 'json-index',
-    INDEX_NOCELLS: 'json-index-nocells'
+    INDEX_NOCELLS: 'json-index-nocells',
+    PRETTY: 'json-pretty'
 };
 
 var DEFAULT_SCOPE = [

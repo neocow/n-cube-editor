@@ -54,9 +54,9 @@ class NCubeService
         NCubeManager.restoreCubes(appId, cubeNames)
     }
 
-    List<NCubeInfoDto> getRevisionHistory(ApplicationID appId, String cubeName)
+    List<NCubeInfoDto> getRevisionHistory(ApplicationID appId, String cubeName, boolean ignoreVersion)
     {
-        return NCubeManager.getRevisionHistory(appId, cubeName)
+        return NCubeManager.getRevisionHistory(appId, cubeName, ignoreVersion)
     }
 
     List<String> getAppNames(String tenant)

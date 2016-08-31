@@ -631,7 +631,7 @@ var NCE = (function ($)
 
         html += '<div class="divider"/>';
         html += '<li class="dropdown-submenu li-compare-cube"><a href="#" tabindex="-1">Compare</a></li>';
-        html += '<li><a href="#" class="anc-revision-history">Revision History...</a></li>';
+        html += '<li><a href="#" class="anc-revision-history" data-ignoreversion="' + (cubeInfo[CUBE_INFO.BRANCH] === head) + '">Revision History...</a></li>';
         html += '<li><a href="#" class="anc-show-outbound-references">Show Outbound References</a></li>';
         html += '<li><a href="#" class="anc-show-required-scope">Show Required Scope</a></li>';
         html += '<div class="divider"/>';
@@ -661,7 +661,7 @@ var NCE = (function ($)
             onViewTypeClick(e, $(this), cubeInfo);
         });
         li.find('a.anc-revision-history').on('click', function() {
-            revisionHistory();
+            revisionHistory($(this).data('ignoreversion'));
         });
         li.find('a.anc-show-outbound-references').on('click', function() {
             showRefsFromCube();
@@ -2451,101 +2451,86 @@ var NCE = (function ($)
         }
     }
 
-    function revisionHistory()
-    {
+    function revisionHistory(ignoreVersion) {
+        var appId, ul, result, dtos, dto, i, len, html, text, date, prevVer, curVer;
         clearError();
-        var appId = getSelectedTabAppId();
-        var ul = $('#revisionHistoryList');
+        appId = getSelectedTabAppId();
+        ul = $('#revisionHistoryList');
         ul.empty();
         $('#revisionHistoryLabel')[0].textContent = 'Revision History for ' + _selectedCubeName;
         $('#revisionHistoryModal').modal();
 
-        var result = call("ncubeController.getRevisionHistory", [appId, _selectedCubeName]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_REVISION_HISTORY, [appId, _selectedCubeName, ignoreVersion]);
+        if (result.status) {
+            html = '';
+            dtos = result.data;
 
-        if (result.status === true)
-        {
-            $.each(result.data, function (index, infoDto)
-            {
-                var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
-                var div = $('<div/>').prop({class: 'container-fluid'});
-                var anchorHtml = $('<a href="#" style="margin:0 10px 0 0"/>');
-                var anchorJson = $('<a href="#" style="margin:0 10px 0 0"/>');
+            for (i = 0, len = dtos.length; i < len; i++) {
+                dto = null;
+                dto = dtos[i];
 
-                ul.append(li);
-                li.append(anchorHtml);
-                li.append(anchorJson);
-                li.append(div);
-
-                var labelB = $('<label/>').prop({class: 'col-xs-1'});
-                div.append(labelB);
-                labelB.css('padding', 0);
-                labelB.css('margin', 0);
-                labelB.css('margin-right', '10px');
-                labelB.css('width', '12%');
-                labelB.append(anchorHtml);
-                labelB.append(anchorJson);
-
-                var kbd1 = $('<kbd/>');
-                kbd1[0].textContent = 'HTML';
-                anchorHtml.append(kbd1);
-
-                var kbd2 = $('<kbd/>');
-                kbd2[0].textContent = 'JSON';
-                anchorJson.append(kbd2);
-                
-                var checkbox = $('<input>').prop({class:'commitCheck', type:'checkbox'});
-                checkbox.attr('data-cube-id', infoDto.id);
-                checkbox.attr('data-rev-id', infoDto.revision);
-                var label = $('<label/>').prop({class: 'checkbox no-margins col-xs-10'});
-                div.append(label);
-                var text = 'rev: ' + infoDto.revision + '&nbsp;&nbsp;&nbsp;';
-                if (infoDto.notes && infoDto.notes != "")
-                {
-                    text += infoDto.notes;
+                if (ignoreVersion) {
+                    curVer = dto.version + '-' + dto.status;
+                    if (curVer !== prevVer) {
+                        prevVer = curVer;
+                        html += '<li class="list-group-item skinny-lr"><strong>' + prevVer + '</strong></li>';
+                    }
                 }
-                else
-                {
-                    var date = '';
-                    if (infoDto.createDate != undefined)
-                    {
-                        date = new Date(infoDto.createDate).format('yyyy-mm-dd HH:MM:ss');
+                text = 'rev: ' + dto.revision + '&nbsp;&nbsp;&nbsp;';
+                if (dto.hasOwnProperty('notes') && dto.notes !== '') {
+                    text += dto.notes;
+                } else {
+                    date = '';
+                    if (dto.hasOwnProperty('createDate')) {
+                        date = new Date(dto.createDate).format('yyyy-mm-dd HH:MM:ss');
                     }
-                    text += date + '&nbsp;&nbsp;&nbsp;' + infoDto.createHid;
+                    text += date + '&nbsp;&nbsp;&nbsp;' + dto.createHid;
                 }
-                label[0].innerHTML = text;
-                checkbox.prependTo(label);
 
-                anchorHtml.click(function ()
-                {
-                    var title = infoDto.name + '.rev.' + infoDto.revision;
-                    var oldHtml = window.open('', title + '.html');
-                    var htmlReq = call("ncubeController.loadCubeById", [appId, infoDto.id, "html"], {noResolveRefs:true});
-                    if (htmlReq.status === true)
-                    {
-                        oldHtml.document.removeChild(oldHtml.document.documentElement);
-                        oldHtml.document.write(htmlReq.data);
-                        oldHtml.document.title = title + '.html';
-                    }
-                });
-                anchorJson.click(function ()
-                {
-                    var title = infoDto.name + '.rev.' + infoDto.revision;
-                    var oldJson = window.open('', title + '.json');
-                    var prettyJsonReq = call("ncubeController.loadCubeById", [appId, infoDto.id, "json-pretty"], {noResolveRefs:true});
-                    if (prettyJsonReq.status === true)
-                    {
-                        oldJson.document.removeChild(oldJson.document.documentElement);
-                        oldJson.document.write('<html><pre>');
-                        oldJson.document.write(prettyJsonReq.data);
-                        oldJson.document.write('</pre></html>');
-                        oldJson.document.title = title + '.json';
-                    }
-                });
+                html += '<li class="list-group-item skinny-lr">';
+                html += '<div class="container-fluid">';
+                html += '<label class="col-xs-1" style="padding:0; width:12%; margin:0 10px 0 0;">'
+                html += '<a href="#" class="anc-html" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>HTML</kbd></a>';
+                html += '<a href="#" class="anc-json" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>JSON</kbd></a>';
+                html += '</label>';
+
+                html += '<label class="checkbox no-margins col-xs-10">';
+                html += '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" />';
+                html += text + '</label>';
+
+                html += '</div></li>';
+            }
+
+            ul.append(html);
+            ul.find('a.anc-html').click(function () {
+                onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), false);
             });
-        }
-        else
-        {
+            ul.find('a.anc-json').click(function () {
+                onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
+            });
+
+        } else {
             showNote('Error fetching revision history (' + appId.version + ', ' + appId.status + '):<hr class="hr-small"/>' + result.data);
+        }
+    }
+
+    function onRevisionViewClick(id, name, rev, isJson) {
+        var title, oldWindow, result, suffix, format;
+        suffix = isJson ? '.json' : '.html';
+        format = isJson ? JSON_MODE.PRETTY : JSON_MODE.HTML;
+        title = name + '.rev.' + rev;
+        oldWindow = window.open('', title + suffix);
+        result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), id, format], {noResolveRefs:true});
+        if (result.status) {
+            oldWindow.document.removeChild(oldWindow.document.documentElement);
+            if (isJson) {
+                oldWindow.document.write('<html><pre>');
+            }
+            oldWindow.document.write(result.data);
+            if (isJson) {
+                oldWindow.document.write('</pre></html>');
+            }
+            oldWindow.document.title = title + suffix;
         }
     }
 
