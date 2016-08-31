@@ -227,10 +227,10 @@ class NCubeController extends BaseController
         nCubeService.restoreCubes(appId, cubeNames)
     }
 
-    Object[] getRevisionHistory(ApplicationID appId, String cubeName)
+    Object[] getRevisionHistory(ApplicationID appId, String cubeName, boolean ignoreVersion = false)
     {
         appId = addTenant(appId)
-        List<NCubeInfoDto> cubeInfos = nCubeService.getRevisionHistory(appId, cubeName)
+        List<NCubeInfoDto> cubeInfos = nCubeService.getRevisionHistory(appId, cubeName, ignoreVersion)
         return cubeInfos.toArray()
     }
 

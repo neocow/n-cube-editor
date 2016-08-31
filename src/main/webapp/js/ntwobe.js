@@ -2132,7 +2132,13 @@ var NCubeEditor2 = (function ($) {
         var val;
         if (column.hasOwnProperty(METAPROPERTIES.DEFAULT_VALUE)) {
             val = column[METAPROPERTIES.DEFAULT_VALUE];
-            return typeof val === 'object' ? val : {type:'string', value:val};
+            if (typeof val === 'object') {
+                return val;
+            } else if (typeof val === 'boolean') {
+                return {type:'boolean', value:val}
+            } else {
+                return {type:'string', value:val};
+            }
         }
         return null;
     }
