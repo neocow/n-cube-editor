@@ -98,7 +98,7 @@
         <version.plugin.javadoc>2.10.3</version.plugin.javadoc>
         <version.plugin.gpg>1.6</version.plugin.gpg>
         <version.plugin.release>2.5.3</version.plugin.release>
-        <version.plugin.war>3.0.0</version.plugin.war>
+        <version.plugin.war>2.6</version.plugin.war>
         <version.plugin.groovy.eclipse.compiler>2.9.2-01</version.plugin.groovy.eclipse.compiler>
         <version.plugin.groovy.eclipse.batch>2.4.3-01</version.plugin.groovy.eclipse.batch>
         <version.plugin.gmavenplus>1.5</version.plugin.gmavenplus>
@@ -262,8 +262,8 @@
                     <packagingExcludes>**/*CprLocal.properties</packagingExcludes>
                     <archiveClasses>false</archiveClasses>
                     <attachClasses>false</attachClasses>
-                    <warName>n-cube-editor</warName>
                     <webXml>src\main\webapp\WEB-INF\web.xml</webXml>
+                    <warName>n-cube-editor</warName>
                 </configuration>
             </plugin>
 
