@@ -2616,7 +2616,7 @@ var NCE = (function ($)
                 html += '</label>';
 
                 html += '<label class="checkbox no-margins col-xs-10">';
-                html += '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-version="' + curVer + '" />';
+                html += '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + (ignoreVersion ? ('" data-version="' + curVer) : '') + '" />';
                 html += text + '</label>';
 
                 html += '</div></li>';
@@ -2680,7 +2680,7 @@ var NCE = (function ($)
             return;
         }
         
-        if (versions.length) {
+        if (versions[0]) {
             loIdx = versions[0] < versions[1] ? 0 : 1;
             hiIdx = versions[0] < versions[1] ? 1 : 0;
             title = [versions[loIdx], revIds[loIdx]].join('-') + ' vs ' + [versions[hiIdx], revIds[hiIdx]].join('-');
