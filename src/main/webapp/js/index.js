@@ -807,10 +807,10 @@ var NCE = (function ($)
         _globalComparatorRightBranch.empty();
         _globalComparatorLeftCube.empty();
         _globalComparatorRightCube.empty();
-        _globalComparatorLeftApp.prop('disabled', cubeInfo);
-        _globalComparatorLeftVersion.prop('disabled', cubeInfo);
-        _globalComparatorLeftBranch.prop('disabled', cubeInfo);
-        _globalComparatorLeftCube.prop('disabled', cubeInfo);
+        _globalComparatorLeftApp.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorLeftVersion.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorLeftBranch.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorLeftCube.prop('disabled', cubeInfo !== undefined);
         
         if (cubeInfo) {
             _globalComparatorLeftApp.append('<option>' + cubeInfo[CUBE_INFO.APP] + '</option>');
