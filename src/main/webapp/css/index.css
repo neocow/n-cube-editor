@@ -584,6 +584,22 @@ span.selected-count {
     min-width: 100px;
 }
 
+#globalComparatorTable {
+    margin: 0 auto;
+}
+
+#globalComparatorTable td {
+    padding: 0 25px 20px 0;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#globalComparatorTable select {
+    max-width: 225px;
+    min-width: 225px;
+}
+
 .modal-xl {
     width: 94%;
 }
