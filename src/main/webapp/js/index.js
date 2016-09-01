@@ -136,6 +136,16 @@ var NCE = (function ($)
     var _dupeCubeName = $('#dupeCubeName');
     var _dupeCubeBranch = $('#dupeCubeBranch');
     var _dupeCubeLabel = $('#dupeCubeLabel');
+    var _globalComparatorLeftApp = $('#globalComparatorLeftApp');
+    var _globalComparatorRightApp = $('#globalComparatorRightApp');
+    var _globalComparatorLeftVersion = $('#globalComparatorLeftVersion');
+    var _globalComparatorRightVersion = $('#globalComparatorRightVersion');
+    var _globalComparatorLeftBranch = $('#globalComparatorLeftBranch');
+    var _globalComparatorRightBranch = $('#globalComparatorRightBranch');
+    var _globalComparatorLeftCube = $('#globalComparatorLeftCube');
+    var _globalComparatorRightCube = $('#globalComparatorRightCube');
+    var _globalComparatorCompare = $('#globalComparatorCompare');
+    var _globalComparatorMenu = $('#globalComparatorMenu');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -147,6 +157,7 @@ var NCE = (function ($)
     var _copyBranchModal = $('#copyBranchModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
     var _dupeCubeModal = $('#dupeCubeModal');
+    var _globalComparatorModal = $('#globalComparatorModal');
 
     initialize();
 
@@ -648,6 +659,7 @@ var NCE = (function ($)
         }
 
         html += '<li><a href="#" class="anc-go-to-context">Go to Context</a></li>';
+        html += '<li><a href="#" class="anc-global-comparator">Global Comparator...</a></li>';
         html += '<div class="divider"/>';
         html += '<li><a href="#" class="anc-close-cube">Close</a></li>';
         html += '<li><a href="#" class="anc-close-all">Close All</a></li>';
@@ -755,6 +767,9 @@ var NCE = (function ($)
             clearSearch();
             buildMenu();
         });
+        li.find('a.anc-global-comparator').on('click', function() {
+            openGlobalComparator(cubeInfo);
+        });
 
         // add branch subdropdown where needed
         li.find('li.li-compare-cube').append(
@@ -781,6 +796,36 @@ var NCE = (function ($)
                 callUpdate(branchName);
             })
         );
+    }
+
+    function openGlobalComparator(cubeInfo) {
+        _globalComparatorLeftApp.empty();
+        _globalComparatorRightApp.empty();
+        _globalComparatorLeftVersion.empty();
+        _globalComparatorRightVersion.empty();
+        _globalComparatorLeftBranch.empty();
+        _globalComparatorRightBranch.empty();
+        _globalComparatorLeftCube.empty();
+        _globalComparatorRightCube.empty();
+        _globalComparatorLeftApp.prop('disabled', cubeInfo);
+        _globalComparatorLeftVersion.prop('disabled', cubeInfo);
+        _globalComparatorLeftBranch.prop('disabled', cubeInfo);
+        _globalComparatorLeftCube.prop('disabled', cubeInfo);
+        
+        if (cubeInfo) {
+            _globalComparatorLeftApp.append('<option>' + cubeInfo[CUBE_INFO.APP] + '</option>');
+            _globalComparatorLeftVersion.append('<option>' + cubeInfo[CUBE_INFO.VERSION] + '-' + cubeInfo[CUBE_INFO.STATUS] + '</option>');
+            _globalComparatorLeftBranch.append('<option>' + cubeInfo[CUBE_INFO.BRANCH] + '</option>');
+            _globalComparatorLeftCube.append('<option>' + cubeInfo[CUBE_INFO.NAME] + '</option>');
+        } else {
+            _globalComparatorLeftVersion.append('<option>' + _selectedVersion + '-' + _selectedStatus + '</option>');
+            _globalComparatorLeftBranch.append('<option>' + _selectedBranch + '</option>');
+            _globalComparatorLeftCube.append('<option>' + _selectedCubeName + '</option>');
+            populateSelect(buildAppState(), _globalComparatorLeftApp, CONTROLLER_METHOD.GET_APP_NAMES, [], _selectedApp);
+        }
+        populateSelect(buildAppState(), _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, []);
+        
+        _globalComparatorModal.modal();
     }
 
     function addMenuConfirmationButtons(li, anc, actionFunc) {
@@ -1545,6 +1590,82 @@ var NCE = (function ($)
             e.stopPropagation();
             clearVisitedBranchesList(_selectedApp);
             buildBranchQuickSelectMenu(_selectedApp);
+        });
+
+        _globalComparatorMenu.on('click', function() {
+            openGlobalComparator();
+        });
+        _globalComparatorCompare.on('click', function() {
+            var leftDto, rightDto, leftResult, rightResult, title, leftVerSplit, rightVerSplit;
+            var leftApp = _globalComparatorLeftApp.val();
+            var rightApp = _globalComparatorRightApp.val();
+            var leftVersion = _globalComparatorLeftVersion.val();
+            var rightVersion = _globalComparatorRightVersion.val();
+            var leftBranch = _globalComparatorLeftBranch.val();
+            var rightBranch = _globalComparatorRightBranch.val();
+            var leftCube = _globalComparatorLeftCube.val();
+            var rightCube = _globalComparatorRightCube.val();
+            
+            if (leftApp && leftVersion && leftBranch && leftCube) {
+                leftVerSplit = leftVersion.split('-');
+                leftResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(leftApp, leftVerSplit[0], leftVerSplit[1], leftBranch), leftCube, null, true]);
+                if (leftResult.status && leftResult.data.length) {
+                    leftDto = leftResult.data[0];
+                } else {
+                    showNote('Unable to load cube ' + leftCube, 'Global Comparator Error', 2000);
+                }
+            } else {
+                showNote('Left compare info not set!', 'Global Comparator Error', 2000);
+                return;
+            }
+
+            if (rightApp && rightVersion && rightBranch && rightCube) {
+                rightVerSplit = rightVersion.split('-');
+                rightResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(rightApp, rightVerSplit[0], rightVerSplit[1], rightBranch), rightCube, null, true]);
+                if (rightResult.status && rightResult.data.length) {
+                    rightDto = rightResult.data[0];
+                } else {
+                    showNote('Unable to load cube ' + rightCube, 'Global Comparator Error', 2000);
+                }
+            } else {
+                showNote('right compare info not set!', 'Global Comparator Error', 2000);
+                return;
+            }
+            
+            if (leftDto && rightDto) {
+                title = [leftApp, leftVersion, leftBranch, leftDto.name].join('-') + ' vs ' + [rightApp, rightVersion, rightBranch, rightDto.name].join('-');
+                diffCubes(leftDto, rightDto, title);
+            } else {
+                showNote('Unable to load cubes for compare!', 'Global Comparator Error', 2000);
+            }
+        });
+        _globalComparatorLeftApp.on('change', function() {
+            _globalComparatorLeftBranch.empty();
+            _globalComparatorLeftCube.empty();
+            populateSelect(buildAppState(), _globalComparatorLeftVersion, CONTROLLER_METHOD.GET_VERSIONS, [$(this).val()], null, true);
+        });
+        _globalComparatorRightApp.on('change', function() {
+            _globalComparatorRightBranch.empty();
+            _globalComparatorRightCube.empty();
+            populateSelect(buildAppState(), _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, [$(this).val()], null, true);
+        });
+        _globalComparatorLeftVersion.on('change', function() {
+            var val = $(this).val().split('-');
+            _globalComparatorLeftCube.empty();
+            populateSelect(buildAppState(), _globalComparatorLeftBranch, CONTROLLER_METHOD.GET_BRANCHES, [appIdFrom(_globalComparatorLeftApp.val(), val[0], val[1], head)], null, true);
+        });
+        _globalComparatorRightVersion.on('change', function() {
+            var val = $(this).val().split('-');
+            _globalComparatorRightCube.empty();
+            populateSelect(buildAppState(), _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], head)], null, true);
+        });
+        _globalComparatorLeftBranch.on('change', function() {
+            var val = _globalComparatorLeftVersion.val().split('-');
+            populateSelect(buildAppState(), _globalComparatorLeftCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorLeftApp.val(), val[0], val[1], $(this).val()), '*', null, true], null, true);
+        });
+        _globalComparatorRightBranch.on('change', function() {
+            var val = _globalComparatorRightVersion.val().split('-');
+            populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], $(this).val()), '*', null, true], null, true);
         });
 
         addBranchListeners();
