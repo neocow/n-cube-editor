@@ -2610,26 +2610,25 @@ var NCE = (function ($)
 
                 html += '<li class="list-group-item skinny-lr">';
                 html += '<div class="container-fluid">';
-                html += '<label class="col-xs-1" style="padding:0; width:12%; margin:0 10px 0 0;">'
+                html += '<label class="col-xs-1" style="padding:0; width:12%; margin:0 10px 0 0;">';
                 html += '<a href="#" class="anc-html" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>HTML</kbd></a>';
                 html += '<a href="#" class="anc-json" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>JSON</kbd></a>';
                 html += '</label>';
 
                 html += '<label class="checkbox no-margins col-xs-10">';
-                html += '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" />';
+                html += '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-version="' + curVer + '" />';
                 html += text + '</label>';
 
                 html += '</div></li>';
             }
 
             ul.append(html);
-            ul.find('a.anc-html').click(function () {
+            ul.find('a.anc-html').on('click', function () {
                 onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), false);
             });
-            ul.find('a.anc-json').click(function () {
+            ul.find('a.anc-json').on('click', function () {
                 onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
             });
-
         } else {
             showNote('Error fetching revision history (' + appId.version + ', ' + appId.status + '):<hr class="hr-small"/>' + result.data);
         }
@@ -2656,40 +2655,42 @@ var NCE = (function ($)
     }
 
     function getSelectedRevisions() {
-        var cubeIds = [];
-        var revIds = [];
-        $.each($('#revisionHistoryList').find('.commitCheck:checked'), function()
-        {
-            cubeIds.push($(this).attr('data-cube-id'));
-            revIds.push($(this).attr('data-rev-id'))
-        });
-
-        return {cubeIds:cubeIds, revIds:revIds};
+        var obj, checkboxes, i, len, checkbox;
+        obj = {cubeIds: [], revIds: [], versions: []};
+        checkboxes = $('#revisionHistoryList').find('.commitCheck:checked');
+        for (i = 0, len = checkboxes.length; i < len; i++) {
+            checkbox = null;
+            checkbox = $(checkboxes[i]);
+            obj.cubeIds.push(checkbox.data('cube-id'));
+            obj.revIds.push(checkbox.data('rev-id'));
+            obj.versions.push(checkbox.data('version'));
+        }
+        return obj;
     }
 
-    function compareRevisions()
-    {
+    function compareRevisions() {
+        var loIdx, hiIdx, title;
         var revs = getSelectedRevisions();
         var revIds = revs.revIds;
         var cubeIds = revs.cubeIds;
+        var versions = revs.versions;
 
-        if (revIds.length != 2)
-        {
+        if (revIds.length !== 2) {
             showNote('Must select exactly 2 for comparison', 'Note', 2500);
             return;
         }
-
-        if (revIds[0] < revIds[1])
-        {
-            var loIdx = 0;
-            var hiIdx = 1;
+        
+        if (versions.length) {
+            loIdx = versions[0] < versions[1] ? 0 : 1;
+            hiIdx = versions[0] < versions[1] ? 1 : 0;
+            title = [versions[loIdx], revIds[loIdx]].join('-') + ' vs ' + [versions[hiIdx], revIds[hiIdx]].join('-');
+        } else {
+            loIdx = revIds[0] < revIds[1] ? 0 : 1;
+            hiIdx = revIds[0] < revIds[1] ? 1 : 0;
+            title = revIds[loIdx] + ' vs ' + revIds[hiIdx];
         }
-        else
-        {
-            var loIdx = 1;
-            var hiIdx = 0;
-        }
-        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], revIds[loIdx] + ' vs. ' + revIds[hiIdx]);
+        
+        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], title);
     }
 
     function promoteRevision() {
