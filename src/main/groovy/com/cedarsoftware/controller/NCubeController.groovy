@@ -351,11 +351,15 @@ class NCubeController extends BaseController
         {
             if (item.value instanceof CellInfo)
             {
-                map[item.key] = (CellInfo) item.value
+                CellInfo cellInfo = (CellInfo) item.value
+                cellInfo.collapseToUiSupportedTypes()       // byte/short/int => long, float => double
+                map[item.key] = cellInfo
             }
             else
             {
-                map[item.key] = new CellInfo(item.value)
+                CellInfo cellInfo = new CellInfo(item.value)
+                cellInfo.collapseToUiSupportedTypes()       // byte/short/int => long, float => double
+                map[item.key] = cellInfo
             }
         }
         return map
@@ -1526,7 +1530,7 @@ class NCubeController extends BaseController
         return fetchJsonDiffs(leftCube, rightCube)
     }
 
-    private Map<String, String> fetchHtmlDiffs(NCube leftCube, NCube rightCube)
+    private static Map<String, String> fetchHtmlDiffs(NCube leftCube, NCube rightCube)
     {
         Map<String, String> ret = [leftHtml: '', rightHtml: '']
         try
