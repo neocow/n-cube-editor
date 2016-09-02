@@ -2023,7 +2023,6 @@ var NCE = (function ($) {
         status = arr[1];
         saveSelectedVersion(version);
         saveSelectedStatus(status);
-        addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
         _versionMenu.find('button')[0].innerHTML = value + '&nbsp;<b class="caret"></b>';
 
         setCubeListLoading();
@@ -2034,6 +2033,7 @@ var NCE = (function ($) {
             loadNCubes();
             runSearch();
             buildMenu();
+            addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
             buildBranchQuickSelectMenu();
         }, PROGRESS_DELAY);
     }
