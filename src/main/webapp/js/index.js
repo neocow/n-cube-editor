@@ -387,10 +387,8 @@ var NCE = (function ($) {
         buildTabs();
     }
 
-    function startWorkers()
-    {
-        if (typeof(Worker) !== 'undefined')
-        {
+    function startWorkers() {
+        if (typeof(Worker) !== 'undefined') {
             /**
              * Background worker thread that will send search filter text asynchronously to server,
              * fetch the results, and ship to main thread (which will be updated to the filtered list).
@@ -415,9 +413,7 @@ var NCE = (function ($) {
                     updateTabStatus(_selectedCubeInfo);
                 }
             };
-        }
-        else
-        {
+        } else {
             alert('Sorry! No Web Worker support. Try using the Chrome browser.');
         }
     }
@@ -446,12 +442,10 @@ var NCE = (function ($) {
             return;
         }
         cube = _openCubes[getOpenCubeIndex(cubeInfo)];
-        if (cube)
-        {
+        if (cube) {
             cube['status'] = result.data ? null : CLASS_OUT_OF_SYNC;
             saveOpenCubeList();
-            if (!result.data)
-            {
+            if (!result.data) {
                 showOutOfSyncNoticeForCube(cubeInfo);
             }
         }
