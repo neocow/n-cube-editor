@@ -1497,16 +1497,11 @@ class NCubeController extends BaseController
         return true
     }
 
-    private Map<String, Object> fetchJsonDiffs(NCube leftCube, NCube rightCube)
+    private static Map<String, Object> fetchJsonDiffs(NCube leftCube, NCube rightCube)
     {
         Map<String, Object> ret = [left:[''], right:[''], delta:'']
-        try
-        {
-            ret.left = jsonToLines(leftCube.toFormattedJson())
-            ret.right = jsonToLines(rightCube.toFormattedJson())
-        }
-        catch (Exception ignored) { }
-
+        ret.left = jsonToLines(leftCube.toFormattedJson())
+        ret.right = jsonToLines(rightCube.toFormattedJson())
         return addDeltaDescription(leftCube, rightCube, ret)
     }
 
@@ -1582,7 +1577,7 @@ class NCubeController extends BaseController
         return ret
     }
 
-    List<String> jsonToLines(String json)
+    private static List<String> jsonToLines(String json)
     {
         JsonWriter.formatJson(json).readLines()
     }
