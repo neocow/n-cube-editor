@@ -778,6 +778,7 @@ var NCE = (function ($) {
     }
 
     function openGlobalComparator(cubeInfo) {
+        var appId;
         _globalComparatorLeftApp.empty();
         _globalComparatorRightApp.empty();
         _globalComparatorLeftVersion.empty();
@@ -797,10 +798,11 @@ var NCE = (function ($) {
             _globalComparatorLeftBranch.append('<option>' + cubeInfo[CUBE_INFO.BRANCH] + '</option>');
             _globalComparatorLeftCube.append('<option>' + cubeInfo[CUBE_INFO.NAME] + '</option>');
         } else {
-            _globalComparatorLeftVersion.append('<option>' + _selectedVersion + '-' + _selectedStatus + '</option>');
-            _globalComparatorLeftBranch.append('<option>' + _selectedBranch + '</option>');
-            _globalComparatorLeftCube.append('<option>' + _selectedCubeName + '</option>');
+            appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
             populateSelect(buildAppState(), _globalComparatorLeftApp, CONTROLLER_METHOD.GET_APP_NAMES, [], _selectedApp);
+            populateSelect(buildAppState(), _globalComparatorLeftVersion, CONTROLLER_METHOD.GET_VERSIONS, [_selectedApp], _selectedVersion + '-' + _selectedStatus, true);
+            populateSelect(buildAppState(), _globalComparatorLeftBranch, CONTROLLER_METHOD.GET_BRANCHES, [appId], _selectedBranch, true);
+            populateSelect(buildAppState(), _globalComparatorLeftCube, CONTROLLER_METHOD.SEARCH, [appId, '*', null, true], _selectedCubeName, true);
         }
         populateSelect(buildAppState(), _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, []);
         
@@ -1577,23 +1579,23 @@ var NCE = (function ($) {
             }
         });
         _globalComparatorLeftApp.on('change', function() {
-            _globalComparatorLeftBranch.empty();
-            _globalComparatorLeftCube.empty();
+            _globalComparatorLeftBranch.empty().val('');
+            _globalComparatorLeftCube.empty().val('');
             populateSelect(buildAppState(), _globalComparatorLeftVersion, CONTROLLER_METHOD.GET_VERSIONS, [$(this).val()], null, true);
         });
         _globalComparatorRightApp.on('change', function() {
-            _globalComparatorRightBranch.empty();
-            _globalComparatorRightCube.empty();
+            _globalComparatorRightBranch.empty().val('');
+            _globalComparatorRightCube.empty().val('');
             populateSelect(buildAppState(), _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, [$(this).val()], null, true);
         });
         _globalComparatorLeftVersion.on('change', function() {
             var val = $(this).val().split('-');
-            _globalComparatorLeftCube.empty();
+            _globalComparatorLeftCube.empty().val('');
             populateSelect(buildAppState(), _globalComparatorLeftBranch, CONTROLLER_METHOD.GET_BRANCHES, [appIdFrom(_globalComparatorLeftApp.val(), val[0], val[1], head)], null, true);
         });
         _globalComparatorRightVersion.on('change', function() {
             var val = $(this).val().split('-');
-            _globalComparatorRightCube.empty();
+            _globalComparatorRightCube.empty().val('');
             populateSelect(buildAppState(), _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], head)], null, true);
         });
         _globalComparatorLeftBranch.on('change', function() {
