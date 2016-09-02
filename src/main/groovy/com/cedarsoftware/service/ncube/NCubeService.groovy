@@ -126,8 +126,9 @@ class NCubeService
 
     void createCube(ApplicationID appId, NCube ncube)
     {
-        List<NCubeInfoDto> list = NCubeManager.search(appId, ncube.name, null, [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true])
-        if (!list.isEmpty())
+        Map options = [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true, (NCubeManager.SEARCH_EXACT_MATCH_NAME):true]
+        List<NCubeInfoDto> list = NCubeManager.search(appId, ncube.name, null, options)
+        if (!list.empty)
         {
             throw new IllegalArgumentException(ncube.name + ' exists.')
         }
