@@ -84,9 +84,14 @@ class NCubeService
         return NCubeManager.getBranchCount(appId)
     }
 
-    List<NCubeInfoDto> getBranchChanges(ApplicationID appId, String branchName)
+    List<NCubeInfoDto> getBranchChangesFromHead(ApplicationID appId)
     {
-        return NCubeManager.getBranchChangesFromDatabase(appId, branchName)
+        return NCubeManager.getBranchChangesFromHead(appId)
+    }
+
+    List<NCubeInfoDto> getBranchChangesFromBranch(ApplicationID appId, String branchName)
+    {
+        return NCubeManager.getBranchChangesFromBranch(appId, branchName)
     }
 
     List<NCubeInfoDto> commitBranch(ApplicationID appId, Object[] infoDtos)

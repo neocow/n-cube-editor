@@ -3588,7 +3588,7 @@ var NCE = (function ($) {
             return;
         }
 
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES, [getAppId()]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FROM_HEAD, [getAppId()]);
 
         if (!result.status || !result.data)
         {

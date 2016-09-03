@@ -177,7 +177,7 @@ var CONTROLLER_METHOD = {
     GET_APP_VERSIONS: 'getAppVersions',
     GET_AXIS: 'getAxis',
     GET_AXIS_METAPROPERTIES: 'getAxisMetaProperties',
-    GET_BRANCH_CHANGES: 'getBranchChanges',
+    GET_BRANCH_CHANGES_FROM_HEAD: 'getBranchChangesFromHead',
     GET_BRANCH_CHANGES_FROM_BRANCH: 'getBranchChangesFromBranch',
     GET_BRANCHES: 'getBranches',
     GET_CELL_NO_EXECUTE: 'getCellNoExecute',
