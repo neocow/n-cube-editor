@@ -1293,17 +1293,17 @@ class NCubeController extends BaseController
         return nCubeService.getBranchCount(appId)
     }
 
-    Object[] getBranchChangesFromHead(ApplicationID appId)
+    Object[] getHeadChangesForBranch(ApplicationID appId)
     {
         appId = addTenant(appId)
-        List<NCubeInfoDto> branchChanges = nCubeService.getBranchChangesFromHead(appId)
+        List<NCubeInfoDto> branchChanges = nCubeService.getHeadChangesForBranch(appId)
         return branchChanges.toArray()
     }
 
-    Object[] getBranchChangesFromBranch(ApplicationID appId, String branchName)
+    Object[] getBranchChangesForHead(ApplicationID appId)
     {
         appId = addTenant(appId)
-        List<NCubeInfoDto> branchChanges = nCubeService.getBranchChangesFromBranch(appId, branchName)
+        List<NCubeInfoDto> branchChanges = nCubeService.getBranchChangesForHead(appId)
         return branchChanges.toArray()
     }
 

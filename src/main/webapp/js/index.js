@@ -420,7 +420,7 @@ var NCE = (function ($) {
 
     function showOutOfSyncNoticeForCube(cubeInfo) {
         var openCube = _openCubes[getOpenCubeIndex(cubeInfo)];
-        if (!openCube.hasShownStatusMessage) {
+        if (openCube && !openCube.hasShownStatusMessage) {
             showNote(cubeInfo[CUBE_INFO.NAME] + ' is out-of-date (newer version exists in HEAD). Update n-cube or branch to pick up changes.', 'Out-of-Date', 5500);
             openCube.hasShownStatusMessage = true;
             saveOpenCubeList();
@@ -3434,7 +3434,17 @@ var NCE = (function ($) {
             return;
         }
 
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FROM_BRANCH, [getAppId(), branchName]);
+        var appId = getAppId();
+        if ('HEAD' == branchName)
+        {
+            appId.branch = getSelectedBranch();
+            result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
+        }
+        else
+        {
+            appId.branch = branchName;
+            result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_HEAD, [appId]);
+        }
         if (!result.status) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
             return;
@@ -3588,7 +3598,7 @@ var NCE = (function ($) {
             return;
         }
 
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FROM_HEAD, [getAppId()]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_HEAD, [getAppId()]);
 
         if (!result.status || !result.data)
         {
