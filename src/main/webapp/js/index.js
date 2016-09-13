@@ -629,7 +629,7 @@ var NCE = (function ($) {
         if (cubeInfo[CUBE_INFO.BRANCH] !== head) {
             html += '<li><a href="#" class="anc-commit-cube">Commit...</a></li>';
             html += '<li><a href="#" class="anc-rollback-cube">Rollback...</a></li>';
-            html += '<li class="dropdown-submenu li-update-cube"><a href="#" tabindex="-1">Update</a></li>';
+            html += '<li><a href="#" class="anc-update-cube">Update from HEAD</a></li>';
             html += '<div class="divider"/>';
             html += '<li><a href="#" class="anc-delete-cube">Delete...</a></li>';
             html += '<li><a href="#" class="anc-duplicate-cube">Duplicate...</a></li>';
@@ -673,6 +673,9 @@ var NCE = (function ($) {
             addMenuConfirmationButtons(li, $(this), function() {
                 callRollbackFromTab(getInfoDto());
             });
+        });
+        li.find('a.anc-update-cube').on('click', function() {
+            callUpdateBranchCubes([getInfoDto().name], head);
         });
         li.find('a.anc-delete-cube').on('click', function(e) {
             e.preventDefault();
@@ -763,16 +766,6 @@ var NCE = (function ($) {
                 leftInfoDto = $.extend(true, {}, infoDto);
                 leftInfoDto.branch = branchName;
                 diffCubes(leftInfoDto, infoDto, infoDto.name);
-            })
-        );
-        li.find('li.li-update-cube').append(
-            createBranchesUl({
-                app: cubeInfo[CUBE_INFO.APP],
-                version: cubeInfo[CUBE_INFO.VERSION],
-                status: cubeInfo[CUBE_INFO.STATUS],
-                branch: cubeInfo[CUBE_INFO.BRANCH]
-            }, function(branchName) {
-                callUpdate(branchName);
             })
         );
     }
@@ -2493,9 +2486,14 @@ var NCE = (function ($) {
         appId = getSelectedTabAppId();
         _revisionHistoryList.empty();
         _revisionHistoryLabel[0].textContent = 'Revision History for ' + _selectedCubeName;
-        _revisionHistoryModal.modal();
-
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_REVISION_HISTORY, [appId, _selectedCubeName, ignoreVersion]);
+        showNote('Loading...');
+        call(CONTROLLER + CONTROLLER_METHOD.GET_REVISION_HISTORY, [appId, _selectedCubeName, ignoreVersion], {callback:function(result) {
+            revisionHistoryCallback(appId, ignoreVersion, result);
+        }});
+    }
+    
+    function revisionHistoryCallback(appId, ignoreVersion, result) {
+        var dtos, dto, i, len, html, text, date, prevVer, curVer;
         if (result.status) {
             html = '';
             dtos = result.data;
@@ -2543,6 +2541,8 @@ var NCE = (function ($) {
             _revisionHistoryList.find('a.anc-json').on('click', function () {
                 onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
             });
+            clearError();
+            _revisionHistoryModal.modal();
         } else {
             showNote('Error fetching revision history (' + appId.version + ', ' + appId.status + '):<hr class="hr-small"/>' + result.data);
         }
