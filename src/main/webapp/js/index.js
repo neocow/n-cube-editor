@@ -3269,11 +3269,6 @@ var NCE = (function ($) {
             setTimeout(function() { commitBranch(false); }, PROGRESS_DELAY);
             showNote('Processing rollback request...');
         });
-        $('#branchUpdate').click(function()
-        {
-            setTimeout(function() { callUpdate(); }, PROGRESS_DELAY);
-            showNote('Updating branch...');
-        });
         $('#branchDelete').click(function()
         {
             deleteBranch();
@@ -3743,68 +3738,6 @@ var NCE = (function ($) {
             reloadCube();
             showNote('Successfully rolled back ' + name + '.');
         }, PROGRESS_DELAY);
-    }
-
-    function callUpdate(sourceBranch) {
-        var appId, result, map, updateMap, mergeMap, updates, merges, conflicts, names, note;
-        clearError();
-        
-        if (sourceBranch !== undefined) {
-            appId = getSelectedTabAppId();
-            result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH_CUBE, [appId, _selectedCubeName, sourceBranch]);
-        } else  {
-            appId = getAppId();
-            result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId]);
-        }
-        if (!result.status) {
-            showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-
-        map = result.data;
-        updateMap = map['updates'];
-        mergeMap = map['merges'];
-        _conflictMap = map['conflicts'];
-        updates = 0;
-        merges = 0;
-        conflicts = 0;
-
-        if (updateMap && updateMap['@items']) {
-            updates = updateMap['@items'].length;
-        }
-        if (mergeMap && mergeMap['@items']) {
-            merges = mergeMap['@items'].length;
-        }
-        if (_conflictMap) {
-            delete _conflictMap['@type'];
-            conflicts = countKeys(_conflictMap);
-        }
-
-        note = '<b>Branch Updated:</b><hr class="hr-small"/>' + updates + ' cubes <b>updated</b><br>' + merges + ' cubes <b>merged</b><br>' + conflicts + ' cubes in <b>conflict</b>';
-        if (updates) {
-            note += getUpdateNote(appId, updateMap['@items'], 'Updated cube names', 'cornflowerblue', true);
-        }
-        if (merges) {
-            note += getUpdateNote(appId, mergeMap['@items'], 'Merged cube names', '#D4AF37', true);
-        }
-        if (conflicts) {
-            note += getUpdateNote(appId, Object.keys(_conflictMap), 'Cubes in conflict', '#F08080', false);
-        }
-        showNote(note);
-        saveOpenCubeList();
-        buildTabs();
-
-        if (conflicts > 0) {
-            mergeBranch(_conflictMap);
-            return;
-        }
-
-        if (appIdsEqual(appId, getAppId())) {
-            loadNCubes();
-            runSearch();
-        }
-
-        reloadCube();
     }
 
     function removeTabStatusFromCubeList(appId, cubeNames) {
