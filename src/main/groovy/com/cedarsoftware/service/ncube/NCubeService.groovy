@@ -104,14 +104,9 @@ class NCubeService
         NCubeManager.rollbackCubes(appId, cubeNames)
     }
 
-    Map<String, Object> updateBranch(ApplicationID appId)
+    Map<String, Object> updateBranch(ApplicationID appId, Object[] cubeNames, String sourceBranch)
     {
-        return NCubeManager.updateBranch(appId)
-    }
-
-    Map<String, Object> updateBranchCube(ApplicationID appId, String cubeName, String sourceBranch)
-    {
-        return NCubeManager.updateBranchCube(appId, cubeName, sourceBranch)
+        return NCubeManager.updateBranch(appId, cubeNames, sourceBranch)
     }
 
     void deleteBranch(ApplicationID appId)
@@ -575,35 +570,5 @@ class NCubeService
             String s = "Failed to load n-cubes from passed in JSON, last successful cube read: " + lastSuccessful
             throw new IllegalArgumentException(s, e)
         }
-    }
-
-    Object getUpToDateStatus(ApplicationID appId, String cubeName)
-    {
-        return true
-//        if (appId.isHead())
-//        {   // HEAD cube can never be out-of-date by definition.
-//            return true
-//        }
-//
-//        Map options = [(NCubeManager.SEARCH_EXACT_MATCH_NAME): true,
-//                       (NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY): true]
-//
-//        String realHeadSha1
-//        List<NCubeInfoDto> list = NCubeManager.search(appId.asHead(), cubeName, null, options)
-//        if (list.size() != 1)
-//        {   // New cube in your branch but not yet in HEAD branch
-//            return true
-//        }
-//
-//        NCubeInfoDto dto = list[0]
-//        realHeadSha1 = dto.sha1
-//
-//        list = NCubeManager.search(appId, cubeName, null, options)
-//        if (list.size() != 1)
-//        {   // Ignore when you can't find the cube that was requested
-//            return true
-//        }
-//        dto = list[0]
-//        return StringUtilities.equalsIgnoreCase(realHeadSha1, dto.headSha1)
     }
 }

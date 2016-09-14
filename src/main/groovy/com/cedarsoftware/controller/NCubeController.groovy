@@ -1357,25 +1357,11 @@ class NCubeController extends BaseController
         return nCubeService.rollbackCubes(appId, cubeNames)
     }
 
-    Object updateBranch(ApplicationID appId)
+    Object updateBranch(ApplicationID appId, Object[] cubeNames, String sourceBranch)
     {
         appId = addTenant(appId)
-        Map<String, Object> result = nCubeService.updateBranch(appId)
+        Map<String, Object> result = nCubeService.updateBranch(appId, cubeNames, sourceBranch)
         return result
-    }
-
-    Object updateBranchCube(ApplicationID appId, String cubeName, String sourceBranch)
-    {
-        appId = addTenant(appId)
-        Map<String, Object> result = nCubeService.updateBranchCube(appId, cubeName, sourceBranch)
-        return result
-    }
-
-    Object updateBranchCubes(ApplicationID appId, Object[] cubeNames, String sourceBranch)
-    {
-        appId = addTenant(appId)
-        // TODO - add in manager
-        throw new IllegalStateException('Functionality not yet implemented.')
     }
 
     void deleteBranch(ApplicationID appId)

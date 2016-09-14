@@ -3491,7 +3491,7 @@ var NCE = (function ($) {
     function callUpdateBranchCubes(cubeNames, branchName) {
         showNote('Updating selected cubes...', 'Please wait...');
         setTimeout(function() {
-            var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH_CUBES, [getAppId(), cubeNames, branchName]);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [getAppId(), cubeNames, branchName]);
             var note;
 
             clearError();

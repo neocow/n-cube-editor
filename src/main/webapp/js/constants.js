@@ -206,7 +206,6 @@ var CONTROLLER_METHOD = {
     UPDATE_AXIS_COLUMNS: 'updateAxisColumns',
     UPDATE_AXIS_METAPROPERTIES: 'updateAxisMetaProperties',
     UPDATE_BRANCH: 'updateBranch',
-    UPDATE_BRANCH_CUBES: 'updateBranchCubes',
     UPDATE_CELL: 'updateCell',
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
