@@ -3433,7 +3433,7 @@ var NCE = (function ($) {
         });
 
         _branchCompareUpdateModal.prop({branchName: branchName});
-        buildUlForCompare(_branchCompareUpdateList, branchName, branchChanges, 'updateCheck');
+        buildUlForCompare(_branchCompareUpdateList, _selectedBranch, branchChanges, 'updateCheck');
 
         _branchCompareUpdateModal.modal();
         setTimeout(selectAll, PROGRESS_DELAY);
