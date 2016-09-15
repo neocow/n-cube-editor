@@ -1242,9 +1242,12 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         nCubeService.copyBranch(appId.asHead(), appId)
-        addBranchToCache(appId)
-        if (appId.version != '0.0.0') {
-            addBranchToCache(appId.asVersion('0.0.0'));
+        if (getBranchesFromCache(appId).size() != 0)
+        {
+            addBranchToCache(appId)
+            if (appId.version != '0.0.0') {
+                addBranchToCache(appId.asVersion('0.0.0'));
+            }
         }
     }
 
