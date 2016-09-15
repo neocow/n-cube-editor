@@ -137,7 +137,6 @@ var NCE = (function ($) {
     var _globalComparatorMenu = $('#globalComparatorMenu');
     var _revisionHistoryList = $('#revisionHistoryList');
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
-    var _frame = $('#content-iframe');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -171,9 +170,6 @@ var NCE = (function ($) {
             addListeners();
             addModalFilters();
             modalsDraggable(true);
-            
-            // _frame.parent().css({overflow:'hidden', height:'calc(100%-' + _openTabsPanel.outerHeight() + ')'});
-            _frame.parent().css({overflow:'hidden', height:'100%'});
         } catch (e) {
             console.log(e);
         }
@@ -883,34 +879,20 @@ var NCE = (function ($) {
     }
 
     function switchTabPane(pageId) {
-        var cw, html, i, len, opt;
+        var iframeId, frame, cw;
+        $('.tab-pane').removeClass('active');
         if (pageId) {
-            _frame.parent().addClass('active');
-        } else {
-            _frame.parent().removeClass('active');
-            return;
-        }
-        if (_frame.prop('cubeinfo') !== _selectedCubeInfo.join(TAB_SEPARATOR)) {
-            _frame.parent().addClass('active');
+            $('#' + pageId).addClass('active');
+            iframeId = 'iframe_' + pageId;
             try {
-                for (i = 0, len = _menuOptions.length; i < len; i++) {
-                    if (_menuOptions[i].pageId === pageId) {
-                        opt = _menuOptions[i];
-                        break;
+                frame = document.getElementById(iframeId);
+                if (frame) {
+                    cw = frame.contentWindow;
+                    if (cw.tabActivated !== undefined) {
+                        cw.tabActivated(buildAppState());
+                        localStorage[ACTIVE_TAB_VIEW_TYPE] = pageId;
+                        cw.focus();
                     }
-                }
-                html = opt.html;
-                if (!html.startsWith('http:') && !html.startsWith('https:')) {
-                    html += '?appId=' + JSON.stringify(getSelectedTabAppId()).replace(/\"/g, '&quot;');
-                }
-                _frame[0].src = html;
-                _frame.prop('cubeinfo', _selectedCubeInfo.join(TAB_SEPARATOR));
-                
-                cw = _frame[0].contentWindow;
-                if (cw.tabActivated !== undefined) {
-                    cw.tabActivated(buildAppState());
-                    localStorage[ACTIVE_TAB_VIEW_TYPE] = pageId;
-                    cw.focus();
                 }
             } catch (e) {
                 console.log(e);
@@ -1107,19 +1089,23 @@ var NCE = (function ($) {
                 _defaultTab = pageId;
             }
 
-            // if (!_mainTabPanel.find('div#' + pageId).length) {
-            //     if (tabHeight === undefined) {
-            //         tabHeight = _openTabsPanel.outerHeight();
-            //     }
-            //     iframeHtml = value['html'];
-            //     if (!iframeHtml.startsWith('http:') && !iframeHtml.startsWith('https:')) {
-            //         iframeHtml += '?appId=' + JSON.stringify(appId).replace(/\"/g, '&quot;');
-            //     }
-            //
-            //     html += '<div class="tab-pane" id="' + pageId + '" ' + 'style="overflow:hidden;height:calc(100% - ' + tabHeight + 'px);">';
-            //     html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + iframeHtml + '">';
-            //     html += '</iframe></div>';
-            // }
+            if (!_mainTabPanel.find('div#' + pageId).length) {
+                if (tabHeight === undefined) {
+                    tabHeight = _openTabsPanel.outerHeight();
+                }
+                iframeHtml = value['html'];
+                if (!iframeHtml.startsWith('http:') && !iframeHtml.startsWith('https:')) {
+                    iframeHtml += '?appId=' + JSON.stringify(appId).replace(/\"/g, '&quot;');
+                }
+
+                html += '<div class="tab-pane" id="' + pageId + '" ' + 'style="overflow:hidden;height:calc(100% - ' + tabHeight + 'px);">';
+                html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + iframeHtml + '">';
+                html += '</iframe></div>';
+            }
+        }
+
+        if (html.length) {
+            _mainTabPanel.append(html);
         }
     }
 
