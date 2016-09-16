@@ -675,7 +675,7 @@ var NCE = (function ($) {
             });
         });
         li.find('a.anc-update-cube').on('click', function() {
-            callUpdateBranchCubes(getSelectedTabAppId(), [getInfoDto().name], head);
+            callUpdateBranchCubes(getSelectedTabAppId(), [getInfoDto().name], head, true);
         });
         li.find('a.anc-delete-cube').on('click', function(e) {
             e.preventDefault();
@@ -3467,7 +3467,7 @@ var NCE = (function ($) {
         callUpdateBranchCubes(getAppId(), changes, branchName);
     }
 
-    function callUpdateBranchCubes(appId, cubeNames, branchName) {
+    function callUpdateBranchCubes(appId, cubeNames, branchName, isFromTabMenu) {
         showNote('Updating selected cubes...', 'Please wait...');
         setTimeout(function() {
             var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeNames, branchName]);
@@ -3537,7 +3537,9 @@ var NCE = (function ($) {
             }
 
             if (appIdsEqual(appId, getAppId())) {
-                compareUpdateBranch(branchName);
+                if (!isFromTabMenu) {
+                    compareUpdateBranch(branchName);
+                }
                 loadNCubes();
                 runSearch();
             }
