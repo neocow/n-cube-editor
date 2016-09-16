@@ -3406,7 +3406,7 @@ var NCE = (function ($) {
         showNote('Changing branch to: ' + branchName, 'Please wait...');
     }
 
-    function compareUpdateBranch(branchName) {
+    function compareUpdateBranch(branchName, noNote) {
         var result, branchChanges;
         var appId = getAppId();
 
@@ -3428,6 +3428,14 @@ var NCE = (function ($) {
 
         $('#branchCompareUpdateLabel')[0].innerHTML = 'Update ' + _selectedBranch + ' from ' + branchName;
         branchChanges = result.data;
+        if (!branchChanges.length) {
+            if (noNote) {
+                _branchCompareUpdateModal.modal('hide');
+            } else {
+                showNote('No changes detected.', '', 2500);
+            }
+            return;
+        }
         branchChanges.sort(function compare(a,b) {
             return a.name.localeCompare(b.name);
         });
@@ -3548,7 +3556,7 @@ var NCE = (function ($) {
 
             if (appIdsEqual(appId, getAppId())) {
                 if (!isFromTabMenu) {
-                    compareUpdateBranch(branchName);
+                    compareUpdateBranch(branchName, true);
                 }
                 loadNCubes();
                 runSearch();
