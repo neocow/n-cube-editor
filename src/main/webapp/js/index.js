@@ -675,7 +675,7 @@ var NCE = (function ($) {
             });
         });
         li.find('a.anc-update-cube').on('click', function() {
-            callUpdateBranchCubes(getSelectedTabAppId(), [getInfoDto().name], head);
+            callUpdateBranchCubes(getSelectedTabAppId(), [getInfoDto().name], head, true);
         });
         li.find('a.anc-delete-cube').on('click', function(e) {
             e.preventDefault();
@@ -762,9 +762,9 @@ var NCE = (function ($) {
                 branch: cubeInfo[CUBE_INFO.BRANCH]
             }, function(branchName) {
                 var infoDto, leftInfoDto;
-                infoDto = getInfoDto();
+                infoDto = $.extend(true, {}, getInfoDto());
                 leftInfoDto = $.extend(true, {}, infoDto);
-                leftInfoDto.branch = branchName;
+                infoDto.branch = branchName;
                 diffCubes(leftInfoDto, infoDto, infoDto.name);
             })
         );
@@ -1070,7 +1070,7 @@ var NCE = (function ($) {
     
     function buildViewsFromTabMenu(menu) {
         var tabMenu, menuKeys, i, len, key, value, pageId, tabHeight, iframeHtml, html, appId;
-        
+        _menuOptions = null;
         _menuOptions = [];
         tabMenu = menu[CONFIG_TAB_MENU];
         delete tabMenu['@type'];
@@ -1083,7 +1083,7 @@ var NCE = (function ($) {
             value = null;
             value = tabMenu[key];
             pageId = key.replace(/\s/g,'_') + PAGE_ID;
-            _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img']});
+            _menuOptions.push({key:key, pageId:pageId, imgSrc:value['img'], html:value['html']});
             if (!_activeTabViewType) {
                 setActiveTabViewType(pageId);
                 _defaultTab = pageId;
@@ -3406,7 +3406,7 @@ var NCE = (function ($) {
         showNote('Changing branch to: ' + branchName, 'Please wait...');
     }
 
-    function compareUpdateBranch(branchName) {
+    function compareUpdateBranch(branchName, noNote) {
         var result, branchChanges;
         var appId = getAppId();
 
@@ -3428,28 +3428,46 @@ var NCE = (function ($) {
 
         $('#branchCompareUpdateLabel')[0].innerHTML = 'Update ' + _selectedBranch + ' from ' + branchName;
         branchChanges = result.data;
+        if (!branchChanges.length) {
+            if (noNote) {
+                _branchCompareUpdateModal.modal('hide');
+            } else {
+                showNote('No changes detected.', '', 2500);
+            }
+            return;
+        }
         branchChanges.sort(function compare(a,b) {
             return a.name.localeCompare(b.name);
         });
 
         _branchCompareUpdateModal.prop({branchName: branchName});
-        buildUlForCompare(_branchCompareUpdateList, _selectedBranch, branchChanges, 'updateCheck');
+        buildUlForCompare(_branchCompareUpdateList, branchName === head, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
 
         _branchCompareUpdateModal.modal();
         setTimeout(selectAll, PROGRESS_DELAY);
     }
 
-    function buildUlForCompare(ul, updateFromBranchName, branchChanges, inputClass) {
+    function buildUlForCompare(ul, isCompareToHead, branchChanges, options) {
         ul.empty();
-        ul.append(buildHtmlListForCompare(branchChanges, inputClass));
+        ul.append(buildHtmlListForCompare(branchChanges, options));
         ul.find('a.compare').on('click', function() {
             var li = $(this).parent().parent().parent();
             var ul = li.parent();
             var idx = ul.children().index(li);
-            var infoDto = branchChanges[idx];
+            var infoDto = $.extend(true, {}, branchChanges[idx]);
             var leftInfoDto = $.extend(true, {}, infoDto);
-            leftInfoDto.branch = updateFromBranchName;
+            if (isCompareToHead) {
+                infoDto.branch = head;
+            } else {
+                leftInfoDto.branch = _selectedBranch;
+            }
             diffCubes(leftInfoDto, infoDto, infoDto.name);
+        });
+        ul.find('a.anc-html').on('click', function () {
+            onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), false);
+        });
+        ul.find('a.anc-json').on('click', function () {
+            onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
         });
     }
 
@@ -3467,7 +3485,7 @@ var NCE = (function ($) {
         callUpdateBranchCubes(getAppId(), changes, branchName);
     }
 
-    function callUpdateBranchCubes(appId, cubeNames, branchName) {
+    function callUpdateBranchCubes(appId, cubeNames, branchName, isFromTabMenu) {
         showNote('Updating selected cubes...', 'Please wait...');
         setTimeout(function() {
             var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeNames, branchName]);
@@ -3537,7 +3555,9 @@ var NCE = (function ($) {
             }
 
             if (appIdsEqual(appId, getAppId())) {
-                compareUpdateBranch(branchName);
+                if (!isFromTabMenu) {
+                    compareUpdateBranch(branchName, true);
+                }
                 loadNCubes();
                 runSearch();
             }
@@ -3546,20 +3566,33 @@ var NCE = (function ($) {
         }, PROGRESS_DELAY);
     }
 
-    function buildHtmlListForCompare(branchChanges, inputClass) {
+    function buildHtmlListForCompare(branchChanges, options) {
         var i, len, infoDto;
         var html = '';
+        var inputClass = options.inputClass;
         for (i = 0, len = branchChanges.length; i < len; i++) {
             infoDto = branchChanges[i];
 
             html += '<li class="list-group-item skinny-lr no-margins" style="padding-left:0;">';
             html += '<div class="container-fluid">';
 
-            html += '<label class="col-xs-1" style="padding:0;margin:0 10px 0 0;">';
-            html += '<a href="#" class="compare"><kbd>Compare</kbd></a>';
-            html += '</label>';
+            if (options.hasOwnProperty('compare')) {
+                html += '<label style="padding:0;margin:0 10px 0 0;">';
+                html += '<a href="#" class="compare"><kbd>Compare</kbd></a>';
+                html += '</label>';
+            }
+            if (options.hasOwnProperty('html')) {
+                html += '<label style="padding:0;margin:0 10px 0 0;">';
+                html += '<a href="#" class="anc-html" data-cube-id="' + infoDto.id + '" data-rev-id="' + infoDto.revision + '" data-cube-name="' + infoDto.name + '"><kbd>HTML</kbd></a>';
+                html += '</label>';
+            }
+            if (options.hasOwnProperty('json')) {
+                html += '<label style="padding:0;margin:0 10px 0 0;">';
+                html += '<a href="#" class="anc-json" data-cube-id="' + infoDto.id + '" data-rev-id="' + infoDto.revision + '" data-cube-name="' + infoDto.name + '"><kbd>JSON</kbd></a>';
+                html += '</label>';
+            }
 
-            html += '<label class="checkbox no-margins col-xs-10 ' + getLabelDisplayClassForInfoDto(infoDto) + '">';
+            html += '<label style="display:inline-block;margin:0 0 0 20px;" class="checkbox ' + getLabelDisplayClassForInfoDto(infoDto) + '">';
             html += '<input class="' + inputClass + '" type="checkbox">';
             html += infoDto.name;
             html += '</label>';
@@ -3599,73 +3632,58 @@ var NCE = (function ($) {
         return '';
     }
 
-    function commitBranch(state)
-    {
+    function commitBranch(state) {
+        var errMsg, title, result, branchChanges;
         clearError();
-
-        var errMsg;
-        var title;
-        if (state)
-        {
+        if (state) {
             errMsg = 'commit to';
             title = 'Commit changes';
             $('#commitOk').show();
             $('#rollbackOk').hide();
-        }
-        else
-        {
+        } else {
             errMsg = 'rollback in';
             title = 'Rollback changes';
             $('#commitOk').hide();
             $('#rollbackOk').show();
         }
 
-        if (isHeadSelected())
-        {
+        if (isHeadSelected()) {
             showNote('You cannot ' + errMsg + ' HEAD.');
             return;
         }
 
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_HEAD, [getAppId()]);
-
-        if (!result.status || !result.data)
-        {
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_HEAD, [getAppId()]);
+        if (!result.status || !result.data) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
             return;
         }
 
         $('#commitRollbackLabel')[0].textContent = title;
 
-        var branchChanges = result.data;
-        branchChanges.sort(
-            function compare(a,b)
-            {
-                return a.name.localeCompare(b.name);
-            });
+        branchChanges = result.data;
+        branchChanges.sort(function compare(a,b) {
+            return a.name.localeCompare(b.name);
+        });
 
         _commitModal.prop('changes', branchChanges);
-        buildUlForCompare(_commitRollbackList, head, branchChanges, 'commitCheck');
+        buildUlForCompare(_commitRollbackList, true, branchChanges, {inputClass:'commitCheck', compare:true});
 
         selectAll();
         _commitModal.modal('show');
     }
 
-    function commitOk()
-    {
+    function commitOk() {
         var branchChanges = _commitModal.prop('changes');
         var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
 
-        $.each(input, function (index, label)
-        {
-            if ($(this).is(':checked'))
-            {
+        $.each(input, function (index, label) {
+            if ($(this).is(':checked')) {
                 changes.push(branchChanges[index]);
             }
         });
 
         _commitModal.modal('hide');
-
         callCommit(changes);
     }
 
@@ -3704,15 +3722,12 @@ var NCE = (function ($) {
         }, PROGRESS_DELAY);
     }
 
-    function rollbackOk()
-    {
+    function rollbackOk() {
         var branchChanges = _commitModal.prop('changes');
         var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
-        $.each(input, function (index, label)
-        {
-            if ($(this).is(':checked'))
-            {
+        $.each(input, function (index, label) {
+            if ($(this).is(':checked')) {
                 changes.push(branchChanges[index]);
             }
         });
