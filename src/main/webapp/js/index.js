@@ -766,9 +766,9 @@ var NCE = (function ($) {
                 branch: cubeInfo[CUBE_INFO.BRANCH]
             }, function(branchName) {
                 var infoDto, leftInfoDto;
-                infoDto = $.extend(true, {}, getInfoDto());
+                infoDto = getInfoDto();
                 leftInfoDto = $.extend(true, {}, infoDto);
-                infoDto.branch = branchName;
+                leftInfoDto.branch = branchName;
                 diffCubes(leftInfoDto, infoDto, infoDto.name);
             })
         );
@@ -784,24 +784,24 @@ var NCE = (function ($) {
         _globalComparatorRightBranch.empty();
         _globalComparatorLeftCube.empty();
         _globalComparatorRightCube.empty();
-        _globalComparatorLeftApp.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorLeftVersion.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorLeftBranch.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorLeftCube.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorRightApp.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorRightVersion.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorRightBranch.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorRightCube.prop('disabled', cubeInfo !== undefined);
         
         if (cubeInfo) {
-            _globalComparatorLeftApp.append('<option>' + cubeInfo[CUBE_INFO.APP] + '</option>');
-            _globalComparatorLeftVersion.append('<option>' + cubeInfo[CUBE_INFO.VERSION] + '-' + cubeInfo[CUBE_INFO.STATUS] + '</option>');
-            _globalComparatorLeftBranch.append('<option>' + cubeInfo[CUBE_INFO.BRANCH] + '</option>');
-            _globalComparatorLeftCube.append('<option>' + cubeInfo[CUBE_INFO.NAME] + '</option>');
+            _globalComparatorRightApp.append('<option>' + cubeInfo[CUBE_INFO.APP] + '</option>');
+            _globalComparatorRightVersion.append('<option>' + cubeInfo[CUBE_INFO.VERSION] + '-' + cubeInfo[CUBE_INFO.STATUS] + '</option>');
+            _globalComparatorRightBranch.append('<option>' + cubeInfo[CUBE_INFO.BRANCH] + '</option>');
+            _globalComparatorRightCube.append('<option>' + cubeInfo[CUBE_INFO.NAME] + '</option>');
         } else {
             appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
-            populateSelect(buildAppState(), _globalComparatorLeftApp, CONTROLLER_METHOD.GET_APP_NAMES, [], _selectedApp);
-            populateSelect(buildAppState(), _globalComparatorLeftVersion, CONTROLLER_METHOD.GET_VERSIONS, [_selectedApp], _selectedVersion + '-' + _selectedStatus, true);
-            populateSelect(buildAppState(), _globalComparatorLeftBranch, CONTROLLER_METHOD.GET_BRANCHES, [appId], _selectedBranch, true);
-            populateSelect(buildAppState(), _globalComparatorLeftCube, CONTROLLER_METHOD.SEARCH, [appId, '*', null, true], _selectedCubeName, true);
+            populateSelect(buildAppState(), _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, [], _selectedApp);
+            populateSelect(buildAppState(), _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, [_selectedApp], _selectedVersion + '-' + _selectedStatus, true);
+            populateSelect(buildAppState(), _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, [appId], _selectedBranch, true);
+            populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appId, '*', null, true], _selectedCubeName, true);
         }
-        populateSelect(buildAppState(), _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, []);
+        populateSelect(buildAppState(), _globalComparatorLeftApp, CONTROLLER_METHOD.GET_APP_NAMES, []);
         
         _globalComparatorModal.modal();
     }
@@ -1542,6 +1542,19 @@ var NCE = (function ($) {
             var leftCube = _globalComparatorLeftCube.val();
             var rightCube = _globalComparatorRightCube.val();
             
+            if (rightApp && rightVersion && rightBranch && rightCube) {
+                rightVerSplit = rightVersion.split('-');
+                rightResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(rightApp, rightVerSplit[0], rightVerSplit[1], rightBranch), rightCube, null, true]);
+                if (rightResult.status && rightResult.data.length) {
+                    rightDto = rightResult.data[0];
+                } else {
+                    showNote('Unable to load cube ' + rightCube, 'Global Comparator Error', 2000);
+                }
+            } else {
+                showNote('Right compare info not set!', 'Global Comparator Error', 2000);
+                return;
+            }
+
             if (leftApp && leftVersion && leftBranch && leftCube) {
                 leftVerSplit = leftVersion.split('-');
                 leftResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(leftApp, leftVerSplit[0], leftVerSplit[1], leftBranch), leftCube, null, true]);
@@ -1552,19 +1565,6 @@ var NCE = (function ($) {
                 }
             } else {
                 showNote('Left compare info not set!', 'Global Comparator Error', 2000);
-                return;
-            }
-
-            if (rightApp && rightVersion && rightBranch && rightCube) {
-                rightVerSplit = rightVersion.split('-');
-                rightResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(rightApp, rightVerSplit[0], rightVerSplit[1], rightBranch), rightCube, null, true]);
-                if (rightResult.status && rightResult.data.length) {
-                    rightDto = rightResult.data[0];
-                } else {
-                    showNote('Unable to load cube ' + rightCube, 'Global Comparator Error', 2000);
-                }
-            } else {
-                showNote('right compare info not set!', 'Global Comparator Error', 2000);
                 return;
             }
             
@@ -3466,9 +3466,9 @@ var NCE = (function ($) {
             var infoDto = $.extend(true, {}, branchChanges[idx]);
             var leftInfoDto = $.extend(true, {}, infoDto);
             if (isCompareToHead) {
-                infoDto.branch = head;
+                leftInfoDto.branch = head;
             } else {
-                leftInfoDto.branch = _selectedBranch;
+                infoDto.branch = _selectedBranch;
             }
             diffCubes(leftInfoDto, infoDto, infoDto.name);
         });
