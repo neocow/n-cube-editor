@@ -2446,6 +2446,10 @@ var NCubeEditor2 = (function ($) {
             closeAxisMenu();
             moveAxes();
         });
+        div.find('a.anc-frozen-columns').on('click', function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        });
     }
 
     function filterOutBlankRows() {

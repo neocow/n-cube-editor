@@ -620,7 +620,7 @@ var NCE = (function ($) {
         }
 
         html += '<div class="divider"/>';
-        html += '<li class="dropdown-submenu li-compare-cube"><a href="#" tabindex="-1">Compare</a></li>';
+        html += '<li class="dropdown-submenu li-compare-cube"><a href="#" class="anc-compare" tabindex="-1">Compare</a></li>';
         html += '<li><a href="#" class="anc-revision-history" data-ignoreversion="' + (cubeInfo[CUBE_INFO.BRANCH] === head) + '">Revision History...</a></li>';
         html += '<li><a href="#" class="anc-show-outbound-references">Show Outbound References</a></li>';
         html += '<li><a href="#" class="anc-show-required-scope">Show Required Scope</a></li>';
@@ -650,6 +650,10 @@ var NCE = (function ($) {
         // add listeners
         li.find('a.anc-view-type').on('click', function(e) {
             onViewTypeClick(e, $(this), cubeInfo);
+        });
+        li.find('a.anc-compare').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
         });
         li.find('a.anc-revision-history').on('click', function() {
             revisionHistory($(this).data('ignoreversion'));
@@ -1598,6 +1602,11 @@ var NCE = (function ($) {
         _globalComparatorRightBranch.on('change', function() {
             var val = _globalComparatorRightVersion.val().split('-');
             populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], $(this).val()), '*', null, true], null, true);
+        });
+
+        _branchCompareUpdateMenu.on('click', function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
         });
 
         addBranchListeners();
