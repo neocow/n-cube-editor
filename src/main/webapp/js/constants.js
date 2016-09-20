@@ -58,6 +58,7 @@ var CLASS_HANDSON_CELL_BASIC = ' cell';
 var CLASS_HANDSON_CELL_CODE = ' code';
 var CLASS_HANDSON_CELL_CUBE_NAME = ' cube-name';
 var CLASS_HANDSON_CELL_DEFAULT = ' tableDefault';
+var CLASS_HANDSON_CELL_NULL = ' null-cell';
 var CLASS_HANDSON_CELL_ODD_ROW = ' oddRow';
 var CLASS_HANDSON_CELL_URL = ' url';
 var CLASS_HANDSON_COLUMN_DEFAULT = ' columnDefault';

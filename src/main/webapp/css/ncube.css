@@ -183,6 +183,11 @@ ul#setUpHideList li {
     color: #B4CDCD;
 }
 
+.handsontable .null-cell, .handsontable .null-cell a {
+    font-style: oblique;
+    color: darkgray;
+}
+
 .dropdown-menu {
     position: fixed;
 }

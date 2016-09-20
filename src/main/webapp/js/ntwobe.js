@@ -2057,24 +2057,29 @@ var NCubeEditor2 = (function ($) {
             cellData = getCellData(row, col);
             td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData && cellData.type) {
-                if (cellData.isSearchResult) {
-                    td.className += CLASS_HANDSON_SEARCH_RESULT;
-                }
+                if (cellData.value) {
+                    if (cellData.isSearchResult) {
+                        td.className += CLASS_HANDSON_SEARCH_RESULT;
+                    }
 
-                if (cellData.url !== undefined) {
-                    td.className += CLASS_HANDSON_CELL_URL;
-                    td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
-                    buildUrlLink(td);
-                } else if (cellData.value !== undefined && CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
-                    td.className += CLASS_HANDSON_CELL_CODE;
-                    td.innerHTML = buildExpressionLink('' + cellData.value, 'groovy');
-                    activateLinks(td);
-                } else if ('date' === cellData.type) {
-                    val = cellData.value;
-                    td.innerHTML = getStringFromDate(val);
+                    if (cellData.url !== undefined) {
+                        td.className += CLASS_HANDSON_CELL_URL;
+                        td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
+                        buildUrlLink(td);
+                    } else if (cellData.value !== undefined && CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
+                        td.className += CLASS_HANDSON_CELL_CODE;
+                        td.innerHTML = buildExpressionLink('' + cellData.value, 'groovy');
+                        activateLinks(td);
+                    } else if ('date' === cellData.type) {
+                        val = cellData.value;
+                        td.innerHTML = getStringFromDate(val);
+                    } else {
+                        td.innerHTML = buildExpressionLink('' + cellData.value);
+                        activateLinks(td);
+                    }
                 } else {
-                    td.innerHTML = buildExpressionLink('' + cellData.value);
-                    activateLinks(td);
+                    td.className += CLASS_HANDSON_CELL_NULL;
+                    td.innerHTML = 'null';
                 }
             } else {
                 columnDefault = getCalculatedColumnDefault(row, col);
