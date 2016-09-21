@@ -2057,7 +2057,7 @@ var NCubeEditor2 = (function ($) {
             cellData = getCellData(row, col);
             td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData && cellData.type) {
-                if (cellData.value !== undefined || cellData.url !== undefined) {
+                if ((cellData.value !== undefined && cellData.value !== null) || (cellData.url !== undefined && cellData.url !== null)) {
                     if (cellData.isSearchResult) {
                         td.className += CLASS_HANDSON_SEARCH_RESULT;
                     }
