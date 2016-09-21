@@ -452,7 +452,7 @@ var NCubeEditor2 = (function ($) {
         ids = [];
         shouldLoadAll = shouldLoadAllCells();
         start = shouldLoadAll ? 2 : Math.max(2, hot.rowOffset());
-        cLen = axes[colOffset].columnLength + colOffset;
+        cLen = colOffset ? axes[colOffset].columnLength + colOffset : 1; // special case for 1 axis
         end = shouldLoadAll ? numRows : Math.min(start + hot.countRenderedRows(), numRows);
 
         for (r = start; r < end; r++) {
@@ -2057,7 +2057,7 @@ var NCubeEditor2 = (function ($) {
             cellData = getCellData(row, col);
             td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData && cellData.type) {
-                if (cellData.value !== undefined || cellData.url !== undefined) {
+                if ((cellData.value !== undefined && cellData.value !== null) || (cellData.url !== undefined && cellData.url !== null)) {
                     if (cellData.isSearchResult) {
                         td.className += CLASS_HANDSON_SEARCH_RESULT;
                     }
