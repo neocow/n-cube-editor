@@ -95,6 +95,7 @@ class NCubeController extends BaseController
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appCache = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appBranches = new ConcurrentHashMap<>()
+    private static final Map EMPTY_CELL = [type:null, value:null]
 
 //    public static void main(String[] args)
 //    {
@@ -1065,9 +1066,18 @@ class NCubeController extends BaseController
             {
                 key.add(Converter.convert(item, Long.class))
             }
-            CellInfo cellInfo = new CellInfo(ncube.getCellByIdNoExecute(key))
-            cellInfo.collapseToUiSupportedTypes()
-            ret[idx++] = [coord, cellInfo as Map]
+            if (ncube.containsCellById(key))
+            {
+                CellInfo cellInfo = new CellInfo(ncube.getCellByIdNoExecute(key))
+                cellInfo.collapseToUiSupportedTypes()
+                ret[idx++] = [coord, cellInfo as Map]
+            }
+            else
+            {
+                CellInfo cellInfo = new CellInfo(null)
+                cellInfo.collapseToUiSupportedTypes()
+                ret[idx++] = [coord, EMPTY_CELL]
+            }
             key.clear()
         }
 
