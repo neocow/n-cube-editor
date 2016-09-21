@@ -466,7 +466,7 @@ var NCubeEditor2 = (function ($) {
         }
         
         if (ids.length) {
-            result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELLS_NO_EXECUTE, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), ids], {noResolveRefs:true});
+            result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELLS_NO_EXECUTE, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), ids], {noResolveRefs:false});
             if (result.status) {
                 addCellsToData(result.data);
                 setUpColumnWidths(false, start, end);
@@ -2057,7 +2057,7 @@ var NCubeEditor2 = (function ($) {
             cellData = getCellData(row, col);
             td.className += CLASS_HANDSON_CELL_BASIC;
             if (cellData && cellData.type) {
-                if (cellData.value) {
+                if (cellData.value || cellData.url) {
                     if (cellData.isSearchResult) {
                         td.className += CLASS_HANDSON_SEARCH_RESULT;
                     }
