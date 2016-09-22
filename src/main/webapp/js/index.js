@@ -3539,17 +3539,17 @@ var NCE = (function ($) {
             note += adds + ' cubes <b>added</b><br>';
             note += deletes + ' cubes <b>deleted</b><br>';
             note += conflicts + ' cubes in <b>conflict</b>';
-            if (updates) {
-                note += getUpdateNote(appId, updateMap['@items'], 'Updated cube names', 'cornflowerblue', true);
-            }
-            if (merges) {
-                note += getUpdateNote(appId, mergeMap['@items'], 'Merged cube names', '#D4AF37', true);
-            }
             if (adds) {
                 note += getUpdateNote(appId, addMap['@items'], 'Added cube names', 'green', true);
             }
+            if (updates) {
+                note += getUpdateNote(appId, updateMap['@items'], 'Updated cube names', 'cornflowerblue', true);
+            }
             if (deletes) {
                 note += getUpdateNote(appId, deleteMap['@items'], 'Deleted cube names', 'red', true);
+            }
+            if (merges) {
+                note += getUpdateNote(appId, mergeMap['@items'], 'Merged cube names', '#D4AF37', true);
             }
             if (conflicts) {
                 note += getUpdateNote(appId, Object.keys(_conflictMap), 'Cubes in conflict', '#F08080', false);

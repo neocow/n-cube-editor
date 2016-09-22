@@ -95,7 +95,7 @@ class NCubeController extends BaseController
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appCache = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appBranches = new ConcurrentHashMap<>()
-    private static final Map EMPTY_CELL = [type:null, value:null]
+    private static final Map NO_CELL = [type:null, value:null]
 
 //    public static void main(String[] args)
 //    {
@@ -1074,9 +1074,7 @@ class NCubeController extends BaseController
             }
             else
             {
-                CellInfo cellInfo = new CellInfo(null)
-                cellInfo.collapseToUiSupportedTypes()
-                ret[idx++] = [coord, EMPTY_CELL]
+                ret[idx++] = [coord, NO_CELL]
             }
             key.clear()
         }
