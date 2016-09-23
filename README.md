@@ -31,6 +31,7 @@ ___
 Visit http://ncube.io to see a running version of the NCUBE Editor.  Play around with it and send your feedback.  This project is very actively being developed.
 
 ## Getting Started
+### Step 1
 Make sure to set the following environment variables (or -D system properties) in order to specify the connection to your database:
 As Java system properties:
 
@@ -48,8 +49,8 @@ or environment variables:
     NCE_JDBC_PWD=ncube
     NCE_POOL_QUERY="/* ping */"
 
-Also, you will need to set up a database with one (1) table.  For the DDL see [mysql-schema.ddl](https://github.com/jdereg/n-cube/blob/master/src/test/resources/ddl/mysql-schema.sql)
-
+### Step 2
+Set up a database with a schema named 'ncube' and a single table named 'n_cube'.  For the DDL see [mysql-schema.ddl](https://github.com/jdereg/n-cube/blob/master/src/test/resources/ddl/mysql-schema.sql)
 
 See [changelog.md](/changelog.md) for revision history.
 
