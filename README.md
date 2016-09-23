@@ -32,7 +32,7 @@ Visit http://ncube.io to see a running version of the NCUBE Editor.  Play around
 
 ## Getting Started
 
-NCUBE has been tested with MySQL, Oracle, HSQLDB, and MSSQL.  It will likely run on all other SQL databases.
+NCUBE Editor has been tested with MySQL, Oracle, HSQLDB, and MSSQL.  It will likely run on all other SQL databases.  NCUBE has been designed to allow other persisters to be added.  For example, it would not be that difficult to add a MongoDB persister for NCUBE.
   
 ### Step 1
 Make sure to set the following environment variables (or -D system properties) in order to specify the connection to your database:
