@@ -39,4 +39,3 @@ Set up a database with a schema named 'ncube' and a single table named 'n_cube'.
 
 See [changelog.md](/changelog.md) for revision history.
 
-By: John DeRegnaucourt, Tym Pollack, Kenny Partlow, Josh Snynder.
