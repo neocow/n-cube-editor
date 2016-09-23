@@ -48,7 +48,7 @@ or environment variables:
     NCE_JDBC_PWD=ncube
     NCE_POOL_QUERY="/* ping */"
 
-Also, you will need to set up a database with one (1) table.  The DDL for this table in MySQL format looks like this (pulled from n-cube's src/test/resources/ddl/mysql-schema.ddl.  See [mysql-schema.ddl](/src/test/resources/ddl/mysql-schema.ddl)
+Also, you will need to set up a database with one (1) table.  For the DDL see [mysql-schema.ddl](https://github.com/jdereg/n-cube/blob/master/src/test/resources/ddl/mysql-schema.sql)
 
 
 See [changelog.md](/changelog.md) for revision history.
