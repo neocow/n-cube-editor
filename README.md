@@ -31,9 +31,12 @@ ___
 Visit http://ncube.io to see a running version of the NCUBE Editor.  Play around with it and send your feedback.  This project is very actively being developed.
 
 ## Getting Started
+
+NCUBE has been tested with MySQL, Oracle, HSQLDB, and MSSQL.  It will likely run on all other SQL databases.
+  
 ### Step 1
 Make sure to set the following environment variables (or -D system properties) in order to specify the connection to your database:
-As Java system properties:
+As Java system properties (using MySQL):
 
     -DNCE_JDBC_DRIVER="com.mysql.jdbc.Driver"
     -DNCE_JDBC_URL="jdbc:mysql://localhost:3306/ncube"
@@ -41,7 +44,7 @@ As Java system properties:
     -DNCE_JDBC_PWD="ncube" 
     -DNCE_POOL_QUERY="/* ping */"
 
-or environment variables:
+or environment variables (using MySQL):
 
     NCE_JDBC_DRIVER=com.mysql.jdbc.Driver
     NCE_JDBC_URL=jdbc:mysql://localhost:3306/ncube
