@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.AxisRef
 import com.cedarsoftware.ncube.AxisType
 import com.cedarsoftware.ncube.AxisValueType
+import com.cedarsoftware.ncube.Delta
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
@@ -112,6 +113,11 @@ class NCubeService
     void deleteBranch(ApplicationID appId)
     {
         NCubeManager.deleteBranch(appId);
+    }
+
+    NCube mergeDeltas(ApplicationID appId, String cubeName, List<Delta> deltas)
+    {
+        NCubeManager.mergeDeltas(appId, cubeName, deltas)
     }
 
     int acceptTheirs(ApplicationID appId, Object[] cubeNames, Object[] branchSha1)

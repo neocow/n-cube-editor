@@ -220,15 +220,6 @@ span.selected-count {
     color: #999;
 }
 
-.innerL {
-    position: absolute;
-}
-.innerR {
-    position: absolute;
-    opacity: 0.70;
-    mix-blend-mode: difference;
-}
-
 .hr-small
 {
     margin-top: 2px;
