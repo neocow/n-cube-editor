@@ -21,6 +21,7 @@
 
 var NCE = (function ($) {
     var head = 'HEAD';
+    var _savedCall = null;
     var _searchThread;
     var _heartBeatThread;
     var _cubeList = {};
@@ -75,6 +76,9 @@ var NCE = (function ($) {
     var _diffHtmlResult = null;
     var _diffLeftName = '';
     var _diffRightName = '';
+    var _diffAppId = null;
+    var _diffCubeName = null;
+    var _didMergeChange = false;
     var _menuOptions = [];
     var _menuList = $('#menuList');
     var _tabOverflow = $('#tab-overflow');
@@ -137,6 +141,8 @@ var NCE = (function ($) {
     var _globalComparatorMenu = $('#globalComparatorMenu');
     var _revisionHistoryList = $('#revisionHistoryList');
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
+    var _diffModalMerge = $('#diffModalMerge');
+    var _diffInstructions = $('#diffInstructions');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1348,6 +1354,10 @@ var NCE = (function ($) {
         $('#diffModalClose').on('click', function() {
             diffShow(false);
         });
+        _diffModalMerge.on('click', function() {
+            diffMerge();
+        });
+
 
         $('#diffDesc').click(function() {
             diffLoad(DIFF_DESCRIPTIVE)
@@ -2579,7 +2589,12 @@ var NCE = (function ($) {
 
     function getSelectedRevisions() {
         var obj, checkboxes, i, len, checkbox;
-        obj = {cubeIds: [], revIds: [], versions: []};
+        obj = {
+            cubeIds: [],
+            revIds: [],
+            versions: [],
+            canEdit: _revisionHistoryList.find('.commitCheck').first().is(':checked')
+        };
         checkboxes = _revisionHistoryList.find('.commitCheck:checked');
         for (i = 0, len = checkboxes.length; i < len; i++) {
             checkbox = null;
@@ -2613,7 +2628,7 @@ var NCE = (function ($) {
             title = revIds[loIdx] + ' vs ' + revIds[hiIdx];
         }
         
-        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], title);
+        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], title, getSelectedTabAppId(), _selectedCubeName, revs.canEdit);
     }
 
     function promoteRevision() {
@@ -4036,26 +4051,34 @@ var NCE = (function ($) {
     
     function diffCubes(leftInfo, rightInfo, title) {
         clearError();
-        call(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:descriptiveDiffCallback});
-        call(CONTROLLER + CONTROLLER_METHOD.FETCH_HTML_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:htmlDiffCallback});
-        setupDiff(leftInfo.branch, rightInfo.branch, title);
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:descriptiveDiffCallback});
+        setupDiff(leftInfo.branch, rightInfo.branch, title, appIdFrom(rightInfo.app, rightInfo.version, rightInfo.status, rightInfo.branch), rightInfo.name, rightInfo.branch !== head);
     }
 
-    function diffCubeRevs(id1, id2, leftName, rightName, title) {
+    function diffCubeRevs(id1, id2, leftName, rightName, title, appId, cubeName, canEdit) {
         clearError();
-        call(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:descriptiveDiffCallback});
-        call(CONTROLLER + CONTROLLER_METHOD.FETCH_HTML_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:htmlDiffCallback});
-        setupDiff(leftName, rightName, title);
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:descriptiveDiffCallback});
+        setupDiff(leftName, rightName, title, appId, cubeName, canEdit);
     }
 
-    function setupDiff(leftName, rightName, title) {
+    function setupDiff(leftName, rightName, title, appId, cubeName, canEdit) {
         _diffOutput.empty();
         $('#diffTitle')[0].innerHTML = title;
         _diffLastResult = 'Loading...';
         _diffHtmlResult = 'Loading...';
         _diffLeftName = leftName;
         _diffRightName = rightName;
-        diffLoad(DIFF_DESCRIPTIVE);
+        _diffAppId = null;
+        _diffAppId = appId;
+        _diffCubeName = cubeName;
+        if (canEdit) {
+            _diffModal.find('.select-all, .select-none, .btn-primary').show();
+            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them left to right.';
+        } else {
+            _diffModal.find('.select-all, .select-none, .btn-primary').hide();
+            _diffInstructions[0].innerHTML = 'View individual changes between two cubes.';
+        }
+        diffDescriptive(canEdit);
         diffShow(true);
     }
     
@@ -4064,106 +4087,113 @@ var NCE = (function ($) {
             _diffModal.show();
         } else {
             _diffModal.hide();
-        }
-    }
-
-    function diffLoad(viewType) {
-        _diffOutput.empty();
-        switch(viewType) {
-            case DIFF_INLINE:
-            case DIFF_SIDE_BY_SIDE:
-                diffInlineOrSideBySide(viewType);
-                break;
-            case DIFF_DESCRIPTIVE:
-                diffDescriptive();
-                break;
-            case DIFF_VISUAL:
-                diffVisual();
-                break;
-            default:
-                console.log('Error -> Unknown DIFF type');
-                break;
-        }
-    }
-    
-    function diffDescriptive() {
-        var str;
-        var stillLoading = typeof _diffLastResult !== 'object';
-
-        if (stillLoading) {
-            str = _diffLastResult;
-        } else {
-            str = _diffLastResult.delta;
-            if (!str || str == '') {
-                str = 'No difference';
+            if (_didMergeChange) {
+                _didMergeChange = false;
+                loadCube();
             }
         }
-        _diffOutput[0].innerHTML = str;
+    }
 
-        if (stillLoading) {
-            setTimeout(function () {
-                emptyDiffOutput();
-                diffDescriptive();
-            }, PROGRESS_DELAY);
+    function diffMerge() {
+        var els, checkedDeltas, allDeltas, result, i, len;
+        checkedDeltas = [];
+        allDeltas = _diffLastResult.delta['@items'];
+        els = _diffOutput.find('.mergeCheck');
+        for (i = 0, len = els.length; i < len; i++) {
+            if ($(els[i]).is(':checked')) {
+                checkedDeltas.push(allDeltas[i]);
+            }
+        }
+        result = call(CONTROLLER + CONTROLLER_METHOD.MERGE_DELTAS, [_diffAppId, _diffCubeName, checkedDeltas]);
+        if (result.status) {
+            _didMergeChange = true;
+            _diffOutput.empty();
+            _diffLastResult = null;
+            _diffLastResult = 'Loading...';
+            executeSavedCall();
+            diffDescriptive(true);
+        } else {
+            showNote('Unable to merge deltas:<hr class="hr-small"/>' + result.data);
         }
     }
-    
-    function diffInlineOrSideBySide(viewType) {
-        var leftJson, rightJson, sm, opcodes;
-        var stillLoading = typeof _diffLastResult !== 'object';
 
-        if (stillLoading) {
-        _diffOutput[0].innerHtml = _diffLastResult;
+    function diffDescriptive(canEdit) {
+        var delta, deltas, html, i, len, isCellChange, deltaLoc;
+
+        // waiting on server response
+        if (typeof _diffLastResult !== 'object') {
+            _diffOutput[0].innerHTML = _diffLastResult;
             setTimeout(function () {
                 emptyDiffOutput();
-                diffInlineOrSideBySide(viewType);
+                diffDescriptive(canEdit);
             }, PROGRESS_DELAY);
             return;
         }
 
-        leftJson = _diffLastResult.left['@items'];
-        rightJson = _diffLastResult.right['@items'];
-        
-        // create a SequenceMatcher instance that diffs the two sets of lines
-        sm = new difflib.SequenceMatcher(leftJson, rightJson);
+        // no changes detected
+        deltas = _diffLastResult.delta['@items'];
+        if (!deltas || !deltas.length) {
+            _diffOutput[0].innerHTML = 'No difference';
+            return;
+        }
 
-        // get the opcodes from the SequenceMatcher instance
-        // opcodes is a list of 3-tuples describing what changes should be made to the base text
-        // in order to yield the new text
-        opcodes = sm.get_opcodes();
+        // handle delta set
+        html = '<ul class="list-group">';
+        for (i = 0, len = deltas.length; i < len; i++) {
+            delta = null;
+            delta = deltas[i];
+            deltaLoc = delta.loc.name;
+            isCellChange = deltaLoc === DELTA.LOC.CELL;
+            html += '<li class="list-group-item skinny-lr no-margins' + (isCellChange ? ' cell-change' : '') + '">';
+            html += '<div class="container-fluid"><label class="checkbox" style="padding:0;margin:0 0 0 20px;">';
+            if (canEdit) {
+                html += '<input class="mergeCheck" type="checkbox">';
+            }
+            html += delta.desc;
+            html += '</label></div>';
+            html += '</li>';
+        }
+        html += '</ul>';
+        _diffOutput[0].innerHTML = html;
 
-        // build the diff view and add it to the current DOM
-        _diffOutput[0].appendChild(diffview.buildView({
-            baseTextLines: leftJson,
-            newTextLines: rightJson,
-            opcodes: opcodes,
-            // set the display titles for each resource
-            baseTextName: _diffLeftName,
-            newTextName: _diffRightName,
-            contextSize: 3,
-            viewType: viewType
-        }));
-        _diffOutput.find('.author').remove();
+        _diffOutput.find('li').on('click', function(e) {
+            //TODO - onDeltaClick
+        });
     }
     
-    function diffVisual() {
-        var html = '';
-        var stillLoading = typeof _diffHtmlResult !== 'object';
-
-        if (stillLoading) {
-            html += _diffHtmlResult;
-        } else {
-            html += '<div class="innerL">' + _diffHtmlResult.leftHtml + '</div>';
-            html += '<div class="innerR">' + _diffHtmlResult.rightHtml + '</div>';
+    function onDeltaClick(e) {
+        var li, isAlreadyOpen, sm, opcodes, delta, leftJson, rightJson;
+        if (!$(e.target).hasClass('mergeCheck')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            li = $(this);
+            isAlreadyOpen = li.find('.diff').length;
+            _diffOutput.find('.diff').remove();
+            if (!isAlreadyOpen) {
+                delta = _diffLastResult.delta['@items'][li.index()];
+                leftJson = constructDeltaText(delta, true);
+                rightJson = constructDeltaText(delta, false);
+                sm = new difflib.SequenceMatcher(leftJson, rightJson);
+                opcodes = sm.get_opcodes();
+                li.append(diffview.buildView({
+                    baseTextLines: leftJson,
+                    newTextLines: rightJson,
+                    opcodes: opcodes,
+                    // set the display titles for each resource
+                    baseTextName: _diffLeftName,
+                    newTextName: _diffRightName,
+                    contextSize: 3
+                }));
+                li.find('.author').remove();
+            }
         }
-        _diffOutput[0].innerHTML = html;
-        
-        if (stillLoading) {
-            setTimeout(function () {
-                emptyDiffOutput();
-                diffVisual();
-            }, PROGRESS_DELAY);
-        }
+    }
+    
+    function constructDeltaText(delta, isSource) {
+        // TODO - not yet implemented
+        // switch (delta.location) {
+        //    
+        // }
     }
 
     function emptyDiffOutput() {
@@ -4189,6 +4219,20 @@ var NCE = (function ($) {
     // ============================================ End Cube Comparison ================================================
 
     // ============================================= General Utilities =================================================
+
+    function callWithSave(target, args, params) {
+        _savedCall = null;
+        _savedCall = {target:target, args:args, params:params};
+        executeSavedCall();
+    }
+
+    function executeSavedCall() {
+        if (_savedCall) {
+            return call(_savedCall.target, _savedCall.args, _savedCall.params);
+        }
+        return {status:false, data:'Logical error.'};
+    }
+
     function loop() {
         setInterval(function() {
             var now = Date.now();

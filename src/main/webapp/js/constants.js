@@ -18,10 +18,6 @@ var SCOPE_MAP = NCE_PREFIX + 'SCOPE_MAP';
 var VISITED_BRANCHES = NCE_PREFIX + 'VISITED_BRANCHES';
 
 var PROGRESS_DELAY = 300;
-var DIFF_SIDE_BY_SIDE = 0;
-var DIFF_INLINE = 1;
-var DIFF_DESCRIPTIVE = 2;
-var DIFF_VISUAL = 3;
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
 var TAB_SEPARATOR = '~';
@@ -144,6 +140,24 @@ var METAPROPERTIES = {
     ]
 };
 
+var DELTA = {
+    LOC: {
+        AXIS: 'AXIS',
+        AXIS_META: 'AXIS_META',
+        CELL: 'CELL',
+        CELL_META: 'CELL_META',
+        COLUMN: 'COLUMN',
+        COLUMN_META: 'COLUMN_META',
+        NCUBE: 'NCUBE',
+        NCUBE_META: 'NCUBE_META'
+    },
+    TYPE: {
+        ADD: 'ADD',
+        DELETE: 'DELETE',
+        UPDATE: 'UPDATE'
+    }
+};
+
 var GROOVY_CLASS = {
     CELL_INFO: 'com.cedarsoftware.ncube.CellInfo'
 };
@@ -195,6 +209,7 @@ var CONTROLLER_METHOD = {
     IS_CUBE_CURRENT: 'isCubeUpToDate',
     LOAD_CUBE_BY_ID: 'loadCubeById',
     LOCK_APP: 'lockApp',
+    MERGE_DELTAS: 'mergeDeltas',
     MOVE_BRANCH: 'moveBranch',
     PASTE_CELLS: 'pasteCells',
     PROMOTE_REVISION: 'promoteRevision',

@@ -1493,12 +1493,22 @@ class NCubeController extends BaseController
         return true
     }
 
-    private static Map<String, Object> fetchJsonDiffs(NCube leftCube, NCube rightCube)
+    void mergeDeltas(ApplicationID appId, String cubeName, Object[] deltas)
     {
-        Map<String, Object> ret = [left:[''], right:[''], delta:'']
+        appId = addTenant(appId)
+        List<Delta> deltaList = deltas as List<Delta>
+        nCubeService.mergeDeltas(appId, cubeName, deltaList)
+    }
+
+    private static Map fetchJsonDiffs(NCube leftCube, NCube rightCube)
+    {
+        Map ret = [left:[''], right:[''], delta:[]]
         ret.left = jsonToLines(leftCube.toFormattedJson())
         ret.right = jsonToLines(rightCube.toFormattedJson())
-        return addDeltaDescription(leftCube, rightCube, ret)
+        if (leftCube && rightCube) {
+            ret.delta = DeltaProcessor.getDeltaDescription(rightCube, leftCube)
+        }
+        return ret
     }
 
     Map<String, Object> fetchJsonRevDiffs(long cubeId1, long cubeId2)
@@ -1552,25 +1562,6 @@ class NCubeController extends BaseController
         NCube leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
         NCube rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
         return fetchHtmlDiffs(leftCube, rightCube)
-    }
-
-    /**
-     * Add the n-cube delta description between the two passed in cubes to the passed in Map.
-     */
-    private static Map<String, Object> addDeltaDescription(NCube leftCube, NCube rightCube, Map<String, Object> ret)
-    {
-        if (leftCube && rightCube)
-        {
-            List<Delta> delta = DeltaProcessor.getDeltaDescription(rightCube, leftCube)
-            StringBuilder s = new StringBuilder()
-            delta.each {
-                Delta d ->
-                    s.append(d.description)
-                    s.append('<br/>')
-            }
-            ret.delta = s.toString()
-        }
-        return ret
     }
 
     private static List<String> jsonToLines(String json)

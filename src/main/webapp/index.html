@@ -30,18 +30,30 @@
             <h3 id="diffTitle" class="modal-title">Compare N-Cubes</h3>
         </div>
         <div class="modal-body">
-            <form role="form" style="height:100%">
-                <div class="form-group" style="height:100%">
-                    <div id="diffOutput" style="height:100%"></div>
+            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="diffHeading">
+                        <h4 class="panel-title">
+                            <a id="diffInstTitle" data-toggle="collapse" data-parent="#accordion" href="#diffCollapse"
+                               aria-expanded="true" aria-controls="diffCollapse">Instructions</a>
+                        </h4>
+                    </div>
+                    <div id="diffCollapse" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="diffHeading">
+                        <div id="diffInstructions" class="panel-body"></div>
+                    </div>
+                </div>
+            </div>
+            <form role="form">
+                <div class="form-group">
+                    <div id="diffOutput"></div>
                 </div>
             </form>
         </div>
         <div class="modal-footer noselect">
-            <button id="diffDesc" type="button" class="btn btn-info btn-sm pull-left">Descriptive</button>
-            <button id="diffVisual" type="button" class="btn btn-info btn-sm pull-left">Visual</button>
-            <button id="diffSide" type="button" class="btn btn-info btn-sm pull-left">Side-by-side</button>
-            <button id="diffInline" type="button" class="btn btn-info btn-sm pull-left">Inline</button>
-            <button id="diffModalClose" class="btn btn-primary">Close</button>
+            <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
+            <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
+            <button id="diffModalClose" class="btn btn-default">Close</button>
+            <button id="diffModalMerge" class="btn btn-primary">Merge</button>
         </div>
     </div>
 
