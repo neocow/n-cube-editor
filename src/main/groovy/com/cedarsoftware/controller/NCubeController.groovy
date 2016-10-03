@@ -1368,10 +1368,10 @@ class NCubeController extends BaseController
         return nCubeService.rollbackCubes(appId, cubeNames)
     }
 
-    Object updateBranch(ApplicationID appId, Object[] cubeNames, String sourceBranch)
+    Object updateBranch(ApplicationID appId, Object[] cubeDtos, String sourceBranch)
     {
         appId = addTenant(appId)
-        Map<String, Object> result = nCubeService.updateBranch(appId, cubeNames, sourceBranch)
+        Map<String, Object> result = nCubeService.updateBranch(appId, cubeDtos, sourceBranch)
         return result
     }
 
