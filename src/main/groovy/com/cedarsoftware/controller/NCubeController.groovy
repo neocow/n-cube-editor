@@ -2026,7 +2026,7 @@ class NCubeController extends BaseController
         }
         for (Map.Entry<String, Object> entry : col.getMetaProperties())
         {
-            map.metaProps[entry.key] = entry.value == null ? 'null' : entry.value.toString()
+            map.metaProps[entry.key] = entry.value == null ? 'null' : entry.value
         }
         map.displayOrder = col.displayOrder as long
         return map
