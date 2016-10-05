@@ -158,6 +158,15 @@ var DELTA = {
     }
 };
 
+var CHANGETYPE = {
+    CREATED: {CODE: 'C', CSS_CLASS: 'cube-added', LABEL: 'Added Cubes'},
+    RESTORED: {CODE: 'R', CSS_CLASS: 'cube-restored', LABEL: 'Restored Cubes'},
+    UPDATED: {CODE: 'U', CSS_CLASS: 'cube-modified', LABEL: 'Updated Cubes'},
+    DELETED: {CODE: 'D', CSS_CLASS: 'cube-deleted', LABEL: 'Deleted Cubes'},
+    FASTFORWARD: {CODE: 'F', CSS_CLASS: 'cube-fastforward', LABEL: 'No Change - Updated HEAD SHA-1'},
+    CONFLICT: {CODE: 'X', CSS_CLASS: 'cube-conflict', LABEL: 'Cubes in Conflict'}
+};
+
 var GROOVY_CLASS = {
     CELL_INFO: 'com.cedarsoftware.ncube.CellInfo'
 };

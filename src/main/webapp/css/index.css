@@ -294,12 +294,20 @@ span.selected-count {
     margin-bottom: 0;
 }
 
+.cube-fastforward {
+    color: darkgrey;
+}
+
+.cube-conflict {
+    color: red;
+}
+
 .cube-modified {
-    color: blue !important;
+    color: blue;
 }
 
 .cube-added {
-    color: green !important;
+    color: green;
 }
 
 .cube-deleted {
@@ -307,7 +315,7 @@ span.selected-count {
 }
 
 .cube-restored {
-    color: darkgoldenrod !important;
+    color: goldenrod;
 }
 
 .top-buffer { margin-top:20px; }

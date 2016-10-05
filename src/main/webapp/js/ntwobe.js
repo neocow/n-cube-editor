@@ -3557,7 +3557,7 @@ var NCubeEditor2 = (function ($) {
                 var inputs = $(el).closest('.modal').find('input[type="text"]');
                 var idx = inputs.index(el);
                 $(el).blur();
-                editColAdd(null, idx);
+                editColAdd([null], idx);
                 el = null;
                 inputs = null;
                 return;
@@ -3583,7 +3583,7 @@ var NCubeEditor2 = (function ($) {
         });
 
         $('#editColAdd').on('click', function() {
-            editColAdd(null, null);
+            editColAdd([null], null);
         });
         $('#editColDelete').on('click', editColDelete);
         $('#editColUp').on('click', editColUp);
@@ -3597,17 +3597,13 @@ var NCubeEditor2 = (function ($) {
         _editColClipboard.focus();
 
         setTimeout(function() {
-            var content = _editColClipboard.val();
+            var content, vals;
+            content = _editColClipboard.val();
             if (content === null || content === '') {
                 return;
             }
-            var vals = content.split(/\t|\n/);
-            for (var i = 0, len = vals.length; i < len; i++) {
-                var addedColVal = vals[i];
-                if (addedColVal !== '') {
-                    editColAdd(addedColVal);
-                }
-            }
+            vals = content.split(/\t|\n/);
+            editColAdd(vals);
         },100);
     }
 
@@ -3648,6 +3644,7 @@ var NCubeEditor2 = (function ($) {
             nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
+        editColumnInstructions(axis);
         sortColumns(axis);
         loadColumns(axis);
         if (axis.preferredOrder === 1) {
@@ -3674,62 +3671,70 @@ var NCubeEditor2 = (function ($) {
         return _colIds--;
     }
 
-    function editColAdd(addedColVal, addedAtIndex) {
-        var input = $('.editColCheckBox');
-        var loc = addedAtIndex;
+    function editColAdd(addedColVals, addedAtIndex) {
+        var input, loc, axis, newCol, html, i, len, addedColVal, c, cLen;
+        input = $('.editColCheckBox');
+        loc = addedAtIndex;
         if (loc === undefined || loc === null) {
             loc = -1;
-            $.each(input, function (index, btn) {
-                if ($(this).prop('checked')) {
-                    loc = index;
+            for (i = 0, len = input.length; i < len; i++) {
+                if (input[i].checked) {
+                    loc = i;
+                    break;
                 }
-            });
+            }
         }
-        var axis = _columnList.prop('model');
-        var newCol = {
-            '@type': 'com.cedarsoftware.ncube.Column',
-            'value': addedColVal === undefined || addedColVal === null ? 'newValue' : addedColVal,
-            'id': getUniqueId()
-        };
+        axis = _columnList.prop('model');
+        html = '';
 
-        if (loc === -1 || axis.preferredOrder === 0) {
-            axis.columns.push(newCol);
-            loc = input.length - 1;
-        } else {
-            axis.columns.splice(loc + 1, 0, newCol);
+        for (c = 0, cLen = addedColVals.length; c < cLen; c++){
+            addedColVal = addedColVals[c];
+            if (addedColVal === '') {
+                continue; // blank row from excel copy
+            }
+            newCol = null;
+            newCol = {
+                '@type': 'com.cedarsoftware.ncube.Column',
+                'value': addedColVal === undefined || addedColVal === null ? 'newValue' : addedColVal,
+                'id': getUniqueId()
+            };
+
+            if (loc === -1 || !axis.preferredOrder) {
+                axis.columns.push(newCol);
+            } else {
+                axis.columns.splice(loc + 1, 0, newCol);
+            }
+
+            html += buildColumnHtml(newCol, axis.type.name === 'RULE');
         }
-        loadColumns(axis);
+
+        if (input.length) {
+            _columnList.find('div.row').eq(loc).after(html);
+        } else {
+            _columnList.append(html);
+        }
 
         // Select newly added column name, so user can just type over it.
         input = _columnList.find('.form-control');
         input[loc + 1].select();
-        input = null;
-        axis = null;
-        newCol = null;
     }
 
     function editColDelete() {
+        var i, len;
         var axis = _columnList.prop('model');
         var cols = axis.columns;
         var colsToDelete = [];
-        $.each($('.editColCheckBox'), function (index, btn) {
-            if ($(this).prop('checked')) {
-                colsToDelete.push(index);
+        var checkBoxes = $('.editColCheckBox');
+        for (i = checkBoxes.length - 1; i >= 0; i--) {
+            if (checkBoxes[i].checked) {
+                cols.splice(i, 1);
+                $(checkBoxes[i]).parent().parent().parent().remove();
             }
-        });
-
-        // Walk through in reverse order, deleting from back to front so that
-        // the correct elements are deleted.
-        for (var i=colsToDelete.length - 1; i >= 0; i--) {
-            cols.splice(colsToDelete[i], 1);
         }
-        loadColumns(axis);
-        axis = null;
-        cols = null;
-        colsToDelete = null;
     }
 
     function editColUp() {
+        var i, len, row;
         var axis = _columnList.prop('model');
         var cols = axis.columns;
         var input = $('.editColCheckBox');
@@ -3739,30 +3744,17 @@ var NCubeEditor2 = (function ($) {
             return;
         }
 
-        for (var i=0; i < input.length - 1; i++) {
-            var tag = input[i];
-            cols[i].checked = tag.checked;
-            if (!tag.checked) {
-                var nextTag = input[i + 1];
-                cols[i + 1].checked = nextTag.checked;
-                if (nextTag.checked) {
-                    tag.checked = true;
-                    nextTag.checked = false;
-
-                    var temp = cols[i];
-                    cols[i] = cols[i + 1];
-                    cols[i + 1] = temp;
-
-                    cols[i].checked = true;
-                    cols[i + 1].checked = false;
-                }
+        for (i = 1, len = input.length; i < len; i++) {
+            if (input[i].checked) {
+                cols[i] = cols.splice(i - 1, 1, cols[i])[0];
+                row = $(input[i]).parent().parent().parent();
+                row.insertBefore(row.siblings().eq(i - 1));
             }
         }
-
-        loadColumns(axis);
     }
 
     function editColDown() {
+        var i, row;
         var axis = _columnList.prop('model');
         var cols = axis.columns;
         var input = $('.editColCheckBox');
@@ -3772,27 +3764,13 @@ var NCubeEditor2 = (function ($) {
             return;
         }
 
-        for (var i=input.length - 1; i; i--) {
-            var tag = input[i];
-            cols[i].checked = tag.checked;
-            if (!tag.checked) {
-                var nextTag = input[i - 1];
-                cols[i - 1].checked = nextTag.checked;
-                if (nextTag.checked) {
-                    tag.checked = true;
-                    nextTag.checked = false;
-
-                    var temp = cols[i];
-                    cols[i] = cols[i - 1];
-                    cols[i - 1] = temp;
-
-                    cols[i].checked = true;
-                    cols[i - 1].checked = false;
-                }
+        for (i = input.length - 2; i >= 0; i--) {
+            if (input[i].checked) {
+                cols[i] = cols.splice(i + 1, 1, cols[i])[0];
+                row = $(input[i]).parent().parent().parent();
+                row.insertAfter(row.siblings().eq(i));
             }
         }
-
-        loadColumns(axis);
     }
 
     function editColCancel() {
@@ -3802,24 +3780,28 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editColSave() {
-        var axis = _columnList.prop('model');
+        var axis, result, lowerAxisName;
+        axis = _columnList.prop('model');
         _columnList.find('input[data-type=cond]').each(function(index, elem) {
-            axis.columns[index].value = elem.value;
+            var col = axis.columns[index];
+            col.value = elem.value;
+            col.displayOrder = index;
         });
         _columnList.find('input[data-type=name]').each(function(index, elem) {
             var col = axis.columns[index];
+            col.displayOrder = index;
             if (col.metaProp) {
                 col.metaProp.name = elem.value;
             }
         });
         axis.defaultCol = null;
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_AXIS_COLUMNS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name, axis.columns]);
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_AXIS_COLUMNS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name, axis.columns]);
         
         if (!result.status) {
             nce.showNote("Unable to update columns for axis '" + axis.name + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
-        var lowerAxisName = axis.name.toLowerCase();
+        lowerAxisName = axis.name.toLowerCase();
         if (_hiddenColumns.hasOwnProperty(lowerAxisName)) {
             nce.showNote('Hidden column selections for axis ' + axis.name + ' removed.', 'Note', 2000);
             delete _hiddenColumns[lowerAxisName];
@@ -3830,7 +3812,7 @@ var NCubeEditor2 = (function ($) {
         reload();
     }
 
-    function loadColumns(axis) {
+    function editColumnInstructions(axis) {
         var insTitle = $('#editColInstTitle');
         var inst = $('#editColInstructions');
         if ('DISCRETE' == axis.type.name) {
@@ -3912,60 +3894,45 @@ var NCubeEditor2 = (function ($) {
             insTitle[0].textContent = 'Instructions';
             inst[0].innerHTML = 'Unknown axis type';
         }
+    }
 
-        var axisList = axis.columns;
+    function loadColumns(axis) {
+        var axisList, i, len, column, html, isAxisRuleType;
+        axisList = axis.columns;
         _columnList.empty();
         _columnList.prop('model', axis);
-        var displayOrder = 0;
-        $.each(axisList, function (key, item) {
-            if (!item.displayOrder || item.displayOrder < 2147483647) {   // Don't add default column in
-                item.displayOrder = displayOrder++;
-                var rowDiv = $('<div/>').prop({class: "row", "model": item});
-                var div = $('<div/>').prop({class: "input-group"});
-                var span = $('<span/>').prop({class: "input-group-addon"});
-                var inputBtn = $('<input/>').prop({class: "editColCheckBox", "type": "checkbox"});
-                if (item.checked === true) {
-                    inputBtn[0].checked = true;
-                }
+        html = '';
+        isAxisRuleType = axis.type.name === 'RULE';
 
-                // For rules with URL to conditions, support URL: (or url:) in front of URL - then store as URL
-                if (axis.type.name == 'RULE') {
-                    if (!item.metaProps) {
-                        item.metaProps = {"name": "Condition " + displayOrder};
-                    }
-                    var inputName = $('<input/>').prop({class: "form-control", "type": "text"});
-                    inputName.attr({"data-type": "name"});
-                    inputName.on('blur', function () {
-                        item.metaProps.name = inputName.val();
-                    });
-                    inputName.val(item.metaProps.name);
-                }
-
-                var inputText = $('<input/>').prop({class: "form-control", "type": "text"});
-                inputText.attr({"data-type":"cond"});
-                inputText.on('blur', function() {
-                    item.value = inputText.val();
-                });
-
-                var prefix = '';
-                if (item.isUrl) {
-                    prefix += 'url|';
-                }
-                if (item.isCached) {
-                    prefix += 'cache|';
-                }
-
-                inputText.val(prefix + item.value);
-                _columnList.append(rowDiv);
-                rowDiv.append(div);
-                div.append(span);
-                span.append(inputBtn);
-                if (axis.type.name == 'RULE') {
-                    div.append(inputName);
-                }
-                div.append(inputText);
+        for (i = 0, len = axisList.length; i < len; i++) {
+            column = null;
+            column = axisList[i];
+            if (!column.displayOrder || column.displayOrder < 2147483647) {   // Don't add default column
+                html += buildColumnHtml(column, isAxisRuleType);
             }
-        });
+        }
+        _columnList.append(html);
+    }
+    
+    function buildColumnHtml(column, isAxisRuleType) {
+        var html, prefix;
+        prefix = '';
+        if (column.isUrl) {
+            prefix += 'url|';
+        }
+        if (column.isCached) {
+            prefix += 'cache|';
+        }
+
+        html = '<div class="row"><div class="input-group">';
+        html += '<span class="input-group-addon"><input class="editColCheckBox" type="checkbox"/></span>';
+        if (isAxisRuleType) {
+            html += '<input class="form-control" type="text" data-type="name" value="' + column.metaProps.name + '" />';
+        }
+        html += '<input class="form-control" type="text" data-type="cond" value="' + prefix + column.value + '" />';
+        html += '</div></div>';
+
+        return html;
     }
 
     // =============================================== End Column Editing ==============================================

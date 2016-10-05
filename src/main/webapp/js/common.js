@@ -242,7 +242,7 @@ function addModalFilters() {
         var refreshItems = function() {
             input.val('');
             input.focus();
-            items = list.is('ul') ? list.find('li') : list.find('tr').has('input[type="checkbox"]');
+            items = (list.is('ul') ? list.find('li') : list.find('tr')).has('input[type="checkbox"]');
             items.on('remove', function() {
                 delay(function() {
                     refreshItems();
