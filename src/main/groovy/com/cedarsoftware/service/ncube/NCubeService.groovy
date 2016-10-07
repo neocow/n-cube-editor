@@ -70,9 +70,9 @@ class NCubeService
         return NCubeManager.getVersions(tenant, app)
     }
 
-    void copyBranch(ApplicationID srcAppId, ApplicationID targetAppId)
+    void copyBranch(ApplicationID srcAppId, ApplicationID targetAppId, boolean copyWithHistory = false)
     {
-        NCubeManager.copyBranch(srcAppId, targetAppId)
+        NCubeManager.copyBranch(srcAppId, targetAppId, copyWithHistory)
     }
 
     Set<String> getBranches(ApplicationID appId)
@@ -95,7 +95,7 @@ class NCubeService
         return NCubeManager.getHeadChangesForBranch(appId)
     }
 
-    List<NCubeInfoDto> commitBranch(ApplicationID appId, Object[] infoDtos)
+    Map<String, Object> commitBranch(ApplicationID appId, Object[] infoDtos)
     {
         return NCubeManager.commitBranch(appId, infoDtos)
     }

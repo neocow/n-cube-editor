@@ -1835,7 +1835,7 @@ var NCubeEditor2 = (function ($) {
                         for (axisNum = 0; axisNum < colOffset; axisNum++) {
                             axisName = axes[axisNum].name;
                             axisVal = getRowHeaderPlainText(r, axisNum);
-                            display += '<strong>' + axisName + '</strong>: ' + axisVal + ', ';
+                            display += '<b>' + axisName + '</b>: ' + axisVal + ', ';
                         }
                         ghostKeys = Object.keys(_ghostAxes);
                         ghostLen = ghostKeys.length;
@@ -1844,7 +1844,7 @@ var NCubeEditor2 = (function ($) {
                                 ghostAxis = null;
                                 ghostAxis = _ghostAxes[ghostKeys[g]];
                                 ghostAxisColumns = ghostAxis.columns;
-                                display += '<strong>' + ghostAxis.name + '</strong>: '
+                                display += '<b>' + ghostAxis.name + '</b>: '
                                     + getAxisColumnPlainText(ghostAxis, ghostAxisColumns[Object.keys(ghostAxisColumns)[0]]) + ', ';
                             }
                         }
@@ -1856,13 +1856,13 @@ var NCubeEditor2 = (function ($) {
                             axisName = axes[0].name;
                             axisVal = getRowHeaderPlainText(r, 0);
                         }
-                        display += '<strong>' + axisName + '</strong>: ' + axisVal;
+                        display += '<b>' + axisName + '</b>: ' + axisVal;
                     } else if (r) {
-                        display = '<strong>Axis</strong>: ' + axes[colOffset].name + ', <strong>Column</strong>:' + getColumnHeaderValue(c);
+                        display = '<b>Axis</b>: ' + axes[colOffset].name + ', <b>Column</b>:' + getColumnHeaderValue(c);
                     }
                 }
                 else if (r > 1) {
-                    display = '<strong>Axis</strong>: ' + axes[c].name + ', <strong>Column</strong>:' + getRowHeaderPlainText(r, c);
+                    display = '<b>Axis</b>: ' + axes[c].name + ', <b>Column</b>:' + getRowHeaderPlainText(r, c);
                 }
                 
                 resetCoordinateBar(display);

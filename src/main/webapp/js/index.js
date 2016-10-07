@@ -2525,7 +2525,7 @@ var NCE = (function ($) {
                     curVer = dto.version + '-' + dto.status;
                     if (curVer !== prevVer) {
                         prevVer = curVer;
-                        html += '<li class="list-group-item skinny-lr"><strong>' + prevVer + '</strong></li>';
+                        html += '<li class="list-group-item skinny-lr"><b>' + prevVer + '</b></li>';
                     }
                 }
                 text = 'rev: ' + dto.revision + '&nbsp;&nbsp;&nbsp;';
@@ -3460,15 +3460,23 @@ var NCE = (function ($) {
             }
             return;
         }
-        branchChanges.sort(function(a, b) {
-            return a.changeType.localeCompare(b.changeType) || a.name.localeCompare(b.name);
-        });
+        branchChanges.sort(sortBranchChanges);
 
         _branchCompareUpdateModal.prop({branchName: branchName, branchChanges: branchChanges});
         buildUlForCompare(_branchCompareUpdateList, branchName === head, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
 
         _branchCompareUpdateModal.modal();
         setTimeout(selectAll, PROGRESS_DELAY);
+    }
+    
+    function sortBranchChanges(a, b) {
+        var aType, bType;
+        if (a.changeType === b.changeType) {
+            return a.name.localeCompare(b.name);
+        }
+        aType = getLabelDisplayTypeForInfoDto(a);
+        bType = getLabelDisplayTypeForInfoDto(b);
+        return aType.DISPLAY_ORDER - bType.DISPLAY_ORDER;
     }
 
     function buildUlForCompare(ul, isCompareToHead, branchChanges, options) {
@@ -3506,6 +3514,18 @@ var NCE = (function ($) {
                 }
             }
         });
+        addCountsToChangeTypeHeaders(ul);
+    }
+
+    function addCountsToChangeTypeHeaders(ul) {
+        var changeTypeHeaders, cssClass, li, i, len, count;
+        changeTypeHeaders = ul.find('li.changeTypeHeader');
+        for (i = 0, len = changeTypeHeaders.length; i < len; i++) {
+            li = $(changeTypeHeaders[i]);
+            cssClass = li.data('changetype');
+            count = li.parent().find('label.' + cssClass).find('input[type="checkbox"]').length;
+            li[0].innerHTML = li[0].innerHTML + '<span class="change-type-header-count"> (' + count + ')</span>';
+        }
     }
 
     function branchCompareUpdateOk() {
@@ -3525,95 +3545,85 @@ var NCE = (function ($) {
         callUpdateBranchCubes(getAppId(), changes, branchName);
     }
 
+    function handleUpdateReturnValues(appId, map, isUpdate) {
+        var note, updateMap, addMap, deleteMap, rejectMap, fastforwardMap, restoreMap,
+            updates, adds, deletes, rejects, fastforwards, restores;
+        updateMap = map['updates'];
+        restoreMap = map['restores'];
+        addMap = map['adds'];
+        deleteMap = map['deletes'];
+        rejectMap = map['rejects'];
+        fastforwardMap = map['fastforwards'];
+        updates = 0;
+        restores = 0;
+        adds = 0;
+        deletes = 0;
+        rejects = 0;
+        fastforwards = 0;
+
+        if (updateMap && updateMap['@items']) {
+            updates = updateMap['@items'].length;
+        }
+        if (restoreMap && restoreMap['@items']) {
+            restores = restoreMap['@items'].length;
+        }
+        if (addMap && addMap['@items']) {
+            adds = addMap['@items'].length;
+        }
+        if (deleteMap && deleteMap['@items']) {
+            deletes = deleteMap['@items'].length;
+        }
+        if (rejectMap && rejectMap['@items']) {
+            rejects = rejectMap['@items'].length;
+        }
+        if (fastforwardMap && fastforwardMap['@items']) {
+            fastforwards = fastforwardMap['@items'].length;
+        }
+
+        note = '<b>Branch ' + (isUpdate ? 'Updated' : 'Committed') + ':</b><hr class="hr-small"/>';
+        note += adds + ' cubes <b class="' + CHANGETYPE.CREATED.CSS_CLASS + '">added</b><br>';
+        note += restores + ' cubes <b class="' + CHANGETYPE.RESTORED.CSS_CLASS + '">restored</b><br>';
+        note += updates + ' cubes <b class="' + CHANGETYPE.UPDATED.CSS_CLASS + '">updated</b><br>';
+        note += deletes + ' cubes <b class="' + CHANGETYPE.DELETED.CSS_CLASS + '">deleted</b><br>';
+        if (isUpdate) {
+            note += fastforwards + ' cubes <b class="' + CHANGETYPE.FASTFORWARD.CSS_CLASS + '">fast-forwarded</b><br>';
+        }
+        note += rejects + ' cubes <b class="' + CHANGETYPE.CONFLICT.CSS_CLASS + '">rejected</b>';
+
+        if (adds) {
+            note += getUpdateNote(appId, addMap['@items'], 'Added cube names', 'green', true);
+        }
+        if (restores) {
+            note += getUpdateNote(appId, restoreMap['@items'], 'Restored cube names', 'goldenrod', true);
+        }
+        if (updates) {
+            note += getUpdateNote(appId, updateMap['@items'], 'Updated cube names', 'cornflowerblue', true);
+        }
+        if (deletes) {
+            note += getUpdateNote(appId, deleteMap['@items'], 'Deleted cube names', 'white', true);
+        }
+        if (fastforwards) {
+            note += getUpdateNote(appId, fastforwardMap['@items'], 'Fast-forwarded cube names', 'lightgrey', true);
+        }
+        if (rejects) {
+            note += getUpdateNote(appId, rejectMap['@items'], 'Rejected cube names', 'red', false);
+        }
+        showNote(note);
+    }
+
     function callUpdateBranchCubes(appId, cubeDtos, branchName, isFromTabMenu) {
         showNote('Updating selected cubes...', 'Please wait...');
         setTimeout(function() {
             var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeDtos, branchName]);
-            var note, map, updateMap, mergeMap, addMap, deleteMap, rejectMap, fastforwardMap,
-                updates, merges, conflicts, adds, deletes, rejects, fastforwards;
             clearError();
             if (!result.status) {
                 showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
                 return;
             }
 
-            map = result.data;
-            updateMap = map['updates'];
-            mergeMap = map['merges'];
-            addMap = map['adds'];
-            deleteMap = map['deletes'];
-            rejectMap = map['rejects'];
-            fastforwardMap = map['fastforwards'];
-            _conflictMap = map['conflicts'];
-            updates = 0;
-            merges = 0;
-            adds = 0;
-            deletes = 0;
-            rejects = 0;
-            fastforwards = 0;
-            conflicts = 0;
-
-            if (updateMap && updateMap['@items']) {
-                updates = updateMap['@items'].length;
-            }
-            if (mergeMap && mergeMap['@items']) {
-                merges = mergeMap['@items'].length;
-            }
-            if (addMap && addMap['@items']) {
-                adds = addMap['@items'].length;
-            }
-            if (deleteMap && deleteMap['@items']) {
-                deletes = deleteMap['@items'].length;
-            }
-            if (rejectMap && rejectMap['@items']) {
-                rejects = rejectMap['@items'].length;
-            }
-            if (fastforwardMap && fastforwardMap['@items']) {
-                fastforwards = fastforwardMap['@items'].length;
-            }
-            if (_conflictMap) {
-                delete _conflictMap['@type'];
-                conflicts = countKeys(_conflictMap);
-            }
-
-            note = '<b>Branch Updated:</b><hr class="hr-small"/>' + updates + ' cubes <b>updated</b><br>';
-            note += merges + ' cubes <b>merged</b><br>';
-            note += adds + ' cubes <b>added</b><br>';
-            note += deletes + ' cubes <b>deleted</b><br>';
-            note += conflicts + ' cubes in <b>conflict</b><br>';
-            note += fastforwards + ' cubes <b>fast-forwarded</b><br>';
-            note += rejects + ' cubes <b>rejected</b>';
-            
-            if (adds) {
-                note += getUpdateNote(appId, addMap['@items'], 'Added cube names', 'green', true);
-            }
-            if (updates) {
-                note += getUpdateNote(appId, updateMap['@items'], 'Updated cube names', 'cornflowerblue', true);
-            }
-            if (deletes) {
-                note += getUpdateNote(appId, deleteMap['@items'], 'Deleted cube names', 'red', true);
-            }
-            if (merges) {
-                note += getUpdateNote(appId, mergeMap['@items'], 'Merged cube names', '#D4AF37', true);
-            }
-            if (conflicts) {
-                note += getUpdateNote(appId, Object.keys(_conflictMap), 'Cubes in conflict', '#F08080', false);
-            }
-            if (fastforwards) {
-                note += getUpdateNote(appId, fastforwardMap['@items'], 'Fast-forwarded cube names', 'grey', true);
-            }
-            if (rejects) {
-                note += getUpdateNote(appId, rejectMap['@items'], 'Rejected cube names', 'brown', false);
-            }
-            showNote(note);
+            handleUpdateReturnValues(appId, result.data, true);
             saveOpenCubeList();
             buildTabs();
-
-            if (conflicts) {
-                mergeBranch(_conflictMap);
-                return;
-            }
-
             if (appIdsEqual(appId, getAppId())) {
                 if (!isFromTabMenu) {
                     compareUpdateBranch(branchName, true);
@@ -3627,18 +3637,17 @@ var NCE = (function ($) {
     }
 
     function buildHtmlListForCompare(branchChanges, options) {
-        var i, len, infoDto, prevChangeType, changeType, displayType, changeTypeCount;
+        var i, len, infoDto, prevChangeType, changeType, displayType;
         var html = '';
         var inputClass = options.inputClass;
-        changeTypeCount = 0;
         for (i = 0, len = branchChanges.length; i < len; i++) {
             infoDto = branchChanges[i];
             changeType = infoDto.changeType;
             displayType = getLabelDisplayTypeForInfoDto(infoDto);
             if (changeType !== prevChangeType) {
                 prevChangeType = changeType;
-                html += '<li class="list-group-item skinny-lr changeTypeHeader ' + displayType.CSS_CLASS + '" data-changetype="'
-                    + displayType.CSS_CLASS + '"><strong>' + displayType.LABEL + '</strong></li>';
+                html += '<li class="list-group-item skinny-lr changeTypeHeader" data-changetype="'
+                    + displayType.CSS_CLASS + '"><b class="' + displayType.CSS_CLASS + '">' + displayType.LABEL + '</b></li>';
             }
 
             html += '<li class="list-group-item skinny-lr no-margins" style="padding-left:0;">';
@@ -3718,9 +3727,7 @@ var NCE = (function ($) {
         $('#commitRollbackLabel')[0].textContent = title;
 
         branchChanges = result.data;
-        branchChanges.sort(function(a, b) {
-            return a.changeType.localeCompare(b.changeType) || a.name.localeCompare(b.name);
-        });
+        branchChanges.sort(sortBranchChanges);
 
         _commitModal.prop('changes', branchChanges);
         buildUlForCompare(_commitRollbackList, true, branchChanges, {inputClass:'commitCheck', compare:true});
@@ -3770,11 +3777,9 @@ var NCE = (function ($) {
             }
             reloadCube();
 
-            note = 'Successfully committed ' + result.data.length + ' cube(s).';
-            note += getUpdateNote(appId, result.data, 'Committed cubes', 'cornflowerblue', true);
+            handleUpdateReturnValues(appId, result.data, false);
             saveOpenCubeList();
             buildTabs();
-            showNote(note);
         }, PROGRESS_DELAY);
     }
 
@@ -3912,7 +3917,7 @@ var NCE = (function ($) {
             branch: $('#copyBranchName').val()
         };
         
-        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, true]);
         if (!result.status) {
             showNote('Unable to copy branch:<hr class="hr-small"/>' + result.data);
             return;

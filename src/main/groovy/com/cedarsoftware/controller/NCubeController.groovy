@@ -19,7 +19,6 @@ import com.cedarsoftware.ncube.NCubeTest
 import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.exception.AxisOverlapException
-import com.cedarsoftware.ncube.exception.BranchMergeException
 import com.cedarsoftware.ncube.exception.CommandCellException
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.RuleJump
@@ -1259,11 +1258,11 @@ class NCubeController extends BaseController
         }
     }
 
-    void copyBranch(ApplicationID srcAppId, ApplicationID targetAppId)
+    void copyBranch(ApplicationID srcAppId, ApplicationID targetAppId, boolean copyWithHistory = false)
     {
         srcAppId = addTenant(srcAppId)
         targetAppId = addTenant(targetAppId)
-        nCubeService.copyBranch(srcAppId, targetAppId)
+        nCubeService.copyBranch(srcAppId, targetAppId, copyWithHistory)
         if (ArrayUtilities.size(getCachedApps(tenant)) > 0)
         {
             addToAppCache(targetAppId.tenant, targetAppId.app)
@@ -1320,46 +1319,18 @@ class NCubeController extends BaseController
 
     Object commitCube(ApplicationID appId, String cubeName)
     {
-        try
-        {   // Do not remove try-catch here in favor of Advice handler.
-            appId = addTenant(appId)
-            Map options = [:]
-            options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
-            options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
-            List<NCubeInfoDto> list = nCubeService.search(appId, cubeName, null, options)
-            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, list.toArray())
-            return committedCubes.toArray()
-        }
-        catch (BranchMergeException e)
-        {
-            markRequestFailed(e.getMessage())
-            return e.getErrors()
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return [:]
-        }
+        appId = addTenant(appId)
+        Map options = [:]
+        options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
+        options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
+        List<NCubeInfoDto> list = nCubeService.search(appId, cubeName, null, options)
+        return nCubeService.commitBranch(appId, list)
     }
 
     Object commitBranch(ApplicationID appId, Object[] infoDtos)
     {
-        try
-        {   // Do not remove try-catch here in favor of Advice handler.
-            appId = addTenant(appId)
-            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos)
-            return committedCubes.toArray()
-        }
-        catch (BranchMergeException e)
-        {
-            markRequestFailed(e.getMessage())
-            return e.getErrors()
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return [:]
-        }
+        appId = addTenant(appId)
+        return nCubeService.commitBranch(appId, infoDtos)
     }
 
     Integer rollbackBranch(ApplicationID appId, Object[] cubeNames)
@@ -1754,7 +1725,6 @@ class NCubeController extends BaseController
     {
         markRequestFailed(getCauses(e))
         if (e instanceof AxisOverlapException ||
-            e instanceof BranchMergeException ||
             e instanceof CommandCellException ||
             e instanceof CoordinateNotFoundException ||
             e instanceof RuleJump ||

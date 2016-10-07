@@ -159,12 +159,12 @@ var DELTA = {
 };
 
 var CHANGETYPE = {
-    CREATED: {CODE: 'C', CSS_CLASS: 'cube-added', LABEL: 'Added Cubes'},
-    RESTORED: {CODE: 'R', CSS_CLASS: 'cube-restored', LABEL: 'Restored Cubes'},
-    UPDATED: {CODE: 'U', CSS_CLASS: 'cube-modified', LABEL: 'Updated Cubes'},
-    DELETED: {CODE: 'D', CSS_CLASS: 'cube-deleted', LABEL: 'Deleted Cubes'},
-    FASTFORWARD: {CODE: 'F', CSS_CLASS: 'cube-fastforward', LABEL: 'No Change - Updated HEAD SHA-1'},
-    CONFLICT: {CODE: 'X', CSS_CLASS: 'cube-conflict', LABEL: 'Cubes in Conflict'}
+    CREATED: {CODE: 'C', DISPLAY_ORDER: 0, CSS_CLASS: 'cube-added', LABEL: 'Added Cubes'},
+    RESTORED: {CODE: 'R', DISPLAY_ORDER: 1, CSS_CLASS: 'cube-restored', LABEL: 'Restored Cubes'},
+    UPDATED: {CODE: 'U', DISPLAY_ORDER: 2, CSS_CLASS: 'cube-modified', LABEL: 'Updated Cubes'},
+    DELETED: {CODE: 'D', DISPLAY_ORDER: 3, CSS_CLASS: 'cube-deleted', LABEL: 'Deleted Cubes'},
+    FASTFORWARD: {CODE: 'F', DISPLAY_ORDER: 4, CSS_CLASS: 'cube-fastforward', LABEL: 'No Change - Updated HEAD SHA-1'},
+    CONFLICT: {CODE: 'X', DISPLAY_ORDER: 5, CSS_CLASS: 'cube-conflict', LABEL: 'Cubes in Conflict'}
 };
 
 var GROOVY_CLASS = {

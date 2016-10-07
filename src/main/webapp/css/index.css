@@ -294,6 +294,11 @@ span.selected-count {
     margin-bottom: 0;
 }
 
+.change-type-header-count {
+    color: #999;
+    text-decoration: none;
+}
+
 .cube-fastforward {
     color: darkgrey;
 }
@@ -303,7 +308,7 @@ span.selected-count {
 }
 
 .cube-modified {
-    color: blue;
+    color: cornflowerblue;
 }
 
 .cube-added {
