@@ -20,33 +20,15 @@
  */
 
 /**
- * return number of 'own' keys in object
- */
-function countKeys(object)
-{
-    var count = 0;
-    for (var key in object)
-    {
-        if (object.hasOwnProperty(key))
-        {
-            count++;
-        }
-    }
-    return count;
-}
-
-/**
  * Convert strings containing DOS-style '*' or '?' to a regex String.
  */
-function wildcardToRegexString(wildcard)
-{
+function wildcardToRegexString(wildcard) {
+    var i, len, c;
     var s = '';
 
-    for (var i = 0, is = wildcard.length; i < is; i++)
-    {
-        var c = wildcard.charAt(i);
-        switch (c)
-        {
+    for (i = 0, len = wildcard.length; i < len; i++) {
+        c = wildcard.charAt(i);
+        switch (c) {
             case '*':
                 s += '.*?';
                 break;
@@ -82,30 +64,24 @@ function wildcardToRegexString(wildcard)
 /**
  * Escape regex characters in source String.  For example, period (.) becomes \.
  */
-function escapeRegExp(string)
-{
+function escapeRegExp(string) {
     return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
 /**
  * Check all the inputs in a list.
  */
-function checkAll(state, queryStr)
-{
+function checkAll(state, queryStr) {
     var input = $(queryStr).filter(':visible');
-    $.each(input, function (index, btn)
-    {
+    $.each(input, function () {
         $(this).prop('checked', state);
     });
 }
 
-function keyCount(obj)
-{
+function keyCount(obj) {
     var size = 0, key;
-    for (key in obj)
-    {
-        if (obj.hasOwnProperty(key))
-        {
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
             size++;
         }
     }
@@ -119,12 +95,10 @@ function keyCount(obj)
  * the input identified by inputId, will be filled with the selected text,
  * and the passed in callback function will be called on the click (selection).
  */
-function buildDropDown(listId, inputId, list, callback)
-{
+function buildDropDown(listId, inputId, list, callback) {
     var ul = $(listId);
     ul.empty();
-    $.each(list, function (key, value)
-    {
+    $.each(list, function (key, value) {
         var li = $('<li/>');
         var anchor = $('<a href="#"/>');
         anchor.html(value);
@@ -153,55 +127,42 @@ function buildDropDown(listId, inputId, list, callback)
  * http://github.com/warpech/sheetclip/
  */
 
-function countQuotes(str)
-{
+function countQuotes(str) {
     return str.split('"').length - 1;
 }
 
-function parseExcelClipboard(str)
-{
+function parseExcelClipboard(str) {
     var r, rlen, rows, arr = [], a = 0, c, clen, multiline, last;
     rows = str.split('\n');
-    if (rows.length > 1 && rows[rows.length - 1] === '')
-    {
+    if (rows.length > 1 && rows[rows.length - 1] === '') {
         rows.pop();
     }
 
-    for (r = 0, rlen = rows.length; r < rlen; r += 1)
-    {
+    for (r = 0, rlen = rows.length; r < rlen; r += 1) {
         rows[r] = rows[r].split('\t');
-        for (c = 0, clen = rows[r].length; c < clen; c += 1)
-        {
-            if (!arr[a])
-            {
+        for (c = 0, clen = rows[r].length; c < clen; c += 1) {
+            if (!arr[a]) {
                 arr[a] = [];
             }
 
-            if (multiline && c === 0)
-            {
+            if (multiline && c === 0) {
                 last = arr[a].length - 1;
                 arr[a][last] = arr[a][last] + '\n' + rows[r][0];
                 if (multiline && (countQuotes(rows[r][0]) & 1)) { //& 1 is a bitwise way of performing mod 2
                     multiline = false;
                     arr[a][last] = arr[a][last].substring(0, arr[a][last].length - 1).replace(/""/g, '"');
                 }
-            }
-            else
-            {
-                if (c === clen - 1 && rows[r][c].indexOf('"') === 0 && (countQuotes(rows[r][c]) & 1))
-                {
+            } else {
+                if (c === clen - 1 && rows[r][c].indexOf('"') === 0 && (countQuotes(rows[r][c]) & 1)) {
                     arr[a].push(rows[r][c].substring(1).replace(/""/g, '"'));
                     multiline = true;
-                }
-                else
-                {
+                } else {
                     arr[a].push(rows[r][c].replace(/""/g, '"'));
                     multiline = false;
                 }
             }
         }
-        if (!multiline)
-        {
+        if (!multiline) {
             a += 1;
         }
     }
@@ -236,10 +197,16 @@ function addSelectAllNoneListeners() {
 
 function addModalFilters() {
     $('.modal-filter').each(function() {
+        var items = [];
+        var checkBoxes = [];
+        var checkedItems = [];
         var contentDiv = $(this);
         var list = contentDiv.find('.modal-body').find('ul,table');
+        var countSpan = $('<span/>');
+        var div = $('<div/>');
+        var input = $('<input/>');
 
-        var refreshItems = function() {
+        function refreshItems() {
             input.val('');
             input.focus();
             items = (list.is('ul') ? list.find('li') : list.find('tr')).has('input[type="checkbox"]');
@@ -250,28 +217,22 @@ function addModalFilters() {
             });
             checkBoxes = items.find('input[type="checkbox"]');
             refreshCount();
-        };
+        }
 
-        var refreshCount = function() {
+        function refreshCount() {
             checkedItems = checkBoxes.filter(function() {
                 return $(this)[0].checked;
             });
             countSpan[0].innerHTML = checkedItems.length + ' of ' + items.length + ' Selected';
-        };
+        }
 
-        var countSpan = $('<span/>');
         countSpan.addClass('pull-left selected-count');
         contentDiv.find('.btn.pull-left:last').after(countSpan);
-
-        var items = [];
-        var checkBoxes = [];
-        var checkedItems = [];
+        
         contentDiv.click(function() {
             refreshCount();
         });
-
-        var div = $('<div/>');
-        var input = $('<input/>');
+        
         input.addClass('modal-filter-input');
         input.prop({'type':'text','placeholder':'Filter...'});
         input.css({'width':'100%'});
@@ -283,18 +244,19 @@ function addModalFilters() {
                 } else {
                     items.hide();
                     items.filter(function () {
+                        var el, cb, tds, td;
                         var item = $(this);
                         if (item.is('li')) {
-                            var el = item;
-                            var cb = item.find('input[type="checkbox"]');
+                            el = item;
+                            cb = item.find('input[type="checkbox"]');
                             if (cb.length > 0) {
                                 el = cb.parent();
                             }
                             return el[0].textContent.toLowerCase().indexOf(query) > -1;
                         }
                         if (item.is('tr')) {
-                            var tds = item.find('td').filter(function() {
-                                var td = $(this);
+                            tds = item.find('td').filter(function() {
+                                td = $(this);
                                 if (td.find('input[type="checkbox"]').length > 0) {
                                     return false;
                                 }
@@ -304,7 +266,7 @@ function addModalFilters() {
                         }
                     }).show();
                 }
-            }, e.keyCode === KEY_CODES.ENTER ? 0 : 200);
+            }, e.keyCode === KEY_CODES.ENTER ? 0 : PROGRESS_DELAY);
         });
 
         contentDiv.find('.modal-header').after(div);
@@ -333,7 +295,7 @@ function makeModalDraggable(modal, shouldBeDraggable) {
             var offset = modal.offset();
             var posX = offset.left;
             var posY = offset.top;
-            var tooFarLeft = posX < -250 && posX < prevX;
+            var tooFarLeft = posX < MODAL_TOO_FAR_LEFT && posX < prevX;
             var tooFarRight = posX > maxX && posX > prevX;
             var tooFarUp = posY < 0 && posY < prevY;
             var tooFarDown = posY > maxY && posY > prevY;
@@ -371,19 +333,16 @@ function appIdFrom(app, version, status, branch) {
 }
 
 function populateSelect(nce, sel, method, params, defVal, forceRefresh, isInverted) {
-    var result;
-    var results;
-    var options;
-    var option;
+    var result, results, options, option, optionValue, i, len;
     if (forceRefresh || sel[0].options.length === 0) {
         sel.empty();
         options = '';
         result = nce.call(CONTROLLER + method, params);
         if (result.status) {
             results = result.data;
-            for (var i = 0, len = results.length; i < len; i++) {
-                var option = '<option>';
-                var optionValue = results[i];
+            for (i = 0, len = results.length; i < len; i++) {
+                option = '<option>';
+                optionValue = results[i];
                 if (method === CONTROLLER_METHOD.SEARCH) {
                     optionValue = optionValue.name;
                 }
@@ -405,33 +364,42 @@ function populateSelect(nce, sel, method, params, defVal, forceRefresh, isInvert
 }
 
 function populateSelectFromCube(nce, sel, params, searchType) {
+    var result, results, idx, iLen, axis;
     var axisTypes = {};
-    sel.empty();
-    var result = nce.call('ncubeController.getJson', params, {noResolveRefs:true});
-    if (result.status === true) {
-        var results = JSON.parse(result.data).axes;
-        if (searchType === POPULATE_SELECT_FROM_CUBE.METHOD) {
-            for (var idx = 0, iLen = results.length; idx < iLen; idx++) {
-                var axis = results[idx];
-                if (['method','methods'].indexOf(axis.name) > -1) {
-                    results = axis.columns;
-                    break;
-                }
-            }
-        }
-        for (var i = 0, len = results.length; i < len; i++) {
-            var option = $('<option/>');
-            var obj = results[i];
-            var val;
+    
+    function getSelectHtml(results) {
+        var i, len, obj, val;
+        var html = '';
+        for (i = 0, len = results.length; i < len; i++) {
+            obj = null;
+            obj = results[i];
             if (searchType === POPULATE_SELECT_FROM_CUBE.METHOD) {
                 val = obj.value;
             } else if (searchType === POPULATE_SELECT_FROM_CUBE.AXIS) {
                 val = obj.name;
                 axisTypes[val] = {axisType:obj.type, valueType:obj.valueType};
             }
-            option[0].innerHTML = val;
-            sel.append(option);
+            html += '<option>' + val + '</option>'
         }
+        return html;
+    }
+    
+    sel.empty();
+    result = nce.call('ncubeController.getJson', params, {noResolveRefs:true});
+    if (result.status) {
+        results = JSON.parse(result.data).axes;
+        if (searchType === POPULATE_SELECT_FROM_CUBE.METHOD) {
+            for (idx = 0, iLen = results.length; idx < iLen; idx++) {
+                axis = null;
+                axis = results[idx];
+                if (['method','methods'].indexOf(axis.name) > -1) {
+                    results = null;
+                    results = axis.columns;
+                    break;
+                }
+            }
+        }
+        sel.append(getSelectHtml(results));
     } else {
         nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
     }
@@ -445,8 +413,9 @@ function populateSelectFromCube(nce, sel, params, searchType) {
     };
 
     $.fn.canvasMeasureWidth = function (font) {
+        var canvas;
         if (!jQuery._cachedCanvas) {
-            var canvas = document.createElement('canvas');
+            canvas = document.createElement('canvas');
             jQuery._cachedCanvas = canvas.getContext('2d');
         }
         jQuery._cachedCanvas.font = font;
@@ -456,6 +425,6 @@ function populateSelectFromCube(nce, sel, params, searchType) {
     $(document).on('shown.bs.tooltip', function (e) {
         setTimeout(function () {
             $(e.target).tooltip('hide');
-        }, 10000);
+        }, TOOLTIP_TIMEOUT);
     });
 })(jQuery);
