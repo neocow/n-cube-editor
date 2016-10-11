@@ -250,6 +250,7 @@ var CONTROLLER_METHOD = {
     RESOLVE_RELATIVE_URL: 'resolveRelativeUrl',
     RESTORE_CUBES: 'restoreCubes',
     ROLLBACK_BRANCH: 'rollbackBranch',
+    SAVE_JSON: 'saveJson',
     SEARCH: 'search',
     UPDATE_AXIS: 'updateAxis',
     UPDATE_AXIS_COLUMNS: 'updateAxisColumns',
@@ -265,6 +266,7 @@ var JSON_MODE = {
     HTML: 'html',
     INDEX: 'json-index',
     INDEX_NOCELLS: 'json-index-nocells',
+    JSON: 'json',
     PRETTY: 'json-pretty'
 };
 
