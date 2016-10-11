@@ -385,7 +385,7 @@ function populateSelectFromCube(nce, sel, params, searchType) {
     }
     
     sel.empty();
-    result = nce.call('ncubeController.getJson', params, {noResolveRefs:true});
+    result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, params, {noResolveRefs:true});
     if (result.status) {
         results = JSON.parse(result.data).axes;
         if (searchType === POPULATE_SELECT_FROM_CUBE.METHOD) {
@@ -425,6 +425,6 @@ function populateSelectFromCube(nce, sel, params, searchType) {
     $(document).on('shown.bs.tooltip', function (e) {
         setTimeout(function () {
             $(e.target).tooltip('hide');
-        }, TOOLTIP_TIMEOUT);
+        }, TEN_SECOND_TIMEOUT);
     });
 })(jQuery);

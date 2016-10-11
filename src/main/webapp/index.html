@@ -589,26 +589,6 @@
     </div>
 </div>
 
-<!-- 'Show References to' Modal -->
-<div id="showRefsToCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsToLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content modal-filter">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="showRefsToLabel" class="modal-title"></h3>
-            </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
-                <ul id="refsToCubeList" class="list-group">
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button id="showRefsToClose" class="btn btn-primary">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- 'Show References from' Modal -->
 <div id="showRefsFromCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsFromLabel"
      aria-hidden="true" data-backdrop="static">
@@ -623,7 +603,7 @@
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="showRefsFromClose" class="btn btn-primary">Close</button>
+                <button id="showRefsFromClose" data-dismiss="modal" class="btn btn-primary">Close</button>
             </div>
         </div>
     </div>
@@ -643,7 +623,7 @@
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="showReqScopeClose" class="btn btn-primary">Close</button>
+                <button id="showReqScopeClose" data-dismiss="modal" class="btn btn-primary">Close</button>
             </div>
         </div>
     </div>

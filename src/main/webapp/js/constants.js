@@ -18,9 +18,19 @@ var SCOPE_MAP = NCE_PREFIX + 'SCOPE_MAP';
 var VISITED_BRANCHES = NCE_PREFIX + 'VISITED_BRANCHES';
 
 var PROGRESS_DELAY = 300;
-var TOOLTIP_TIMEOUT = 10000;
+var ONE_SECOND_TIMEOUT = 1000;
+var TWO_SECOND_TIMEOUOT = 2000;
+var TEN_SECOND_TIMEOUT = 10000;
+var MINUTE_TIMEOUT = 60000;
 //noinspection MagicNumberJS
 var MODAL_TOO_FAR_LEFT = -250;
+//noinspection MagicNumberJS
+var MAIN_SPLITTER_DEFAULTS = {
+    TOGGLER_LENGTH_OPEN: 60,
+    WEST_SIZE: 250,
+    WEST_MIN_SIZE: 140
+};
+var TAB_TRIM_TEXT = 30;
 
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
@@ -69,6 +79,9 @@ var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 var CLASS_CONFLICT = 'conflict';
 var CLASS_OUT_OF_SYNC = 'out-of-sync';
 var CLASS_ACTIVE_VIEW = 'active-view';
+
+var CLASS_NCUBE_NOT_SELECTED = 'ncube-notselected';
+var CLASS_NCUBE_SELECTED = 'ncube-selected';
 
 var TAB_OVERFLOW_TEXT_PADDING = 70;
 var TAB_WIDTH = 217;
@@ -190,6 +203,7 @@ var CONTROLLER_METHOD = {
     BREAK_AXIS_REFERENCE: 'breakAxisReference',
     CHANGE_VERSION_VALUE: 'changeVersionValue',
     CHECK_PERMISSIONS: 'checkPermissions',
+    CLEAR_CACHE: 'clearCache',
     COMMIT_BRANCH: 'commitBranch',
     COMMIT_CUBE: 'commitCube',
     COPY_BRANCH: 'copyBranch',
@@ -214,11 +228,15 @@ var CONTROLLER_METHOD = {
     GET_CELLS_NO_EXECUTE: 'getCellsNoExecute',
     GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
+    GET_HEADERS: 'getHeaders',
     GET_JSON: 'getJson',
     GET_MENU: 'getMenu',
     GET_REFERENCE_AXES: 'getReferenceAxes',
+    GET_REFERENCES_FROM: 'getReferencesFrom',
+    GET_REQUIRED_SCOPE: 'getRequiredScope',
     GET_REVISION_HISTORY: 'getRevisionHistory',
     GET_VERSIONS: 'getVersions',
+    HEARTBEAT: 'heartBeat',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     IS_CUBE_CURRENT: 'isCubeUpToDate',
@@ -248,6 +266,11 @@ var JSON_MODE = {
     INDEX: 'json-index',
     INDEX_NOCELLS: 'json-index-nocells',
     PRETTY: 'json-pretty'
+};
+
+var DISPLAY_MAP_TITLE = {
+    HTTP_HEADERS: 'HTTP Headers',
+    SERVER_STATS: 'Server Statistics'
 };
 
 var DEFAULT_SCOPE = [
