@@ -123,6 +123,9 @@ var NCE = (function ($) {
     var _showRefsFromLabel = $('#showRefsFromLabel');
     var _reqScopeList = $('#reqScopeList');
     var _showReqScopeLabel = $('#showReqScopeLabel');
+    var _commitOk = $('#commitOk');
+    var _rollbackOk = $('#rollbackOk');
+    var _commitRollbackLabel = $('#commitRollbackLabel');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -408,6 +411,21 @@ var NCE = (function ($) {
         saveSelectedCubeInfo([]);
         saveSelectedCubeName(null);
         buildTabs();
+    }
+
+    function buildCubeInfo(app, version, status, branch, name, tab) {
+        var cubeInfo = [];
+        cubeInfo[CUBE_INFO.APP] = app;
+        cubeInfo[CUBE_INFO.VERSION] = version;
+        cubeInfo[CUBE_INFO.STATUS] = status;
+        cubeInfo[CUBE_INFO.BRANCH] = branch;
+        if (name !== undefined && name !== null) {
+            cubeInfo[CUBE_INFO.NAME] = name;
+        }
+        if (tab !== undefined && tab !== null) {
+            cubeInfo[CUBE_INFO.TAB_VIEW] = tab;
+        }
+        return cubeInfo;
     }
 
     function startWorkers() {
@@ -2342,11 +2360,7 @@ var NCE = (function ($) {
         var i, len, cubeInfo, cubeName, cis, x;
         var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_CUBES, [getAppId(), cubesToDelete]);
         if (result.status) {
-            cubeInfo = [];
-            cubeInfo[CUBE_INFO.APP] = _selectedApp;
-            cubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
-            cubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
-            cubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
+            cubeInfo = buildCubeInfo(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
             for (i = 0, len = cubesToDelete.length; i < len; i++) {
                 cubeName = cubesToDelete[i];
                 delete _cubeList[cubeName.toLowerCase()];
@@ -2379,11 +2393,7 @@ var NCE = (function ($) {
         var appId = getSelectedTabAppId();
         var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_CUBES, [appId, [cubeToDelete]]);
         if (result.status) {
-            cubeInfo = [];
-            cubeInfo[CUBE_INFO.APP] = appId.app;
-            cubeInfo[CUBE_INFO.VERSION] = appId.version;
-            cubeInfo[CUBE_INFO.STATUS] = appId.status;
-            cubeInfo[CUBE_INFO.BRANCH] = appId.branch;
+            cubeInfo = buildCubeInfo(appId.app, appId.version, appId.status, appId.branch);
             cubeName = cubeToDelete;
             if (_selectedCubeName === cubeName) {
                 _selectedCubeName = null;
@@ -2585,7 +2595,7 @@ var NCE = (function ($) {
     }
 
     function compareRevisions() {
-        var loIdx, hiIdx, title;
+        var loIdx, hiIdx, title, diffOptions;
         var revs = getSelectedRevisions();
         var revIds = revs.revIds;
         var cubeIds = revs.cubeIds;
@@ -2605,8 +2615,16 @@ var NCE = (function ($) {
             hiIdx = revIds[0] < revIds[1] ? 1 : 0;
             title = revIds[loIdx] + ' vs ' + revIds[hiIdx];
         }
-        
-        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], title, getSelectedTabAppId(), _selectedCubeName, revs.canEdit);
+
+        diffOptions = {
+            leftName: revIds[loIdx],
+            rightName: revIds[hiIdx],
+            title: title,
+            appId: getSelectedTabAppId(),
+            cubeName: _selectedCubeName,
+            canEdit: revs.canEdit
+        };
+        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], diffOptions);
     }
 
     function promoteRevision() {
@@ -2645,21 +2663,10 @@ var NCE = (function ($) {
         var oldCubeInfo, newCubeInfo, oldCis, newCis, i, len, openCube;
         var result = call("ncubeController.renameCube", [getSelectedTabAppId(), _selectedCubeName, newName]);
         if (result.status) {
-            oldCubeInfo = [];
-            oldCubeInfo[CUBE_INFO.APP] = _selectedApp;
-            oldCubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
-            oldCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
-            oldCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
-            oldCubeInfo[CUBE_INFO.NAME] = _selectedCubeName;
+            oldCubeInfo = buildCubeInfo(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName);
             oldCis = getCubeInfoKey(oldCubeInfo);
 
-            newCubeInfo = [];
-            newCubeInfo[CUBE_INFO.APP] = _selectedApp;
-            newCubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
-            newCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
-            newCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
-            newCubeInfo[CUBE_INFO.NAME] = newName;
-            newCubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
+            newCubeInfo = buildCubeInfo(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, newName, getActiveTabViewType());
             newCis = getCubeInfoKey(newCubeInfo);
 
             for (i = 0, len = _openCubes.length; i < len; i++) {
@@ -2669,8 +2676,7 @@ var NCE = (function ($) {
                 }
             }
             saveOpenCubeList();
-            _selectedCubeName = newName;
-            localStorage[SELECTED_CUBE] = _selectedCubeName;
+            saveSelectedCubeName(newName);
             buildTabs(newCubeInfo);
             loadCube();
             if (appIdsEqual(getSelectedTabAppId(), getAppId())) {
@@ -3203,30 +3209,30 @@ var NCE = (function ($) {
 
     function addBranchListeners() {
         // Main menu options
-        $('#branchSelect').click(function() {
+        $('#branchSelect').on('click', function() {
             selectBranch();
         });
         $('#branchCompareUpdateOk').on('click', function() {
             branchCompareUpdateOk();
         });
-        $('#branchCommit').click(function() {
+        $('#branchCommit').on('click', function() {
             setTimeout(function() { commitBranch(true); }, PROGRESS_DELAY);
             showNote('Processing commit request...');
         });
-        $('#commitOk').click(function() {
+        _commitOk.on('click', function() {
             commitOk();
         });
-        $('#rollbackOk').click(function() {
+        _rollbackOk.on('click', function() {
             rollbackOk();
         });
-        $('#branchRollback').click(function() {
+        $('#branchRollback').on('click', function() {
             setTimeout(function() { commitBranch(false); }, PROGRESS_DELAY);
             showNote('Processing rollback request...');
         });
-        $('#branchDelete').click(function() {
+        $('#branchDelete').on('click', function() {
             deleteBranch();
         });
-        $('#deleteBranchOk').click(function() {
+        $('#deleteBranchOk').on('click', function() {
             deleteBranchOk();
         });
         $('#branchCopy').on('click', function() {
@@ -3236,30 +3242,13 @@ var NCE = (function ($) {
             copyBranchOk();
         });
         // From 'Select / Create Branch' Modal
-        $('#createBranch').click(function() {
+        $('#createBranch').on('click', function() {
             createBranch();
         });
         _branchNameWarning.find('button').on('click', function() {
             _branchNameWarning.hide();
         });
-        $('#compareCubes').click(function(e) {
-            diffConflicts();
-        });
-        $('#acceptTheirs').click(function(e) {
-            acceptTheirs();
-        });
-        $('#acceptMine').click(function(e) {
-            acceptMine();
-        });
-        $('#mergeClose').click(function(e) {
-            setTimeout(function() {
-                loadNCubes();
-                reloadCube();
-                runSearch();
-            }, PROGRESS_DELAY);
-            showNote('Closing merge window, reloading cubes...', 'Note', TWO_SECOND_TIMEOUOT);
-        });
-        $('#btnClearBranchQuickSelect').click(function(e) {
+        $('#btnClearBranchQuickSelect').on('click', function(e) {
             var appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus);
             e.preventDefault();
             e.stopPropagation();
@@ -3269,6 +3258,12 @@ var NCE = (function ($) {
         _branchCompareUpdateMenu.on('click', function(e) {
             e.preventDefault();
             e.stopImmediatePropagation();
+        });
+        $('button.accept-mine').on('click', function() {
+            acceptMineTheirs($(this).closest('.modal').find('ul'), true);
+        });
+        $('button.accept-theirs').on('click', function() {
+            acceptMineTheirs($(this).closest('.modal').find('ul'), false);
         });
         addBatchUpdateRefAxesListeners();
     }
@@ -3321,11 +3316,10 @@ var NCE = (function ($) {
     }
 
     function selectBranch() {
-        var branchNames, ul, listHtml, i, len, name;
+        var branchNames, listHtml, i, len, name;
         clearError();
         _newBranchName.val('');
         _branchNameWarning.hide();
-
         branchNames = getBranchNames();
         listHtml = '';
 
@@ -3334,14 +3328,12 @@ var NCE = (function ($) {
             listHtml += '<li class="list-group-item skinny-lr"><a href="#"><kbd>' + name + '</kbd></a></li>';
         }
 
-        ul = _branchList;
-        ul.empty();
-        ul.append(listHtml);
-        ul.find('li').find('a').on('click', function() {
+        _branchList.empty();
+        _branchList.append(listHtml);
+        _branchList.find('li').find('a').on('click', function() {
             var branchName = $(this).find('kbd')[0].textContent;
             changeBranch(branchName);
         });
-
         _selectBranchModal.modal('show');
     }
 
@@ -3509,13 +3501,13 @@ var NCE = (function ($) {
             }
         }
 
-        _commitModal.modal('hide');
+        _branchCompareUpdateModal.modal('hide');
         callUpdateBranchCubes(getAppId(), changes, branchName);
     }
 
     function getUpdateReturnMapLength(map) {
         if (map && map.hasOwnProperty('@items')) {
-            return updateMap['@items'].length;
+            return map['@items'].length;
         }
         return 0;
     }
@@ -3582,6 +3574,7 @@ var NCE = (function ($) {
             buildTabs();
             if (appIdsEqual(appId, getAppId())) {
                 if (!isFromTabMenu) {
+                    compareUpdateBranch(branchName, true);
                     compareUpdateBranch(branchName, true);
                 }
                 loadNCubes();
@@ -3660,13 +3653,15 @@ var NCE = (function ($) {
         if (state) {
             errMsg = 'commit to';
             title = 'Commit changes';
-            $('#commitOk').show();
-            $('#rollbackOk').hide();
+            _commitModal.find('.accept-mine, .accept-theirs').show();
+            _commitOk.show();
+            _rollbackOk.hide();
         } else {
             errMsg = 'rollback in';
             title = 'Rollback changes';
-            $('#commitOk').hide();
-            $('#rollbackOk').show();
+            _commitModal.find('.accept-mine, .accept-theirs').hide();
+            _commitOk.hide();
+            _rollbackOk.show();
         }
 
         if (isHeadSelected()) {
@@ -3680,21 +3675,19 @@ var NCE = (function ($) {
             return;
         }
 
-        $('#commitRollbackLabel')[0].textContent = title;
+        _commitRollbackLabel[0].textContent = title;
 
         branchChanges = result.data;
         branchChanges.sort(sortBranchChanges);
 
-        _commitModal.prop('changes', branchChanges);
+        _commitModal.prop('branchChanges', branchChanges);
         buildUlForCompare(_commitRollbackList, true, branchChanges, {inputClass:'commitCheck', compare:true});
-
-        selectAll();
         _commitModal.modal('show');
     }
 
     function commitOk() {
         var i, len;
-        var branchChanges = _commitModal.prop('changes');
+        var branchChanges = _commitModal.prop('branchChanges');
         var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
         for (i = 0, len = input.length; i < len; i++) {
@@ -3740,7 +3733,7 @@ var NCE = (function ($) {
     }
 
     function rollbackOk() {
-        var branchChanges = _commitModal.prop('changes');
+        var branchChanges = _commitModal.prop('branchChanges');
         var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
         $.each(input, function (index, label) {
@@ -3833,19 +3826,24 @@ var NCE = (function ($) {
             }
             note += cubeName + '<br>';
             if (shouldUpdateStatus) {
-                for (o = 0, oLen = _openCubes.length; o < oLen; o++) {
-                    openCube = null;
-                    openCube = _openCubes[o];
-                    openCubeInfo = null;
-                    openCubeInfo = getCubeInfo(openCube.cubeKey);
-                    if (cubeName === openCubeInfo[CUBE_INFO.NAME] && doesCubeInfoMatchOldAppId(CUBE_INFO.BRANCH, openCubeInfo, appId)) {
-                        openCube.status = null;
-                        openCube.hasShownStatusMessage = false;
-                    }
-                }
+                updateTabStatusForUpdateNote(appId, cubeName);
             }
         }
         return note;
+    }
+
+    function updateTabStatusForUpdateNote(appId, cubeName) {
+        var i, len, openCube, openCubeInfo;
+        for (i = 0, len = _openCubes.length; i < len; i++) {
+            openCube = null;
+            openCube = _openCubes[i];
+            openCubeInfo = null;
+            openCubeInfo = getCubeInfo(openCube.cubeKey);
+            if (cubeName === openCubeInfo[CUBE_INFO.NAME] && doesCubeInfoMatchOldAppId(CUBE_INFO.BRANCH, openCubeInfo, appId)) {
+                openCube.status = null;
+                openCube.hasShownStatusMessage = false;
+            }
+        }
     }
 
     function copyBranch() {
@@ -3917,125 +3915,67 @@ var NCE = (function ($) {
         }
     }
 
-    function mergeBranch(conflictMap) {
-        var ul, keys;
-        delete conflictMap['@type'];
-        ul = $('#mergeList');
-        ul.empty();
-
-        // Sort keys of Map
-        keys = Object.keys(conflictMap);
-        keys.sort(function(a, b) {
-            var lowA = a.toLowerCase();
-            var lowB = b.toLowerCase();
-            return lowA.localeCompare(lowB);
-        });
-
-        // Walk sorted keys, indexing into Map
-        $.each(keys, function(index, cubeName) {
-            var li = $('<li style="border:none"/>').prop({class: 'list-group-item skinny-lr'});
-            var div = $('<div/>').prop({class:'container-fluid'});
-            var checkbox = $('<input>').prop({type:'checkbox'});
-            var label = $('<label/>').prop({class: 'radio no-margins'});
-            label[0].textContent = cubeName;
-            ul.append(li);
-            li.append(div);
-            div.append(label);
-            checkbox.prependTo(label); // <=== create input without the closing tag
-        });
-        $('#mergeBranchModal').modal('show');
-    }
-
-    function getSingleSelectedConflict() {
-        var checkedInput = $('#mergeList').find('input:checked');
-        if (!checkedInput.length) {
-            showNote('Select a cube', 'Note', TWO_SECOND_TIMEOUOT);
+    function getAllSelectedMineTheirs(ul) {
+        var i, len, results, cubeName, branchChanges, inputs, dto;
+        if (!ul.find('input:checked').length) {
+            showNote('No cubes selected!', 'Note', TWO_SECOND_TIMEOUOT);
             return null;
         }
-        if (checkedInput.length > 1) {
-            showNote('Select only one cube', 'Note', TWO_SECOND_TIMEOUOT);
-            return null;
-        }
-        return checkedInput.parent()[0].textContent;
-    }
-
-    function getAllSelectedConflicts() {
-        var i, len, results, cubeName;
-        var checkedInput = $('#mergeList').find('input:checked');
-        if (!checkedInput.length) {
-            showNote('Select a cube', 'Note', TWO_SECOND_TIMEOUOT);
-            return null;
-        }
-
+        branchChanges = ul.closest('.modal').prop('branchChanges');
+        inputs = ul.find('label.checkbox input[type="checkbox"]');
         results = {
             cubeNames: [],
-            branchSha1: [],
-            headSha1: []
+            sha1s: []
         };
-        for (i = 0, len = checkedInput.length; i < len; i++) {
-            cubeName = $(checkedInput[i]).parent()[0].textContent;
-            results.cubeNames.push(cubeName);
-            results.branchSha1.push(_conflictMap[cubeName].sha1);
-            results.headSha1.push(_conflictMap[cubeName].headSha1);
+        for (i = 0, len = inputs.length; i < len; i++) {
+            if (inputs[i].checked) {
+                dto = null;
+                dto = branchChanges[i];
+                results.cubeNames.push(dto.name);
+                results.sha1s.push(dto.sha1);
+            }
         }
         return results;
     }
 
-    function diffConflicts() {
-        var appId, infoDto, leftInfoDto;
-        var conflictedCube = getSingleSelectedConflict();
-        if (!conflictedCube) {
+    function acceptMineTheirs(ul, isMine) {
+        var obj;
+        var mineTheirs = getAllSelectedMineTheirs(ul);
+        if (!mineTheirs) {
             return;
         }
-        appId = getAppId();
-        infoDto = {
-            name: conflictedCube,
-            app: appId.app,
-            version: appId.version,
-            status: appId.status,
-            branch: appId.branch
-        };
-        leftInfoDto = $.extend(true, {}, infoDto);
-        leftInfoDto.branch = 'HEAD';
-        diffCubes(leftInfoDto, infoDto, conflictedCube);
-    }
-
-    function acceptTheirs() {
-        var conflictedCubes = getAllSelectedConflicts();
-        if (!conflictedCubes) {
-            return;
+        if (isMine) {
+            obj = {
+                controllerMethod: CONTROLLER_METHOD.ACCEPT_MINE,
+                cubeNames: mineTheirs.cubeNames,
+                sha1s: mineTheirs.sha1s,
+                successMsg: 'cubes updated to overwrite-on-commit.',
+                errorMsg: 'Unable to update your branch cubes to overwrite-on-commit'
+            };
+        } else {
+            obj = {
+                controllerMethod: CONTROLLER_METHOD.ACCEPT_THEIRS,
+                cubeNames: mineTheirs.cubeNames,
+                sha1s: mineTheirs.sha1s,
+                successMsg: 'cubes updated in your branch.',
+                errorMsg: 'Unable to update your branch cubes'
+            };
         }
-        callAcceptMineTheirs({
-            controllerMethod: CONTROLLER_METHOD.ACCEPT_THEIRS,
-            cubeNames: conflictedCubes.cubeNames,
-            sha1s: conflictedCubes.branchSha1,
-            successMsg: 'cubes updated in your branch with cube from HEAD.',
-            errorMsg: 'Unable to update your branch cubes from HEAD'
-        });
-    }
-
-    function acceptMine() {
-        var conflictedCubes = getAllSelectedConflicts();
-        if (!conflictedCubes) {
-            return;
-        }
-        callAcceptMineTheirs({
-            controllerMethod: CONTROLLER_METHOD.ACCEPT_MINE,
-            cubeNames: conflictedCubes.cubeNames,
-            sha1s: conflictedCubes.headSha1,
-            successMsg: 'cubes updated to overwrite-on-commit.',
-            errorMsg: 'Unable to update your branch cubes to overwrite-on-commit'
-        });
+        callAcceptMineTheirs(ul, obj);
     }
     
-    function callAcceptMineTheirs(options) {
+    function callAcceptMineTheirs(ul, options) {
         var result = call(CONTROLLER + options.controllerMethod, [getAppId(), options.cubeNames, options.sha1s]);
         if (result.status) {
             showNote(result.data.value + ' ' + options.successMsg, 'Note', TEN_SECOND_TIMEOUT);
-            $('#mergeList').find('input:checked').parent().parent().parent().remove();
             removeTabStatusFromCubeList(getAppId(), options.cubeNames);
+            if (ul.is(_branchCompareUpdateList)) {
+                compareUpdateBranch(_branchCompareUpdateModal.prop('branchName'), true)
+            } else if (ul.is(_commitRollbackList)) {
+                commitBranch(true);
+            }
         } else {
-            showNote(options.errorMsg + ':<hr class="hr-small"/>');
+            showNote(options.errorMsg + ':<hr class="hr-small"/>' + result.data);
         }
     }
 
@@ -4046,33 +3986,41 @@ var NCE = (function ($) {
     function diffCubes(leftInfo, rightInfo, title) {
         clearError();
         callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:descriptiveDiffCallback});
-        setupDiff(leftInfo.branch, rightInfo.branch, title, appIdFrom(rightInfo.app, rightInfo.version, rightInfo.status, rightInfo.branch), rightInfo.name, rightInfo.branch !== head);
+        setupDiff({
+            leftName: leftInfo.branch,
+            rightName: rightInfo.branch,
+            title: title,
+            appId: appIdFrom(rightInfo.app, rightInfo.version, rightInfo.status, rightInfo.branch),
+            cubeName: rightInfo.name,
+            canEdit: rightInfo.branch !== head
+        });
     }
 
-    function diffCubeRevs(id1, id2, leftName, rightName, title, appId, cubeName, canEdit) {
+    function diffCubeRevs(id1, id2, diffOptions) {
         clearError();
         callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:descriptiveDiffCallback});
-        setupDiff(leftName, rightName, title, appId, cubeName, canEdit);
+        setupDiff(diffOptions);
     }
 
-    function setupDiff(leftName, rightName, title, appId, cubeName, canEdit) {
+    // options: leftName, rightName, title, appId, cubeName, canEdit
+    function setupDiff(diffOptions) {
         _diffOutput.empty();
-        $('#diffTitle')[0].innerHTML = title;
+        $('#diffTitle')[0].innerHTML = diffOptions.title;
         _diffLastResult = 'Loading...';
         _diffHtmlResult = 'Loading...';
-        _diffLeftName = leftName;
-        _diffRightName = rightName;
+        _diffLeftName = diffOptions.leftName;
+        _diffRightName = diffOptions.rightName;
         _diffAppId = null;
-        _diffAppId = appId;
-        _diffCubeName = cubeName;
-        if (canEdit) {
+        _diffAppId = diffOptions.appId;
+        _diffCubeName = diffOptions.cubeName;
+        if (diffOptions.canEdit) {
             _diffModal.find('.select-all, .select-none, .btn-primary').show();
             _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them left to right.';
         } else {
             _diffModal.find('.select-all, .select-none, .btn-primary').hide();
             _diffInstructions[0].innerHTML = 'View individual changes between two cubes.';
         }
-        diffDescriptive(canEdit);
+        diffDescriptive(diffOptions.canEdit);
         diffShow(true);
     }
     
@@ -4084,6 +4032,11 @@ var NCE = (function ($) {
             if (_didMergeChange) {
                 _didMergeChange = false;
                 loadCube();
+                if (_commitModal.hasClass('in')) {
+                    commitBranch(true);
+                } else if (_branchCompareUpdateModal.hasClass('in')) {
+                    compareUpdateBranch(_branchCompareUpdateModal.prop('branchName'), true);
+                }
             }
         }
     }
@@ -4200,14 +4153,6 @@ var NCE = (function ($) {
             return;
         }
         _diffLastResult = result.data;
-    }
-
-    function htmlDiffCallback(result) {
-        if (!result.status) {
-            showNote('Unable to fetch visual comparison of cube:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-        _diffHtmlResult = result.data;
     }
 
     // ============================================ End Cube Comparison ================================================
