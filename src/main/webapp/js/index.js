@@ -871,7 +871,7 @@ var NCE = (function ($) {
         clearError();
         li = anc.parent().parent().parent();
         setActiveTabViewType(anc.data('pageid'));
-        ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType()];
+        ci2 = buildCubeInfo(cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType());
         cia2 = getCubeInfoKey(ci2);
         tabIdx = getOpenCubeIndex(ci2);
         isCtrlKey = e.metaKey || e.ctrlKey;
@@ -888,8 +888,7 @@ var NCE = (function ($) {
         } else {
             tabIdx = getOpenCubeIndex(cubeInfo);
             if (isCtrlKey) { // open new tab
-                li.removeClass('open');
-                li.tooltip('hide');
+                li.removeClass('open').tooltip('hide');
                 addCurrentCubeTab(tabIdx, ci2, getInfoDto());
             } else { // use current tab
                 cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
@@ -897,7 +896,7 @@ var NCE = (function ($) {
                 saveOpenCubeList();
                 li.attr('id', cia2.replace(/\./g,'_'));
                 img = li.find('a.ncube-tab-top-level img');
-                if (img.length > 0) {
+                if (img.length) {
                     img.attr('src', anc.data('imgsrc'));
                 }
                 li.find('a').removeClass(CLASS_ACTIVE_VIEW);
