@@ -3494,14 +3494,11 @@ var NCE = (function ($) {
         var branchChanges = _branchCompareUpdateModal.prop('branchChanges');
         var inputs = _branchCompareUpdateList.find('.updateCheck');
         var changes = [];
-
         for (i = 0, len = inputs.length; i < len; i++) {
             if (inputs[i].checked) {
                 changes.push(branchChanges[i]);
             }
         }
-
-        _branchCompareUpdateModal.modal('hide');
         callUpdateBranchCubes(getAppId(), changes, branchName);
     }
 
