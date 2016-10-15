@@ -401,6 +401,9 @@ span.selected-count {
     height: calc(100% - 120px);
     overflow-y: scroll;
 }
+#diffOutputModal table.diff {
+    margin: 5px 35px;
+}
 
 .navbar-custom {
     background-color: #2474b8;

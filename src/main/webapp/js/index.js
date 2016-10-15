@@ -3981,7 +3981,7 @@ var NCE = (function ($) {
     
     function diffCubes(leftInfo, rightInfo, title) {
         clearError();
-        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:descriptiveDiffCallback});
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {callback:descriptiveDiffCallback});
         setupDiff({
             leftName: leftInfo.branch,
             rightName: rightInfo.branch,
@@ -3994,7 +3994,7 @@ var NCE = (function ($) {
 
     function diffCubeRevs(id1, id2, diffOptions) {
         clearError();
-        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:descriptiveDiffCallback});
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {callback:descriptiveDiffCallback});
         setupDiff(diffOptions);
     }
 
@@ -4011,7 +4011,7 @@ var NCE = (function ($) {
         _diffCubeName = diffOptions.cubeName;
         if (diffOptions.canEdit) {
             _diffModal.find('.select-all, .select-none, .btn-primary').show();
-            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them left to right.';
+            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them left to right. Click a row to see more information about the change.';
         } else {
             _diffModal.find('.select-all, .select-none, .btn-primary').hide();
             _diffInstructions[0].innerHTML = 'View individual changes between two cubes.';
@@ -4100,16 +4100,16 @@ var NCE = (function ($) {
         _diffOutput[0].innerHTML = html;
 
         _diffOutput.find('li').on('click', function(e) {
-            //TODO - onDeltaClick
+            onDeltaClick(e, this);
         });
     }
     
-    function onDeltaClick(e) {
-        var li, isAlreadyOpen, sm, opcodes, delta, leftJson, rightJson;
+    function onDeltaClick(e, li) {
+        var isAlreadyOpen, sm, opcodes, delta, leftJson, rightJson;
         if (!$(e.target).hasClass('mergeCheck')) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            li = $(this);
+            li = $(li);
             isAlreadyOpen = li.find('.diff').length;
             _diffOutput.find('.diff').remove();
             if (!isAlreadyOpen) {
@@ -4133,10 +4133,39 @@ var NCE = (function ($) {
     }
     
     function constructDeltaText(delta, isSource) {
-        // TODO - not yet implemented
-        // switch (delta.location) {
-        //    
-        // }
+        if ([DELTA.LOC.NCUBE, DELTA.LOC.CELL].indexOf(delta.loc.name) > -1) {
+            return getObjectTextArray(isSource ? delta.sourceVal : delta.destVal);
+        }
+        if (delta.type.name === DELTA.TYPE.UPDATE) {
+            return getObjectTextArray(isSource ? delta.sourceVal : delta.destVal);
+        }
+        return getObjectTextArray(isSource ? delta.sourceList : delta.destList);
+    }
+    
+    function getObjectTextArray(val) {
+        var i, len, keys, key, ret = [];
+        if (val === null || val === undefined) {
+            ret.push('');
+        } else if (val.hasOwnProperty('@items')) {
+            ret = getObjectTextArray(val['@items']);
+        } else if (Object.prototype.toString.call(val) === '[object Array]'){
+            for (i = 0, len = val.length; i < len; i++) {
+                ret.push(val[i]);
+            }
+        } else if (typeof val === 'object') {
+            keys = Object.keys(val);
+            ret.push('{');
+            for (i = 0, len = keys.length; i < len; i++) {
+                key = keys[i];
+                if (key !== '@type') {
+                    ret.push('  ' + key + ': ' + val[key]);
+                }
+            }
+            ret.push('}');
+        } else {
+            ret.push(val);
+        }
+        return ret;
     }
 
     function emptyDiffOutput() {
