@@ -1318,6 +1318,13 @@ class NCubeController extends BaseController
         return branchChanges.toArray()
     }
 
+    Object[] getBranchChangesForMyBranch(ApplicationID appId, String branch)
+    {
+        appId = addTenant(appId)
+        List<NCubeInfoDto> branchChanges = nCubeService.getBranchChangesForMyBranch(appId, branch)
+        return branchChanges.toArray()
+    }
+
     Object commitCube(ApplicationID appId, String cubeName)
     {
         try
