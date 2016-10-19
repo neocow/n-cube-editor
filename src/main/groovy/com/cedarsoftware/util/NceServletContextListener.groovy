@@ -1,6 +1,7 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.controller.NCubeController
+import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.web.context.WebApplicationContext
@@ -29,6 +30,7 @@ import javax.servlet.annotation.WebListener
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
+@CompileStatic
 @WebListener
 class NceServletContextListener implements ServletContextListener
 {

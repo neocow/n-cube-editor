@@ -135,7 +135,7 @@ class NCubeController extends BaseController
             user = System.getProperty("user.name")
         }
 
-        NCubeManager.setUserId(user)
+        NCubeManager.userId = user
         return user
     }
 

@@ -1,5 +1,6 @@
 package com.cedarsoftware.util
 
+import groovy.transform.CompileStatic
 import org.apache.tomcat.jdbc.pool.ConnectionPool
 import org.apache.tomcat.jdbc.pool.JdbcInterceptor
 import org.apache.tomcat.jdbc.pool.PooledConnection
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
+@CompileStatic
 class PoolInterceptor extends JdbcInterceptor
 {
     public static AtomicInteger size = new AtomicInteger()
@@ -35,9 +37,9 @@ class PoolInterceptor extends JdbcInterceptor
     {
         if (connectionPool)
         {
-            size.set(connectionPool.getSize())
-            active.set(connectionPool.getActive())
-            idle.set(connectionPool.getIdle())
+            size.set(connectionPool.size)
+            active.set(connectionPool.active)
+            idle.set(connectionPool.idle)
         }
     }
 }
