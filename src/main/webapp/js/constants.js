@@ -222,6 +222,7 @@ var CONTROLLER_METHOD = {
     GET_AXIS: 'getAxis',
     GET_AXIS_METAPROPERTIES: 'getAxisMetaProperties',
     GET_BRANCH_CHANGES_FOR_HEAD: 'getBranchChangesForHead',
+    GET_BRANCH_CHANGES_FOR_MY_BRANCH: 'getBranchChangesForMyBranch',
     GET_HEAD_CHANGES_FOR_BRANCH: 'getHeadChangesForBranch',
     GET_BRANCHES: 'getBranches',
     GET_CELL_NO_EXECUTE: 'getCellNoExecute',

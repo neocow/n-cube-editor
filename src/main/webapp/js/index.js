@@ -90,6 +90,7 @@ var NCE = (function ($) {
     var _releaseCubesProgressPct = null;
     var _releaseCubesProgressText = null;
     var isReleasePending = false;
+    var _branchCompareUpdateOk = $('#branchCompareUpdateOk');
     var _branchCompareUpdateMenu = $('#branchCompareUpdate');
     var _branchCompareUpdateList = $('#branchCompareUpdateList');
     var _branchList = $('#branchList');
@@ -721,7 +722,7 @@ var NCE = (function ($) {
             });
         });
         li.find('a.anc-update-cube').on('click', function() {
-            callUpdateBranchCubes(getSelectedTabAppId(), [getInfoDto()], head, true);
+            callUpdateBranchCubes(getSelectedTabAppId(), [getInfoDto()], true);
         });
         li.find('a.anc-delete-cube').on('click', function(e) {
             e.preventDefault();
@@ -3211,7 +3212,7 @@ var NCE = (function ($) {
         $('#branchSelect').on('click', function() {
             selectBranch();
         });
-        $('#branchCompareUpdateOk').on('click', function() {
+        _branchCompareUpdateOk.on('click', function() {
             branchCompareUpdateOk();
         });
         $('#branchCommit').on('click', function() {
@@ -3400,9 +3401,10 @@ var NCE = (function ($) {
 
         if (branchName === head) {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
+            _branchCompareUpdateOk.show();
         } else {
-            appId.branch = branchName;
-            result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_HEAD, [appId]);
+            result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
+            _branchCompareUpdateOk.hide();
         }
         if (!result.status) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
@@ -3422,7 +3424,7 @@ var NCE = (function ($) {
         branchChanges.sort(sortBranchChanges);
 
         _branchCompareUpdateModal.prop({branchName: branchName, branchChanges: branchChanges});
-        buildUlForCompare(_branchCompareUpdateList, branchName === head, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
+        buildUlForCompare(_branchCompareUpdateList, branchName, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
 
         _branchCompareUpdateModal.modal();
         setTimeout(selectAll, PROGRESS_DELAY);
@@ -3438,7 +3440,7 @@ var NCE = (function ($) {
         return aType.DISPLAY_ORDER - bType.DISPLAY_ORDER;
     }
 
-    function buildUlForCompare(ul, isCompareToHead, branchChanges, options) {
+    function buildUlForCompare(ul, branchName, branchChanges, options) {
         var inputClass = options.inputClass;
         ul.empty();
         ul.append(buildHtmlListForCompare(branchChanges, options));
@@ -3448,10 +3450,10 @@ var NCE = (function ($) {
             var idx = ul.find('.' + inputClass).index(checkbox);
             var infoDto = $.extend(true, {}, branchChanges[idx]);
             var leftInfoDto = $.extend(true, {}, infoDto);
-            if (isCompareToHead) {
+            if (branchName === head) {
                 leftInfoDto.branch = head;
             } else {
-                infoDto.branch = _selectedBranch;
+                infoDto.branch = branchName;
             }
             diffCubes(leftInfoDto, infoDto, infoDto.name);
         });
@@ -3498,7 +3500,7 @@ var NCE = (function ($) {
                 changes.push(branchChanges[i]);
             }
         }
-        callUpdateBranchCubes(getAppId(), changes, branchName);
+        callUpdateBranchCubes(getAppId(), changes);
     }
 
     function getUpdateReturnMapLength(map) {
@@ -3556,10 +3558,10 @@ var NCE = (function ($) {
         showNote(note, success ? 'Success' : 'Failure');
     }
 
-    function callUpdateBranchCubes(appId, cubeDtos, branchName, isFromTabMenu) {
+    function callUpdateBranchCubes(appId, cubeDtos, isFromTabMenu) {
         showNote('Updating selected cubes...', 'Please wait...');
         setTimeout(function() {
-            var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeDtos, branchName]);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeDtos]);
             clearError();
             if (!result.status) {
                 showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
@@ -3571,8 +3573,7 @@ var NCE = (function ($) {
             buildTabs();
             if (appIdsEqual(appId, getAppId())) {
                 if (!isFromTabMenu) {
-                    compareUpdateBranch(branchName, true);
-                    compareUpdateBranch(branchName, true);
+                    compareUpdateBranch(head, true);
                 }
                 loadNCubes();
                 runSearch();
@@ -3678,7 +3679,7 @@ var NCE = (function ($) {
         branchChanges.sort(sortBranchChanges);
 
         _commitModal.prop('branchChanges', branchChanges);
-        buildUlForCompare(_commitRollbackList, true, branchChanges, {inputClass:'commitCheck', compare:true});
+        buildUlForCompare(_commitRollbackList, head, branchChanges, {inputClass:'commitCheck', compare:true});
         _commitModal.modal('show');
     }
 
