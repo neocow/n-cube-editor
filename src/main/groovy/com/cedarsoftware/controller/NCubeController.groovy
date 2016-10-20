@@ -246,7 +246,7 @@ class NCubeController extends BaseController
 
     private static String toHtmlWithColumnHints(NCube ncube)
     {
-        ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns')
+        ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns', 'attribute', 'attributes')
     }
 
     String getJson(ApplicationID appId, String cubeName)
@@ -1334,8 +1334,10 @@ class NCubeController extends BaseController
             options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
             options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
             List<NCubeInfoDto> list = nCubeService.search(appId, cubeName, null, options)
-            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, list.toArray())
-            return committedCubes.toArray()
+//            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, list.toArray())
+//            return committedCubes.toArray()
+            // TODO: This code should be replaced by Tym's copy
+            return null
         }
         catch (BranchMergeException e)
         {
@@ -1354,8 +1356,10 @@ class NCubeController extends BaseController
         try
         {   // Do not remove try-catch here in favor of Advice handler.
             appId = addTenant(appId)
-            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos)
-            return committedCubes.toArray()
+            return null
+            // TODO: This code should be replaced by Tym's copy
+//            List<NCubeInfoDto> committedCubes = nCubeService.commitBranch(appId, infoDtos)
+//            return committedCubes.toArray()
         }
         catch (BranchMergeException e)
         {
@@ -1375,10 +1379,11 @@ class NCubeController extends BaseController
         return nCubeService.rollbackCubes(appId, cubeNames)
     }
 
-    Object updateBranch(ApplicationID appId, Object[] cubeDtos, String sourceBranch)
+    // TODO: Remove 3rd argument
+    Object updateBranch(ApplicationID appId, Object[] cubeDtos, String sourceBranch = ApplicationID.HEAD)
     {
         appId = addTenant(appId)
-        Map<String, Object> result = nCubeService.updateBranch(appId, cubeDtos, sourceBranch)
+        Map<String, Object> result = nCubeService.updateBranch(appId, cubeDtos)
         return result
     }
 

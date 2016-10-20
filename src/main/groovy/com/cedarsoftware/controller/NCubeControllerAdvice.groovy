@@ -53,9 +53,5 @@ class NCubeControllerAdvice
             controller.fail(e)
             return null
         }
-        finally
-        {
-            NCubeManager.clearPermissionsCache()
-        }
     }
 }
