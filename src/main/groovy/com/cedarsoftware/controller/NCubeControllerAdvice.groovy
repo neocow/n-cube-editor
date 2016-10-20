@@ -1,5 +1,6 @@
 package com.cedarsoftware.controller
 
+import com.cedarsoftware.ncube.NCubeManager
 import groovy.transform.CompileStatic
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
@@ -40,7 +41,7 @@ class NCubeControllerAdvice
         try
         {
             // Place user on ThreadLocal
-            controller.getUserForDatabase()
+            controller.userForDatabase
 
             // Execute method
             def ret = pjp.proceed()

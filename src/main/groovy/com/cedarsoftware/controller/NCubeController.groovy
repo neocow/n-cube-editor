@@ -135,7 +135,7 @@ class NCubeController extends BaseController
             user = System.getProperty("user.name")
         }
 
-        NCubeManager.setUserId(user)
+        NCubeManager.userId = user
         return user
     }
 
@@ -246,7 +246,7 @@ class NCubeController extends BaseController
 
     private static String toHtmlWithColumnHints(NCube ncube)
     {
-        ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns')
+        ncube.toHtml('trait', 'traits', 'businessDivisionCode', 'bu', 'month', 'months', 'col', 'column', 'cols', 'columns', 'attribute', 'attributes')
     }
 
     String getJson(ApplicationID appId, String cubeName)
@@ -1373,10 +1373,11 @@ class NCubeController extends BaseController
         return nCubeService.rollbackCubes(appId, cubeNames)
     }
 
-    Object updateBranch(ApplicationID appId, Object[] cubeDtos, String sourceBranch)
+    // TODO: Remove 3rd argument
+    Object updateBranch(ApplicationID appId, Object[] cubeDtos, String sourceBranch = ApplicationID.HEAD)
     {
         appId = addTenant(appId)
-        Map<String, Object> result = nCubeService.updateBranch(appId, cubeDtos, sourceBranch)
+        Map<String, Object> result = nCubeService.updateBranch(appId, cubeDtos)
         return result
     }
 

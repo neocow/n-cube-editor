@@ -110,9 +110,9 @@ class NCubeService
         NCubeManager.rollbackCubes(appId, cubeNames)
     }
 
-    Map<String, Object> updateBranch(ApplicationID appId, Object[] cubeDtos, String sourceBranch)
+    Map<String, Object> updateBranch(ApplicationID appId, Object[] cubeDtos)
     {
-        return NCubeManager.updateBranch(appId, cubeDtos, sourceBranch)
+        return NCubeManager.updateBranch(appId, cubeDtos)
     }
 
     void deleteBranch(ApplicationID appId)

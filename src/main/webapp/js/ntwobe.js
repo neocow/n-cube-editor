@@ -1,6 +1,6 @@
 var NCubeEditor2 = (function ($) {
 
-    var headerAxisNames = ['trait','traits','businessDivisionCode','bu','month','months','col','column','cols','columns'];
+    var headerAxisNames = ['trait','traits','businessDivisionCode','bu','month','months','col','column','cols','columns', 'attribute', 'attributes'];
     var nce = null;
     var hot = null;
     var CellEditor;
