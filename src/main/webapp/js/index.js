@@ -3508,7 +3508,7 @@ var NCE = (function ($) {
         return 0;
     }
 
-    function handleUpdateReturnValues(appId, map, isUpdate) {
+    function handleUpdateReturnValues(appId, map, isUpdate, success) {
         var note, updateMap, addMap, deleteMap, rejectMap, fastforwardMap, restoreMap,
             updates, adds, deletes, rejects, fastforwards, restores;
         updateMap = map['updates'];
@@ -3524,7 +3524,8 @@ var NCE = (function ($) {
         rejects = getUpdateReturnMapLength(rejectMap);
         fastforwards = getUpdateReturnMapLength(fastforwardMap);
 
-        note = '<b>Branch ' + (isUpdate ? 'Updated' : 'Committed') + ':</b><hr class="hr-small"/>'
+        note = '<b>Branch ' + (isUpdate ? 'Update' : 'Commit') + ' ' + (success ? 'succeeded' : 'failed')
+             + ':</b><hr class="hr-small"/>'
              + adds + ' cubes <b class="' + CHANGETYPE.CREATED.CSS_CLASS + '">added</b><br>'
              + restores + ' cubes <b class="' + CHANGETYPE.RESTORED.CSS_CLASS + '">restored</b><br>'
              + updates + ' cubes <b class="' + CHANGETYPE.UPDATED.CSS_CLASS + '">updated</b><br>'
@@ -3552,7 +3553,7 @@ var NCE = (function ($) {
         if (rejects) {
             note += getUpdateNote(appId, rejectMap['@items'], 'Rejected cube names', 'red', false);
         }
-        showNote(note);
+        showNote(note, success ? 'Success' : 'Failure');
     }
 
     function callUpdateBranchCubes(appId, cubeDtos, branchName, isFromTabMenu) {
@@ -3565,7 +3566,7 @@ var NCE = (function ($) {
                 return;
             }
 
-            handleUpdateReturnValues(appId, result.data, true);
+            handleUpdateReturnValues(appId, result.data, true, true);
             saveOpenCubeList();
             buildTabs();
             if (appIdsEqual(appId, getAppId())) {
@@ -3710,9 +3711,8 @@ var NCE = (function ($) {
             result = call(CONTROLLER + method, [appId, dtos]);
 
             clearError();
-            if (!result.status)
-            {
-                showNote('You have conflicts with the HEAD branch.  Update Branch first, then re-attempt branch commit.');
+            if (!result.status) {
+                handleUpdateReturnValues(appId, result.data, false, false);
                 return;
             }
 
@@ -3722,7 +3722,7 @@ var NCE = (function ($) {
             }
             reloadCube();
 
-            handleUpdateReturnValues(appId, result.data, false);
+            handleUpdateReturnValues(appId, result.data, false, true);
             saveOpenCubeList();
             buildTabs();
         }, PROGRESS_DELAY);

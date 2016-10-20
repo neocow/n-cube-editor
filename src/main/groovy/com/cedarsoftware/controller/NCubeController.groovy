@@ -19,6 +19,7 @@ import com.cedarsoftware.ncube.NCubeTest
 import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.exception.AxisOverlapException
+import com.cedarsoftware.ncube.exception.BranchMergeException
 import com.cedarsoftware.ncube.exception.CommandCellException
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.RuleJump
@@ -1331,13 +1332,39 @@ class NCubeController extends BaseController
         options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
         options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
         List<NCubeInfoDto> list = nCubeService.search(appId, cubeName, null, options)
-        return nCubeService.commitBranch(appId, list)
+        try
+        {
+            return nCubeService.commitBranch(appId, list)
+        }
+        catch (BranchMergeException e)
+        {
+            markRequestFailed(e.message)
+            return e.errors
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return [:]
+        }
     }
 
     Object commitBranch(ApplicationID appId, Object[] infoDtos)
     {
         appId = addTenant(appId)
-        return nCubeService.commitBranch(appId, infoDtos)
+        try
+        {
+            return nCubeService.commitBranch(appId, infoDtos)
+        }
+        catch (BranchMergeException e)
+        {
+            markRequestFailed(e.message)
+            return e.errors
+        }
+        catch (Exception e)
+        {
+            fail(e)
+            return [:]
+        }
     }
 
     Integer rollbackBranch(ApplicationID appId, Object[] cubeNames)
@@ -1732,20 +1759,21 @@ class NCubeController extends BaseController
     {
         markRequestFailed(getCauses(e))
         if (e instanceof AxisOverlapException ||
+            e instanceof BranchMergeException ||
             e instanceof CommandCellException ||
             e instanceof CoordinateNotFoundException ||
             e instanceof RuleJump ||
             e instanceof RuleStop)
         {
             Throwable t = e
-            while (t.getCause() != null)
+            while (t.cause != null)
             {
-                t = t.getCause()
+                t = t.cause
             }
             String msg = t.message
             if (StringUtilities.isEmpty(msg))
             {
-                msg = t.getClass().getName()
+                msg = t.class.name
             }
             LOG.info('user runtime error: ' + msg)
         }
