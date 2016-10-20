@@ -1,5 +1,6 @@
 package com.cedarsoftware.controller
 
+import com.cedarsoftware.ncube.Action
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.AxisRef
@@ -14,7 +15,6 @@ import com.cedarsoftware.ncube.GroovyExpression
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.ncube.NCubeManager.ACTION
 import com.cedarsoftware.ncube.NCubeTest
 import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
@@ -144,7 +144,7 @@ class NCubeController extends BaseController
     Boolean checkPermissions(ApplicationID appId, String resource, String action)
     {
         appId = addTenant(appId)
-        return nCubeService.checkPermissions(appId, resource, action == null ? ACTION.READ : ACTION.valueOf(action.toUpperCase()))
+        return nCubeService.checkPermissions(appId, resource, action == null ? Action.READ : Action.valueOf(action.toUpperCase()))
     }
 
     Boolean isAppAdmin(ApplicationID appId)
@@ -299,7 +299,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         String resourceName = cubeName + '/' + axisName
-        nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
+        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
         NCube ncube = nCubeService.loadCube(appId, cubeName)
         Axis axis = ncube.getAxis(axisName)
         axis.clearMetaProperties()
@@ -323,7 +323,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         String resourceName = cubeName + '/' +axisName
-        nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
+        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
         NCube ncube = nCubeService.loadCube(appId, cubeName)
         Axis axis = ncube.getAxis(axisName)
         Column column = axis.getColumnById(colId)
@@ -744,7 +744,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         String resourceName = cubeName + '/' + axisName
-        nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
+        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
         nCubeService.addAxis(appId, cubeName, axisName, type, valueType)
     }
 
@@ -785,7 +785,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         String resourceName = cubeName + '/' +axisName
-        nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
+        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
         nCubeService.deleteAxis(appId, cubeName, axisName)
     }
 
@@ -793,9 +793,9 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         String resourceName = cubeName + '/' + origAxisName
-        nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
+        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
         resourceName = cubeName + '/' + axisName
-        nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
+        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
         nCubeService.updateAxis(appId, cubeName, origAxisName, axisName, hasDefault, isSorted, fireAll)
     }
 
@@ -807,7 +807,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         String resourceName = cubeName + '/' + axisName
-        nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
+        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
         Set<Column> columns = new LinkedHashSet<>()
 
         if (cols != null)
@@ -832,7 +832,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         String resourceName = cubeName + '/' + axisName
-        nCubeService.assertPermissions(appId, resourceName, ACTION.UPDATE)
+        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
         nCubeService.breakAxisReference(appId, cubeName, axisName)
     }
 
@@ -1410,7 +1410,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         NCube ncube = nCubeService.loadCubeById(id)
-        nCubeService.assertPermissions(appId, ncube.name, ACTION.READ)
+        nCubeService.assertPermissions(appId, ncube.name, Action.READ)
         return formatCube(ncube, [mode: mode])
     }
 

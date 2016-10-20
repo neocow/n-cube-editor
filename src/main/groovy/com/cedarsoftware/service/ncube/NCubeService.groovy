@@ -1,5 +1,6 @@
 package com.cedarsoftware.service.ncube
 
+import com.cedarsoftware.ncube.Action
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.AxisRef
@@ -8,8 +9,8 @@ import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.ncube.NCubeManager.ACTION
 import com.cedarsoftware.ncube.ReferenceAxisLoader
+import com.cedarsoftware.ncube.VersionControl
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.io.JsonObject
 import com.cedarsoftware.util.io.JsonReader
@@ -86,32 +87,32 @@ class NCubeService
 
     List<NCubeInfoDto> getBranchChangesForHead(ApplicationID appId)
     {
-        return NCubeManager.getBranchChangesForHead(appId)
+        return VersionControl.getBranchChangesForHead(appId)
     }
 
     List<NCubeInfoDto> getHeadChangesForBranch(ApplicationID appId)
     {
-        return NCubeManager.getHeadChangesForBranch(appId)
+        return VersionControl.getHeadChangesForBranch(appId)
     }
 
     List<NCubeInfoDto> getBranchChangesForMyBranch(ApplicationID appId, String branch)
     {
-        return NCubeManager.getBranchChangesForMyBranch(appId, branch)
+        return VersionControl.getBranchChangesForMyBranch(appId, branch)
     }
 
     Map<String, Object> commitBranch(ApplicationID appId, Object[] infoDtos)
     {
-        return NCubeManager.commitBranch(appId, infoDtos)
+        return VersionControl.commitBranch(appId, infoDtos)
     }
 
     int rollbackCubes(ApplicationID appId, Object[] cubeNames)
     {
-        NCubeManager.rollbackCubes(appId, cubeNames)
+        VersionControl.rollbackCubes(appId, cubeNames)
     }
 
     Map<String, Object> updateBranch(ApplicationID appId, Object[] cubeDtos)
     {
-        return NCubeManager.updateBranch(appId, cubeDtos)
+        return VersionControl.updateBranch(appId, cubeDtos)
     }
 
     void deleteBranch(ApplicationID appId)
@@ -121,12 +122,12 @@ class NCubeService
 
     int acceptTheirs(ApplicationID appId, Object[] cubeNames, Object[] branchSha1)
     {
-        NCubeManager.mergeAcceptTheirs(appId, cubeNames, branchSha1)
+        VersionControl.mergeAcceptTheirs(appId, cubeNames, branchSha1)
     }
 
     int acceptMine(ApplicationID appId, Object[] cubeNames)
     {
-        NCubeManager.mergeAcceptMine(appId, cubeNames)
+        VersionControl.mergeAcceptMine(appId, cubeNames)
     }
 
     void createCube(ApplicationID appId, NCube ncube)
@@ -479,12 +480,12 @@ class NCubeService
         NCubeManager.updateReferenceAxes(axisRefs);
     }
 
-    boolean assertPermissions(ApplicationID appId, String resource, ACTION action)
+    boolean assertPermissions(ApplicationID appId, String resource, Action action)
     {
-        NCubeManager.assertPermissions(appId, resource, action ?: ACTION.READ)
+        NCubeManager.assertPermissions(appId, resource, action ?: Action.READ)
     }
 
-    boolean checkPermissions(ApplicationID appId, String resource, ACTION action)
+    boolean checkPermissions(ApplicationID appId, String resource, Action action)
     {
         NCubeManager.checkPermissions(appId, resource, action)
     }
@@ -564,7 +565,7 @@ class NCubeService
                     String json1 = JsonWriter.objectToJson(ncube)
                     NCube nCube = NCube.fromSimpleJson(json1)
                     cubeList.add(nCube)
-                    lastSuccessful = nCube.getName()
+                    lastSuccessful = nCube.name
                 }
             }
 
