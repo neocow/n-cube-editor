@@ -95,6 +95,11 @@ class NCubeService
         return NCubeManager.getHeadChangesForBranch(appId)
     }
 
+    List<NCubeInfoDto> getBranchChangesForMyBranch(ApplicationID appId, String branch)
+    {
+        return NCubeManager.getBranchChangesForMyBranch(appId, branch)
+    }
+
     Map<String, Object> commitBranch(ApplicationID appId, Object[] infoDtos)
     {
         return NCubeManager.commitBranch(appId, infoDtos)
