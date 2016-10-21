@@ -2311,6 +2311,7 @@ var NCE = (function ($) {
         if (result.status) {
             saveSelectedApp(appId.app);
             saveSelectedVersion(appId.version);
+            addToVisitedBranchesList(appId);
             loadAppListView();
             loadVersionListView();
             loadNCubes();
@@ -3895,12 +3896,7 @@ var NCE = (function ($) {
     function copyBranchOk() {
         var result;
         var origAppId = getAppId();
-        var copyAppId = {
-            app: $('#copyBranchAppName').val(),
-            version: $('#copyBranchVersion').val(),
-            status: STATUS.SNAPSHOT,
-            branch: $('#copyBranchName').val()
-        };
+        var copyAppId = appIdFrom($('#copyBranchAppName').val(), $('#copyBranchVersion').val(), STATUS.SNAPSHOT, $('#copyBranchName').val());
         
         result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, true]);
         if (!result.status) {
@@ -3913,6 +3909,7 @@ var NCE = (function ($) {
         saveSelectedVersion(copyAppId.version);
         saveSelectedStatus(copyAppId.status);
         saveSelectedBranch(copyAppId.branch);
+        addToVisitedBranchesList(copyAppId);
         loadAppListView();
         loadVersionListView();
         showActiveBranch();
