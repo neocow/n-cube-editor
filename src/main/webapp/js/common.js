@@ -72,10 +72,7 @@ function escapeRegExp(string) {
  * Check all the inputs in a list.
  */
 function checkAll(state, queryStr) {
-    var input = $(queryStr).filter(':visible');
-    $.each(input, function () {
-        $(this).prop('checked', state);
-    });
+    $(queryStr).filter(':visible').not('.exclude').prop('checked', state).change();
 }
 
 function keyCount(obj) {
@@ -187,10 +184,10 @@ function selectNone() {
 }
 
 function addSelectAllNoneListeners() {
-    $('.select-all').click(function() {
+    $('.select-all').on('click', function() {
         selectAll();
     });
-    $('.select-none').click(function() {
+    $('.select-none').on('click', function() {
         selectNone();
     });
 }
@@ -209,7 +206,7 @@ function addModalFilters() {
         function refreshItems() {
             input.val('');
             input.focus();
-            items = (list.is('ul') ? list.find('li') : list.find('tr')).has('input[type="checkbox"]');
+            items = (list.is('ul') ? list.find('li') : list.find('tr')).has('input[type="checkbox"]:not(".exclude")')
             items.on('remove', function() {
                 delay(function() {
                     refreshItems();

@@ -3463,15 +3463,47 @@ var NCE = (function ($) {
         ul.find('a.anc-json').on('click', function () {
             onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
         });
-        ul.find('li.changeTypeHeader').on('click', function() {
+        ul.find('li.changeTypeHeader input[type="checkbox"]').on('click', function() {
             var cssClass, inputs, li, i, len, state;
-            li = $(this);
+            li = $(this).parent();
             cssClass = li.data('changetype');
             inputs = li.parent().find('label.' + cssClass).find('input[type="checkbox"]');
-            if (inputs.length) {
-                state = inputs[0].checked;
-                for (i = 0, len = inputs.length; i < len; i++) {
-                    $(inputs[i]).prop('checked', !state);
+            state = this.checked;
+            for (i = 0, len = inputs.length; i < len; i++) {
+                $(inputs[i]).prop('checked', state);
+            }
+        });
+        ul.find('li').not('.changeTypeHeader').find('input[type="checkbox"]').on('change', function(e) {
+            var cssClass, inputs, i, len, state, changeTypeHeaderCheck;
+            cssClass = $(this).closest('li').data('changetype');
+            changeTypeHeaderCheck = $('[data-changetype="' + cssClass + '"]').find('input[type="checkbox"]')[0];
+            inputs = $('label.' + cssClass).find('input[type="checkbox"]');
+            state = this.checked;
+            for (i = 0, len = inputs.length; i < len; i++) {
+                if (inputs[i].checked !== state) {
+                    changeTypeHeaderCheck.checked = false;
+                    return;
+                }
+            }
+            changeTypeHeaderCheck.checked = state;
+        });
+        ul.find('li.changeTypeHeader span.glyphicon').on('click', function() {
+            var cssClass, el, li, lis, i, len, show;
+            el = $(this);
+            li = el.parent();
+            cssClass = li.data('changetype');
+            lis = li.parent().find('label.' + cssClass).closest('li');
+            show = el.hasClass('glyphicon-plus');
+            if (show) {
+                el.removeClass('glyphicon-plus').addClass('glyphicon-minus');
+            } else {
+                el.removeClass('glyphicon-minus').addClass('glyphicon-plus');
+            }
+            for (i = 0, len = lis.length; i < len; i++) {
+                if (show) {
+                    $(lis[i]).show();
+                } else {
+                    $(lis[i]).hide();
                 }
             }
         });
@@ -3485,7 +3517,7 @@ var NCE = (function ($) {
             li = $(changeTypeHeaders[i]);
             cssClass = li.data('changetype');
             count = li.parent().find('label.' + cssClass).find('input[type="checkbox"]').length;
-            li[0].innerHTML = li[0].innerHTML + '<span class="change-type-header-count"> (' + count + ')</span>';
+            li.find('input[type="checkbox"]').before('<span class="change-type-header-count"> (' + count + ')</span> ');
         }
     }
 
@@ -3593,11 +3625,13 @@ var NCE = (function ($) {
             displayType = getLabelDisplayTypeForInfoDto(infoDto);
             if (changeType !== prevChangeType) {
                 prevChangeType = changeType;
-                html += '<li class="list-group-item skinny-lr changeTypeHeader" data-changetype="'
-                    + displayType.CSS_CLASS + '"><b class="' + displayType.CSS_CLASS + '">' + displayType.LABEL + '</b></li>';
+                html += '<li class="list-group-item skinny-lr noselect changeTypeHeader" data-changetype="'
+                    + displayType.CSS_CLASS + '"><span class="glyphicon glyphicon-minus"></span>'
+                    + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>'
+                    + '<input class="exclude" type="checkbox"/></li>';
             }
 
-            html += '<li class="list-group-item skinny-lr no-margins" style="padding-left:0;">';
+            html += '<li class="list-group-item skinny-lr no-margins" style="padding-left:0;" data-changetype="' + displayType.CSS_CLASS + '">';
             html += '<div class="container-fluid">';
 
             if (options.hasOwnProperty('compare')) {
