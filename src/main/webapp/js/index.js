@@ -3464,31 +3464,15 @@ var NCE = (function ($) {
         ul.find('a.anc-json').on('click', function () {
             onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
         });
-        ul.find('li.changeTypeHeader input[type="checkbox"]').on('click', function() {
-            var cssClass, inputs, li, i, len, state;
-            li = $(this).parent();
+        ul.find('li.changeTypeHeader').find('a').on('click', function() {
+            var cssClass, el, li, state;
+            el = $(this);
+            li = el.parent();
             cssClass = li.data('changetype');
-            inputs = li.parent().find('label.' + cssClass).find('input[type="checkbox"]');
-            state = this.checked;
-            for (i = 0, len = inputs.length; i < len; i++) {
-                $(inputs[i]).prop('checked', state);
-            }
+            state = el.hasClass(CLASS_SECTION_ALL);
+            li.parent().find('label.' + cssClass).find('input[type="checkbox"]').prop('checked', state);
         });
-        ul.find('li').not('.changeTypeHeader').find('input[type="checkbox"]').on('change', function(e) {
-            var cssClass, inputs, i, len, state, changeTypeHeaderCheck;
-            cssClass = $(this).closest('li').data('changetype');
-            changeTypeHeaderCheck = $('[data-changetype="' + cssClass + '"]').find('input[type="checkbox"]')[0];
-            inputs = $('label.' + cssClass).find('input[type="checkbox"]');
-            state = this.checked;
-            for (i = 0, len = inputs.length; i < len; i++) {
-                if (inputs[i].checked !== state) {
-                    changeTypeHeaderCheck.checked = false;
-                    return;
-                }
-            }
-            changeTypeHeaderCheck.checked = state;
-        });
-        ul.find('li.changeTypeHeader span.glyphicon').on('click', function() {
+        ul.find('li.changeTypeHeader').find('span.glyphicon, b').on('click', function() {
             var cssClass, el, li, lis, i, len, show;
             el = $(this);
             li = el.parent();
@@ -3518,7 +3502,7 @@ var NCE = (function ($) {
             li = $(changeTypeHeaders[i]);
             cssClass = li.data('changetype');
             count = li.parent().find('label.' + cssClass).find('input[type="checkbox"]').length;
-            li.find('input[type="checkbox"]').before('<span class="change-type-header-count"> (' + count + ')</span> ');
+            li.find('b').after('<span class="change-type-header-count">(' + count + ')</span>');
         }
     }
 
@@ -3629,10 +3613,12 @@ var NCE = (function ($) {
                 html += '<li class="list-group-item skinny-lr noselect changeTypeHeader" data-changetype="'
                     + displayType.CSS_CLASS + '"><span class="glyphicon glyphicon-minus"></span>'
                     + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>'
-                    + '<input class="exclude" type="checkbox"/></li>';
+                    + '<a href="#" class="' + CLASS_SECTION_ALL + '">All</a>'
+                    + '<a href="#" class="' + CLASS_SECTION_NONE + '">None</a>'
+                    + '</li>';
             }
 
-            html += '<li class="list-group-item skinny-lr no-margins" style="padding-left:0;" data-changetype="' + displayType.CSS_CLASS + '">';
+            html += '<li class="list-group-item skinny-lr no-margins" data-changetype="' + displayType.CSS_CLASS + '">';
             html += '<div class="container-fluid">';
 
             if (options.hasOwnProperty('compare')) {

@@ -82,6 +82,8 @@ var CLASS_ACTIVE_VIEW = 'active-view';
 
 var CLASS_NCUBE_NOT_SELECTED = 'ncube-notselected';
 var CLASS_NCUBE_SELECTED = 'ncube-selected';
+var CLASS_SECTION_ALL = 'section-all';
+var CLASS_SECTION_NONE = 'section-none';
 
 var TAB_OVERFLOW_TEXT_PADDING = 70;
 var TAB_WIDTH = 217;

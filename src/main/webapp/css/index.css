@@ -645,3 +645,11 @@ span.selected-count {
     z-index: 1040;
     background-color: #000;
 }
+
+a.section-all, a.section-none,
+a.section-all:focus, a.section-none:focus,
+a.section-all:hover, a.section-none:hover {
+    text-decoration: none;
+    color: #999;
+    margin-left: 10px;
+}
