@@ -140,6 +140,11 @@ var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 var METAPROPERTIES = {
     COLUMN_BLACKLIST: ['value','url','type','id','name'],
     DEFAULT_VALUE: 'default_value',
+    DEFAULT_VIEW: {
+        AXIS_ORDER: 'default_view_axis_order',
+        HIDDEN_AXES: 'default_view_hidden_axes',
+        HIDDEN_COLUMNS: 'default_view_hidden_columns'
+    },
     OBJECT_TYPES: {
         CUBE: 'cube',
         AXIS: 'axis',
@@ -260,6 +265,7 @@ var CONTROLLER_METHOD = {
     UPDATE_AXIS_METAPROPERTIES: 'updateAxisMetaProperties',
     UPDATE_BRANCH: 'updateBranch',
     UPDATE_CELL: 'updateCell',
+    UPDATE_CUBE_FROM_HEAD: 'updateCubeFromHead',
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
     UPDATE_REFERENCE_AXES: 'updateReferenceAxes'

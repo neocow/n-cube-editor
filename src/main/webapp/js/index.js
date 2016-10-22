@@ -3578,7 +3578,12 @@ var NCE = (function ($) {
     function callUpdateBranchCubes(appId, cubeDtos, isFromTabMenu) {
         showNote('Updating selected cubes...', 'Please wait...');
         setTimeout(function() {
-            var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeDtos]);
+            var result;
+            if (isFromTabMenu) {
+                result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_CUBE_FROM_HEAD, [appId, cubeDtos[0].name]);
+            } else {
+                result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeDtos]);
+            }
             clearError();
             if (!result.status) {
                 showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);

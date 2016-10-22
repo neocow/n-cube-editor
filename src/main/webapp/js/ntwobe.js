@@ -1241,14 +1241,23 @@ var NCubeEditor2 = (function ($) {
         return false;
     }
 
-    function determineAxesOrder(cubeAxes) {
-        var i, len, axis, order, keys, horizontal, delta, smallestDelta;
+    function getCustomAxisOrder() {
+        if (hasCustomAxisOrder()) {
+            return JSON.parse(localStorage[getStorageKey(nce, AXIS_ORDER)]);
+        }
+        if (data.hasOwnProperty(METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER)) {
+            return JSON.parse(data[METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER]);
+        }
+    }
+
+    function setUpAxisOrder(cubeAxes) {
+        var i, len, axis, order;
         axes = null;
         axes = [];
         _axisIdsInOrder = null;
         _axisIdsInOrder = [];
-        if (hasCustomAxisOrder()) {
-            order = JSON.parse(localStorage[getStorageKey(nce, AXIS_ORDER)]);
+        order = getCustomAxisOrder();
+        if (order) {
             for (i = 0, len = order.length; i < len; i++) {
                 axis = cubeAxes[order[i]];
                 getColumnLength(axis);
@@ -1256,34 +1265,39 @@ var NCubeEditor2 = (function ($) {
                 _axisIdsInOrder.push(getAxisId(axis));
             }
         } else {
-            keys = Object.keys(cubeAxes);
-            for (i = 0, len = keys.length; i < len; i++) {
-                axes.push(cubeAxes[keys[i]]);
-            }
+            determineAxisOrder(cubeAxes);
+        }
+    }
 
-            axes.sort(function (a, b) {
-                return getColumnLength(b) - getColumnLength(a);
-            });
+    function determineAxisOrder(cubeAxes) {
+        var i, len, axis, keys, horizontal, delta, smallestDelta;
+        keys = Object.keys(cubeAxes);
+        for (i = 0, len = keys.length; i < len; i++) {
+            axes.push(cubeAxes[keys[i]]);
+        }
 
-            smallestDelta = Number.MAX_VALUE;
-            for (i = 0, len = axes.length; i < len; i++) {
-                axis = axes[i];
-                if (headerAxisNames.indexOf(axis.name) > -1) {
-                    horizontal = i;
-                    break;
-                }
-                delta = Math.abs(getColumnLength(axis) - DEFAULT_COLUMN_COUNT);
-                if (delta < smallestDelta) {
-                    smallestDelta = delta;
-                    horizontal = i;
-                }
-            }
-            horizontal = axes.splice(horizontal, 1);
-            axes.push(horizontal[0]);
+        axes.sort(function (a, b) {
+            return getColumnLength(b) - getColumnLength(a);
+        });
 
-            for (i = 0, len = axes.length; i < len; i++) {
-                _axisIdsInOrder.push(getAxisId(axes[i]));
+        smallestDelta = Number.MAX_VALUE;
+        for (i = 0, len = axes.length; i < len; i++) {
+            axis = axes[i];
+            if (headerAxisNames.indexOf(axis.name) > -1) {
+                horizontal = i;
+                break;
             }
+            delta = Math.abs(getColumnLength(axis) - DEFAULT_COLUMN_COUNT);
+            if (delta < smallestDelta) {
+                smallestDelta = delta;
+                horizontal = i;
+            }
+        }
+        horizontal = axes.splice(horizontal, 1);
+        axes.push(horizontal[0]);
+
+        for (i = 0, len = axes.length; i < len; i++) {
+            _axisIdsInOrder.push(getAxisId(axes[i]));
         }
     }
 
@@ -1291,11 +1305,15 @@ var NCubeEditor2 = (function ($) {
         var i, axisLength, axis, lowerAxisName, keys, j, len;
         var storageKey = getStorageKey(nce, HIDDEN_COLUMNS);
         _hiddenColumns = null;
-        if (!localStorage.hasOwnProperty(storageKey)) {
+        if (localStorage.hasOwnProperty(storageKey)) {
+            _hiddenColumns = JSON.parse(localStorage[storageKey]);
+        } else if (data.hasOwnProperty(METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS)) {
+            _hiddenColumns = JSON.parse(data[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS]);
+        }
+        if (!_hiddenColumns) {
             _hiddenColumns = {};
             return;
         }
-        _hiddenColumns = JSON.parse(localStorage[storageKey]);
         for (i = 0, axisLength = axes.length; i < axisLength; i++) {
             axis = null;
             axis = axes[i];
@@ -1315,11 +1333,15 @@ var NCubeEditor2 = (function ($) {
         var i;
         var storageKey = getStorageKey(nce, GHOST_AXES);
         _ghostAxes = null;
-        if (!localStorage.hasOwnProperty(storageKey)) {
+        if (localStorage.hasOwnProperty(storageKey)) {
+            _ghostAxes = JSON.parse(localStorage[storageKey]);
+        } else if (data.hasOwnProperty(METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES)) {
+            _ghostAxes = JSON.parse(data[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES]);
+        }
+        if (!_ghostAxes) {
             _ghostAxes = {};
             return;
         }
-        _ghostAxes = JSON.parse(localStorage[storageKey]);
         for (i = axes.length; i--;) {
             if (_ghostAxes.hasOwnProperty(axes[i].name)) {
                 axes.splice(i, 1);
@@ -1333,6 +1355,10 @@ var NCubeEditor2 = (function ($) {
 
     function hasGhostAxes() {
         return Object.keys(_ghostAxes).length;
+    }
+
+    function hasHiddenColumns() {
+        return Object.keys(_hiddenColumns).length;
     }
 
     function setUpAxisColumnMap() {
@@ -1446,7 +1472,7 @@ var NCubeEditor2 = (function ($) {
         _defaultCellText = null;
 
         data = cubeData;
-        determineAxesOrder(data.axes);
+        setUpAxisOrder(data.axes);
         setUpGhostAxes();
         setUpHideColumns();
         setUpDataTable();
@@ -2268,9 +2294,10 @@ var NCubeEditor2 = (function ($) {
     function activateLinks(element) {
         // Add click handler that opens clicked cube names
         $(element).find('a').on('click', function () {
+            var i, len, fullName;
             var cubeName = this.textContent.toLowerCase();
-            for (var i = 0, len = prefixes.length; i < len; i++) {
-                var fullName = prefixes[i] + cubeName;
+            for (i = 0, len = prefixes.length; i < len; i++) {
+                fullName = prefixes[i] + cubeName;
                 if (cubeMap[fullName]) {
                     nce.selectCubeByName(nce.getProperCubeName(fullName));
                     break;
@@ -2361,6 +2388,26 @@ var NCubeEditor2 = (function ($) {
             }
             closeAxisMenu();
             clearFilters();
+            reload();
+        });
+        div.find('a.anc-set-view').on('click', function (e) {
+            e.preventDefault();
+            if (!hasModifiedView()) {
+                e.stopImmediatePropagation();
+                return;
+            }
+            closeAxisMenu();
+            callUpdateMetaPropertiesForDefaultCubeView();
+            reload();
+        });
+        div.find('a.anc-clear-view').on('click', function (e) {
+            e.preventDefault();
+            if (!hasDefaultCubeView()) {
+                e.stopImmediatePropagation();
+                return;
+            }
+            closeAxisMenu();
+            callUpdateMetaPropertiesForDefaultCubeView(true);
             reload();
         });
         div.find('a.anc-hide-columns').on('click', function (e) {
@@ -2475,6 +2522,41 @@ var NCubeEditor2 = (function ($) {
             e.preventDefault();
             e.stopImmediatePropagation();
         });
+    }
+
+    function hasModifiedView() {
+        return hasCustomAxisOrder() || hasHiddenColumns() || hasGhostAxes();
+    }
+
+    function hasDefaultCubeView() {
+        return data.hasOwnProperty(METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER)
+            || data.hasOwnProperty(METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES)
+            || data.hasOwnProperty(METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS);
+    }
+
+    function callUpdateMetaPropertiesForDefaultCubeView(shouldClear) {
+        var metaPropertyOptions, metaProperties;
+        metaPropertyOptions = {
+            objectType: METAPROPERTIES.OBJECT_TYPES.CUBE,
+            objectName: cubeName
+        };
+        metaProperties = getMetaProperties(metaPropertyOptions);
+        if (shouldClear) {
+            delete metaProperties[METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER];
+            delete metaProperties[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES];
+            delete metaProperties[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS];
+        } else {
+            if (hasCustomAxisOrder()) {
+                metaProperties[METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER] = JSON.stringify(getCustomAxisOrder());
+            }
+            if (hasGhostAxes()) {
+                metaProperties[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES] = JSON.stringify(_ghostAxes);
+            }
+            if (hasHiddenColumns()) {
+                metaProperties[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS] = JSON.stringify(_hiddenColumns);
+            }
+        }
+        updateMetaProperties(metaPropertyOptions, metaProperties);
     }
 
     function filterOutBlankRows() {
@@ -2596,6 +2678,17 @@ var NCubeEditor2 = (function ($) {
                 html += ' class="disabled"';
             }
             html += '><a href="#" class="anc-clear-filters">Clear Filters</a></li>';
+            html += '<li class="divider"/>';
+            html += '<li';
+            if (!hasModifiedView()) {
+                html += ' class="disabled"';
+            }
+            html += '><a href="#" class="anc-set-view">Set as Default View</a></li>';
+            html += '<li';
+            if (!hasDefaultCubeView()) {
+                html += ' class="disabled"';
+            }
+            html += '><a href="#" class="anc-clear-view">Clear Default View</a></li>';
             html += '<li class="divider"/>';
         }
 
@@ -2888,28 +2981,13 @@ var NCubeEditor2 = (function ($) {
     }
 
     function updateMetaProperties(metaPropertyOptions, metaProperties) {
-        var mpMap, mpIdx, mpLen, prop, controllerInfo, result;
-        mpMap = {};
-        for (mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
-            prop = null;
-            prop = metaProperties[mpIdx];
-            mpMap[prop.key] = {
-                '@type': GROOVY_CLASS.CELL_INFO,
-                isUrl: prop.isUrl,
-                isCached: prop.isCached,
-                value: prop.value,
-                dataType: prop.dataType
-            };
-        }
-
+        var controllerInfo, result;
         controllerInfo = getMetaPropertiesControllerInfo(metaPropertyOptions);
-        controllerInfo.params.push(mpMap);
+        controllerInfo.params.push(metaProperties);
         result = nce.call(CONTROLLER + controllerInfo.setter, controllerInfo.params);
         if (!result.status) {
             nce.showNote("Unable to update metaproperties for " + metaProperties.objectType + " '" + metaPropertyOptions.objectName + "':<hr class=\"hr-small\"/>" + result.data);
-            return;
         }
-        reload();
     }
 
     function openMetaPropertiesBuilder(metaPropertyOptions) {
@@ -2974,8 +3052,22 @@ var NCubeEditor2 = (function ($) {
             },
             readonly: metaPropertyOptions.readonly,
             afterSave: function() {
-                updateMetaProperties(metaPropertyOptions, metaProperties);
+                var mpMap, mpIdx, mpLen, prop;
+                mpMap = {};
+                for (mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
+                    prop = null;
+                    prop = metaProperties[mpIdx];
+                    mpMap[prop.key] = {
+                        '@type': GROOVY_CLASS.CELL_INFO,
+                        isUrl: prop.isUrl,
+                        isCached: prop.isCached,
+                        value: prop.value,
+                        dataType: prop.dataType
+                    };
+                }
+                updateMetaProperties(metaPropertyOptions, mpMap);
                 removeHotBeforeKeyDown();
+                reload();
             }
         };
 
@@ -3826,7 +3918,7 @@ var NCubeEditor2 = (function ($) {
         }
         lowerAxisName = axis.name.toLowerCase();
         if (_hiddenColumns.hasOwnProperty(lowerAxisName)) {
-            nce.showNote('Hidden column selections for axis ' + axis.name + ' removed.', 'Note', 2000);
+            nce.showNote('Hidden column selections for axis ' + axis.name + ' removed.', 'Note', TWO_SECOND_TIMEOUOT);
             delete _hiddenColumns[lowerAxisName];
             storeHiddenColumns();
         }
@@ -4069,7 +4161,7 @@ var NCubeEditor2 = (function ($) {
         });
         len = columnIds.length;
         if (len === axis.columns.length) {
-            nce.showNote('Please select at least one column to show.', 'Note', 2000);
+            nce.showNote('Please select at least one column to show.', 'Note', TWO_SECOND_TIMEOUOT);
             return;
         }
         delete _hiddenColumns[lowerAxisName];
@@ -4345,9 +4437,9 @@ var NCubeEditor2 = (function ($) {
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.DELETE_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
         if (result.status) {
             lowerAxisName = axisName.toLowerCase();
-            if (_hiddenColumns.hasOwnProperty(lowerAxisName))
-            {
-                nce.showNote('Hidden column selections for axis ' + axisName + ' removed.', 'Note', 2000);
+            callUpdateMetaPropertiesForDefaultCubeView(true);
+            if (_hiddenColumns.hasOwnProperty(lowerAxisName)) {
+                nce.showNote('Hidden column selections for axis ' + axisName + ' removed.', 'Note', TWO_SECOND_TIMEOUOT);
                 delete _hiddenColumns[lowerAxisName];
                 storeHiddenColumns();
             }
@@ -4484,6 +4576,7 @@ var NCubeEditor2 = (function ($) {
             oldName = _axisName.toLowerCase();
             newName = axisName.toLowerCase();
             if (oldName !== newName) {
+                callUpdateMetaPropertiesForDefaultCubeView(true);
                 _hiddenColumns[newName] = _hiddenColumns[oldName];
                 delete _hiddenColumns[oldName];
                 storeHiddenColumns();
