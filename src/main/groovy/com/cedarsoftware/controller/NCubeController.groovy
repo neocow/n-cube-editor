@@ -1373,6 +1373,13 @@ class NCubeController extends BaseController
         return nCubeService.rollbackCubes(appId, cubeNames)
     }
 
+    Object updateCubeFromHead(ApplicationID appId, String cubeName)
+    {
+        appId = addTenant(appId)
+        List<NCubeInfoDto> dtos = nCubeService.search(appId.asHead(), cubeName, null, [(NCubeManager.SEARCH_EXACT_MATCH_NAME) : true])
+        nCubeService.updateBranch(appId, dtos.toArray())
+    }
+
     Object updateBranch(ApplicationID appId, Object[] cubeDtos)
     {
         appId = addTenant(appId)
