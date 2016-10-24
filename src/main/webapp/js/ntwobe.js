@@ -2017,7 +2017,6 @@ var NCubeEditor2 = (function ($) {
     }
 
     function categoryRenderer(instance, td, row, col, prop, value, cellProperties) {
-        var axis, column, rowHeader, cellData, val, columnDefault;
         Handsontable.renderers.TextRenderer.apply(this, arguments);
         cellProperties.editor = NcubeBaseEditor;
         td.className = '';
@@ -2027,137 +2026,157 @@ var NCubeEditor2 = (function ($) {
 
         // cube name
         if (!row && (col < colOffset || !col)) {
-            if (!col) {
-                td.innerHTML = cubeName;
-            }
-            td.className += CLASS_HANDSON_CELL_CUBE_NAME;
-            td.style.background = BACKGROUND_CUBE_NAME;
-            td.style.color = COLOR_WHITE;
-            td.colSpan = 1;
-            cellProperties.editor = CubeEditor;
-            if (col < axes.length - 2) {
-                td.style.borderRight = NONE;
-                td.style.overflow = 'visible';
-            }
-        }
-
-        // horizontal axis metadata area
-        else if (!row) {
-            if (axes.length > 1 && (col === colOffset || (_firstRenderedCol && col === _firstRenderedCol))) {
-                td.style.overflow = 'visible';
-                td.colSpan = axes[colOffset].columnLength - _firstRenderedCol;
-            }
-            td.style.background = BACKGROUND_AXIS_INFO;
-            td.style.color = COLOR_WHITE;
-            cellProperties.readOnly = true;
-        }
-
-        else if (row === 1) {
-            // vertical axes metadata area
-            axis = axes[colOffset];
+            renderCubeName(td, col, cellProperties);
+        } else if (!row) {
+            renderHorizontalAxisMetadata(td, col, cellProperties);
+        } else if (row === 1) {
             if (col < colOffset || !col) {
-                td.style.background = BACKGROUND_AXIS_INFO;
-                td.style.color = COLOR_WHITE;
-                td.style.overflow = 'visible';
-                cellProperties.readOnly = true;
-                buildAxisMenu(axes[col], td);
+                renderVerticalAxisMetadata(td, col, cellProperties);
             } else {
-                // column headers
-                if (axes.length > 1) {
-                    column = getColumnHeader(col);
-                    td.innerHTML = getRowHeaderValue(axis, column);
-                    if (column.isSearchResult) {
-                        td.className += CLASS_HANDSON_SEARCH_RESULT;
-                    }
-                }
-                td.className += CLASS_HANDSON_TABLE_HEADER;
-                cellProperties.editor = ColumnEditor;
-                if (axis.isRef) {
-                    cellProperties.readOnly = true;
-                }
+                renderColumnHeader(td, col, cellProperties);
             }
+        } else if (!col || col < colOffset) {
+            renderRowHeader(td, row, col, cellProperties);
+        } else {
+            renderCell(td, row, col, cellProperties);
         }
-
-        // row headaers
-        else if (!col || col < colOffset) {
-            rowHeader = getRowHeader(row, col);
-            axis = axes[col];
-            if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (!col || (col && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
-                td.style.borderTop = NONE;
-            } else {
-                td.innerHTML = getRowHeaderValue(axis, rowHeader);
-            }
-            td.className += CLASS_HANDSON_TABLE_HEADER;
-            if (getRowHeader(row, col).isSearchResult) {
+    }
+    
+    function renderCubeName(td, col, cellProperties) {
+        if (!col) {
+            td.innerHTML = cubeName;
+        }
+        td.className += CLASS_HANDSON_CELL_CUBE_NAME;
+        td.style.background = BACKGROUND_CUBE_NAME;
+        td.style.color = COLOR_WHITE;
+        td.colSpan = 1;
+        cellProperties.editor = CubeEditor;
+        if (col < axes.length - 2) {
+            td.style.borderRight = NONE;
+            td.style.overflow = 'visible';
+        }
+    }
+    
+    function renderHorizontalAxisMetadata(td, col, cellProperties) {
+        if (axes.length > 1 && (col === colOffset || (_firstRenderedCol && col === _firstRenderedCol))) {
+            td.style.overflow = 'visible';
+            td.colSpan = axes[colOffset].columnLength - _firstRenderedCol;
+        }
+        setCommonAxisMetadataProps(td, cellProperties);
+    }
+    
+    function renderVerticalAxisMetadata(td, col, cellProperties) {
+        setCommonAxisMetadataProps(td, cellProperties);
+        td.style.overflow = 'visible';
+        buildAxisMenu(axes[col], td);
+    }
+    
+    function setCommonAxisMetadataProps(td, cellProperties) {
+        td.style.background = BACKGROUND_AXIS_INFO;
+        td.style.color = COLOR_WHITE;
+        cellProperties.readOnly = true;
+    }
+    
+    function renderColumnHeader(td, col, cellProperties) {
+        var axis, column;
+        axis = axes[colOffset];
+        if (axes.length > 1) {
+            column = getColumnHeader(col);
+            td.innerHTML = getRowHeaderValue(axis, column);
+            if (column.isSearchResult) {
                 td.className += CLASS_HANDSON_SEARCH_RESULT;
             }
+        }
+        td.className += CLASS_HANDSON_TABLE_HEADER;
+        cellProperties.editor = ColumnEditor;
+        if (axis.isRef) {
+            cellProperties.readOnly = true;
+        }
+    }
 
-            cellProperties.editor = ColumnEditor;
-            if (axis.isRef) {
-                cellProperties.readOnly = true;
-            }
+    function renderRowHeader(td, row, col, cellProperties) {
+        var rowHeader = getRowHeader(row, col);
+        var axis = axes[col];
+        if (row > 2 && getColumnLength(axis) > 1  && col < colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (!col || (col && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
+            td.style.borderTop = NONE;
+        } else {
+            td.innerHTML = getRowHeaderValue(axis, rowHeader);
+        }
+        td.className += CLASS_HANDSON_TABLE_HEADER;
+        if (getRowHeader(row, col).isSearchResult) {
+            td.className += CLASS_HANDSON_SEARCH_RESULT;
         }
 
-        // otherwise in cell data
-        else {
-            cellData = getCellData(row, col);
-            td.className += CLASS_HANDSON_CELL_BASIC;
-            if (cellData && cellData.type) {
-                if ((cellData.value !== undefined && cellData.value !== null) || (cellData.url !== undefined && cellData.url !== null)) {
-                    if (cellData.isSearchResult) {
-                        td.className += CLASS_HANDSON_SEARCH_RESULT;
-                    }
+        cellProperties.editor = ColumnEditor;
+        if (axis.isRef) {
+            cellProperties.readOnly = true;
+        }
+    }
+    
+    function renderCell(td, row, col, cellProperties) {
+        var cellData, val, columnDefault;
+        cellData = getCellData(row, col);
+        td.className += CLASS_HANDSON_CELL_BASIC;
+        if (cellData && cellData.type) {
+            if ((cellData.value !== undefined && cellData.value !== null) || (cellData.url !== undefined && cellData.url !== null)) {
+                if (cellData.isSearchResult) {
+                    td.className += CLASS_HANDSON_SEARCH_RESULT;
+                }
 
-                    if (cellData.url !== undefined) {
-                        td.className += CLASS_HANDSON_CELL_URL;
-                        td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
-                        buildUrlLink(td);
-                    } else if (cellData.value !== undefined && CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
-                        td.className += CLASS_HANDSON_CELL_CODE;
-                        td.innerHTML = buildExpressionLink('' + cellData.value, 'groovy');
-                        activateLinks(td);
-                    } else if ('date' === cellData.type) {
-                        val = cellData.value;
-                        td.innerHTML = getStringFromDate(val);
-                    } else {
-                        td.innerHTML = buildExpressionLink('' + cellData.value);
-                        activateLinks(td);
-                    }
+                if (cellData.url !== undefined) {
+                    td.className += CLASS_HANDSON_CELL_URL;
+                    td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
+                    buildUrlLink(td);
+                } else if (cellData.value !== undefined && CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
+                    td.className += CLASS_HANDSON_CELL_CODE;
+                    td.innerHTML = buildExpressionLink('' + cellData.value, 'groovy');
+                    activateLinks(td);
+                } else if ('date' === cellData.type) {
+                    val = cellData.value;
+                    td.innerHTML = getStringFromDate(val);
                 } else {
-                    td.className += CLASS_HANDSON_CELL_NULL;
-                    td.innerHTML = 'null';
+                    td.innerHTML = buildExpressionLink('' + cellData.value);
+                    activateLinks(td);
                 }
             } else {
-                columnDefault = getCalculatedColumnDefault(row, col);
-                if (columnDefault !== null) {
-                    td.className += CLASS_HANDSON_COLUMN_DEFAULT;
-                    if (columnDefault.type === 'date') {
-                        td.innerHTML = getStringFromDate(columnDefault.value);
+                td.className += CLASS_HANDSON_CELL_NULL;
+                td.innerHTML = 'null';
+            }
+        } else {
+            columnDefault = getCalculatedColumnDefault(row, col);
+            if (columnDefault !== null) {
+                td.className += CLASS_HANDSON_COLUMN_DEFAULT;
+                if (columnDefault.type === 'date') {
+                    td.innerHTML = getStringFromDate(columnDefault.value);
+                } else {
+                    if (columnDefault.url !== undefined) {
+                        td.innerHTML = '<a class="nc-anc">' + columnDefault.url + '</a>';
+                        buildUrlLink(td);
                     } else {
                         columnDefault = buildExpressionLink('' + columnDefault.value, NONE);
                         td.innerHTML = columnDefault;
                         activateLinks(td);
                     }
-                } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
-                    td.className += CLASS_HANDSON_CELL_DEFAULT;
-                    if (_defaultCellText === null) {
-                        _defaultCellText = buildExpressionLink('' + data.defaultCellValue, NONE);
-                    }
-                    td.innerHTML = _defaultCellText;
-                    activateLinks(td);
-                } else if (data.defaultCellValueUrl !== null && data.defaultCellValueUrl !== undefined) {
-                    td.className += CLASS_HANDSON_CELL_DEFAULT;
-                    td.innerHTML = '<a class="nc-anc">' + data.defaultCellValueUrl + '</a>';
-                    buildUrlLink(td);
                 }
+            } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
+                td.className += CLASS_HANDSON_CELL_DEFAULT;
+                if (_defaultCellText === null) {
+                    _defaultCellText = buildExpressionLink('' + data.defaultCellValue, NONE);
+                }
+                td.innerHTML = _defaultCellText;
+                activateLinks(td);
+            } else if (data.defaultCellValueUrl !== null && data.defaultCellValueUrl !== undefined) {
+                td.className += CLASS_HANDSON_CELL_DEFAULT;
+                td.innerHTML = '<a class="nc-anc">' + data.defaultCellValueUrl + '</a>';
+                buildUrlLink(td);
             }
-
-            if (row % 2 !== 0) {
-                td.className += CLASS_HANDSON_CELL_ODD_ROW;
-            }
-
-            cellProperties.editor = CellEditor;
         }
+
+        if (row % 2 !== 0) {
+            td.className += CLASS_HANDSON_CELL_ODD_ROW;
+        }
+
+        cellProperties.editor = CellEditor;
     }
 
     function getCalculatedColumnDefault(row, col) {
