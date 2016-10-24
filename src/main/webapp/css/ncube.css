@@ -88,7 +88,7 @@ ul#setUpHideList li {
 
 #coordinate-bar-move-left {
     position: absolute;
-    left: 0px;
+    left: 0;
     display: none;
 }
 
@@ -223,16 +223,12 @@ ul#setUpHideList li {
     color:#e8e8e8;
     border-radius:3px;
     font-family: "arial","helvetica", sans-serif;
-    padding-left:5px;
-    padding-right:5px;
-    padding-top:1px;
-    padding-bottom:1px
+    padding: 1px 5px;
 }
 
 .hr-rule {
     margin:1px;
-    border-style:dashed;
-    border-color:darkgray;
+    border: dashed darkgray;
 }
 
 .handsontable td.code {

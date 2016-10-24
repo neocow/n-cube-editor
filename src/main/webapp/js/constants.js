@@ -18,10 +18,20 @@ var SCOPE_MAP = NCE_PREFIX + 'SCOPE_MAP';
 var VISITED_BRANCHES = NCE_PREFIX + 'VISITED_BRANCHES';
 
 var PROGRESS_DELAY = 300;
-var DIFF_SIDE_BY_SIDE = 0;
-var DIFF_INLINE = 1;
-var DIFF_DESCRIPTIVE = 2;
-var DIFF_VISUAL = 3;
+var ONE_SECOND_TIMEOUT = 1000;
+var TWO_SECOND_TIMEOUOT = 2000;
+var TEN_SECOND_TIMEOUT = 10000;
+var MINUTE_TIMEOUT = 60000;
+//noinspection MagicNumberJS
+var MODAL_TOO_FAR_LEFT = -250;
+//noinspection MagicNumberJS
+var MAIN_SPLITTER_DEFAULTS = {
+    TOGGLER_LENGTH_OPEN: 60,
+    WEST_SIZE: 250,
+    WEST_MIN_SIZE: 140
+};
+var TAB_TRIM_TEXT = 30;
+
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
 var TAB_SEPARATOR = '~';
@@ -44,8 +54,10 @@ var CONFIG_TAB_MENU = 'tab-menu';
 var CONFIG_TITLE = 'title';
 var PAGE_ID = 'PageId';
 
-var AXIS_DEFAULT = '002147483647';
+var DEFAULT_COLUMN_DISPLAY_ORDER = 2147483647;
+var AXIS_DEFAULT = '00' + DEFAULT_COLUMN_DISPLAY_ORDER;
 var DEFAULT_TEXT = 'Default';
+var DEFAULT_COLUMN_COUNT = 12;
 
 var BACKGROUND_CUBE_NAME = '#6495ED';
 var BACKGROUND_AXIS_INFO = '#4D4D4D';
@@ -67,6 +79,11 @@ var CLASS_HANDSON_SEARCH_RESULT = ' searchResult';
 var CLASS_CONFLICT = 'conflict';
 var CLASS_OUT_OF_SYNC = 'out-of-sync';
 var CLASS_ACTIVE_VIEW = 'active-view';
+
+var CLASS_NCUBE_NOT_SELECTED = 'ncube-notselected';
+var CLASS_NCUBE_SELECTED = 'ncube-selected';
+var CLASS_SECTION_ALL = 'section-all';
+var CLASS_SECTION_NONE = 'section-none';
 
 var TAB_OVERFLOW_TEXT_PADDING = 70;
 var TAB_WIDTH = 217;
@@ -123,6 +140,11 @@ var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 var METAPROPERTIES = {
     COLUMN_BLACKLIST: ['value','url','type','id','name'],
     DEFAULT_VALUE: 'default_value',
+    DEFAULT_VIEW: {
+        AXIS_ORDER: 'default_view_axis_order',
+        HIDDEN_AXES: 'default_view_hidden_axes',
+        HIDDEN_COLUMNS: 'default_view_hidden_columns'
+    },
     OBJECT_TYPES: {
         CUBE: 'cube',
         AXIS: 'axis',
@@ -144,6 +166,33 @@ var METAPROPERTIES = {
     ]
 };
 
+var DELTA = {
+    LOC: {
+        AXIS: 'AXIS',
+        AXIS_META: 'AXIS_META',
+        CELL: 'CELL',
+        CELL_META: 'CELL_META',
+        COLUMN: 'COLUMN',
+        COLUMN_META: 'COLUMN_META',
+        NCUBE: 'NCUBE',
+        NCUBE_META: 'NCUBE_META'
+    },
+    TYPE: {
+        ADD: 'ADD',
+        DELETE: 'DELETE',
+        UPDATE: 'UPDATE'
+    }
+};
+
+var CHANGETYPE = {
+    CREATED: {CODE: 'C', DISPLAY_ORDER: 0, CSS_CLASS: 'cube-added', LABEL: 'Added Cubes'},
+    RESTORED: {CODE: 'R', DISPLAY_ORDER: 1, CSS_CLASS: 'cube-restored', LABEL: 'Restored Cubes'},
+    UPDATED: {CODE: 'U', DISPLAY_ORDER: 2, CSS_CLASS: 'cube-modified', LABEL: 'Updated Cubes'},
+    DELETED: {CODE: 'D', DISPLAY_ORDER: 3, CSS_CLASS: 'cube-deleted', LABEL: 'Deleted Cubes'},
+    FASTFORWARD: {CODE: 'F', DISPLAY_ORDER: 4, CSS_CLASS: 'cube-fastforward', LABEL: 'No Change - Updated HEAD SHA-1'},
+    CONFLICT: {CODE: 'X', DISPLAY_ORDER: 5, CSS_CLASS: 'cube-conflict', LABEL: 'Cubes in Conflict'}
+};
+
 var GROOVY_CLASS = {
     CELL_INFO: 'com.cedarsoftware.ncube.CellInfo'
 };
@@ -161,6 +210,7 @@ var CONTROLLER_METHOD = {
     BREAK_AXIS_REFERENCE: 'breakAxisReference',
     CHANGE_VERSION_VALUE: 'changeVersionValue',
     CHECK_PERMISSIONS: 'checkPermissions',
+    CLEAR_CACHE: 'clearCache',
     COMMIT_BRANCH: 'commitBranch',
     COMMIT_CUBE: 'commitCube',
     COPY_BRANCH: 'copyBranch',
@@ -179,22 +229,28 @@ var CONTROLLER_METHOD = {
     GET_AXIS: 'getAxis',
     GET_AXIS_METAPROPERTIES: 'getAxisMetaProperties',
     GET_BRANCH_CHANGES_FOR_HEAD: 'getBranchChangesForHead',
+    GET_BRANCH_CHANGES_FOR_MY_BRANCH: 'getBranchChangesForMyBranch',
     GET_HEAD_CHANGES_FOR_BRANCH: 'getHeadChangesForBranch',
     GET_BRANCHES: 'getBranches',
     GET_CELL_NO_EXECUTE: 'getCellNoExecute',
     GET_CELLS_NO_EXECUTE: 'getCellsNoExecute',
     GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
+    GET_HEADERS: 'getHeaders',
     GET_JSON: 'getJson',
     GET_MENU: 'getMenu',
     GET_REFERENCE_AXES: 'getReferenceAxes',
+    GET_REFERENCES_FROM: 'getReferencesFrom',
+    GET_REQUIRED_SCOPE: 'getRequiredScope',
     GET_REVISION_HISTORY: 'getRevisionHistory',
     GET_VERSIONS: 'getVersions',
+    HEARTBEAT: 'heartBeat',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     IS_CUBE_CURRENT: 'isCubeUpToDate',
     LOAD_CUBE_BY_ID: 'loadCubeById',
     LOCK_APP: 'lockApp',
+    MERGE_DELTAS: 'mergeDeltas',
     MOVE_BRANCH: 'moveBranch',
     PASTE_CELLS: 'pasteCells',
     PROMOTE_REVISION: 'promoteRevision',
@@ -202,12 +258,14 @@ var CONTROLLER_METHOD = {
     RESOLVE_RELATIVE_URL: 'resolveRelativeUrl',
     RESTORE_CUBES: 'restoreCubes',
     ROLLBACK_BRANCH: 'rollbackBranch',
+    SAVE_JSON: 'saveJson',
     SEARCH: 'search',
     UPDATE_AXIS: 'updateAxis',
     UPDATE_AXIS_COLUMNS: 'updateAxisColumns',
     UPDATE_AXIS_METAPROPERTIES: 'updateAxisMetaProperties',
     UPDATE_BRANCH: 'updateBranch',
     UPDATE_CELL: 'updateCell',
+    UPDATE_CUBE_FROM_HEAD: 'updateCubeFromHead',
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
     UPDATE_REFERENCE_AXES: 'updateReferenceAxes'
@@ -217,7 +275,13 @@ var JSON_MODE = {
     HTML: 'html',
     INDEX: 'json-index',
     INDEX_NOCELLS: 'json-index-nocells',
+    JSON: 'json',
     PRETTY: 'json-pretty'
+};
+
+var DISPLAY_MAP_TITLE = {
+    HTTP_HEADERS: 'HTTP Headers',
+    SERVER_STATS: 'Server Statistics'
 };
 
 var DEFAULT_SCOPE = [
@@ -240,33 +304,64 @@ var PERMISSION_ACTION = {
     UPDATE: 'update'
 };
 
+//noinspection MagicNumberJS
 var KEY_CODES = {
     MOUSE_LEFT: 1,
-    MOUSE_RIGHT: 3,
     MOUSE_MIDDLE: 2,
+    MOUSE_RIGHT: 3,
     BACKSPACE: 8,
-    COMMA: 188,
-    INSERT: 45,
-    DELETE: 46,
-    END: 35,
-    ENTER: 13,
-    ESCAPE: 27,
-    CONTROL_LEFT: 91,
-    COMMAND_LEFT: 17,
-    COMMAND_RIGHT: 93,
-    ALT: 18,
-    HOME: 36,
-    PAGE_DOWN: 34,
-    PAGE_UP: 33,
-    PERIOD: 190,
-    SPACE: 32,
-    SHIFT: 16,
-    CAPS_LOCK: 20,
     TAB: 9,
-    ARROW_RIGHT: 39,
+    ENTER: 13,
+    SHIFT: 16,
+    COMMAND_LEFT: 17,
+    ALT: 18,
+    CAPS_LOCK: 20,
+    ESCAPE: 27,
+    SPACE: 32,
+    PAGE_UP: 33,
+    PAGE_DOWN: 34,
+    END: 35,
+    HOME: 36,
     ARROW_LEFT: 37,
     ARROW_UP: 38,
+    ARROW_RIGHT: 39,
     ARROW_DOWN: 40,
+    INSERT: 45,
+    DELETE: 46,
+    NUM_0: 48,
+    NUM_1: 49,
+    NUM_2: 50,
+    NUM_3: 51,
+    NUM_4: 52,
+    NUM_5: 53,
+    NUM_6: 54,
+    NUM_7: 55,
+    NUM_8: 56,
+    NUM_9: 57,
+    A: 65,
+    F: 70,
+    X: 88,
+    C: 67,
+    K: 75,
+    V: 86,
+    Z: 90,
+    NUMPAD_0: 96,
+    NUMPAD_1: 97,
+    NUMPAD_2: 98,
+    NUMPAD_3: 99,
+    NUMPAD_4: 100,
+    NUMPAD_5: 101,
+    NUMPAD_6: 102,
+    NUMPAD_7: 103,
+    NUMPAD_8: 104,
+    NUMPAD_9: 105,
+    MULTIPLY: 106,
+    ADD: 107,
+    SUBTRACT: 109,
+    DECIMAL: 110,
+    DIVIDE: 111,
+    CONTROL_LEFT: 91,
+    COMMAND_RIGHT: 93,
     F1: 112,
     F2: 113,
     F3: 114,
@@ -279,10 +374,15 @@ var KEY_CODES = {
     F10: 121,
     F11: 122,
     F12: 123,
-    A: 65,
-    F: 70,
-    X: 88,
-    C: 67,
-    K: 75,
-    V: 86
+    SEMICOLON: 186,
+    EQUALS: 187,
+    COMMA: 188,
+    DASH: 189,
+    PERIOD: 190,
+    F_SLASH: 191,
+    ACCENT: 192,
+    OPEN_BRACKET: 219,
+    B_SLASH: 220,
+    CLOSE_BRACKET: 221,
+    SINGLE_QUOTE: 222
 };

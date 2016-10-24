@@ -220,15 +220,6 @@ span.selected-count {
     color: #999;
 }
 
-.innerL {
-    position: absolute;
-}
-.innerR {
-    position: absolute;
-    opacity: 0.70;
-    mix-blend-mode: difference;
-}
-
 .hr-small
 {
     margin-top: 2px;
@@ -303,12 +294,25 @@ span.selected-count {
     margin-bottom: 0;
 }
 
+.change-type-header-count {
+    color: #999;
+    text-decoration: none;
+}
+
+.cube-fastforward {
+    color: darkgrey;
+}
+
+.cube-conflict {
+    color: red;
+}
+
 .cube-modified {
-    color: blue !important;
+    color: cornflowerblue;
 }
 
 .cube-added {
-    color: green !important;
+    color: green;
 }
 
 .cube-deleted {
@@ -316,7 +320,7 @@ span.selected-count {
 }
 
 .cube-restored {
-    color: darkgoldenrod !important;
+    color: goldenrod;
 }
 
 .top-buffer { margin-top:20px; }
@@ -343,7 +347,6 @@ span.selected-count {
     width: 0;
     -webkit-transition: none;
     -moz-transition: none;
-    -ms-transition: none;
     -o-transition: none;
     transition: none;
 }
@@ -397,6 +400,9 @@ span.selected-count {
     width:100%;
     height: calc(100% - 120px);
     overflow-y: scroll;
+}
+#diffOutputModal table.diff {
+    margin: 5px 35px;
 }
 
 .navbar-custom {
@@ -638,4 +644,12 @@ span.selected-count {
     position: fixed;
     z-index: 1040;
     background-color: #000;
+}
+
+a.section-all, a.section-none,
+a.section-all:focus, a.section-none:focus,
+a.section-all:hover, a.section-none:hover {
+    text-decoration: none;
+    color: #999;
+    margin-left: 10px;
 }

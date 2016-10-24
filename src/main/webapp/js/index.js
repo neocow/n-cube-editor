@@ -1,3 +1,4 @@
+//noinspection FunctionTooLongJS
 /**
  * NCube Editor
  *     IDE for building and editing NCubes
@@ -21,44 +22,20 @@
 
 var NCE = (function ($) {
     var head = 'HEAD';
+    var _savedCall = null;
     var _searchThread;
     var _heartBeatThread;
     var _cubeList = {};
     var _openCubes = localStorage[OPEN_CUBES];
-    try {
-        _openCubes = JSON.parse(_openCubes);
-        if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
-            || (_openCubes.length > 0 && typeof _openCubes[0] !== 'object')) {
-            _openCubes = [];
-        } else if (!_openCubes[0].hasOwnProperty('cubeKey')) {
-            _openCubes = [];
-        }
-    } catch (e) {
-        _openCubes = []
-    }
     var _visitedBranches = localStorage[VISITED_BRANCHES];
-    if (_visitedBranches === undefined) {
-        _visitedBranches = {};
-    } else {
-        _visitedBranches = JSON.parse(_visitedBranches);
-    }
     var _selectedCubeName = localStorage[SELECTED_CUBE];
     var _selectedApp = localStorage[SELECTED_APP];
     var _selectedVersion = localStorage[SELECTED_VERSION];
     var _selectedBranch;
-    if (localStorage.getItem(SELECTED_BRANCH) == null) {
-        saveSelectedBranch(head);
-    } else {
-        _selectedBranch = localStorage[SELECTED_BRANCH];
-    }
     var _selectedStatus = localStorage[SELECTED_STATUS] || STATUS.SNAPSHOT;
     var _errorId = null;
     var _activeTabViewType = localStorage[ACTIVE_TAB_VIEW_TYPE];
-    if (!_activeTabViewType) {
-        _activeTabViewType = 'n-cube' + PAGE_ID;
-    }
     var _selectedCubeInfo = localStorage[SELECTED_CUBE_INFO];
-    _selectedCubeInfo = _selectedCubeInfo ? JSON.parse(_selectedCubeInfo) : [];
     var _defaultTab = null;
     var _appTitle = $('#appTitle');
     var _searchNames = $('#cube-search');
@@ -75,6 +52,9 @@ var NCE = (function ($) {
     var _diffHtmlResult = null;
     var _diffLeftName = '';
     var _diffRightName = '';
+    var _diffAppId = null;
+    var _diffCubeName = null;
+    var _didMergeChange = false;
     var _menuOptions = [];
     var _menuList = $('#menuList');
     var _tabOverflow = $('#tab-overflow');
@@ -100,21 +80,22 @@ var NCE = (function ($) {
     var _getAppLockedByMenu = $('#getAppLockedByMenu');
     var _releaseCubesVersion = $('#releaseCubesVersion');
     var _branchMenu = $('#BranchMenu');
-    var _releaseMenu = $('#ReleaseMenu');
     var _branchCommit = $('#branchCommit');
     var _commitRollbackList = $('#commitRollbackList');
     var _branchQuickSelectHeader = $('#branchQuickSelectHeader');
     var _clearCache = $('#clearCache');
-    var _releaseCubesProgressDiv = $('#releaseCubesProgressDiv');
     var _releaseCubesProgressBar = $('#releaseCubesProgressBar');
     var _releaseCubesProgressInfo = $('#releaseCubesProgressInfo');
     var _releaseCubesOk = $('#releaseCubesOk');
     var _releaseCubesProgressPct = null;
     var _releaseCubesProgressText = null;
     var isReleasePending = false;
+    var _branchCompareUpdateOk = $('#branchCompareUpdateOk');
     var _branchCompareUpdateMenu = $('#branchCompareUpdate');
     var _branchCompareUpdateList = $('#branchCompareUpdateList');
     var _branchList = $('#branchList');
+    var _deleteCubeList = $('#deleteCubeList');
+    var _deleteCubeLabel = $('#deleteCubeLabel');
     var _newBranchName = $('#newBranchName');
     var _branchNameWarning = $('#branchNameWarning');
     var _createSnapshotLabel = $('#createSnapshotLabel');
@@ -137,6 +118,15 @@ var NCE = (function ($) {
     var _globalComparatorMenu = $('#globalComparatorMenu');
     var _revisionHistoryList = $('#revisionHistoryList');
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
+    var _diffModalMerge = $('#diffModalMerge');
+    var _diffInstructions = $('#diffInstructions');
+    var _refsFromCubeList = $('#refsFromCubeList');
+    var _showRefsFromLabel = $('#showRefsFromLabel');
+    var _reqScopeList = $('#reqScopeList');
+    var _showReqScopeLabel = $('#showReqScopeLabel');
+    var _commitOk = $('#commitOk');
+    var _rollbackOk = $('#rollbackOk');
+    var _commitRollbackLabel = $('#commitRollbackLabel');
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -152,8 +142,43 @@ var NCE = (function ($) {
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
     var _deleteCubeModal = $('#deleteCubeModal');
+    var _showRefsFromCubeModal = $('#showRefsFromCubeModal');
+    var _showReqScopeModal = $('#showReqScopeModal');
 
+    preInit();
     initialize();
+
+    function preInit() {
+        if (localStorage.getItem(SELECTED_BRANCH) === null) {
+            saveSelectedBranch(head);
+        } else {
+            _selectedBranch = localStorage[SELECTED_BRANCH];
+        }
+
+        _selectedCubeInfo = _selectedCubeInfo ? JSON.parse(_selectedCubeInfo) : [];
+
+        if (!_activeTabViewType) {
+            _activeTabViewType = 'n-cube' + PAGE_ID;
+        }
+
+        if (_visitedBranches === undefined) {
+            _visitedBranches = {};
+        } else {
+            _visitedBranches = JSON.parse(_visitedBranches);
+        }
+
+        try {
+            _openCubes = JSON.parse(_openCubes);
+            if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
+                || (_openCubes.length > 0 && typeof _openCubes[0] !== 'object')) {
+                _openCubes = [];
+            } else if (!_openCubes[0].hasOwnProperty('cubeKey')) {
+                _openCubes = [];
+            }
+        } catch (ignore) {
+            _openCubes = []
+        }
+    }
 
     function initialize() {
         try {
@@ -183,7 +208,7 @@ var NCE = (function ($) {
             , resizable: true	// when open, pane can be resized
             , slidable: true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
             , livePaneResizing: true
-            , togglerLength_open: 60
+            , togglerLength_open: MAIN_SPLITTER_DEFAULTS.TOGGLER_LENGTH_OPEN
             , togglerLength_closed: "100%"
             //	some pane animation settings
             , west__animatePaneSizing: false
@@ -192,8 +217,8 @@ var NCE = (function ($) {
             , spacing_open: 5
             , spacing_closed: 5
             , west__resizeable: true
-            , west__size: 250
-            , west__minSize: 140
+            , west__size: MAIN_SPLITTER_DEFAULTS.WEST_SIZE
+            , west__minSize: MAIN_SPLITTER_DEFAULTS.WEST_MIN_SIZE
             //	enable showOverflow on west-pane so CSS popups will overlap north pane
             , west__showOverflowOnHover: true
             , center__triggerEventsOnLoad: true
@@ -214,8 +239,9 @@ var NCE = (function ($) {
     }
 
     function addCurrentCubeTab(insertIdx, cubeInfo, dto) {
+        var newOpenCube;
         cubeInfo = cubeInfo || [_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName, getActiveTabViewType()];
-        var newOpenCube = {
+        newOpenCube = {
             cubeKey: getCubeInfoKey(cubeInfo),
             status: null,
             position: {},
@@ -364,11 +390,12 @@ var NCE = (function ($) {
     }
 
     function removeTab(cubeInfo) {
+        var newCubeInfo;
         _openCubes.splice(getOpenCubeIndex(cubeInfo), 1);
         saveOpenCubeList();
 
         if (_openCubes.length > 0) {
-            var newCubeInfo = getCubeInfo(_openCubes[0].cubeKey);
+            newCubeInfo = getCubeInfo(_openCubes[0].cubeKey);
             makeCubeInfoActive(newCubeInfo);
         } else {
             saveSelectedCubeInfo([]);
@@ -387,21 +414,38 @@ var NCE = (function ($) {
         buildTabs();
     }
 
+    function buildCubeInfo(app, version, status, branch, name, tab) {
+        var cubeInfo = [];
+        cubeInfo[CUBE_INFO.APP] = app;
+        cubeInfo[CUBE_INFO.VERSION] = version;
+        cubeInfo[CUBE_INFO.STATUS] = status;
+        cubeInfo[CUBE_INFO.BRANCH] = branch;
+        if (name !== undefined && name !== null) {
+            cubeInfo[CUBE_INFO.NAME] = name;
+        }
+        if (tab !== undefined && tab !== null) {
+            cubeInfo[CUBE_INFO.TAB_VIEW] = tab;
+        }
+        return cubeInfo;
+    }
+
     function startWorkers() {
-        if (typeof(Worker) !== 'undefined') {
+        if (typeof(Worker) === 'undefined') {
+            alert('Sorry! No Web Worker support. Try using the Chrome browser.');
+        } else {
             /**
              * Background worker thread that will send search filter text asynchronously to server,
              * fetch the results, and ship to main thread (which will be updated to the filtered list).
              */
             _searchThread = new Worker('js/loadCubeList.js');
-            _searchThread.onmessage = function(event) {
+            _searchThread.onmessage = function (event) {
                 var list = event.data;
                 loadFilteredNCubeListView(list);
             };
 
             // background thread for heartbeat
             _heartBeatThread = new Worker('js/heartBeat.js');
-            _heartBeatThread.onmessage = function(event) {
+            _heartBeatThread.onmessage = function (event) {
                 var result, status;
                 result = event.data.obj[0];
                 if (result.key.length) {
@@ -413,8 +457,6 @@ var NCE = (function ($) {
                     updateTabStatus(_selectedCubeInfo);
                 }
             };
-        } else {
-            alert('Sorry! No Web Worker support. Try using the Chrome browser.');
         }
     }
 
@@ -530,14 +572,14 @@ var NCE = (function ($) {
     }
 
     function addListenersToTab(li, cubeInfo) {
-        li.on('dragstart', function(e) {
+        li.on('dragstart', function() {
             _draggingTabCubeInfo = cubeInfo;
         });
         li.tooltip({
             trigger: 'hover',
             placement: 'auto top',
             animate: true,
-            delay: 250,
+            delay: PROGRESS_DELAY,
             container: 'body',
             title: cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - '),
             template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
@@ -593,8 +635,8 @@ var NCE = (function ($) {
         if (el.scrollWidth > el.offsetWidth) {
             value = el.innerHTML;
             len = value.length;
-            if (len > 30) {
-                value = value.substr(len - 30);
+            if (len > TAB_TRIM_TEXT) {
+                value = value.substr(len - TAB_TRIM_TEXT);
             }
             do {
                 value = '...' + value.substr(4);
@@ -605,49 +647,50 @@ var NCE = (function ($) {
     }
 
     function addTabDropdownList(li, cubeInfo) {
-        var html, menuIdx, menuLen, menuOption, pageId, imgHtml;
+        var html, menuIdx, menuLen, menuOption;
         html = '<ul class="dropdown-menu tab-menu">';
 
         // view type menu options
         for (menuIdx = 0, menuLen = _menuOptions.length; menuIdx < menuLen; menuIdx++) {
+            menuOption = null;
             menuOption = _menuOptions[menuIdx];
-            pageId = menuOption.pageId;
-            imgHtml = getTabImage(menuOption.imgSrc);
-
-            html += '<li><a href="#" class="anc-view-type" data-pageid="' + pageId + '" data-imgsrc="' + menuOption.imgSrc + '">';
-            html += imgHtml + NBSP + menuOption.key;
-            html += '</a></li>';
+            html += '<li><a href="#" class="anc-view-type" data-pageid="' + menuOption.pageId + '" data-imgsrc="' + menuOption.imgSrc + '">'
+                  + getTabImage(menuOption.imgSrc) + NBSP + menuOption.key
+                  + '</a></li>';
         }
 
-        html += '<div class="divider"/>';
-        html += '<li class="dropdown-submenu li-compare-cube"><a href="#" class="anc-compare" tabindex="-1">Compare</a></li>';
-        html += '<li><a href="#" class="anc-revision-history" data-ignoreversion="' + (cubeInfo[CUBE_INFO.BRANCH] === head) + '">Revision History...</a></li>';
-        html += '<li><a href="#" class="anc-show-outbound-references">Show Outbound References</a></li>';
-        html += '<li><a href="#" class="anc-show-required-scope">Show Required Scope</a></li>';
-        html += '<div class="divider"/>';
+        html += '<div class="divider"/>'
+              + '<li class="dropdown-submenu li-compare-cube"><a href="#" class="anc-compare" tabindex="-1">Compare</a></li>'
+              + '<li><a href="#" class="anc-revision-history" data-ignoreversion="' + (cubeInfo[CUBE_INFO.BRANCH] === head) + '">Revision History...</a></li>'
+              + '<li><a href="#" class="anc-show-outbound-references">Show Outbound References</a></li>'
+              + '<li><a href="#" class="anc-show-required-scope">Show Required Scope</a></li>'
+              + '<div class="divider"/>';
 
         if (cubeInfo[CUBE_INFO.BRANCH] !== head) {
-            html += '<li><a href="#" class="anc-commit-cube">Commit...</a></li>';
-            html += '<li><a href="#" class="anc-rollback-cube">Rollback...</a></li>';
-            html += '<li><a href="#" class="anc-update-cube">Update from HEAD</a></li>';
-            html += '<div class="divider"/>';
-            html += '<li><a href="#" class="anc-delete-cube">Delete...</a></li>';
-            html += '<li><a href="#" class="anc-duplicate-cube">Duplicate...</a></li>';
-            html += '<li><a href="#" class="anc-rename-cube">Rename...</a></li>';
-            html += '<div class="divider"/>';
+            html += '<li><a href="#" class="anc-commit-cube">Commit...</a></li>'
+                  + '<li><a href="#" class="anc-rollback-cube">Rollback...</a></li>'
+                  + '<li><a href="#" class="anc-update-cube">Update from HEAD</a></li>'
+                  + '<div class="divider"/>'
+                  + '<li><a href="#" class="anc-delete-cube">Delete...</a></li>'
+                  + '<li><a href="#" class="anc-duplicate-cube">Duplicate...</a></li>'
+                  + '<li><a href="#" class="anc-rename-cube">Rename...</a></li>'
+                  + '<div class="divider"/>';
         }
 
-        html += '<li><a href="#" class="anc-go-to-context">Go to Context</a></li>';
-        html += '<li><a href="#" class="anc-global-comparator">Global Comparator...</a></li>';
-        html += '<div class="divider"/>';
-        html += '<li><a href="#" class="anc-close-cube">Close</a></li>';
-        html += '<li><a href="#" class="anc-close-all">Close All</a></li>';
-        html += '<li><a href="#" class="anc-close-others">Close Others</a></li>';
-
-        html += '</ul>';
+        html += '<li><a href="#" class="anc-go-to-context">Go to Context</a></li>'
+              + '<li><a href="#" class="anc-global-comparator">Global Comparator...</a></li>'
+              + '<div class="divider"/>'
+              + '<li><a href="#" class="anc-close-cube">Close</a></li>'
+              + '<li><a href="#" class="anc-close-all">Close All</a></li>'
+              + '<li><a href="#" class="anc-close-others">Close Others</a></li>'
+              + '</ul>';
+        
         li.append(html);
+        addTabDropdownListeners(li, cubeInfo);
+        addTabDropdownBranchSubDropdown(li, cubeInfo);
+    }
 
-        // add listeners
+    function addTabDropdownListeners(li, cubeInfo) {
         li.find('a.anc-view-type').on('click', function(e) {
             onViewTypeClick(e, $(this), cubeInfo);
         });
@@ -679,7 +722,7 @@ var NCE = (function ($) {
             });
         });
         li.find('a.anc-update-cube').on('click', function() {
-            callUpdateBranchCubes(getSelectedTabAppId(), [getInfoDto().name], head, true);
+            callUpdateBranchCubes(getSelectedTabAppId(), [getInfoDto()], true);
         });
         li.find('a.anc-delete-cube').on('click', function(e) {
             e.preventDefault();
@@ -692,7 +735,7 @@ var NCE = (function ($) {
             dupeCube();
         });
         li.find('a.anc-rename-cube').on('click', function(e) {
-            var parent, inputs, newNameInput, anc;
+            var parent, inputs, newNameInput, anc, html;
             e.preventDefault();
             e.stopPropagation();
             anc = $(this);
@@ -756,8 +799,9 @@ var NCE = (function ($) {
         li.find('a.anc-global-comparator').on('click', function() {
             openGlobalComparator(cubeInfo);
         });
+    }
 
-        // add branch subdropdown where needed
+    function addTabDropdownBranchSubDropdown(li, cubeInfo) {
         li.find('li.li-compare-cube').append(
             createBranchesUl({
                 app: cubeInfo[CUBE_INFO.APP],
@@ -828,7 +872,7 @@ var NCE = (function ($) {
         clearError();
         li = anc.parent().parent().parent();
         setActiveTabViewType(anc.data('pageid'));
-        ci2 = [cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType()];
+        ci2 = buildCubeInfo(cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType());
         cia2 = getCubeInfoKey(ci2);
         tabIdx = getOpenCubeIndex(ci2);
         isCtrlKey = e.metaKey || e.ctrlKey;
@@ -845,8 +889,7 @@ var NCE = (function ($) {
         } else {
             tabIdx = getOpenCubeIndex(cubeInfo);
             if (isCtrlKey) { // open new tab
-                li.removeClass('open');
-                li.tooltip('hide');
+                li.removeClass('open').tooltip('hide');
                 addCurrentCubeTab(tabIdx, ci2, getInfoDto());
             } else { // use current tab
                 cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
@@ -854,7 +897,7 @@ var NCE = (function ($) {
                 saveOpenCubeList();
                 li.attr('id', cia2.replace(/\./g,'_'));
                 img = li.find('a.ncube-tab-top-level img');
-                if (img.length > 0) {
+                if (img.length) {
                     img.attr('src', anc.data('imgsrc'));
                 }
                 li.find('a').removeClass(CLASS_ACTIVE_VIEW);
@@ -955,25 +998,27 @@ var NCE = (function ($) {
     }
 
     function buildTabOverflow(maxTabs, len) {
+        var dd, largestText, i, tabText, textWidth, x, xLen, opt, button, offset, maxWidth,
+            dropdownWidth, dropDownTop, dropDownLeft;
         $('#tab-overflow-text')[0].innerHTML = len - maxTabs;
-        var dd = _tabOverflow.find('ul');
-        var largestText = TAB_WIDTH;
+        dd = _tabOverflow.find('ul');
+        largestText = TAB_WIDTH;
 
-        for (var i = maxTabs; i < len; i++) {
+        for (i = maxTabs; i < len; i++) {
             (function() {
                 var openCube = _openCubes[i];
                 var cubeInfo = getCubeInfo(openCube.cubeKey);
                 var imgSrc;
-                for (var x = 0, xLen = _menuOptions.length; x < xLen; x++) {
-                    var opt = _menuOptions[x];
+                for (x = 0, xLen = _menuOptions.length; x < xLen; x++) {
+                    opt = _menuOptions[x];
                     if (opt.pageId === cubeInfo[CUBE_INFO.TAB_VIEW]) {
                         imgSrc = opt.imgSrc;
                         break;
                     }
                 }
 
-                var tabText = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - ');
-                var textWidth = $('<p>' + tabText + '</p>').canvasMeasureWidth(FONT_CELL) + CALC_WIDTH_TAB_OVERFLOW_MOD;
+                tabText = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - ');
+                textWidth = $('<p>' + tabText + '</p>').canvasMeasureWidth(FONT_CELL) + CALC_WIDTH_TAB_OVERFLOW_MOD;
                 if (textWidth > largestText) {
                     largestText = textWidth;
                 }
@@ -1003,12 +1048,12 @@ var NCE = (function ($) {
         }
 
         largestText += TAB_OVERFLOW_TEXT_PADDING;
-        var button = _tabOverflow.find('button');
-        var offset = button.offset();
-        var maxWidth = offset.left + button.outerWidth();
-        var dropdownWidth = largestText < maxWidth ? largestText : maxWidth;
-        var dropDownTop = offset.top + button.outerHeight() + parseInt(button.css('marginTop').replace('px',''));
-        var dropDownLeft = maxWidth - dropdownWidth;
+        button = _tabOverflow.find('button');
+        offset = button.offset();
+        maxWidth = offset.left + button.outerWidth();
+        dropdownWidth = largestText < maxWidth ? largestText : maxWidth;
+        dropDownTop = offset.top + button.outerHeight() + parseInt(button.css('marginTop').replace('px',''));
+        dropDownLeft = maxWidth - dropdownWidth;
         dd.css({top: dropDownTop + 'px', left: dropDownLeft + 'px', width: dropdownWidth + 'px'});
     }
 
@@ -1250,10 +1295,10 @@ var NCE = (function ($) {
     }
 
     function runSearch() {
-        var nameFilter, list, pattern, regex;
+        var nameFilter, list, pattern, regex, mainList, i, len, info;
         if (!_searchContent.val() || _searchContent.val() === '')
         {   // Perform filter client-side only (no server call)
-            var mainList = _cubeList;
+            mainList = _cubeList;
             if (_searchNames.val() && _searchNames.val() !== '')
             {   // If there is content to filter by, then use it.
                 nameFilter = _searchNames.val();
@@ -1282,8 +1327,8 @@ var NCE = (function ($) {
 
                 mainList = null;
                 mainList = {};
-                for (var i = 0; i < list.length; i++) {
-                    var info = list[i];
+                for (i = 0, len = list.length; i < len; i++) {
+                    info = list[i];
                     mainList[info.name.toLowerCase()] = info;
                 }
             }
@@ -1320,95 +1365,73 @@ var NCE = (function ($) {
         _versionMenu.parent().find('.dropdown-menu').empty();
         _versionMenu[0].innerHTML = 'Version: Loading...';
     }
+    
+    function onDragTab(e) {
+        var offsetLeft, posX, left, top;
+        e.preventDefault();
+        offsetLeft = $('#center').offset().left;
+        posX = e.originalEvent.x - offsetLeft;
+        left = Math.floor(posX / TAB_WIDTH) * TAB_WIDTH + offsetLeft;
+        top = _openTabsPanel.outerHeight() - _tabDragIndicator.height() + _openTabsPanel.offset().top;
+        _tabDragIndicator.css({left:left, top:top});
+        _tabDragIndicator.show()
+    }
+    
+    function onDropTab(e) {
+        var posX, oldTabIdx, newTabIdx;
+        $('.tooltip').hide();
+        _tabDragIndicator.hide();
+        posX = e.originalEvent.x - $('#center').offset().left;
+        oldTabIdx = getOpenCubeIndex(_draggingTabCubeInfo);
+        newTabIdx = Math.floor(posX / TAB_WIDTH);
+        if (newTabIdx !== oldTabIdx) {
+            _openCubes.splice(newTabIdx, 0, _openCubes.splice(oldTabIdx, 1)[0]);
+            saveOpenCubeList();
+            buildTabs();
+        }
+    }
 
     function addListeners() {
         _openTabsPanel.on('drop dragdrop', function(e) {
-            $('.tooltip').hide();
-            _tabDragIndicator.hide();
-            var posX = e.originalEvent.x - $('#center').offset().left;
-            var oldTabIdx = getOpenCubeIndex(_draggingTabCubeInfo);
-            var newTabIdx = Math.floor(posX / TAB_WIDTH);
-            if (newTabIdx !== oldTabIdx) {
-                _openCubes.splice(newTabIdx, 0, _openCubes.splice(oldTabIdx, 1)[0]);
-                saveOpenCubeList();
-                buildTabs();
-            }
+            onDropTab(e);
         });
         _openTabsPanel.on('dragenter dragover', function(e) {
-            e.preventDefault();
-            var offsetLeft = $('#center').offset().left;
-            var posX = e.originalEvent.x - offsetLeft;
-            var left = Math.floor(posX / TAB_WIDTH) * TAB_WIDTH + offsetLeft;
-            var top = _openTabsPanel.outerHeight() - _tabDragIndicator.height() + _openTabsPanel.offset().top;
-            _tabDragIndicator.css({left:left, top:top});
-            _tabDragIndicator.show()
+            onDragTab(e);
         });
 
         // 'Close' for the Diff Modal
         $('#diffModalClose').on('click', function() {
             diffShow(false);
         });
-
-        $('#diffDesc').click(function() {
-            diffLoad(DIFF_DESCRIPTIVE)
-        });
-        $('#diffVisual').click(function() {
-            diffLoad(DIFF_VISUAL)
-        });
-        $('#diffSide').click(function() {
-            diffLoad(DIFF_SIDE_BY_SIDE)
-        });
-        $('#diffInline').click(function() {
-            diffLoad(DIFF_INLINE)
+        _diffModalMerge.on('click', function() {
+            diffMerge();
         });
 
         // Send to background Web Worker thread
-        _searchNames.on('input', function (event) {
+        _searchNames.on('input', function () {
             _searchKeyPressed = true;
             _searchLastKeyTime = Date.now();
         });
-        _searchContent.on('input', function (event) {
+        _searchContent.on('input', function () {
             _searchKeyPressed = true;
             _searchLastKeyTime = Date.now();
         });
 
         _searchNames.keyup(function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {   // ESCape key
+            if (e.keyCode === KEY_CODES.ESCAPE) {
                 clearSearch();
             }
         });
 
         _searchContent.keyup(function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {   // ESCape key
+            if (e.keyCode === KEY_CODES.ESCAPE) {
                 clearSearch();
             }
         });
 
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
-        $(window).on("popstate", function(e) {
-            var state = e.originalEvent.state;
-            if (state) {
-                _selectedCubeName = state.cube;
-                if (_selectedApp === state.app &&
-                    _selectedVersion === state.version &&
-                    _selectedStatus === state.status &&
-                    _selectedBranch === state.branch)
-                {   // Make Back button WAY faster when only cube name changes - no need to reload other lists.
-                    selectCubeByName(_selectedCubeName);
-                } else {
-                    saveSelectedApp(state.app);
-                    saveSelectedVersion(state.version);
-                    saveSelectedStatus(state.status);
-                    saveSelectedBranch(state.branch);
-                    _selectedCubeName = state.cube;
-                    loadAppListView();
-                    loadVersionListView();
-                    showActiveBranch();
-                    loadNCubes();
-                    selectCubeByName(_selectedCubeName);
-                    buildMenu();
-                }
-            }
+        $(window).on('popstate', function(e) {
+            onWindowPopstate(e);
         });
 
         $('#cube-search-reset').click(function() {
@@ -1438,15 +1461,17 @@ var NCE = (function ($) {
         $('#revisionHistoryOk').click(function () {
             revisionHistoryOk();
         });
-        $('#showRefsFromClose').click(function () {
-            showRefsFromCubeClose();
-        });
-        $('#showReqScopeClose').click(function () {
-            showReqScopeClose();
-        });
         _releaseCubesOk.click(function () {
             releaseCubesOk();
         });
+        
+        addSystemMenuListeners();
+        addGlobalComparatorListeners();
+        addBranchListeners();
+        addSelectAllNoneListeners();
+    }
+    
+    function addSystemMenuListeners() {
         $('#changeVerOk').on('click', function () {
             setTimeout(changeVersionOk, PROGRESS_DELAY);
         });
@@ -1474,28 +1499,6 @@ var NCE = (function ($) {
         $('#clearRevSelection').click(function() {
             clearRevSelection();
         });
-        $('#batchUpdateAxisReferencesMenu').click(function() {
-            batchUpdateAxisReferencesOpen();
-        });
-        $('#batchUpdateAxisReferencesUpdate').click(function() {
-            batchUpdateAxisReferencesUpdate();
-        });
-        _batchUpdateAxisReferencesToggle.change(function() {
-            buildBatchUpdateAxisReferencesTable();
-            if (_batchUpdateAxisReferencesCubeName.val()) {
-                batchUpdateAxisReferencesCubeNameChanged();
-            }
-        });
-        _batchUpdateAxisReferencesApp.change(function() {
-            batchUpdateAxisReferencesAppChanged();
-        });
-        _batchUpdateAxisReferencesVersion.change(function() {
-            batchUpdateAxisReferencesVersionChanged();
-        });
-        _batchUpdateAxisReferencesCubeName.change(function() {
-            batchUpdateAxisReferencesCubeNameChanged();
-        });
-
         $('#releaseCubesVersionMajor').click(function(e) {
             e.preventDefault();
             _releaseCubesVersion.val(getNextVersion(VERSION.MAJOR));
@@ -1520,60 +1523,40 @@ var NCE = (function ($) {
             e.preventDefault();
             _createSnapshotVersion.val(getNextVersion(VERSION.PATCH));
         });
-        $('#btnClearBranchQuickSelect').click(function(e) {
-            var appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus);
-            e.preventDefault();
-            e.stopPropagation();
-            clearVisitedBranchesList(appId);
-            buildBranchQuickSelectMenu();
-        });
+    }
 
+    function onWindowPopstate(e) {
+        var state = e.originalEvent.state;
+        if (state) {
+            _selectedCubeName = state.cube;
+            if (_selectedApp === state.app &&
+                _selectedVersion === state.version &&
+                _selectedStatus === state.status &&
+                _selectedBranch === state.branch)
+            {   // Make Back button WAY faster when only cube name changes - no need to reload other lists.
+                selectCubeByName(_selectedCubeName);
+            } else {
+                saveSelectedApp(state.app);
+                saveSelectedVersion(state.version);
+                saveSelectedStatus(state.status);
+                saveSelectedBranch(state.branch);
+                _selectedCubeName = state.cube;
+                loadAppListView();
+                loadVersionListView();
+                showActiveBranch();
+                loadNCubes();
+                selectCubeByName(_selectedCubeName);
+                buildMenu();
+            }
+        }
+    }
+
+    function addGlobalComparatorListeners() {
         _globalComparatorMenu.on('click', function() {
             openGlobalComparator();
         });
         _globalComparatorCompare.on('click', function() {
-            var leftDto, rightDto, leftResult, rightResult, title, leftVerSplit, rightVerSplit;
-            var leftApp = _globalComparatorLeftApp.val();
-            var rightApp = _globalComparatorRightApp.val();
-            var leftVersion = _globalComparatorLeftVersion.val();
-            var rightVersion = _globalComparatorRightVersion.val();
-            var leftBranch = _globalComparatorLeftBranch.val();
-            var rightBranch = _globalComparatorRightBranch.val();
-            var leftCube = _globalComparatorLeftCube.val();
-            var rightCube = _globalComparatorRightCube.val();
-            
-            if (rightApp && rightVersion && rightBranch && rightCube) {
-                rightVerSplit = rightVersion.split('-');
-                rightResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(rightApp, rightVerSplit[0], rightVerSplit[1], rightBranch), rightCube, null, true]);
-                if (rightResult.status && rightResult.data.length) {
-                    rightDto = rightResult.data[0];
-                } else {
-                    showNote('Unable to load cube ' + rightCube, 'Global Comparator Error', 2000);
-                }
-            } else {
-                showNote('Right compare info not set!', 'Global Comparator Error', 2000);
-                return;
-            }
-
-            if (leftApp && leftVersion && leftBranch && leftCube) {
-                leftVerSplit = leftVersion.split('-');
-                leftResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(leftApp, leftVerSplit[0], leftVerSplit[1], leftBranch), leftCube, null, true]);
-                if (leftResult.status && leftResult.data.length) {
-                    leftDto = leftResult.data[0];
-                } else {
-                    showNote('Unable to load cube ' + leftCube, 'Global Comparator Error', 2000);
-                }
-            } else {
-                showNote('Left compare info not set!', 'Global Comparator Error', 2000);
-                return;
-            }
-            
-            if (leftDto && rightDto) {
-                title = [leftApp, leftVersion, leftBranch, leftDto.name].join('-') + ' vs ' + [rightApp, rightVersion, rightBranch, rightDto.name].join('-');
-                diffCubes(leftDto, rightDto, title);
-            } else {
-                showNote('Unable to load cubes for compare!', 'Global Comparator Error', 2000);
-            }
+            globalComparatorCompare();
         });
         _globalComparatorLeftApp.on('change', function() {
             _globalComparatorLeftBranch.empty().val('');
@@ -1603,35 +1586,73 @@ var NCE = (function ($) {
             var val = _globalComparatorRightVersion.val().split('-');
             populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], $(this).val()), '*', null, true], null, true);
         });
+    }
 
-        _branchCompareUpdateMenu.on('click', function(e) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-        });
+    function globalComparatorCompare() {
+        var leftDto, rightDto, leftResult, rightResult, title, leftVerSplit, rightVerSplit;
+        var leftApp = _globalComparatorLeftApp.val();
+        var rightApp = _globalComparatorRightApp.val();
+        var leftVersion = _globalComparatorLeftVersion.val();
+        var rightVersion = _globalComparatorRightVersion.val();
+        var leftBranch = _globalComparatorLeftBranch.val();
+        var rightBranch = _globalComparatorRightBranch.val();
+        var leftCube = _globalComparatorLeftCube.val();
+        var rightCube = _globalComparatorRightCube.val();
 
-        addBranchListeners();
-        addSelectAllNoneListeners();
+        if (rightApp && rightVersion && rightBranch && rightCube) {
+            rightVerSplit = rightVersion.split('-');
+            rightResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(rightApp, rightVerSplit[0], rightVerSplit[1], rightBranch), rightCube, null, true]);
+            if (rightResult.status && rightResult.data.length) {
+                rightDto = rightResult.data[0];
+            } else {
+                showNote('Unable to load cube ' + rightCube, 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+            }
+        } else {
+            showNote('Right compare info not set!', 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+            return;
+        }
+
+        if (leftApp && leftVersion && leftBranch && leftCube) {
+            leftVerSplit = leftVersion.split('-');
+            leftResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(leftApp, leftVerSplit[0], leftVerSplit[1], leftBranch), leftCube, null, true]);
+            if (leftResult.status && leftResult.data.length) {
+                leftDto = leftResult.data[0];
+            } else {
+                showNote('Unable to load cube ' + leftCube, 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+            }
+        } else {
+            showNote('Left compare info not set!', 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+            return;
+        }
+
+        if (leftDto && rightDto) {
+            title = [leftApp, leftVersion, leftBranch, leftDto.name].join('-') + ' vs ' + [rightApp, rightVersion, rightBranch, rightDto.name].join('-');
+            diffCubes(leftDto, rightDto, title);
+        } else {
+            showNote('Unable to load cubes for compare!', 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+        }
     }
 
     function getNextVersion(partChanged) {
+        var i, len;
         var version = _selectedVersion.split('.');
         version[partChanged] = parseInt(version[partChanged]) + 1;
-        for (var i = partChanged + 1, len = version.length; i < len; i++) {
+        for (i = partChanged + 1, len = version.length; i < len; i++) {
             version[i] = 0;
         }
         return version.join('.')
     }
 
     function batchUpdateAxisReferencesAppChanged() {
+        var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE];
         _batchUpdateAxisReferencesCubeName.empty();
         _batchUpdateAxisReferencesAxisName.empty();
-        var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE];
         populateSelect(buildAppState(), _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
     }
 
     function batchUpdateAxisReferencesVersionChanged() {
-        _batchUpdateAxisReferencesAxisName.empty();
         var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), '*', null, true];
+        _batchUpdateAxisReferencesAxisName.empty();
         populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
     }
 
@@ -1706,7 +1727,6 @@ var NCE = (function ($) {
             html += '<td class="axisName">' + (axis || '') + '</td>';
             html += '</tr>';
         }
-
         _batchUpdateAxisReferencesTable.append(html);
     }
 
@@ -1748,7 +1768,7 @@ var NCE = (function ($) {
             showNote('Unable to update reference axes:<hr class="hr-small"/>' + result.data);
             return;
         }
-        showNote(checkedLen + ' ' + (checkedLen === 1 ? 'axis' : 'axes') + ' updated', '', 3000);
+        showNote(checkedLen + ' ' + (checkedLen === 1 ? 'axis' : 'axes') + ' updated', '', TWO_SECOND_TIMEOUOT);
         for (checkedIdx = 0; checkedIdx < checkedLen; checkedIdx++) {
             row = null;
             row = $(checked[checkedIdx]);
@@ -1981,8 +2001,8 @@ var NCE = (function ($) {
 
     function saveState() {
         var title = (_selectedApp ? _selectedApp : '') + ' - ' + (_selectedVersion ? _selectedVersion : '') + ' - ' + (_selectedStatus ? _selectedStatus : '') + ' - ' + (_selectedBranch ? _selectedBranch : '') + ' - ' + (_selectedCubeName ? _selectedCubeName : '');
-        document.title = title;
         var state = history.state;
+        document.title = title;
         if (state && state.app == _selectedApp &&
             state.version == _selectedVersion &&
             state.status == _selectedStatus &&
@@ -2042,8 +2062,7 @@ var NCE = (function ($) {
         }, PROGRESS_DELAY);
     }
 
-    function getActiveTab()
-    {
+    function getActiveTab() {
         return _mainTabPanel.find('div.active iframe');
     }
 
@@ -2066,7 +2085,7 @@ var NCE = (function ($) {
 
         _listOfCubes.append(listItemHtml);
         _listOfCubes.find('a').on('click', function() {
-            selectCubeByName(this.getAttribute('itemName'));
+            selectCubeByName($(this).data('itemname'));
         });
 
         if (!keyCount(cubes)) {   // Special case: 0 cubes
@@ -2093,27 +2112,28 @@ var NCE = (function ($) {
             innerHtml = cubeName;
         }
 
-        if (_selectedCubeName === cubeName) {
-            classes.push('ncube-selected');
-        } else {
-            classes.push('ncube-notselected');
-        }
-
+        classes.push(_selectedCubeName === cubeName ? CLASS_NCUBE_SELECTED : CLASS_NCUBE_NOT_SELECTED);
         if (isNotHead) {
             if (!infoDto.headSha1) {
-                classes.push('cube-added');
+                classes.push(CHANGETYPE.CREATED.CSS_CLASS);
             } else if (infoDto.headSha1 !== infoDto.sha1) {
-                classes.push('cube-modified');
+                classes.push(CHANGETYPE.UPDATED.CSS_CLASS);
             }
         }
 
-        return '<li><a href="#" itemName="' + loName + '" class="' + classes.join(' ') + '">' + innerHtml + '</a></li>';
+        return '<li><a href="#" data-itemname="' + loName + '" class="' + classes.join(' ') + '">' + innerHtml + '</a></li>';
     }
 
     function getProperCubeName(cubeName) {
         var nameToChk = (cubeName + '').toLowerCase();
         var info = _cubeList[nameToChk];
-        return info ? info.name : getInfoDto() ? getInfoDto().name : null;
+        if (info) {
+            return info.name;
+        }
+        if (getInfoDto()) {
+            return getInfoDto().name;
+        }
+        return null;
     }
 
     function loadCube() {
@@ -2145,7 +2165,7 @@ var NCE = (function ($) {
         items.filter(function() {
             var anchor = $(this);
             var text = anchor[0].textContent;
-            var elemName = anchor.attr('itemName');
+            var elemName = anchor.data('itemname');
             if (loItemName === elemName || itemName === text) {
                 anchor.scrollintoview();
                 return true;
@@ -2275,38 +2295,35 @@ var NCE = (function ($) {
         }
     }
 
-    function newCubeSave()
-    {
+    function newCubeSave() {
+        var cubeName, version, appId, result;
         $('#newCubeModal').modal('hide');
-        var appName = $('#newCubeAppName').val();
-        var cubeName = $('#newCubeName').val();
-        var version = $('#newCubeVersion').val();
-        if (!version)
-        {
+        version = $('#newCubeVersion').val();
+        if (!version) {
             showNote("Note", "Version must be x.y.z");
             return;
         }
-        var appId = getAppId();
+        cubeName = $('#newCubeName').val();
+        appId = getAppId();
         appId.version = version;
-        appId.app = appName;
-        var result = call("ncubeController.createCube", [appId, cubeName]);
-        if (result.status)
-        {
-            saveSelectedApp(appName);
+        appId.app = $('#newCubeAppName').val();
+        result = call("ncubeController.createCube", [appId, cubeName]);
+        if (result.status) {
+            saveSelectedApp(appId.app);
             saveSelectedVersion(appId.version);
+            addToVisitedBranchesList(appId);
             loadAppListView();
             loadVersionListView();
             loadNCubes();
             clearSearch();
             selectCubeByName(cubeName);
-        }
-        else
-        {
+        } else {
             showNote("Unable to create n-cube '" + cubeName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
     function deleteCube() {
+        var cubeLinks, i, len, cubeName, html;
         clearError();
         if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
             showNote('Need to have an application, version, and status selected first.');
@@ -2316,26 +2333,16 @@ var NCE = (function ($) {
             selectBranch();
             return;
         }
-
-        var ul = $('#deleteCubeList');
-        ul.empty();
-        $('#deleteCubeLabel')[0].textContent = 'Delete Cubes in ' + _selectedVersion + ', ' + _selectedStatus;
-        var cubeLinks = _listOfCubes.find('a');
-        for (var i = 0, len = cubeLinks.length; i < len; i++) {
-            var cubeName = cubeLinks[i].textContent;
-            var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
-            var div = $('<div/>').prop({class: 'container-fluid'});
-            var checkbox = $('<input>').prop({
-                class: 'deleteCheck',
-                type: 'checkbox'
-            });
-            var label = $('<label/>').prop({class: 'checkbox no-margins'});
-            label[0].textContent = cubeName;
-            ul.append(li);
-            li.append(div);
-            div.append(label);
-            checkbox.prependTo(label); // <=== create input without the closing tag
+        html = '';
+        cubeLinks = _listOfCubes.find('a');
+        for (i = 0, len = cubeLinks.length; i < len; i++) {
+            cubeName = cubeLinks[i].textContent;
+            html += '<li class="list-group-item skinny-lr"><div class="container-fluid"><label class="checkbox no-margins">'
+                  + '<input class="deleteCheck" type="checkbox">' + cubeName + '</label></div></li>';
         }
+        _deleteCubeList.empty();
+        _deleteCubeList.append(html);
+        _deleteCubeLabel[0].textContent = 'Delete Cubes in ' + _selectedVersion + ', ' + _selectedStatus;
         _deleteCubeModal.modal();
     }
 
@@ -2354,11 +2361,7 @@ var NCE = (function ($) {
         var i, len, cubeInfo, cubeName, cis, x;
         var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_CUBES, [getAppId(), cubesToDelete]);
         if (result.status) {
-            cubeInfo = [];
-            cubeInfo[CUBE_INFO.APP] = _selectedApp;
-            cubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
-            cubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
-            cubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
+            cubeInfo = buildCubeInfo(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
             for (i = 0, len = cubesToDelete.length; i < len; i++) {
                 cubeName = cubesToDelete[i];
                 delete _cubeList[cubeName.toLowerCase()];
@@ -2391,11 +2394,7 @@ var NCE = (function ($) {
         var appId = getSelectedTabAppId();
         var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_CUBES, [appId, [cubeToDelete]]);
         if (result.status) {
-            cubeInfo = [];
-            cubeInfo[CUBE_INFO.APP] = appId.app;
-            cubeInfo[CUBE_INFO.VERSION] = appId.version;
-            cubeInfo[CUBE_INFO.STATUS] = appId.status;
-            cubeInfo[CUBE_INFO.BRANCH] = appId.branch;
+            cubeInfo = buildCubeInfo(appId.app, appId.version, appId.status, appId.branch);
             cubeName = cubeToDelete;
             if (_selectedCubeName === cubeName) {
                 _selectedCubeName = null;
@@ -2515,7 +2514,7 @@ var NCE = (function ($) {
                     curVer = dto.version + '-' + dto.status;
                     if (curVer !== prevVer) {
                         prevVer = curVer;
-                        html += '<li class="list-group-item skinny-lr"><strong>' + prevVer + '</strong></li>';
+                        html += '<li class="list-group-item skinny-lr"><b>' + prevVer + '</b></li>';
                     }
                 }
                 text = 'rev: ' + dto.revision + '&nbsp;&nbsp;&nbsp;';
@@ -2579,7 +2578,12 @@ var NCE = (function ($) {
 
     function getSelectedRevisions() {
         var obj, checkboxes, i, len, checkbox;
-        obj = {cubeIds: [], revIds: [], versions: []};
+        obj = {
+            cubeIds: [],
+            revIds: [],
+            versions: [],
+            canEdit: _revisionHistoryList.find('.commitCheck').first().is(':checked')
+        };
         checkboxes = _revisionHistoryList.find('.commitCheck:checked');
         for (i = 0, len = checkboxes.length; i < len; i++) {
             checkbox = null;
@@ -2592,14 +2596,14 @@ var NCE = (function ($) {
     }
 
     function compareRevisions() {
-        var loIdx, hiIdx, title;
+        var loIdx, hiIdx, title, diffOptions;
         var revs = getSelectedRevisions();
         var revIds = revs.revIds;
         var cubeIds = revs.cubeIds;
         var versions = revs.versions;
 
         if (revIds.length !== 2) {
-            showNote('Must select exactly 2 for comparison', 'Note', 2500);
+            showNote('Must select exactly 2 for comparison', 'Note', TWO_SECOND_TIMEOUOT);
             return;
         }
         
@@ -2612,8 +2616,16 @@ var NCE = (function ($) {
             hiIdx = revIds[0] < revIds[1] ? 1 : 0;
             title = revIds[loIdx] + ' vs ' + revIds[hiIdx];
         }
-        
-        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], revIds[loIdx], revIds[hiIdx], title);
+
+        diffOptions = {
+            leftName: revIds[loIdx],
+            rightName: revIds[hiIdx],
+            title: title,
+            appId: getSelectedTabAppId(),
+            cubeName: _selectedCubeName,
+            canEdit: revs.canEdit
+        };
+        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], diffOptions);
     }
 
     function promoteRevision() {
@@ -2627,7 +2639,7 @@ var NCE = (function ($) {
             note = 'Must select only 1 revision to promote.';
         }
         if (note) {
-            showNote(note, 'Note', 2500);
+            showNote(note, 'Note', TWO_SECOND_TIMEOUOT);
             return;
         }
 
@@ -2649,34 +2661,23 @@ var NCE = (function ($) {
     }
 
     function renameCube(newName) {
+        var oldCubeInfo, newCubeInfo, oldCis, newCis, i, len, openCube;
         var result = call("ncubeController.renameCube", [getSelectedTabAppId(), _selectedCubeName, newName]);
-        if (result.status === true) {
-            var oldCubeInfo = [];
-            oldCubeInfo[CUBE_INFO.APP] = _selectedApp;
-            oldCubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
-            oldCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
-            oldCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
-            oldCubeInfo[CUBE_INFO.NAME] = _selectedCubeName;
-            var oldCis = getCubeInfoKey(oldCubeInfo);
+        if (result.status) {
+            oldCubeInfo = buildCubeInfo(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, _selectedCubeName);
+            oldCis = getCubeInfoKey(oldCubeInfo);
 
-            var newCubeInfo = [];
-            newCubeInfo[CUBE_INFO.APP] = _selectedApp;
-            newCubeInfo[CUBE_INFO.VERSION] = _selectedVersion;
-            newCubeInfo[CUBE_INFO.STATUS] = _selectedStatus;
-            newCubeInfo[CUBE_INFO.BRANCH] = _selectedBranch;
-            newCubeInfo[CUBE_INFO.NAME] = newName;
-            newCubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
-            var newCis = getCubeInfoKey(newCubeInfo);
+            newCubeInfo = buildCubeInfo(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch, newName, getActiveTabViewType());
+            newCis = getCubeInfoKey(newCubeInfo);
 
-            for (var i = 0, len = _openCubes.length; i < len; i++) {
-                var openCube = _openCubes[i];
+            for (i = 0, len = _openCubes.length; i < len; i++) {
+                openCube = _openCubes[i];
                 if (openCube.cubeKey.indexOf(oldCis) > -1) {
                     openCube.cubeKey = newCis;
                 }
             }
             saveOpenCubeList();
-            _selectedCubeName = newName;
-            localStorage[SELECTED_CUBE] = _selectedCubeName;
+            saveSelectedCubeName(newName);
             buildTabs(newCubeInfo);
             loadCube();
             if (appIdsEqual(getSelectedTabAppId(), getAppId())) {
@@ -2690,13 +2691,11 @@ var NCE = (function ($) {
 
     function dupeCube() {
         clearError();
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus)
-        {
+        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
             showNote('No n-cube selected. Nothing to duplicate.');
             return;
         }
-        if (isSelectedCubeInHead())
-        {
+        if (isSelectedCubeInHead()) {
             selectBranch();
             return false;
         }
@@ -2750,67 +2749,46 @@ var NCE = (function ($) {
         }
     }
 
-    function showRefsFromCube()
-    {
+    function showRefsFromCube() {
+        var result, cubeNames, i, len, html;
         clearError();
-        $('#showRefsFromLabel')[0].textContent = 'Outbound refs of: ' + _selectedCubeName;
-        var ul = $('#refsFromCubeList');
-        ul.empty();
-        $('#showRefsFromCubeModal').modal();
-        var result = call("ncubeController.getReferencesFrom", [getSelectedTabAppId(), _selectedCubeName]);
-        if (result.status === true)
-        {
-            $.each(result.data, function (index, value)
-            {
-                var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
-                var anchor = $('<a href="#"/>');
-                anchor[0].innerHTML = value;
-                anchor.click(function ()
-                {
-                    showRefsFromCubeClose();
-                    selectCubeByName(value);
-                });
-                ul.append(li);
-                li.append(anchor);
+        _showRefsFromLabel[0].textContent = 'Outbound refs of: ' + _selectedCubeName;
+        _refsFromCubeList.empty();
+        _showRefsFromCubeModal.modal();
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCES_FROM, [getSelectedTabAppId(), _selectedCubeName]);
+        if (result.status) {
+            cubeNames = result.data;
+            html = '';
+            for (i = 0, len = cubeNames.length; i < len; i++){
+                html += '<li class="list-group-item skinny-lr"><a href="#">' + cubeNames[i] + '</a></li>';
+            }
+            _refsFromCubeList.append(html);
+            _refsFromCubeList.find('a').on('click', function() {
+                showRefsFromCubeClose();
+                selectCubeByName(this.innerHTML);
             });
-        }
-        else
-        {
+        } else {
             showNote('Error fetching outbound references for ' + _selectedCubeName + '):<hr class="hr-small"/>' + result.data);
         }
     }
 
-    function showRefsFromCubeClose()
-    {
-        $('#showRefsFromCubeModal').modal('hide');
-    }
-
-    function showReqScope()
-    {
+    function showReqScope() {
+        var result, scopeKeys, i, len, html;
         clearError();
-        $('#showReqScopeLabel')[0].textContent = "Scope for '" + _selectedCubeName + "'";
-        var ul = $('#reqScopeList');
-        ul.empty();
-        $('#showReqScopeModal').modal();
-        var result = call("ncubeController.getRequiredScope", [getSelectedTabAppId(), _selectedCubeName]);
-        if (result.status === true)
-        {
-            $.each(result.data, function (index, value)
-            {
-                var li = $("<li/>").attr({'class': 'list-group-item skinny-lr'});
-                li[0].innerHTML = value;
-                ul.append(li);
-            });
-        }
-        else
-        {
+        _showReqScopeLabel[0].textContent = "Scope for '" + _selectedCubeName + "'";
+        _reqScopeList.empty();
+        _showReqScopeModal.modal();
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_REQUIRED_SCOPE, [getSelectedTabAppId(), _selectedCubeName]);
+        if (result.status) {
+            scopeKeys = result.data;
+            html = '';
+            for (i = 0, len = scopeKeys.length; i < len; i++) {
+                html += '<li class="list-group-item skinny-lr">' + scopeKeys[i] + '</li>';
+            }
+            _reqScopeList.append(html);
+        } else {
             showNote('Error fetching required scope for: ' + _selectedCubeName + '):<hr class="hr-small"/>' + result.data);
         }
-    }
-
-    function showReqScopeClose()
-    {
-        $('#showReqScopeModal').modal('hide');
     }
 
     function setLockUnlockMenuText(isLocked) {
@@ -2821,21 +2799,20 @@ var NCE = (function ($) {
 
     function lockUnlockApp() {
         var appId = getAppId();
-        var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [appId]);
-        var isLocked;
-        if (result.status) {
-            isLocked = result.data;
+        var isLockedResult = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [appId]);
+        var isLocked, lockAppResult;
+        if (isLockedResult.status) {
+            isLocked = isLockedResult.data;
         } else {
-            showNote("Unable to check lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + result.data);
+            showNote("Unable to check lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + isLockedResult.data);
             return;
         }
-        result = null;
-        result = call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, !isLocked]);
-        if (result.status) {
+        lockAppResult = call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, !isLocked]);
+        if (lockAppResult.status) {
             setLockUnlockMenuText(!isLocked);
             setGetAppLockedByMenuText(!isLocked);
         } else {
-            showNote("Unable to change lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + result.data);
+            showNote("Unable to change lock for app '" + _selectedApp + "':<hr class=\"hr-small\"/>" + lockAppResult.data);
         }
     }
 
@@ -2895,7 +2872,7 @@ var NCE = (function ($) {
     function releaseCubesOk() {
         var newSnapVer = _releaseCubesVersion.val();
 
-        setInterval(updateProgressUi, 1000);
+        setInterval(updateProgressUi, ONE_SECOND_TIMEOUT);
         if (!newSnapVer) {
             setReleaseCubesProgress(0, 'No version set.', true);
             return;
@@ -2923,7 +2900,7 @@ var NCE = (function ($) {
             if (result.status) {
                 setTimeout(function() {
                         lockAppForReleaseCallback(appId, newSnapVer);
-                }, 10000);
+                }, TEN_SECOND_TIMEOUT);
             } else {
                 setReleaseCubesProgress(0, 'Unable to lock app: ' + result.data, true);
             }
@@ -3083,13 +3060,14 @@ var NCE = (function ($) {
     }
 
     function doesCubeInfoMatchOldAppId(cubeInfoPart, cubeInfo, appId) {
+        var doesAppMatch, doesVersionMatch, doesStatusMatch, doesBranchMatch;
         if (!appId) {
             appId = getAppId();
         }
-        var doesAppMatch = cubeInfo[CUBE_INFO.APP] === appId.app;
-        var doesVersionMatch = cubeInfo[CUBE_INFO.VERSION] === appId.version;
-        var doesStatusMatch = cubeInfo[CUBE_INFO.STATUS] === appId.status;
-        var doesBranchMatch = cubeInfo[CUBE_INFO.BRANCH] === appId.branch;
+        doesAppMatch = cubeInfo[CUBE_INFO.APP] === appId.app;
+        doesVersionMatch = cubeInfo[CUBE_INFO.VERSION] === appId.version;
+        doesStatusMatch = cubeInfo[CUBE_INFO.STATUS] === appId.status;
+        doesBranchMatch = cubeInfo[CUBE_INFO.BRANCH] === appId.branch;
 
         switch (cubeInfoPart) {
             case CUBE_INFO.APP:
@@ -3136,115 +3114,95 @@ var NCE = (function ($) {
         buildTabs();
     }
 
-    function ensureModifiable(operation)
-    {
+    function ensureModifiable(operation) {
+        var appId = getSelectedTabAppId() || getAppId();
+        clearError();
         if (!operation) {
             operation = '';
         }
-        clearError();
-        var appId = getSelectedTabAppId() || getAppId();
-        if (!appId.app || !appId.version || !_selectedCubeName || !appId.status || !appId.branch)
-        {
+        if (!appId.app || !appId.version || !_selectedCubeName || !appId.status || !appId.branch) {
             showNote(operation + ' No n-cube selected.');
             return false;
         }
-        if (appId.status === "RELEASE")
-        {
+        if (appId.status === "RELEASE") {
             showNote(operation + ' Only a SNAPSHOT version can be modified.');
             return false;
         }
-        if (appId.branch === head)
-        {
+        if (appId.branch === head) {
             showNote(operation + ' HEAD branch cannot be modified.');
             return false;
         }
-
         return true;
     }
 
     function clearStorage() {
+        var i, len, key;
         var keys = Object.keys(localStorage);
-        for (var i = 0, len = keys.length; i < len; i++) {
-            var key = keys[i];
+        for (i = 0, len = keys.length; i < len; i++) {
+            key = keys[i];
             if (key.startsWith(NCE_PREFIX)) {
                 delete localStorage[key];
             }
         }
     }
 
-    function clearCache()
-    {
-        var result = call("ncubeController.clearCache", [getAppId()]);
-
-        if (result.status === false)
-        {
+    function clearCache() {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.CLEAR_CACHE, [getAppId()]);
+        if (!result.status) {
             showNote('Unable to clear cache:<hr class="hr-small"/>' + result.data);
         }
     }
 
-    function serverStats()
-    {
-        var result = call("ncubeController.heartBeat", [{}]);
-
-        if (result.status === false)
-        {
+    function serverStats() {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.HEARTBEAT, [{}]);
+        if (!result.status) {
             showNote('Unable to fetch server statistics:<hr class="hr-small"/>' + result.data);
             return;
         }
         clearError();
-        displayMap(result.data.serverStats, 'Server Statistics');
+        displayMap(result.data.serverStats, DISPLAY_MAP_TITLE.SERVER_STATS);
     }
 
-    function httpHeaders()
-    {
-        var result = call("ncubeController.getHeaders", []);
-
-        if (result.status === false)
-        {
+    function httpHeaders() {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEADERS, []);
+        if (!result.status) {
             showNote('Unable to fetch HTTP headers:<hr class="hr-small"/>' + result.data);
             return;
         }
         clearError();
-        displayMap(result.data, 'HTTP Headers');
+        displayMap(result.data, DISPLAY_MAP_TITLE.HTTP_HEADERS);
     }
 
-    function displayMap(map, title)
-    {
+    function displayMap(map, title) {
+        var msg, maxValLen, rows, key, val;
         delete map['@type'];
-        var msg = '';
-        var maxValLen = 0;
-        var rows = 0;
+        msg = '';
+        maxValLen = 0;
+        rows = 0;
 
-        for (var key in map)
-        {
-            if (map.hasOwnProperty(key))
-            {
+        for (key in map) {
+            if (map.hasOwnProperty(key)) {
                 rows++;
-                var val = '' + map[key];
-                if (val.length > 50)
-                {   // Hard-coded to size of current (330px) gritter text area (reduced by gritter-image size)
+                val = '' + map[key];
+                if (val.length > 50) {
+                    // Hard-coded to size of current (330px) gritter text area (reduced by gritter-image size)
                     val = val.substring(0, 5) + '...' + val.substr(-54);
                 }
                 msg += '<dt>' + key + '</dt>';
                 msg += '<dd>' + val + '</dd>';
 
-                if (val.length > maxValLen)
-                {
+                if (val.length > maxValLen) {
                     maxValLen = val.length;
                 }
             }
         }
 
-        if (maxValLen > 32 || rows == 1)
-        {
+        if (maxValLen > 32 || rows == 1) {
             msg = '<dl>' + msg;
-        }
-        else
-        {
+        } else {
             msg = '<dl class="dl-horizontal">' + msg;
         }
         msg += '</dl>';
-
         showNote(msg, title);
     }
 
@@ -3252,30 +3210,30 @@ var NCE = (function ($) {
 
     function addBranchListeners() {
         // Main menu options
-        $('#branchSelect').click(function() {
+        $('#branchSelect').on('click', function() {
             selectBranch();
         });
-        $('#branchCompareUpdateOk').on('click', function() {
+        _branchCompareUpdateOk.on('click', function() {
             branchCompareUpdateOk();
         });
-        $('#branchCommit').click(function() {
+        $('#branchCommit').on('click', function() {
             setTimeout(function() { commitBranch(true); }, PROGRESS_DELAY);
             showNote('Processing commit request...');
         });
-        $('#commitOk').click(function() {
+        _commitOk.on('click', function() {
             commitOk();
         });
-        $('#rollbackOk').click(function() {
+        _rollbackOk.on('click', function() {
             rollbackOk();
         });
-        $('#branchRollback').click(function() {
+        $('#branchRollback').on('click', function() {
             setTimeout(function() { commitBranch(false); }, PROGRESS_DELAY);
             showNote('Processing rollback request...');
         });
-        $('#branchDelete').click(function() {
+        $('#branchDelete').on('click', function() {
             deleteBranch();
         });
-        $('#deleteBranchOk').click(function() {
+        $('#deleteBranchOk').on('click', function() {
             deleteBranchOk();
         });
         $('#branchCopy').on('click', function() {
@@ -3285,28 +3243,53 @@ var NCE = (function ($) {
             copyBranchOk();
         });
         // From 'Select / Create Branch' Modal
-        $('#createBranch').click(function() {
+        $('#createBranch').on('click', function() {
             createBranch();
         });
         _branchNameWarning.find('button').on('click', function() {
             _branchNameWarning.hide();
         });
-        $('#compareCubes').click(function(e) {
-            diffConflicts();
+        $('#btnClearBranchQuickSelect').on('click', function(e) {
+            var appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus);
+            e.preventDefault();
+            e.stopPropagation();
+            clearVisitedBranchesList(appId);
+            buildBranchQuickSelectMenu();
         });
-        $('#acceptTheirs').click(function(e) {
-            acceptTheirs();
+        _branchCompareUpdateMenu.on('click', function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
         });
-        $('#acceptMine').click(function(e) {
-            acceptMine();
+        $('button.accept-mine').on('click', function() {
+            acceptMineTheirs($(this).closest('.modal').find('ul'), true);
         });
-        $('#mergeClose').click(function(e) {
-            setTimeout(function() {
-                loadNCubes();
-                reloadCube();
-                runSearch();
-            }, PROGRESS_DELAY);
-            showNote('Closing merge window, reloading cubes...', 'Note', 1000);
+        $('button.accept-theirs').on('click', function() {
+            acceptMineTheirs($(this).closest('.modal').find('ul'), false);
+        });
+        addBatchUpdateRefAxesListeners();
+    }
+
+    function addBatchUpdateRefAxesListeners() {
+        $('#batchUpdateAxisReferencesMenu').click(function() {
+            batchUpdateAxisReferencesOpen();
+        });
+        $('#batchUpdateAxisReferencesUpdate').click(function() {
+            batchUpdateAxisReferencesUpdate();
+        });
+        _batchUpdateAxisReferencesToggle.change(function() {
+            buildBatchUpdateAxisReferencesTable();
+            if (_batchUpdateAxisReferencesCubeName.val()) {
+                batchUpdateAxisReferencesCubeNameChanged();
+            }
+        });
+        _batchUpdateAxisReferencesApp.change(function() {
+            batchUpdateAxisReferencesAppChanged();
+        });
+        _batchUpdateAxisReferencesVersion.change(function() {
+            batchUpdateAxisReferencesVersionChanged();
+        });
+        _batchUpdateAxisReferencesCubeName.change(function() {
+            batchUpdateAxisReferencesCubeNameChanged();
         });
     }
 
@@ -3334,11 +3317,10 @@ var NCE = (function ($) {
     }
 
     function selectBranch() {
-        var branchNames, ul, listHtml, i, len, name;
+        var branchNames, listHtml, i, len, name;
         clearError();
         _newBranchName.val('');
         _branchNameWarning.hide();
-
         branchNames = getBranchNames();
         listHtml = '';
 
@@ -3347,31 +3329,26 @@ var NCE = (function ($) {
             listHtml += '<li class="list-group-item skinny-lr"><a href="#"><kbd>' + name + '</kbd></a></li>';
         }
 
-        ul = _branchList;
-        ul.empty();
-        ul.append(listHtml);
-        ul.find('li').find('a').on('click', function() {
+        _branchList.empty();
+        _branchList.append(listHtml);
+        _branchList.find('li').find('a').on('click', function() {
             var branchName = $(this).find('kbd')[0].textContent;
             changeBranch(branchName);
         });
-
         _selectBranchModal.modal('show');
     }
 
-    function createBranch()
-    {
-        clearError();
-
+    function createBranch() {
+        var appId;
         var branchName = _newBranchName.val();
         var validName = /^[a-zA-Z_][0-9a-zA-Z_.-]*$/i;
-
-        if (!branchName || !validName.test(branchName) || head.toLowerCase() == branchName.toLowerCase())
-        {
+        clearError();
+        if (!branchName || !validName.test(branchName) || head.toLowerCase() == branchName.toLowerCase()) {
             _branchNameWarning.show();
             return;
         }
 
-        var appId = getAppId();
+        appId = getAppId();
         appId.branch = branchName;
         if (!_selectedApp || !_selectedVersion || !_selectedStatus)
         {
@@ -3381,8 +3358,7 @@ var NCE = (function ($) {
 
         setTimeout(function() {
             var result = call("ncubeController.createBranch", [appId]);
-            if (!result.status)
-            {
+            if (!result.status) {
                 clearError();
                 showNote('Unable to create branch:<hr class="hr-small"/>' + result.data);
                 return;
@@ -3426,9 +3402,10 @@ var NCE = (function ($) {
 
         if (branchName === head) {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
+            _branchCompareUpdateOk.show();
         } else {
-            appId.branch = branchName;
-            result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_HEAD, [appId]);
+            result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
+            _branchCompareUpdateOk.hide();
         }
         if (!result.status) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
@@ -3441,34 +3418,43 @@ var NCE = (function ($) {
             if (noNote) {
                 _branchCompareUpdateModal.modal('hide');
             } else {
-                showNote('No changes detected.', '', 2500);
+                showNote('No changes detected.', '', TWO_SECOND_TIMEOUOT);
             }
             return;
         }
-        branchChanges.sort(function compare(a,b) {
-            return a.name.localeCompare(b.name);
-        });
+        branchChanges.sort(sortBranchChanges);
 
-        _branchCompareUpdateModal.prop({branchName: branchName});
-        buildUlForCompare(_branchCompareUpdateList, branchName === head, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
+        _branchCompareUpdateModal.prop({branchName: branchName, branchChanges: branchChanges});
+        buildUlForCompare(_branchCompareUpdateList, branchName, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
 
         _branchCompareUpdateModal.modal();
         setTimeout(selectAll, PROGRESS_DELAY);
     }
+    
+    function sortBranchChanges(a, b) {
+        var aType, bType;
+        if (a.changeType === b.changeType) {
+            return a.name.localeCompare(b.name);
+        }
+        aType = getLabelDisplayTypeForInfoDto(a);
+        bType = getLabelDisplayTypeForInfoDto(b);
+        return aType.DISPLAY_ORDER - bType.DISPLAY_ORDER;
+    }
 
-    function buildUlForCompare(ul, isCompareToHead, branchChanges, options) {
+    function buildUlForCompare(ul, branchName, branchChanges, options) {
+        var inputClass = options.inputClass;
         ul.empty();
         ul.append(buildHtmlListForCompare(branchChanges, options));
         ul.find('a.compare').on('click', function() {
-            var li = $(this).parent().parent().parent();
-            var ul = li.parent();
-            var idx = ul.children().index(li);
+            var checkbox = $(this).parent().parent().find('.' + inputClass);
+            var ul = $(this).parent().parent().parent().parent();
+            var idx = ul.find('.' + inputClass).index(checkbox);
             var infoDto = $.extend(true, {}, branchChanges[idx]);
             var leftInfoDto = $.extend(true, {}, infoDto);
-            if (isCompareToHead) {
+            if (branchName === head) {
                 leftInfoDto.branch = head;
             } else {
-                infoDto.branch = _selectedBranch;
+                infoDto.branch = branchName;
             }
             diffCubes(leftInfoDto, infoDto, infoDto.name);
         });
@@ -3478,94 +3464,138 @@ var NCE = (function ($) {
         ul.find('a.anc-json').on('click', function () {
             onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
         });
+        ul.find('li.changeTypeHeader').find('a').on('click', function() {
+            var cssClass, el, li, state;
+            el = $(this);
+            li = el.parent();
+            cssClass = li.data('changetype');
+            state = el.hasClass(CLASS_SECTION_ALL);
+            li.parent().find('label.' + cssClass).find('input[type="checkbox"]').prop('checked', state);
+        });
+        ul.find('li.changeTypeHeader').find('span.glyphicon, b').on('click', function() {
+            var cssClass, el, li, lis, i, len, show;
+            el = $(this);
+            li = el.parent();
+            cssClass = li.data('changetype');
+            lis = li.parent().find('label.' + cssClass).closest('li');
+            show = el.hasClass('glyphicon-plus');
+            if (show) {
+                el.removeClass('glyphicon-plus').addClass('glyphicon-minus');
+            } else {
+                el.removeClass('glyphicon-minus').addClass('glyphicon-plus');
+            }
+            for (i = 0, len = lis.length; i < len; i++) {
+                if (show) {
+                    $(lis[i]).show();
+                } else {
+                    $(lis[i]).hide();
+                }
+            }
+        });
+        addCountsToChangeTypeHeaders(ul);
+    }
+
+    function addCountsToChangeTypeHeaders(ul) {
+        var changeTypeHeaders, cssClass, li, i, len, count;
+        changeTypeHeaders = ul.find('li.changeTypeHeader');
+        for (i = 0, len = changeTypeHeaders.length; i < len; i++) {
+            li = $(changeTypeHeaders[i]);
+            cssClass = li.data('changetype');
+            count = li.parent().find('label.' + cssClass).find('input[type="checkbox"]').length;
+            li.find('b').after('<span class="change-type-header-count">(' + count + ')</span>');
+        }
     }
 
     function branchCompareUpdateOk() {
         var i, len;
         var branchName = _branchCompareUpdateModal.prop('branchName');
-        var inputs = _branchCompareUpdateList.find('.updateCheck:checked');
+        var branchChanges = _branchCompareUpdateModal.prop('branchChanges');
+        var inputs = _branchCompareUpdateList.find('.updateCheck');
         var changes = [];
-
         for (i = 0, len = inputs.length; i < len; i++) {
-            changes.push($(inputs[i]).parent()[0].textContent);
+            if (inputs[i].checked) {
+                changes.push(branchChanges[i]);
+            }
         }
-
-        _commitModal.modal('hide');
-        callUpdateBranchCubes(getAppId(), changes, branchName);
+        callUpdateBranchCubes(getAppId(), changes);
     }
 
-    function callUpdateBranchCubes(appId, cubeNames, branchName, isFromTabMenu) {
+    function getUpdateReturnMapLength(map) {
+        if (map && map.hasOwnProperty('@items')) {
+            return map['@items'].length;
+        }
+        return 0;
+    }
+
+    function handleUpdateReturnValues(appId, map, isUpdate, success) {
+        var note, updateMap, addMap, deleteMap, rejectMap, fastforwardMap, restoreMap,
+            updates, adds, deletes, rejects, fastforwards, restores;
+        updateMap = map['updates'];
+        restoreMap = map['restores'];
+        addMap = map['adds'];
+        deleteMap = map['deletes'];
+        rejectMap = map['rejects'];
+        fastforwardMap = map['fastforwards'];
+        updates = getUpdateReturnMapLength(updateMap);
+        restores = getUpdateReturnMapLength(restoreMap);
+        adds = getUpdateReturnMapLength(addMap);
+        deletes = getUpdateReturnMapLength(deleteMap);
+        rejects = getUpdateReturnMapLength(rejectMap);
+        fastforwards = getUpdateReturnMapLength(fastforwardMap);
+
+        note = '<b>Branch ' + (isUpdate ? 'Update' : 'Commit') + ' ' + (success ? 'succeeded' : 'failed')
+             + ':</b><hr class="hr-small"/>'
+             + adds + ' cubes <b class="' + CHANGETYPE.CREATED.CSS_CLASS + '">added</b><br>'
+             + restores + ' cubes <b class="' + CHANGETYPE.RESTORED.CSS_CLASS + '">restored</b><br>'
+             + updates + ' cubes <b class="' + CHANGETYPE.UPDATED.CSS_CLASS + '">updated</b><br>'
+             + deletes + ' cubes <b class="' + CHANGETYPE.DELETED.CSS_CLASS + '">deleted</b><br>';
+        if (isUpdate) {
+            note += fastforwards + ' cubes <b class="' + CHANGETYPE.FASTFORWARD.CSS_CLASS + '">fast-forwarded</b><br>';
+        }
+        note += rejects + ' cubes <b class="' + CHANGETYPE.CONFLICT.CSS_CLASS + '">rejected</b>';
+
+        if (adds) {
+            note += getUpdateNote(appId, addMap['@items'], 'Added cube names', 'green', true);
+        }
+        if (restores) {
+            note += getUpdateNote(appId, restoreMap['@items'], 'Restored cube names', 'goldenrod', true);
+        }
+        if (updates) {
+            note += getUpdateNote(appId, updateMap['@items'], 'Updated cube names', 'cornflowerblue', true);
+        }
+        if (deletes) {
+            note += getUpdateNote(appId, deleteMap['@items'], 'Deleted cube names', 'white', true);
+        }
+        if (fastforwards) {
+            note += getUpdateNote(appId, fastforwardMap['@items'], 'Fast-forwarded cube names', 'lightgrey', true);
+        }
+        if (rejects) {
+            note += getUpdateNote(appId, rejectMap['@items'], 'Rejected cube names', 'red', false);
+        }
+        showNote(note, success ? 'Success' : 'Failure');
+    }
+
+    function callUpdateBranchCubes(appId, cubeDtos, isFromTabMenu) {
         showNote('Updating selected cubes...', 'Please wait...');
         setTimeout(function() {
-            var result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeNames, branchName]);
-            var note, map, updateMap, mergeMap, addMap, deleteMap, updates, merges, conflicts, adds, deletes;
+            var result;
+            if (isFromTabMenu) {
+                result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_CUBE_FROM_HEAD, [appId, cubeDtos[0].name]);
+            } else {
+                result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeDtos]);
+            }
             clearError();
             if (!result.status) {
                 showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
                 return;
             }
 
-            map = result.data;
-            updateMap = map['updates'];
-            mergeMap = map['merges'];
-            addMap = map['adds'];
-            deleteMap = map['deletes'];
-            _conflictMap = map['conflicts'];
-            updates = 0;
-            merges = 0;
-            adds = 0;
-            deletes = 0;
-            conflicts = 0;
-
-            if (updateMap && updateMap['@items']) {
-                updates = updateMap['@items'].length;
-            }
-            if (mergeMap && mergeMap['@items']) {
-                merges = mergeMap['@items'].length;
-            }
-            if (addMap && addMap['@items']) {
-                adds = addMap['@items'].length;
-            }
-            if (deleteMap && deleteMap['@items']) {
-                deletes = deleteMap['@items'].length;
-            }
-            if (_conflictMap) {
-                delete _conflictMap['@type'];
-                conflicts = countKeys(_conflictMap);
-            }
-
-            note = '<b>Branch Updated:</b><hr class="hr-small"/>' + updates + ' cubes <b>updated</b><br>';
-            note += merges + ' cubes <b>merged</b><br>';
-            note += adds + ' cubes <b>added</b><br>';
-            note += deletes + ' cubes <b>deleted</b><br>';
-            note += conflicts + ' cubes in <b>conflict</b>';
-            if (adds) {
-                note += getUpdateNote(appId, addMap['@items'], 'Added cube names', 'green', true);
-            }
-            if (updates) {
-                note += getUpdateNote(appId, updateMap['@items'], 'Updated cube names', 'cornflowerblue', true);
-            }
-            if (deletes) {
-                note += getUpdateNote(appId, deleteMap['@items'], 'Deleted cube names', 'red', true);
-            }
-            if (merges) {
-                note += getUpdateNote(appId, mergeMap['@items'], 'Merged cube names', '#D4AF37', true);
-            }
-            if (conflicts) {
-                note += getUpdateNote(appId, Object.keys(_conflictMap), 'Cubes in conflict', '#F08080', false);
-            }
-            showNote(note);
+            handleUpdateReturnValues(appId, result.data, true, true);
             saveOpenCubeList();
             buildTabs();
-
-            if (conflicts) {
-                mergeBranch(_conflictMap);
-                return;
-            }
-
             if (appIdsEqual(appId, getAppId())) {
                 if (!isFromTabMenu) {
-                    compareUpdateBranch(branchName, true);
+                    compareUpdateBranch(head, true);
                 }
                 loadNCubes();
                 runSearch();
@@ -3576,13 +3606,24 @@ var NCE = (function ($) {
     }
 
     function buildHtmlListForCompare(branchChanges, options) {
-        var i, len, infoDto;
+        var i, len, infoDto, prevChangeType, changeType, displayType;
         var html = '';
         var inputClass = options.inputClass;
         for (i = 0, len = branchChanges.length; i < len; i++) {
             infoDto = branchChanges[i];
+            changeType = infoDto.changeType;
+            displayType = getLabelDisplayTypeForInfoDto(infoDto);
+            if (changeType !== prevChangeType) {
+                prevChangeType = changeType;
+                html += '<li class="list-group-item skinny-lr noselect changeTypeHeader" data-changetype="'
+                    + displayType.CSS_CLASS + '"><span class="glyphicon glyphicon-minus"></span>'
+                    + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>'
+                    + '<a href="#" class="' + CLASS_SECTION_ALL + '">All</a>'
+                    + '<a href="#" class="' + CLASS_SECTION_NONE + '">None</a>'
+                    + '</li>';
+            }
 
-            html += '<li class="list-group-item skinny-lr no-margins" style="padding-left:0;">';
+            html += '<li class="list-group-item skinny-lr no-margins" data-changetype="' + displayType.CSS_CLASS + '">';
             html += '<div class="container-fluid">';
 
             if (options.hasOwnProperty('compare')) {
@@ -3601,7 +3642,7 @@ var NCE = (function ($) {
                 html += '</label>';
             }
 
-            html += '<label style="display:inline-block;margin:0 0 0 20px;" class="checkbox ' + getLabelDisplayClassForInfoDto(infoDto) + '">';
+            html += '<label style="display:inline-block;margin:0 0 0 20px;" class="checkbox ' + displayType.CSS_CLASS + '">';
             html += '<input class="' + inputClass + '" type="checkbox">';
             html += infoDto.name;
             html += '</label>';
@@ -3611,34 +3652,23 @@ var NCE = (function ($) {
         return html;
     }
     
-    function getLabelDisplayClassForInfoDto(infoDto) {
-        if (infoDto.revision < 0) {
-            return 'cube-deleted';
+    function getLabelDisplayTypeForInfoDto(infoDto) {
+        switch (infoDto.changeType) {
+            case CHANGETYPE.CONFLICT.CODE: // CONFLICTS ALWAYS SUPERCEDE OTHER CHANGE TYPES
+                return CHANGETYPE.CONFLICT;
+            case CHANGETYPE.DELETED.CODE:
+                return CHANGETYPE.DELETED;
+            case CHANGETYPE.CREATED.CODE:
+                return CHANGETYPE.CREATED;
+            case CHANGETYPE.RESTORED.CODE:
+                return CHANGETYPE.RESTORED;
+            case CHANGETYPE.UPDATED.CODE:
+                return CHANGETYPE.UPDATED;
+            case CHANGETYPE.FASTFORWARD.CODE:
+                return CHANGETYPE.FASTFORWARD;
+            default:
+                return '';
         }
-        
-        if (!infoDto.headSha1) {
-            if (infoDto.sha1) {
-                return 'cube-added';
-            }
-            if (infoDto.changeType === 'D') {
-                    return 'cube-deleted';
-            }
-            if (infoDto.changeType === 'R') {
-                return 'cube-restored';
-            }
-        }
-        
-        if (infoDto.headSha1 != infoDto.sha1) {
-            return 'cube-modified';
-        }
-        if (infoDto.changeType === 'D') {
-            return 'cube-deleted';
-        }
-        if (infoDto.changeType == 'R') {
-            return 'cube-restored';
-        }
-        
-        return '';
     }
 
     function commitBranch(state) {
@@ -3647,13 +3677,15 @@ var NCE = (function ($) {
         if (state) {
             errMsg = 'commit to';
             title = 'Commit changes';
-            $('#commitOk').show();
-            $('#rollbackOk').hide();
+            _commitModal.find('.accept-mine, .accept-theirs').show();
+            _commitOk.show();
+            _rollbackOk.hide();
         } else {
             errMsg = 'rollback in';
             title = 'Rollback changes';
-            $('#commitOk').hide();
-            $('#rollbackOk').show();
+            _commitModal.find('.accept-mine, .accept-theirs').hide();
+            _commitOk.hide();
+            _rollbackOk.show();
         }
 
         if (isHeadSelected()) {
@@ -3667,31 +3699,26 @@ var NCE = (function ($) {
             return;
         }
 
-        $('#commitRollbackLabel')[0].textContent = title;
+        _commitRollbackLabel[0].textContent = title;
 
         branchChanges = result.data;
-        branchChanges.sort(function compare(a,b) {
-            return a.name.localeCompare(b.name);
-        });
+        branchChanges.sort(sortBranchChanges);
 
-        _commitModal.prop('changes', branchChanges);
-        buildUlForCompare(_commitRollbackList, true, branchChanges, {inputClass:'commitCheck', compare:true});
-
-        selectAll();
+        _commitModal.prop('branchChanges', branchChanges);
+        buildUlForCompare(_commitRollbackList, head, branchChanges, {inputClass:'commitCheck', compare:true});
         _commitModal.modal('show');
     }
 
     function commitOk() {
-        var branchChanges = _commitModal.prop('changes');
+        var i, len;
+        var branchChanges = _commitModal.prop('branchChanges');
         var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
-
-        $.each(input, function (index, label) {
-            if ($(this).is(':checked')) {
-                changes.push(branchChanges[index]);
+        for (i = 0, len = input.length; i < len; i++) {
+            if ($(input[i]).is(':checked')) {
+                changes.push(branchChanges[i]);
             }
-        });
-
+        }
         _commitModal.modal('hide');
         callCommit(changes);
     }
@@ -3711,9 +3738,8 @@ var NCE = (function ($) {
             result = call(CONTROLLER + method, [appId, dtos]);
 
             clearError();
-            if (!result.status)
-            {
-                showNote('You have conflicts with the HEAD branch.  Update Branch first, then re-attempt branch commit.');
+            if (!result.status) {
+                handleUpdateReturnValues(appId, result.data, false, false);
                 return;
             }
 
@@ -3723,16 +3749,14 @@ var NCE = (function ($) {
             }
             reloadCube();
 
-            note = 'Successfully committed ' + result.data.length + ' cube(s).';
-            note += getUpdateNote(appId, result.data, 'Committed cubes', 'cornflowerblue', true);
+            handleUpdateReturnValues(appId, result.data, false, true);
             saveOpenCubeList();
             buildTabs();
-            showNote(note);
         }, PROGRESS_DELAY);
     }
 
     function rollbackOk() {
-        var branchChanges = _commitModal.prop('changes');
+        var branchChanges = _commitModal.prop('branchChanges');
         var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
         $.each(input, function (index, label) {
@@ -3748,12 +3772,12 @@ var NCE = (function ($) {
     function callRollback(changes) {
         showNote('Rolling back changes on selected cubes...', 'Please wait...');
         setTimeout(function(){
-            var names, i, len, note;
+            var names, i, len, note, result;
             names = [];
             for (i = 0, len = changes.length; i < len; i++) {
                 names.push(changes[i].name)
             }
-            var result = call(CONTROLLER + CONTROLLER_METHOD.ROLLBACK_BRANCH, [getAppId(), names]);
+            result = call(CONTROLLER + CONTROLLER_METHOD.ROLLBACK_BRANCH, [getAppId(), names]);
             clearError();
 
             if (!result.status) {
@@ -3825,19 +3849,24 @@ var NCE = (function ($) {
             }
             note += cubeName + '<br>';
             if (shouldUpdateStatus) {
-                for (o = 0, oLen = _openCubes.length; o < oLen; o++) {
-                    openCube = null;
-                    openCube = _openCubes[o];
-                    openCubeInfo = null;
-                    openCubeInfo = getCubeInfo(openCube.cubeKey);
-                    if (cubeName === openCubeInfo[CUBE_INFO.NAME] && doesCubeInfoMatchOldAppId(CUBE_INFO.BRANCH, openCubeInfo, appId)) {
-                        openCube.status = null;
-                        openCube.hasShownStatusMessage = false;
-                    }
-                }
+                updateTabStatusForUpdateNote(appId, cubeName);
             }
         }
         return note;
+    }
+
+    function updateTabStatusForUpdateNote(appId, cubeName) {
+        var i, len, openCube, openCubeInfo;
+        for (i = 0, len = _openCubes.length; i < len; i++) {
+            openCube = null;
+            openCube = _openCubes[i];
+            openCubeInfo = null;
+            openCubeInfo = getCubeInfo(openCube.cubeKey);
+            if (cubeName === openCubeInfo[CUBE_INFO.NAME] && doesCubeInfoMatchOldAppId(CUBE_INFO.BRANCH, openCubeInfo, appId)) {
+                openCube.status = null;
+                openCube.hasShownStatusMessage = false;
+            }
+        }
     }
 
     function copyBranch() {
@@ -3858,14 +3887,9 @@ var NCE = (function ($) {
     function copyBranchOk() {
         var result;
         var origAppId = getAppId();
-        var copyAppId = {
-            app: $('#copyBranchAppName').val(),
-            version: $('#copyBranchVersion').val(),
-            status: STATUS.SNAPSHOT,
-            branch: $('#copyBranchName').val()
-        };
+        var copyAppId = appIdFrom($('#copyBranchAppName').val(), $('#copyBranchVersion').val(), STATUS.SNAPSHOT, $('#copyBranchName').val());
         
-        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, true]);
         if (!result.status) {
             showNote('Unable to copy branch:<hr class="hr-small"/>' + result.data);
             return;
@@ -3876,6 +3900,7 @@ var NCE = (function ($) {
         saveSelectedVersion(copyAppId.version);
         saveSelectedStatus(copyAppId.status);
         saveSelectedBranch(copyAppId.branch);
+        addToVisitedBranchesList(copyAppId);
         loadAppListView();
         loadVersionListView();
         showActiveBranch();
@@ -3909,124 +3934,67 @@ var NCE = (function ($) {
         }
     }
 
-    function mergeBranch(conflictMap) {
-        delete conflictMap['@type'];
-        var ul = $('#mergeList');
-        ul.empty();
-
-        // Sort keys of Map
-        var keys = Object.keys(conflictMap);
-        keys.sort(function(a, b) {
-            var lowA = a.toLowerCase();
-            var lowB = b.toLowerCase();
-            return lowA.localeCompare(lowB);
-        });
-
-        // Walk sorted keys, indexing into Map
-        $.each(keys, function(index, cubeName) {
-            var li = $('<li style="border:none"/>').prop({class: 'list-group-item skinny-lr'});
-            var div = $('<div/>').prop({class:'container-fluid'});
-            var checkbox = $('<input>').prop({type:'checkbox'});
-            var label = $('<label/>').prop({class: 'radio no-margins'});
-            label[0].textContent = cubeName;
-            ul.append(li);
-            li.append(div);
-            div.append(label);
-            checkbox.prependTo(label); // <=== create input without the closing tag
-        });
-        $('#mergeBranchModal').modal('show');
-    }
-
-    function getSingleSelectedConflict() {
-        var checkedInput = $('#mergeList').find('input:checked');
-        if (!checkedInput.length) {
-            showNote('Select a cube', 'Note', 3000);
+    function getAllSelectedMineTheirs(ul) {
+        var i, len, results, cubeName, branchChanges, inputs, dto;
+        if (!ul.find('input:checked').length) {
+            showNote('No cubes selected!', 'Note', TWO_SECOND_TIMEOUOT);
             return null;
         }
-        if (checkedInput.length > 1) {
-            showNote('Select only one cube', 'Note', 3000);
-            return null;
-        }
-        return checkedInput.parent()[0].textContent;
-    }
-
-    function getAllSelectedConflicts() {
-        var i, len, results, cubeName;
-        var checkedInput = $('#mergeList').find('input:checked');
-        if (!checkedInput.length) {
-            showNote('Select a cube', 'Note', 3000);
-            return null;
-        }
-
+        branchChanges = ul.closest('.modal').prop('branchChanges');
+        inputs = ul.find('label.checkbox input[type="checkbox"]');
         results = {
             cubeNames: [],
-            branchSha1: [],
-            headSha1: []
+            sha1s: []
         };
-        for (i = 0, len = checkedInput.length; i < len; i++) {
-            cubeName = $(checkedInput[i]).parent()[0].textContent;
-            results.cubeNames.push(cubeName);
-            results.branchSha1.push(_conflictMap[cubeName].sha1);
-            results.headSha1.push(_conflictMap[cubeName].headSha1);
+        for (i = 0, len = inputs.length; i < len; i++) {
+            if (inputs[i].checked) {
+                dto = null;
+                dto = branchChanges[i];
+                results.cubeNames.push(dto.name);
+                results.sha1s.push(dto.sha1);
+            }
         }
         return results;
     }
 
-    function diffConflicts() {
-        var appId, infoDto, leftInfoDto;
-        var conflictedCube = getSingleSelectedConflict();
-        if (!conflictedCube) {
+    function acceptMineTheirs(ul, isMine) {
+        var obj;
+        var mineTheirs = getAllSelectedMineTheirs(ul);
+        if (!mineTheirs) {
             return;
         }
-        appId = getAppId();
-        infoDto = {
-            name: conflictedCube,
-            app: appId.app,
-            version: appId.version,
-            status: appId.status,
-            branch: appId.branch
-        };
-        leftInfoDto = $.extend(true, {}, infoDto);
-        leftInfoDto.branch = 'HEAD';
-        diffCubes(leftInfoDto, infoDto, conflictedCube);
-    }
-
-    function acceptTheirs() {
-        var conflictedCubes = getAllSelectedConflicts();
-        if (!conflictedCubes) {
-            return;
+        if (isMine) {
+            obj = {
+                controllerMethod: CONTROLLER_METHOD.ACCEPT_MINE,
+                cubeNames: mineTheirs.cubeNames,
+                sha1s: mineTheirs.sha1s,
+                successMsg: 'cubes updated to overwrite-on-commit.',
+                errorMsg: 'Unable to update your branch cubes to overwrite-on-commit'
+            };
+        } else {
+            obj = {
+                controllerMethod: CONTROLLER_METHOD.ACCEPT_THEIRS,
+                cubeNames: mineTheirs.cubeNames,
+                sha1s: mineTheirs.sha1s,
+                successMsg: 'cubes updated in your branch.',
+                errorMsg: 'Unable to update your branch cubes'
+            };
         }
-        callAcceptMineTheirs({
-            controllerMethod: CONTROLLER_METHOD.ACCEPT_THEIRS,
-            cubeNames: conflictedCubes.cubeNames,
-            sha1s: conflictedCubes.branchSha1,
-            successMsg: 'cubes updated in your branch with cube from HEAD.',
-            errorMsg: 'Unable to update your branch cubes from HEAD'
-        });
-    }
-
-    function acceptMine() {
-        var conflictedCubes = getAllSelectedConflicts();
-        if (!conflictedCubes) {
-            return;
-        }
-        callAcceptMineTheirs({
-            controllerMethod: CONTROLLER_METHOD.ACCEPT_MINE,
-            cubeNames: conflictedCubes.cubeNames,
-            sha1s: conflictedCubes.headSha1,
-            successMsg: 'cubes updated to overwrite-on-commit.',
-            errorMsg: 'Unable to update your branch cubes to overwrite-on-commit'
-        });
+        callAcceptMineTheirs(ul, obj);
     }
     
-    function callAcceptMineTheirs(options) {
+    function callAcceptMineTheirs(ul, options) {
         var result = call(CONTROLLER + options.controllerMethod, [getAppId(), options.cubeNames, options.sha1s]);
         if (result.status) {
-            showNote(result.data.value + ' ' + options.successMsg, 'Note', 5000);
-            $('#mergeList').find('input:checked').parent().parent().parent().remove();
+            showNote(result.data.value + ' ' + options.successMsg, 'Note', TEN_SECOND_TIMEOUT);
             removeTabStatusFromCubeList(getAppId(), options.cubeNames);
+            if (ul.is(_branchCompareUpdateList)) {
+                compareUpdateBranch(_branchCompareUpdateModal.prop('branchName'), true)
+            } else if (ul.is(_commitRollbackList)) {
+                commitBranch(true);
+            }
         } else {
-            showNote(options.errorMsg + ':<hr class="hr-small"/>');
+            showNote(options.errorMsg + ':<hr class="hr-small"/>' + result.data);
         }
     }
 
@@ -4036,26 +4004,42 @@ var NCE = (function ($) {
     
     function diffCubes(leftInfo, rightInfo, title) {
         clearError();
-        call(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:descriptiveDiffCallback});
-        call(CONTROLLER + CONTROLLER_METHOD.FETCH_HTML_BRANCH_DIFFS, [leftInfo, rightInfo], {noResolveRefs:true, callback:htmlDiffCallback});
-        setupDiff(leftInfo.branch, rightInfo.branch, title);
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {callback:descriptiveDiffCallback});
+        setupDiff({
+            leftName: leftInfo.branch,
+            rightName: rightInfo.branch,
+            title: title,
+            appId: appIdFrom(rightInfo.app, rightInfo.version, rightInfo.status, rightInfo.branch),
+            cubeName: rightInfo.name,
+            canEdit: rightInfo.branch !== head
+        });
     }
 
-    function diffCubeRevs(id1, id2, leftName, rightName, title) {
+    function diffCubeRevs(id1, id2, diffOptions) {
         clearError();
-        call(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:descriptiveDiffCallback});
-        call(CONTROLLER + CONTROLLER_METHOD.FETCH_HTML_REV_DIFFS, [id1, id2], {noResolveRefs:true, callback:htmlDiffCallback});
-        setupDiff(leftName, rightName, title);
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {callback:descriptiveDiffCallback});
+        setupDiff(diffOptions);
     }
 
-    function setupDiff(leftName, rightName, title) {
+    // options: leftName, rightName, title, appId, cubeName, canEdit
+    function setupDiff(diffOptions) {
         _diffOutput.empty();
-        $('#diffTitle')[0].innerHTML = title;
+        $('#diffTitle')[0].innerHTML = diffOptions.title;
         _diffLastResult = 'Loading...';
         _diffHtmlResult = 'Loading...';
-        _diffLeftName = leftName;
-        _diffRightName = rightName;
-        diffLoad(DIFF_DESCRIPTIVE);
+        _diffLeftName = diffOptions.leftName;
+        _diffRightName = diffOptions.rightName;
+        _diffAppId = null;
+        _diffAppId = diffOptions.appId;
+        _diffCubeName = diffOptions.cubeName;
+        if (diffOptions.canEdit) {
+            _diffModal.find('.select-all, .select-none, .btn-primary').show();
+            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them left to right. Click a row to see more information about the change.';
+        } else {
+            _diffModal.find('.select-all, .select-none, .btn-primary').hide();
+            _diffInstructions[0].innerHTML = 'View individual changes between two cubes.';
+        }
+        diffDescriptive(diffOptions.canEdit);
         diffShow(true);
     }
     
@@ -4064,106 +4048,147 @@ var NCE = (function ($) {
             _diffModal.show();
         } else {
             _diffModal.hide();
-        }
-    }
-
-    function diffLoad(viewType) {
-        _diffOutput.empty();
-        switch(viewType) {
-            case DIFF_INLINE:
-            case DIFF_SIDE_BY_SIDE:
-                diffInlineOrSideBySide(viewType);
-                break;
-            case DIFF_DESCRIPTIVE:
-                diffDescriptive();
-                break;
-            case DIFF_VISUAL:
-                diffVisual();
-                break;
-            default:
-                console.log('Error -> Unknown DIFF type');
-                break;
-        }
-    }
-    
-    function diffDescriptive() {
-        var str;
-        var stillLoading = typeof _diffLastResult !== 'object';
-
-        if (stillLoading) {
-            str = _diffLastResult;
-        } else {
-            str = _diffLastResult.delta;
-            if (!str || str == '') {
-                str = 'No difference';
+            if (_didMergeChange) {
+                _didMergeChange = false;
+                loadCube();
+                if (_commitModal.hasClass('in')) {
+                    commitBranch(true);
+                } else if (_branchCompareUpdateModal.hasClass('in')) {
+                    compareUpdateBranch(_branchCompareUpdateModal.prop('branchName'), true);
+                }
             }
         }
-        _diffOutput[0].innerHTML = str;
+    }
 
-        if (stillLoading) {
-            setTimeout(function () {
-                emptyDiffOutput();
-                diffDescriptive();
-            }, PROGRESS_DELAY);
+    function diffMerge() {
+        var els, checkedDeltas, allDeltas, result, i, len;
+        checkedDeltas = [];
+        allDeltas = _diffLastResult.delta['@items'];
+        els = _diffOutput.find('.mergeCheck');
+        for (i = 0, len = els.length; i < len; i++) {
+            if ($(els[i]).is(':checked')) {
+                checkedDeltas.push(allDeltas[i]);
+            }
+        }
+        result = call(CONTROLLER + CONTROLLER_METHOD.MERGE_DELTAS, [_diffAppId, _diffCubeName, checkedDeltas]);
+        if (result.status) {
+            _didMergeChange = true;
+            _diffOutput.empty();
+            _diffLastResult = null;
+            _diffLastResult = 'Loading...';
+            executeSavedCall();
+            diffDescriptive(true);
+        } else {
+            showNote('Unable to merge deltas:<hr class="hr-small"/>' + result.data);
         }
     }
-    
-    function diffInlineOrSideBySide(viewType) {
-        var leftJson, rightJson, sm, opcodes;
-        var stillLoading = typeof _diffLastResult !== 'object';
 
-        if (stillLoading) {
-        _diffOutput[0].innerHtml = _diffLastResult;
+    function diffDescriptive(canEdit) {
+        var delta, deltas, html, i, len, isCellChange, deltaLoc;
+
+        // waiting on server response
+        if (typeof _diffLastResult !== 'object') {
+            _diffOutput[0].innerHTML = _diffLastResult;
             setTimeout(function () {
                 emptyDiffOutput();
-                diffInlineOrSideBySide(viewType);
+                diffDescriptive(canEdit);
             }, PROGRESS_DELAY);
             return;
         }
 
-        leftJson = _diffLastResult.left['@items'];
-        rightJson = _diffLastResult.right['@items'];
-        
-        // create a SequenceMatcher instance that diffs the two sets of lines
-        sm = new difflib.SequenceMatcher(leftJson, rightJson);
+        // no changes detected
+        deltas = _diffLastResult.delta['@items'];
+        if (!deltas || !deltas.length) {
+            _diffOutput[0].innerHTML = 'No difference';
+            return;
+        }
 
-        // get the opcodes from the SequenceMatcher instance
-        // opcodes is a list of 3-tuples describing what changes should be made to the base text
-        // in order to yield the new text
-        opcodes = sm.get_opcodes();
+        // handle delta set
+        html = '<ul class="list-group">';
+        for (i = 0, len = deltas.length; i < len; i++) {
+            delta = null;
+            delta = deltas[i];
+            deltaLoc = delta.loc.name;
+            isCellChange = deltaLoc === DELTA.LOC.CELL;
+            html += '<li class="list-group-item skinny-lr no-margins' + (isCellChange ? ' cell-change' : '') + '">';
+            html += '<div class="container-fluid"><label class="checkbox" style="padding:0;margin:0 0 0 20px;">';
+            if (canEdit) {
+                html += '<input class="mergeCheck" type="checkbox">';
+            }
+            html += delta.desc;
+            html += '</label></div>';
+            html += '</li>';
+        }
+        html += '</ul>';
+        _diffOutput[0].innerHTML = html;
 
-        // build the diff view and add it to the current DOM
-        _diffOutput[0].appendChild(diffview.buildView({
-            baseTextLines: leftJson,
-            newTextLines: rightJson,
-            opcodes: opcodes,
-            // set the display titles for each resource
-            baseTextName: _diffLeftName,
-            newTextName: _diffRightName,
-            contextSize: 3,
-            viewType: viewType
-        }));
-        _diffOutput.find('.author').remove();
+        _diffOutput.find('li').on('click', function(e) {
+            onDeltaClick(e, this);
+        });
     }
     
-    function diffVisual() {
-        var html = '';
-        var stillLoading = typeof _diffHtmlResult !== 'object';
-
-        if (stillLoading) {
-            html += _diffHtmlResult;
+    function onDeltaClick(e, li) {
+        var isAlreadyOpen, sm, opcodes, delta, leftJson, rightJson;
+        if (!$(e.target).hasClass('mergeCheck')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            li = $(li);
+            isAlreadyOpen = li.find('.diff').length;
+            _diffOutput.find('.diff').remove();
+            if (!isAlreadyOpen) {
+                delta = _diffLastResult.delta['@items'][li.index()];
+                leftJson = constructDeltaText(delta, true);
+                rightJson = constructDeltaText(delta, false);
+                sm = new difflib.SequenceMatcher(leftJson, rightJson);
+                opcodes = sm.get_opcodes();
+                li.append(diffview.buildView({
+                    baseTextLines: leftJson,
+                    newTextLines: rightJson,
+                    opcodes: opcodes,
+                    // set the display titles for each resource
+                    baseTextName: _diffLeftName,
+                    newTextName: _diffRightName,
+                    contextSize: 3
+                }));
+                li.find('.author').remove();
+            }
+        }
+    }
+    
+    function constructDeltaText(delta, isSource) {
+        if ([DELTA.LOC.NCUBE, DELTA.LOC.CELL].indexOf(delta.loc.name) > -1) {
+            return getObjectTextArray(isSource ? delta.sourceVal : delta.destVal);
+        }
+        if (delta.type.name === DELTA.TYPE.UPDATE) {
+            return getObjectTextArray(isSource ? delta.sourceVal : delta.destVal);
+        }
+        return getObjectTextArray(isSource ? delta.sourceList : delta.destList);
+    }
+    
+    function getObjectTextArray(val) {
+        var i, len, keys, key, ret = [];
+        if (val === null || val === undefined) {
+            ret.push('');
+        } else if (val.hasOwnProperty('@items')) {
+            ret = getObjectTextArray(val['@items']);
+        } else if (Object.prototype.toString.call(val) === '[object Array]'){
+            for (i = 0, len = val.length; i < len; i++) {
+                ret.push(val[i]);
+            }
+        } else if (typeof val === 'object') {
+            keys = Object.keys(val);
+            ret.push('{');
+            for (i = 0, len = keys.length; i < len; i++) {
+                key = keys[i];
+                if (key !== '@type') {
+                    ret.push('  ' + key + ': ' + val[key]);
+                }
+            }
+            ret.push('}');
         } else {
-            html += '<div class="innerL">' + _diffHtmlResult.leftHtml + '</div>';
-            html += '<div class="innerR">' + _diffHtmlResult.rightHtml + '</div>';
+            ret.push(val);
         }
-        _diffOutput[0].innerHTML = html;
-        
-        if (stillLoading) {
-            setTimeout(function () {
-                emptyDiffOutput();
-                diffVisual();
-            }, PROGRESS_DELAY);
-        }
+        return ret;
     }
 
     function emptyDiffOutput() {
@@ -4178,31 +4203,37 @@ var NCE = (function ($) {
         _diffLastResult = result.data;
     }
 
-    function htmlDiffCallback(result) {
-        if (!result.status) {
-            showNote('Unable to fetch visual comparison of cube:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-        _diffHtmlResult = result.data;
-    }
-
     // ============================================ End Cube Comparison ================================================
 
     // ============================================= General Utilities =================================================
+
+    function callWithSave(target, args, params) {
+        _savedCall = null;
+        _savedCall = {target:target, args:args, params:params};
+        executeSavedCall();
+    }
+
+    function executeSavedCall() {
+        if (_savedCall) {
+            return call(_savedCall.target, _savedCall.args, _savedCall.params);
+        }
+        return {status:false, data:'Logical error.'};
+    }
+
     function loop() {
         setInterval(function() {
             var now = Date.now();
-            if (now - _searchLastKeyTime > 150 && _searchKeyPressed) {
+            if (now - _searchLastKeyTime > PROGRESS_DELAY && _searchKeyPressed) {
                 _searchKeyPressed = false;
                 runSearch();
             }
-        }, 500);
+        }, PROGRESS_DELAY);
     }
 
     function createHeartBeatTransferObj() {
         var obj = {};
         obj[getCubeInfo(getSelectedCubeInfoKey()).slice(0, CUBE_INFO.TAB_VIEW).join(TAB_SEPARATOR)] = '';
-
+        //noinspection MagicNumberJS
         return {obj:obj, aBuffer: new ArrayBuffer(1024 * 1024)};
     }
 
@@ -4212,7 +4243,7 @@ var NCE = (function ($) {
         setInterval(function() {
             transferObj = createHeartBeatTransferObj();
             _heartBeatThread.postMessage(transferObj, [transferObj.aBuffer]);
-        }, 60000);
+        }, MINUTE_TIMEOUT);
     }
 
     function showNote(msg, title, millis) {

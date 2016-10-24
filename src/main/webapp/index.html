@@ -30,18 +30,30 @@
             <h3 id="diffTitle" class="modal-title">Compare N-Cubes</h3>
         </div>
         <div class="modal-body">
-            <form role="form" style="height:100%">
-                <div class="form-group" style="height:100%">
-                    <div id="diffOutput" style="height:100%"></div>
+            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="diffHeading">
+                        <h4 class="panel-title">
+                            <a id="diffInstTitle" data-toggle="collapse" data-parent="#accordion" href="#diffCollapse"
+                               aria-expanded="true" aria-controls="diffCollapse">Instructions</a>
+                        </h4>
+                    </div>
+                    <div id="diffCollapse" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="diffHeading">
+                        <div id="diffInstructions" class="panel-body"></div>
+                    </div>
+                </div>
+            </div>
+            <form role="form">
+                <div class="form-group">
+                    <div id="diffOutput"></div>
                 </div>
             </form>
         </div>
         <div class="modal-footer noselect">
-            <button id="diffDesc" type="button" class="btn btn-info btn-sm pull-left">Descriptive</button>
-            <button id="diffVisual" type="button" class="btn btn-info btn-sm pull-left">Visual</button>
-            <button id="diffSide" type="button" class="btn btn-info btn-sm pull-left">Side-by-side</button>
-            <button id="diffInline" type="button" class="btn btn-info btn-sm pull-left">Inline</button>
-            <button id="diffModalClose" class="btn btn-primary">Close</button>
+            <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
+            <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
+            <button id="diffModalClose" class="btn btn-default">Close</button>
+            <button id="diffModalMerge" class="btn btn-primary">Merge</button>
         </div>
     </div>
 
@@ -130,11 +142,11 @@
                     <span>n-cubes</span><span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="#" id="newCubeMenu">New</a></li>
-                    <li><a href="#" id="deleteCubeMenu">Delete</a></li>
-                    <li><a href="#" id="restoreCubeMenu">Restore</a></li>
+                    <li><a href="#" id="newCubeMenu">New...</a></li>
+                    <li><a href="#" id="deleteCubeMenu">Delete...</a></li>
+                    <li><a href="#" id="restoreCubeMenu">Restore...</a></li>
                     <li class="divider"></li>
-                    <li><a href="#" id="batchUpdateAxisReferencesMenu">Batch Update Reference Axes</a></li>
+                    <li><a href="#" id="batchUpdateAxisReferencesMenu">Batch Update Reference Axes...</a></li>
                     <li><a href="#" id="globalComparatorMenu">Open Global Comparator...</a></li>
                 </ul>
             </div>
@@ -315,6 +327,8 @@
             <div class="modal-footer">
                 <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
                 <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
+                <button class="btn btn-danger btn-sm pull-left accept-mine" aria-hidden="true">Accept Mine</button>
+                <button class="btn btn-danger btn-sm pull-left accept-theirs" aria-hidden="true">Accept Theirs</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
                 <button id="commitOk" class="btn btn-primary btn-sm">Commit</button>
                 <button id="rollbackOk" class="btn btn-primary btn-sm">Rollback</button>
@@ -339,6 +353,8 @@
             <div class="modal-footer">
                 <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
                 <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
+                <button class="btn btn-danger btn-sm pull-left accept-mine" aria-hidden="true">Accept Mine</button>
+                <button class="btn btn-danger btn-sm pull-left accept-theirs" aria-hidden="true">Accept Theirs</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
                 <button id="branchCompareUpdateOk" class="btn btn-primary btn-sm">Update</button>
             </div>
@@ -470,44 +486,6 @@
     </div>
 </div>
 
-<!-- Merge Branch Modal -->
-<div id="mergeBranchModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mergeBranchLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content modal-filter">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id=mergeBranchLabel" class="modal-title">Merge Branch</h3>
-            </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
-
-                <form role="form">
-                    <div class="well well-sm">
-                        <span class="help-block">One or more cubes that you have worked on has changed in HEAD since your created / updated the cubes in your branch.  A cube in conflict cannot be committed to HEAD.</span>
-                    </div>
-                </form>
-
-                <form role="form">
-                    <div class="form-group">
-                        <label for="mergeList">Select conflicting cube:</label>
-                        <ul id="mergeList" class="list-group">
-                        </ul>
-                    </div>
-                </form>
-
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
-                <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
-                <button id="compareCubes" class="btn btn-primary btn-sm pull-left">Compare</button>
-                <button id="acceptMine" class="btn btn-primary btn-sm pull-left">Accept Mine</button>
-                <button id="acceptTheirs" class="btn btn-primary btn-sm pull-left">Accept Theirs</button>
-                <button id="mergeClose" class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Duplicate Cube Modal -->
 <div id="dupeCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="dupeCubeLabel"
      aria-hidden="true" data-backdrop="static">
@@ -577,26 +555,6 @@
     </div>
 </div>
 
-<!-- 'Show References to' Modal -->
-<div id="showRefsToCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsToLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content modal-filter">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="showRefsToLabel" class="modal-title"></h3>
-            </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
-                <ul id="refsToCubeList" class="list-group">
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button id="showRefsToClose" class="btn btn-primary">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- 'Show References from' Modal -->
 <div id="showRefsFromCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsFromLabel"
      aria-hidden="true" data-backdrop="static">
@@ -611,7 +569,7 @@
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="showRefsFromClose" class="btn btn-primary">Close</button>
+                <button id="showRefsFromClose" data-dismiss="modal" class="btn btn-primary">Close</button>
             </div>
         </div>
     </div>
@@ -631,7 +589,7 @@
                 </ul>
             </div>
             <div class="modal-footer">
-                <button id="showReqScopeClose" class="btn btn-primary">Close</button>
+                <button id="showReqScopeClose" data-dismiss="modal" class="btn btn-primary">Close</button>
             </div>
         </div>
     </div>
