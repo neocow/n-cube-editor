@@ -206,7 +206,10 @@ function addModalFilters() {
         function refreshItems() {
             input.val('');
             input.focus();
-            items = (list.is('ul') ? list.find('li') : list.find('tr')).has('input[type="checkbox"]:not(".exclude")')
+            items = list.is('ul') ? list.find('li') : list.find('tr');
+            if (items.find('input[type="checkbox"]').length) {
+                items = items.has('input[type="checkbox"]:not(".exclude")');
+            }
             items.on('remove', function() {
                 delay(function() {
                     refreshItems();
@@ -233,7 +236,7 @@ function addModalFilters() {
         input.addClass('modal-filter-input');
         input.prop({'type':'text','placeholder':'Filter...'});
         input.css({'width':'100%'});
-        input.keyup(function(e) {
+        input.on('keyup', function(e) {
             delay(function() {
                 var query = input.val().toLowerCase();
                 if (query === '') {
@@ -246,7 +249,7 @@ function addModalFilters() {
                         if (item.is('li')) {
                             el = item;
                             cb = item.find('input[type="checkbox"]');
-                            if (cb.length > 0) {
+                            if (cb.length) {
                                 el = cb.parent();
                             }
                             return el[0].textContent.toLowerCase().indexOf(query) > -1;
@@ -254,12 +257,12 @@ function addModalFilters() {
                         if (item.is('tr')) {
                             tds = item.find('td').filter(function() {
                                 td = $(this);
-                                if (td.find('input[type="checkbox"]').length > 0) {
+                                if (td.find('input[type="checkbox"]').length) {
                                     return false;
                                 }
                                 return td[0].textContent.toLowerCase().indexOf(query) > -1;
                             });
-                            return tds.length > 0;
+                            return tds.length;
                         }
                     }).show();
                 }
