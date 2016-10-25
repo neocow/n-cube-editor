@@ -2228,7 +2228,7 @@ var NCE = (function ($) {
         }
         
         if (!_selectedVersion || !doesVersionExist(versions, _selectedVersion, _selectedStatus)) {
-            if (versions.length > 0) {
+            if (versions.length) {
                 arr = versions[0].split('-');
             }
             saveSelectedVersion(arr ? arr[0] : null);
@@ -2505,6 +2505,13 @@ var NCE = (function ($) {
         if (result.status) {
             html = '';
             dtos = result.data;
+            dtos.sort(function(a, b) {
+                var aArr = a.version.split('.');
+                var bArr = b.version.split('.');
+                return parseInt(bArr[0]) - parseInt(aArr[0])
+                    || parseInt(bArr[1]) - parseInt(aArr[1])
+                    || parseInt(bArr[2]) - parseInt(aArr[2]);
+            });
 
             for (i = 0, len = dtos.length; i < len; i++) {
                 dto = null;
@@ -2528,18 +2535,17 @@ var NCE = (function ($) {
                     text += date + '&nbsp;&nbsp;&nbsp;' + dto.createHid;
                 }
 
-                html += '<li class="list-group-item skinny-lr">';
-                html += '<div class="container-fluid">';
-                html += '<label class="col-xs-1" style="padding:0; width:12%; margin:0 10px 0 0;">';
-                html += '<a href="#" class="anc-html" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>HTML</kbd></a>';
-                html += '<a href="#" class="anc-json" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>JSON</kbd></a>';
-                html += '</label>';
-
-                html += '<label class="checkbox no-margins col-xs-10">';
-                html += '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + (ignoreVersion ? ('" data-version="' + curVer) : '') + '" />';
-                html += text + '</label>';
-
-                html += '</div></li>';
+                html += '<li class="list-group-item skinny-lr">'
+                      + '<div class="container-fluid">'
+                      + '<label class="col-xs-1" style="padding:0; width:12%; margin:0 10px 0 0;">'
+                      + '<a href="#" class="anc-html" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>HTML</kbd></a>'
+                      + '<a href="#" class="anc-json" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>JSON</kbd></a>'
+                      + '</label>'
+                      + '<label class="checkbox no-margins col-xs-10">'
+                      + '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + (ignoreVersion ? ('" data-version="' + curVer) : '') + '" />'
+                      + text
+                      + '</label>'
+                      + '</div></li>';
             }
 
             _revisionHistoryList.append(html);
