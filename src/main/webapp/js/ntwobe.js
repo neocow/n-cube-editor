@@ -3692,8 +3692,6 @@ var NCubeEditor2 = (function ($) {
                 idx = inputs.index(el);
                 $(el).blur();
                 editColAdd([null], idx);
-                el = null;
-                inputs = null;
                 return;
             }
             if (isTextInputTarget) {
@@ -3850,7 +3848,9 @@ var NCubeEditor2 = (function ($) {
 
         // Select newly added column name, so user can just type over it.
         input = _columnList.find('.form-control');
-        input[loc + 1].select();
+        loc = loc === -1 ? (input.length - 1) : (loc + 1);
+        input[loc].select();
+        _editColumnModal.find('.modal-body').scrollTop($(input[loc]).offset().top);
     }
 
     function editColDelete() {
