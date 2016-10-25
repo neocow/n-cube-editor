@@ -2508,9 +2508,10 @@ var NCE = (function ($) {
             dtos.sort(function(a, b) {
                 var aArr = a.version.split('.');
                 var bArr = b.version.split('.');
-                return parseInt(bArr[0]) - parseInt(aArr[0])
-                    || parseInt(bArr[1]) - parseInt(aArr[1])
-                    || parseInt(bArr[2]) - parseInt(aArr[2]);
+                return bArr[0] - aArr[0]
+                    || bArr[1] - aArr[1]
+                    || bArr[2] - aArr[2]
+                    || b.revision - a.revision;
             });
 
             for (i = 0, len = dtos.length; i < len; i++) {
