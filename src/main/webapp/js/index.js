@@ -3174,34 +3174,19 @@ var NCE = (function ($) {
     }
 
     function displayMap(map, title) {
-        var msg, maxValLen, rows, key, val;
+        var msg = '', rows = 0, key, val;
         delete map['@type'];
-        msg = '';
-        maxValLen = 0;
-        rows = 0;
 
         for (key in map) {
             if (map.hasOwnProperty(key)) {
                 rows++;
                 val = '' + map[key];
-                if (val.length > 50) {
-                    // Hard-coded to size of current (330px) gritter text area (reduced by gritter-image size)
-                    val = val.substring(0, 5) + '...' + val.substr(-54);
-                }
                 msg += '<dt>' + key + '</dt>';
                 msg += '<dd>' + val + '</dd>';
-
-                if (val.length > maxValLen) {
-                    maxValLen = val.length;
-                }
             }
         }
 
-        if (maxValLen > 32 || rows == 1) {
-            msg = '<dl>' + msg;
-        } else {
-            msg = '<dl class="dl-horizontal">' + msg;
-        }
+        msg = '<dl class="dl-horizontal">' + msg;
         msg += '</dl>';
         showNote(msg, title);
     }

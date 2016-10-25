@@ -1685,23 +1685,7 @@ class NCubeController extends BaseController
         putIfNotNull(serverStats, 'JDBC Pool idle', PoolInterceptor.idle.get())
 
         putIfNotNull(results, 'serverStats', serverStats)
-
-        Map compareResults = [:]
-        openCubes.each { key, nothing ->
-            if (key != null)
-            {
-                String cubeId = key.toString()
-                String[] pieces = cubeId.split('~')
-                if (pieces != null && pieces.length > 4)
-                {
-                    ApplicationID appId = new ApplicationID("x", pieces[0], pieces[1], pieces[2], pieces[3])
-                    appId = addTenant(appId)
-                    String cubeName = pieces[4]
-                    putIfNotNull(compareResults, cubeId, isCubeUpToDate(appId, cubeName))
-                }
-            }
-        }
-        putIfNotNull(results, 'compareResults', compareResults)
+        putIfNotNull(results, 'compareResults', [:])
 
         return results
     }

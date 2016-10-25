@@ -231,7 +231,7 @@
          */
         _fade: function(e, unique_id, params, unbind_events)
         {
-            params = params || {},
+            var params = params || {},
                 fade = (typeof(params.fade) != 'undefined') ? params.fade : true,
                 fade_out_speed = params.speed || this.fade_out_speed,
                 manual_close = unbind_events;
@@ -328,7 +328,7 @@
          */
         _runSetup: function()
         {
-            for (opt in $.gritter.options)
+            for (var opt in $.gritter.options)
             {
                 this[opt] = $.gritter.options[opt];
             }
