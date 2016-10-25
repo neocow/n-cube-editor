@@ -4074,15 +4074,17 @@ var NCE = (function ($) {
         // waiting on server response
         if (typeof _diffLastResult !== 'object') {
             _diffOutput[0].innerHTML = _diffLastResult;
-            setTimeout(function () {
-                emptyDiffOutput();
-                diffDescriptive(canEdit);
-            }, PROGRESS_DELAY);
+            if (_diffLastResult === 'Loading...') {
+                setTimeout(function () {
+                    emptyDiffOutput();
+                    diffDescriptive(canEdit);
+                }, PROGRESS_DELAY);
+            }
             return;
         }
 
         // no changes detected
-        deltas = _diffLastResult.delta['@items'];
+        deltas = _diffLastResult['@items'];
         if (!deltas || !deltas.length) {
             _diffOutput[0].innerHTML = 'No difference';
             return;
@@ -4121,7 +4123,7 @@ var NCE = (function ($) {
             isAlreadyOpen = li.find('.diff').length;
             _diffOutput.find('.diff').remove();
             if (!isAlreadyOpen) {
-                delta = _diffLastResult.delta['@items'][li.index()];
+                delta = _diffLastResult['@items'][li.index()];
                 leftJson = constructDeltaText(delta, true);
                 rightJson = constructDeltaText(delta, false);
                 sm = new difflib.SequenceMatcher(leftJson, rightJson);
@@ -4150,28 +4152,43 @@ var NCE = (function ($) {
         return getObjectTextArray(isSource ? delta.sourceList : delta.destList);
     }
     
-    function getObjectTextArray(val) {
-        var i, len, keys, key, ret = [];
-        if (val === null || val === undefined) {
+    function getObjectTextArray(val, level, valKey) {
+        var i, len, keys, key, spacer, ret, valRet;
+        ret = [];
+        level = level || 0;
+        spacer = level ? new Array(2 * level).join(' ') : '';
+
+        if (valKey !== null && valKey !== undefined) {
+            valRet = getObjectTextArray(val, level + 1);
+            if (valRet.length === 1) {
+                ret.push(spacer + valKey + ': ' + valRet[0].trim());
+            } else {
+                ret.push(spacer + valKey + ' {');
+                ret = ret.concat(valRet);
+                ret.push(spacer + '}');
+            }
+        } else if (val === undefined) {
             ret.push('');
+        } else if (val === null) {
+            ret.push(spacer + 'null');
         } else if (val.hasOwnProperty('@items')) {
-            ret = getObjectTextArray(val['@items']);
+            ret = getObjectTextArray(val['@items'], level + 1);
         } else if (Object.prototype.toString.call(val) === '[object Array]'){
             for (i = 0, len = val.length; i < len; i++) {
-                ret.push(val[i]);
+                ret.push(spacer + val[i]);
             }
         } else if (typeof val === 'object') {
             keys = Object.keys(val);
-            ret.push('{');
+            ret.push(spacer + '{');
             for (i = 0, len = keys.length; i < len; i++) {
                 key = keys[i];
                 if (key !== '@type') {
-                    ret.push('  ' + key + ': ' + val[key]);
+                    ret = ret.concat(getObjectTextArray(val[key], level + 1, key));
                 }
             }
-            ret.push('}');
+            ret.push(spacer + '}');
         } else {
-            ret.push(val);
+            ret.push(spacer + val);
         }
         return ret;
     }
@@ -4181,11 +4198,7 @@ var NCE = (function ($) {
     }
 
     function descriptiveDiffCallback(result) {
-        if (!result.status) {
-            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-        _diffLastResult = result.data;
+        _diffLastResult = result.status ? result.data : ('Cube does not exist: ' + result.data);
     }
 
     // ============================================ End Cube Comparison ================================================
