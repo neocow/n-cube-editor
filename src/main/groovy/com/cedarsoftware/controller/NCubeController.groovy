@@ -1394,13 +1394,13 @@ class NCubeController extends BaseController
         removeBranchFromCache(appId)
     }
 
-    Integer acceptTheirs(ApplicationID appId, Object[] cubeNames, Object[] branchSha1)
+    Integer acceptTheirs(ApplicationID appId, Object[] cubeNames, String sourceBranch)
     {
         appId = addTenant(appId)
-        return nCubeService.acceptTheirs(appId, cubeNames, branchSha1)
+        return nCubeService.acceptTheirs(appId, cubeNames, sourceBranch)
     }
 
-    Integer acceptMine(ApplicationID appId, Object[] cubeNames, Object[] headSha1)
+    Integer acceptMine(ApplicationID appId, Object[] cubeNames, String sourceBranch = ApplicationID.HEAD)
     {
         appId = addTenant(appId)
         return nCubeService.acceptMine(appId, cubeNames)
@@ -1512,15 +1512,20 @@ class NCubeController extends BaseController
         nCubeService.mergeDeltas(appId, cubeName, deltaList)
     }
 
+    List<Delta> getDeltaDescription(NCube leftCube, NCube rightCube)
+    {
+        nCubeService.checkPermissions(leftCube.applicationID, leftCube.name, Action.READ)
+        nCubeService.checkPermissions(rightCube.applicationID, rightCube.name, Action.READ)
+        return DeltaProcessor.getDeltaDescription(rightCube, leftCube)
+    }
+
     List<Delta> fetchJsonRevDiffs(long cubeId1, long cubeId2)
     {
         NCube leftCube = nCubeService.loadCubeById(cubeId1)
-        addTenant(leftCube.applicationID)
-
         NCube rightCube = nCubeService.loadCubeById(cubeId2)
+        addTenant(leftCube.applicationID)
         addTenant(rightCube.applicationID)
-
-        return DeltaProcessor.getDeltaDescription(rightCube, leftCube)
+        return getDeltaDescription(leftCube, rightCube)
     }
 
     List<Delta> fetchJsonBranchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
@@ -1529,7 +1534,7 @@ class NCubeController extends BaseController
         ApplicationID rightAppId = new ApplicationID(tenant, rightInfoDto.app, rightInfoDto.version, rightInfoDto.status, rightInfoDto.branch)
         NCube leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
         NCube rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
-        return DeltaProcessor.getDeltaDescription(rightCube, leftCube)
+        return getDeltaDescription(leftCube, rightCube)
     }
 
     private static Map<String, String> fetchHtmlDiffs(NCube leftCube, NCube rightCube)

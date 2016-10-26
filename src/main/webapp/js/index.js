@@ -3386,6 +3386,7 @@ var NCE = (function ($) {
     function compareUpdateBranch(branchName, noNote) {
         var result, branchChanges;
         var appId = getAppId();
+        var acceptMineBtn = _branchCompareUpdateModal.find('.accept-mine');
 
         if (isHeadSelected()) {
             showNote('You cannot update HEAD.');
@@ -3395,9 +3396,11 @@ var NCE = (function ($) {
         if (branchName === head) {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
             _branchCompareUpdateOk.show();
+            acceptMineBtn.show();
         } else {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
             _branchCompareUpdateOk.hide();
+            acceptMineBtn.hide();
         }
         if (!result.status) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
@@ -3420,7 +3423,6 @@ var NCE = (function ($) {
         buildUlForCompare(_branchCompareUpdateList, branchName, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
 
         _branchCompareUpdateModal.modal();
-        setTimeout(selectAll, PROGRESS_DELAY);
     }
     
     function sortBranchChanges(a, b) {
@@ -3443,11 +3445,7 @@ var NCE = (function ($) {
             var idx = ul.find('.' + inputClass).index(checkbox);
             var infoDto = $.extend(true, {}, branchChanges[idx]);
             var leftInfoDto = $.extend(true, {}, infoDto);
-            if (branchName === head) {
-                leftInfoDto.branch = head;
-            } else {
-                infoDto.branch = branchName;
-            }
+            leftInfoDto.branch = branchName;
             diffCubes(leftInfoDto, infoDto, infoDto.name);
         });
         ul.find('a.anc-html').on('click', function () {
@@ -3927,23 +3925,17 @@ var NCE = (function ($) {
     }
 
     function getAllSelectedMineTheirs(ul) {
-        var i, len, results, cubeName, branchChanges, inputs, dto;
+        var i, len, results, branchChanges, inputs;
         if (!ul.find('input:checked').length) {
             showNote('No cubes selected!', 'Note', TWO_SECOND_TIMEOUOT);
             return null;
         }
         branchChanges = ul.closest('.modal').prop('branchChanges');
         inputs = ul.find('label.checkbox input[type="checkbox"]');
-        results = {
-            cubeNames: [],
-            sha1s: []
-        };
+        results = [];
         for (i = 0, len = inputs.length; i < len; i++) {
             if (inputs[i].checked) {
-                dto = null;
-                dto = branchChanges[i];
-                results.cubeNames.push(dto.name);
-                results.sha1s.push(dto.sha1);
+                results.push(branchChanges[i].name);
             }
         }
         return results;
@@ -3952,22 +3944,20 @@ var NCE = (function ($) {
     function acceptMineTheirs(ul, isMine) {
         var obj;
         var mineTheirs = getAllSelectedMineTheirs(ul);
-        if (!mineTheirs) {
+        if (!mineTheirs.length) {
             return;
         }
         if (isMine) {
             obj = {
                 controllerMethod: CONTROLLER_METHOD.ACCEPT_MINE,
-                cubeNames: mineTheirs.cubeNames,
-                sha1s: mineTheirs.sha1s,
+                cubeNames: mineTheirs,
                 successMsg: 'cubes updated to overwrite-on-commit.',
                 errorMsg: 'Unable to update your branch cubes to overwrite-on-commit'
             };
         } else {
             obj = {
                 controllerMethod: CONTROLLER_METHOD.ACCEPT_THEIRS,
-                cubeNames: mineTheirs.cubeNames,
-                sha1s: mineTheirs.sha1s,
+                cubeNames: mineTheirs,
                 successMsg: 'cubes updated in your branch.',
                 errorMsg: 'Unable to update your branch cubes'
             };
@@ -3976,12 +3966,17 @@ var NCE = (function ($) {
     }
     
     function callAcceptMineTheirs(ul, options) {
-        var result = call(CONTROLLER + options.controllerMethod, [getAppId(), options.cubeNames, options.sha1s]);
+        var branchName = ul.closest('.modal').prop('branchName') || head;
+        var result = call(CONTROLLER + options.controllerMethod, [getAppId(), options.cubeNames, branchName]);
         if (result.status) {
             showNote(result.data.value + ' ' + options.successMsg, 'Note', TEN_SECOND_TIMEOUT);
             removeTabStatusFromCubeList(getAppId(), options.cubeNames);
+            if (options.controllerMethod === CONTROLLER_METHOD.ACCEPT_THEIRS) {
+                loadNCubes();
+                runSearch();
+            }
             if (ul.is(_branchCompareUpdateList)) {
-                compareUpdateBranch(_branchCompareUpdateModal.prop('branchName'), true)
+                compareUpdateBranch(branchName, true)
             } else if (ul.is(_commitRollbackList)) {
                 commitBranch(true);
             }
@@ -4055,7 +4050,7 @@ var NCE = (function ($) {
     function diffMerge() {
         var els, checkedDeltas, allDeltas, result, i, len;
         checkedDeltas = [];
-        allDeltas = _diffLastResult.delta['@items'];
+        allDeltas = _diffLastResult['@items'];
         els = _diffOutput.find('.mergeCheck');
         for (i = 0, len = els.length; i < len; i++) {
             if ($(els[i]).is(':checked')) {
