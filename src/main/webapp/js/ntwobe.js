@@ -3831,7 +3831,7 @@ var NCubeEditor2 = (function ($) {
                 'id': getUniqueId()
             };
 
-            if (loc === -1 || !axis.preferredOrder) {
+            if (loc === -1) {
                 axis.columns.push(newCol);
             } else {
                 axis.columns.splice(loc + 1, 0, newCol);
@@ -3914,20 +3914,24 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editColSave() {
-        var axis, result, lowerAxisName;
+        var axis, result, lowerAxisName, input, i, len, condInputList, nameInputList, col;
+        condInputList = _columnList.find('input[data-type=cond]');
+        nameInputList = _columnList.find('input[data-type=name]');
         axis = _columnList.prop('model');
-        _columnList.find('input[data-type=cond]').each(function(index, elem) {
-            var col = axis.columns[index];
-            col.value = elem.value;
-            col.displayOrder = index;
-        });
-        _columnList.find('input[data-type=name]').each(function(index, elem) {
-            var col = axis.columns[index];
-            col.displayOrder = index;
-            if (col.metaProp) {
-                col.metaProp.name = elem.value;
+        
+        for (i = 0, len = condInputList.length; i < len; i++) {
+            col = axis.columns[i];
+            col.displayOrder = i;
+            col.value = condInputList[i].value;
+            input = nameInputList[i];
+            if (input) {
+                if (!col.hasOwnProperty('metaProps')) {
+                    col.metaProps = {};
+                }
+                col.metaProps.name = input.value;
             }
-        });
+        }
+        
         axis.defaultCol = null;
         result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_AXIS_COLUMNS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name, axis.columns]);
         
