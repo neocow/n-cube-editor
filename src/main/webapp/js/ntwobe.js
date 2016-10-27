@@ -3692,8 +3692,6 @@ var NCubeEditor2 = (function ($) {
                 idx = inputs.index(el);
                 $(el).blur();
                 editColAdd([null], idx);
-                el = null;
-                inputs = null;
                 return;
             }
             if (isTextInputTarget) {
@@ -3850,7 +3848,9 @@ var NCubeEditor2 = (function ($) {
 
         // Select newly added column name, so user can just type over it.
         input = _columnList.find('.form-control');
-        input[loc + 1].select();
+        loc = loc === -1 ? (input.length - 1) : (loc + 1);
+        input[loc].select();
+        _editColumnModal.find('.modal-body').scrollTop($(input[loc]).offset().top);
     }
 
     function editColDelete() {
@@ -4039,7 +4039,6 @@ var NCubeEditor2 = (function ($) {
         isAxisRuleType = axis.type.name === 'RULE';
 
         for (i = 0, len = axisList.length; i < len; i++) {
-            column = null;
             column = axisList[i];
             if (!column.displayOrder || column.displayOrder < DEFAULT_COLUMN_DISPLAY_ORDER) {   // Don't add default column
                 html += buildColumnHtml(column, isAxisRuleType);
@@ -4061,7 +4060,7 @@ var NCubeEditor2 = (function ($) {
         html = '<div class="row"><div class="input-group">';
         html += '<span class="input-group-addon"><input class="editColCheckBox" type="checkbox"/></span>';
         if (isAxisRuleType) {
-            html += '<input class="form-control" type="text" data-type="name" value="' + column.metaProps.name + '" />';
+            html += '<input class="form-control" type="text" data-type="name" value="' + (column.metaProps ? column.metaProps.name : 'Condition') + '" />';
         }
         html += '<input class="form-control" type="text" data-type="cond" value="' + prefix + column.value + '" />';
         html += '</div></div>';

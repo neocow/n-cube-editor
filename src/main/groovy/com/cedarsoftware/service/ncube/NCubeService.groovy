@@ -126,9 +126,9 @@ class NCubeService
         NCubeManager.mergeDeltas(appId, cubeName, deltas)
     }
 
-    int acceptTheirs(ApplicationID appId, Object[] cubeNames, Object[] branchSha1)
+    int acceptTheirs(ApplicationID appId, Object[] cubeNames, String sourceBranch)
     {
-        VersionControl.mergeAcceptTheirs(appId, cubeNames, branchSha1)
+        VersionControl.mergeAcceptTheirs(appId, cubeNames, sourceBranch)
     }
 
     int acceptMine(ApplicationID appId, Object[] cubeNames)

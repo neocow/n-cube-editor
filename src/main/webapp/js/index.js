@@ -2228,7 +2228,7 @@ var NCE = (function ($) {
         }
         
         if (!_selectedVersion || !doesVersionExist(versions, _selectedVersion, _selectedStatus)) {
-            if (versions.length > 0) {
+            if (versions.length) {
                 arr = versions[0].split('-');
             }
             saveSelectedVersion(arr ? arr[0] : null);
@@ -2505,6 +2505,14 @@ var NCE = (function ($) {
         if (result.status) {
             html = '';
             dtos = result.data;
+            dtos.sort(function(a, b) {
+                var aArr = a.version.split('.');
+                var bArr = b.version.split('.');
+                return bArr[0] - aArr[0]
+                    || bArr[1] - aArr[1]
+                    || bArr[2] - aArr[2]
+                    || b.revision - a.revision;
+            });
 
             for (i = 0, len = dtos.length; i < len; i++) {
                 dto = null;
@@ -2528,18 +2536,17 @@ var NCE = (function ($) {
                     text += date + '&nbsp;&nbsp;&nbsp;' + dto.createHid;
                 }
 
-                html += '<li class="list-group-item skinny-lr">';
-                html += '<div class="container-fluid">';
-                html += '<label class="col-xs-1" style="padding:0; width:12%; margin:0 10px 0 0;">';
-                html += '<a href="#" class="anc-html" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>HTML</kbd></a>';
-                html += '<a href="#" class="anc-json" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>JSON</kbd></a>';
-                html += '</label>';
-
-                html += '<label class="checkbox no-margins col-xs-10">';
-                html += '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + (ignoreVersion ? ('" data-version="' + curVer) : '') + '" />';
-                html += text + '</label>';
-
-                html += '</div></li>';
+                html += '<li class="list-group-item skinny-lr">'
+                      + '<div class="container-fluid">'
+                      + '<label class="col-xs-1" style="padding:0; width:12%; margin:0 10px 0 0;">'
+                      + '<a href="#" class="anc-html" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>HTML</kbd></a>'
+                      + '<a href="#" class="anc-json" style="margin:0 10px 0 0;" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>JSON</kbd></a>'
+                      + '</label>'
+                      + '<label class="checkbox no-margins col-xs-10">'
+                      + '<input type="checkbox" class="commitCheck" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + (ignoreVersion ? ('" data-version="' + curVer) : '') + '" />'
+                      + text
+                      + '</label>'
+                      + '</div></li>';
             }
 
             _revisionHistoryList.append(html);
@@ -3379,6 +3386,7 @@ var NCE = (function ($) {
     function compareUpdateBranch(branchName, noNote) {
         var result, branchChanges;
         var appId = getAppId();
+        var acceptMineBtn = _branchCompareUpdateModal.find('.accept-mine');
 
         if (isHeadSelected()) {
             showNote('You cannot update HEAD.');
@@ -3388,9 +3396,11 @@ var NCE = (function ($) {
         if (branchName === head) {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
             _branchCompareUpdateOk.show();
+            acceptMineBtn.show();
         } else {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
             _branchCompareUpdateOk.hide();
+            acceptMineBtn.hide();
         }
         if (!result.status) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
@@ -3413,7 +3423,6 @@ var NCE = (function ($) {
         buildUlForCompare(_branchCompareUpdateList, branchName, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
 
         _branchCompareUpdateModal.modal();
-        setTimeout(selectAll, PROGRESS_DELAY);
     }
     
     function sortBranchChanges(a, b) {
@@ -3436,11 +3445,7 @@ var NCE = (function ($) {
             var idx = ul.find('.' + inputClass).index(checkbox);
             var infoDto = $.extend(true, {}, branchChanges[idx]);
             var leftInfoDto = $.extend(true, {}, infoDto);
-            if (branchName === head) {
-                leftInfoDto.branch = head;
-            } else {
-                infoDto.branch = branchName;
-            }
+            leftInfoDto.branch = branchName;
             diffCubes(leftInfoDto, infoDto, infoDto.name);
         });
         ul.find('a.anc-html').on('click', function () {
@@ -3920,23 +3925,17 @@ var NCE = (function ($) {
     }
 
     function getAllSelectedMineTheirs(ul) {
-        var i, len, results, cubeName, branchChanges, inputs, dto;
+        var i, len, results, branchChanges, inputs;
         if (!ul.find('input:checked').length) {
             showNote('No cubes selected!', 'Note', TWO_SECOND_TIMEOUOT);
             return null;
         }
         branchChanges = ul.closest('.modal').prop('branchChanges');
         inputs = ul.find('label.checkbox input[type="checkbox"]');
-        results = {
-            cubeNames: [],
-            sha1s: []
-        };
+        results = [];
         for (i = 0, len = inputs.length; i < len; i++) {
             if (inputs[i].checked) {
-                dto = null;
-                dto = branchChanges[i];
-                results.cubeNames.push(dto.name);
-                results.sha1s.push(dto.sha1);
+                results.push(branchChanges[i].name);
             }
         }
         return results;
@@ -3945,22 +3944,20 @@ var NCE = (function ($) {
     function acceptMineTheirs(ul, isMine) {
         var obj;
         var mineTheirs = getAllSelectedMineTheirs(ul);
-        if (!mineTheirs) {
+        if (!mineTheirs.length) {
             return;
         }
         if (isMine) {
             obj = {
                 controllerMethod: CONTROLLER_METHOD.ACCEPT_MINE,
-                cubeNames: mineTheirs.cubeNames,
-                sha1s: mineTheirs.sha1s,
+                cubeNames: mineTheirs,
                 successMsg: 'cubes updated to overwrite-on-commit.',
                 errorMsg: 'Unable to update your branch cubes to overwrite-on-commit'
             };
         } else {
             obj = {
                 controllerMethod: CONTROLLER_METHOD.ACCEPT_THEIRS,
-                cubeNames: mineTheirs.cubeNames,
-                sha1s: mineTheirs.sha1s,
+                cubeNames: mineTheirs,
                 successMsg: 'cubes updated in your branch.',
                 errorMsg: 'Unable to update your branch cubes'
             };
@@ -3969,12 +3966,17 @@ var NCE = (function ($) {
     }
     
     function callAcceptMineTheirs(ul, options) {
-        var result = call(CONTROLLER + options.controllerMethod, [getAppId(), options.cubeNames, options.sha1s]);
+        var branchName = ul.closest('.modal').prop('branchName') || head;
+        var result = call(CONTROLLER + options.controllerMethod, [getAppId(), options.cubeNames, branchName]);
         if (result.status) {
             showNote(result.data.value + ' ' + options.successMsg, 'Note', TEN_SECOND_TIMEOUT);
             removeTabStatusFromCubeList(getAppId(), options.cubeNames);
+            if (options.controllerMethod === CONTROLLER_METHOD.ACCEPT_THEIRS) {
+                loadNCubes();
+                runSearch();
+            }
             if (ul.is(_branchCompareUpdateList)) {
-                compareUpdateBranch(_branchCompareUpdateModal.prop('branchName'), true)
+                compareUpdateBranch(branchName, true)
             } else if (ul.is(_commitRollbackList)) {
                 commitBranch(true);
             }
@@ -4048,7 +4050,7 @@ var NCE = (function ($) {
     function diffMerge() {
         var els, checkedDeltas, allDeltas, result, i, len;
         checkedDeltas = [];
-        allDeltas = _diffLastResult.delta['@items'];
+        allDeltas = _diffLastResult['@items'];
         els = _diffOutput.find('.mergeCheck');
         for (i = 0, len = els.length; i < len; i++) {
             if ($(els[i]).is(':checked')) {
@@ -4074,15 +4076,17 @@ var NCE = (function ($) {
         // waiting on server response
         if (typeof _diffLastResult !== 'object') {
             _diffOutput[0].innerHTML = _diffLastResult;
-            setTimeout(function () {
-                emptyDiffOutput();
-                diffDescriptive(canEdit);
-            }, PROGRESS_DELAY);
+            if (_diffLastResult === 'Loading...') {
+                setTimeout(function () {
+                    emptyDiffOutput();
+                    diffDescriptive(canEdit);
+                }, PROGRESS_DELAY);
+            }
             return;
         }
 
         // no changes detected
-        deltas = _diffLastResult.delta['@items'];
+        deltas = _diffLastResult['@items'];
         if (!deltas || !deltas.length) {
             _diffOutput[0].innerHTML = 'No difference';
             return;
@@ -4121,7 +4125,7 @@ var NCE = (function ($) {
             isAlreadyOpen = li.find('.diff').length;
             _diffOutput.find('.diff').remove();
             if (!isAlreadyOpen) {
-                delta = _diffLastResult.delta['@items'][li.index()];
+                delta = _diffLastResult['@items'][li.index()];
                 leftJson = constructDeltaText(delta, true);
                 rightJson = constructDeltaText(delta, false);
                 sm = new difflib.SequenceMatcher(leftJson, rightJson);
@@ -4150,28 +4154,43 @@ var NCE = (function ($) {
         return getObjectTextArray(isSource ? delta.sourceList : delta.destList);
     }
     
-    function getObjectTextArray(val) {
-        var i, len, keys, key, ret = [];
-        if (val === null || val === undefined) {
+    function getObjectTextArray(val, level, valKey) {
+        var i, len, keys, key, spacer, ret, valRet;
+        ret = [];
+        level = level || 0;
+        spacer = level ? new Array(2 * level).join(' ') : '';
+
+        if (valKey !== null && valKey !== undefined) {
+            valRet = getObjectTextArray(val, level + 1);
+            if (valRet.length === 1) {
+                ret.push(spacer + valKey + ': ' + valRet[0].trim());
+            } else {
+                ret.push(spacer + valKey + ' {');
+                ret = ret.concat(valRet);
+                ret.push(spacer + '}');
+            }
+        } else if (val === undefined) {
             ret.push('');
+        } else if (val === null) {
+            ret.push(spacer + 'null');
         } else if (val.hasOwnProperty('@items')) {
-            ret = getObjectTextArray(val['@items']);
+            ret = getObjectTextArray(val['@items'], level + 1);
         } else if (Object.prototype.toString.call(val) === '[object Array]'){
             for (i = 0, len = val.length; i < len; i++) {
-                ret.push(val[i]);
+                ret.push(spacer + val[i]);
             }
         } else if (typeof val === 'object') {
             keys = Object.keys(val);
-            ret.push('{');
+            ret.push(spacer + '{');
             for (i = 0, len = keys.length; i < len; i++) {
                 key = keys[i];
                 if (key !== '@type') {
-                    ret.push('  ' + key + ': ' + val[key]);
+                    ret = ret.concat(getObjectTextArray(val[key], level + 1, key));
                 }
             }
-            ret.push('}');
+            ret.push(spacer + '}');
         } else {
-            ret.push(val);
+            ret.push(spacer + val);
         }
         return ret;
     }
@@ -4181,11 +4200,7 @@ var NCE = (function ($) {
     }
 
     function descriptiveDiffCallback(result) {
-        if (!result.status) {
-            showNote('Unable to fetch comparison of cube:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-        _diffLastResult = result.data;
+        _diffLastResult = result.status ? result.data : ('Cube does not exist: ' + result.data);
     }
 
     // ============================================ End Cube Comparison ================================================
