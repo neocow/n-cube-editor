@@ -2511,7 +2511,7 @@ var NCE = (function ($) {
                 return bArr[0] - aArr[0]
                     || bArr[1] - aArr[1]
                     || bArr[2] - aArr[2]
-                    || b.revision - a.revision;
+                    || Math.abs(b.revision) - Math.abs(a.revision);
             });
 
             for (i = 0, len = dtos.length; i < len; i++) {

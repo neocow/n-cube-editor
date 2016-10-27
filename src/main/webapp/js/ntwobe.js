@@ -3831,7 +3831,7 @@ var NCubeEditor2 = (function ($) {
                 'id': getUniqueId()
             };
 
-            if (loc === -1 || !axis.preferredOrder) {
+            if (loc === -1) {
                 axis.columns.push(newCol);
             } else {
                 axis.columns.splice(loc + 1, 0, newCol);
