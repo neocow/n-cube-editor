@@ -227,8 +227,8 @@ ul#setUpHideList li {
 }
 
 .hr-rule {
-    margin:1px;
-    border: dashed darkgray;
+    margin: 1px;
+    border-top: 1px dashed darkgray;
 }
 
 .handsontable td.code {
