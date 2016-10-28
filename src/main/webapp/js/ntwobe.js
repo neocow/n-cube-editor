@@ -1475,6 +1475,7 @@ var NCubeEditor2 = (function ($) {
         setUpAxisOrder(data.axes);
         setUpGhostAxes();
         setUpHideColumns();
+        setUpAxisColumnMap();
         setUpDataTable();
         setUpAxisColumnMap();
     }
