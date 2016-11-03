@@ -2115,69 +2115,78 @@ var NCubeEditor2 = (function ($) {
     }
     
     function renderCell(td, row, col, cellProperties) {
-        var cellData, val, columnDefault;
-        cellData = getCellData(row, col);
+        var cellData = getCellData(row, col);
         td.className += CLASS_HANDSON_CELL_BASIC;
         if (cellData && cellData.type) {
-            if ((cellData.value !== undefined && cellData.value !== null) || (cellData.url !== undefined && cellData.url !== null)) {
-                if (cellData.isSearchResult) {
-                    td.className += CLASS_HANDSON_SEARCH_RESULT;
-                }
-
-                if (cellData.url !== undefined) {
-                    td.className += CLASS_HANDSON_CELL_URL;
-                    td.innerHTML = '<a class="nc-anc">' + cellData.url + '</a>';
-                    buildUrlLink(td);
-                } else if (cellData.value !== undefined && CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
-                    td.className += CLASS_HANDSON_CELL_CODE;
-                    td.innerHTML = buildExpressionLink('' + cellData.value, 'groovy');
-                    activateLinks(td);
-                } else if ('date' === cellData.type) {
-                    val = cellData.value;
-                    td.innerHTML = getStringFromDate(val);
-                } else {
-                    td.innerHTML = buildExpressionLink('' + cellData.value);
-                    activateLinks(td);
-                }
-            } else {
-                td.className += CLASS_HANDSON_CELL_NULL;
-                td.innerHTML = 'null';
-            }
+            renderCellWithData(td, cellData);
         } else {
-            columnDefault = getCalculatedColumnDefault(row, col);
-            if (columnDefault !== null) {
-                td.className += CLASS_HANDSON_COLUMN_DEFAULT;
-                if (columnDefault.type === 'date') {
-                    td.innerHTML = getStringFromDate(columnDefault.value);
-                } else {
-                    if (columnDefault.url !== undefined) {
-                        td.innerHTML = '<a class="nc-anc">' + columnDefault.url + '</a>';
-                        buildUrlLink(td);
-                    } else {
-                        columnDefault = buildExpressionLink('' + columnDefault.value, NONE);
-                        td.innerHTML = columnDefault;
-                        activateLinks(td);
-                    }
-                }
-            } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
-                td.className += CLASS_HANDSON_CELL_DEFAULT;
-                if (_defaultCellText === null) {
-                    _defaultCellText = buildExpressionLink('' + data.defaultCellValue, NONE);
-                }
-                td.innerHTML = _defaultCellText;
-                activateLinks(td);
-            } else if (data.defaultCellValueUrl !== null && data.defaultCellValueUrl !== undefined) {
-                td.className += CLASS_HANDSON_CELL_DEFAULT;
-                td.innerHTML = '<a class="nc-anc">' + data.defaultCellValueUrl + '</a>';
-                buildUrlLink(td);
-            }
+            renderCellDefault(td, row, col);
         }
 
         if (row % 2 !== 0) {
             td.className += CLASS_HANDSON_CELL_ODD_ROW;
         }
-
         cellProperties.editor = CellEditor;
+    }
+
+    function renderCellWithData(td, cellData) {
+        var val;
+        if ((cellData.value !== undefined && cellData.value !== null) || (cellData.url !== undefined && cellData.url !== null)) {
+            if (cellData.isSearchResult) {
+                td.className += CLASS_HANDSON_SEARCH_RESULT;
+            }
+
+            if (cellData.url !== undefined) {
+                td.className += CLASS_HANDSON_CELL_URL;
+                td.innerHTML = '<a class="nc-anc-url">' + cellData.url + '</a>';
+                activateLinks(td);
+            } else if (cellData.value !== undefined && CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
+                td.className += CLASS_HANDSON_CELL_CODE;
+                td.innerHTML = buildExpressionLink('' + cellData.value, 'groovy');
+                activateLinks(td);
+            } else if ('date' === cellData.type) {
+                td.innerHTML = getStringFromDate(cellData.value);
+            } else {
+                val = createUrlAnchorsInString('' + cellData.value);
+                td.innerHTML = buildExpressionLink(val);
+                activateLinks(td);
+            }
+        } else {
+            td.className += CLASS_HANDSON_CELL_NULL;
+            td.innerHTML = 'null';
+        }
+    }
+
+    function renderCellDefault(td, row, col) {
+        var columnDefault;
+        columnDefault = getCalculatedColumnDefault(row, col);
+        if (columnDefault !== null) {
+            td.className += CLASS_HANDSON_COLUMN_DEFAULT;
+            if (columnDefault.type === 'date') {
+                td.innerHTML = getStringFromDate(columnDefault.value);
+            } else {
+                if (columnDefault.url !== undefined) {
+                    td.innerHTML = '<a class="nc-anc-url">' + columnDefault.url + '</a>';
+                    activateLinks(td);
+                } else {
+                    columnDefault = createUrlAnchorsInString('' + columnDefault.value);
+                    columnDefault = buildExpressionLink(columnDefault, NONE);
+                    td.innerHTML = columnDefault;
+                    activateLinks(td);
+                }
+            }
+        } else if (data.defaultCellValue !== null && data.defaultCellValue !== undefined) {
+            td.className += CLASS_HANDSON_CELL_DEFAULT;
+            if (_defaultCellText === null) {
+                _defaultCellText = buildExpressionLink('' + data.defaultCellValue, NONE);
+            }
+            td.innerHTML = _defaultCellText;
+            activateLinks(td);
+        } else if (data.defaultCellValueUrl !== null && data.defaultCellValueUrl !== undefined) {
+            td.className += CLASS_HANDSON_CELL_DEFAULT;
+            td.innerHTML = '<a class="nc-anc-url">' + data.defaultCellValueUrl + '</a>';
+            activateLinks(td);
+        }
     }
 
     function getCalculatedColumnDefault(row, col) {
@@ -2244,47 +2253,31 @@ var NCubeEditor2 = (function ($) {
         return '' + val;
     }
 
-    function buildUrlLink(element) {
-        // Add click handler that opens clicked cube names
-        $(element).find('a').on('click', function (e) {
-            var link, result, msg;
-            nce.clearError();
-            link = this.innerHTML;
-            if (!link.indexOf('http:') || !link.indexOf('https:') || !link.indexOf('file:')) {
-                window.open(link);
-            } else {
-                result = nce.call(CONTROLLER + CONTROLLER_METHOD.RESOLVE_RELATIVE_URL, [nce.getSelectedTabAppId(), link], {noResolveRefs:true});
-                if (result.status && result.data) {
-                    link = result.data;
-                    window.open(link);
-                } else {
-                    msg = result.data ? result.data : 'Unable to resolve relative URL against entries in sys.classpath';
-                    nce.showNote('Unable to open ' + link + ':<hr class="hr-small"/>' + msg);
-                }
-            }
-            e.preventDefault();
+    function createUrlAnchorsInString(val) {
+        var ex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+        var regex = new RegExp(ex);
+        return val.replace(regex, function (matched) {
+            return '<a class="nc-anc-url">' + matched + '</a>';
         });
     }
     
     function buildExpressionLink(url, highlightLanguage) {
-        var found, val, shouldHighlight, highlighted, tempHighlight, top, ancIdx, text, endIdx;
+        var val, shouldHighlight, highlighted, tempHighlight, top, ancIdx, text, endIdx;
         if (_expressionLinks.hasOwnProperty(url)) {
             return _expressionLinks[url];
         }
         if (url && url.length > 2) {
-            found = false;
             shouldHighlight = highlightLanguage !== NONE;
         
             url = url.replace(cubeMapRegex, function (matched) {
-                found = true;
-                return '<a class="nc-anc">' + matched + '</a>';
+                return '<a class="nc-anc-cube">' + matched + '</a>';
             });
         
             if (shouldHighlight) {
-                if (found) {
+                if (url.indexOf('<a class="nc-anc-') > -1) {
                     //highlight in between links
                     highlighted = '';
-                    while ((ancIdx = url.indexOf('<a class="nc-anc">')) > -1) {
+                    while ((ancIdx = url.indexOf('<a class="nc-anc-')) > -1) {
                         text = url.substring(0, ancIdx);
                         endIdx = url.indexOf('</a>') + 4;
                         tempHighlight = highlightLanguage ? hljs.highlight(highlightLanguage, text, true, top) : hljs.highlightAuto(text);
@@ -2313,7 +2306,7 @@ var NCubeEditor2 = (function ($) {
 
     function activateLinks(element) {
         // Add click handler that opens clicked cube names
-        $(element).find('a').on('click', function () {
+        $(element).find('a.nc-anc-cube').on('click', function () {
             var i, len, fullName;
             var cubeName = this.textContent.toLowerCase();
             for (i = 0, len = prefixes.length; i < len; i++) {
@@ -2323,6 +2316,26 @@ var NCubeEditor2 = (function ($) {
                     break;
                 }
             }
+        });
+
+        // Add click handler that opens clicked cube names
+        $(element).find('a.nc-anc-url').on('click', function (e) {
+            var link, result, msg;
+            nce.clearError();
+            link = this.innerHTML;
+            if (!link.indexOf('http:') || !link.indexOf('https:') || !link.indexOf('file:')) {
+                window.open(link);
+            } else {
+                result = nce.call(CONTROLLER + CONTROLLER_METHOD.RESOLVE_RELATIVE_URL, [nce.getSelectedTabAppId(), link], {noResolveRefs:true});
+                if (result.status && result.data) {
+                    link = result.data;
+                    window.open(link);
+                } else {
+                    msg = result.data ? result.data : 'Unable to resolve relative URL against entries in sys.classpath';
+                    nce.showNote('Unable to open ' + link + ':<hr class="hr-small"/>' + msg);
+                }
+            }
+            e.preventDefault();
         });
     }
 
