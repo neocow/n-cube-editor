@@ -669,7 +669,7 @@ var NCE = (function ($) {
         if (cubeInfo[CUBE_INFO.BRANCH] !== head) {
             html += '<li><a href="#" class="anc-commit-cube">Commit...</a></li>'
                   + '<li><a href="#" class="anc-rollback-cube">Rollback...</a></li>'
-                  // + '<li><a href="#" class="anc-update-cube">Update from HEAD</a></li>'
+                  + '<li><a href="#" class="anc-update-cube">Update from HEAD</a></li>'
                   + '<div class="divider"/>'
                   + '<li><a href="#" class="anc-delete-cube">Delete...</a></li>'
                   + '<li><a href="#" class="anc-duplicate-cube">Duplicate...</a></li>'
@@ -3576,7 +3576,7 @@ var NCE = (function ($) {
             }
             clearError();
             if (!result.status) {
-                showNote('Unable to update branch:<hr class="hr-small"/>' + result.data);
+                showNote('Unable to update ' + (isFromTabMenu ? 'cube' : 'branch') + ':<hr class="hr-small"/>' + result.data);
                 return;
             }
 

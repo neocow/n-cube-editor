@@ -7,6 +7,7 @@ import com.cedarsoftware.ncube.AxisRef
 import com.cedarsoftware.ncube.AxisType
 import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.CellInfo
+import com.cedarsoftware.ncube.ChangeType
 import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.CommandCell
 import com.cedarsoftware.ncube.Delta
@@ -1376,8 +1377,13 @@ class NCubeController extends BaseController
     Object updateCubeFromHead(ApplicationID appId, String cubeName)
     {
         appId = addTenant(appId)
-        List<NCubeInfoDto> dtos = nCubeService.search(appId.asHead(), cubeName, null, [(NCubeManager.SEARCH_EXACT_MATCH_NAME) : true])
-        nCubeService.updateBranch(appId, dtos.toArray())
+        NCubeInfoDto dto = nCubeService.getHeadChangesForBranch(appId).find { it.name == cubeName }
+        if (dto == null)
+        {
+            markRequestFailed(cubeName + ' is already up-to-date')
+            return null
+        }
+        nCubeService.updateBranch(appId, dto)
     }
 
     Object updateBranch(ApplicationID appId, Object[] cubeDtos)
