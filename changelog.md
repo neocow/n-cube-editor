@@ -1,4 +1,6 @@
 ### Revision History
+* 0.6.0-SNAPSHOT
+ * Massive improvement in version control support
 * 0.5.0-SNAPSHOT
  * Enhancement: Scope-build on Visualizer page.  Allows user to set up input Map to be used for Visualizer display.
  * Enhancement: Visualize n-cube as connected network (graphs)
