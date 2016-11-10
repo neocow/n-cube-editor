@@ -1270,7 +1270,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function determineAxisOrder(cubeAxes) {
-        var i, len, axis, keys, horizontal, delta, smallestDelta;
+        var i, len, axis, keys, horizontal, delta, smallestDelta, colLen;
         keys = Object.keys(cubeAxes);
         for (i = 0, len = keys.length; i < len; i++) {
             axes.push(cubeAxes[keys[i]]);
@@ -1283,11 +1283,12 @@ var NCubeEditor2 = (function ($) {
         smallestDelta = Number.MAX_VALUE;
         for (i = 0, len = axes.length; i < len; i++) {
             axis = axes[i];
+            colLen = getColumnLength(axis);
             if (headerAxisNames.indexOf(axis.name) > -1) {
                 horizontal = i;
                 break;
             }
-            delta = Math.abs(getColumnLength(axis) - DEFAULT_COLUMN_COUNT);
+            delta = Math.abs(colLen - DEFAULT_COLUMN_COUNT);
             if (delta < smallestDelta) {
                 smallestDelta = delta;
                 horizontal = i;

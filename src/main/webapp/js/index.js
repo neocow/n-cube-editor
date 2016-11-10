@@ -65,6 +65,7 @@ var NCE = (function ($) {
     var _appMenu = $('#AppMenu');
     var _versionMenu = $('#VersionMenu');
     var _batchUpdateAxisReferencesTable = $('#batchUpdateAxisReferencesTable');
+    var _batchUpdateAxisReferencesUpdate = $('#batchUpdateAxisReferencesUpdate');
     var _batchUpdateAxisReferencesToggle = $('#batchUpdateAxisReferencesToggle');
     var _batchUpdateAxisReferencesData = [];
     var _batchUpdateAxisReferencesApp = $('#batchUpdateAxisReferencesApp');
@@ -1683,8 +1684,17 @@ var NCE = (function ($) {
             _batchUpdateAxisReferencesData = null;
             _batchUpdateAxisReferencesData = result.data;
             buildBatchUpdateAxisReferencesTable();
+            enableDisableBatchUpdate();
             _batchUpdateAxisReferencesModal.modal();
         },1);
+    }
+
+    function enableDisableBatchUpdate() {
+        if (_selectedBranch === head || !checkAppPermission(PERMISSION_ACTION.UPDATE)) {
+            _batchUpdateAxisReferencesUpdate.hide();
+        } else {
+            _batchUpdateAxisReferencesUpdate.show();
+        }
     }
 
     function findBatchUpdateAxisReferencesRows() {
@@ -3262,25 +3272,25 @@ var NCE = (function ($) {
     }
 
     function addBatchUpdateRefAxesListeners() {
-        $('#batchUpdateAxisReferencesMenu').click(function() {
+        $('#batchUpdateAxisReferencesMenu').on('click', function() {
             batchUpdateAxisReferencesOpen();
         });
-        $('#batchUpdateAxisReferencesUpdate').click(function() {
+        _batchUpdateAxisReferencesUpdate.on('click', function() {
             batchUpdateAxisReferencesUpdate();
         });
-        _batchUpdateAxisReferencesToggle.change(function() {
+        _batchUpdateAxisReferencesToggle.on('change', function() {
             buildBatchUpdateAxisReferencesTable();
             if (_batchUpdateAxisReferencesCubeName.val()) {
                 batchUpdateAxisReferencesCubeNameChanged();
             }
         });
-        _batchUpdateAxisReferencesApp.change(function() {
+        _batchUpdateAxisReferencesApp.on('change', function() {
             batchUpdateAxisReferencesAppChanged();
         });
-        _batchUpdateAxisReferencesVersion.change(function() {
+        _batchUpdateAxisReferencesVersion.on('change', function() {
             batchUpdateAxisReferencesVersionChanged();
         });
-        _batchUpdateAxisReferencesCubeName.change(function() {
+        _batchUpdateAxisReferencesCubeName.on('change', function() {
             batchUpdateAxisReferencesCubeNameChanged();
         });
     }
@@ -4184,7 +4194,7 @@ var NCE = (function ($) {
             ret.push(spacer + '{');
             for (i = 0, len = keys.length; i < len; i++) {
                 key = keys[i];
-                if (key !== '@type') {
+                if (DELTA_IGNORE_LIST.indexOf(key) === -1) {
                     ret = ret.concat(getObjectTextArray(val[key], level + 1, key));
                 }
             }
