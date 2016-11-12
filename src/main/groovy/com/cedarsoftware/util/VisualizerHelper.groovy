@@ -32,7 +32,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	public static final String RPM_ENUM_DOT = 'rpm.enum.'
 	public static final String R_EXTENDS = 'r:extends'
 	public static final String CLASS_TRAITS = 'CLASS_TRAITS'
-	public static final List MINIMAL_TRAITS = ['r:rpmType', 'v:enum', 'r:scopedName', 'r:extends', 'r:exists', 'v:min', 'v:max', 'pd:busType' ]
+	public static final List MINIMAL_TRAITS = ['r:rpmType', 'r:scopedName', 'r:extends', 'r:exists', 'v:enum', 'v:min', 'v:max']
 
 	/** pattern to match valid class names: names must start with letter (a-z), but allow numbers (1-9) and underscore (_). Class names are also allowed to include package name (x.y.z)
 	 *  COPIED: Copied from Dynamis

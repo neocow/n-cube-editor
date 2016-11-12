@@ -2,6 +2,7 @@ package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.util.io.JsonWriter
+import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
 import ncube.grv.method.NCubeGroovyController
 
@@ -24,7 +25,6 @@ class Visualizer extends NCubeGroovyController
 	public static final String R_EXISTS = 'r:exists'
 	public static final String V_MIN = 'v:min'
 	public static final String V_MAX = 'v:max'
-	public static final String PD_BUS_TYPE = 'pd:busType'
 
 	public static final String SOURCE_FIELD_NAME = 'sourceFieldName'
 
@@ -148,7 +148,7 @@ class Visualizer extends NCubeGroovyController
 			relInfo.targetTraitMaps = targetTraitMaps
 		}
 
-		String busType = getFormattedBusType(targetTraitMaps)
+		String group = getGroup(targetCubeName)
 
 		addToEdges(visInfo, relInfo)
 
@@ -157,8 +157,8 @@ class Visualizer extends NCubeGroovyController
 			return
 		}
 
-		visInfo.availableGroupsAllLevels << busType
-		addToNodes(visInfo, relInfo, busType)
+		visInfo.availableGroupsAllLevels << group
+		addToNodes(visInfo, relInfo, group)
 
 		targetTraitMaps.each{ k, v ->
 			String targetFieldName = k as String
@@ -213,7 +213,7 @@ class Visualizer extends NCubeGroovyController
 			relInfo.targetTraitMaps = targetTraitMaps
 		}
 
-		String busType = UNSPECIFIED
+		String group = UNSPECIFIED
 
 		targetTraitMaps.each { k, v ->
 			String targetFieldName = k as String
@@ -232,8 +232,8 @@ class Visualizer extends NCubeGroovyController
 						{
 							VisualizerRelInfo nextTargetRelInfo = addToStack(visInfo, relInfo, nextTargetCube, relInfo.sourceFieldRpmType, targetFieldName)
 
-							if (busType == UNSPECIFIED) {
-								busType = getFormattedBusType(nextTargetRelInfo.targetTraitMaps)
+							if (group == UNSPECIFIED) {
+								group = getGroup(nextTargetCubeName)
 							}
 						}
 						else{
@@ -255,8 +255,8 @@ class Visualizer extends NCubeGroovyController
 			return
 		}
 
-		visInfo.availableGroupsAllLevels << busType
-		addToNodes(visInfo, relInfo, busType)
+		visInfo.availableGroupsAllLevels << group
+		addToNodes(visInfo, relInfo, group)
 
 	}
 
@@ -304,22 +304,24 @@ class Visualizer extends NCubeGroovyController
 		}
 	}
 
-	private static String getGroup(NCube cube, String busType)
+	private static String getNodeGroup(NCube cube, String group)
 	{
 		if (cube.name.startsWith(RPM_ENUM))
 		{
-			return busType + _ENUM
+			return group + _ENUM
 		}
 		else
 		{
-			return busType
+			return group
 		}
 	}
 
-	private static String getFormattedBusType(Map traitMaps)
+	private static String getGroup(String cubeName)
 	{
-		String busType = getBusType(traitMaps)
-		return busType == null ? UNSPECIFIED : busType.toUpperCase()
+		Iterable<String> splits = Splitter.on('.').split(cubeName)
+		String group = splits[splits.size()-1].toUpperCase()
+		Set groups = ALL_GROUPS_MAP.keySet()
+		return groups.contains(group) ? group : UNSPECIFIED
 	}
 
 	private static void addToEdges(VisualizerInfo visInfo, VisualizerRelInfo relInfo )
@@ -357,7 +359,7 @@ class Visualizer extends NCubeGroovyController
 		visInfo.edges << edgeMap
 	}
 
-	private void addToNodes(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String busType)
+	private void addToNodes(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String group)
 	{
 		NCube targetCube = relInfo.targetCube
 		String targetCubeName = targetCube.name
@@ -366,7 +368,7 @@ class Visualizer extends NCubeGroovyController
 		String sourceFieldName = relInfo.sourceFieldName
 
 		int maxLineLength = 16
-		String nodeGroup = getGroup(targetCube, busType)
+		String nodeGroup = getNodeGroup(targetCube, group)
 		StringBuilder sb = new StringBuilder()
 		if (GROUPS_TO_SHOW_IN_TITLE.contains(nodeGroup))
 		{
@@ -564,17 +566,6 @@ class Visualizer extends NCubeGroovyController
 		return newScope
 	}
 
-	private static String getBusType(Map traitMaps)
-	{
-		Map traits = traitMaps[CLASS_TRAITS] as Map
-		if (traits)
-		{
-			return traits[PD_BUS_TYPE]
-		}
-
-		return null
-	}
-
 	private static String getDotSuffix(String value)
 	{
 		int lastIndexOfDot = value.lastIndexOf('.')
@@ -588,12 +579,11 @@ class Visualizer extends NCubeGroovyController
 	private boolean hasMissingScope(VisualizerInfo visInfo ) {
 		String startCubeName = visInfo.startCubeName
 		Map scope = visInfo.scope
-		Set missingScope = findMissingScope(startCubeName, scope)
+		Set<String> missingScope = findMissingScope(startCubeName, scope)
 		if (missingScope) {
 			Map expandedScope = scope == null ? new CaseInsensitiveMap(DEFAULT_SCOPE) : new CaseInsensitiveMap(scope)
 			String missingScopeString = ''
-			missingScope.each {
-				String key = it as String
+			missingScope.each {String key ->
 				expandedScope[key] = '????'
 				missingScopeString = missingScopeString + key + ', '
 			}
