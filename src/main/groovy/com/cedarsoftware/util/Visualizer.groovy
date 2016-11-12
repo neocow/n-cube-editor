@@ -1,6 +1,7 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.NCube
+import com.cedarsoftware.util.io.JsonWriter
 import groovy.transform.CompileStatic
 import ncube.grv.method.NCubeGroovyController
 
@@ -96,6 +97,14 @@ class Visualizer extends NCubeGroovyController
 		getRpmVisualization(visInfo)
 
 		String message = messages.size() > 0 ? messages.toString() : null
+
+		//TODO: Remove before creating pull request. Used temporarily for regression testing.
+		String jsonFolder = 'C:/json'
+		new File(jsonFolder, 'visInfoNew.json').withWriter('utf-8') {
+			writer ->
+				writer.writeLine(JsonWriter.objectToJson(visInfo))
+		}
+
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
 
@@ -185,7 +194,7 @@ class Visualizer extends NCubeGroovyController
 
 	private void processEnumCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-	 	Map targetScope = relInfo.targetScope
+		Map targetScope = relInfo.targetScope
 		String targetCubeName = relInfo.targetCube.name
 		String sourceFieldRpmType =  relInfo.sourceFieldRpmType
 
@@ -421,7 +430,6 @@ class Visualizer extends NCubeGroovyController
 		sb.append('<strong>level = </strong>' + nodeMap.level.toString() + '<br><br>')
 
 		sb.append(getTitleFields(traitMaps))
-		sb.append(getTitleClassTraits(traitMaps))
 
 		return sb.toString();
 	}
@@ -446,19 +454,6 @@ class Visualizer extends NCubeGroovyController
 		}
 
 		return fieldDetails.toString();
-	}
-
-	private static String getTitleClassTraits(Map traitMaps)
-	{
-		StringBuilder traits = new StringBuilder()
-		traits.append('<br><br><strong>class traits = </strong><br>')
-		Map classTraits = traitMaps[CLASS_TRAITS] as Map
-		classTraits.each { k,v ->
-			String key = k as String
-			String value = v as String
-			traits.append(SPACE + key + ' = ' + value + '<br>')
-		}
-		return traits.toString()
 	}
 
 	private static String getEffectiveName(NCube cube, Map traitMaps)
