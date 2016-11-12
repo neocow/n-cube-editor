@@ -1,7 +1,6 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
 import ncube.grv.method.NCubeGroovyController
@@ -97,14 +96,6 @@ class Visualizer extends NCubeGroovyController
 		getRpmVisualization(visInfo)
 
 		String message = messages.size() > 0 ? messages.toString() : null
-
-		//TODO: Remove before creating pull request. Used temporarily for regression testing.
-		String jsonFolder = 'C:/json'
-		new File(jsonFolder, 'visInfoNewWorkersCompensationProduct.json').withWriter('utf-8') {
-			writer ->
-				writer.writeLine(JsonWriter.objectToJson(visInfo))
-		}
-
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
 
