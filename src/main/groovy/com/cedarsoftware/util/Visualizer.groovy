@@ -34,7 +34,7 @@ class Visualizer extends NCubeGroovyController
 
 	public static final String _ENUM = '_ENUM'
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
-	public static final Map ALL_GROUPS_MAP = [PRODUCT:'Product', FORM:'Form', FORMDATA:'Form data', RISK:'Risk', COVERAGE:'Coverage', CONTAINER:'Container', DEDUCTIBLE:'Deductible', LIMIT:'Limit', RATE:'Rate', RATEFACTOR:'Rate Factor', PREMIUM:'Premium', PARTY:'Party', PLACE:'Place', ROLE:'Role', ROLEPLAYER:'Role Player', UNSPECIFIED:'Unspecified']
+	public static final Map ALL_GROUPS_MAP = [PRODUCT:'Product', FORM:'Form', RISK:'Risk', COVERAGE:'Coverage', CONTAINER:'Container', DEDUCTIBLE:'Deductible', LIMIT:'Limit', RATE:'Rate', RATEFACTOR:'Rate Factor', PREMIUM:'Premium', PARTY:'Party', PLACE:'Place', ROLE:'Role', ROLEPLAYER:'Role Player', UNSPECIFIED:'Unspecified']
 	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLEPLAYER', 'ROLE']
 
 	public static final Map DEFAULT_SCOPE = [context: 'Edit', action: 'Edit']
@@ -100,7 +100,7 @@ class Visualizer extends NCubeGroovyController
 
 		//TODO: Remove before creating pull request. Used temporarily for regression testing.
 		String jsonFolder = 'C:/json'
-		new File(jsonFolder, 'visInfoNew.json').withWriter('utf-8') {
+		new File(jsonFolder, 'visInfoNewWorkersCompensationProduct.json').withWriter('utf-8') {
 			writer ->
 				writer.writeLine(JsonWriter.objectToJson(visInfo))
 		}
@@ -227,17 +227,17 @@ class Visualizer extends NCubeGroovyController
 
 					if (nextTargetCubeName)
 					{
-						NCube nextTargetCube = getCube(RPM_CLASS_DOT + nextTargetCubeName)
+						NCube nextTargetCube = getCube(nextTargetCubeName)
 						if (nextTargetCube)
 						{
-							VisualizerRelInfo nextTargetRelInfo = addToStack(visInfo, relInfo, nextTargetCube, relInfo.sourceFieldRpmType, targetFieldName)
+							addToStack(visInfo, relInfo, nextTargetCube, relInfo.sourceFieldRpmType, targetFieldName)
 
 							if (group == UNSPECIFIED) {
 								group = getGroup(nextTargetCubeName)
 							}
 						}
 						else{
-							messages << 'No cube exists with name of ' + RPM_ENUM_DOT + nextTargetCubeName + '. It is therefore not included in the visualization.'
+							messages << 'No cube exists with name of ' + nextTargetCubeName + '. It is therefore not included in the visualization.'
 						}
 					}
 				}
@@ -319,7 +319,7 @@ class Visualizer extends NCubeGroovyController
 	private static String getGroup(String cubeName)
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
-		String group = splits[splits.size()-1].toUpperCase()
+		String group = splits[2].toUpperCase()
 		Set groups = ALL_GROUPS_MAP.keySet()
 		return groups.contains(group) ? group : UNSPECIFIED
 	}
@@ -520,7 +520,7 @@ class Visualizer extends NCubeGroovyController
 			}
 			else
 			{
-				return relInfo.sourceFieldRpmType
+				return RPM_CLASS_DOT + relInfo.sourceFieldRpmType
 			}
 		}
 
