@@ -1,7 +1,9 @@
 package com.cedarsoftware.util
 
-import com.cedarsoftware.ncube.*
-import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
+import com.cedarsoftware.ncube.Axis
+import com.cedarsoftware.ncube.Column
+import com.cedarsoftware.ncube.NCube
+import com.cedarsoftware.ncube.NCubeManager
 import groovy.transform.CompileStatic
 import ncube.grv.method.NCubeGroovyController
 
@@ -9,10 +11,8 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /**
- * The methods in this class are used by the n-cube-editor for tooling work related to the rpm.
- * The methods are are copied from Dynamis unless otherwise is indicated.
- * Do find on 'COPIED' to find code copied from Dynamis.
- * Do find on 'MODIFIED' to find modifications to copied Dynamis code.
+ * The methods in this class are used by the Visualizer.
+ * The methods are are copied from Dynamis unless otherwise is indicated. Some methods are slightly altered.
  * Do find on 'ORIGINAL' to find code not copied from Dynamis.
  *
  */
@@ -31,34 +31,30 @@ public class VisualizerHelper extends NCubeGroovyController {
 	public static final String RPM_CLASS_DOT = 'rpm.class.'
 	public static final String RPM_ENUM_DOT = 'rpm.enum.'
 	public static final String R_EXTENDS = 'r:extends'
+	public static final String R_EXISTS = 'r:exists'
+	public static final String R_RPM_TYPE = 'r:rpmType'
+	public static final String R_SCOPED_NAME = 'r:scopedName'
+	public static final String R_DECLARED = 'r:declared'
+	public static final String R_SINCE = 'r:since'
+	public static final String R_OBSOLETE = 'r:obsolete'
+	public static final String V_ENUM = 'v:enum'
+	public static final String V_MIN = 'v:min'
+	public static final String V_MAX = 'v:max'
+	private static final String NOT_DEFINED = '#NOT_DEFINED'
 	public static final String CLASS_TRAITS = 'CLASS_TRAITS'
-	public static final List MINIMAL_TRAITS = ['r:rpmType', 'r:scopedName', 'r:extends', 'r:exists', 'v:enum', 'v:min', 'v:max']
+	public static final String EFFECTIVE_VERSION_SCOPE_KEY = '_' + 'effectiveVersion'
+	public static final List MINIMAL_TRAITS = [R_RPM_TYPE, R_SCOPED_NAME, R_EXTENDS, R_EXISTS, R_DECLARED, R_SINCE, R_OBSOLETE, V_ENUM, V_MIN, V_MAX]
+	private static final String EXISTS_TRAIT_CONTAINS_NULL_VALUE = " may not contain a value of null. If there is a value, it must be true or false. ";
 
-	/** pattern to match valid class names: names must start with letter (a-z), but allow numbers (1-9) and underscore (_). Class names are also allowed to include package name (x.y.z)
-	 *  COPIED: Copied from Dynamis
-	 */
 	public static
 	final Pattern PATTERN_CLASS_NAME = Pattern.compile('^(?:[a-z][a-z0-9_]*)(?:\\.[a-z][a-z0-9_]*)*$', Pattern.CASE_INSENSITIVE);
 
-	/** pattern to match comma-delimited classnames (class names within value will be validated individually against PATTERN_CLASS_NAME)
-	 *  COPIED: Copied from Dynamis
-	 */
 	public static
 	final Pattern PATTERN_CLASS_EXTENDS_TRAIT = Pattern.compile('[^,\\s][^\\,]*[^,\\s]*', Pattern.CASE_INSENSITIVE);
 
-	/** pattern to match r:extends trait on fields
-	 *  COPIED: Copied from Dynamis
-	 */
-	public static
+		public static
 	final Pattern PATTERN_FIELD_EXTENDS_TRAIT = Pattern.compile('^\\s*((?:[a-z][a-z0-9_]*)(?:\\.[a-z][a-z0-9_]*)*)\\s*(?:[\\[]\\s*([a-z0-9_]+?)\\s*[\\]])?\\s*$', Pattern.CASE_INSENSITIVE);
 
-	/** COPIED: Copied from Dynamis
-	 */
-	public static final String RPM_META = "rpm.meta.traits.category";
-
-	/**
-	 * COPIED: Copied from Dynamis
-	 */
 	public boolean isPrimitive(String type) {
 		for (PRIMITIVE_TYPE pt : PRIMITIVE_TYPE.values()) {
 			if (pt.getClassType().getSimpleName().equalsIgnoreCase(type)) {
@@ -72,23 +68,22 @@ public class VisualizerHelper extends NCubeGroovyController {
 	 * ORIGINAL: Not copied from Dynamis
 	 */
 	public Map getTraitMaps(String cubeName, Map scope) {
-		Set excludedClasses = input?.excludedClasses == null ? [] as Set : input.excludedClasses as Set
 		NCube cube = getCube(cubeName)
 		Map traitMaps = [:]
-		if (cube.name.startsWith(RPM_ENUM)) {
-			loadRpmClassFields(RPM_ENUM, cube.name.split(RPM_ENUM_DOT)[1], scope, traitMaps,excludedClasses)
-		} else {
-			loadRpmClassFields(RPM_CLASS, cube.name.split(RPM_CLASS_DOT)[1], scope, traitMaps, excludedClasses)
+		if (cube.name.startsWith(RPM_ENUM))
+		{
+			loadRpmClassFields(RPM_ENUM, cube.name.split(RPM_ENUM_DOT)[1], scope, traitMaps, [:])
+		} else
+		{
+			loadRpmClassFields(RPM_CLASS, cube.name.split(RPM_CLASS_DOT)[1], scope, traitMaps,  [:])
 		}
-
 		return traitMaps
 	}
 
 	/**
 	 * pulls all of the fields and associated traits from nCube that will be used to create the RpmClass/RpmEnum instance
-	 * COPIED: Copied from Dynamis
 	 */
-	private void loadRpmClassFields(String cubeType, String cubeName, Map<String, Object> scope, Map<String,Map<String,Object>> traitMaps, Set excludedClasses)
+	private void loadRpmClassFields(String cubeType, String cubeName, Map<String, Object> scope, Map<String, Map<String, Object>> traitMaps, Map<String, Object> output)
 	{
 		LinkedList<String> classesToProcess = new LinkedList<String>();
 		Set<String> visited = new LinkedHashSet<String>();
@@ -100,11 +95,6 @@ public class VisualizerHelper extends NCubeGroovyController {
 		{
 			String className = classesToProcess.pop();
 
-			//MODIFIED: Added logic to exclude specific classes
-			if (excludedClasses.contains(className)) {
-				continue;
-			}
-
 			// don't allow cycles
 			if (visited.contains(className))
 			{
@@ -114,14 +104,14 @@ public class VisualizerHelper extends NCubeGroovyController {
 
 			try
 			{
-				loadFieldTraitsForClass(cubeType, className, scope, traitMaps, classesToProcess);
+				loadFieldTraitsForClass(cubeType, className, scope, traitMaps, classesToProcess, output);
 				if(isOriginalClass)
 				{
 					for(Map.Entry<String,Map<String,Object>> entry : traitMaps.entrySet())
 					{
-						if(!"CLASS_TRAITS".equals(entry.getKey()))
+						if(!CLASS_TRAITS.equals(entry.getKey()))
 						{
-							entry.getValue().put("r:declared", true);
+							entry.getValue().put(R_DECLARED, true);
 						}
 					}
 				}
@@ -129,62 +119,78 @@ public class VisualizerHelper extends NCubeGroovyController {
 			}
 			catch (Exception e)
 			{
-				// to help with debugging issues related to classes using mixins, dump the list of classes processed thus far
-				StringBuilder msg = new StringBuilder();
-				msg.append("Failed to load " + (cubeType==RPM_CLASS ? "RpmClass" : "RpmEnum") + "='");
-				msg.append(className);
-				msg.append("'");
-				if (visited.size()>1)
-				{
-					msg.append(", classes processed=");
-					msg.append(Arrays.toString(visited.toArray()));
-				}
-				throw new Exception( msg.toString(), e);
+				handleException(cubeType,visited,className,e);
 			}
 		} // end class stack
 	}
 
 	/**
 	 * Populates the field traits for the class or enum
-	 * COPIED: Copied from Dynamis
 	 */
-	private void loadFieldTraitsForClass(String cubeType, String className, Map<String, Object> scope, Map<String,Map<String,Object>> traitMaps, LinkedList<String> classesToProcess)
+	private void loadFieldTraitsForClass(String cubeType, String className, Map<String, Object> scope, Map<String,Map<String,Object>> fieldAndTraits, LinkedList<String> classesToProcess, Map<String, Object> output)
 	{
 		String axisName = RPM_ENUM.equals(cubeType) ? ENUM_NAME_AXIS : FIELD_AXIS;
 
-		// MODIFIED: Removed scope argument. Not performing scope check here.
-		NCube ncube = findClassCube(cubeType, className);
-		if (ncube == null)
+		NCube classCube = findClassCube(cubeType, scope, className, output);
+		if (classCube == null)
 		{
 			String classType = cubeType==RPM_CLASS ? "RpmClass" : "RpmEnum";
 			throw new IllegalArgumentException(classType + " definition not found for identifier='" + className + "'");
 		}
 
-		List<Column> fields = ncube.getAxis(axisName).getColumns();
-		for (Column field : fields)
-		{
-			String fieldName = (String) field.getValue();
-			Map<String, Object> traits = traitMaps.get(fieldName);
-			if (traits==null)
-			{
-				traits = new LinkedHashMap<String, Object>();
-				traitMaps.put(fieldName, traits);
+		// populate initial fields
+		populateAllFieldsFromAxis(fieldAndTraits, axisName, classCube);
+
+		// wildcard the fieldAxis using r:exists
+		populateExistsTrait(className, axisName, scope, fieldAndTraits, classCube, output);
+
+		// determine traits to fetch, except for r:exists already fetched
+		List<String> traitNames = getTraitNamesForCube(classCube, (String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY));
+		traitNames.remove(R_EXISTS);
+
+		// pull traits for existing fields
+		Axis fieldAxis = classCube.getAxis(axisName);
+		for(String fieldName : fieldAndTraits.keySet()) {
+			Map<String,Object> fieldTraits = fieldAndTraits.get(fieldName);
+
+			// short circuit the fields that don't exist
+			Boolean exist = (Boolean) fieldTraits.get(R_EXISTS);
+			if (Boolean.FALSE.equals(exist)) {
+				continue;
+			}
+			else if (fieldAxis.findColumn(fieldName)==null) {
+				continue;
 			}
 
-			Map<String, Object> traitCells = mergeFieldTraits(fieldName, ncube,	axisName, scope, traits);
+			// gather traits for current field that haven't already been populated
+			Map<String, Object> coord = new HashMap<>(scope);
+			coord.put(axisName,fieldName);
+			loadTraitsForField(classCube, traitNames, fieldTraits, coord);
 
-			//MODIFIED: Use local R_EXTENDS constant
-			Object extendsValue = traitCells.get(R_EXTENDS);
-			if (extendsValue!=null)
-			{
-				//MODIFIED: Use local CLASS_TRAITS constant
-				if (CLASS_TRAITS.equals(fieldName))
+			// eliminate scoped fields
+			if (!isFieldValidSince(fieldTraits,(String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY))) {
+				fieldTraits.put(R_EXISTS,false);
+			}
+			if (!isFieldValidObsolete(fieldTraits,(String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY))) {
+				fieldTraits.put(R_EXISTS,false);
+			}
+
+			// check extends value
+			if (traitNames.contains(R_EXTENDS)) {
+				coord.put(TRAIT_AXIS, R_EXTENDS);
+				Object extendsValue = classCube.getCell(coord, new HashMap(), NOT_DEFINED);
+				if (extendsValue!=null && hasValue(extendsValue))
 				{
-					processClassMixins(className, extendsValue.toString(), classesToProcess);
-				}
-				else
-				{
-					processMasterDefinition(className, fieldName, extendsValue.toString(), cubeType, axisName, scope, traits);
+					if (!fieldTraits.containsKey(R_EXTENDS)) {
+						fieldTraits.put(R_EXTENDS,extendsValue.toString());
+					}
+
+					if (CLASS_TRAITS.equals(fieldName)) {
+						processClassMixins(className, extendsValue.toString(), classesToProcess);
+					}
+					else {
+						processMasterDefinition(className, fieldName, extendsValue.toString(), cubeType, axisName, scope, fieldTraits, output);
+					}
 				}
 			}
 		}
@@ -193,10 +199,9 @@ public class VisualizerHelper extends NCubeGroovyController {
 
 	/**
 	 * applies the master definition specified in r:extends to the current field traits
-	 * COPIED: Copied from Dynamis
 	 */
 	private void processMasterDefinition(String className, String fieldName, String masterDefinition,
-										 String cubeType, String axisName, Map<String, Object> scope, Map<String, Object> traits)
+										 String cubeType, String axisName, Map<String, Object> scope, Map<String, Object> traits, Map<String, Object> output)
 	{
 		String classType = cubeType==RPM_CLASS ? "RpmClass" : "RpmEnum";
 		LinkedList<String> defsToProcess = new LinkedList<String>();
@@ -229,8 +234,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 			fqVisited.add(fqMasterDef);
 
 			// make sure the class definition exists
-			// MODIFIED: Removed scope argument. Not performing scope check here.
-			NCube masterCube = findClassCube(cubeType, masterClass);
+			NCube masterCube = findClassCube(cubeType, scope, masterClass, output);
 			if (masterCube == null)
 			{
 				throw new IllegalArgumentException(String.format(exceptionFormat, "Class in master definition not found", fieldName,
@@ -238,63 +242,37 @@ public class VisualizerHelper extends NCubeGroovyController {
 			}
 
 			// validate the field name
-			boolean validField = false;
-			for (Column col : masterCube.getAxis(axisName).getColumns()) {
-				if (col.getValue().equals(masterField)) {
-					validField = true;
-					break;
-				}
-			}
+			boolean validField = masterCube.getAxis(axisName).findColumn(masterField) != null;
 			if (!validField) {
 				throw new IllegalArgumentException(String.format(exceptionFormat, "Field in master definition not found", fieldName,
 						classType, className, Arrays.toString(visited.toArray())));
 			}
 
-			// pull the field traits from the data dictionary class and apply to this field
-			Map<String,Object> masterTraits = mergeFieldTraits(masterField, masterCube, axisName, scope, traits);
+			Map<String,Object> coord = new CaseInsensitiveMap<>(scope);
+			coord.put(axisName,masterField);
+			List<String> traitNames = getTraitNamesForCube(masterCube, (String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY));
+			loadTraitsForField(masterCube, traitNames, traits, coord);
+
+			if (traits.containsKey(R_EXISTS) && traits.get(R_EXISTS) ==  null){
+				throw new IllegalArgumentException(String.format(exceptionFormat, R_EXISTS + EXISTS_TRAIT_CONTAINS_NULL_VALUE, fieldName,
+						classType, className, Arrays.toString(visited.toArray())));
+			}
 
 			// check for extended definitions
-			//MODIFIED: Change to use local R_EXTENDS
-			String extension = (String) masterTraits.get(R_EXTENDS);
-			if (!StringUtilities.isEmpty(extension)) {
-				defsToProcess.add(extension);
+			if (traitNames.contains(R_EXTENDS)) {
+				coord.put(TRAIT_AXIS, R_EXTENDS);
+				String extension = (String) masterCube.getCell(coord, new HashMap(), NOT_DEFINED);
+				if (hasValue(extension) && !StringUtilities.isEmpty(extension)) {
+					defsToProcess.add(extension);
+				}
 			}
 		} // end while
 	}
 
 	/**
-	 * merges trait entries from the current cube into the list of traits that have already been extracted
-	 * COPIED: Copied from Dynamis
-	 */
-	private Map<String, Object> mergeFieldTraits(String fieldName, NCube ncube, String axisName, Map<String, Object> scope,	Map<String, Object> traits)
-	{
-		Set<String> invalidTraits = new LinkedHashSet<>();
-		Map<String, Object> traitCells = getTraitsForEntry(ncube, fieldName, axisName, scope);
-		for (Map.Entry<String, Object> cell : traitCells.entrySet())
-		{
-			String traitName = cell.getKey();
-			Object traitValue = cell.getValue();
-
-			if (!traits.containsKey(traitName))
-			{
-				traits.put(traitName, traitValue);
-			}
-		}
-
-		for(String msg : invalidTraits)
-		{
-			//MODIFIED: Not logging
-			//LOG.warn(msg);
-		}
-		return traitCells;
-	}
-
-	/**
 	 * Returns the nCube for the specified class (or enum)
-	 * COPIED: Copied from Dynamis
 	 */
-	private NCube findClassCube(String cubeType, String className) {
-		// MODIFIED: Removed scope arugment. Not performing scope check here.
+	private NCube findClassCube(String cubeType, Map<String, Object> scope, String className, Map<String, Object> output) {
 		if (className==null || !PATTERN_CLASS_NAME.matcher(className).matches())
 		{
 			throw new IllegalArgumentException("Invalid class identifier [" + className + "] was specified for " + cubeType);
@@ -306,37 +284,29 @@ public class VisualizerHelper extends NCubeGroovyController {
 			return null;
 		}
 
-		// MODIFIED: Not performing scope check here.
-		/*
-		Set<String> requiredScope = getRequiredScope(ncube);
+		Set<String> requiredScope = getRequiredScope(ncube, scope, output);
 		if (RPM_ENUM.equals(cubeType))
 		{
 			requiredScope.remove("name");
 		}
 		ensureEnoughScopeProvided(className, scope, requiredScope);
-		*/
 		return ncube;
 	}
 
+
 	/**
 	 * parses the value of the r:extends trait and adds all mixins to the list of classes to process
-	 * COPIED: Copied from Dynamis
 	 */
-	private static void processClassMixins(String className, String mixins, LinkedList<String> classesToProcess) {
+	private void processClassMixins(String className, String mixins, LinkedList<String> classesToProcess) {
+		if (classesToProcess==null) {
+			return;
+		}
+
 		Matcher matcher = PATTERN_CLASS_EXTENDS_TRAIT.matcher(mixins);
 		if (StringUtilities.isEmpty(mixins) || !matcher.find())
 		{
 			throw new IllegalArgumentException("Invalid mixin format specified for class='" + className + "': mixin='" + mixins + "'");
 		}
-
-		/*MODIFIED: Groovy does not support do-while. Replacing original Dynamis code with for loop.
-    do {
-        String mixinName = matcher.group(0);
-        if (!StringUtilities.isEmpty(mixinName)) {
-            classesToProcess.push(mixinName.trim());
-        }
-    } while (matcher.find());
-    */
 
 		for (; ;) { // infinite for
 			String mixinName = matcher.group(0);
@@ -348,48 +318,8 @@ public class VisualizerHelper extends NCubeGroovyController {
 				break
 			}
 		}
-
 	}
 
-
-	/**
-	 * Get only the traits for the passed in field that have an actual value set on them (containsCell() == true).
-	 * This greatly reduces the number of entries in the returned trait map.
-	 * COPIED: Copied from Dynamis
-	 */
-	private static Map<String, Object> getTraitsForEntry(NCube ncube, String fieldName, String key, Map scope)
-	{
-		// Must copy scope here, because we are using it as our lookup coordinate, and
-		// we need to add to it.  Cannot damage original scope.
-		Map<String, Object> coord = new CaseInsensitiveMap<String, Object>(scope);
-		coord.put(key, fieldName);
-
-		Map<String, Object> traits = new CaseInsensitiveMap<String, Object>();
-
-		// MODIFIED: Get only the traits needed for visualization
-		for (String traitName : MINIMAL_TRAITS)
-		{
-			coord.put(TRAIT_AXIS, traitName);
-			try
-			{
-				Object val = ncube.getCell(coord);
-				if (!"#NOT_DEFINED".equals(val))
-				{
-					traits.put((String) traitName, val);
-				}
-			}
-			catch(CoordinateNotFoundException ignored)
-			{
-				//no traits defined
-			}
-		}
-		return traits;             // returns 1D (slice) of the ncube
-	}
-
-
-	/**
-	 * COPIED: Copied from Dynamis
-	 */
 	private enum PRIMITIVE_TYPE {
 		BOOLEAN(Boolean.class), LONG(Long.class), DOUBLE(Double.class), BIG_DECIMAL(BigDecimal.class), STRING(String.class), DATE(Date.class);
 
@@ -411,6 +341,543 @@ public class VisualizerHelper extends NCubeGroovyController {
 			}
 
 			throw new IllegalArgumentException("Unknown primitive type specified: " + typeName);
+		}
+	}
+
+	/**
+	 * Throws RpmException which includes list of classes processed and cause
+	 */
+	private void handleException(String cubeType, Set<String> visited, String className, Exception e) {
+		// to help with debugging issues related to classes using mixins, dump the list of classes processed thus far
+		StringBuilder msg = new StringBuilder();
+		msg.append("Failed to load " + (cubeType==RPM_CLASS ? "RpmClass" : "RpmEnum") + "='");
+		msg.append(className);
+		msg.append("'");
+		if (visited.size()>1)
+		{
+			msg.append(", classes processed=");
+			msg.append(Arrays.toString(visited.toArray()));
+		}
+		throw new Exception( msg.toString(), e);
+	}
+
+	/**
+	 * Load trait values for a given field into the fieldTraits map, ignoring traits already loaded
+	 */
+	private static void loadTraitsForField(NCube classCube, List<String> traitNames, Map<String, Object> fieldTraits, Map<String, Object> coord) {
+		for (String traitName : traitNames) {
+			if (fieldTraits.containsKey(traitName) || R_EXTENDS.equals(traitName)) {
+				continue;
+			}
+
+			coord.put(TRAIT_AXIS,traitName);
+			Object val = classCube.getCell(coord, new HashMap(), NOT_DEFINED);
+			if (hasValue(val)) {
+				fieldTraits.put(traitName, val);
+			}
+		}
+	}
+
+	/**
+	 * Determines initial list of fields by extracting column values from axis
+	 */
+	private static void populateAllFieldsFromAxis(Map<String, Map<String, Object>> fieldAndTraits, String axisName, NCube classCube) {
+		for (Column c:classCube.getAxis(axisName).getColumns()) {
+			String fieldName = c.getValueThatMatches().toString();
+
+			Map<String,Object> fieldTraits = fieldAndTraits.get(fieldName);
+			if (fieldTraits==null) {
+				fieldTraits = new LinkedHashMap<>();
+				fieldAndTraits.put(fieldName,fieldTraits);
+			}
+		}
+	}
+
+
+	private boolean isFieldValidSince(Map<String, Object> traits, String sourceVersion) {
+		if (!traits.containsKey(R_SINCE)) {
+			return true;
+		}
+
+		Object sinceVersionString = traits.get(R_SINCE);
+		ComparableVersion sinceVersion = new ComparableVersion(sinceVersionString.toString());
+		ComparableVersion version = new ComparableVersion(sourceVersion);
+		return version.compareTo(sinceVersion) >= 0;
+	}
+
+	private boolean isFieldValidObsolete(Map<String, Object> traits, String sourceVersion) {
+		if (!traits.containsKey(R_OBSOLETE)) {
+			return true;
+		}
+
+		Object obsoleteVersionString = traits.get(R_OBSOLETE);
+		ComparableVersion obsoleteVersion = new ComparableVersion(obsoleteVersionString.toString());
+		ComparableVersion version = new ComparableVersion(sourceVersion);
+		return version.compareTo(obsoleteVersion) < 0;
+	}
+
+
+	/**
+	 * Return List of Strings, containing names of trait columns defined on the NCube specified
+	 */
+	private static List<String> getTraitNamesForCube(NCube classCube, String sourceVersion) {
+		Axis traitAxis = classCube.getAxis(TRAIT_AXIS);
+		List<String> traitNames = new ArrayList<>();
+		for (Column c:traitAxis.getColumns()) {
+			String traitName = c.getValue().toString();
+			if (MINIMAL_TRAITS.contains(traitName)){
+				traitNames.add(traitName);
+			}
+		}
+		return traitNames;
+	}
+
+	/**
+	 * Get the 'proper' requiredScope from NCube.  In addition to getting the scope
+	 * keys (Strings), the associated Set is all the values used for the given scope
+	 * key, akin to all enums in an enum list.
+	 */
+	private static Set<String> getRequiredScope(NCube ncube, Map<String, Object> scope, Map<String, Object> output)
+	{
+		Set<String> requiredScope = new CaseInsensitiveSet<String>(ncube.getRequiredScope(scope, output));
+
+		// Although 'field' and 'trait' are axes on the ncube defining the class/enum/rel, they are system
+		// scope, not business scope.
+		requiredScope.remove(FIELD_AXIS);
+		requiredScope.remove(TRAIT_AXIS);
+		return requiredScope;
+	}
+
+	/**
+	 * Ensure that enough scope is provided.  This will check that the original scope key set
+	 * has all the keys required to reach all cells in the defining ncube.
+	 */
+	private static void ensureEnoughScopeProvided(String className, Map<String, Object> scope, Set<String> requiredScope)
+	{
+		if (!scope.keySet().containsAll(requiredScope))
+		{
+			Set<String> missingScope = new CaseInsensitiveSet<String>(requiredScope);
+
+			for (String key : scope.keySet())
+			{
+				missingScope.remove(key);
+			}
+			throw new IllegalArgumentException("Not enough scope was provided to create class/enum/rel: " +
+					className + ", missing scope keys: " + missingScope);
+		}
+	}
+
+
+
+
+	/**
+	 * Bulk loads value of r:exists for all fields defined
+	 */
+	private void populateExistsTrait(String className, String axisName, Map<String, Object> scope, Map<String, Map<String, Object>> fieldAndTraits, NCube classCube, Map output) {
+		Axis traitAxis = classCube.getAxis(TRAIT_AXIS);
+		if (traitAxis==null || traitAxis.findColumn(R_EXISTS)==null) {
+			return;
+		}
+
+		Map<String, Object> coord = new HashMap<>(scope);
+		coord.put(TRAIT_AXIS, R_EXISTS);
+		for (Column c : classCube.getAxis(axisName).getColumns()) {
+			String fieldName = (String) c.getValue();
+
+			Map<String, Object> fieldTraits = fieldAndTraits.get(fieldName);
+			if (!fieldTraits.containsKey(R_EXISTS)) {
+				coord.put(axisName,fieldName);
+				Boolean exists = getExistsValue(fieldName, className, classCube.getCell(coord,output,NOT_DEFINED));
+
+				if (exists!=null) {
+					fieldTraits.put(R_EXISTS, exists);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Returns the value of the r:exists trait, or null if not set
+	 * @return the boolean value of r:exists, if it exists; otherwise, null
+	 */
+	private static Boolean getExistsValue(String fieldName, String className, Object exists) {
+		if (CLASS_TRAITS.equals(fieldName)) {
+			return true;
+		}
+
+		if (exists==null)
+		{
+			throw new IllegalStateException(R_EXISTS + EXISTS_TRAIT_CONTAINS_NULL_VALUE + "field: "+ fieldName + ", rpmClass: "+ className);
+		}
+
+		if (!hasValue(exists)) {
+			return null;
+		}
+
+		if (exists instanceof String)
+		{
+			exists = Boolean.valueOf((String)exists);
+		}
+		else if(!(exists instanceof Boolean))
+		{
+			throw new IllegalStateException(R_EXISTS + " must be boolean or string. field: "+ fieldName + ", rpmClass: "+ className);
+		}
+
+		return (Boolean)exists;
+	}
+
+	/**
+	 * Utility method to return true if the field value exists and doesn't match default
+	 */
+	private static boolean hasValue(Object value) {
+		return !(value != null && NOT_DEFINED.equals(value));
+	}
+
+	private class ComparableVersion
+			implements Comparable<ComparableVersion> {
+		private String value;
+
+		private String canonical;
+
+		private ListItem items;
+
+		private interface Item {
+			int INTEGER_ITEM = 0;
+			int STRING_ITEM = 1;
+			int LIST_ITEM = 2;
+
+			int compareTo(Item item);
+
+			int getType();
+
+			boolean isNull();
+		}
+
+		/**
+		 * Represents a numeric item in the version item list.
+		 */
+		private static class IntegerItem
+				implements Item {
+			private static final BigInteger BIG_INTEGER_ZERO = new BigInteger("0");
+
+			private final BigInteger value;
+
+			public static final IntegerItem ZERO = new IntegerItem();
+
+			private IntegerItem() {
+				this.value = BIG_INTEGER_ZERO;
+			}
+
+			public IntegerItem(String str) {
+				this.value = new BigInteger(str);
+			}
+
+			public int getType() {
+				return INTEGER_ITEM;
+			}
+
+			public boolean isNull() {
+				return BIG_INTEGER_ZERO.equals(value);
+			}
+
+			public int compareTo(Item item) {
+				if (item == null) {
+					return BIG_INTEGER_ZERO.equals(value) ? 0 : 1; // 1.0 == 1, 1.1 > 1
+				}
+
+				switch (item.getType()) {
+					case INTEGER_ITEM:
+						return value.compareTo(((IntegerItem) item).value);
+
+					case STRING_ITEM:
+						return 1; // 1.1 > 1-sp
+
+					case LIST_ITEM:
+						return 1; // 1.1 > 1-1
+
+					default:
+						throw new RuntimeException("invalid item: " + item.getClass());
+				}
+			}
+
+			public String toString() {
+				return value.toString();
+			}
+		}
+
+		/**
+		 * Represents a string in the version item list, usually a qualifier.
+		 */
+		private static class StringItem
+				implements Item {
+			private static final String[] QUALIFIERS = ['alpha', 'beta', 'milestone', 'rc', 'snapshot', '', 'sp' ];
+
+			@SuppressWarnings("checkstyle:constantname")
+			private static final List<String> _QUALIFIERS = Arrays.asList(QUALIFIERS);
+
+			private static final Properties ALIASES = new Properties();
+			static
+			{
+				ALIASES.put("ga", "");
+				ALIASES.put("final", "");
+				ALIASES.put("cr", "rc");
+			}
+
+			/**
+			 * A comparable value for the empty-string qualifier. This one is used to determine if a given qualifier makes
+			 * the version older than one without a qualifier, or more recent.
+			 */
+			private static final String RELEASE_VERSION_INDEX = String.valueOf(_QUALIFIERS.indexOf(""));
+
+			private String value;
+
+			public StringItem(String value, boolean followedByDigit) {
+				if (followedByDigit && value.length() == 1) {
+					// a1 = alpha-1, b1 = beta-1, m1 = milestone-1
+					switch (value.charAt(0)) {
+						case 'a':
+							value = "alpha";
+							break;
+						case 'b':
+							value = "beta";
+							break;
+						case 'm':
+							value = "milestone";
+							break;
+						default:
+							break;
+					}
+				}
+				this.value = ALIASES.getProperty(value, value);
+			}
+
+			public int getType() {
+				return STRING_ITEM;
+			}
+
+			public boolean isNull() {
+				return (comparableQualifier(value).compareTo(RELEASE_VERSION_INDEX) == 0);
+			}
+
+			/**
+			 * Returns a comparable value for a qualifier.
+			 *
+			 * This method takes into account the ordering of known qualifiers then unknown qualifiers with lexical
+			 * ordering.
+			 *
+			 * just returning an Integer with the index here is faster, but requires a lot of if/then/else to check for -1
+			 * or QUALIFIERS.size and then resort to lexical ordering. Most comparisons are decided by the first character,
+			 * so this is still fast. If more characters are needed then it requires a lexical sort anyway.
+			 *
+			 * @param qualifier
+			 * @return an equivalent value that can be used with lexical comparison
+			 */
+			public static String comparableQualifier(String qualifier) {
+				int i = _QUALIFIERS.indexOf(qualifier);
+
+				return i == -1 ? (_QUALIFIERS.size() + "-" + qualifier) : String.valueOf(i);
+			}
+
+			public int compareTo(Item item) {
+				if (item == null) {
+					// 1-rc < 1, 1-ga > 1
+					return comparableQualifier(value).compareTo(RELEASE_VERSION_INDEX);
+				}
+				switch (item.getType()) {
+					case INTEGER_ITEM:
+						return -1; // 1.any < 1.1 ?
+
+					case STRING_ITEM:
+						return comparableQualifier(value).compareTo(comparableQualifier(((StringItem) item).value));
+
+					case LIST_ITEM:
+						return -1; // 1.any < 1-1
+
+					default:
+						throw new RuntimeException("invalid item: " + item.getClass());
+				}
+			}
+
+			public String toString() {
+				return value;
+			}
+		}
+
+		/**
+		 * Represents a version list item. This class is used both for the global item list and for sub-lists (which start
+		 * with '-(number)' in the version specification).
+		 */
+		private static class ListItem
+				extends ArrayList<Item>
+				implements Item {
+			public int getType() {
+				return LIST_ITEM;
+			}
+
+			public boolean isNull() {
+				return (size() == 0);
+			}
+
+			void normalize() {
+				for (int i = size() - 1; i >= 0; i--) {
+					Item lastItem = get(i);
+
+					if (lastItem.isNull()) {
+						// remove null trailing items: 0, "", empty list
+						remove(i);
+					} else if (!(lastItem instanceof ListItem)) {
+						break;
+					}
+				}
+			}
+
+			public int compareTo(Item item) {
+				if (item == null) {
+					if (size() == 0) {
+						return 0; // 1-0 = 1- (normalize) = 1
+					}
+					Item first = get(0);
+					return first.compareTo(null);
+				}
+				switch (item.getType()) {
+					case INTEGER_ITEM:
+						return -1; // 1-1 < 1.0.x
+
+					case STRING_ITEM:
+						return 1; // 1-1 > 1-sp
+
+					case LIST_ITEM:
+						Iterator<Item> left = iterator();
+						Iterator<Item> right = ((ListItem) item).iterator();
+
+						while (left.hasNext() || right.hasNext()) {
+							Item l = left.hasNext() ? left.next() : null;
+							Item r = right.hasNext() ? right.next() : null;
+
+							// if this is shorter, then invert the compare and mul with -1
+							int result = l == null ? (r == null ? 0 : -1 * r.compareTo(l)) : l.compareTo(r);
+
+							if (result != 0) {
+								return result;
+							}
+						}
+
+						return 0;
+
+					default:
+						throw new RuntimeException("invalid item: " + item.getClass());
+				}
+			}
+
+			public String toString() {
+				StringBuilder buffer = new StringBuilder();
+				for (Item item : this) {
+					if (buffer.length() > 0) {
+						buffer.append((item instanceof ListItem) ? '-' : '.');
+					}
+					buffer.append(item);
+				}
+				return buffer.toString();
+			}
+		}
+
+		public ComparableVersion(String version) {
+			parseVersion(version);
+		}
+
+		public final void parseVersion(String version) {
+			this.value = version;
+
+			items = new ListItem();
+
+			version = version.toLowerCase(Locale.ENGLISH);
+
+			ListItem list = items;
+
+			Stack<Item> stack = new Stack<>();
+			stack.push(list);
+
+			boolean isDigit = false;
+
+			int startIndex = 0;
+
+			for (int i = 0; i < version.length(); i++) {
+				char c = version.charAt(i);
+
+				if (c == '.') {
+					if (i == startIndex) {
+						list.add(IntegerItem.ZERO);
+					} else {
+						list.add(parseItem(isDigit, version.substring(startIndex, i)));
+					}
+					startIndex = i + 1;
+				} else if (c == '-') {
+					if (i == startIndex) {
+						list.add(IntegerItem.ZERO);
+					} else {
+						list.add(parseItem(isDigit, version.substring(startIndex, i)));
+					}
+					startIndex = i + 1;
+
+					list.add(list = new ListItem());
+					stack.push(list);
+				} else if (Character.isDigit(c)) {
+					if (!isDigit && i > startIndex) {
+						list.add(new StringItem(version.substring(startIndex, i), true));
+						startIndex = i;
+
+						list.add(list = new ListItem());
+						stack.push(list);
+					}
+
+					isDigit = true;
+				} else {
+					if (isDigit && i > startIndex) {
+						list.add(parseItem(true, version.substring(startIndex, i)));
+						startIndex = i;
+
+						list.add(list = new ListItem());
+						stack.push(list);
+					}
+
+					isDigit = false;
+				}
+			}
+
+			if (version.length() > startIndex) {
+				list.add(parseItem(isDigit, version.substring(startIndex)));
+			}
+
+			while (!stack.isEmpty()) {
+				list = (ListItem) stack.pop();
+				list.normalize();
+			}
+
+			canonical = items.toString();
+		}
+
+		private static Item parseItem(boolean isDigit, String buf) {
+			return isDigit ? new IntegerItem(buf) : new StringItem(buf, false);
+		}
+
+		public int compareTo(ComparableVersion o) {
+			return items.compareTo(o.items);
+		}
+
+		public String toString() {
+			return value;
+		}
+
+		public String getCanonical() {
+			return canonical;
+		}
+
+		public boolean equals(Object o) {
+			return (o instanceof ComparableVersion) && canonical.equals(((ComparableVersion) o).canonical);
+		}
+
+		public int hashCode() {
+			return canonical.hashCode();
 		}
 	}
 }

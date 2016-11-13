@@ -1,5 +1,6 @@
 package com.cedarsoftware.util
 
+import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
@@ -16,8 +17,10 @@ class Visualizer extends NCubeGroovyController
 	public static final String RPM_CLASS = 'rpm.class'
 	public static final String RPM_ENUM = 'rpm.enum'
 	public static final String RPM_CLASS_DOT = 'rpm.class.'
+	public static final String RPM_SCOPE_CLASS_DOT = 'rpm.scope.class.'
 	public static final String RPM_ENUM_DOT = 'rpm.enum.'
 	public static final String CLASS_TRAITS = 'CLASS_TRAITS'
+	public static final String DOT_CLASS_TRAITS = '.classTraits'
 	public static final String R_RPM_TYPE = 'r:rpmType'
 	public static final String V_ENUM = 'v:enum'
 	public static final String R_SCOPED_NAME = 'r:scopedName'
@@ -48,7 +51,7 @@ class Visualizer extends NCubeGroovyController
 	public static final String STATUS_MISSING_SCOPE = 'missingScope'
 	public static final String STATUS_SUCCESS = 'success'
 
-	private List messages = []
+	private Set messages = []
 	private Set visited = []
 
 	Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
@@ -162,6 +165,8 @@ class Visualizer extends NCubeGroovyController
 				if (!helper.isPrimitive(targetFieldRpmType))
 				{
 					NCube nextTargetCube = null
+					boolean canProcess = true
+
 					if (targetTraits.containsKey(V_ENUM))
 					{
 						nextTargetCube = getCube(RPM_ENUM_DOT + targetTraits[V_ENUM])
@@ -169,14 +174,16 @@ class Visualizer extends NCubeGroovyController
 					else if (targetFieldRpmType)
 					{
 						nextTargetCube = getCube(RPM_CLASS_DOT + targetFieldRpmType)
+						canProcess = canProcessReferenceCube(targetCubeName, nextTargetCube, targetFieldName)
 					}
 
-					if (nextTargetCube)
+					if (!nextTargetCube)
+					{
+						messages << 'No cube exists with name of ' + RPM_ENUM_DOT + nextTargetCube.name + '. It is therefore not included in the visualization.'
+					}
+					else if (canProcess)
 					{
 						addToStack(visInfo, relInfo, nextTargetCube, targetFieldRpmType, targetFieldName)
-					}
-					else{
-						messages << 'No cube exists with name of ' + RPM_ENUM_DOT + nextTargetCube.name + '. It is therefore not included in the visualization.'
 					}
 				}
 			}
@@ -249,6 +256,25 @@ class Visualizer extends NCubeGroovyController
 		visInfo.availableGroupsAllLevels << group
 		addToNodes(visInfo, relInfo, group)
 
+	}
+
+	private boolean canProcessReferenceCube(String sourceCubeName, NCube referenceCube, String fieldName)
+	{
+		//For fields that are references (non-primitive r:rpmType and no v:enum), check if the source field name
+		//matches up with the scoped name of the target. If not, it cannot be loaded
+		if (referenceCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME)) {
+			String businessType = Splitter.on('.').split(referenceCube.name.replace(RPM_CLASS_DOT, '')).first()
+			NCube classTraitsCube = getCube(RPM_SCOPE_CLASS_DOT + businessType + DOT_CLASS_TRAITS)
+			List columns = classTraitsCube.getAxis(businessType.toLowerCase()).columns
+			if (!columns.find{fieldName == (it as Column).value})
+			{
+				messages << 'Field name ' + fieldName + ' on ' + sourceCubeName + ' is a reference to ' +
+						referenceCube.name + ', but there is no ' + businessType.toLowerCase() + ' named ' +
+						fieldName + ' on ' + referenceCube.name + '. The reference class for ' + fieldName + ' is therefore not included in the visualization.'
+    			return false
+			}
+		}
+		return true
 	}
 
 	private static void trimSelectedLevel(VisualizerInfo visInfo) {
