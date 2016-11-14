@@ -285,19 +285,6 @@ var DISPLAY_MAP_TITLE = {
     SERVER_STATS: 'Server Statistics'
 };
 
-var DEFAULT_SCOPE = [
-    {
-        isApplied: 'true',
-        key: 'context',
-        value: 'Edit'
-    },
-    {
-        isApplied: 'true',
-        key: 'action',
-        value: 'Edit'
-    }
-];
-
 var PERMISSION_ACTION = {
     COMMIT: 'commit',
     READ: 'read',
