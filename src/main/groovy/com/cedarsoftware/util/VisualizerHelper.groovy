@@ -52,7 +52,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	public static
 	final Pattern PATTERN_CLASS_EXTENDS_TRAIT = Pattern.compile('[^,\\s][^\\,]*[^,\\s]*', Pattern.CASE_INSENSITIVE);
 
-		public static
+	public static
 	final Pattern PATTERN_FIELD_EXTENDS_TRAIT = Pattern.compile('^\\s*((?:[a-z][a-z0-9_]*)(?:\\.[a-z][a-z0-9_]*)*)\\s*(?:[\\[]\\s*([a-z0-9_]+?)\\s*[\\]])?\\s*$', Pattern.CASE_INSENSITIVE);
 
 	public boolean isPrimitive(String type){
@@ -70,13 +70,12 @@ public class VisualizerHelper extends NCubeGroovyController {
 	public Map getTraitMaps(String cubeName, Map scope) {
 		NCube cube = getCube(cubeName)
 		Map traitMaps = [:]
-		if (cube.name.startsWith(RPM_ENUM))
-		{
+		if (cube.name.startsWith(RPM_ENUM)){
 			loadRpmClassFields(RPM_ENUM, cube.name.split(RPM_ENUM_DOT)[1], scope, traitMaps, [:])
-		} else
-		{
-			loadRpmClassFields(RPM_CLASS, cube.name.split(RPM_CLASS_DOT)[1], scope, traitMaps,  [:])
+		} else{
+			loadRpmClassFields(RPM_CLASS, cube.name.split(RPM_CLASS_DOT)[1], scope, traitMaps, [:])
 		}
+
 		return traitMaps
 	}
 
