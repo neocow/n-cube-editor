@@ -114,30 +114,26 @@ var Visualizer = (function ($) {
 
     function buildScopeFromText(scopeString) {
         var newScope = {};
-        if (scopeString!== null && scopeString.length > 0) {
-            var tuples = scopeString.split(',');
-            for (var i = 0, iLen = tuples.length; i < iLen; i++) {
-                var tuple = tuples[i].split(':');
-                var key = tuple[0].trim();
-                var value = tuple[1].trim();
-                newScope[key] = value;
-                var shouldInsertNewExpression = true;
-                if (_savedScope!== null && _savedScope.length > 0) {
-                    for (var j = 0, jLen = _savedScope.length; j < jLen; j++) {
-                        var expression = _savedScope[j];
-                        if (expression.isApplied && expression.key === key) {
-                            expression.value = value;
-                            shouldInsertNewExpression = false;
-                            break;
-                        }
-                    }
-                    if (shouldInsertNewExpression) {
-                        _savedScope.push = {isApplied: true, key: key, value: value};
-                    }
+        var tuples = scopeString.split(',');
+        for (var i = 0, iLen = tuples.length; i < iLen; i++) {
+            var tuple = tuples[i].split(':');
+            var key = tuple[0].trim();
+            var value = tuple[1].trim();
+            newScope[key] = value;
+            var shouldInsertNewExpression = true;
+            for (var j = 0, jLen = _savedScope.length; j < jLen; j++) {
+                var expression = _savedScope[j];
+                if (expression.isApplied && expression.key === key) {
+                    expression.value = value;
+                    shouldInsertNewExpression = false;
+                    break;
                 }
             }
-            saveScope();
+            if (shouldInsertNewExpression) {
+                _savedScope.push = {isApplied: true, key: key, value: value};
+            }
         }
+        saveScope();
         return newScope;
     }
 
@@ -170,8 +166,6 @@ var Visualizer = (function ($) {
                 //TODO: Save off settings to local storage so they can be retrieved here and used in load of different cube.
                 _selectedLevel = null;
                 _selectedGroups = null;
-                _scope = null;
-                _savedScope = null;
                 _hierarchical = false;
                 _network = null;
             }
@@ -214,6 +208,8 @@ var Visualizer = (function ($) {
                 _nce.showNote(json.message);
                 _loadedCubeName = _nce.getSelectedCubeName();
                 _scope = json.visInfo.scope;
+                _savedScope = json.visInfo.scope;
+                saveScope();
                 loadScopeView();
                 _visualizerContent.show();
                 _visualizerInfo.hide();
@@ -873,7 +869,8 @@ var Visualizer = (function ($) {
     }
 
     function getSavedScope() {
-        return localStorage[getStorageKey(_nce, SCOPE_MAP)];
+        var scopeMap = localStorage[getStorageKey(_nce, SCOPE_MAP)];
+        return scopeMap ? JSON.parse(scopeMap) : {};
     }
 
     function saveScope() {
