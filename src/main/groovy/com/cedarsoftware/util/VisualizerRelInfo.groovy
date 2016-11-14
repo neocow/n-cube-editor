@@ -25,4 +25,7 @@ class VisualizerRelInfo
 	Map sourceTraitMaps
 	String sourceFieldName
 	String sourceFieldRpmType
+
+	Set requiredScopeKeys = []
+	Set optionalScopeKeys = []
 }

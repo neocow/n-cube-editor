@@ -33,6 +33,7 @@ var Visualizer = (function ($) {
     var _edges = null;
     var _networkData = null;
     var _scope = null;
+    var _availableScopeKeys = [];
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
     var _availableGroupsAllLevels = null;
@@ -55,6 +56,7 @@ var Visualizer = (function ($) {
     var _scopeBuilderModal = null;
     var _savedScope = null;
     var _scopeInput = null;
+    var _scopeBuilderListenersAdded = false;
 
     var init = function (info) {
         if (!_nce) {
@@ -87,8 +89,6 @@ var Visualizer = (function ($) {
             _scopeBuilderTable = $('#scopeBuilderTable');
             _scopeBuilderModal = $('#scopeBuilderModal');
             _scopeInput = $('#scope');
-
-            addScopeBuilderListeners();
 
             $(window).resize(function() {
                 if (_network) {
@@ -168,6 +168,8 @@ var Visualizer = (function ($) {
                 _selectedGroups = null;
                 _hierarchical = false;
                 _network = null;
+                _scope = [];
+                _savedScope = [];
             }
 
             var options =
@@ -175,7 +177,8 @@ var Visualizer = (function ($) {
                 selectedLevel: _selectedLevel,
                 startCubeName: _nce.getSelectedCubeName(),
                 scope: _scope,
-                selectedGroups: _selectedGroups
+                selectedGroups: _selectedGroups,
+                availableScopeKeys: _availableScopeKeys
             };
 
 
@@ -223,7 +226,13 @@ var Visualizer = (function ($) {
                 }
                 _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
             }
-        }
+            _availableScopeKeys = json.visInfo.availableScopeKeys['@items'].sort();
+            if (_scopeBuilderListenersAdded === false){
+                availableScopeKeys = _availableScopeKeys;
+                addScopeBuilderListeners();
+                _scopeBuilderListenersAdded = true;
+            }
+         }
     };
 
     function loadHierarchicalView() {
@@ -482,7 +491,7 @@ var Visualizer = (function ($) {
         _maxLevel = visInfo.maxLevel;
         _nodesAllLevels = visInfo.nodes['@items'];
         _edgesAllLevels = visInfo.edges['@items'];
-    }
+     }
 
     var handleCubeSelected = function() {
         load();
@@ -826,8 +835,7 @@ var Visualizer = (function ($) {
     }
 
     /*================================= BEGIN SCOPE BUILDER ==========================================================*/
-
-    var availableScopeKeys = ['context','action','state','date','product','coverage','risk','classCode','programType','lob','businessUnit','producer','policyControlDate','quoteDate','LocationState'];
+    var availableScopeKeys = []
 
     function addScopeBuilderListeners() {
         var builderOptions = {
