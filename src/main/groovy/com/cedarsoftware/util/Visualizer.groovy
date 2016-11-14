@@ -682,7 +682,7 @@ class Visualizer extends NCubeGroovyController
 		//Check other required scope for the start cube
 		Set<String> missingScope = findMissingScope(startCubeName, scope)
 		if (missingScope) {
-			Map expandedScope = scope == null ? new LinkedHashMap<>(DEFAULT_SCOPE) : new LinkedHashMap(scope)
+			Map expandedScope = scope == null ? new LinkedHashMap(DEFAULT_SCOPE) : new LinkedHashMap(scope)
 			String missingScopeString = ''
 			missingScope.each {String key ->
 				expandedScope[key] = DEFAULT_SCOPE_VALUE
