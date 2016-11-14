@@ -55,7 +55,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 		public static
 	final Pattern PATTERN_FIELD_EXTENDS_TRAIT = Pattern.compile('^\\s*((?:[a-z][a-z0-9_]*)(?:\\.[a-z][a-z0-9_]*)*)\\s*(?:[\\[]\\s*([a-z0-9_]+?)\\s*[\\]])?\\s*$', Pattern.CASE_INSENSITIVE);
 
-	public boolean isPrimitive(String type) {
+	public boolean isPrimitive(String type){
 		for (PRIMITIVE_TYPE pt : PRIMITIVE_TYPE.values()) {
 			if (pt.getClassType().getSimpleName().equalsIgnoreCase(type)) {
 				return true;
@@ -169,9 +169,13 @@ public class VisualizerHelper extends NCubeGroovyController {
 
 			// eliminate scoped fields
 			if (!isFieldValidSince(fieldTraits,(String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY))) {
+				//TODO: Temporary printout while debugging
+				println('On class cube ' + classCube.name + ': field ' + fieldName + ' is no longer valid due to r:since. Scope= ' + scope.toString())
 				fieldTraits.put(R_EXISTS,false);
 			}
 			if (!isFieldValidObsolete(fieldTraits,(String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY))) {
+				//TODO: Temporary printout while debugging
+				println('On class cube ' + classCube.name + ': field ' + fieldName + ' is no longer valid due to r:obsolete. Scope= ' + scope.toString())
 				fieldTraits.put(R_EXISTS,false);
 			}
 
@@ -321,10 +325,9 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	private enum PRIMITIVE_TYPE {
-		BOOLEAN(Boolean.class), LONG(Long.class), DOUBLE(Double.class), BIG_DECIMAL(BigDecimal.class), STRING(String.class), DATE(Date.class);
+		BOOLEAN (Boolean.class), LONG(Long.class), DOUBLE(Double.class), BIG_DECIMAL(BigDecimal.class), STRING(String.class), DATE(Date.class);
 
 		private Class<?> classType;
-
 		private PRIMITIVE_TYPE(Class<?> classType) {
 			this.classType = classType;
 		}
@@ -333,7 +336,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 			return this.classType;
 		}
 
-		public PRIMITIVE_TYPE fromName(String typeName) {
+		public static PRIMITIVE_TYPE fromName(String typeName) {
 			for (PRIMITIVE_TYPE type : values()) {
 				if (type.toString().equalsIgnoreCase(typeName) || type.getClassType().getSimpleName().equalsIgnoreCase(typeName)) {
 					return type;
