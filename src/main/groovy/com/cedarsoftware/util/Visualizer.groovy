@@ -78,8 +78,8 @@ class Visualizer extends NCubeGroovyController
 
 		VisualizerInfo visInfo = new VisualizerInfo()
 		visInfo.startCubeName = options.startCubeName as String
-		Map scope = options.scope as Map
-		visInfo.scope = scope == null ? new HashMap(DEFAULT_SCOPE) : scope
+		Map scope = options.scope as LinkedHashMap
+		visInfo.scope = scope == null ? new LinkedHashMap(DEFAULT_SCOPE) : scope
 		visInfo.allGroups = ALL_GROUPS_MAP
 		visInfo.availableGroupsAllLevels = []
 		visInfo.groupSuffix = _ENUM
@@ -600,7 +600,7 @@ class Visualizer extends NCubeGroovyController
  */
 	private static Map getScopeRelativeToSource(NCube targetCube, String sourceFieldRpmType, String targetFieldName, Map<String, Object> scope)
 	{
-		Map<String, Object> newScope = new HashMap(scope)
+		Map<String, Object> newScope = new LinkedHashMap(scope)
 
 		if (targetCube.name.startsWith(RPM_ENUM))
 		{
@@ -641,7 +641,7 @@ class Visualizer extends NCubeGroovyController
 		boolean minimumScopeMissing = false
 		if (!scope || scope == DEFAULT_SCOPE){
 			if (!scope){
-				visInfo.scope = new HashMap(DEFAULT_SCOPE)
+				visInfo.scope = new LinkedHashMap(DEFAULT_SCOPE)
 			}
 			String type = Splitter.on('.').split(startCubeName.replace(RPM_CLASS_DOT, '')).first()
 			visInfo.scope[type.toLowerCase()] = DEFAULT_SCOPE_VALUE
@@ -682,7 +682,7 @@ class Visualizer extends NCubeGroovyController
 		//Check other required scope for the start cube
 		Set<String> missingScope = findMissingScope(startCubeName, scope)
 		if (missingScope) {
-			Map expandedScope = scope == null ? new HashMap(DEFAULT_SCOPE) : new HashMap(scope)
+			Map expandedScope = scope == null ? new LinkedHashMap<>(DEFAULT_SCOPE) : new LinkedHashMap(scope)
 			String missingScopeString = ''
 			missingScope.each {String key ->
 				expandedScope[key] = DEFAULT_SCOPE_VALUE
