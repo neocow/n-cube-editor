@@ -12,7 +12,7 @@ import ncube.grv.method.NCubeGroovyController
 class VisualizerRelInfo
 {
 	long id
-	boolean loadTargetAsRpmClass = true
+	boolean loadFieldsAndTraits = true
 	Set<String> notes = []
 
     NCube targetCube
@@ -25,7 +25,4 @@ class VisualizerRelInfo
 	Map sourceTraitMaps
 	String sourceFieldName
 	String sourceFieldRpmType
-
-	Set requiredScopeKeys = []
-	Set optionalScopeKeys = []
 }

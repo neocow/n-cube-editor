@@ -207,7 +207,7 @@ var Visualizer = (function ($) {
                 _visualizerInfo.show();
                 _visualizerNetwork.show();
             }
-            else if (json.status === 'missingScope') {
+            else if (json.status === 'missingStartScope') {
                 _nce.showNote(json.message);
                 _loadedCubeName = _nce.getSelectedCubeName();
                 _scope = json.visInfo.scope;

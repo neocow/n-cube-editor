@@ -67,9 +67,8 @@ public class VisualizerHelper extends NCubeGroovyController {
 	/**
 	 * ORIGINAL: Not copied from Dynamis
 	 */
-	public Map getTraitMaps(String cubeName, Map scope) {
+	public Map getTraitMaps(String cubeName, Map scope, Map traitMaps) {
 		NCube cube = getCube(cubeName)
-		Map traitMaps = [:]
 		if (cube.name.startsWith(RPM_ENUM)){
 			loadRpmClassFields(RPM_ENUM, cube.name.split(RPM_ENUM_DOT)[1], scope, traitMaps, [:])
 		} else{
@@ -168,13 +167,9 @@ public class VisualizerHelper extends NCubeGroovyController {
 
 			// eliminate scoped fields
 			if (!isFieldValidSince(fieldTraits,(String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY))) {
-				//TODO: Temporary printout while debugging
-				println('On class cube ' + classCube.name + ': field ' + fieldName + ' is no longer valid due to r:since. Scope= ' + scope.toString())
 				fieldTraits.put(R_EXISTS,false);
 			}
 			if (!isFieldValidObsolete(fieldTraits,(String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY))) {
-				//TODO: Temporary printout while debugging
-				println('On class cube ' + classCube.name + ': field ' + fieldName + ' is no longer valid due to r:obsolete. Scope= ' + scope.toString())
 				fieldTraits.put(R_EXISTS,false);
 			}
 
