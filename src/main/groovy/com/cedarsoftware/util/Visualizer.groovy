@@ -68,7 +68,7 @@ class Visualizer extends NCubeGroovyController
 	public static final String UNABLE_TO_LOAD = 'unable to load'
 
 	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
-	public static final String NOT_ALL_REQUIRED_SCOPE_KEYS = 'does not contain all of the required scope keys:'
+	public static final String NOT_ALL_REQUIRED_SCOPE_KEYS = 'does not contain all of the required scope keys'
 	public static final String STATUS_SUCCESS = 'success'
 
 	private Set messages = []
@@ -114,14 +114,14 @@ class Visualizer extends NCubeGroovyController
 		visInfo.edges = []
 
 		if (hasMissingMinimumScope(visInfo)) {
-			messages << 'Scope is required. Please add scope value(s) for the following scope key(s): ' + String.join(COMMA_SPACE, missingRequiredScopeKeys) + '.'
+			messages << 'Scope is required. Please add scope value(s) for the following scope key(s): ' + BREAK + BREAK + String.join(COMMA_SPACE, missingRequiredScopeKeys)
 			return [status: STATUS_MISSING_START_SCOPE, visInfo: visInfo, message: String.join(DOUBLE_BREAK, messages)]
 		}
 
 		getRpmVisualization(visInfo)
 
 		if (missingRequiredScopeKeys) {
-			messages << 'Additional scope is required. Please add scope value(s) for the following scope key(s): ' + String.join(COMMA_SPACE, missingRequiredScopeKeys) + '.'
+			messages << 'Additional scope is required. Please add scope value(s) for the following scope key(s): ' + BREAK + BREAK + String.join(COMMA_SPACE, missingRequiredScopeKeys)
 		}
 
 		String message = messages.size() > 0 ? String.join(DOUBLE_BREAK, messages) : null
@@ -354,7 +354,7 @@ class Visualizer extends NCubeGroovyController
 				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
 				relInfo.notes << 'The source cube ' + relInfo.sourceCube.name + ' points directly to this cube (' + targetCube.name +
 						') via field ' + sourceFieldName + ', but there is no ' + type.toLowerCase() + ' named ' +
-						sourceFieldName + ' on this cube. It can therefore not be loaded as an rpm.class in the visualization.'
+						sourceFieldName + ' on this cube.' + BREAK + BREAK + 'It can therefore not be loaded as an rpm.class in the visualization.'
 				relInfo.loadFieldsAndTraits = false
 				return false
 			}
@@ -674,10 +674,10 @@ class Visualizer extends NCubeGroovyController
 		{
 			String scopedName
 			Set notes = []
-			String exceptionCause = e.cause.toString()
-			if (exceptionCause.contains(NOT_ALL_REQUIRED_SCOPE_KEYS)) //TODO: Can be changed to use NCube.NOT_ALL_REQUIRED_SCOPE_KEYS if/when PR is merged.
+			String rootCause = getRootCause(e).toString()
+			if (rootCause.contains(NOT_ALL_REQUIRED_SCOPE_KEYS))
 			{
-				Set<String> missingScope = findMissingScope(scope, exceptionCause)
+				Set<String> missingScope = findMissingScope(scope, rootCause)
 				if (missingScope)
 				{
 					Map expandedScope = scope == null ? new LinkedHashMap(DEFAULT_SCOPE) : new LinkedHashMap(scope)
@@ -687,20 +687,20 @@ class Visualizer extends NCubeGroovyController
 					missingRequiredScopeKeys.addAll(missingScope)
 					visInfo.scope = expandedScope
 					scopedName = MISSING_SCOPE
-					notes << 'Additional scope is required. Please add scope value(s) for the following scope key(s): ' + String.join(COMMA_SPACE, missingScope)
+					notes << 'Additional scope is required. Please add scope value(s) for the following scope key(s):' + BREAK + BREAK + String.join(COMMA_SPACE, missingScope)
 				}
 				else
 				{
-					throw new IllegalStateException('Exception message contains "' + NOT_ALL_REQUIRED_SCOPE_KEYS + '", but no missing keys found for ' + cubeName + ' and scope ' + scope.toString() + '.')
+					throw new IllegalStateException('Exception message contains "' + NOT_ALL_REQUIRED_SCOPE_KEYS + '", but no missing keys found for ' + cubeName + ' and scope ' + scope.toString() + '.', e)
 				}
 			}
 			else
 			{
 				scopedName = UNABLE_TO_LOAD
-				notes << 'An exception was thrown while attempting to load fields and traits for this class. '
-				notes << e.message
-				messages << 'Cube ' + cubeName + ' threw an exception while loading fields and traits. ' + e.message
-			}
+				String message = 'An exception was thrown while loading fields and traits for cube ' + cubeName + '.' + BREAK + BREAK + '<strong>Message:</strong> ' + BREAK + BREAK + e.message + BREAK + BREAK +  '<strong>Root cause: </strong>'+ BREAK + BREAK + rootCause
+				notes << message
+				messages << message
+ 			}
 			traitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): scopedName]]
 			relInfo.targetTraitMaps = traitMaps
 			relInfo.loadFieldsAndTraits = false
@@ -710,10 +710,19 @@ class Visualizer extends NCubeGroovyController
 		return true
 	}
 
+	private static Throwable getRootCause(Throwable cause) {
+		Throwable rootCause = null;
+		while (cause != null && cause != rootCause) {
+			rootCause = cause;
+			cause = cause.getCause();
+		}
+		return rootCause;
+	}
+
 	private static Set<String> findMissingScope(Map scope, String requiredScopeKeyString)
 	{
 		Set<String> missingScope = []
-		String part1 = Splitter.on(NOT_ALL_REQUIRED_SCOPE_KEYS).split(requiredScopeKeyString).last() //TODO: Can be changed to NCube.NOT_ALL_REQUIRED_SCOPE_KEYS if/when PR is merged.
+		String part1 = Splitter.on(NOT_ALL_REQUIRED_SCOPE_KEYS).split(requiredScopeKeyString).last()
 		String part2 = Splitter.on('[').split(part1).last()
 		String part3 = Splitter.on(']').split(part2).first()
 		Set<String> requiredKeys = Splitter.on(',').split(part3) as Set
