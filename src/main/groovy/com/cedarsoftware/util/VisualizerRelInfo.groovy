@@ -12,6 +12,8 @@ import ncube.grv.method.NCubeGroovyController
 class VisualizerRelInfo
 {
 	long id
+	boolean loadFieldsAndTraits = true
+	Set<String> notes = []
 
     NCube targetCube
 	Map targetScope

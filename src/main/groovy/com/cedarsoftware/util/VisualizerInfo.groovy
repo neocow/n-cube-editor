@@ -23,4 +23,5 @@ class VisualizerInfo
 	Set selectedGroups
 	Set availableGroupsAllLevels
 	String groupSuffix
+	Set availableScopeKeys = []
 }
