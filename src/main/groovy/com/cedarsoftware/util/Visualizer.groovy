@@ -630,8 +630,8 @@ class Visualizer extends NCubeGroovyController
 		else{
 			missingScope = true
 			visInfo.scope = getDefaultScope(cubeName)
-			messages << 'The scope for the following scope keys was added since it is required. ' +
-					BREAK + BREAK + String.join(COMMA_SPACE, visInfo.scope.keySet()) +
+			messages << 'The scope for the following scope keys was added since it is required: ' +
+					BREAK + BREAK + SPACE + SPACE + SPACE + String.join(COMMA_SPACE, visInfo.scope.keySet()) +
 					BREAK + BREAK + messageSuffixType + ' The other default scope values may also be changed as desired.'
 		}
 		return missingScope
