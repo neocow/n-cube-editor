@@ -195,8 +195,7 @@ class Visualizer extends NCubeGroovyController
 			targetTraitMaps.each { k, v ->
 				String targetFieldName = k as String
 				Map targetTraits = v as Map
-				Boolean exists = targetTraits[R_EXISTS]
-				if (!CLASS_TRAITS.equals(targetFieldName) && exists)
+				if (CLASS_TRAITS != targetFieldName && targetTraits[R_EXISTS])
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
 
@@ -251,8 +250,7 @@ class Visualizer extends NCubeGroovyController
 			targetTraitMaps.each { k, v ->
 				String targetFieldName = k as String
 				Map targetTraits = v as Map
-				Boolean exists = targetTraits[R_EXISTS]
-				if (!CLASS_TRAITS.equals(targetFieldName) && exists)
+				if (CLASS_TRAITS != targetFieldName &&  targetTraits[R_EXISTS])
 				{
 					try
 					{
@@ -511,19 +509,20 @@ class Visualizer extends NCubeGroovyController
 		List<String> fields = new ArrayList(traitMaps.keySet())
 		fields.remove(CLASS_TRAITS)
 		String fieldString = "<strong>fields = </strong>"
-		return fieldString + getFieldDetails(fields, SPACE)
+		return fieldString + getFieldDetails(traitMaps, SPACE)
 	}
 
-
-	private static String getFieldDetails(List<String> fields, String spaces)
+	private static String getFieldDetails(Map traitMaps, String spaces)
 	{
 		StringBuilder fieldDetails = new StringBuilder()
 		fieldDetails.append('')
 
-		fields.each() {
-			fieldDetails.append(BREAK + spaces + it + SPACE)
+		traitMaps.each { k, v ->
+			String fieldName = k as String
+			if (CLASS_TRAITS != fieldName && traitMaps[fieldName][R_EXISTS]) {
+				fieldDetails.append(BREAK + spaces + k + SPACE)
+			}
 		}
-
 		return fieldDetails.toString()
 	}
 
@@ -619,7 +618,7 @@ class Visualizer extends NCubeGroovyController
 		String type = getTypeFromCubeName(cubeName)
 
 		String messageSuffix = 'Its default value may be changed as desired.'
-		String messageSuffixType = 'Please replace ' + DEFAULT_SCOPE_VALUE + ' with an actual scope value.'
+		String messageSuffixType = 'Please replace ' + DEFAULT_SCOPE_VALUE + ' for ' + type + ' with an actual scope value.'
 
 		if (scope) {
 			missingScope = validateScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix) ? true : missingScope
