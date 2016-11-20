@@ -57,9 +57,10 @@ class Visualizer extends NCubeGroovyController
 	public static final long DEFAULT_LEVEL = 2
 
 	private static final String SPACE = '&nbsp;'
+	private static final String INDENT = "${SPACE}${SPACE}${SPACE}"
 	private static final String BREAK = '<br>'
 	private static final String COMMA_SPACE = ', '
-	private static final String DOUBLE_BREAK = BREAK + BREAK
+	private static final String DOUBLE_BREAK = "${BREAK}${BREAK}"
 
 	private VisualizerHelper helper = new VisualizerHelper()
 	static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
@@ -218,7 +219,7 @@ class Visualizer extends NCubeGroovyController
 							addToStack(visInfo, relInfo, nextTargetCube, targetFieldRpmType, targetFieldName)
 						}
 						else {
-							messages << 'No cube exists with name of ' + nextTargetCubeName + '. It is therefore not included in the visualization.'
+							messages << "No cube exists with name of ${nextTargetCubeName}. It is therefore not included in the visualization."
 						}
 					}
 				}
@@ -235,7 +236,7 @@ class Visualizer extends NCubeGroovyController
 		String sourceFieldRpmType = relInfo.sourceFieldRpmType
 
 		if (!targetCubeName.startsWith(RPM_ENUM)) {
-			throw new IllegalStateException('Cube is not an rpm.enum cube: ' + targetCubeName + '.')
+			throw new IllegalStateException("Cube is not an rpm.enum cube: ${targetCubeName}.")
 		}
 
 		if (relInfo.sourceCube && (!sourceFieldRpmType || helper.isPrimitive(sourceFieldRpmType)))
@@ -266,13 +267,13 @@ class Visualizer extends NCubeGroovyController
 								}
 							}
 							else {
-								messages << 'No cube exists with name of ' + nextTargetCubeName + '. It is therefore not included in the visualization.'
+								messages << "No cube exists with name of ${nextTargetCubeName}. It is therefore not included in the visualization."
 							}
 						}
 					}
 					catch (Exception e)
 					{
-						throw new IllegalStateException('Exception caught while loading and processing the cube for enum field ' + targetFieldName + ' in enum ' + targetCubeName + '.', e)
+						throw new IllegalStateException("Exception caught while loading and processing the cube for enum field ${targetFieldName} in enum ${targetCubeName}.", e)
 					}
 				}
 			}
@@ -328,7 +329,7 @@ class Visualizer extends NCubeGroovyController
 		}
 		catch (Exception e)
 		{
-			throw new IllegalStateException('Exception caught while loading and processing the class for field ' + relInfo.sourceFieldName + ' in class ' + nextTargetCube.name + '.', e)
+			throw new IllegalStateException("Exception caught while loading and processing the class for field ${relInfo.sourceFieldName} in class ${nextTargetCube.name}.", e)
 		}
 	}
 
@@ -343,15 +344,27 @@ class Visualizer extends NCubeGroovyController
 		if (sourceCube && sourceCube.name.startsWith(RPM_CLASS_DOT) && targetCube.name.startsWith(RPM_CLASS_DOT) &&
 				targetCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME))
 		{
-			String type = Splitter.on('.').split(targetCube.name.replace(RPM_CLASS_DOT, '')).first()
+			String type = getTypeFromCubeName(targetCube.name)
 			NCube classTraitsCube = getCube(RPM_SCOPE_CLASS_DOT + type + DOT_CLASS_TRAITS)
-			List columns = classTraitsCube.getAxis(type.toLowerCase()).columns
+			List columns = classTraitsCube.getAxis(type).columns
 			String sourceFieldName = relInfo.sourceFieldName
 			if (!columns.find { sourceFieldName == (it as Column).value }) {
 				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
-				relInfo.notes << 'The source cube ' + relInfo.sourceCube.name + ' points directly to this cube (' + targetCube.name +
-						') via field ' + sourceFieldName + ', but there is no ' + type.toLowerCase() + ' named ' +
-						sourceFieldName + ' on this cube.' + BREAK + BREAK + 'It can therefore not be loaded as an rpm.class in the visualization.'
+				StringBuilder sb = new StringBuilder()
+				sb.append('The source cube ')
+				sb.append(sourceCube.name)
+				sb.append(' points directly to this cube (')
+				sb.append(targetCube.name )
+				sb.append(') via field ')
+				sb.append(sourceFieldName)
+				sb.append(', but there is no ')
+				sb.append(type)
+				sb.append(' named ')
+				sb.append(sourceFieldName)
+				sb.append(' on this cube.')
+				sb.append(DOUBLE_BREAK)
+				sb.append('It can therefore not be loaded as an rpm.class in the visualization.')
+				relInfo.notes << sb.toString()
 				relInfo.loadFieldsAndTraits = false
 				return false
 			}
@@ -388,8 +401,8 @@ class Visualizer extends NCubeGroovyController
 		String sourceCubeEffectiveName = getEffectiveName(sourceCube, sourceTraitMaps)
 		String targetCubeEffectiveName = getEffectiveName(targetCube, relInfo.targetTraitMaps)
 		edgeMap.id = String.valueOf(relInfo.id)
-		edgeMap.from = sourceCube.name + '_' + relInfo.sourceScope.toString()
-		edgeMap.to = targetCube.name + '_' + relInfo.targetScope.toString()
+		edgeMap.from = sourceCube.name + '_' + relInfo.sourceScope.toString()  //Note: Cannot use GString here since vis.js can't handle it
+		edgeMap.to = targetCube.name + '_' + relInfo.targetScope.toString()    //Note: Cannot use GString here since vis.js can't handle it
 		edgeMap.fromName = sourceCubeEffectiveName
 		edgeMap.toName = targetCubeEffectiveName
 		edgeMap.fromFieldName = sourceFieldName
@@ -399,7 +412,7 @@ class Visualizer extends NCubeGroovyController
 		String vMax = sourceTraitMaps[sourceFieldName][V_MAX]
 		edgeMap.title = ''
 		if (vMin != null && vMax != null) {
-			edgeMap.title = vMin + ':' + vMax
+			edgeMap.title = "${vMin}:${vMax}"
 		}
 		else {
 			edgeMap.title = ''
@@ -447,7 +460,7 @@ class Visualizer extends NCubeGroovyController
 		sb.append(line)
 
 		Map nodeMap = [:]
-		nodeMap.id = targetCube.name + '_' + targetScope.toString()
+		nodeMap.id = targetCube.name + '_' + targetScope.toString() //Note: Cannot use GString here since vis.js can't handle it
 		nodeMap.scope = targetScope.toString()
 		nodeMap.level = String.valueOf(relInfo.targetLevel)
 		nodeMap.name = targetCubeName
@@ -470,30 +483,50 @@ class Visualizer extends NCubeGroovyController
 
 		StringBuilder sb = new StringBuilder()
 
+		//Scoped Name
 		if (scopedName) {
-			sb.append('<strong>scoped name = </strong>' + scopedName + DOUBLE_BREAK)
+			sb.append('<b>scoped name = </b>')
+			sb.append(scopedName)
+			sb.append(DOUBLE_BREAK)
 		}
 
+		//Notes
 		if (notes)
 		{
-			sb.append('<strong>Note: </strong><br>')
+			sb.append('<b>Note: </b><br>')
 			notes.each { String note ->
-				sb.append(' ' + note + BREAK)
+				sb.append(' ')
+				sb.append(note)
+				sb.append(BREAK)
 			}
 			sb.append(BREAK)
 		}
 
-		sb.append('<strong>scope = </strong>' + scope.toString().replace('{', '').replace('}', '') + DOUBLE_BREAK)
+		//Scope
+		sb.append('<b>scope = </b>')
+		sb.append(scope.toString() - '{' - '}')
+		sb.append(DOUBLE_BREAK)
 
+		//Required scope
 		getRequiredAndOptionalScopeKeys(relInfo)
 		String cubeName = relInfo.targetCube.name
 		String requiredScope = String.join(COMMA_SPACE, requiredScopeKeys[cubeName])
-		sb.append(requiredScope == '' ? '' : '' + '<strong>required scope to access all cells for cube = </strong>' + requiredScope + DOUBLE_BREAK)
+		sb.append('<b>required scope to access all cells for cube = </b>')
+		sb.append(requiredScope)
+		sb.append(DOUBLE_BREAK)
+
+		//Optional scope
 		String optionalScope = String.join(COMMA_SPACE, optionalScopeKeys[cubeName])
-		sb.append(optionalScope == '' ? '' : '' + '<strong>optional scope for cube = </strong>' + optionalScope + DOUBLE_BREAK)
+		sb.append('<b>optional scope for cube = </b>')
+		sb.append(optionalScope)
+		sb.append(DOUBLE_BREAK)
 
-		sb.append('<strong>level = </strong>' + nodeMap.level.toString() + DOUBLE_BREAK)
+		//Level
+		sb.append('<b>level = </b>')
+		sb.append(nodeMap.level.toString())
+		sb.append(DOUBLE_BREAK)
 
+		//Fields
 		if (loadFieldsAndTraits)
 		{
 			sb.append(getTitleFields(traitMaps))
@@ -506,7 +539,7 @@ class Visualizer extends NCubeGroovyController
 	{
 		List<String> fields = new ArrayList(traitMaps.keySet())
 		fields.remove(CLASS_TRAITS)
-		String fieldString = "<strong>fields = </strong>"
+		String fieldString = "<b>fields = </b>"
 		return fieldString + getFieldDetails(traitMaps, SPACE)
 	}
 
@@ -518,7 +551,10 @@ class Visualizer extends NCubeGroovyController
 		traitMaps.each { k, v ->
 			String fieldName = k as String
 			if (CLASS_TRAITS != fieldName) {
-				fieldDetails.append(BREAK + spaces + k + SPACE)
+				fieldDetails.append(BREAK)
+				fieldDetails.append(spaces)
+				fieldDetails.append(fieldName)
+				fieldDetails.append(SPACE)
 			}
 		}
 		return fieldDetails.toString()
@@ -615,8 +651,8 @@ class Visualizer extends NCubeGroovyController
 		Map scope = visInfo.scope
 		String type = getTypeFromCubeName(cubeName)
 
-		String messageSuffix = 'Its default value may be changed as desired.'
-		String messageSuffixType = 'Please replace ' + DEFAULT_SCOPE_VALUE + ' for ' + type + ' with an actual scope value.'
+		String messageSuffix = "Its default value may be changed as desired."
+		String messageSuffixType = "Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
 
 		if (scope) {
 			missingScope = validateScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix) ? true : missingScope
@@ -627,9 +663,15 @@ class Visualizer extends NCubeGroovyController
 		else{
 			missingScope = true
 			visInfo.scope = getDefaultScope(cubeName)
-			messages << 'The scope for the following scope keys was added since it is required: ' +
-					BREAK + BREAK + SPACE + SPACE + SPACE + String.join(COMMA_SPACE, visInfo.scope.keySet()) +
-					BREAK + BREAK + messageSuffixType + ' The other default scope values may also be changed as desired.'
+			StringBuilder sb = new StringBuilder()
+			sb.append("The scope for the following scope keys was added since it is required: ")
+			sb.append(DOUBLE_BREAK)
+			sb.append(INDENT)
+			sb.append(String.join(COMMA_SPACE, visInfo.scope.keySet()))
+			sb.append(DOUBLE_BREAK)
+			sb.append(messageSuffixType)
+			sb.append(" The other default scope values may also be changed as desired.")
+			messages << sb.toString()
 		}
 		return missingScope
 	}
@@ -654,7 +696,7 @@ class Visualizer extends NCubeGroovyController
 		}
 
 		if (missingScope){
-			messages << 'Scope is required for ' + key + '. ' + messageSuffix
+			messages << "Scope is required for ${key}. ${messageSuffix}"
 		}
 		return missingScope
 	}
@@ -716,8 +758,21 @@ class Visualizer extends NCubeGroovyController
 		Object value = e.value ?: 'null'
 
 		if (cubeName && axisName) {
-			String message = 'The scope value ' + value + ' for scope key ' + axisName + ' cannot be found on axis ' + axisName + ' on ' + cubeName + getSourceMessage(relInfo) + '.' +
-					' Please supply a different value for ' + axisName + '.'
+			StringBuilder sb = new StringBuilder()
+			sb.append('The scope value ')
+			sb.append(value)
+			sb.append(' for scope key ')
+			sb.append(axisName)
+			sb.append(' cannot be found on axis ')
+			sb.append(axisName)
+			sb.append(' on ')
+			sb.append(cubeName)
+			sb.append(getSourceMessage(relInfo))
+			sb.append('.')
+			sb.append(' Please supply a different value for ')
+			sb.append(axisName)
+			sb.append('.')
+			String message = sb.toString()
 			relInfo.notes << message
 			messages << message
 			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): SCOPE_VALUE_NOT_FOUND]]
@@ -733,12 +788,12 @@ class Visualizer extends NCubeGroovyController
 		if (relInfo.sourceTraitMaps)
 		{
 			String sourceScopedName = getScopedName(relInfo.sourceTraitMaps)
-			return sourceScopedName ? ', the target of ' + sourceScopedName + ' on ' + relInfo.sourceCube.name : ''
+			return sourceScopedName ? ", the target of ${sourceScopedName} on ${relInfo.sourceCube.name}" : ""
 		}
 		return ''
 	}
 
-	private void handleInvalidCoordinateException(InvalidCoordinateException e,  VisualizerInfo visInfo, VisualizerRelInfo relInfo)
+	private void handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		String cubeName = e.cubeName
 		Set requiredKeys = e.requiredKeys
@@ -751,14 +806,20 @@ class Visualizer extends NCubeGroovyController
 			}
 			visInfo.scope = expandedScope
 			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE]]
-			String message = 'Additional scope is required to load ' + cubeName + getSourceMessage(relInfo) +
-					'. Please add scope value(s) for the following scope key(s): ' + String.join(COMMA_SPACE, missingScope) + '.'
+			StringBuilder sb = new StringBuilder()
+			sb.append('Additional scope is required to load ')
+			sb.append(cubeName)
+			sb.append(getSourceMessage(relInfo))
+			sb.append('. Please add scope value(s) for the following scope key(s): ')
+			sb.append(String.join(COMMA_SPACE, missingScope))
+			sb.append('.')
+			String message = sb.toString()
 			relInfo.notes << message
 			messages << message
 		}
 		else
 		{
-			throw new IllegalStateException('An InvalidCoordinateException was thrown, but no missing scope keys found for ' + relInfo.targetCube.name + ' and scope ' + visInfo.scope.toString() + '.', e)
+			throw new IllegalStateException("An InvalidCoordinateException was thrown, but no missing scope keys found for ${relInfo.targetCube.name} and scope ${visInfo.scope.toString()}.", e)
 		}
 	}
 
@@ -776,7 +837,24 @@ class Visualizer extends NCubeGroovyController
 
 	private void handleException(Throwable e, VisualizerRelInfo relInfo)
 	{
-		String message = 'An exception was thrown while loading fields and traits for ' + relInfo.targetCube.name + getSourceMessage(relInfo) + '.' + BREAK + BREAK + '<strong>Message:</strong> ' + BREAK + BREAK + e.message + BREAK + BREAK +  '<strong>Root cause: </strong>'+ BREAK + BREAK + getDeepestException(e).toString()
+		Throwable t = getDeepestException(e)
+		StringBuilder sb = new StringBuilder()
+		sb.append('An exception was thrown while loading fields and traits for ')
+		sb.append(relInfo.targetCube.name)
+		sb.append(getSourceMessage(relInfo))
+		sb.append('.')
+		sb.append(DOUBLE_BREAK)
+		sb.append('<b>Message:</b> ')
+		sb.append(DOUBLE_BREAK)
+		sb.append(e.message)
+		sb.append(DOUBLE_BREAK)
+		sb.append('<b>Root cause: </b>')
+		sb.append(DOUBLE_BREAK)
+		sb.append(t.toString())
+		sb.append('<b>Stack trace: </b>')
+		sb.append(DOUBLE_BREAK)
+		sb.append(t.stackTrace.toString())
+		String message = sb.toString()
 		relInfo.notes << message
 		messages << message
 		relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
@@ -817,7 +895,7 @@ class Visualizer extends NCubeGroovyController
 
 	private static String getTypeFromCubeName(String cubeName)
 	{
-		return Splitter.on('.').split(cubeName.replace(RPM_CLASS_DOT, '')).first().toLowerCase()
+		return (cubeName - RPM_CLASS_DOT).toLowerCase()
 	}
 
 }
