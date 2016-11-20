@@ -81,15 +81,18 @@ public class VisualizerHelper extends NCubeGroovyController {
 	/**
 	 * ORIGINAL: Not copied from Dynamis
 	 */
-	private static void removeNotExistsFields(Map<String, Map<String, Object>> traitMaps) {
-		List notExistFields = []
-		traitMaps.keySet().each{ String fieldName->
+	private static void removeNotExistsFields(Map<String, Map<String, Object>> traitMaps)
+	{
+		Set keySet = traitMaps.keySet()
+		Iterator<String> i = keySet.iterator()
+		while (i.hasNext())
+		{
+			String fieldName = i.next()
 			if (!traitMaps[fieldName][R_EXISTS])
 			{
-				notExistFields << fieldName
+				i.remove()
 			}
 		}
-		traitMaps.keySet().removeAll(notExistFields);
 	}
 
 	/**

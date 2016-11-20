@@ -99,17 +99,17 @@ class Visualizer extends NCubeGroovyController
 		String cubeName = options.startCubeName as String
 		helper.ncube = ncube
 
-		VisualizerInfo visInfo = new VisualizerInfo()
-		visInfo.startCubeName = cubeName
-		Map scope = options.scope as LinkedHashMap
 		defaultScopeEffectiveVersion = applicationID.version.replace('.', '-')
 		defaultScopeDate = DATE_TIME_FORMAT.format(new Date())
-		visInfo.scope = scope ?: null ? getDefaultScope(cubeName) : scope
+
+		VisualizerInfo visInfo = new VisualizerInfo()
+		visInfo.startCubeName = cubeName
+		visInfo.scope = options.scope as LinkedHashMap
 		visInfo.allGroups = ALL_GROUPS_MAP
 		visInfo.availableGroupsAllLevels = []
 		visInfo.groupSuffix = _ENUM
 		Set selectedGroups = options.selectedGroups as Set
-		visInfo.selectedGroups = selectedGroups == null ? ALL_GROUPS_MAP.keySet() : selectedGroups
+		visInfo.selectedGroups = selectedGroups ?: ALL_GROUPS_MAP.keySet()
 		String selectedLevel = options.selectedLevel as String
 		visInfo.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL : Converter.convert(selectedLevel, long.class) as long
 		Set availableScopeKeys = options.availableScopeKeys as Set
@@ -358,7 +358,7 @@ class Visualizer extends NCubeGroovyController
 				sb.append(') via field ')
 				sb.append(sourceFieldName)
 				sb.append(', but there is no ')
-				sb.append(type)
+				sb.append(type.toLowerCase())
 				sb.append(' named ')
 				sb.append(sourceFieldName)
 				sb.append(' on this cube.')
@@ -401,8 +401,8 @@ class Visualizer extends NCubeGroovyController
 		String sourceCubeEffectiveName = getEffectiveName(sourceCube, sourceTraitMaps)
 		String targetCubeEffectiveName = getEffectiveName(targetCube, relInfo.targetTraitMaps)
 		edgeMap.id = String.valueOf(relInfo.id)
-		edgeMap.from = sourceCube.name + '_' + relInfo.sourceScope.toString()  //Note: Cannot use GString here since vis.js can't handle it
-		edgeMap.to = targetCube.name + '_' + relInfo.targetScope.toString()    //Note: Cannot use GString here since vis.js can't handle it
+		edgeMap.from = "${sourceCube.name}_${relInfo.sourceScope.toString()}".toString()
+		edgeMap.to = "${targetCube.name}_${relInfo.targetScope.toString()}".toString()
 		edgeMap.fromName = sourceCubeEffectiveName
 		edgeMap.toName = targetCubeEffectiveName
 		edgeMap.fromFieldName = sourceFieldName
@@ -460,7 +460,7 @@ class Visualizer extends NCubeGroovyController
 		sb.append(line)
 
 		Map nodeMap = [:]
-		nodeMap.id = targetCube.name + '_' + targetScope.toString() //Note: Cannot use GString here since vis.js can't handle it
+		nodeMap.id = "${targetCube.name}_${targetScope.toString()}".toString()
 		nodeMap.scope = targetScope.toString()
 		nodeMap.level = String.valueOf(relInfo.targetLevel)
 		nodeMap.name = targetCubeName
@@ -537,7 +537,7 @@ class Visualizer extends NCubeGroovyController
 
 	private static String getTitleFields(Map traitMaps)
 	{
-		List<String> fields = new ArrayList(traitMaps.keySet())
+		Set fields = new LinkedHashSet(traitMaps.keySet())
 		fields.remove(CLASS_TRAITS)
 		String fieldString = "<b>fields = </b>"
 		return fieldString + getFieldDetails(traitMaps, SPACE)
@@ -636,7 +636,7 @@ class Visualizer extends NCubeGroovyController
 
 	private Map getDefaultScope(String cubeName)
 	{
-		String type = getTypeFromCubeName(cubeName)
+		String type = getTypeFromCubeName(cubeName).toLowerCase()
 		return [(type): DEFAULT_SCOPE_VALUE,
 				(EFFECTIVE_VERSION): defaultScopeEffectiveVersion,
 				(POLICY_CONTROL_DATE): defaultScopeDate,
@@ -649,25 +649,26 @@ class Visualizer extends NCubeGroovyController
 		boolean missingScope
 		String cubeName = visInfo.startCubeName
 		Map scope = visInfo.scope
-		String type = getTypeFromCubeName(cubeName)
+		String type = getTypeFromCubeName(cubeName).toLowerCase()
 
 		String messageSuffix = "Its default value may be changed as desired."
 		String messageSuffixType = "Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
 
 		if (scope) {
-			missingScope = validateScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix) ? true : missingScope
-			missingScope = validateScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix) ? true : missingScope
-			missingScope = validateScope(visInfo, QUOTE_DATE, defaultScopeDate, messageSuffix) ? true : missingScope
-			missingScope = validateScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType) ? true : missingScope
+			missingScope = validateScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix) ?: missingScope
+			missingScope = validateScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix)  ?: missingScope
+			missingScope = validateScope(visInfo, QUOTE_DATE, defaultScopeDate, messageSuffix) ?: missingScope
+			missingScope = validateScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType) ?: missingScope
 		}
 		else{
 			missingScope = true
-			visInfo.scope = getDefaultScope(cubeName)
+			Map<String, String> defaultScope = getDefaultScope(cubeName)
+			visInfo.scope = defaultScope
 			StringBuilder sb = new StringBuilder()
 			sb.append("The scope for the following scope keys was added since it is required: ")
 			sb.append(DOUBLE_BREAK)
 			sb.append(INDENT)
-			sb.append(String.join(COMMA_SPACE, visInfo.scope.keySet()))
+			sb.append(String.join(COMMA_SPACE, defaultScope.keySet()))
 			sb.append(DOUBLE_BREAK)
 			sb.append(messageSuffixType)
 			sb.append(" The other default scope values may also be changed as desired.")
@@ -708,9 +709,9 @@ class Visualizer extends NCubeGroovyController
 		{
 			if (isRpmClassOrScopeCube(cubeName))
 			{
-				List<Set> scopeKeys = getScopeAllReferenced(relInfo.targetCube, [[] as Set, [] as Set])
-				requiredScopeKeys[cubeName] = scopeKeys.first()
-				optionalScopeKeys[cubeName] = scopeKeys.last()
+				List<Set> scopeKeys = getScopeAllReferenced(relInfo.targetCube, [[] as Set, [] as Set] as LinkedList)
+				requiredScopeKeys[cubeName] = scopeKeys.get(0)
+				optionalScopeKeys[cubeName] = scopeKeys.get(1)
 			}
 			else
 			{
@@ -851,6 +852,7 @@ class Visualizer extends NCubeGroovyController
 		sb.append('<b>Root cause: </b>')
 		sb.append(DOUBLE_BREAK)
 		sb.append(t.toString())
+		sb.append(DOUBLE_BREAK)
 		sb.append('<b>Stack trace: </b>')
 		sb.append(DOUBLE_BREAK)
 		sb.append(t.stackTrace.toString())
@@ -872,9 +874,9 @@ class Visualizer extends NCubeGroovyController
 
 	private List getScopeAllReferenced(NCube cube, List<Set> scopeKeys)
 	{
-		Set requiredScopeKeys = scopeKeys.first()
+		Set requiredScopeKeys = scopeKeys.get(0)
 		requiredScopeKeys.addAll(getRequiredScope(cube))
-		Set optionalScopeKeys = scopeKeys.last()
+		Set optionalScopeKeys = scopeKeys.get(1)
 		optionalScopeKeys.addAll(cube.getOptionalScope([:] as Map, [:] as Map))
 		cube.referencedCubeNames.each {
 			NCube refCube = getCube(it)
@@ -895,7 +897,7 @@ class Visualizer extends NCubeGroovyController
 
 	private static String getTypeFromCubeName(String cubeName)
 	{
-		return (cubeName - RPM_CLASS_DOT).toLowerCase()
+		return (cubeName - RPM_CLASS_DOT)
 	}
 
 }
