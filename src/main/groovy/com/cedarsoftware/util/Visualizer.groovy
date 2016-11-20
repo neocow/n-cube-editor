@@ -31,7 +31,6 @@ class Visualizer extends NCubeGroovyController
 	public static final String R_RPM_TYPE = 'r:rpmType'
 	public static final String V_ENUM = 'v:enum'
 	public static final String R_SCOPED_NAME = 'r:scopedName'
-	public static final String R_EXISTS = 'r:exists'
 	public static final String V_MIN = 'v:min'
 	public static final String V_MAX = 'v:max'
 
@@ -195,7 +194,7 @@ class Visualizer extends NCubeGroovyController
 			targetTraitMaps.each { k, v ->
 				String targetFieldName = k as String
 				Map targetTraits = v as Map
-				if (CLASS_TRAITS != targetFieldName && targetTraits[R_EXISTS])
+				if (CLASS_TRAITS != targetFieldName)
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
 
@@ -249,8 +248,7 @@ class Visualizer extends NCubeGroovyController
 		if (loadFieldsAndTraits) {
 			targetTraitMaps.each { k, v ->
 				String targetFieldName = k as String
-				Map targetTraits = v as Map
-				if (CLASS_TRAITS != targetFieldName &&  targetTraits[R_EXISTS])
+				if (CLASS_TRAITS != targetFieldName)
 				{
 					try
 					{
@@ -519,7 +517,7 @@ class Visualizer extends NCubeGroovyController
 
 		traitMaps.each { k, v ->
 			String fieldName = k as String
-			if (CLASS_TRAITS != fieldName && traitMaps[fieldName][R_EXISTS]) {
+			if (CLASS_TRAITS != fieldName) {
 				fieldDetails.append(BREAK + spaces + k + SPACE)
 			}
 		}
