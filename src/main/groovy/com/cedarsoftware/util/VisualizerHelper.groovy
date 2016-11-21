@@ -83,8 +83,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	 */
 	private static void removeNotExistsFields(Map<String, Map<String, Object>> traitMaps)
 	{
-		Set keySet = traitMaps.keySet()
-		Iterator<String> i = keySet.iterator()
+		Iterator<String> i = traitMaps.keySet().iterator()
 		while (i.hasNext())
 		{
 			String fieldName = i.next()

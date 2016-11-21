@@ -655,10 +655,10 @@ class Visualizer extends NCubeGroovyController
 		String messageSuffixType = "Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
 
 		if (scope) {
-			missingScope = validateScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix) ?: missingScope
-			missingScope = validateScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix)  ?: missingScope
-			missingScope = validateScope(visInfo, QUOTE_DATE, defaultScopeDate, messageSuffix) ?: missingScope
-			missingScope = validateScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType) ?: missingScope
+			missingScope |= validateScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix)
+			missingScope |= validateScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix)
+			missingScope |= validateScope(visInfo, QUOTE_DATE, defaultScopeDate, messageSuffix)
+			missingScope |= validateScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType)
 		}
 		else{
 			missingScope = true
@@ -678,10 +678,10 @@ class Visualizer extends NCubeGroovyController
 	}
 
 
-	private Boolean validateScope(VisualizerInfo visInfo, String key, String value, String messageSuffix)
+	private boolean validateScope(VisualizerInfo visInfo, String key, String value, String messageSuffix)
 	{
 		Map scope = visInfo.scope
-		Boolean missingScope
+		boolean missingScope
 		if (scope.containsKey(key)){
 			if (!scope[key]){
 				visInfo.scope[key] = value
