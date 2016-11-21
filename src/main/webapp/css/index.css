@@ -147,16 +147,8 @@ body {
     background-color:rgba(61, 139, 202, 0.45);
 }
 
-#cube-search {
-    border-radius: 0;
-}
-
-#cube-search-content {
-    border-radius: 0;
-}
-
-#cube-search-reset {
-    border-radius: 0;
+#cube-search-options {
+    display: none;
 }
 
 #ncubeTabContent {

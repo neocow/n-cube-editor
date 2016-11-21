@@ -13,7 +13,7 @@
  */
 
 onmessage = function(e) {
-    var searchResults, cubes, results, i ,len, infoDto, array;
+    var searchResults, cubes, results, i ,len, infoDto, array, optsString;
     var args = e.data;
     var nameFilter = args[0];
     var searchOptions = args[1];
@@ -21,9 +21,15 @@ onmessage = function(e) {
     var regex = args[3];
     var hasFilter = nameFilter && nameFilter.length;
     var req = new XMLHttpRequest();
+    var opts = {
+        activeRecordsOnly: true,
+        includeTags: searchOptions.tagsInclude,
+        excludeTags: searchOptions.tagsExclude
+    };
+    optsString = JSON.stringify(opts);
 
     req.open("POST", getSearchUrl(), false);
-    req.send('[' + appIdString + ',"' + nameFilter + '","' + searchOptions.contains + '",true,' + JSON.stringify(searchOptions.tagsInclude) + ',' + JSON.stringify(searchOptions.tagsExclude) + ']');
+    req.send('[' + appIdString + ',"' + nameFilter + '","' + searchOptions.contains + '",' + optsString + ']');
 
     if (req.response) {
         searchResults = JSON.parse(req.response);

@@ -38,11 +38,14 @@ var NCE = (function ($) {
     var _selectedCubeInfo = localStorage[SELECTED_CUBE_INFO];
     var _defaultTab = null;
     var _appTitle = $('#appTitle');
+    var _cubeListDiv = $('#ncube-list-div').find('.panel-body');
     var _searchNames = $('#cube-search');
-    var _cubeSearchContains = $('#cubeSearchContains');
-    var _cubeSearchTagsInclude = $('#cubeSearchTagsInclude');
-    var _cubeSearchTagsExclude = $('#cubeSearchTagsExclude');
-    var _cubeSearchOptions = {contains:null, tagsInclude:null, tagsExclude:null};
+    var _cubeSearchOptionsDiv = $('#cube-search-options');
+    var _cubeSearchOptionsBtn = $('#cube-search-options-btn');
+    var _cubeSearchOptionsIcon = _cubeSearchOptionsBtn.find('span');
+    var _cubeSearchContains = $('#cube-search-contains');
+    var _cubeSearchTagsInclude = $('#cube-search-tags-include');
+    var _cubeSearchTagsExclude = $('#cube-search-tags-exclude');
     var _cubeCount = $('#ncubeCount');
     var _listOfCubes= $('#ncube-list');
     var _mainTabPanel = $('#ncubeTabContent');
@@ -148,7 +151,6 @@ var NCE = (function ($) {
     var _deleteCubeModal = $('#deleteCubeModal');
     var _showRefsFromCubeModal = $('#showRefsFromCubeModal');
     var _showReqScopeModal = $('#showReqScopeModal');
-    var _cubeSearchModal = $('#cubeSearchModal');
 
     preInit();
     initialize();
@@ -194,15 +196,24 @@ var NCE = (function ($) {
             showActiveBranch();
             loadNCubes();
             buildMenu();
-            clearSearch();
-            loop();
             heartBeat();
             addListeners();
             addModalFilters();
             modalsDraggable(true);
+            cubeSearchInit();
+            loop();
         } catch (e) {
             console.log(e);
         }
+    }
+
+    function cubeSearchInit() {
+        if (getCubeSearchOptionsShown()) {
+            _cubeListDiv.height(_cubeListDiv.height() - CUBE_OPTIONS_OFFSET);
+            _cubeSearchOptionsIcon.removeClass(GLYPHICONS.OPTION_HORIZONTAL).addClass(GLYPHICONS.OPTION_VERTICAL);
+            _cubeSearchOptionsDiv.toggle();
+        }
+        runSearch();
     }
 
     function setupMainSplitter() {
@@ -848,7 +859,7 @@ var NCE = (function ($) {
             populateSelect(buildAppState(), _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, [], _selectedApp);
             populateSelect(buildAppState(), _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, [_selectedApp], _selectedVersion + '-' + _selectedStatus, true);
             populateSelect(buildAppState(), _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, [appId], _selectedBranch, true);
-            populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appId, '*', null, true, null, null], _selectedCubeName, true);
+            populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appId, '*', null, getDefaultSearchOptions()], _selectedCubeName, true);
         }
         populateSelect(buildAppState(), _globalComparatorLeftApp, CONTROLLER_METHOD.GET_APP_NAMES, []);
         
@@ -1249,6 +1260,10 @@ var NCE = (function ($) {
 
     function clearSearch() {
         _searchNames.val('');
+        _cubeSearchContains.val('');
+        _cubeSearchTagsInclude.val('');
+        _cubeSearchTagsExclude.val('');
+        saveCubeSearchOptions();
         loadNCubeListView();
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
         _cubeCount[0].textContent = Object.keys(_cubeList).length;
@@ -1296,15 +1311,16 @@ var NCE = (function ($) {
         saveState();
     }
 
-    function hasSearchOptions() {
-        return (_cubeSearchOptions.contains && _cubeSearchOptions.contains.length)
-            || (_cubeSearchOptions.tagsInclude && _cubeSearchOptions.tagsInclude.length)
-            || (_cubeSearchOptions.tagsExclude && _cubeSearchOptions.tagsExclude.length);
+    function hasSearchOptions(opts) {
+        return (opts.contains && opts.contains.length)
+            || (opts.tagsInclude && opts.tagsInclude.length)
+            || (opts.tagsExclude && opts.tagsExclude.length);
     }
     
     function runSearch() {
         var nameFilter, mainList;
-        if (hasSearchOptions()) {
+        var opts = applyCubeSearchOptions();
+        if (hasSearchOptions(opts)) {
             callServerSideSearch();
         } else {
             nameFilter = _searchNames.val();
@@ -1358,7 +1374,7 @@ var NCE = (function ($) {
         }
         _searchThread.postMessage([
                 nameFilter,
-                _cubeSearchOptions,
+                getCubeSearchOptions(),
                 getAppId(),
                 regex
             ]);
@@ -1457,8 +1473,10 @@ var NCE = (function ($) {
     }
 
     function addSearchListeners() {
-        // Send to background Web Worker thread
-        _searchNames.on('input', function () {
+        _searchNames.add(_cubeSearchContains)
+            .add(_cubeSearchTagsInclude)
+            .add(_cubeSearchTagsExclude)
+            .on('input', function () {
             _searchKeyPressed = true;
             _searchLastKeyTime = Date.now();
         });
@@ -1469,34 +1487,52 @@ var NCE = (function ($) {
             }
         });
 
+        _cubeSearchContains.on('keyup', function (e) {
+            if (e.keyCode === KEY_CODES.ESCAPE) {
+                this.value = '';
+                saveCubeSearchOptions();
+                runSearch();
+            }
+        });
+        _cubeSearchTagsInclude.on('keyup', function (e) {
+            if (e.keyCode === KEY_CODES.ESCAPE) {
+                this.value = '';
+                saveCubeSearchOptions();
+                runSearch();
+            }
+        });
+        _cubeSearchTagsExclude.on('keyup', function (e) {
+            if (e.keyCode === KEY_CODES.ESCAPE) {
+                this.value = '';
+                saveCubeSearchOptions();
+                runSearch();
+            }
+        });
+
         $('#cube-search-reset').on('click', function() {
             clearSearch();
         });
-        
-        $('#cubeSearchSave').on('click', function() {
-            cubeSearchSave();
+
+        _cubeSearchOptionsBtn.on('click', function() {
+            var newHeight, removeClass, addClass;
+            var prevHeight = _cubeListDiv.height();
+            var isVisible = _cubeSearchOptionsDiv.is(':visible');
+
+            if (isVisible) {
+                newHeight = prevHeight + CUBE_OPTIONS_OFFSET;
+                removeClass = GLYPHICONS.OPTION_VERTICAL;
+                addClass = GLYPHICONS.OPTION_HORIZONTAL;
+            } else {
+                newHeight = prevHeight - CUBE_OPTIONS_OFFSET;
+                removeClass = GLYPHICONS.OPTION_HORIZONTAL;
+                addClass = GLYPHICONS.OPTION_VERTICAL;
+            }
+
+            _cubeListDiv.height(newHeight);
+            _cubeSearchOptionsIcon.removeClass(removeClass).addClass(addClass);
+            _cubeSearchOptionsDiv.toggle();
+            saveCubeSearchOptionsShown(!isVisible);
         });
-        
-        $('#cube-search-options').on('click', function() {
-            cubeSearchOpen();
-        });
-    }
-    
-    function cubeSearchSave() {
-        var includes = _cubeSearchTagsInclude.val();
-        var excludes = _cubeSearchTagsExclude.val();
-        _cubeSearchOptions.contains = _cubeSearchContains.val();
-        _cubeSearchOptions.tagsInclude = includes.length ? includes.split(',') : null;
-        _cubeSearchOptions.tagsExclude = excludes.length ? excludes.split(',') : null;
-        _cubeSearchModal.modal('hide');
-        runSearch();
-    }
-    
-    function cubeSearchOpen() {
-        _cubeSearchContains.val(_cubeSearchOptions.contains);
-        _cubeSearchTagsInclude.val(_cubeSearchOptions.tagsInclude ? _cubeSearchOptions.tagsInclude.join(',') : '');
-        _cubeSearchTagsExclude.val(_cubeSearchOptions.tagsExclude ? _cubeSearchOptions.tagsExclude.join(',') : '');
-        _cubeSearchModal.modal();
     }
     
     function addSystemMenuListeners() {
@@ -1608,11 +1644,11 @@ var NCE = (function ($) {
         });
         _globalComparatorLeftBranch.on('change', function() {
             var val = _globalComparatorLeftVersion.val().split('-');
-            populateSelect(buildAppState(), _globalComparatorLeftCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorLeftApp.val(), val[0], val[1], $(this).val()), '*', null, true, null, null], null, true);
+            populateSelect(buildAppState(), _globalComparatorLeftCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorLeftApp.val(), val[0], val[1], $(this).val()), '*', null, getDefaultSearchOptions()], null, true);
         });
         _globalComparatorRightBranch.on('change', function() {
             var val = _globalComparatorRightVersion.val().split('-');
-            populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], $(this).val()), '*', null, true, null, null], null, true);
+            populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], $(this).val()), '*', null, getDefaultSearchOptions()], null, true);
         });
     }
 
@@ -1629,7 +1665,7 @@ var NCE = (function ($) {
 
         if (rightApp && rightVersion && rightBranch && rightCube) {
             rightVerSplit = rightVersion.split('-');
-            rightResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(rightApp, rightVerSplit[0], rightVerSplit[1], rightBranch), rightCube, null, true, null, null]);
+            rightResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(rightApp, rightVerSplit[0], rightVerSplit[1], rightBranch), rightCube, null, getDefaultSearchOptions()]);
             if (rightResult.status && rightResult.data.length) {
                 rightDto = rightResult.data[0];
             } else {
@@ -1642,7 +1678,7 @@ var NCE = (function ($) {
 
         if (leftApp && leftVersion && leftBranch && leftCube) {
             leftVerSplit = leftVersion.split('-');
-            leftResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(leftApp, leftVerSplit[0], leftVerSplit[1], leftBranch), leftCube, null, true, null, null]);
+            leftResult = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appIdFrom(leftApp, leftVerSplit[0], leftVerSplit[1], leftBranch), leftCube, null, getDefaultSearchOptions()]);
             if (leftResult.status && leftResult.data.length) {
                 leftDto = leftResult.data[0];
             } else {
@@ -1679,7 +1715,7 @@ var NCE = (function ($) {
     }
 
     function batchUpdateAxisReferencesVersionChanged() {
-        var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), '*', null, true, null, null];
+        var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), '*', null, getDefaultSearchOptions()];
         _batchUpdateAxisReferencesAxisName.empty();
         populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
     }
@@ -1999,13 +2035,13 @@ var NCE = (function ($) {
             list.splice(oldIdx, 1);
         }
         list.splice(1, 0, branch);
-        _visitedBranches[getVisitedBranchesId(appId)] = list.join(TAB_SEPARATOR);
+        _visitedBranches[getTextAppIdNoBranch(appId)] = list.join(TAB_SEPARATOR);
         saveVisitedBranchesList();
     }
 
     function removeFromVisitedBranchesList(appId) {
         var id, list, oldIdx;
-        id = getVisitedBranchesId(appId);
+        id = getTextAppIdNoBranch(appId);
         list = getVisitedBranchesList(id);
         oldIdx = list.indexOf(appId.branch);
         if (oldIdx > -1) {
@@ -2016,7 +2052,7 @@ var NCE = (function ($) {
     }
 
     function clearVisitedBranchesList(appId) {
-        delete _visitedBranches[getVisitedBranchesId(appId)];
+        delete _visitedBranches[getTextAppIdNoBranch(appId)];
         saveVisitedBranchesList();
     }
 
@@ -2025,15 +2061,65 @@ var NCE = (function ($) {
     }
 
     function getVisitedBranchesList(appId) {
-        var id = getVisitedBranchesId(appId);
+        var id = getTextAppIdNoBranch(appId);
         if (_visitedBranches.hasOwnProperty(id)) {
             return _visitedBranches[id].split(TAB_SEPARATOR);
         }
         return [head];
     }
 
-    function getVisitedBranchesId(appId) {
+    function getTextAppIdNoBranch(appId) {
         return [appId.app, appId.version, appId.status].join(TAB_SEPARATOR);
+    }
+    
+    function getTextAppId(appId) {
+        return [appId.app, appId.version, appId.status, appId.branch].join(TAB_SEPARATOR);
+    }
+
+    function saveCubeSearchOptionsShown(isShown) {
+        localStorage[CUBE_SEARCH_OPTIONS_SHOWN] = isShown;
+    }
+
+    function getCubeSearchOptionsShown() {
+        return localStorage[CUBE_SEARCH_OPTIONS_SHOWN] === 'true';
+    }
+
+    function saveCubeSearchOptions() {
+        var includes = _cubeSearchTagsInclude.val();
+        var excludes = _cubeSearchTagsExclude.val();
+        var allOptions = localStorage[CUBE_SEARCH_OPTIONS];
+        allOptions = allOptions ? JSON.parse(allOptions) : {};
+        allOptions[getTextAppId(getAppId())] = {
+            contains: _cubeSearchContains.val(),
+            tagsInclude: includes.length ? includes.split(',') : null,
+            tagsExclude: excludes.length ? excludes.split(',') : null
+        };
+        localStorage[CUBE_SEARCH_OPTIONS] = JSON.stringify(allOptions);
+    }
+
+    function getCubeSearchOptions() {
+        var appOptions;
+        var allOptions = localStorage[CUBE_SEARCH_OPTIONS];
+        if (allOptions) {
+            appOptions = JSON.parse(allOptions)[getTextAppId(getAppId())];
+            if (appOptions) {
+                return appOptions;
+            }
+        }
+        return {contains:null, tagsInclude:null, tagsExclude:null};
+    }
+
+    function applyCubeSearchOptions() {
+        var opts = getCubeSearchOptions();
+        _cubeSearchContains.val(opts.contains);
+        _cubeSearchTagsInclude.val(opts.tagsInclude ? opts.tagsInclude.join(',') : null);
+        _cubeSearchTagsExclude.val(opts.tagsExclude ? opts.tagsExclude.join(',') : null);
+        if (hasSearchOptions(opts)) {
+            _cubeSearchOptionsBtn.addClass('btn-info');
+        } else {
+            _cubeSearchOptionsBtn.removeClass('btn-info');
+        }
+        return opts;
     }
 
     function saveState() {
@@ -2191,7 +2277,7 @@ var NCE = (function ($) {
      * to match what was selected.
      */
     function setListSelectedStatus(itemName, listId) {
-        var items, saveSelected, loItemName;
+        var items, loItemName;
         items = $(listId).find('li a');
         items.filter('.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
         if (itemName === null || itemName === undefined) {
@@ -2226,7 +2312,7 @@ var NCE = (function ($) {
         if (!_selectedStatus) {
             return;
         }
-        result = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [getAppId(), '*', null, true, null, null]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [getAppId(), '*', null, getDefaultSearchOptions()]);
         first = null;
         if (result.status) {
             dtos = result.data;
@@ -2482,7 +2568,7 @@ var NCE = (function ($) {
         ul = $('#deletedCubeList');
         ul.empty();
         $('#restoreCubeLabel')[0].textContent = 'Restore Cubes in ' + _selectedVersion + ', ' + _selectedStatus;
-        result = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [getAppId(), "*", null, false, null, null]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [getAppId(), "*", null, getDeletedRecordsSearchOptions()]);
         if (result.status) {
             $.each(result.data, function (index, value) {
                 var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
@@ -4262,6 +4348,7 @@ var NCE = (function ($) {
             var now = Date.now();
             if (now - _searchLastKeyTime > PROGRESS_DELAY && _searchKeyPressed) {
                 _searchKeyPressed = false;
+                saveCubeSearchOptions();
                 runSearch();
             }
         }, PROGRESS_DELAY);

@@ -407,6 +407,18 @@ function populateSelectFromCube(nce, sel, params, searchType) {
     return axisTypes;
 }
 
+function getDefaultSearchOptions() {
+    var opts = {};
+    opts[SEARCH_OPTIONS.SEARCH_ACTIVE_RECORDS_ONLY] = true;
+    return opts;
+}
+
+function getDeletedRecordsSearchOptions() {
+    var opts = {};
+    opts[SEARCH_OPTIONS.SEARCH_DELETED_RECORDS_ONLY] = true;
+    return opts;
+}
+
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();
