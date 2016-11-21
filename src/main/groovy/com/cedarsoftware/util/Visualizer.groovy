@@ -646,7 +646,7 @@ class Visualizer extends NCubeGroovyController
 
 	private boolean hasMissingMinimumScope(VisualizerInfo visInfo)
 	{
-		boolean missingScope
+		boolean hasMissingScope
 		String cubeName = visInfo.startCubeName
 		Map scope = visInfo.scope
 		String type = getTypeFromCubeName(cubeName).toLowerCase()
@@ -655,13 +655,13 @@ class Visualizer extends NCubeGroovyController
 		String messageSuffixType = "Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
 
 		if (scope) {
-			missingScope |= validateScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix)
-			missingScope |= validateScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix)
-			missingScope |= validateScope(visInfo, QUOTE_DATE, defaultScopeDate, messageSuffix)
-			missingScope |= validateScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType)
+			hasMissingScope = addMissingScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix) ?: hasMissingScope
+			hasMissingScope = addMissingScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix)  ?: hasMissingScope
+			hasMissingScope = addMissingScope(visInfo, QUOTE_DATE, defaultScopeDate, messageSuffix) ?: hasMissingScope
+			hasMissingScope = addMissingScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType) ?: hasMissingScope
 		}
 		else{
-			missingScope = true
+			hasMissingScope = true
 			Map<String, String> defaultScope = getDefaultScope(cubeName)
 			visInfo.scope = defaultScope
 			StringBuilder sb = new StringBuilder()
@@ -674,11 +674,11 @@ class Visualizer extends NCubeGroovyController
 			sb.append(" The other default scope values may also be changed as desired.")
 			messages << sb.toString()
 		}
-		return missingScope
+		return hasMissingScope
 	}
 
 
-	private boolean validateScope(VisualizerInfo visInfo, String key, String value, String messageSuffix)
+	private boolean addMissingScope(VisualizerInfo visInfo, String key, String value, String messageSuffix)
 	{
 		Map scope = visInfo.scope
 		boolean missingScope
