@@ -196,6 +196,10 @@ div#west div.panel-body {
     height:calc(100% - 195px);
 }
 
+#ncube-list-div input, #ncube-list-div button {
+    border-radius: 0;
+}
+
 div#east div.panel-body {
     overflow: auto;
     height: 100%;
