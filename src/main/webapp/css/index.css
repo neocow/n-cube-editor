@@ -147,16 +147,8 @@ body {
     background-color:rgba(61, 139, 202, 0.45);
 }
 
-#cube-search {
-    border-radius: 0;
-}
-
-#cube-search-content {
-    border-radius: 0;
-}
-
-#cube-search-reset {
-    border-radius: 0;
+#cube-search-options {
+    display: none;
 }
 
 #ncubeTabContent {
@@ -201,7 +193,11 @@ div#west div.panel-body {
 }
 
 #ncube-list-div div.panel-body {
-    height:calc(100% - 230px);
+    height:calc(100% - 195px);
+}
+
+#ncube-list-div input, #ncube-list-div button {
+    border-radius: 0;
 }
 
 div#east div.panel-body {

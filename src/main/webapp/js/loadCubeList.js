@@ -13,22 +13,23 @@
  */
 
 onmessage = function(e) {
+    var searchResults, cubes, results, i ,len, infoDto, array, optsString;
     var args = e.data;
-    var filter = args[0];
-    var content = args[1];
-    var appId = args[2];
+    var nameFilter = args[0];
+    var searchOptions = args[1];
+    var appIdString = JSON.stringify(args[2]);
     var regex = args[3];
-    var hasFilter = filter && filter.length > 0;
-    var appIdString = JSON.stringify(appId);
+    var hasFilter = nameFilter && nameFilter.length;
     var req = new XMLHttpRequest();
-    var searchResults;
-    var cubes;
-    var results;
-    var i;
-    var len;
+    var opts = {
+        activeRecordsOnly: true,
+        includeTags: searchOptions.tagsInclude,
+        excludeTags: searchOptions.tagsExclude
+    };
+    optsString = JSON.stringify(opts);
 
     req.open("POST", getSearchUrl(), false);
-    req.send('[' + appIdString + ',"' + filter + '","' + content + '",true]');
+    req.send('[' + appIdString + ',"' + nameFilter + '","' + searchOptions.contains + '",' + optsString + ']');
 
     if (req.response) {
         searchResults = JSON.parse(req.response);
@@ -36,19 +37,16 @@ onmessage = function(e) {
             cubes = {};
             results = searchResults.data;
             for (i = 0, len = results.length; i < len; ++i) {
-                var infoDto = results[i];
+                infoDto = results[i];
                 cubes[infoDto.name.toLowerCase()] = infoDto;
-                if (hasFilter) {
-                    if (regex) {
-                        var array = regex.exec(infoDto.name);
-                        if (array) {
-                            infoDto.pos = array.index;
-                            infoDto.endPos = array.index + array[0].length;
-                        }
+                if (hasFilter && regex) {
+                    array = regex.exec(infoDto.name);
+                    if (array) {
+                        infoDto.pos = array.index;
+                        infoDto.endPos = array.index + array[0].length;
                     }
                 }
             }
-
             postMessage(cubes);
         }
     }
@@ -56,17 +54,10 @@ onmessage = function(e) {
     function getSearchUrl() {
         var regexp = /\/([^\/]+)\//g;
         var match = regexp.exec(location.pathname);
-        var url;
-        var ctx;
+        var url = location.protocol + '//' + location.hostname + ":" + location.port;
 
-        if (match == null || match.length != 2)
-        {
-            url = location.protocol + '//' + location.hostname + ":" + location.port;
-        }
-        else
-        {
-            ctx = match[1];
-            url = location.protocol + '//' + location.hostname + ":" + location.port + "/" + ctx;
+        if (match !== null && match.length === 2) {
+            url += "/" + match[1];
         }
         url += '/cmd/ncubeController/search';
         return url;

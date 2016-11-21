@@ -193,19 +193,9 @@ class NCubeController extends BaseController
         clearVersionCache(appId.app)
     }
 
-    Object[] search(ApplicationID appId, String cubeNamePattern, String content, boolean active)
+    Object[] search(ApplicationID appId, String cubeNamePattern, String content, Map options)
     {
         appId = addTenant(appId)
-        Map options = [:]
-        if (active)
-        {
-            options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
-        }
-        else
-        {
-            options[(NCubeManager.SEARCH_DELETED_RECORDS_ONLY)] = true
-        }
-
         List<NCubeInfoDto> cubeInfos = nCubeService.search(appId, cubeNamePattern, content, options)
 
         Collections.sort(cubeInfos, new Comparator<NCubeInfoDto>() {
@@ -215,12 +205,12 @@ class NCubeController extends BaseController
             }
         })
 
-        return cubeInfos.toArray()
+        return cubeInfos as Object[]
     }
 
-    Integer getSearchCount(ApplicationID appId, String cubeNamePattern = null, String content = null, boolean active = true)
+    Integer getSearchCount(ApplicationID appId, String cubeNamePattern = null, String content = null, Map options = [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true])
     {
-        return search(appId, cubeNamePattern, content, active).length
+        return search(appId, cubeNamePattern, content, options).length
     }
 
     void restoreCubes(ApplicationID appId, Object[] cubeNames)
@@ -1088,11 +1078,11 @@ class NCubeController extends BaseController
         appId = addTenant(appId)
         NCube ncube = nCubeService.getCube(appId, cubeName)
         Set<Long> colIds = getCoordinate(ids)
-        Map<String, Comparable> coord = ncube.getDisplayCoordinateFromIds(colIds)
-        Map<String, Comparable> niceCoord = [:]
-        coord.each {
-            k, v ->
-                niceCoord[k] = CellInfo.formatForDisplay(v)
+        Map<String, Object> coord = ncube.getDisplayCoordinateFromIds(colIds)
+        Map<String, Object> niceCoord = [:]
+        coord.each { k, v ->
+                Comparable c = v as Comparable
+                niceCoord[k] = CellInfo.formatForDisplay(c)
         }
         return niceCoord
     }

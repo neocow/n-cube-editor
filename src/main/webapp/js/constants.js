@@ -16,6 +16,8 @@ var TEST_RESULTS = NCE_PREFIX + 'TEST_RESULTS';
 var FILTERS = NCE_PREFIX + 'FILTERS';
 var SCOPE_MAP = NCE_PREFIX + 'SCOPE_MAP';
 var VISITED_BRANCHES = NCE_PREFIX + 'VISITED_BRANCHES';
+var CUBE_SEARCH_OPTIONS_SHOWN = NCE_PREFIX + 'CUBE_SEARCH_OPTIONS_SHOWN';
+var CUBE_SEARCH_OPTIONS = NCE_PREFIX + 'CUBE_SEARCH_OPTIONS';
 
 var PROGRESS_DELAY = 300;
 var ONE_SECOND_TIMEOUT = 1000;
@@ -31,6 +33,7 @@ var MAIN_SPLITTER_DEFAULTS = {
     WEST_MIN_SIZE: 140
 };
 var TAB_TRIM_TEXT = 30;
+var CUBE_OPTIONS_OFFSET = 90;
 
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
@@ -84,6 +87,11 @@ var CLASS_NCUBE_NOT_SELECTED = 'ncube-notselected';
 var CLASS_NCUBE_SELECTED = 'ncube-selected';
 var CLASS_SECTION_ALL = 'section-all';
 var CLASS_SECTION_NONE = 'section-none';
+
+var GLYPHICONS = {
+    OPTION_HORIZONTAL: 'glyphicon-option-horizontal',
+    OPTION_VERTICAL: 'glyphicon-option-vertical'
+};
 
 var TAB_OVERFLOW_TEXT_PADDING = 70;
 var TAB_WIDTH = 217;
@@ -270,6 +278,18 @@ var CONTROLLER_METHOD = {
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
     UPDATE_REFERENCE_AXES: 'updateReferenceAxes'
+};
+
+var SEARCH_OPTIONS = {
+    SEARCH_INCLUDE_CUBE_DATA: 'includeCubeData',
+    SEARCH_INCLUDE_TEST_DATA: 'includeTestData',
+    SEARCH_INCLUDE_NOTES: 'includeNotes',
+    SEARCH_DELETED_RECORDS_ONLY: 'deletedRecordsOnly',
+    SEARCH_ACTIVE_RECORDS_ONLY: 'activeRecordsOnly',
+    SEARCH_CHANGED_RECORDS_ONLY: 'changedRecordsOnly',
+    SEARCH_EXACT_MATCH_NAME: 'exactMatchName',
+    SEARCH_FILTER_INCLUDE: 'includeTags',
+    SEARCH_FILTER_EXCLUDE: 'excludeTags'
 };
 
 var JSON_MODE = {

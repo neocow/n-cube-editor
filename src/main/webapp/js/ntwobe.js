@@ -4358,12 +4358,12 @@ var NCubeEditor2 = (function ($) {
         _refAxisVersion.on('change', function() {
             _refAxisCube.empty();
             _refAxisAxis.empty();
-            populateSelect(nce, _refAxisCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_refAxisApp.val(), $(this).val(), _refAxisStatus.val(), _refAxisBranch.val()), '*', null, true]);
+            populateSelect(nce, _refAxisCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_refAxisApp.val(), $(this).val(), _refAxisStatus.val(), _refAxisBranch.val()), '*', null, getDefaultSearchOptions()]);
         });
         _refFilterVersion.on('change', function() {
             _refFilterCube.empty();
             _refFilterMethod.empty();
-            populateSelect(nce, _refFilterCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_refFilterApp.val(), $(this).val(), _refFilterStatus.val(), _refFilterBranch.val()), '*', null, true]);
+            populateSelect(nce, _refFilterCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_refFilterApp.val(), $(this).val(), _refFilterStatus.val(), _refFilterBranch.val()), '*', null, getDefaultSearchOptions()]);
         });
 
         _refAxisCube.on('change', function() {
