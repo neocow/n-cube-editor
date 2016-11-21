@@ -1,6 +1,5 @@
 package com.cedarsoftware.util
 
-import com.cedarsoftware.ncube.NCube
 import groovy.transform.CompileStatic
 
 /**

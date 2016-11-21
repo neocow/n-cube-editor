@@ -74,8 +74,24 @@ public class VisualizerHelper extends NCubeGroovyController {
 		} else{
 			loadRpmClassFields(RPM_CLASS, cube.name.split(RPM_CLASS_DOT)[1], scope, traitMaps, [:])
 		}
-
+		removeNotExistsFields(traitMaps)
 		return traitMaps
+	}
+
+	/**
+	 * ORIGINAL: Not copied from Dynamis
+	 */
+	private static void removeNotExistsFields(Map<String, Map<String, Object>> traitMaps)
+	{
+		Iterator<String> i = traitMaps.keySet().iterator()
+		while (i.hasNext())
+		{
+			String fieldName = i.next()
+			if (!traitMaps[fieldName][R_EXISTS])
+			{
+				i.remove()
+			}
+		}
 	}
 
 	/**
