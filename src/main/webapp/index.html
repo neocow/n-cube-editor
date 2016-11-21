@@ -158,9 +158,11 @@
                 <button id="cube-search-reset" class="btn btn-sm btn-default" type="button">
                     <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
                 </button>
+                <button id="cube-search-options" class="btn btn-sm btn-default" type="button">
+                    <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
+                </button>
             </span>
         </div>
-        <input id="cube-search-content" style="font-size:12px" type="text" class="form-control" placeholder="Cubes containing...">
         <div class="panel-body">
             <ul class="nav nav-list" id="ncube-list">
                 <a>Loading n-cubes...</a>
@@ -806,6 +808,39 @@
         </div>
     </div>
 </div>
+
+    <!-- Cube Search Options Modal -->
+    <div id="cubeSearchModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="cubeSearchLabel"
+         aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3 id="cubeSearchLabel" class="modal-title">Cube Search Options</h3>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <label for="cubeSearchContains">Contains</label>
+                            <input class="form-control" type="text" id="cubeSearchContains" placeholder="Cube contains text..."/>
+                        </div>
+                        <div class="form-group">
+                            <label for="newCubeName">Include Tags</label>
+                            <input class="form-control" type="text" id="cubeSearchTagsInclude" placeholder="tag1,tag2..."/>
+                        </div>
+                        <div class="form-group">
+                            <label for="newCubeName">ExcludeTags</label>
+                            <input class="form-control" type="text" id="cubeSearchTagsExclude" placeholder="tag1,tag2..."/>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                    <button id="cubeSearchSave" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script src="js/jquery-2.1.4.min.js"></script>
 <script src="js/jquery-ui-1.11.0.min.js"></script>

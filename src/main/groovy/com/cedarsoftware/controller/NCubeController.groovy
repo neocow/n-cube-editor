@@ -193,7 +193,7 @@ class NCubeController extends BaseController
         clearVersionCache(appId.app)
     }
 
-    Object[] search(ApplicationID appId, String cubeNamePattern, String content, boolean active)
+    Object[] search(ApplicationID appId, String cubeNamePattern, String content, boolean active, Object[] tagsInclude, Object[] tagsExclude)
     {
         appId = addTenant(appId)
         Map options = [:]
@@ -206,6 +206,20 @@ class NCubeController extends BaseController
             options[(NCubeManager.SEARCH_DELETED_RECORDS_ONLY)] = true
         }
 
+        if (tagsInclude != null)
+        {
+            Set<String> includes = new HashSet<String>()
+            tagsInclude.each { String tag -> includes.add(tag) }
+            options[(NCubeManager.SEARCH_FILTER_INCLUDE)] = includes
+        }
+
+        if (tagsExclude != null)
+        {
+            Set<String> excludes = new HashSet<String>()
+            tagsExclude.each { String tag -> excludes.add(tag) }
+            options[(NCubeManager.SEARCH_FILTER_EXCLUDE)] = excludes
+        }
+
         List<NCubeInfoDto> cubeInfos = nCubeService.search(appId, cubeNamePattern, content, options)
 
         Collections.sort(cubeInfos, new Comparator<NCubeInfoDto>() {
@@ -215,12 +229,12 @@ class NCubeController extends BaseController
             }
         })
 
-        return cubeInfos.toArray()
+        return cubeInfos as Object[]
     }
 
     Integer getSearchCount(ApplicationID appId, String cubeNamePattern = null, String content = null, boolean active = true)
     {
-        return search(appId, cubeNamePattern, content, active).length
+        return search(appId, cubeNamePattern, content, active, null, null).length
     }
 
     void restoreCubes(ApplicationID appId, Object[] cubeNames)
