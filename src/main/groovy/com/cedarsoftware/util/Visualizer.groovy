@@ -342,7 +342,7 @@ class Visualizer extends NCubeGroovyController
 		NCube targetCube = relInfo.targetCube
 
 		if (sourceCube && sourceCube.name.startsWith(RPM_CLASS_DOT) && targetCube.name.startsWith(RPM_CLASS_DOT) &&
-				targetCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME))
+				targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			String type = getTypeFromCubeName(targetCube.name)
 			NCube classTraitsCube = getCube(RPM_SCOPE_CLASS_DOT + type + DOT_CLASS_TRAITS)
@@ -537,13 +537,11 @@ class Visualizer extends NCubeGroovyController
 
 	private static String getTitleFields(Map traitMaps)
 	{
-		Set fields = new LinkedHashSet(traitMaps.keySet())
-		fields.remove(CLASS_TRAITS)
 		String fieldString = "<b>fields = </b>"
-		return fieldString + getFieldDetails(traitMaps, SPACE)
+		return fieldString + getFieldDetails(traitMaps)
 	}
 
-	private static String getFieldDetails(Map traitMaps, String spaces)
+	private static String getFieldDetails(Map traitMaps)
 	{
 		StringBuilder fieldDetails = new StringBuilder()
 		fieldDetails.append('')
@@ -552,9 +550,8 @@ class Visualizer extends NCubeGroovyController
 			String fieldName = k as String
 			if (CLASS_TRAITS != fieldName) {
 				fieldDetails.append(BREAK)
-				fieldDetails.append(spaces)
-				fieldDetails.append(fieldName)
 				fieldDetails.append(SPACE)
+				fieldDetails.append(fieldName)
 			}
 		}
 		return fieldDetails.toString()
@@ -574,7 +571,7 @@ class Visualizer extends NCubeGroovyController
 
 	private static String getNextTargetCubeName(VisualizerRelInfo relInfo, String targetFieldName)
 	{
-		if (relInfo.sourceCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME))
+		if (relInfo.sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			if (relInfo.sourceTraitMaps[CLASS_TRAITS][R_SCOPED_NAME] == null)
 			{
@@ -611,7 +608,7 @@ class Visualizer extends NCubeGroovyController
 		{
 			newScope[SOURCE_FIELD_NAME] = targetFieldName
 		}
-		else if (targetCube.getAxis(AXIS_TRAIT).contains(R_SCOPED_NAME))
+		else if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			String newScopeKey = sourceFieldRpmType.toLowerCase()
 			String oldValue = scope[newScopeKey]
