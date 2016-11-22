@@ -119,13 +119,14 @@ class Visualizer extends NCubeGroovyController
 		visInfo.nodes = []
 		visInfo.edges = []
 
-		if (hasMissingMinimumScope(visInfo)) {
-			return [status: STATUS_MISSING_START_SCOPE, visInfo: visInfo, message: join(DOUBLE_BREAK, messages)]
+		if (hasMissingMinimumScope(visInfo))
+        {
+			return [status: STATUS_MISSING_START_SCOPE, visInfo: visInfo, message: messages.join(DOUBLE_BREAK)]
 		}
 
 		getRpmVisualization(visInfo)
 
-		String message = messages.size() > 0 ? join(DOUBLE_BREAK, messages) : null
+		String message = messages.size() > 0 ? messages.join(DOUBLE_BREAK) : null
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
 
@@ -138,7 +139,8 @@ class Visualizer extends NCubeGroovyController
 		relInfo.id = 1
 		stack.push(relInfo)
 
-		while (!stack.empty) {
+		while (!stack.empty)
+        {
 			processCube(visInfo, stack.pop())
 		}
 
@@ -149,7 +151,8 @@ class Visualizer extends NCubeGroovyController
 		trimSelectedGroups(visInfo)
 	}
 
-	private static Set addSets(Set<String> set, Set<Set> sets) {
+	private static Set addSets(Set<String> set, Set<Set> sets)
+    {
 		sets.each {
 			set.addAll(it)
 		}
@@ -202,7 +205,7 @@ class Visualizer extends NCubeGroovyController
 					if (!helper.isPrimitive(targetFieldRpmType))
 					{
 						NCube nextTargetCube
-						String nextTargetCubeName
+						String nextTargetCubeName = ""
 						if (targetTraits.containsKey(V_ENUM))
 						{
 							nextTargetCubeName = RPM_ENUM_DOT + targetTraits[V_ENUM]
@@ -218,7 +221,8 @@ class Visualizer extends NCubeGroovyController
 						{
 							addToStack(visInfo, relInfo, nextTargetCube, targetFieldRpmType, targetFieldName)
 						}
-						else {
+						else
+                        {
 							messages << "No cube exists with name of ${nextTargetCubeName}. It is therefore not included in the visualization."
 						}
 					}
@@ -291,14 +295,17 @@ class Visualizer extends NCubeGroovyController
 
 	}
 
-	private static void trimSelectedLevel(VisualizerInfo visInfo) {
+	private static void trimSelectedLevel(VisualizerInfo visInfo)
+    {
 		long nodeCount = visInfo.nodeCount
 		long selectedLevel = visInfo.selectedLevel
+        // TODO: Why is compareTo being used instead of > operator?
 		visInfo.selectedLevel = selectedLevel.compareTo(nodeCount) > 0 ? nodeCount : selectedLevel
 	}
 
-	private static void trimSelectedGroups(VisualizerInfo visInfo) {
-		visInfo.selectedGroups = visInfo.availableGroupsAllLevels.intersect(visInfo.selectedGroups)
+	private static void trimSelectedGroups(VisualizerInfo visInfo)
+    {
+        visInfo.selectedGroups = visInfo.availableGroupsAllLevels.intersect(visInfo.selectedGroups)
 	}
 
 	private VisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
@@ -320,6 +327,7 @@ class Visualizer extends NCubeGroovyController
 			nextRelInfo.targetLevel = nextTargetTargetLevel
 
 			long maxLevel = visInfo.maxLevel
+            // TODO: why is compareTo() being used below instead of <=
 			visInfo.maxLevel = maxLevel.compareTo(nextTargetTargetLevel) < 0 ? nextTargetTargetLevel : maxLevel
 			visInfo.nodeCount += 1
 			nextRelInfo.id = visInfo.nodeCount
@@ -437,7 +445,7 @@ class Visualizer extends NCubeGroovyController
 			int len = label.length()
 			sb.append(label)
 			sb.append('\n')
-			sb.append('-'.multiply(Math.floor(len * 1.2)))
+			sb.append('-' * Math.floor(len * 1.2))
 			sb.append('\n')
 		}
 
@@ -510,13 +518,13 @@ class Visualizer extends NCubeGroovyController
 		//Required scope
 		getRequiredAndOptionalScopeKeys(relInfo)
 		String cubeName = relInfo.targetCube.name
-		String requiredScope = join(COMMA_SPACE, requiredScopeKeys[cubeName])
+		String requiredScope = requiredScopeKeys[cubeName].join(COMMA_SPACE)
 		sb.append('<b>required scope to access all cells for cube = </b>')
 		sb.append(requiredScope)
 		sb.append(DOUBLE_BREAK)
 
 		//Optional scope
-		String optionalScope = join(COMMA_SPACE, optionalScopeKeys[cubeName])
+		String optionalScope = optionalScopeKeys[cubeName].join(COMMA_SPACE)
 		sb.append('<b>optional scope for cube = </b>')
 		sb.append(optionalScope)
 		sb.append(DOUBLE_BREAK)
@@ -643,21 +651,22 @@ class Visualizer extends NCubeGroovyController
 
 	private boolean hasMissingMinimumScope(VisualizerInfo visInfo)
 	{
-		boolean hasMissingScope
+		boolean hasMissingScope = false
 		String cubeName = visInfo.startCubeName
 		Map scope = visInfo.scope
 		String type = getTypeFromCubeName(cubeName).toLowerCase()
-
 		String messageSuffix = "Its default value may be changed as desired."
 		String messageSuffixType = "Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
 
-		if (scope) {
+		if (scope)
+        {
 			hasMissingScope = addMissingScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix) ?: hasMissingScope
 			hasMissingScope = addMissingScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix)  ?: hasMissingScope
 			hasMissingScope = addMissingScope(visInfo, QUOTE_DATE, defaultScopeDate, messageSuffix) ?: hasMissingScope
 			hasMissingScope = addMissingScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType) ?: hasMissingScope
 		}
-		else{
+		else
+        {
 			hasMissingScope = true
 			Map<String, String> defaultScope = getDefaultScope(cubeName)
 			visInfo.scope = defaultScope
@@ -665,7 +674,7 @@ class Visualizer extends NCubeGroovyController
 			sb.append("The scope for the following scope keys was added since it is required: ")
 			sb.append(DOUBLE_BREAK)
 			sb.append(INDENT)
-			sb.append(join(COMMA_SPACE, defaultScope.keySet()))
+			sb.append(defaultScope.keySet().join(COMMA_SPACE))
 			sb.append(DOUBLE_BREAK)
 			sb.append(messageSuffixType)
 			sb.append(" The other default scope values may also be changed as desired.")
@@ -809,7 +818,7 @@ class Visualizer extends NCubeGroovyController
 			sb.append(cubeName)
 			sb.append(getSourceMessage(relInfo))
 			sb.append('. Please add scope value(s) for the following scope key(s): ')
-			sb.append(join(COMMA_SPACE, missingScope))
+			sb.append(missingScope.join(COMMA_SPACE))
 			sb.append('.')
 			String message = sb.toString()
 			relInfo.notes << message
@@ -895,18 +904,5 @@ class Visualizer extends NCubeGroovyController
 	private static String getTypeFromCubeName(String cubeName)
 	{
 		return (cubeName - RPM_CLASS_DOT)
-	}
-
-
-	public static String join(CharSequence delimiter, Iterable<? extends CharSequence> elements)
-	{
-		Objects.requireNonNull(delimiter)
-		Objects.requireNonNull(elements)
-		StringJoiner joiner = new StringJoiner(delimiter)
-		for (CharSequence cs: elements)
-		{
-			joiner.add(cs)
-		}
-		return joiner.toString()
 	}
 }
