@@ -223,7 +223,7 @@ class Visualizer extends NCubeGroovyController
 						}
 						else
                         {
-							messages << "No cube exists with name of ${nextTargetCubeName}. It is therefore not included in the visualization."
+							messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization."
 						}
 					}
 				}
@@ -275,13 +275,13 @@ class Visualizer extends NCubeGroovyController
 							}
 							else
                             {
-								messages << "No cube exists with name of ${nextTargetCubeName}. It is therefore not included in the visualization."
+								messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization."
 							}
 						}
 					}
 					catch (Exception e)
 					{
-						throw new IllegalStateException("Exception caught while loading and processing the cube for enum field ${targetFieldName} in enum ${targetCubeName}.", e)
+						throw new IllegalStateException("Error processing the cube for enum field ${targetFieldName} in enum ${targetCubeName}.", e)
 					}
 				}
 			}
@@ -296,7 +296,6 @@ class Visualizer extends NCubeGroovyController
 
 		visInfo.availableGroupsAllLevels << group
 		addToNodes(visInfo, relInfo, group)
-
 	}
 
 	private static void trimSelectedLevel(VisualizerInfo visInfo)
@@ -363,22 +362,11 @@ class Visualizer extends NCubeGroovyController
 			if (!columns.find { sourceFieldName == (it as Column).value })
             {
 				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
-				StringBuilder sb = new StringBuilder()
-                // TODO: For readability, could this whole String be built using "The source cube ${sourceCube.name} ..."
-				sb.append('The source cube ')
-				sb.append(sourceCube.name)
-				sb.append(' points directly to this cube (')
-				sb.append(targetCube.name )
-				sb.append(') via field ')
-				sb.append(sourceFieldName)
-				sb.append(', but there is no ')
-				sb.append(type.toLowerCase())
-				sb.append(' named ')
-				sb.append(sourceFieldName)
-				sb.append(' on this cube.')
-				sb.append(DOUBLE_BREAK)
-				sb.append('It can therefore not be loaded as an rpm.class in the visualization.')
-				relInfo.notes << sb.toString()
+                String msg = """\
+The source ${sourceCube.name} points directly to (${targetCube.name}) via field ${sourceFieldName}, but \
+there is no ${type.toLowerCase()} named ${sourceFieldName} on this cube.  ${DOUBLE_BREAK}Therefore \
+it cannot be loaded as an rpm.class in the visualization."""
+				relInfo.notes << msg
 				relInfo.loadFieldsAndTraits = false
 				return false
 			}
@@ -683,20 +671,14 @@ class Visualizer extends NCubeGroovyController
 			hasMissingScope = true
 			Map<String, String> defaultScope = getDefaultScope(cubeName)
 			visInfo.scope = defaultScope
-			StringBuilder sb = new StringBuilder()
-            // TODO: For readability, could this whole String be built using "Additional scope is required to load ${cubeName} ..."
-			sb.append("The scope for the following scope keys was added since it is required: ")
-			sb.append(DOUBLE_BREAK)
-			sb.append(INDENT)
-			sb.append(defaultScope.keySet().join(COMMA_SPACE))
-			sb.append(DOUBLE_BREAK)
-			sb.append(messageSuffixType)
-			sb.append(" The other default scope values may also be changed as desired.")
-			messages << sb.toString()
+            String msg = """\
+The scope for the following scope keys was added since it was required: \
+${DOUBLE_BREAK}${INDENT}${defaultScope.keySet().join(COMMA_SPACE)}${DOUBLE_BREAK}${messageSuffixType} \
+The other default scope values may also be changed as desired."""
+			messages << msg
 		}
 		return hasMissingScope
 	}
-
 
 	private boolean addMissingScope(VisualizerInfo visInfo, String key, String value, String messageSuffix)
 	{
@@ -789,24 +771,11 @@ class Visualizer extends NCubeGroovyController
 
 		if (cubeName && axisName)
         {
-            // TODO: For readability, could this whole String be built using "The scope value ${value} for scope key ..."
-			StringBuilder sb = new StringBuilder()
-			sb.append('The scope value ')
-			sb.append(value)
-			sb.append(' for scope key ')
-			sb.append(axisName)
-			sb.append(' cannot be found on axis ')
-			sb.append(axisName)
-			sb.append(' on ')
-			sb.append(cubeName)
-			sb.append(getSourceMessage(relInfo))
-			sb.append('.')
-			sb.append(' Please supply a different value for ')
-			sb.append(axisName)
-			sb.append('.')
-			String message = sb.toString()
-			relInfo.notes << message
-			messages << message
+            String msg = """\
+The scope value ${value} for scope key ${axisName} cannot be found on axis ${axisName} in \
+cube ${cubeName}${getSourceMessage(relInfo)}. Please supply a different value for ${axisName}."""
+			relInfo.notes << msg
+			messages << msg
 			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): SCOPE_VALUE_NOT_FOUND]]
 			relInfo.loadFieldsAndTraits = false
 		}
@@ -839,17 +808,11 @@ class Visualizer extends NCubeGroovyController
 			}
 			visInfo.scope = expandedScope
 			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE]]
-			StringBuilder sb = new StringBuilder()
-            // TODO: For readability, could this whole String be built using "Additional scope is required to load ${cubeName} ..."
-			sb.append('Additional scope is required to load ')
-			sb.append(cubeName)
-			sb.append(getSourceMessage(relInfo))
-			sb.append('. Please add scope value(s) for the following scope key(s): ')
-			sb.append(missingScope.join(COMMA_SPACE))
-			sb.append('.')
-			String message = sb.toString()
-			relInfo.notes << message
-			messages << message
+            String msg = """\
+Additional scope is required to load ${cubeName}${getSourceMessage(relInfo)}. Please add scope \
+value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}."""
+			relInfo.notes << msg
+			messages << msg
 		}
 		else
 		{
@@ -872,27 +835,12 @@ class Visualizer extends NCubeGroovyController
 	private void handleException(Throwable e, VisualizerRelInfo relInfo)
 	{
 		Throwable t = getDeepestException(e)
-        // TODO: For readability, could this whole String be built using "Additional scope is required to load ${cubeName} ..."
-		StringBuilder sb = new StringBuilder()
-		sb.append('An exception was thrown while loading fields and traits for ')
-		sb.append(relInfo.targetCube.name)
-		sb.append(getSourceMessage(relInfo))
-		sb.append('.')
-		sb.append(DOUBLE_BREAK)
-		sb.append('<b>Message:</b> ')
-		sb.append(DOUBLE_BREAK)
-		sb.append(e.message)
-		sb.append(DOUBLE_BREAK)
-		sb.append('<b>Root cause: </b>')
-		sb.append(DOUBLE_BREAK)
-		sb.append(t.toString())
-		sb.append(DOUBLE_BREAK)
-		sb.append('<b>Stack trace: </b>')
-		sb.append(DOUBLE_BREAK)
-		sb.append(t.stackTrace.toString())
-		String message = sb.toString()
-		relInfo.notes << message
-		messages << message
+        String msg = """\
+An exception was thrown while loading fields and traits for ${relInfo.targetCube.name}${getSourceMessage(relInfo)}. \
+${DOUBLE_BREAK}<b>Message:</b> ${DOUBLE_BREAK}${e.message}${DOUBLE_BREAK}<b>Root cause: </b>\
+${DOUBLE_BREAK}${t.toString()}${DOUBLE_BREAK}<b>Stack trace: </b>${DOUBLE_BREAK}${t.stackTrace.toString()}"""
+		relInfo.notes << msg
+		messages << msg
 		relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
 		relInfo.loadFieldsAndTraits = false
 	}
