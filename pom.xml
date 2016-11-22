@@ -82,7 +82,6 @@
         <version.junit>4.12</version.junit>
         <version.spring>4.3.1.RELEASE</version.spring>
         <version.servlet>3.1.0</version.servlet>
-        <version.java>1.8</version.java>
         <version.tomcat>8.0.32</version.tomcat>
         <version.mysql>5.1.38</version.mysql>
         <version.tuckey>4.0.4</version.tuckey>
@@ -102,6 +101,9 @@
         <version.plugin.gmavenplus>1.5</version.plugin.gmavenplus>
         <version.plugin.surefire>2.19.1</version.plugin.surefire>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
     <pluginRepositories>
