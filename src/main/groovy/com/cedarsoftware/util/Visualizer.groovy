@@ -120,12 +120,12 @@ class Visualizer extends NCubeGroovyController
 		visInfo.edges = []
 
 		if (hasMissingMinimumScope(visInfo)) {
-			return [status: STATUS_MISSING_START_SCOPE, visInfo: visInfo, message: String.join(DOUBLE_BREAK, messages)]
+			return [status: STATUS_MISSING_START_SCOPE, visInfo: visInfo, message: join(DOUBLE_BREAK, messages)]
 		}
 
 		getRpmVisualization(visInfo)
 
-		String message = messages.size() > 0 ? String.join(DOUBLE_BREAK, messages) : null
+		String message = messages.size() > 0 ? join(DOUBLE_BREAK, messages) : null
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
 
@@ -510,13 +510,13 @@ class Visualizer extends NCubeGroovyController
 		//Required scope
 		getRequiredAndOptionalScopeKeys(relInfo)
 		String cubeName = relInfo.targetCube.name
-		String requiredScope = String.join(COMMA_SPACE, requiredScopeKeys[cubeName])
+		String requiredScope = join(COMMA_SPACE, requiredScopeKeys[cubeName])
 		sb.append('<b>required scope to access all cells for cube = </b>')
 		sb.append(requiredScope)
 		sb.append(DOUBLE_BREAK)
 
 		//Optional scope
-		String optionalScope = String.join(COMMA_SPACE, optionalScopeKeys[cubeName])
+		String optionalScope = join(COMMA_SPACE, optionalScopeKeys[cubeName])
 		sb.append('<b>optional scope for cube = </b>')
 		sb.append(optionalScope)
 		sb.append(DOUBLE_BREAK)
@@ -665,7 +665,7 @@ class Visualizer extends NCubeGroovyController
 			sb.append("The scope for the following scope keys was added since it is required: ")
 			sb.append(DOUBLE_BREAK)
 			sb.append(INDENT)
-			sb.append(String.join(COMMA_SPACE, defaultScope.keySet()))
+			sb.append(join(COMMA_SPACE, defaultScope.keySet()))
 			sb.append(DOUBLE_BREAK)
 			sb.append(messageSuffixType)
 			sb.append(" The other default scope values may also be changed as desired.")
@@ -809,7 +809,7 @@ class Visualizer extends NCubeGroovyController
 			sb.append(cubeName)
 			sb.append(getSourceMessage(relInfo))
 			sb.append('. Please add scope value(s) for the following scope key(s): ')
-			sb.append(String.join(COMMA_SPACE, missingScope))
+			sb.append(join(COMMA_SPACE, missingScope))
 			sb.append('.')
 			String message = sb.toString()
 			relInfo.notes << message
@@ -897,4 +897,16 @@ class Visualizer extends NCubeGroovyController
 		return (cubeName - RPM_CLASS_DOT)
 	}
 
+
+	public static String join(CharSequence delimiter, Iterable<? extends CharSequence> elements)
+	{
+		Objects.requireNonNull(delimiter)
+		Objects.requireNonNull(elements)
+		StringJoiner joiner = new StringJoiner(delimiter)
+		for (CharSequence cs: elements)
+		{
+			joiner.add(cs)
+		}
+		return joiner.toString()
+	}
 }
