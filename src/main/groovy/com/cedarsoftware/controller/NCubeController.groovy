@@ -1149,7 +1149,7 @@ class NCubeController extends BaseController
                 continue
             }
 
-            Object lastElem = cell[cell.length - 1]
+            Object lastElem = cell[cell.length - 1i]
 
             if (lastElem instanceof Object[])
             {   // If last element is an Object[], we have a coordinate (destination cell)
@@ -1433,7 +1433,7 @@ class NCubeController extends BaseController
         appId = addTenant(appId)
         int dot = command.indexOf('.')
         String controller = command.substring(0, dot)
-        String method = command.substring(dot + 1)
+        String method = command.substring(dot + 1i)
         Map coordinate = ['method' : method, 'service': nCubeService]
         coordinate.putAll(args)
         NCube cube = nCubeService.getCube(appId, controller)
@@ -1785,9 +1785,9 @@ class NCubeController extends BaseController
             s.append(map.msg)
             s.append('</b><br>')
 
-            if (i != len - 1)
+            if (i != len - 1i)
             {
-                Map nextStack = stacks[i + 1]
+                Map nextStack = stacks[i + 1i]
                 StackTraceElement[] nextStackElementArray = (StackTraceElement[]) nextStack.trace
                 s.append(trace(map.trace as StackTraceElement[], nextStackElementArray))
                 s.append('<hr style="border-top: 1px solid #aaa;margin:8px"><b>Called by:</b><br>')
@@ -1895,7 +1895,7 @@ class NCubeController extends BaseController
         {
             return null
         }
-        if (col > (valueRow.length - 1))
+        if (col > (valueRow.length - 1i))
         {
             col %= valueRow.length
         }
