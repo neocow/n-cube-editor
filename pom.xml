@@ -82,7 +82,7 @@
         <version.junit>4.12</version.junit>
         <version.spring>4.3.1.RELEASE</version.spring>
         <version.servlet>3.1.0</version.servlet>
-        <version.java>1.7</version.java>
+        <version.java>1.8</version.java>
         <version.tomcat>8.0.32</version.tomcat>
         <version.mysql>5.1.38</version.mysql>
         <version.tuckey>4.0.4</version.tuckey>
