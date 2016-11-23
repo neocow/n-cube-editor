@@ -683,7 +683,7 @@ The other default scope values may also be changed as desired."""
 	private boolean addMissingScope(VisualizerInfo visInfo, String key, String value, String messageSuffix)
 	{
 		Map scope = visInfo.scope
-		boolean missingScope
+		boolean missingScope = false
 		if (scope.containsKey(key))
         {
 			if (!scope[key])
@@ -742,6 +742,7 @@ The other default scope values may also be changed as desired."""
         {
 			helper.getTraitMaps(cubeName, relInfo.targetScope, traitMaps)
 			relInfo.targetTraitMaps = traitMaps
+            return true
 		}
 		catch (Exception e)
 		{
@@ -760,7 +761,6 @@ The other default scope values may also be changed as desired."""
 			}
 			return false
 		}
-		return true
 	}
 
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerRelInfo relInfo)
