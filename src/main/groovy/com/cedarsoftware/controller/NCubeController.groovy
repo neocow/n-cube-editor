@@ -193,7 +193,7 @@ class NCubeController extends BaseController
         clearVersionCache(appId.app)
     }
 
-    Object[] search(ApplicationID appId, String cubeNamePattern, String content, Map options)
+    Object[] search(ApplicationID appId, String cubeNamePattern = null, String content = null, Map options = [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true])
     {
         appId = addTenant(appId)
         List<NCubeInfoDto> cubeInfos = nCubeService.search(appId, cubeNamePattern, content, options)
