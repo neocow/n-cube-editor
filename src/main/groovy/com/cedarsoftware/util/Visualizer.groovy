@@ -62,8 +62,8 @@ class Visualizer extends NCubeGroovyController
 	private static final String COMMA_SPACE = ', '
 	private static final String DOUBLE_BREAK = "${BREAK}${BREAK}"
 
-	private VisualizerHelper helper = new VisualizerHelper()
-	static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
+	private static final int NODE_LABEL_MAX_LINE_LENGTH = 16
+	private static final BigDecimal NODE_LABEL_LINE_LENGTH_MULTIPLIER = 1.2
 
 	public static final List MANDATORY_RPM_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT]
 	public static final String MISSING_SCOPE = 'missing scope'
@@ -73,6 +73,8 @@ class Visualizer extends NCubeGroovyController
 	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
 	public static final String STATUS_SUCCESS = 'success'
 
+	private VisualizerHelper helper = new VisualizerHelper()
+	private static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
 	private Set messages = []
 	private Set visited = []
 	Map<String, Set> requiredScopeKeys = [:]
@@ -302,8 +304,7 @@ class Visualizer extends NCubeGroovyController
     {
 		long nodeCount = visInfo.nodeCount
 		long selectedLevel = visInfo.selectedLevel
-        // TODO: Why is compareTo being used instead of > operator?
-		visInfo.selectedLevel = selectedLevel.compareTo(nodeCount) > 0 ? nodeCount : selectedLevel
+  		visInfo.selectedLevel = selectedLevel > nodeCount ? nodeCount : selectedLevel
 	}
 
 	private static void trimSelectedGroups(VisualizerInfo visInfo)
@@ -330,8 +331,7 @@ class Visualizer extends NCubeGroovyController
 			nextRelInfo.targetLevel = nextTargetTargetLevel
 
 			long maxLevel = visInfo.maxLevel
-            // TODO: why is compareTo() being used below instead of <=
-			visInfo.maxLevel = maxLevel.compareTo(nextTargetTargetLevel) < 0 ? nextTargetTargetLevel : maxLevel
+ 			visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
 			visInfo.nodeCount += 1
 			nextRelInfo.id = visInfo.nodeCount
 
@@ -428,12 +428,25 @@ it cannot be loaded as an rpm.class in the visualization."""
 	{
 		NCube targetCube = relInfo.targetCube
 		String targetCubeName = targetCube.name
-		Map targetTraitMaps = relInfo.targetTraitMaps
 		Map targetScope = relInfo.targetScope
 		String sourceFieldName = relInfo.sourceFieldName
-
-		int maxLineLength = 16
 		String nodeGroup = getNodeGroup(targetCubeName, group)
+
+		Map nodeMap = [:]
+		nodeMap.id = "${targetCube.name}_${targetScope.toString()}".toString()
+		nodeMap.scope = targetScope.toString()
+		nodeMap.level = String.valueOf(relInfo.targetLevel)
+		nodeMap.name = targetCubeName
+		nodeMap.fromFieldName = sourceFieldName == null ? null : sourceFieldName
+		nodeMap.label = getLabel(relInfo, nodeGroup)
+		nodeMap.title = targetCubeName
+		nodeMap.desc = getTitle(relInfo, nodeMap)
+		nodeMap.group = nodeGroup
+		visInfo.nodes << nodeMap
+	}
+
+	private static String getLabel(VisualizerRelInfo relInfo, String nodeGroup)
+	{
 		StringBuilder sb = new StringBuilder()
 		if (GROUPS_TO_SHOW_IN_TITLE.contains(nodeGroup))
 		{
@@ -441,17 +454,16 @@ it cannot be loaded as an rpm.class in the visualization."""
 			int len = label.length()
 			sb.append(label)
 			sb.append('\n')
-			sb.append('-' * Math.floor(len * 1.2))
+			sb.append('-' * Math.floor(len * NODE_LABEL_LINE_LENGTH_MULTIPLIER))
 			sb.append('\n')
 		}
 
-        // TODO: This code needs to be broken into named methods that explain what it is doing
-		String labelName = getDotSuffix(getEffectiveName(targetCube, targetTraitMaps))
+		String labelName = getDotSuffix(getEffectiveName(relInfo.targetCube, relInfo.targetTraitMaps))
 		String[] splitName = labelName.split("(?=\\p{Upper})")
 		String line = ''
 		for (String part : splitName)
 		{
-			if (line.length() + part.length() < maxLineLength)
+			if (line.length() + part.length() < NODE_LABEL_MAX_LINE_LENGTH)
 			{
 				line += part
 			}
@@ -463,19 +475,7 @@ it cannot be loaded as an rpm.class in the visualization."""
 			}
 		}
 		sb.append(line)
-
-		Map nodeMap = [:]
-		nodeMap.id = "${targetCube.name}_${targetScope.toString()}".toString()
-		nodeMap.scope = targetScope.toString()
-		nodeMap.level = String.valueOf(relInfo.targetLevel)
-		nodeMap.name = targetCubeName
-		nodeMap.fromFieldName = sourceFieldName == null ? null : sourceFieldName
-
-		nodeMap.label = sb.toString()
-		nodeMap.title = targetCubeName
-		nodeMap.desc = getTitle(relInfo, nodeMap)
-		nodeMap.group = nodeGroup
-		visInfo.nodes << nodeMap
+		return sb.toString()
 	}
 
 	private String getTitle(VisualizerRelInfo relInfo, Map nodeMap)
@@ -616,8 +616,7 @@ it cannot be loaded as an rpm.class in the visualization."""
 		}
 		else if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
-            // TODO: Can we use CaseInsensitiveMap so we don't have to do .toLowerCase()?
-			String newScopeKey = sourceFieldRpmType.toLowerCase()
+   			String newScopeKey = sourceFieldRpmType.toLowerCase()
 			String oldValue = scope[newScopeKey]
 			if (oldValue)
             {
@@ -641,8 +640,7 @@ it cannot be loaded as an rpm.class in the visualization."""
 
 	private Map getDefaultScope(String cubeName)
 	{
-        // TODO: Can we use CaseInsensitiveMap so we don't have to do .toLowerCase()?
-		String type = getTypeFromCubeName(cubeName).toLowerCase()
+  		String type = getTypeFromCubeName(cubeName).toLowerCase()
 		return [(type): DEFAULT_SCOPE_VALUE,
 				(EFFECTIVE_VERSION): defaultScopeEffectiveVersion,
 				(POLICY_CONTROL_DATE): defaultScopeDate,
