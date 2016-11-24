@@ -7,7 +7,7 @@ import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
-import ncube.grv.method.NCubeGroovyController
+import ncube.grv.exp.NCubeGroovyExpression
 
 /**
  * Provides the information used to visualize rpm cubes associated with a given rpm cube.
@@ -15,7 +15,7 @@ import ncube.grv.method.NCubeGroovyController
 
 // TODO: This code needs to be moved out of NCE and pulled-in via Grapes.
 @CompileStatic
-class Visualizer extends NCubeGroovyController
+class Visualizer extends NCubeGroovyExpression
 {
 	public static final String RPM_CLASS = 'rpm.class'
 	public static final String RPM_ENUM = 'rpm.enum'
