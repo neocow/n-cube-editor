@@ -10,18 +10,23 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class VisualizerRelInfo
 {
-	long id
 	boolean loadFieldsAndTraits = true
 	Set<String> notes = []
+	Map scope
 
+	long targetId
     NCube targetCube
 	Map targetScope
 	Map targetTraitMaps
 	long targetLevel
 
+	long sourceId
 	NCube sourceCube
 	Map sourceScope
 	Map sourceTraitMaps
 	String sourceFieldName
 	String sourceFieldRpmType
+
+	Set requiredScopeKeys  = []
+	Set optionalScopeKeys  = []
 }

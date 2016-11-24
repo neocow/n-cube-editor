@@ -4,6 +4,7 @@ import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import groovy.transform.CompileStatic
 import ncube.grv.method.NCubeGroovyController
 
@@ -13,6 +14,7 @@ import java.util.regex.Pattern
 /**
  * The methods in this class are used by the Visualizer.
  * The methods are are copied from Dynamis unless otherwise is indicated. Some methods are slightly altered.
+ * Do find on 'COPIED' to find code copied from Dynamis.
  * Do find on 'ORIGINAL' to find code not copied from Dynamis.
  *
  */
@@ -29,7 +31,6 @@ public class VisualizerHelper extends NCubeGroovyController {
 	public static final String RPM_CLASS = "rpm.class";
 	public static final String RPM_ENUM = "rpm.enum";
 	public static final String RPM_CLASS_DOT = 'rpm.class.'
-	public static final String RPM_ENUM_DOT = 'rpm.enum.'
 	public static final String R_EXTENDS = 'r:extends'
 	public static final String R_EXISTS = 'r:exists'
 	public static final String R_RPM_TYPE = 'r:rpmType'
@@ -42,10 +43,14 @@ public class VisualizerHelper extends NCubeGroovyController {
 	public static final String V_MAX = 'v:max'
 	private static final String NOT_DEFINED = '#NOT_DEFINED'
 	public static final String CLASS_TRAITS = 'CLASS_TRAITS'
-	public static final String EFFECTIVE_VERSION_SCOPE_KEY = '_' + 'effectiveVersion'
+	public static final String SYSTEM_SCOPE_KEY_PREFIX = "_";
+	public static final String EFFECTIVE_VERSION_SCOPE_KEY = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion";
 	public static final List MINIMAL_TRAITS = [R_RPM_TYPE, R_SCOPED_NAME, R_EXTENDS, R_EXISTS, R_DECLARED, R_SINCE, R_OBSOLETE, V_ENUM, V_MIN, V_MAX]
 	private static final String EXISTS_TRAIT_CONTAINS_NULL_VALUE = " may not contain a value of null. If there is a value, it must be true or false. ";
 
+	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
+	 */
 	public static
 	final Pattern PATTERN_CLASS_NAME = Pattern.compile('^(?:[a-z][a-z0-9_]*)(?:\\.[a-z][a-z0-9_]*)*$', Pattern.CASE_INSENSITIVE);
 
@@ -55,6 +60,9 @@ public class VisualizerHelper extends NCubeGroovyController {
 	public static
 	final Pattern PATTERN_FIELD_EXTENDS_TRAIT = Pattern.compile('^\\s*((?:[a-z][a-z0-9_]*)(?:\\.[a-z][a-z0-9_]*)*)\\s*(?:[\\[]\\s*([a-z0-9_]+?)\\s*[\\]])?\\s*$', Pattern.CASE_INSENSITIVE);
 
+	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
+	 */
 	public boolean isPrimitive(String type){
 		for (PRIMITIVE_TYPE pt : PRIMITIVE_TYPE.values()) {
 			if (pt.getClassType().getSimpleName().equalsIgnoreCase(type)) {
@@ -65,39 +73,10 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
-	 * ORIGINAL: Not copied from Dynamis
-	 */
-	public Map getTraitMaps(String cubeName, Map scope, Map traitMaps) {
-		NCube cube = getCube(cubeName)
-		if (cube.name.startsWith(RPM_ENUM)){
-			loadRpmClassFields(RPM_ENUM, cube.name.split(RPM_ENUM_DOT)[1], scope, traitMaps, [:])
-		} else{
-			loadRpmClassFields(RPM_CLASS, cube.name.split(RPM_CLASS_DOT)[1], scope, traitMaps, [:])
-		}
-		removeNotExistsFields(traitMaps)
-		return traitMaps
-	}
-
-	/**
-	 * ORIGINAL: Not copied from Dynamis
-	 */
-	private static void removeNotExistsFields(Map<String, Map<String, Object>> traitMaps)
-	{
-		Iterator<String> i = traitMaps.keySet().iterator()
-		while (i.hasNext())
-		{
-			String fieldName = i.next()
-			if (!traitMaps[fieldName][R_EXISTS])
-			{
-				i.remove()
-			}
-		}
-	}
-
-	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * pulls all of the fields and associated traits from nCube that will be used to create the RpmClass/RpmEnum instance
 	 */
-	private void loadRpmClassFields(String cubeType, String cubeName, Map<String, Object> scope, Map<String, Map<String, Object>> traitMaps, Map<String, Object> output)
+	public void loadRpmClassFields(String cubeType, String cubeName, Map<String, Object> scope, Map<String, Map<String, Object>> traitMaps, Map<String, Object> output)
 	{
 		LinkedList<String> classesToProcess = new LinkedList<String>();
 		Set<String> visited = new LinkedHashSet<String>();
@@ -139,6 +118,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Populates the field traits for the class or enum
 	 */
 	private void loadFieldTraitsForClass(String cubeType, String className, Map<String, Object> scope, Map<String,Map<String,Object>> fieldAndTraits, LinkedList<String> classesToProcess, Map<String, Object> output)
@@ -212,6 +192,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * applies the master definition specified in r:extends to the current field traits
 	 */
 	private void processMasterDefinition(String className, String fieldName, String masterDefinition,
@@ -284,6 +265,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Returns the nCube for the specified class (or enum)
 	 */
 	private NCube findClassCube(String cubeType, Map<String, Object> scope, String className, Map<String, Object> output) {
@@ -303,12 +285,13 @@ public class VisualizerHelper extends NCubeGroovyController {
 		{
 			requiredScope.remove("name");
 		}
-		ensureEnoughScopeProvided(className, scope, requiredScope);
+		ensureEnoughScopeProvided(cubeType, className, scope, requiredScope);
 		return ncube;
 	}
 
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * parses the value of the r:extends trait and adds all mixins to the list of classes to process
 	 */
 	private void processClassMixins(String className, String mixins, LinkedList<String> classesToProcess) {
@@ -334,6 +317,9 @@ public class VisualizerHelper extends NCubeGroovyController {
 		}
 	}
 
+	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
+	 */
 	private enum PRIMITIVE_TYPE {
 		BOOLEAN (Boolean.class), LONG(Long.class), DOUBLE(Double.class), BIG_DECIMAL(BigDecimal.class), STRING(String.class), DATE(Date.class);
 
@@ -358,6 +344,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Throws RpmException which includes list of classes processed and cause
 	 */
 	private void handleException(String cubeType, Set<String> visited, String className, Exception e) {
@@ -375,6 +362,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Load trait values for a given field into the fieldTraits map, ignoring traits already loaded
 	 */
 	private static void loadTraitsForField(NCube classCube, List<String> traitNames, Map<String, Object> fieldTraits, Map<String, Object> coord) {
@@ -392,6 +380,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Determines initial list of fields by extracting column values from axis
 	 */
 	private static void populateAllFieldsFromAxis(Map<String, Map<String, Object>> fieldAndTraits, String axisName, NCube classCube) {
@@ -406,7 +395,9 @@ public class VisualizerHelper extends NCubeGroovyController {
 		}
 	}
 
-
+	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
+	 */
 	private boolean isFieldValidSince(Map<String, Object> traits, String sourceVersion) {
 		if (!traits.containsKey(R_SINCE)) {
 			return true;
@@ -418,6 +409,10 @@ public class VisualizerHelper extends NCubeGroovyController {
 		return version.compareTo(sinceVersion) >= 0;
 	}
 
+
+	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
+	 */
 	private boolean isFieldValidObsolete(Map<String, Object> traits, String sourceVersion) {
 		if (!traits.containsKey(R_OBSOLETE)) {
 			return true;
@@ -431,6 +426,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Return List of Strings, containing names of trait columns defined on the NCube specified
 	 */
 	private static List<String> getTraitNamesForCube(NCube classCube, String sourceVersion) {
@@ -446,6 +442,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Get the 'proper' requiredScope from NCube.  In addition to getting the scope
 	 * keys (Strings), the associated Set is all the values used for the given scope
 	 * key, akin to all enums in an enum list.
@@ -462,28 +459,27 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * MODIFIED: From Dynamis 5.2.0. Modified to throw InvalidCoordinateException
 	 * Ensure that enough scope is provided.  This will check that the original scope key set
 	 * has all the keys required to reach all cells in the defining ncube.
 	 */
-	private static void ensureEnoughScopeProvided(String className, Map<String, Object> scope, Set<String> requiredScope)
+	private static void ensureEnoughScopeProvided(String cubeType, String className, Map<String, Object> scope, Set<String> requiredScope)
 	{
 		if (!scope.keySet().containsAll(requiredScope))
 		{
 			Set<String> missingScope = new CaseInsensitiveSet<String>(requiredScope);
-
-			for (String key : scope.keySet())
+			Set scopeKeySet = scope.keySet()
+			for (String key : scopeKeySet)
 			{
 				missingScope.remove(key);
 			}
-			throw new IllegalArgumentException("Not enough scope was provided to create class/enum/rel: " +
-					className + ", missing scope keys: " + missingScope);
+			String cubeName = "${cubeType}.${className}"
+			throw new InvalidCoordinateException("Not enough scope was provided to create class/enum/rel: ${className}, missing scope keys: ${missingScope}", cubeName, scopeKeySet, requiredScope)
 		}
 	}
 
-
-
-
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Bulk loads value of r:exists for all fields defined
 	 */
 	private void populateExistsTrait(String className, String axisName, Map<String, Object> scope, Map<String, Map<String, Object>> fieldAndTraits, NCube classCube, Map output) {
@@ -510,6 +506,7 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Returns the value of the r:exists trait, or null if not set
 	 * @return the boolean value of r:exists, if it exists; otherwise, null
 	 */
@@ -540,12 +537,16 @@ public class VisualizerHelper extends NCubeGroovyController {
 	}
 
 	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Utility method to return true if the field value exists and doesn't match default
 	 */
 	private static boolean hasValue(Object value) {
 		return !(value != null && NOT_DEFINED.equals(value));
 	}
 
+	/**
+	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
+	 */
 	private class ComparableVersion
 			implements Comparable<ComparableVersion> {
 		private String value;
