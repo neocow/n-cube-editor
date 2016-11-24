@@ -705,6 +705,7 @@ The other default scope values may also be changed as desired."""
 		try
 		{
 			getTraitMaps(relInfo)
+            return true
 		}
 		catch (Exception e)
 		{
@@ -712,11 +713,11 @@ The other default scope values may also be changed as desired."""
 			Throwable t = getDeepestException(e)
 			if (t instanceof InvalidCoordinateException)
             {
-				handleInvalidCoordinateException(t, visInfo, relInfo)
+				handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, relInfo)
 			}
 			else if (t instanceof CoordinateNotFoundException)
             {
-				handleCoordinateNotFoundException(t, relInfo)
+				handleCoordinateNotFoundException(t as CoordinateNotFoundException, relInfo)
 			}
 			else
             {
@@ -724,7 +725,6 @@ The other default scope values may also be changed as desired."""
 			}
 			return false
 		}
-		return true
 	}
 
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerRelInfo relInfo)
