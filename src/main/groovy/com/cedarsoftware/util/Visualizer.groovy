@@ -520,25 +520,17 @@ it cannot be loaded as an rpm.class in the visualization."""
 		//Fields
 		if (loadFieldsAndTraits)
 		{
-			sb.append(getTitleFields(traitMaps))
+			sb.append("<b>fields = </b>${getFieldDetails(traitMaps)}")
 		}
 
 		return sb.toString()
 	}
 
-	private static String getTitleFields(Map traitMaps)
-	{
-		String fieldString = "<b>fields = </b>"
-		return fieldString + getFieldDetails(traitMaps)
-	}
-
-	private static String getFieldDetails(Map traitMaps)
+	private static String getFieldDetails(Map<String, Object> traitMaps)
 	{
 		StringBuilder fieldDetails = new StringBuilder()
-		fieldDetails.append('')
 
-		traitMaps.each { k, v ->
-			String fieldName = k as String
+		traitMaps.each { String fieldName, v ->
 			if (CLASS_TRAITS != fieldName)
             {
 				fieldDetails.append(BREAK)
@@ -800,7 +792,7 @@ value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}."""
 				missingScope << key
 			}
 		}
-		return missingScope.size() > 0 ? missingScope : null
+		return missingScope ?: null
 	}
 
 	private void handleException(Throwable e, VisualizerRelInfo relInfo)
