@@ -24,4 +24,14 @@ class VisualizerInfo
 	String groupSuffix
 	Set availableScopeKeys = []
 	Map<String, Set<String>> availableScopeValues = [:]
+
+	void trimSelectedLevel()
+	{
+		selectedLevel = selectedLevel > nodeCount ? nodeCount : selectedLevel
+	}
+
+	void trimSelectedGroups()
+	{
+		selectedGroups = availableGroupsAllLevels.intersect(selectedGroups)
+	}
 }

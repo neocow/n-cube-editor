@@ -2,6 +2,7 @@ package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.Axis
+import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.ReleaseStatus
@@ -161,9 +162,8 @@ class Visualizer extends NCubeGroovyController
 
 		addSets(visInfo.availableScopeKeys, requiredScopeKeys.values() as Set)
 		addSets(visInfo.availableScopeKeys, optionalScopeKeys.values() as Set)
-
-		trimSelectedLevel(visInfo)
-		trimSelectedGroups(visInfo)
+        visInfo.trimSelectedLevel()
+        visInfo.trimSelectedGroups()
 	}
 
 	private static Set addSets(Set<String> set, Set<Set> sets)
@@ -307,18 +307,6 @@ class Visualizer extends NCubeGroovyController
 
 		visInfo.availableGroupsAllLevels << group
 		addToNodes(visInfo, relInfo, group)
-	}
-
-	private static void trimSelectedLevel(VisualizerInfo visInfo)
-	{
-		long nodeCount = visInfo.nodeCount
-		long selectedLevel = visInfo.selectedLevel
-		visInfo.selectedLevel = selectedLevel > nodeCount ? nodeCount : selectedLevel
-	}
-
-	private static void trimSelectedGroups(VisualizerInfo visInfo)
-	{
-		visInfo.selectedGroups = visInfo.availableGroupsAllLevels.intersect(visInfo.selectedGroups)
 	}
 
 	private VisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
@@ -700,7 +688,7 @@ class Visualizer extends NCubeGroovyController
 		}
 		else
 		{
-			relInfo.requiredScopeKeys = getRequiredScope(relInfo)
+			relInfo.requiredScopeKeys = relInfo.requiredScope
 			relInfo.optionalScopeKeys = cube.getOptionalScope(relInfo.scope, [:])
 			requiredScopeKeys[cubeName] = relInfo.requiredScopeKeys
 			optionalScopeKeys[cubeName] = relInfo.optionalScopeKeys
@@ -712,6 +700,7 @@ class Visualizer extends NCubeGroovyController
 		try
 		{
 			getTraitMaps(relInfo)
+            return true
 		}
 		catch (Exception e)
 		{
@@ -731,7 +720,6 @@ class Visualizer extends NCubeGroovyController
 			}
 			return false
 		}
-		return true
 	}
 
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
@@ -768,6 +756,7 @@ class Visualizer extends NCubeGroovyController
 		String cubeName = e.cubeName
 		Set requiredKeys = e.requiredKeys
 		Set<String> missingScope = findMissingScope(relInfo.scope, requiredKeys)
+
 		if (missingScope)
 		{
 			Map expandedScope = new LinkedHashMap(visInfo.scope)
@@ -843,11 +832,10 @@ class Visualizer extends NCubeGroovyController
 		scopeCollector.addAll(relInfo.optionalScopeKeys)
 		scopeCollector << EFFECTIVE_VERSION_SCOPE_KEY
 
-		if (output[NCube.RULE_EXEC_INFO])
-		{
-			Set keysUsed = (output[NCube.RULE_EXEC_INFO] as RuleInfo).getInputKeysUsed()
-			scopeCollector.addAll(keysUsed)
-		}
+        RuleInfo ruleInfo = NCube.getRuleInfo(output)
+        Set keysUsed = ruleInfo.getInputKeysUsed()
+		scopeCollector.addAll(keysUsed)
+
 		relInfo.targetScope = new CaseInsensitiveMap(relInfo.scope)
 		cullScope(relInfo.targetScope, scopeCollector)
 	}
@@ -879,15 +867,6 @@ class Visualizer extends NCubeGroovyController
 		}
 	}
 
-	private static Set getRequiredScope(VisualizerRelInfo relInfo)
-	{
-		Set<String> requiredScope = relInfo.targetCube.getRequiredScope(relInfo.targetScope, [:] as Map)
-		requiredScope.remove(AXIS_FIELD)
-		requiredScope.remove(AXIS_NAME)
-		requiredScope.remove(AXIS_TRAIT)
-		return requiredScope
-	}
-
 	private static String getTypeFromCubeName(String cubeName)
 	{
 		return (cubeName - RPM_CLASS_DOT)
@@ -895,8 +874,10 @@ class Visualizer extends NCubeGroovyController
 
 	private Set loadAvailableScopeValues(VisualizerInfo visInfo, String cubeName, String key)
 	{
+        // TODO: This should be re-written to use getColumnValues() below.
 		Axis axis = getCube(cubeName).getAxis(key)
-		if (axis) {
+		if (axis)
+        {
 			Set<String> values = axis.columnsWithoutDefault.collect {it.value} as Set<String>
 			visInfo.availableScopeValues[key] = values
 			return values
@@ -909,7 +890,7 @@ class Visualizer extends NCubeGroovyController
 		Map valuesByKey = new CaseInsensitiveMap()
 
 		//Values for Risk, SourceRisk, Coverage, SourceCoverage, etc.
-		DERIVED_SCOPE_KEYS.each{ key ->
+		DERIVED_SCOPE_KEYS.each { key ->
 			String cubeName = RPM_SCOPE_CLASS_DOT + key + DOT_TRAITS
 			List values = getCube(cubeName).getAxis(key).columnsWithoutDefault.collect{it.value}
 			valuesByKey[key] = values
@@ -922,24 +903,35 @@ class Visualizer extends NCubeGroovyController
 		//Values from ENT.APP
 		String latest = NCubeManager.getLatestVersion(ApplicationID.DEFAULT_TENANT, ENT_APP, ReleaseStatus.RELEASE.name())
 		ApplicationID entAppAppId = new ApplicationID(ApplicationID.DEFAULT_TENANT, ENT_APP, latest, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD)
-		valuesByKey[BUSINESS_DIVISION_CODE] = getColumnValues(entAppAppId, BUSINESS_DIVISION_CUBE_NAME, BUSINESS_DIVISION_CODE)
-		List stateValues = getColumnValues(entAppAppId, STATE_CUBE_NAME, STATE)
+
+        // TODO: The 'as List' on both lines below should be removed, and the code that uses this value should expect a Set.
+		valuesByKey[BUSINESS_DIVISION_CODE] = getColumnValues(entAppAppId, BUSINESS_DIVISION_CUBE_NAME, BUSINESS_DIVISION_CODE) as List
+		List stateValues = getColumnValues(entAppAppId, STATE_CUBE_NAME, STATE) as List
 		valuesByKey[STATE] = stateValues
 		valuesByKey[LOCATION_STATE] = stateValues
 
 		return valuesByKey
 	}
 
-	private static List getColumnValues(ApplicationID applicationID, String cubeName, String axis)
+	private static Set<Object> getColumnValues(ApplicationID applicationID, String cubeName, String axisName)
 	{
 		NCube cube = NCubeManager.getCube(applicationID, cubeName)
-		return cube.getAxis(axis).columnsWithoutDefault.collect{it.value}
+        Set values = new LinkedHashSet()
+        Axis axis = cube.getAxis(axisName)
+        if (axis)
+        {
+            for (Column column : axis.columnsWithoutDefault)
+            {
+                values.add(column.value)
+            }
+        }
+		return values
 	}
 
-	private static Set getAllVersions(String tenant, String app)
+	private static Set<String> getAllVersions(String tenant, String app)
 	{
 		Map<String, List<String>> versionsMap = NCubeManager.getVersions(tenant, app)
-		SortedSet<String> versions = new TreeSet<>(new VersionComparator())
+		Set<String> versions = new TreeSet<>(new VersionComparator())
 		versions.addAll(versionsMap[ReleaseStatus.RELEASE.name()])
 		versions.addAll(versionsMap[ReleaseStatus.SNAPSHOT.name()])
 		return versions
