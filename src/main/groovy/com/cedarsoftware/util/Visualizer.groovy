@@ -44,7 +44,7 @@ class Visualizer extends NCubeGroovyController
 
 	public static final String _ENUM = '_ENUM'
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
-	public static final Map ALL_GROUPS_MAP = [PRODUCT: 'Product', FORM: 'Form', RISK: 'Risk', COVERAGE: 'Coverage', CONTAINER: 'Container', DEDUCTIBLE: 'Deductible', LIMIT: 'Limit', RATE: 'Rate', RATEFACTOR: 'Rate Factor', PREMIUM: 'Premium', PARTY: 'Party', PLACE: 'Place', ROLE: 'Role', ROLEPLAYER: 'Role Player', UNSPECIFIED: 'Unspecified']
+	public static final Map<String, String> ALL_GROUPS_MAP = [PRODUCT: 'Product', FORM: 'Form', RISK: 'Risk', COVERAGE: 'Coverage', CONTAINER: 'Container', DEDUCTIBLE: 'Deductible', LIMIT: 'Limit', RATE: 'Rate', RATEFACTOR: 'Rate Factor', PREMIUM: 'Premium', PARTY: 'Party', PLACE: 'Place', ROLE: 'Role', ROLEPLAYER: 'Role Player', UNSPECIFIED: 'Unspecified']
 	public static final Set<String> ALL_GROUPS_KEYS = ALL_GROUPS_MAP.keySet()
 	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLEPLAYER', 'ROLE']
 
@@ -54,15 +54,15 @@ class Visualizer extends NCubeGroovyController
 	public static final String BUSINESS_DIVISION_CODE = 'businessDivisionCode'
 	public static final String STATE = 'state'
 	public static final String LOCATION_STATE = 'locationState'
-	public static final List<String> DERIVED_SCOPE_KEYS = ['product', 'risk', 'coverage', 'container', 'deductible', 'limit', 'rate', 'ratefactor', 'premium', 'party', 'place', 'role', 'roleplayer']
-	public static final List DERIVED_SOURCE_SCOPE_KEYS = ['sourceRisk', 'sourceCoverage', 'sourceContainer', 'sourceDeductible', 'sourceLimit', 'sourceRate', 'sourceRatefactor', 'sourcePremium', 'sourceParty', 'sourcePlace', 'sourceRole', 'sourceRoleplayer']
+	public static final Set<String> DERIVED_SCOPE_KEYS = ['product', 'risk', 'coverage', 'container', 'deductible', 'limit', 'rate', 'ratefactor', 'premium', 'party', 'place', 'role', 'roleplayer'] as Set
+	public static final Set<String> DERIVED_SOURCE_SCOPE_KEYS = ['sourceRisk', 'sourceCoverage', 'sourceContainer', 'sourceDeductible', 'sourceLimit', 'sourceRate', 'sourceRatefactor', 'sourcePremium', 'sourceParty', 'sourcePlace', 'sourceRole', 'sourceRoleplayer'] as Set
 	public static final String SOURCE_SCOPE_KEY_PREFIX = 'source'
 
 	public static final String SYSTEM_SCOPE_KEY_PREFIX = "_"
 	public static final String EFFECTIVE_VERSION_SCOPE_KEY = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion"
 
-	public static final List DEFAULT_OPTIONAL_SCOPE_KEYS = ['action', 'businessDivisionCode', 'context', 'date', 'edition', '_effectiveVersion', 'env', 'formId', 'LocationState', 'screen', 'state', 'transaction', 'transactionsubtype', 'username', 'view']
-	public static final List DEFAULT_AVAILABLE_SCOPE_KEYS = DERIVED_SCOPE_KEYS + DERIVED_SOURCE_SCOPE_KEYS + DEFAULT_OPTIONAL_SCOPE_KEYS + [POLICY_CONTROL_DATE, QUOTE_DATE, EFFECTIVE_VERSION]
+	public static final Set<String> DEFAULT_OPTIONAL_SCOPE_KEYS = ['action', 'businessDivisionCode', 'context', 'date', 'edition', '_effectiveVersion', 'env', 'formId', 'LocationState', 'screen', 'state', 'transaction', 'transactionsubtype', 'username', 'view'] as Set
+	public static final Set<String> DEFAULT_AVAILABLE_SCOPE_KEYS = DERIVED_SCOPE_KEYS + DERIVED_SOURCE_SCOPE_KEYS + DEFAULT_OPTIONAL_SCOPE_KEYS + [POLICY_CONTROL_DATE, QUOTE_DATE, EFFECTIVE_VERSION]
 	public static final String DEFAULT_SCOPE_VALUE = '????'
 	public static final long DEFAULT_LEVEL = 2
 
@@ -79,7 +79,7 @@ class Visualizer extends NCubeGroovyController
 	public static final int NODE_LABEL_MAX_LINE_LENGTH = 16
 	public static final double NODE_LABEL_LINE_LENGTH_MULTIPLIER = 1.2d
 
-	public static final List MANDATORY_RPM_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT]
+	public static final Set<String> MANDATORY_RPM_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
 	public static final String MISSING_SCOPE = 'missing scope'
 	public static final String UNABLE_TO_LOAD = 'unable to load'
 	public static final String SCOPE_VALUE_NOT_FOUND = 'scope value not found'
@@ -89,10 +89,10 @@ class Visualizer extends NCubeGroovyController
 
 	private VisualizerHelper helper = new VisualizerHelper()
 	private static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
-	private Set messages = []
-	private Set visited = []
-	private Map<String, Set<Set>> requiredScopeKeys = [:]
-	private Map<String, Set<Set>> optionalScopeKeys = [:]
+	private Set<String> messages = []
+	private Set<String> visited = []
+	private Map<String, Set<String>> requiredScopeKeys = [:]
+	private Map<String, Set<String>> optionalScopeKeys = [:]
 	private String defaultScopeEffectiveVersion
 	private String defaultScopeDate
 	private Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
@@ -120,15 +120,14 @@ class Visualizer extends NCubeGroovyController
 
 		VisualizerInfo visInfo = new VisualizerInfo()
 		visInfo.startCubeName = cubeName
-		visInfo.scope = options.scope as CaseInsensitiveMap
+		visInfo.scope = options.scope as CaseInsensitiveMap<String, Object>
 		visInfo.allGroups = ALL_GROUPS_MAP
-		visInfo.availableGroupsAllLevels = []
+		visInfo.availableGroupsAllLevels = [] as Set
 		visInfo.groupSuffix = _ENUM
-		Set selectedGroups = options.selectedGroups as Set
-		visInfo.selectedGroups = selectedGroups ?: ALL_GROUPS_KEYS
+		visInfo.selectedGroups = options.selectedGroups as Set ?: ALL_GROUPS_KEYS
 		String selectedLevel = options.selectedLevel as String
 		visInfo.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL : Converter.convert(selectedLevel, long.class) as long
-		visInfo.availableScopeKeys = options.availableScopeKeys as Set ?: DEFAULT_AVAILABLE_SCOPE_KEYS as Set
+		visInfo.availableScopeKeys =  options.availableScopeKeys as Set ?: DEFAULT_AVAILABLE_SCOPE_KEYS
 		visInfo.availableScopeValues = options.availableScopeValues as Map ?: loadAvailableScopeValues()
 		visInfo.maxLevel = 1
 		visInfo.nodeCount = 1
@@ -166,11 +165,12 @@ class Visualizer extends NCubeGroovyController
         visInfo.trimSelectedGroups()
 	}
 
-	private static Set addSets(Set<String> set, Set<Set> sets)
+	private static Set<Set> addSets(Set<String> set, Set<Set> sets)
 	{
 		sets.each {
 			set.addAll(it)
 		}
+		return sets
 	}
 
 	private void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
@@ -208,9 +208,7 @@ class Visualizer extends NCubeGroovyController
 
 		if (loadFieldsAndTraits)
 		{
-			relInfo.targetTraitMaps.each { k, v ->
-				String targetFieldName = k as String
-				Map targetTraits = v as Map
+			relInfo.targetTraitMaps.each { targetFieldName, targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
@@ -236,7 +234,7 @@ class Visualizer extends NCubeGroovyController
 						}
 						else
 						{
-							messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization."
+							messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization.".toString()
 						}
 					}
 				}
@@ -264,8 +262,7 @@ class Visualizer extends NCubeGroovyController
 
 		if (loadFieldsAndTraits)
 		{
-			relInfo.targetTraitMaps.each { k, v ->
-				String targetFieldName = k as String
+			relInfo.targetTraitMaps.each { targetFieldName, targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					try
@@ -286,7 +283,7 @@ class Visualizer extends NCubeGroovyController
 							}
 							else
 							{
-								messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization."
+								messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization.".toString()
 							}
 						}
 					}
@@ -358,7 +355,7 @@ class Visualizer extends NCubeGroovyController
 			String sourceFieldName = relInfo.sourceFieldName
 			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
 			{
-				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
+				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]] as Map
 				String msg = getLoadTargetAsRpmClassMessage(relInfo, type)
 				relInfo.notes << msg
 				relInfo.loadFieldsAndTraits = false
@@ -390,9 +387,9 @@ class Visualizer extends NCubeGroovyController
 
 		NCube targetCube = relInfo.targetCube
 		String sourceFieldName = relInfo.sourceFieldName
-		Map sourceTraitMaps = relInfo.sourceTraitMaps
+		Map<String, Map<String, Object>> sourceTraitMaps = relInfo.sourceTraitMaps
 
-		Map edgeMap = [:]
+		Map<String, String> edgeMap = [:]
 		String sourceCubeEffectiveName = getEffectiveName(sourceCube, sourceTraitMaps)
 		String targetCubeEffectiveName = getEffectiveName(targetCube, relInfo.targetTraitMaps)
 		edgeMap.id = String.valueOf(visInfo.edges.size() + 1)
@@ -403,7 +400,7 @@ class Visualizer extends NCubeGroovyController
 		edgeMap.fromFieldName = sourceFieldName
 		edgeMap.level = String.valueOf(relInfo.targetLevel)
 		edgeMap.label = ''
-		Map sourceFieldTraitMap = sourceTraitMaps[sourceFieldName] as Map
+		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceTraitMaps[sourceFieldName] as Map
 		String vMin = sourceFieldTraitMap[V_MIN]
 		String vMax = sourceFieldTraitMap[V_MAX]
 
@@ -425,7 +422,7 @@ class Visualizer extends NCubeGroovyController
 		String sourceFieldName = relInfo.sourceFieldName
 		String nodeGroup = getNodeGroup(targetCubeName, group)
 
-		Map nodeMap = [:]
+		Map<String, String> nodeMap = [:]
 		nodeMap.id = String.valueOf(relInfo.targetId)
 		nodeMap.level = String.valueOf(relInfo.targetLevel)
 		nodeMap.name = targetCubeName
@@ -470,11 +467,11 @@ class Visualizer extends NCubeGroovyController
 		return sb.toString()
 	}
 
-	private static String getTitle(VisualizerRelInfo relInfo, Map nodeMap)
+	private static String getTitle(VisualizerRelInfo relInfo, Map<String, String> nodeMap)
 	{
 		boolean loadFieldsAndTraits = relInfo.loadFieldsAndTraits
-		Map traitMaps = relInfo.targetTraitMaps
-		Set notes = relInfo.notes
+		Map<String, Map<String, Object>> traitMaps = relInfo.targetTraitMaps
+		Set<String> notes = relInfo.notes
 		String scopedName = getScopedName(traitMaps)
 		StringBuilder sb = new StringBuilder()
 
@@ -523,7 +520,7 @@ class Visualizer extends NCubeGroovyController
 		return sb.toString()
 	}
 
-	private static String getFieldDetails(Map<String, Object> traitMaps)
+	private static String getFieldDetails(Map<String, Map<String, Object>> traitMaps)
 	{
 		StringBuilder fieldDetails = new StringBuilder()
 
@@ -538,15 +535,15 @@ class Visualizer extends NCubeGroovyController
 		return fieldDetails.toString()
 	}
 
-	private static String getEffectiveName(NCube cube, Map traitMaps)
+	private static String getEffectiveName(NCube cube, Map<String, Map<String, Object>> traitMaps)
 	{
 		String scopedName = getScopedName(traitMaps)
 		return scopedName == null ? cube.name : scopedName
 	}
 
-	private static String getScopedName(Map traitMaps)
+	private static String getScopedName(Map<String, Map<String, Object>> traitMaps)
 	{
-		Map classTraitsTraitMap = traitMaps[CLASS_TRAITS] as Map
+		Map<String, Object> classTraitsTraitMap = traitMaps[CLASS_TRAITS] as Map
 		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
 	}
 
@@ -581,9 +578,9 @@ class Visualizer extends NCubeGroovyController
 	 * @return Map new scope
 	 *
 	 */
-	private static Map getScopeRelativeToSource(NCube targetCube, String sourceFieldRpmType, String targetFieldName, Map scope)
+	private static Map<String, Object> getScopeRelativeToSource(NCube targetCube, String sourceFieldRpmType, String targetFieldName, Map scope)
 	{
-		Map newScope = new CaseInsensitiveMap(scope)
+		Map<String, Object> newScope = new CaseInsensitiveMap<String, Object>(scope)
 
 		if (targetCube.name.startsWith(RPM_ENUM))
 		{
@@ -608,10 +605,10 @@ class Visualizer extends NCubeGroovyController
 		return lastIndexOfDot == -1 ? value : value.substring(lastIndexOfDot + 1)
 	}
 
-	private Map getDefaultScope(String cubeName)
+	private Map<String, Object> getDefaultScope(String cubeName)
 	{
 		String type = getTypeFromCubeName(cubeName)
-		Map scope = new CaseInsensitiveMap()
+		Map<String, Object> scope = new CaseInsensitiveMap<String, Object>()
 		scope[type] = DEFAULT_SCOPE_VALUE
 		scope[EFFECTIVE_VERSION] = defaultScopeEffectiveVersion
 		scope[POLICY_CONTROL_DATE] = defaultScopeDate
@@ -624,7 +621,7 @@ class Visualizer extends NCubeGroovyController
 	{
 		boolean hasMissingScope = false
 		String cubeName = visInfo.startCubeName
-		Map scope = visInfo.scope
+		Map<String, Object> scope = visInfo.scope
 		String type = getTypeFromCubeName(cubeName)
 		String messageSuffix = "Its default value may be changed as desired."
 		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, type)
@@ -640,7 +637,7 @@ class Visualizer extends NCubeGroovyController
 		else
 		{
 			hasMissingScope = true
-			Map defaultScope = getDefaultScope(cubeName)
+			Map<String, Object> defaultScope = getDefaultScope(cubeName)
 			visInfo.scope = defaultScope
 			String msg = getMissingMinimumScopeMessage(defaultScope, messageScopeValues, messageSuffixType )
 			messages << msg
@@ -650,7 +647,7 @@ class Visualizer extends NCubeGroovyController
 
 	private boolean addMissingMinimumScope(VisualizerInfo visInfo, String key, String value, String messageSuffix)
 	{
-		Map scope = visInfo.scope
+		Map<String, Object> scope = visInfo.scope
 		boolean missingScope
 		if (scope.containsKey(key))
 		{
@@ -672,7 +669,7 @@ class Visualizer extends NCubeGroovyController
 
 		if (missingScope)
 		{
-			messages << "Scope is required for ${key}. ${messageSuffix}"
+			messages << "Scope is required for ${key}. ${messageSuffix}".toString()
 		}
 		return missingScope
 	}
@@ -733,7 +730,7 @@ class Visualizer extends NCubeGroovyController
 			String msg = getCoordinateNotFoundMessage(visInfo, relInfo, axisName, value, cubeName)
 			relInfo.notes << msg
 			messages << msg
-			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): SCOPE_VALUE_NOT_FOUND]]
+			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): SCOPE_VALUE_NOT_FOUND]] as Map
 		}
 		else
 		{
@@ -759,12 +756,12 @@ class Visualizer extends NCubeGroovyController
 
 		if (missingScope)
 		{
-			Map expandedScope = new LinkedHashMap(visInfo.scope)
-			missingScope.each { String key ->
+			Map<String, Object> expandedScope = new CaseInsensitiveMap<String, Object>(visInfo.scope)
+			missingScope.each { key ->
 				expandedScope[key] = DEFAULT_SCOPE_VALUE
 			}
 			visInfo.scope = expandedScope
-			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE]]
+			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE]] as Map
 			String msg = getInvalidCoordinateExceptionMessage(visInfo, relInfo, missingScope, cubeName)
 			relInfo.notes << msg
 			messages << msg
@@ -775,10 +772,10 @@ class Visualizer extends NCubeGroovyController
 		}
 	}
 
-	private static Set<String> findMissingScope(Map scope, Set<String> requiredKeys)
+	private static Set<String> findMissingScope(Map<String, Object> scope, Set<String> requiredKeys)
 	{
 		Set<String> missingScope = []
-		requiredKeys.each { String key ->
+		requiredKeys.each { key ->
 			if (!MANDATORY_RPM_SCOPE_KEYS.contains(key) && (scope == null || !scope.containsKey(key)))
 			{
 				missingScope << key
@@ -793,7 +790,7 @@ class Visualizer extends NCubeGroovyController
 		String msg = getExceptionMessage(relInfo, e, t)
 		relInfo.notes << msg
 		messages << msg
-		relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
+		relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]] as Map
 	}
 
 	private static Throwable getDeepestException(Throwable e)
@@ -808,9 +805,9 @@ class Visualizer extends NCubeGroovyController
 	private void getTraitMaps(VisualizerRelInfo relInfo)
 	{
 		NCube cube = relInfo.targetCube
-		Map scope = relInfo.scope
+		Map<String, Object> scope = relInfo.scope
 		relInfo.targetTraitMaps = [:]
-		Map traitMaps = relInfo.targetTraitMaps
+		Map<String, Map<String, Object>> traitMaps = relInfo.targetTraitMaps
 		Map output = [:]
 		if (cube.name.startsWith(RPM_ENUM))
 		{
@@ -872,41 +869,34 @@ class Visualizer extends NCubeGroovyController
 		return (cubeName - RPM_CLASS_DOT)
 	}
 
-	private Set loadAvailableScopeValues(VisualizerInfo visInfo, String cubeName, String key)
+	private Set<Object> loadAvailableScopeValues(VisualizerInfo visInfo, String cubeName, String key)
 	{
-        // TODO: This should be re-written to use getColumnValues() below.
-		Axis axis = getCube(cubeName).getAxis(key)
-		if (axis)
-        {
-			Set<String> values = axis.columnsWithoutDefault.collect {it.value} as Set<String>
-			visInfo.availableScopeValues[key] = values
-			return values
-		}
-		return [] as Set
+		Set<Object> values = getColumnValues(applicationID, cubeName, key)
+		visInfo.availableScopeValues[key] = values
+		return values
 	}
 
-	private Map loadAvailableScopeValues()
+	private Map<String, Set<Object>> loadAvailableScopeValues()
 	{
-		Map valuesByKey = new CaseInsensitiveMap()
+		Map<String, Set<Object>> valuesByKey = new CaseInsensitiveMap<String, Set<Object>>()
 
 		//Values for Risk, SourceRisk, Coverage, SourceCoverage, etc.
 		DERIVED_SCOPE_KEYS.each { key ->
 			String cubeName = RPM_SCOPE_CLASS_DOT + key + DOT_TRAITS
-			List values = getCube(cubeName).getAxis(key).columnsWithoutDefault.collect{it.value}
+			Set<Object> values = getColumnValues(applicationID, cubeName, key)
 			valuesByKey[key] = values
 			valuesByKey[SOURCE_SCOPE_KEY_PREFIX + key] = values
 		}
 
 		//Values for effective version
-		valuesByKey[EFFECTIVE_VERSION] = getAllVersions(applicationID.tenant, applicationID.app)
+		valuesByKey[EFFECTIVE_VERSION] = getAllVersions(applicationID.tenant, applicationID.app) as Set<Object>
 
 		//Values from ENT.APP
 		String latest = NCubeManager.getLatestVersion(ApplicationID.DEFAULT_TENANT, ENT_APP, ReleaseStatus.RELEASE.name())
 		ApplicationID entAppAppId = new ApplicationID(ApplicationID.DEFAULT_TENANT, ENT_APP, latest, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD)
 
-        // TODO: The 'as List' on both lines below should be removed, and the code that uses this value should expect a Set.
-		valuesByKey[BUSINESS_DIVISION_CODE] = getColumnValues(entAppAppId, BUSINESS_DIVISION_CUBE_NAME, BUSINESS_DIVISION_CODE) as List
-		List stateValues = getColumnValues(entAppAppId, STATE_CUBE_NAME, STATE) as List
+   		valuesByKey[BUSINESS_DIVISION_CODE] = getColumnValues(entAppAppId, BUSINESS_DIVISION_CUBE_NAME, BUSINESS_DIVISION_CODE)
+		Set<Object> stateValues = getColumnValues(entAppAppId, STATE_CUBE_NAME, STATE)
 		valuesByKey[STATE] = stateValues
 		valuesByKey[LOCATION_STATE] = stateValues
 
@@ -916,7 +906,7 @@ class Visualizer extends NCubeGroovyController
 	private static Set<Object> getColumnValues(ApplicationID applicationID, String cubeName, String axisName)
 	{
 		NCube cube = NCubeManager.getCube(applicationID, cubeName)
-        Set values = new LinkedHashSet()
+        Set values = new LinkedHashSet<Object>()
         Axis axis = cube.getAxis(axisName)
         if (axis)
         {
@@ -940,7 +930,7 @@ class Visualizer extends NCubeGroovyController
 	private String getAvailableScopeValuesMessage(VisualizerInfo visInfo, String cubeName, String key)
 	{
 		String messageScopeValues = ''
-		Set<String> scopeValues = visInfo.availableScopeValues[key] ?: loadAvailableScopeValues(visInfo, cubeName, key)
+		Set<Object> scopeValues = visInfo.availableScopeValues[key] ?: loadAvailableScopeValues(visInfo, cubeName, key)
 		if (scopeValues) {
 			messageScopeValues = """\
 ${DOUBLE_BREAK}The following values are available for ${key}: \
@@ -949,7 +939,7 @@ ${DOUBLE_BREAK}${scopeValues.join(COMMA_SPACE)}  """
 		return messageScopeValues
 	}
 
-	private static String getMissingMinimumScopeMessage(Map scope, String messageScopeValues, String messageSuffixType )
+	private static String getMissingMinimumScopeMessage(Map<String, Object> scope, String messageScopeValues, String messageSuffixType )
 	{
 		"""\
 The scope for the following scope keys was added since it was required: \

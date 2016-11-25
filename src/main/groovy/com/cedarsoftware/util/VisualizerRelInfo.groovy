@@ -12,23 +12,23 @@ class VisualizerRelInfo
 {
 	boolean loadFieldsAndTraits = true
 	Set<String> notes = []
-	Map scope
+	Map<String, Object> scope
 
 	long targetId
     NCube targetCube
-	Map targetScope
-	Map targetTraitMaps
+	Map<String, Object> targetScope
+	Map<String, Map<String, Object>> targetTraitMaps
 	long targetLevel
 
 	long sourceId
 	NCube sourceCube
-	Map sourceScope
-	Map sourceTraitMaps
+	Map<String, Object> sourceScope
+	Map<String, Map<String, Object>> sourceTraitMaps
 	String sourceFieldName
 	String sourceFieldRpmType
 
-	Set requiredScopeKeys  = []
-	Set optionalScopeKeys  = []
+	Set<String> requiredScopeKeys  = []
+	Set<String> optionalScopeKeys  = []
 
 	Set<String> getRequiredScope()
 	{
