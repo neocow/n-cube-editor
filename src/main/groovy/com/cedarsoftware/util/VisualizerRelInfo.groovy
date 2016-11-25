@@ -30,7 +30,7 @@ class VisualizerRelInfo
 	Set requiredScopeKeys  = []
 	Set optionalScopeKeys  = []
 
-	Set getRequiredScope()
+	Set<String> getRequiredScope()
 	{
 		Set<String> requiredScope = targetCube.getRequiredScope(targetScope, [:] as Map)
 		requiredScope.remove(Visualizer.AXIS_FIELD)
