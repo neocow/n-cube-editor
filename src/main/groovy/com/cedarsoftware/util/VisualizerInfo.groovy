@@ -14,7 +14,7 @@ class VisualizerInfo
 	List nodes
 	List edges
 
-    long maxLevel
+	long maxLevel
 	long nodeCount
 	long selectedLevel
 
@@ -23,4 +23,5 @@ class VisualizerInfo
 	Set availableGroupsAllLevels
 	String groupSuffix
 	Set availableScopeKeys = []
+	Map<String, Set<String>> availableScopeValues = [:]
 }

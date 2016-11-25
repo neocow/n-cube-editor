@@ -1,13 +1,17 @@
 package com.cedarsoftware.util
 
-import com.cedarsoftware.ncube.Column
+import com.cedarsoftware.ncube.ApplicationID
+import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.NCube
+import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
+import com.cedarsoftware.ncube.util.VersionComparator
 import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
-import ncube.grv.exp.NCubeGroovyExpression
+import ncube.grv.method.NCubeGroovyController
 
 /**
  * Provides the information used to visualize rpm cubes associated with a given rpm cube.
@@ -15,7 +19,7 @@ import ncube.grv.exp.NCubeGroovyExpression
 
 // TODO: This code needs to be moved out of NCE and pulled-in via Grapes.
 @CompileStatic
-class Visualizer extends NCubeGroovyExpression
+class Visualizer extends NCubeGroovyController
 {
 	public static final String RPM_CLASS = 'rpm.class'
 	public static final String RPM_ENUM = 'rpm.enum'
@@ -24,6 +28,7 @@ class Visualizer extends NCubeGroovyExpression
 	public static final String RPM_ENUM_DOT = 'rpm.enum.'
 	public static final String CLASS_TRAITS = 'CLASS_TRAITS'
 	public static final String DOT_CLASS_TRAITS = '.classTraits'
+	public static final String DOT_TRAITS = '.traits'
 	public static final String R_RPM_TYPE = 'r:rpmType'
 	public static final String R_EXISTS = 'r:exists'
 	public static final String V_ENUM = 'v:enum'
@@ -39,22 +44,30 @@ class Visualizer extends NCubeGroovyExpression
 	public static final String _ENUM = '_ENUM'
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
 	public static final Map ALL_GROUPS_MAP = [PRODUCT: 'Product', FORM: 'Form', RISK: 'Risk', COVERAGE: 'Coverage', CONTAINER: 'Container', DEDUCTIBLE: 'Deductible', LIMIT: 'Limit', RATE: 'Rate', RATEFACTOR: 'Rate Factor', PREMIUM: 'Premium', PARTY: 'Party', PLACE: 'Place', ROLE: 'Role', ROLEPLAYER: 'Role Player', UNSPECIFIED: 'Unspecified']
+	public static final Set<String> ALL_GROUPS_KEYS = ALL_GROUPS_MAP.keySet()
 	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLEPLAYER', 'ROLE']
 
 	public static final String EFFECTIVE_VERSION = '_effectiveVersion'
 	public static final String POLICY_CONTROL_DATE = 'policyControlDate'
 	public static final String QUOTE_DATE = 'quoteDate'
-	public static final List DERIVED_SCOPE_KEYS = ['product', 'risk', 'coverage', 'container', 'deductible', 'limit', 'rate', 'ratefactor', 'premium', 'party', 'place', 'role', 'roleplayer']
+	public static final String BUSINESS_DIVISION_CODE = 'businessDivisionCode'
+	public static final String STATE = 'state'
+	public static final String LOCATION_STATE = 'locationState'
+	public static final List<String> DERIVED_SCOPE_KEYS = ['product', 'risk', 'coverage', 'container', 'deductible', 'limit', 'rate', 'ratefactor', 'premium', 'party', 'place', 'role', 'roleplayer']
 	public static final List DERIVED_SOURCE_SCOPE_KEYS = ['sourceRisk', 'sourceCoverage', 'sourceContainer', 'sourceDeductible', 'sourceLimit', 'sourceRate', 'sourceRatefactor', 'sourcePremium', 'sourceParty', 'sourcePlace', 'sourceRole', 'sourceRoleplayer']
 	public static final String SOURCE_SCOPE_KEY_PREFIX = 'source'
 
-	public static final String SYSTEM_SCOPE_KEY_PREFIX = "_";
-	public static final String EFFECTIVE_VERSION_SCOPE_KEY = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion";
+	public static final String SYSTEM_SCOPE_KEY_PREFIX = "_"
+	public static final String EFFECTIVE_VERSION_SCOPE_KEY = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion"
 
 	public static final List DEFAULT_OPTIONAL_SCOPE_KEYS = ['action', 'businessDivisionCode', 'context', 'date', 'edition', '_effectiveVersion', 'env', 'formId', 'LocationState', 'screen', 'state', 'transaction', 'transactionsubtype', 'username', 'view']
 	public static final List DEFAULT_AVAILABLE_SCOPE_KEYS = DERIVED_SCOPE_KEYS + DERIVED_SOURCE_SCOPE_KEYS + DEFAULT_OPTIONAL_SCOPE_KEYS + [POLICY_CONTROL_DATE, QUOTE_DATE, EFFECTIVE_VERSION]
 	public static final String DEFAULT_SCOPE_VALUE = '????'
 	public static final long DEFAULT_LEVEL = 2
+
+	public static final String ENT_APP = 'ENT.APP'
+	public static final String BUSINESS_DIVISION_CUBE_NAME = 'ent.manual.BusinessDivision'
+	public static final String STATE_CUBE_NAME = 'ent.manual.State'
 
 	public static final String SPACE = '&nbsp;'
 	public static final String INDENT = "${SPACE}${SPACE}${SPACE}"
@@ -63,7 +76,7 @@ class Visualizer extends NCubeGroovyExpression
 	public static final String DOUBLE_BREAK = "${BREAK}${BREAK}"
 
 	public static final int NODE_LABEL_MAX_LINE_LENGTH = 16
-	public static final BigDecimal NODE_LABEL_LINE_LENGTH_MULTIPLIER = 1.2
+	public static final double NODE_LABEL_LINE_LENGTH_MULTIPLIER = 1.2d
 
 	public static final List MANDATORY_RPM_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT]
 	public static final String MISSING_SCOPE = 'missing scope'
@@ -111,18 +124,18 @@ class Visualizer extends NCubeGroovyExpression
 		visInfo.availableGroupsAllLevels = []
 		visInfo.groupSuffix = _ENUM
 		Set selectedGroups = options.selectedGroups as Set
-		visInfo.selectedGroups = selectedGroups ?: ALL_GROUPS_MAP.keySet()
+		visInfo.selectedGroups = selectedGroups ?: ALL_GROUPS_KEYS
 		String selectedLevel = options.selectedLevel as String
 		visInfo.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL : Converter.convert(selectedLevel, long.class) as long
-		Set availableScopeKeys = options.availableScopeKeys as Set
-		visInfo.availableScopeKeys = availableScopeKeys ?: DEFAULT_AVAILABLE_SCOPE_KEYS as Set
+		visInfo.availableScopeKeys = options.availableScopeKeys as Set ?: DEFAULT_AVAILABLE_SCOPE_KEYS as Set
+		visInfo.availableScopeValues = options.availableScopeValues as Map ?: loadAvailableScopeValues()
 		visInfo.maxLevel = 1
 		visInfo.nodeCount = 1
 		visInfo.nodes = []
 		visInfo.edges = []
 
 		if (hasMissingMinimumScope(visInfo))
-        {
+		{
 			return [status: STATUS_MISSING_START_SCOPE, visInfo: visInfo, message: messages.join(DOUBLE_BREAK)]
 		}
 
@@ -142,7 +155,7 @@ class Visualizer extends NCubeGroovyExpression
 		stack.push(relInfo)
 
 		while (!stack.empty)
-        {
+		{
 			processCube(visInfo, stack.pop())
 		}
 
@@ -154,7 +167,7 @@ class Visualizer extends NCubeGroovyExpression
 	}
 
 	private static Set addSets(Set<String> set, Set<Set> sets)
-    {
+	{
 		sets.each {
 			set.addAll(it)
 		}
@@ -222,7 +235,7 @@ class Visualizer extends NCubeGroovyExpression
 							addToStack(visInfo, relInfo, nextTargetCube, targetFieldRpmType, targetFieldName)
 						}
 						else
-                        {
+						{
 							messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization."
 						}
 					}
@@ -238,7 +251,7 @@ class Visualizer extends NCubeGroovyExpression
 		String sourceFieldRpmType = relInfo.sourceFieldRpmType
 
 		if (!targetCubeName.startsWith(RPM_ENUM))
-        {
+		{
 			throw new IllegalStateException("Cube is not an rpm.enum cube: ${targetCubeName}.")
 		}
 
@@ -250,10 +263,10 @@ class Visualizer extends NCubeGroovyExpression
 		boolean loadFieldsAndTraits = getTraitMaps(visInfo, relInfo)
 
 		if (loadFieldsAndTraits)
-        {
+		{
 			relInfo.targetTraitMaps.each { k, v ->
 				String targetFieldName = k as String
-	    		if (CLASS_TRAITS != targetFieldName)
+				if (CLASS_TRAITS != targetFieldName)
 				{
 					try
 					{
@@ -267,12 +280,12 @@ class Visualizer extends NCubeGroovyExpression
 								addToStack(visInfo, relInfo, nextTargetCube, relInfo.sourceFieldRpmType, targetFieldName)
 
 								if (group == UNSPECIFIED)
-                                {
+								{
 									group = getGroup(nextTargetCubeName)
 								}
 							}
 							else
-                            {
+							{
 								messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization."
 							}
 						}
@@ -297,14 +310,14 @@ class Visualizer extends NCubeGroovyExpression
 	}
 
 	private static void trimSelectedLevel(VisualizerInfo visInfo)
-    {
+	{
 		long nodeCount = visInfo.nodeCount
 		long selectedLevel = visInfo.selectedLevel
-  		visInfo.selectedLevel = selectedLevel > nodeCount ? nodeCount : selectedLevel
+		visInfo.selectedLevel = selectedLevel > nodeCount ? nodeCount : selectedLevel
 	}
 
 	private static void trimSelectedGroups(VisualizerInfo visInfo)
-    {
+	{
 		visInfo.selectedGroups = visInfo.availableGroupsAllLevels.intersect(visInfo.selectedGroups)
 	}
 
@@ -328,7 +341,7 @@ class Visualizer extends NCubeGroovyExpression
 			nextRelInfo.targetLevel = nextTargetTargetLevel
 
 			long maxLevel = visInfo.maxLevel
- 			visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
+			visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
 			visInfo.nodeCount += 1
 			nextRelInfo.targetId = visInfo.nodeCount
 
@@ -354,15 +367,11 @@ class Visualizer extends NCubeGroovyExpression
 		{
 			String type = relInfo.sourceFieldRpmType
 			NCube classTraitsCube = getCube(RPM_SCOPE_CLASS_DOT + type + DOT_CLASS_TRAITS)
-			List columns = classTraitsCube.getAxis(type).columns
 			String sourceFieldName = relInfo.sourceFieldName
-			if (!columns.find { sourceFieldName == (it as Column).value })
-            {
+			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
+			{
 				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
-                String msg = """\
-The source ${sourceCube.name} points directly to (${targetCube.name}) via field ${sourceFieldName}, but \
-there is no ${type} named ${sourceFieldName} on this cube.  ${DOUBLE_BREAK}Therefore \
-it cannot be loaded as an rpm.class in the visualization."""
+				String msg = getLoadTargetAsRpmClassMessage(relInfo, type)
 				relInfo.notes << msg
 				relInfo.loadFieldsAndTraits = false
 				return false
@@ -380,8 +389,7 @@ it cannot be loaded as an rpm.class in the visualization."""
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		Set groups = ALL_GROUPS_MAP.keySet()
-		return groups.contains(group) ? group : UNSPECIFIED
+		return ALL_GROUPS_KEYS.contains(group) ? group : UNSPECIFIED
 	}
 
 	private static void addToEdges(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
@@ -407,15 +415,16 @@ it cannot be loaded as an rpm.class in the visualization."""
 		edgeMap.fromFieldName = sourceFieldName
 		edgeMap.level = String.valueOf(relInfo.targetLevel)
 		edgeMap.label = ''
-		String vMin = sourceTraitMaps[sourceFieldName][V_MIN]
-		String vMax = sourceTraitMaps[sourceFieldName][V_MAX]
+		Map sourceFieldTraitMap = sourceTraitMaps[sourceFieldName] as Map
+		String vMin = sourceFieldTraitMap[V_MIN]
+		String vMax = sourceFieldTraitMap[V_MAX]
 
 		if (vMin != null && vMax != null)
-        {
+		{
 			edgeMap.title = "${vMin}:${vMax}"
 		}
 		else
-        {
+		{
 			edgeMap.title = ''
 		}
 		visInfo.edges << edgeMap
@@ -483,7 +492,7 @@ it cannot be loaded as an rpm.class in the visualization."""
 
 		//Scoped Name
 		if (scopedName)
-        {
+		{
 			sb.append('<b>scoped name = </b>')
 			sb.append(scopedName)
 			sb.append(DOUBLE_BREAK)
@@ -532,7 +541,7 @@ it cannot be loaded as an rpm.class in the visualization."""
 
 		traitMaps.each { String fieldName, v ->
 			if (CLASS_TRAITS != fieldName)
-            {
+			{
 				fieldDetails.append(BREAK)
 				fieldDetails.append(SPACE)
 				fieldDetails.append(fieldName)
@@ -597,7 +606,7 @@ it cannot be loaded as an rpm.class in the visualization."""
 			String newScopeKey = sourceFieldRpmType
 			String oldValue = scope[newScopeKey]
 			if (oldValue)
-            {
+			{
 				newScope[SOURCE_SCOPE_KEY_PREFIX + sourceFieldRpmType] = oldValue
 			}
 			newScope[newScopeKey] = targetFieldName
@@ -630,24 +639,22 @@ it cannot be loaded as an rpm.class in the visualization."""
 		Map scope = visInfo.scope
 		String type = getTypeFromCubeName(cubeName)
 		String messageSuffix = "Its default value may be changed as desired."
+		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, type)
 		String messageSuffixType = "Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
 
 		if (scope)
-        {
+		{
 			hasMissingScope = addMissingMinimumScope(visInfo, EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix) ?: hasMissingScope
-			hasMissingScope = addMissingMinimumScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix)  ?: hasMissingScope
+			hasMissingScope = addMissingMinimumScope(visInfo, POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix) ?: hasMissingScope
 			hasMissingScope = addMissingMinimumScope(visInfo, QUOTE_DATE, defaultScopeDate, messageSuffix) ?: hasMissingScope
-			hasMissingScope = addMissingMinimumScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType) ?: hasMissingScope
+			hasMissingScope = addMissingMinimumScope(visInfo, type, DEFAULT_SCOPE_VALUE, messageSuffixType + messageScopeValues) ?: hasMissingScope
 		}
 		else
-        {
+		{
 			hasMissingScope = true
 			Map defaultScope = getDefaultScope(cubeName)
 			visInfo.scope = defaultScope
-            String msg = """\
-The scope for the following scope keys was added since it was required: \
-${DOUBLE_BREAK}${INDENT}${defaultScope.keySet().join(COMMA_SPACE)}${DOUBLE_BREAK}${messageSuffixType} \
-The other default scope values may also be changed as desired."""
+			String msg = getMissingMinimumScopeMessage(defaultScope, messageScopeValues, messageSuffixType )
 			messages << msg
 		}
 		return hasMissingScope
@@ -658,25 +665,25 @@ The other default scope values may also be changed as desired."""
 		Map scope = visInfo.scope
 		boolean missingScope
 		if (scope.containsKey(key))
-        {
+		{
 			if (!scope[key])
-            {
+			{
 				visInfo.scope[key] = value
 				missingScope = true
 			}
 			else if (DEFAULT_SCOPE_VALUE == scope[key])
-            {
+			{
 				missingScope = true
 			}
 		}
 		else
-        {
+		{
 			visInfo.scope[key] = value
 			missingScope = true
 		}
 
 		if (missingScope)
-        {
+		{
 			messages << "Scope is required for ${key}. ${messageSuffix}"
 		}
 		return missingScope
@@ -705,45 +712,43 @@ The other default scope values may also be changed as desired."""
 		try
 		{
 			getTraitMaps(relInfo)
-            return true
 		}
 		catch (Exception e)
 		{
 			relInfo.loadFieldsAndTraits = false
 			Throwable t = getDeepestException(e)
 			if (t instanceof InvalidCoordinateException)
-            {
+			{
 				handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, relInfo)
 			}
 			else if (t instanceof CoordinateNotFoundException)
-            {
-				handleCoordinateNotFoundException(t as CoordinateNotFoundException, relInfo)
+			{
+				handleCoordinateNotFoundException(t as CoordinateNotFoundException, visInfo, relInfo)
 			}
 			else
-            {
+			{
 				handleException(t, relInfo)
 			}
 			return false
 		}
+		return true
 	}
 
-	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerRelInfo relInfo)
+	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		String cubeName = e.cubeName
 		String axisName = e.axisName
 		Object value = e.value ?: 'null'
 
 		if (cubeName && axisName)
-        {
-            String msg = """\
-The scope value ${value} for scope key ${axisName} cannot be found on axis ${axisName} in \
-cube ${cubeName}${getSourceMessage(relInfo)}. Please supply a different value for ${axisName}."""
+		{
+			String msg = getCoordinateNotFoundMessage(visInfo, relInfo, axisName, value, cubeName)
 			relInfo.notes << msg
 			messages << msg
 			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): SCOPE_VALUE_NOT_FOUND]]
 		}
 		else
-        {
+		{
 			handleException(e as Exception, relInfo)
 		}
 	}
@@ -771,9 +776,7 @@ cube ${cubeName}${getSourceMessage(relInfo)}. Please supply a different value fo
 			}
 			visInfo.scope = expandedScope
 			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE]]
-            String msg = """\
-Additional scope is required to load ${cubeName}${getSourceMessage(relInfo)}. Please add scope \
-value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}."""
+			String msg = getInvalidCoordinateExceptionMessage(visInfo, relInfo, missingScope, cubeName)
 			relInfo.notes << msg
 			messages << msg
 		}
@@ -786,22 +789,19 @@ value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}."""
 	private static Set<String> findMissingScope(Map scope, Set<String> requiredKeys)
 	{
 		Set<String> missingScope = []
-		requiredKeys.each {String key ->
+		requiredKeys.each { String key ->
 			if (!MANDATORY_RPM_SCOPE_KEYS.contains(key) && (scope == null || !scope.containsKey(key)))
 			{
 				missingScope << key
 			}
 		}
-		return missingScope ?: null
+		return missingScope.size() > 0 ? missingScope : null
 	}
 
 	private void handleException(Throwable e, VisualizerRelInfo relInfo)
 	{
 		Throwable t = getDeepestException(e)
-        String msg = """\
-An exception was thrown while loading fields and traits for ${relInfo.targetCube.name}${getSourceMessage(relInfo)}. \
-${DOUBLE_BREAK}<b>Message:</b> ${DOUBLE_BREAK}${e.message}${DOUBLE_BREAK}<b>Root cause: </b>\
-${DOUBLE_BREAK}${t.toString()}${DOUBLE_BREAK}<b>Stack trace: </b>${DOUBLE_BREAK}${t.stackTrace.toString()}"""
+		String msg = getExceptionMessage(relInfo, e, t)
 		relInfo.notes << msg
 		messages << msg
 		relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]]
@@ -883,13 +883,123 @@ ${DOUBLE_BREAK}${t.toString()}${DOUBLE_BREAK}<b>Stack trace: </b>${DOUBLE_BREAK}
 	{
 		Set<String> requiredScope = relInfo.targetCube.getRequiredScope(relInfo.targetScope, [:] as Map)
 		requiredScope.remove(AXIS_FIELD)
-		requiredScope.remove(AXIS_NAME);
-		requiredScope.remove(AXIS_TRAIT);
-		return requiredScope;
+		requiredScope.remove(AXIS_NAME)
+		requiredScope.remove(AXIS_TRAIT)
+		return requiredScope
 	}
 
 	private static String getTypeFromCubeName(String cubeName)
 	{
 		return (cubeName - RPM_CLASS_DOT)
+	}
+
+	private Set loadAvailableScopeValues(VisualizerInfo visInfo, String cubeName, String key)
+	{
+		Axis axis = getCube(cubeName).getAxis(key)
+		if (axis) {
+			Set<String> values = axis.columnsWithoutDefault.collect {it.value} as Set<String>
+			visInfo.availableScopeValues[key] = values
+			return values
+		}
+		return [] as Set
+	}
+
+	private Map loadAvailableScopeValues()
+	{
+		Map valuesByKey = new CaseInsensitiveMap()
+
+		//Values for Risk, SourceRisk, Coverage, SourceCoverage, etc.
+		DERIVED_SCOPE_KEYS.each{ key ->
+			String cubeName = RPM_SCOPE_CLASS_DOT + key + DOT_TRAITS
+			List values = getCube(cubeName).getAxis(key).columnsWithoutDefault.collect{it.value}
+			valuesByKey[key] = values
+			valuesByKey[SOURCE_SCOPE_KEY_PREFIX + key] = values
+		}
+
+		//Values for effective version
+		valuesByKey[EFFECTIVE_VERSION] = getAllVersions(applicationID.tenant, applicationID.app)
+
+		//Values from ENT.APP
+		String latest = NCubeManager.getLatestVersion(ApplicationID.DEFAULT_TENANT, ENT_APP, ReleaseStatus.RELEASE.name())
+		ApplicationID entAppAppId = new ApplicationID(ApplicationID.DEFAULT_TENANT, ENT_APP, latest, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD)
+		valuesByKey[BUSINESS_DIVISION_CODE] = getColumnValues(entAppAppId, BUSINESS_DIVISION_CUBE_NAME, BUSINESS_DIVISION_CODE)
+		List stateValues = getColumnValues(entAppAppId, STATE_CUBE_NAME, STATE)
+		valuesByKey[STATE] = stateValues
+		valuesByKey[LOCATION_STATE] = stateValues
+
+		return valuesByKey
+	}
+
+	private static List getColumnValues(ApplicationID applicationID, String cubeName, String axis)
+	{
+		NCube cube = NCubeManager.getCube(applicationID, cubeName)
+		return cube.getAxis(axis).columnsWithoutDefault.collect{it.value}
+	}
+
+	private static Set getAllVersions(String tenant, String app)
+	{
+		Map<String, List<String>> versionsMap = NCubeManager.getVersions(tenant, app)
+		SortedSet<String> versions = new TreeSet<>(new VersionComparator())
+		versions.addAll(versionsMap[ReleaseStatus.RELEASE.name()])
+		versions.addAll(versionsMap[ReleaseStatus.SNAPSHOT.name()])
+		return versions
+	}
+
+	private String getAvailableScopeValuesMessage(VisualizerInfo visInfo, String cubeName, String key)
+	{
+		String messageScopeValues = ''
+		Set<String> scopeValues = visInfo.availableScopeValues[key] ?: loadAvailableScopeValues(visInfo, cubeName, key)
+		if (scopeValues) {
+			messageScopeValues = """\
+${DOUBLE_BREAK}The following values are available for ${key}: \
+${DOUBLE_BREAK}${scopeValues.join(COMMA_SPACE)}  """
+		}
+		return messageScopeValues
+	}
+
+	private static String getMissingMinimumScopeMessage(Map scope, String messageScopeValues, String messageSuffixType )
+	{
+		"""\
+The scope for the following scope keys was added since it was required: \
+${DOUBLE_BREAK}${INDENT}${scope.keySet().join(COMMA_SPACE)}\
+${DOUBLE_BREAK}${messageSuffixType} The other default scope values may also be changed as desired.\
+${messageScopeValues}"""
+	}
+
+	private static String getExceptionMessage(VisualizerRelInfo relInfo, Throwable e, Throwable t)
+	{
+		"""\
+An exception was thrown while loading fields and traits for ${relInfo.targetCube.name}${getSourceMessage(relInfo)}. \
+${DOUBLE_BREAK}<b>Message:</b> ${DOUBLE_BREAK}${e.message}${DOUBLE_BREAK}<b>Root cause: </b>\
+${DOUBLE_BREAK}${t.toString()}${DOUBLE_BREAK}<b>Stack trace: </b>${DOUBLE_BREAK}${t.stackTrace.toString()}"""
+	}
+
+	private String getCoordinateNotFoundMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String key, Object value, String cubeName)
+	{
+		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, key)
+		"""\
+The scope value ${value} for scope key ${key} cannot be found on axis ${key} in \
+cube ${cubeName}${getSourceMessage(relInfo)}. Please supply a different value for ${key}.\
+${messageScopeValues}"""
+	}
+
+	private String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set<String> missingScope, String cubeName)
+	{
+		StringBuilder message = new StringBuilder()
+		message.append("""\
+Additional scope is required to load ${cubeName}${getSourceMessage(relInfo)}. Please add scope \
+value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.""")
+
+		missingScope.each{ key ->
+			message.append(getAvailableScopeValuesMessage(visInfo, cubeName, key))
+		}
+		return message.toString()
+	}
+
+	private static String getLoadTargetAsRpmClassMessage(VisualizerRelInfo relInfo, String type) {
+		"""\
+The source ${relInfo.sourceCube.name} points directly to target ${relInfo.targetCube.name} via field ${relInfo.sourceFieldName}, but \
+there is no ${type} named ${relInfo.sourceFieldName} on this cube.  ${DOUBLE_BREAK}Therefore \
+it cannot be loaded as an rpm.class in the visualization."""
 	}
 }
