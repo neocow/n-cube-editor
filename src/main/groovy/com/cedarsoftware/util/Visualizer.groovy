@@ -10,9 +10,54 @@ import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import com.cedarsoftware.ncube.util.VersionComparator
-import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
 import ncube.grv.method.NCubeGroovyController
+
+import static com.cedarsoftware.util.VisualizerConstants.ALL_GROUPS_KEYS
+import static com.cedarsoftware.util.VisualizerConstants.ALL_GROUPS_MAP
+import static com.cedarsoftware.util.VisualizerConstants.AXIS_TRAIT
+import static com.cedarsoftware.util.VisualizerConstants.BUSINESS_DIVISION_CODE
+import static com.cedarsoftware.util.VisualizerConstants.BUSINESS_DIVISION_CUBE_NAME
+import static com.cedarsoftware.util.VisualizerConstants.CLASS_TRAITS
+import static com.cedarsoftware.util.VisualizerConstants.COMMA_SPACE
+import static com.cedarsoftware.util.VisualizerConstants.DATE_TIME_FORMAT
+import static com.cedarsoftware.util.VisualizerConstants.DEFAULT_AVAILABLE_SCOPE_KEYS
+import static com.cedarsoftware.util.VisualizerConstants.DEFAULT_LEVEL
+import static com.cedarsoftware.util.VisualizerConstants.DEFAULT_SCOPE_VALUE
+import static com.cedarsoftware.util.VisualizerConstants.DERIVED_SCOPE_KEYS
+import static com.cedarsoftware.util.VisualizerConstants.DOT_CLASS_TRAITS
+import static com.cedarsoftware.util.VisualizerConstants.DOT_TRAITS
+import static com.cedarsoftware.util.VisualizerConstants.DOUBLE_BREAK
+import static com.cedarsoftware.util.VisualizerConstants.EFFECTIVE_VERSION
+import static com.cedarsoftware.util.VisualizerConstants.EFFECTIVE_VERSION_SCOPE_KEY
+import static com.cedarsoftware.util.VisualizerConstants.ENT_APP
+import static com.cedarsoftware.util.VisualizerConstants.INDENT
+import static com.cedarsoftware.util.VisualizerConstants.LOCATION_STATE
+import static com.cedarsoftware.util.VisualizerConstants.MANDATORY_RPM_SCOPE_KEYS
+import static com.cedarsoftware.util.VisualizerConstants.MISSING_SCOPE
+import static com.cedarsoftware.util.VisualizerConstants.POLICY_CONTROL_DATE
+import static com.cedarsoftware.util.VisualizerConstants.QUOTE_DATE
+import static com.cedarsoftware.util.VisualizerConstants.RPM_CLASS
+import static com.cedarsoftware.util.VisualizerConstants.RPM_CLASS_DOT
+import static com.cedarsoftware.util.VisualizerConstants.RPM_ENUM
+import static com.cedarsoftware.util.VisualizerConstants.RPM_ENUM_DOT
+import static com.cedarsoftware.util.VisualizerConstants.RPM_SCOPE_CLASS_DOT
+import static com.cedarsoftware.util.VisualizerConstants.R_RPM_TYPE
+import static com.cedarsoftware.util.VisualizerConstants.R_SCOPED_NAME
+import static com.cedarsoftware.util.VisualizerConstants.SCOPE_VALUE_NOT_FOUND
+import static com.cedarsoftware.util.VisualizerConstants.SOURCE_FIELD_NAME
+import static com.cedarsoftware.util.VisualizerConstants.SOURCE_SCOPE_KEY_PREFIX
+import static com.cedarsoftware.util.VisualizerConstants.STATE
+import static com.cedarsoftware.util.VisualizerConstants.STATE_CUBE_NAME
+import static com.cedarsoftware.util.VisualizerConstants.STATUS_MISSING_START_SCOPE
+import static com.cedarsoftware.util.VisualizerConstants.STATUS_SUCCESS
+import static com.cedarsoftware.util.VisualizerConstants.SYSTEM_SCOPE_KEY_PREFIX
+import static com.cedarsoftware.util.VisualizerConstants.UNABLE_TO_LOAD
+import static com.cedarsoftware.util.VisualizerConstants.UNSPECIFIED
+import static com.cedarsoftware.util.VisualizerConstants.V_ENUM
+import static com.cedarsoftware.util.VisualizerConstants.V_MAX
+import static com.cedarsoftware.util.VisualizerConstants.V_MIN
+import static com.cedarsoftware.util.VisualizerConstants._ENUM
 
 /**
  * Provides the information used to visualize rpm cubes associated with a given rpm cube.
@@ -22,73 +67,7 @@ import ncube.grv.method.NCubeGroovyController
 @CompileStatic
 class Visualizer extends NCubeGroovyController
 {
-	public static final String RPM_CLASS = 'rpm.class'
-	public static final String RPM_ENUM = 'rpm.enum'
-	public static final String RPM_CLASS_DOT = 'rpm.class.'
-	public static final String RPM_SCOPE_CLASS_DOT = 'rpm.scope.class.'
-	public static final String RPM_ENUM_DOT = 'rpm.enum.'
-	public static final String CLASS_TRAITS = 'CLASS_TRAITS'
-	public static final String DOT_CLASS_TRAITS = '.classTraits'
-	public static final String DOT_TRAITS = '.traits'
-	public static final String R_RPM_TYPE = 'r:rpmType'
-	public static final String R_EXISTS = 'r:exists'
-	public static final String V_ENUM = 'v:enum'
-	public static final String R_SCOPED_NAME = 'r:scopedName'
-	public static final String V_MIN = 'v:min'
-	public static final String V_MAX = 'v:max'
-
-	public static final String SOURCE_FIELD_NAME = 'sourceFieldName'
-	public static final String AXIS_FIELD = 'field'
-	public static final String AXIS_NAME = 'name'
-	public static final String AXIS_TRAIT = 'trait'
-
-	public static final String _ENUM = '_ENUM'
-	public static final String UNSPECIFIED = 'UNSPECIFIED'
-	public static final Map<String, String> ALL_GROUPS_MAP = [PRODUCT: 'Product', FORM: 'Form', RISK: 'Risk', COVERAGE: 'Coverage', CONTAINER: 'Container', DEDUCTIBLE: 'Deductible', LIMIT: 'Limit', RATE: 'Rate', RATEFACTOR: 'Rate Factor', PREMIUM: 'Premium', PARTY: 'Party', PLACE: 'Place', ROLE: 'Role', ROLEPLAYER: 'Role Player', UNSPECIFIED: 'Unspecified']
-	public static final Set<String> ALL_GROUPS_KEYS = ALL_GROUPS_MAP.keySet()
-	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLEPLAYER', 'ROLE']
-
-	public static final String EFFECTIVE_VERSION = '_effectiveVersion'
-	public static final String POLICY_CONTROL_DATE = 'policyControlDate'
-	public static final String QUOTE_DATE = 'quoteDate'
-	public static final String BUSINESS_DIVISION_CODE = 'businessDivisionCode'
-	public static final String STATE = 'state'
-	public static final String LOCATION_STATE = 'locationState'
-	public static final Set<String> DERIVED_SCOPE_KEYS = ['product', 'risk', 'coverage', 'container', 'deductible', 'limit', 'rate', 'ratefactor', 'premium', 'party', 'place', 'role', 'roleplayer'] as Set
-	public static final Set<String> DERIVED_SOURCE_SCOPE_KEYS = ['sourceRisk', 'sourceCoverage', 'sourceContainer', 'sourceDeductible', 'sourceLimit', 'sourceRate', 'sourceRatefactor', 'sourcePremium', 'sourceParty', 'sourcePlace', 'sourceRole', 'sourceRoleplayer'] as Set
-	public static final String SOURCE_SCOPE_KEY_PREFIX = 'source'
-
-	public static final String SYSTEM_SCOPE_KEY_PREFIX = "_"
-	public static final String EFFECTIVE_VERSION_SCOPE_KEY = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion"
-
-	public static final Set<String> DEFAULT_OPTIONAL_SCOPE_KEYS = ['action', 'businessDivisionCode', 'context', 'date', 'edition', '_effectiveVersion', 'env', 'formId', 'LocationState', 'screen', 'state', 'transaction', 'transactionsubtype', 'username', 'view'] as Set
-	public static final Set<String> DEFAULT_AVAILABLE_SCOPE_KEYS = DERIVED_SCOPE_KEYS + DERIVED_SOURCE_SCOPE_KEYS + DEFAULT_OPTIONAL_SCOPE_KEYS + [POLICY_CONTROL_DATE, QUOTE_DATE, EFFECTIVE_VERSION]
-	public static final String DEFAULT_SCOPE_VALUE = '????'
-	public static final long DEFAULT_LEVEL = 2
-
-	public static final String ENT_APP = 'ENT.APP'
-	public static final String BUSINESS_DIVISION_CUBE_NAME = 'ent.manual.BusinessDivision'
-	public static final String STATE_CUBE_NAME = 'ent.manual.State'
-
-	public static final String SPACE = '&nbsp;'
-	public static final String INDENT = "${SPACE}${SPACE}${SPACE}"
-	public static final String BREAK = '<br>'
-	public static final String COMMA_SPACE = ', '
-	public static final String DOUBLE_BREAK = "${BREAK}${BREAK}"
-
-	public static final int NODE_LABEL_MAX_LINE_LENGTH = 16
-	public static final double NODE_LABEL_LINE_LENGTH_MULTIPLIER = 1.2d
-
-	public static final Set<String> MANDATORY_RPM_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
-	public static final String MISSING_SCOPE = 'missing scope'
-	public static final String UNABLE_TO_LOAD = 'unable to load'
-	public static final String SCOPE_VALUE_NOT_FOUND = 'scope value not found'
-
-	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
-	public static final String STATUS_SUCCESS = 'success'
-
 	private VisualizerHelper helper = new VisualizerHelper()
-	private static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
 	private Set<String> messages = []
 	private Set<String> visited = []
 	private Map<String, Set<String>> requiredScopeKeys = [:]
@@ -202,9 +181,9 @@ class Visualizer extends NCubeGroovyController
 			return
 		}
 
-		String group = getGroup(targetCubeName)
-		visInfo.availableGroupsAllLevels << group
-		addToNodes(visInfo, relInfo, group)
+		relInfo.group = relInfo.getGroupName()
+		visInfo.availableGroupsAllLevels << relInfo.group
+		addToNodes(visInfo, relInfo)
 
 		if (loadFieldsAndTraits)
 		{
@@ -244,7 +223,7 @@ class Visualizer extends NCubeGroovyController
 
 	private void processEnumCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		String group = UNSPECIFIED
+		relInfo.group = UNSPECIFIED
 		String targetCubeName = relInfo.targetCube.name
 		String sourceFieldRpmType = relInfo.sourceFieldRpmType
 
@@ -267,7 +246,7 @@ class Visualizer extends NCubeGroovyController
 				{
 					try
 					{
-						String nextTargetCubeName = getNextTargetCubeName(relInfo, targetFieldName)
+						String nextTargetCubeName = relInfo.getNextTargetCubeName(targetFieldName)
 
 						if (nextTargetCubeName)
 						{
@@ -276,9 +255,9 @@ class Visualizer extends NCubeGroovyController
 							{
 								addToStack(visInfo, relInfo, nextTargetCube, relInfo.sourceFieldRpmType, targetFieldName)
 
-								if (group == UNSPECIFIED)
+								if (relInfo.group == UNSPECIFIED)
 								{
-									group = getGroup(nextTargetCubeName)
+									relInfo.group = relInfo.getGroupName(nextTargetCubeName)
 								}
 							}
 							else
@@ -302,8 +281,8 @@ class Visualizer extends NCubeGroovyController
 			return
 		}
 
-		visInfo.availableGroupsAllLevels << group
-		addToNodes(visInfo, relInfo, group)
+		visInfo.availableGroupsAllLevels << relInfo.group
+		addToNodes(visInfo, relInfo)
 	}
 
 	private VisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, NCube nextTargetCube, String rpmType, String targetFieldName)
@@ -365,18 +344,6 @@ class Visualizer extends NCubeGroovyController
 		return true
 	}
 
-	private static String getNodeGroup(String cubeName, String group)
-	{
-		return cubeName.startsWith(RPM_ENUM) ? group + _ENUM : group
-	}
-
-	private static String getGroup(String cubeName)
-	{
-		Iterable<String> splits = Splitter.on('.').split(cubeName)
-		String group = splits[2].toUpperCase()
-		return ALL_GROUPS_KEYS.contains(group) ? group : UNSPECIFIED
-	}
-
 	private static void addToEdges(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		NCube sourceCube = relInfo.sourceCube
@@ -385,13 +352,12 @@ class Visualizer extends NCubeGroovyController
 			return
 		}
 
-		NCube targetCube = relInfo.targetCube
 		String sourceFieldName = relInfo.sourceFieldName
 		Map<String, Map<String, Object>> sourceTraitMaps = relInfo.sourceTraitMaps
 
 		Map<String, String> edgeMap = [:]
-		String sourceCubeEffectiveName = getEffectiveName(sourceCube, sourceTraitMaps)
-		String targetCubeEffectiveName = getEffectiveName(targetCube, relInfo.targetTraitMaps)
+		String sourceCubeEffectiveName = relInfo.getSourceEffectiveName()
+		String targetCubeEffectiveName = relInfo.getTargetEffectiveName()
 		edgeMap.id = String.valueOf(visInfo.edges.size() + 1)
 		edgeMap.from = String.valueOf(relInfo.sourceId)
 		edgeMap.to = String.valueOf(relInfo.targetId)
@@ -415,153 +381,22 @@ class Visualizer extends NCubeGroovyController
 		visInfo.edges << edgeMap
 	}
 
-	private static void addToNodes(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String group)
+	private static void addToNodes(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		NCube targetCube = relInfo.targetCube
 		String targetCubeName = targetCube.name
 		String sourceFieldName = relInfo.sourceFieldName
-		String nodeGroup = getNodeGroup(targetCubeName, group)
 
 		Map<String, String> nodeMap = [:]
 		nodeMap.id = String.valueOf(relInfo.targetId)
 		nodeMap.level = String.valueOf(relInfo.targetLevel)
 		nodeMap.name = targetCubeName
 		nodeMap.fromFieldName = sourceFieldName == null ? null : sourceFieldName
-		nodeMap.label = getLabel(relInfo, nodeGroup)
+		nodeMap.label = relInfo.getLabel()
 		nodeMap.title = targetCubeName
-		nodeMap.desc = getTitle(relInfo, nodeMap)
-		nodeMap.group = nodeGroup
+		nodeMap.desc = relInfo.getTitle()
+		nodeMap.group = relInfo.getNodeGroup()
 		visInfo.nodes << nodeMap
-	}
-
-	private static String getLabel(VisualizerRelInfo relInfo, String nodeGroup)
-	{
-		StringBuilder sb = new StringBuilder()
-		if (GROUPS_TO_SHOW_IN_TITLE.contains(nodeGroup))
-		{
-			String label = ALL_GROUPS_MAP[nodeGroup]
-			int len = label.length()
-			sb.append(label)
-			sb.append('\n')
-			sb.append('-' * Math.floor(len * NODE_LABEL_LINE_LENGTH_MULTIPLIER))
-			sb.append('\n')
-		}
-
-		String labelName = getDotSuffix(getEffectiveName(relInfo.targetCube, relInfo.targetTraitMaps))
-		String[] splitName = labelName.split("(?=\\p{Upper})")
-		String line = ''
-		for (String part : splitName)
-		{
-			if (line.length() + part.length() < NODE_LABEL_MAX_LINE_LENGTH)
-			{
-				line += part
-			}
-			else
-			{
-				sb.append(line)
-				sb.append('\n')
-				line = part
-			}
-		}
-		sb.append(line)
-		return sb.toString()
-	}
-
-	private static String getTitle(VisualizerRelInfo relInfo, Map<String, String> nodeMap)
-	{
-		boolean loadFieldsAndTraits = relInfo.loadFieldsAndTraits
-		Map<String, Map<String, Object>> traitMaps = relInfo.targetTraitMaps
-		Set<String> notes = relInfo.notes
-		String scopedName = getScopedName(traitMaps)
-		StringBuilder sb = new StringBuilder()
-
-		//Scoped Name
-		if (scopedName)
-		{
-			sb.append('<b>scoped name = </b>')
-			sb.append(scopedName)
-			sb.append(DOUBLE_BREAK)
-		}
-
-		//Notes
-		if (notes)
-		{
-			sb.append('<b>Note: </b><br>')
-			notes.each { String note ->
-				sb.append(' ')
-				sb.append(note)
-				sb.append(BREAK)
-			}
-			sb.append(BREAK)
-		}
-
-		//Scope
-		if (loadFieldsAndTraits)
-		{
-			sb.append('<b>scope used to load class = </b>')
-			sb.append(relInfo.targetScope.toString() - '{' - '}')
-			sb.append(DOUBLE_BREAK)
-		}
-		sb.append('<b>available scope to load class = </b>')
-		sb.append(relInfo.scope.toString() - '{' - '}')
-		sb.append(DOUBLE_BREAK)
-
-		//Level
-		sb.append('<b>level = </b>')
-		sb.append(nodeMap.level.toString())
-		sb.append(DOUBLE_BREAK)
-
-		//Fields
-		if (loadFieldsAndTraits)
-		{
-			sb.append("<b>fields = </b>${getFieldDetails(traitMaps)}")
-		}
-
-		return sb.toString()
-	}
-
-	private static String getFieldDetails(Map<String, Map<String, Object>> traitMaps)
-	{
-		StringBuilder fieldDetails = new StringBuilder()
-
-		traitMaps.each { String fieldName, v ->
-			if (CLASS_TRAITS != fieldName)
-			{
-				fieldDetails.append(BREAK)
-				fieldDetails.append(SPACE)
-				fieldDetails.append(fieldName)
-			}
-		}
-		return fieldDetails.toString()
-	}
-
-	private static String getEffectiveName(NCube cube, Map<String, Map<String, Object>> traitMaps)
-	{
-		String scopedName = getScopedName(traitMaps)
-		return scopedName == null ? cube.name : scopedName
-	}
-
-	private static String getScopedName(Map<String, Map<String, Object>> traitMaps)
-	{
-		Map<String, Object> classTraitsTraitMap = traitMaps[CLASS_TRAITS] as Map
-		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
-	}
-
-	private static String getNextTargetCubeName(VisualizerRelInfo relInfo, String targetFieldName)
-	{
-		if (relInfo.sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
-		{
-			if (relInfo.sourceTraitMaps[CLASS_TRAITS][R_SCOPED_NAME] == null)
-			{
-				return null
-			}
-			else
-			{
-				return RPM_CLASS_DOT + relInfo.sourceFieldRpmType
-			}
-		}
-
-		return targetFieldName
 	}
 
 	/**
@@ -599,12 +434,6 @@ class Visualizer extends NCubeGroovyController
 		return newScope
 	}
 
-	private static String getDotSuffix(String value)
-	{
-		int lastIndexOfDot = value.lastIndexOf('.')
-		return lastIndexOfDot == -1 ? value : value.substring(lastIndexOfDot + 1)
-	}
-
 	private Map<String, Object> getDefaultScope(String cubeName)
 	{
 		String type = getTypeFromCubeName(cubeName)
@@ -615,7 +444,6 @@ class Visualizer extends NCubeGroovyController
 		scope[QUOTE_DATE] = defaultScopeDate
 		return scope
 	}
-
 
 	private boolean hasMissingMinimumScope(VisualizerInfo visInfo)
 	{
@@ -742,7 +570,7 @@ class Visualizer extends NCubeGroovyController
 	{
 		if (relInfo.sourceTraitMaps)
 		{
-			String sourceScopedName = getScopedName(relInfo.sourceTraitMaps)
+			String sourceScopedName = relInfo.getSourceScopedName()
 			return sourceScopedName ? ", the target of ${sourceScopedName} on ${relInfo.sourceCube.name}" : ""
 		}
 		return ''
@@ -817,7 +645,7 @@ class Visualizer extends NCubeGroovyController
 		{
 			helper.loadRpmClassFields(RPM_CLASS, cube.name - RPM_CLASS_DOT, scope, traitMaps, output)
 		}
-		removeNotExistsFields(traitMaps)
+		relInfo.removeNotExistsFields()
 		retainUsedScope(relInfo, output)
 	}
 
@@ -845,19 +673,6 @@ class Visualizer extends NCubeGroovyController
 		{
 			String scopeKey = i.next()
 			if (!(scopeCollector.contains(scopeKey) || scopeKey.startsWith(SYSTEM_SCOPE_KEY_PREFIX)))
-			{
-				i.remove()
-			}
-		}
-	}
-
-	private static void removeNotExistsFields(Map<String, Map<String, Object>> traitMaps)
-	{
-		Iterator<String> i = traitMaps.keySet().iterator()
-		while (i.hasNext())
-		{
-			String fieldName = i.next()
-			if (!traitMaps[fieldName][R_EXISTS])
 			{
 				i.remove()
 			}

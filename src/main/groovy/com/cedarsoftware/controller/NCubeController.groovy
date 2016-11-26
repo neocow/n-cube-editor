@@ -41,6 +41,7 @@ import com.cedarsoftware.util.SystemUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.Visualizer
+import com.cedarsoftware.util.VisualizerConstants
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble
@@ -256,7 +257,7 @@ class NCubeController extends BaseController
     Map getVisualizerJson(ApplicationID appId, Map options)
     {
         String cubeName = options.startCubeName
-        if (!cubeName.startsWith(Visualizer.RPM_CLASS))
+        if (!cubeName.startsWith(VisualizerConstants.RPM_CLASS))
         {
             throw new IllegalArgumentException('n-cube name must begin with rpm.class, n-cube: ' + cubeName + ', app: ' + appId)
         }
