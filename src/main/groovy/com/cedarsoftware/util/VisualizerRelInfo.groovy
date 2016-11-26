@@ -169,15 +169,21 @@ class VisualizerRelInfo
 
 	String getNodeGroup()
 	{
+		if (!group)
+		{
+			throw new IllegalStateException("Group must be set prior to getting node group.")
+		}
+
 		return targetCube.name.startsWith(RPM_ENUM) ? group + _ENUM : group
 	}
 
-	String getGroupName(String cubeName = targetCube.name)
+	String setGroupName(String cubeName = targetCube.name)
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		return ALL_GROUPS_KEYS.contains(group) ? group : UNSPECIFIED
+		this.group = ALL_GROUPS_KEYS.contains(group) ? group : UNSPECIFIED
 	}
+
 
 	String getSourceEffectiveName()
 	{
@@ -271,12 +277,17 @@ class VisualizerRelInfo
         targetTraitMaps.keySet().removeAll { String fieldName -> !targetTraitMaps[fieldName][R_EXISTS] }
     }
 
-    void cullScope(Set<String> scopeKeys, Set scopeCollector)
+    static void cullScope(Set<String> scopeKeys, Set scopeCollector)
     {
         scopeKeys.removeAll { String item -> !(scopeCollector.contains(item) || item.startsWith(SYSTEM_SCOPE_KEY_PREFIX)) }
     }
 
-    // TODO: Add comment that explains what this method is doing
+	/**
+	 *  Gets the required and optional scope keys for the target cube from a map
+	 *  of scope keys for all cubes processed so far.
+	 *  If the map has not already been loaded with scope keys for this cube,
+	 *  then get the scope keys for this cube and add them to the map.
+	*/
     private void getRequiredAndOptionalScopeKeys(Map<String, Set<String>> requiredScopeKeyz, Map<String, Set<String>> optionalScopeKeyz)
     {
         String cubeName = targetCube.name
