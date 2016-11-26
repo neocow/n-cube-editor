@@ -1,6 +1,7 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.NCube
+import com.cedarsoftware.ncube.RuleInfo
 import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
 
@@ -12,14 +13,18 @@ import static com.cedarsoftware.util.VisualizerConstants.AXIS_TRAIT
 import static com.cedarsoftware.util.VisualizerConstants.BREAK
 import static com.cedarsoftware.util.VisualizerConstants.CLASS_TRAITS
 import static com.cedarsoftware.util.VisualizerConstants.DOUBLE_BREAK
+import static com.cedarsoftware.util.VisualizerConstants.EFFECTIVE_VERSION_SCOPE_KEY
 import static com.cedarsoftware.util.VisualizerConstants.GROUPS_TO_SHOW_IN_TITLE
 import static com.cedarsoftware.util.VisualizerConstants.NODE_LABEL_LINE_LENGTH_MULTIPLIER
 import static com.cedarsoftware.util.VisualizerConstants.NODE_LABEL_MAX_LINE_LENGTH
+import static com.cedarsoftware.util.VisualizerConstants.RPM_CLASS
 import static com.cedarsoftware.util.VisualizerConstants.RPM_CLASS_DOT
 import static com.cedarsoftware.util.VisualizerConstants.RPM_ENUM
+import static com.cedarsoftware.util.VisualizerConstants.RPM_ENUM_DOT
 import static com.cedarsoftware.util.VisualizerConstants.R_EXISTS
 import static com.cedarsoftware.util.VisualizerConstants.R_SCOPED_NAME
 import static com.cedarsoftware.util.VisualizerConstants.SPACE
+import static com.cedarsoftware.util.VisualizerConstants.SYSTEM_SCOPE_KEY_PREFIX
 import static com.cedarsoftware.util.VisualizerConstants.UNSPECIFIED
 import static com.cedarsoftware.util.VisualizerConstants._ENUM
 
@@ -54,32 +59,32 @@ class VisualizerRelInfo
 	Set<String> getRequiredScope()
 	{
 		Set<String> requiredScope = targetCube.getRequiredScope(targetScope, [:] as Map)
-		requiredScope.remove(com.cedarsoftware.util.VisualizerConstants.AXIS_FIELD)
-		requiredScope.remove(com.cedarsoftware.util.VisualizerConstants.AXIS_NAME)
-		requiredScope.remove(com.cedarsoftware.util.VisualizerConstants.AXIS_TRAIT)
+		requiredScope.remove(AXIS_FIELD)
+		requiredScope.remove(AXIS_NAME)
+		requiredScope.remove(AXIS_TRAIT)
 		return requiredScope
 	}
 
 	String getLabel()
 	{
-		String nodeGroup = getNodeGroup()
+		String nodeGroup = nodeGroup
 		StringBuilder sb = new StringBuilder()
-		if (com.cedarsoftware.util.VisualizerConstants.GROUPS_TO_SHOW_IN_TITLE.contains(nodeGroup))
+		if (GROUPS_TO_SHOW_IN_TITLE.contains(nodeGroup))
 		{
-			String label = com.cedarsoftware.util.VisualizerConstants.ALL_GROUPS_MAP[nodeGroup]
+			String label = ALL_GROUPS_MAP[nodeGroup]
 			int len = label.length()
 			sb.append(label)
 			sb.append('\n')
-			sb.append('-' * Math.floor(len * com.cedarsoftware.util.VisualizerConstants.NODE_LABEL_LINE_LENGTH_MULTIPLIER))
+			sb.append('-' * Math.floor(len * NODE_LABEL_LINE_LENGTH_MULTIPLIER))
 			sb.append('\n')
 		}
 
-		String labelName = getDotSuffix(getTargetEffectiveName())
+		String labelName = getDotSuffix(targetEffectiveName)
 		String[] splitName = labelName.split("(?=\\p{Upper})")
 		String line = ''
 		for (String part : splitName)
 		{
-			if (line.length() + part.length() < com.cedarsoftware.util.VisualizerConstants.NODE_LABEL_MAX_LINE_LENGTH)
+			if (line.length() + part.length() < NODE_LABEL_MAX_LINE_LENGTH)
 			{
 				line += part
 			}
@@ -99,7 +104,7 @@ class VisualizerRelInfo
 		boolean loadFieldsAndTraits = loadFieldsAndTraits
 		Map<String, Map<String, Object>> traitMaps = targetTraitMaps
 		Set<String> notes = notes
-		String scopedName = getTargetScopedName()
+		String scopedName = targetScopedName
 		StringBuilder sb = new StringBuilder()
 
 		//Scoped Name
@@ -107,7 +112,7 @@ class VisualizerRelInfo
 		{
 			sb.append('<b>scoped name = </b>')
 			sb.append(scopedName)
-			sb.append(com.cedarsoftware.util.VisualizerConstants.DOUBLE_BREAK)
+			sb.append(DOUBLE_BREAK)
 		}
 
 		//Notes
@@ -117,9 +122,9 @@ class VisualizerRelInfo
 			notes.each { String note ->
 				sb.append(' ')
 				sb.append(note)
-				sb.append(com.cedarsoftware.util.VisualizerConstants.BREAK)
+				sb.append(BREAK)
 			}
-			sb.append(com.cedarsoftware.util.VisualizerConstants.BREAK)
+			sb.append(BREAK)
 		}
 
 		//Scope
@@ -127,16 +132,16 @@ class VisualizerRelInfo
 		{
 			sb.append('<b>scope used to load class = </b>')
 			sb.append(targetScope.toString() - '{' - '}')
-			sb.append(com.cedarsoftware.util.VisualizerConstants.DOUBLE_BREAK)
+			sb.append(DOUBLE_BREAK)
 		}
 		sb.append('<b>available scope to load class = </b>')
 		sb.append(scope.toString() - '{' - '}')
-		sb.append(com.cedarsoftware.util.VisualizerConstants.DOUBLE_BREAK)
+		sb.append(DOUBLE_BREAK)
 
 		//Level
 		sb.append('<b>level = </b>')
 		sb.append(String.valueOf(targetLevel))
-		sb.append(com.cedarsoftware.util.VisualizerConstants.DOUBLE_BREAK)
+		sb.append(DOUBLE_BREAK)
 
 		//Fields
 		if (loadFieldsAndTraits)
@@ -152,10 +157,10 @@ class VisualizerRelInfo
 		StringBuilder fieldDetails = new StringBuilder()
 
 		traitMaps.each { String fieldName, v ->
-			if (com.cedarsoftware.util.VisualizerConstants.CLASS_TRAITS != fieldName)
+			if (CLASS_TRAITS != fieldName)
 			{
-				fieldDetails.append(com.cedarsoftware.util.VisualizerConstants.BREAK)
-				fieldDetails.append(com.cedarsoftware.util.VisualizerConstants.SPACE)
+				fieldDetails.append(BREAK)
+				fieldDetails.append(SPACE)
 				fieldDetails.append(fieldName)
 			}
 		}
@@ -164,38 +169,38 @@ class VisualizerRelInfo
 
 	String getNodeGroup()
 	{
-		return targetCube.name.startsWith(com.cedarsoftware.util.VisualizerConstants.RPM_ENUM) ? group + com.cedarsoftware.util.VisualizerConstants._ENUM : group
+		return targetCube.name.startsWith(RPM_ENUM) ? group + _ENUM : group
 	}
 
 	String getGroupName(String cubeName = targetCube.name)
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		return com.cedarsoftware.util.VisualizerConstants.ALL_GROUPS_KEYS.contains(group) ? group : com.cedarsoftware.util.VisualizerConstants.UNSPECIFIED
+		return ALL_GROUPS_KEYS.contains(group) ? group : UNSPECIFIED
 	}
 
 	String getSourceEffectiveName()
 	{
-		String scopedName = getSourceScopedName()
+		String scopedName = sourceScopedName
 		return scopedName == null ? sourceCube.name : scopedName
 	}
 
 	String getTargetEffectiveName()
 	{
-		String scopedName = getTargetScopedName()
+		String scopedName = targetScopedName
 		return scopedName == null ? targetCube.name : scopedName
 	}
 
 	String getSourceScopedName()
 	{
-		Map<String, Object> classTraitsTraitMap = sourceTraitMaps[com.cedarsoftware.util.VisualizerConstants.CLASS_TRAITS] as Map
-		return classTraitsTraitMap ? classTraitsTraitMap[com.cedarsoftware.util.VisualizerConstants.R_SCOPED_NAME] : null
+		Map<String, Object> classTraitsTraitMap = sourceTraitMaps[CLASS_TRAITS] as Map
+		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
 	}
 
 	String getTargetScopedName()
 	{
-		Map<String, Object> classTraitsTraitMap = targetTraitMaps[com.cedarsoftware.util.VisualizerConstants.CLASS_TRAITS] as Map
-		return classTraitsTraitMap ? classTraitsTraitMap[com.cedarsoftware.util.VisualizerConstants.R_SCOPED_NAME] : null
+		Map<String, Object> classTraitsTraitMap = targetTraitMaps[CLASS_TRAITS] as Map
+		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
 	}
 
 	private static String getDotSuffix(String value)
@@ -204,32 +209,88 @@ class VisualizerRelInfo
 		return lastIndexOfDot == -1 ? value : value.substring(lastIndexOfDot + 1)
 	}
 
-	void removeNotExistsFields()
-	{
-		Iterator<String> i = targetTraitMaps.keySet().iterator()
-		while (i.hasNext())
-		{
-			String fieldName = i.next()
-			if (!targetTraitMaps[fieldName][com.cedarsoftware.util.VisualizerConstants.R_EXISTS])
-			{
-				i.remove()
-			}
-		}
-	}
-
 	String getNextTargetCubeName(String targetFieldName)
 	{
-		if (sourceCube.getAxis(com.cedarsoftware.util.VisualizerConstants.AXIS_TRAIT).findColumn(com.cedarsoftware.util.VisualizerConstants.R_SCOPED_NAME))
+		if (sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
-			if (sourceTraitMaps[com.cedarsoftware.util.VisualizerConstants.CLASS_TRAITS][com.cedarsoftware.util.VisualizerConstants.R_SCOPED_NAME] == null)
+			if (sourceTraitMaps[CLASS_TRAITS][R_SCOPED_NAME] == null)
 			{
 				return null
 			}
 			else
 			{
-				return com.cedarsoftware.util.VisualizerConstants.RPM_CLASS_DOT + sourceFieldRpmType
+				return RPM_CLASS_DOT + sourceFieldRpmType
 			}
 		}
 		return targetFieldName
 	}
+
+    String getSourceMessage()
+    {
+        if (sourceTraitMaps)
+        {
+            return sourceScopedName ? ", the target of ${sourceScopedName} on ${sourceCube.name}" : ""
+        }
+        return ''
+    }
+
+    void getTraitMaps(VisualizerHelper helper, Map<String, Set<String>> requiredScopeKeyz, Map<String, Set<String>> optionalScopeKeyz)
+    {
+        targetTraitMaps = [:]
+        Map output = [:]
+        if (targetCube.name.startsWith(RPM_ENUM))
+        {
+            helper.loadRpmClassFields(RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetTraitMaps, output)
+        }
+        else
+        {
+            helper.loadRpmClassFields(RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetTraitMaps, output)
+        }
+        removeNotExistsFields()
+        getRequiredAndOptionalScopeKeys(requiredScopeKeyz, optionalScopeKeyz)
+        retainUsedScope(output)
+    }
+
+    void retainUsedScope(Map output)
+    {
+        Set<String> scopeCollector = new CaseInsensitiveSet<>()
+        scopeCollector.addAll(requiredScopeKeys)
+        scopeCollector.addAll(optionalScopeKeys)
+        scopeCollector << EFFECTIVE_VERSION_SCOPE_KEY
+
+        RuleInfo ruleInfo = NCube.getRuleInfo(output)
+        Set keysUsed = ruleInfo.getInputKeysUsed()
+        scopeCollector.addAll(keysUsed)
+
+        targetScope = new CaseInsensitiveMap(scope)
+        cullScope(targetScope.keySet(), scopeCollector)
+    }
+
+    void removeNotExistsFields()
+    {
+        targetTraitMaps.keySet().removeAll { String fieldName -> !targetTraitMaps[fieldName][R_EXISTS] }
+    }
+
+    void cullScope(Set<String> scopeKeys, Set scopeCollector)
+    {
+        scopeKeys.removeAll { String item -> !(scopeCollector.contains(item) || item.startsWith(SYSTEM_SCOPE_KEY_PREFIX)) }
+    }
+
+    // TODO: Add comment that explains what this method is doing
+    private void getRequiredAndOptionalScopeKeys(Map<String, Set<String>> requiredScopeKeyz, Map<String, Set<String>> optionalScopeKeyz)
+    {
+        String cubeName = targetCube.name
+        if (requiredScopeKeyz.containsKey(cubeName))
+        {
+            requiredScopeKeys = requiredScopeKeyz[cubeName]
+            optionalScopeKeys = optionalScopeKeyz[cubeName]
+        }
+        else
+        {
+            requiredScopeKeys = this.requiredScope
+            optionalScopeKeys = targetCube.getOptionalScope(scope, [:])
+            requiredScopeKeyz[cubeName] = requiredScopeKeys
+            optionalScopeKeyz[cubeName] = optionalScopeKeys
+        }
+    }
 }
