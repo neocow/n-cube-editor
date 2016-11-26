@@ -96,7 +96,7 @@ class Visualizer extends NCubeGroovyController
 
 		VisualizerInfo visInfo = new VisualizerInfo()
 		visInfo.startCubeName = cubeName
-		visInfo.scope = options.scope as CaseInsensitiveMap<String, Object>
+		visInfo.scope = options.scope as CaseInsensitiveMap
 		visInfo.allGroups = ALL_GROUPS_MAP
 		visInfo.availableGroupsAllLevels = [] as Set
 		visInfo.groupSuffix = _ENUM
@@ -178,15 +178,11 @@ class Visualizer extends NCubeGroovyController
 			return
 		}
 
-        // TODO: Seems odd that this is done outside of RelInfo
-        // TODO: Instead should this be VisualizerRelInfo.setGroupName(foo) ?
-		relInfo.group = relInfo.getGroupName()
-		visInfo.availableGroupsAllLevels << relInfo.group
 		addToNodes(visInfo, relInfo)
 
 		if (loadFieldsAndTraits)
 		{
-			relInfo.targetTraitMaps.each { targetFieldName, targetTraits ->
+			relInfo.targetTraitMaps.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
@@ -240,7 +236,7 @@ class Visualizer extends NCubeGroovyController
 
 		if (loadFieldsAndTraits)
 		{
-			relInfo.targetTraitMaps.each { String targetFieldName, targetTraits ->
+			relInfo.targetTraitMaps.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					try
@@ -256,7 +252,7 @@ class Visualizer extends NCubeGroovyController
 
 								if (relInfo.group == UNSPECIFIED)
 								{
-									relInfo.group = relInfo.getGroupName(nextTargetCubeName)
+									relInfo.setGroupName(nextTargetCubeName)
 								}
 							}
 							else
@@ -391,9 +387,11 @@ class Visualizer extends NCubeGroovyController
 		nodeMap.level = String.valueOf(relInfo.targetLevel)
 		nodeMap.name = targetCubeName
 		nodeMap.fromFieldName = sourceFieldName == null ? null : sourceFieldName
-		nodeMap.label = relInfo.label
 		nodeMap.title = targetCubeName
 		nodeMap.desc = relInfo.title
+		relInfo.group ?: relInfo.setGroupName()
+		visInfo.availableGroupsAllLevels << relInfo.group
+		nodeMap.label = relInfo.label
 		nodeMap.group = relInfo.nodeGroup
 		visInfo.nodes << nodeMap
 	}
@@ -414,7 +412,7 @@ class Visualizer extends NCubeGroovyController
 	 */
 	private static Map<String, Object> getScopeRelativeToSource(NCube targetCube, String sourceFieldRpmType, String targetFieldName, Map scope)
 	{
-		Map<String, Object> newScope = new CaseInsensitiveMap<String, Object>(scope)
+		Map<String, Object> newScope = new CaseInsensitiveMap<>(scope)
 
 		if (targetCube.name.startsWith(RPM_ENUM))
 		{
@@ -526,8 +524,8 @@ class Visualizer extends NCubeGroovyController
 
 		if (missingScope)
 		{
-			Map<String, Object> expandedScope = new CaseInsensitiveMap<String, Object>(visInfo.scope)
-			missingScope.each { key ->
+			Map<String, Object> expandedScope = new CaseInsensitiveMap<>(visInfo.scope)
+			missingScope.each { String key ->
 				expandedScope[key] = DEFAULT_SCOPE_VALUE
 			}
 			visInfo.scope = expandedScope
@@ -584,7 +582,7 @@ class Visualizer extends NCubeGroovyController
 		Map<String, Set<Object>> valuesByKey = new CaseInsensitiveMap<>()
 
 		//Values for Risk, SourceRisk, Coverage, SourceCoverage, etc.
-		DERIVED_SCOPE_KEYS.each { key ->
+		DERIVED_SCOPE_KEYS.each { String key ->
 			String cubeName = RPM_SCOPE_CLASS_DOT + key + DOT_TRAITS
 			Set<Object> values = getColumnValues(applicationID, cubeName, key)
 			valuesByKey[key] = values
@@ -675,7 +673,7 @@ ${messageScopeValues}"""
 Additional scope is required to load ${cubeName}${relInfo.sourceMessage}. Please add scope \
 value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.""")
 
-		missingScope.each{ key ->
+		missingScope.each{ String key ->
 			message.append(getAvailableScopeValuesMessage(visInfo, cubeName, key))
 		}
 		return message.toString()
