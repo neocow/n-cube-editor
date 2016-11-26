@@ -12,49 +12,7 @@ import com.cedarsoftware.ncube.util.VersionComparator
 import groovy.transform.CompileStatic
 import ncube.grv.method.NCubeGroovyController
 
-import static com.cedarsoftware.util.VisualizerConstants.ALL_GROUPS_KEYS
-import static com.cedarsoftware.util.VisualizerConstants.ALL_GROUPS_MAP
-import static com.cedarsoftware.util.VisualizerConstants.AXIS_TRAIT
-import static com.cedarsoftware.util.VisualizerConstants.BUSINESS_DIVISION_CODE
-import static com.cedarsoftware.util.VisualizerConstants.BUSINESS_DIVISION_CUBE_NAME
-import static com.cedarsoftware.util.VisualizerConstants.CLASS_TRAITS
-import static com.cedarsoftware.util.VisualizerConstants.COMMA_SPACE
-import static com.cedarsoftware.util.VisualizerConstants.DATE_TIME_FORMAT
-import static com.cedarsoftware.util.VisualizerConstants.DEFAULT_AVAILABLE_SCOPE_KEYS
-import static com.cedarsoftware.util.VisualizerConstants.DEFAULT_LEVEL
-import static com.cedarsoftware.util.VisualizerConstants.DEFAULT_SCOPE_VALUE
-import static com.cedarsoftware.util.VisualizerConstants.DERIVED_SCOPE_KEYS
-import static com.cedarsoftware.util.VisualizerConstants.DOT_CLASS_TRAITS
-import static com.cedarsoftware.util.VisualizerConstants.DOT_TRAITS
-import static com.cedarsoftware.util.VisualizerConstants.DOUBLE_BREAK
-import static com.cedarsoftware.util.VisualizerConstants.EFFECTIVE_VERSION
-import static com.cedarsoftware.util.VisualizerConstants.ENT_APP
-import static com.cedarsoftware.util.VisualizerConstants.INDENT
-import static com.cedarsoftware.util.VisualizerConstants.LOCATION_STATE
-import static com.cedarsoftware.util.VisualizerConstants.MANDATORY_RPM_SCOPE_KEYS
-import static com.cedarsoftware.util.VisualizerConstants.MISSING_SCOPE
-import static com.cedarsoftware.util.VisualizerConstants.POLICY_CONTROL_DATE
-import static com.cedarsoftware.util.VisualizerConstants.QUOTE_DATE
-import static com.cedarsoftware.util.VisualizerConstants.RPM_CLASS
-import static com.cedarsoftware.util.VisualizerConstants.RPM_CLASS_DOT
-import static com.cedarsoftware.util.VisualizerConstants.RPM_ENUM
-import static com.cedarsoftware.util.VisualizerConstants.RPM_ENUM_DOT
-import static com.cedarsoftware.util.VisualizerConstants.RPM_SCOPE_CLASS_DOT
-import static com.cedarsoftware.util.VisualizerConstants.R_RPM_TYPE
-import static com.cedarsoftware.util.VisualizerConstants.R_SCOPED_NAME
-import static com.cedarsoftware.util.VisualizerConstants.SCOPE_VALUE_NOT_FOUND
-import static com.cedarsoftware.util.VisualizerConstants.SOURCE_FIELD_NAME
-import static com.cedarsoftware.util.VisualizerConstants.SOURCE_SCOPE_KEY_PREFIX
-import static com.cedarsoftware.util.VisualizerConstants.STATE
-import static com.cedarsoftware.util.VisualizerConstants.STATE_CUBE_NAME
-import static com.cedarsoftware.util.VisualizerConstants.STATUS_MISSING_START_SCOPE
-import static com.cedarsoftware.util.VisualizerConstants.STATUS_SUCCESS
-import static com.cedarsoftware.util.VisualizerConstants.UNABLE_TO_LOAD
-import static com.cedarsoftware.util.VisualizerConstants.UNSPECIFIED
-import static com.cedarsoftware.util.VisualizerConstants.V_ENUM
-import static com.cedarsoftware.util.VisualizerConstants.V_MAX
-import static com.cedarsoftware.util.VisualizerConstants.V_MIN
-import static com.cedarsoftware.util.VisualizerConstants._ENUM
+import static com.cedarsoftware.util.VisualizerConstants.*
 
 /**
  * Provides the information used to visualize rpm cubes associated with a given rpm cube.
@@ -252,7 +210,7 @@ class Visualizer extends NCubeGroovyController
 
 								if (relInfo.group == UNSPECIFIED)
 								{
-									relInfo.setGroupName(nextTargetCubeName)
+									relInfo.groupName = nextTargetCubeName
 								}
 							}
 							else
