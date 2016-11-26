@@ -10,20 +10,20 @@ import groovy.transform.CompileStatic
 class VisualizerInfo
 {
 	String startCubeName
-	Map scope
-	List nodes
-	List edges
+	Map<String, Object> scope
+	List<Map<String, String>> nodes
+	List<Map<String, String>> edges
 
 	long maxLevel
 	long nodeCount
 	long selectedLevel
 
-	Map allGroups
-	Set selectedGroups
-	Set availableGroupsAllLevels
+	Map<String,String> allGroups
+	Set<String> selectedGroups
+	Set<String> availableGroupsAllLevels
 	String groupSuffix
-	Set availableScopeKeys = []
-	Map<String, Set<String>> availableScopeValues = [:]
+	Set<String> availableScopeKeys = []
+	Map<String, Set<Object>> availableScopeValues = [:]
 
 	void trimSelectedLevel()
 	{

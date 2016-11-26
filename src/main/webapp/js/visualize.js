@@ -107,7 +107,10 @@ var Visualizer = (function ($) {
 
             _scopeInput.change(function () {
                 _scope = buildScopeFromText(this.value);
-                load(true);
+            });
+
+            $('#loadGraph').click(function () {
+                load(true)
             });
         }
     };
