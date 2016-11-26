@@ -165,7 +165,7 @@ var NCE = (function ($) {
         _selectedCubeInfo = _selectedCubeInfo ? JSON.parse(_selectedCubeInfo) : [];
 
         if (!_activeTabViewType) {
-            _activeTabViewType = 'n-cube' + PAGE_ID;
+            _activeTabViewType = DEFAULT_ACTIVE_TAB_VIEW_TYPE;
         }
 
         if (_visitedBranches === undefined) {
@@ -1269,7 +1269,7 @@ var NCE = (function ($) {
         _cubeCount[0].textContent = Object.keys(_cubeList).length;
     }
 
-    function selectCubeByName(cubeName, differentAppId) {
+    function selectCubeByName(cubeName, differentAppId, newTab) {
         var cubeInfo, cis, found, i, len, oci, idx, tab;
         if (!cubeName) {
             return;
@@ -1291,20 +1291,23 @@ var NCE = (function ($) {
             tab = oci.substring(idx + TAB_SEPARATOR.length);
             oci = oci.substring(0, idx);
             if (oci === cis) {
-                cubeInfo.push(tab);
-                if (i < calcMaxTabs()) {
-                    selectTab(cubeInfo);
-                } else {
-                    makeCubeInfoActive(cubeInfo);
-                    buildTabs();
-                    return;
+                if (!newTab || (newTab === tab) ) {
+                    cubeInfo.push(tab);
+                    if (i < calcMaxTabs()) {
+                        selectTab(cubeInfo);
+                    } else {
+                        makeCubeInfoActive(cubeInfo);
+                        buildTabs();
+                        return;
+                    }
+                    found = true;
+                    break;
                 }
-                found = true;
-                break;
             }
         }
-        if (!found) {
-            setActiveTabViewType(_defaultTab);
+        if (!found){
+            tab = newTab === undefined ? _defaultTab : newTab;
+            setActiveTabViewType(tab);
             cubeInfo.push(getActiveTabViewType());
             addCurrentCubeTab(null, cubeInfo);
         }
@@ -4447,7 +4450,7 @@ var NCE = (function ($) {
 
     function getActiveTabViewType() {
         if (!_activeTabViewType) {
-            _activeTabViewType = 'n-cube' + PAGE_ID;
+            _activeTabViewType = DEFAULT_ACTIVE_TAB_VIEW_TYPE;
         }
         return _activeTabViewType;
     }

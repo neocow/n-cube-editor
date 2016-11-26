@@ -382,10 +382,11 @@ class Visualizer extends NCubeGroovyController
 		String targetCubeName = targetCube.name
 		String sourceFieldName = relInfo.sourceFieldName
 
-		Map<String, String> nodeMap = [:]
+		Map<String, Object> nodeMap = [:]
 		nodeMap.id = String.valueOf(relInfo.targetId)
 		nodeMap.level = String.valueOf(relInfo.targetLevel)
 		nodeMap.name = targetCubeName
+		nodeMap.scope = relInfo.targetScope
 		nodeMap.fromFieldName = sourceFieldName == null ? null : sourceFieldName
 		nodeMap.title = targetCubeName
 		nodeMap.desc = relInfo.title

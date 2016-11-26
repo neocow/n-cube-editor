@@ -13,7 +13,7 @@ class VisualizerInfo
 {
 	String startCubeName
 	Map<String, Object> scope
-	List<Map<String, String>> nodes
+	List<Map<String, Object>> nodes
 	List<Map<String, String>> edges
 
 	long maxLevel

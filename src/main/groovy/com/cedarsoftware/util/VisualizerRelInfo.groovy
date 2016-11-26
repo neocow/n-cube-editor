@@ -71,11 +71,11 @@ class VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		if (GROUPS_TO_SHOW_IN_TITLE.contains(nodeGroup))
 		{
-			String label = ALL_GROUPS_MAP[nodeGroup]
+			String label =ALL_GROUPS_MAP[nodeGroup]
 			int len = label.length()
 			sb.append(label)
 			sb.append('\n')
-			sb.append('-' * Math.floor(len * NODE_LABEL_LINE_LENGTH_MULTIPLIER))
+			sb.append('-' * Math.floor(len *NODE_LABEL_LINE_LENGTH_MULTIPLIER))
 			sb.append('\n')
 		}
 
@@ -84,7 +84,7 @@ class VisualizerRelInfo
 		String line = ''
 		for (String part : splitName)
 		{
-			if (line.length() + part.length() < NODE_LABEL_MAX_LINE_LENGTH)
+			if (line.length() + part.length() <NODE_LABEL_MAX_LINE_LENGTH)
 			{
 				line += part
 			}
@@ -174,14 +174,14 @@ class VisualizerRelInfo
 			throw new IllegalStateException("Group must be set prior to getting node group.")
 		}
 
-		return targetCube.name.startsWith(RPM_ENUM) ? group + _ENUM : group
+		return targetCube.name.startsWith(RPM_ENUM) ? group +_ENUM : group
 	}
 
 	String setGroupName(String cubeName = targetCube.name)
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		this.group = ALL_GROUPS_KEYS.contains(group) ? group : UNSPECIFIED
+		this.group =ALL_GROUPS_KEYS.contains(group) ? group :UNSPECIFIED
 	}
 
 
@@ -246,11 +246,11 @@ class VisualizerRelInfo
         Map output = [:]
         if (targetCube.name.startsWith(RPM_ENUM))
         {
-            helper.loadRpmClassFields(RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetTraitMaps, output)
+            helper.loadRpmClassFields(RPM_ENUM, targetCube.name -RPM_ENUM_DOT, scope, targetTraitMaps, output)
         }
         else
         {
-            helper.loadRpmClassFields(RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetTraitMaps, output)
+            helper.loadRpmClassFields(RPM_CLASS, targetCube.name -RPM_CLASS_DOT, scope, targetTraitMaps, output)
         }
         removeNotExistsFields()
         getRequiredAndOptionalScopeKeys(requiredScopeKeyz, optionalScopeKeyz)
@@ -262,7 +262,7 @@ class VisualizerRelInfo
         Set<String> scopeCollector = new CaseInsensitiveSet<>()
         scopeCollector.addAll(requiredScopeKeys)
         scopeCollector.addAll(optionalScopeKeys)
-        scopeCollector << EFFECTIVE_VERSION_SCOPE_KEY
+        scopeCollector <<EFFECTIVE_VERSION_SCOPE_KEY
 
         RuleInfo ruleInfo = NCube.getRuleInfo(output)
         Set keysUsed = ruleInfo.getInputKeysUsed()

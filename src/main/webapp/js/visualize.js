@@ -33,6 +33,7 @@ var Visualizer = (function ($) {
     var _edges = null;
     var _networkData = null;
     var _scope = null;
+    var _keepScope = false;
     var _availableScopeKeys = [];
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
@@ -50,6 +51,8 @@ var Visualizer = (function ($) {
     var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
     var _nodeTitle = null;
+    var _nodeVisualizer = null;
+    var _nodeTraits = null;
     var _nodeDesc = null;
     var _layout = null;
     var _scopeBuilderTable = null;
@@ -57,7 +60,7 @@ var Visualizer = (function ($) {
     var _savedScope = null;
     var _scopeInput = null;
     var _scopeBuilderListenersAdded = false;
-
+  
     var init = function (info) {
         if (!_nce) {
             _nce = info;
@@ -85,6 +88,8 @@ var Visualizer = (function ($) {
             _visualizerInfo = $('#visualizer-info');
             _visualizerNetwork = $('#visualizer-network');
             _nodeTitle = $('#nodeTitle');
+            _nodeTraits = $('#nodeTraits');
+            _nodeVisualizer = $('#nodeVisualizer');
             _nodeDesc = $('#nodeDesc');
             _scopeBuilderTable = $('#scopeBuilderTable');
             _scopeBuilderModal = $('#scopeBuilderModal');
@@ -110,7 +115,7 @@ var Visualizer = (function ($) {
             });
 
             $('#loadGraph').click(function () {
-                load(true)
+                load()
             });
         }
     };
@@ -154,93 +159,105 @@ var Visualizer = (function ($) {
         _visualizerNetwork.show();
     };
 
-    var load = function (reloadJson)
+    var load = function ()
     {
-        var differentCube = _nce.getSelectedCubeName() !== _loadedCubeName;
+        clearVisLayoutEast()
+        _nce.clearError();
 
-        if (reloadJson || differentCube) {
-            _nce.clearError();
+        if (!_nce.getSelectedCubeName()) {
+            _visualizerContent.hide();
+            _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + 'No cube selected.');
+            return;
+        }
 
-            var info = _nce.getInfoDto();
-            if (!info) {
-                _visualizerContent.hide();
-                _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + 'No cube selected.');
-                return;
-            }
-
-            if (differentCube)
+        if (_nce.getSelectedCubeName() !== _loadedCubeName)
+        {
+            _selectedLevel = null;
+            _selectedGroups = null;
+            _hierarchical = false;
+            _network = null;
+            if (_keepScope)
             {
-                //TODO: Save off settings to local storage so they can be retrieved here and used in load of different cube.
-                _selectedLevel = null;
-                _selectedGroups = null;
-                _hierarchical = false;
-                _network = null;
+                _keepScope = false
+            }
+            else{
                 _scope = [];
                 _savedScope = [];
             }
+        }
 
-            var options =
-            {
-                selectedLevel: _selectedLevel,
-                startCubeName: _nce.getSelectedCubeName(),
-                scope: _scope,
-                selectedGroups: _selectedGroups,
-                availableScopeKeys: _availableScopeKeys
-            };
+        var options =
+        {
+            selectedLevel: _selectedLevel,
+            startCubeName: _nce.getSelectedCubeName(),
+            scope: _scope,
+            selectedGroups: _selectedGroups,
+            availableScopeKeys: _availableScopeKeys
+        };
 
 
-            var result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
-            if (result.status === false) {
-                _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
-                return;
-            }
+        var result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
+        if (result.status === false) {
+            _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
+            _visualizerContent.hide();
+            _visualizerInfo.hide();
+            _visualizerNetwork.hide();
+            return;
+        }
 
-            var json = result.data;
+        var json = result.data;
 
-            if (json.status === 'success') {
-                if (json.message !== null) {
-                    _nce.showNote(json.message);
-                }
-                _loadedCubeName = _nce.getSelectedCubeName();
-                loadNetworkData(json.visInfo);
-                trimNetworkData(null);
-                draw();
-                loadSelectedLevelListView();
-                loadScopeView();
-                loadHierarchicalView();
-                loadAvailableGroupsView();
-                loadCountsView();
-                _visualizerContent.show();
-                _visualizerInfo.show();
-                _visualizerNetwork.show();
-            }
-            else if (json.status === 'missingStartScope') {
+        if (json.status === 'success') {
+            if (json.message !== null) {
                 _nce.showNote(json.message);
-                _loadedCubeName = _nce.getSelectedCubeName();
-                _scope = json.visInfo.scope;
-                _savedScope = json.visInfo.scope;
-                saveScope();
-                loadScopeView();
-                _visualizerContent.show();
-                _visualizerInfo.hide();
-                _visualizerNetwork.hide();
             }
-            else {
-                _visualizerContent.hide();
-                var message = json.message;
-                if (json.stackTrace != null) {
-                    message = message + TWO_LINE_BREAKS + json.stackTrace
-                }
-                _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
+            _loadedCubeName = _nce.getSelectedCubeName();
+            loadNetworkData(json.visInfo);
+            trimNetworkData(null);
+            draw();
+            loadSelectedLevelListView();
+            loadScopeView();
+            loadHierarchicalView();
+            loadAvailableGroupsView();
+            loadCountsView();
+            _visualizerContent.show();
+            _visualizerInfo.show();
+            _visualizerNetwork.show();
+        }
+        else if (json.status === 'missingStartScope') {
+            _nce.showNote(json.message);
+            _loadedCubeName = _nce.getSelectedCubeName();
+            _scope = json.visInfo.scope;
+            _savedScope = json.visInfo.scope;
+            saveScope();
+            loadScopeView();
+            _visualizerContent.show();
+            _visualizerInfo.hide();
+            _visualizerNetwork.hide();
+        }
+        else {
+            _visualizerContent.hide();
+             var message = json.message;
+            if (json.stackTrace != null) {
+                message = message + TWO_LINE_BREAKS + json.stackTrace
             }
-            _availableScopeKeys = json.visInfo.availableScopeKeys['@items'].sort();
-            if (_scopeBuilderListenersAdded === false){
-                availableScopeKeys = _availableScopeKeys;
-                addScopeBuilderListeners();
-                _scopeBuilderListenersAdded = true;
-            }
-         }
+            _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
+        }
+        _availableScopeKeys = json.visInfo.availableScopeKeys['@items'].sort();
+        if (_scopeBuilderListenersAdded === false){
+            availableScopeKeys = _availableScopeKeys;
+            addScopeBuilderListeners();
+            _scopeBuilderListenersAdded = true;
+        }
     };
+
+    function clearVisLayoutEast(){
+        _nodeTitle[0].innerHTML = '';
+        _nodeVisualizer[0].innerHTML = '';
+        _nodeTraits[0].innerHTML = '';
+        _nodeDesc[0].innerHTML = '';
+        _layout.close('east');
+    }
 
     function loadHierarchicalView() {
         $('#hierarchical').prop('checked', _hierarchical);
@@ -713,15 +730,40 @@ var Visualizer = (function ($) {
             var node = getNodeById(_nodes, params.nodes[0]);
             if (node) {
                 var cubeName = node.name;
-                var an = $('<a/>');
-                an.addClass('nc-anc');
-                an.html(cubeName);
-                an.click(function (e) {
+                var appId =_nce.getSelectedTabAppId()
+                var cubeLink = $('<a/>');
+                cubeLink.addClass('nc-anc');
+                cubeLink.html(cubeName);
+                cubeLink.click(function (e) {
                     e.preventDefault();
-                    _nce.selectCubeByName(cubeName);
+                    _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
                 });
                 _nodeTitle[0].innerHTML = 'Class ';
-                _nodeTitle.append(an);
+                _nodeTitle.append(cubeLink);
+
+                var visualizerLink = $('<a/>');
+                visualizerLink.addClass('nc-anc');
+                visualizerLink.html('visualize');
+                visualizerLink.click(function (e) {
+                    e.preventDefault();
+                    _keepScope = true
+                    _scope = node.scope
+                    _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
+                 });
+                _nodeVisualizer[0].innerHTML = '';
+                _nodeVisualizer.append(visualizerLink);
+
+                var traitsLink = $('<a/>');
+                traitsLink.addClass('nc-anc');
+                traitsLink.html('load traits<BR><BR>');
+                traitsLink.click(function (e) {
+                    e.preventDefault();
+                    _nce.showNote('The feature to load traits is under construction.');
+                });
+                _nodeTraits[0].innerHTML = '';
+                _nodeTraits.append(traitsLink);
+
+
                 _nodeDesc[0].innerHTML = node.desc;
                 _layout.open('east');
             }
@@ -880,7 +922,7 @@ var Visualizer = (function ($) {
         var newScope = buildScopeText();
         _scopeInput.val(newScope);
         _scope = buildScopeFromText(newScope);
-        load(true);
+        load();
     }
 
     function getSavedScope() {
