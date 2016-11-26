@@ -210,7 +210,7 @@ class Visualizer extends NCubeGroovyController
 
 								if (relInfo.group == UNSPECIFIED)
 								{
-									relInfo.setGroupName(nextTargetCubeName)
+									relInfo.groupName = nextTargetCubeName
 								}
 							}
 							else
