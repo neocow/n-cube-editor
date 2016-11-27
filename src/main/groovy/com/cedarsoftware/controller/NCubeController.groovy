@@ -256,10 +256,10 @@ class NCubeController extends BaseController
     // TODO: This needs to be externalized (loaded via Grapes)
     Map getVisualizerJson(ApplicationID appId, Map options)
     {
-        String cubeName = options.startCubeName
+        String cubeName = options.startCubeName as String
         if (!cubeName.startsWith(VisualizerConstants.RPM_CLASS))
         {
-            throw new IllegalArgumentException('n-cube name must begin with rpm.class, n-cube: ' + cubeName + ', app: ' + appId)
+            throw new IllegalArgumentException("The cube used as the starting point for a visualization must begin with 'rpm.class'. Cube ${cubeName} may not be used as the starting point.")
         }
         appId = addTenant(appId)
 

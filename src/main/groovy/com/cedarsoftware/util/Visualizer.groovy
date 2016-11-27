@@ -390,40 +390,57 @@ class Visualizer extends NCubeGroovyController
 		return newScope
 	}
 
-	private Map<String, Object> getDefaultScope(String cubeName)
+	private Map<String, Object> getDefaultScope(String type)
 	{
-		String type = getTypeFromCubeName(cubeName)
 		Map<String, Object> scope = new CaseInsensitiveMap<>()
-		scope[type] = DEFAULT_SCOPE_VALUE
+		if (type)
+		{
+			scope[type] = DEFAULT_SCOPE_VALUE
+			scope[POLICY_CONTROL_DATE] = defaultScopeDate
+			scope[QUOTE_DATE] = defaultScopeDate
+		}
 		scope[EFFECTIVE_VERSION] = defaultScopeEffectiveVersion
-		scope[POLICY_CONTROL_DATE] = defaultScopeDate
-		scope[QUOTE_DATE] = defaultScopeDate
 		return scope
 	}
 
 	private boolean hasMissingMinimumScope(VisualizerInfo visInfo)
 	{
+		String type
+		String messageSuffix
+		String messageSuffixTypeScopeKey = ''
+		String messageScopeValues = ''
+		String messageSuffixScopeKey = "Its default value may be changed as desired."
 		boolean hasMissingScope = false
 		String cubeName = visInfo.startCubeName
 		Map<String, Object> scope = visInfo.scope
-		String type = getTypeFromCubeName(cubeName)
-		String messageSuffix = "Its default value may be changed as desired."
-		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, type)
-		String messageSuffixType = "Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
+
+		if (getCube(cubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		{
+			type = getTypeFromCubeName(cubeName)
+			messageSuffixTypeScopeKey = "Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
+			messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, type)
+			messageSuffix = 'The other default scope values may also be changed as desired.'
+		}
+		else{
+			messageSuffix = 'The default scope value(s) may be changed as desired.'
+		}
 
 		if (scope)
 		{
-			hasMissingScope = visInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffix, messages) ?: hasMissingScope
-			hasMissingScope = visInfo.addMissingMinimumScope(POLICY_CONTROL_DATE, defaultScopeDate, messageSuffix, messages) ?: hasMissingScope
-			hasMissingScope = visInfo.addMissingMinimumScope(QUOTE_DATE, defaultScopeDate, messageSuffix, messages) ?: hasMissingScope
-			hasMissingScope = visInfo.addMissingMinimumScope(type, DEFAULT_SCOPE_VALUE, messageSuffixType + messageScopeValues, messages) ?: hasMissingScope
+			if (type)
+			{
+				hasMissingScope = visInfo.addMissingMinimumScope(type, DEFAULT_SCOPE_VALUE, messageSuffixTypeScopeKey + messageScopeValues, messages) ?: hasMissingScope
+				hasMissingScope = visInfo.addMissingMinimumScope(POLICY_CONTROL_DATE, defaultScopeDate, messageSuffixScopeKey, messages) ?: hasMissingScope
+				hasMissingScope = visInfo.addMissingMinimumScope(QUOTE_DATE, defaultScopeDate, messageSuffixScopeKey, messages) ?: hasMissingScope
+			}
+			hasMissingScope = visInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffixScopeKey, messages) ?: hasMissingScope
 		}
 		else
 		{
 			hasMissingScope = true
-			Map<String, Object> defaultScope = getDefaultScope(cubeName)
+			Map<String, Object> defaultScope = getDefaultScope(type)
 			visInfo.scope = defaultScope
-			String msg = getMissingMinimumScopeMessage(defaultScope, messageScopeValues, messageSuffixType )
+			String msg = getMissingMinimumScopeMessage(defaultScope, messageScopeValues, messageSuffixTypeScopeKey, messageSuffix )
 			messages << msg
 		}
 		return hasMissingScope
@@ -599,12 +616,12 @@ ${DOUBLE_BREAK}${scopeValues.join(COMMA_SPACE)}  """
 		return messageScopeValues
 	}
 
-	private static String getMissingMinimumScopeMessage(Map<String, Object> scope, String messageScopeValues, String messageSuffixType )
+	private static String getMissingMinimumScopeMessage(Map<String, Object> scope, String messageScopeValues, String messageSuffixType, String messageSuffix )
 	{
 		"""\
 The scope for the following scope keys was added since it was required: \
 ${DOUBLE_BREAK}${INDENT}${scope.keySet().join(COMMA_SPACE)}\
-${DOUBLE_BREAK}${messageSuffixType} The other default scope values may also be changed as desired.\
+${DOUBLE_BREAK}${messageSuffixType} ${messageSuffix} \
 ${messageScopeValues}"""
 	}
 
