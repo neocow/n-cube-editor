@@ -38,6 +38,7 @@ var Visualizer = (function ($) {
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
     var _availableGroupsAllLevels = null;
+    var _availableScopeValues = {};
     var _allGroups = null;
     var _maxLevel = null;
     var _nodeCount = null;
@@ -60,6 +61,8 @@ var Visualizer = (function ($) {
     var _savedScope = null;
     var _scopeInput = null;
     var _scopeBuilderListenersAdded = false;
+    var STATUS_SUCCESS = 'success';
+    var STATUS_MISSING_START_SCOPE = 'missingStartScope';
   
     var init = function (info) {
         if (!_nce) {
@@ -192,7 +195,8 @@ var Visualizer = (function ($) {
             startCubeName: _nce.getSelectedCubeName(),
             scope: _scope,
             selectedGroups: _selectedGroups,
-            availableScopeKeys: _availableScopeKeys
+            availableScopeKeys: _availableScopeKeys,
+            availableScopeValues: _availableScopeValues
         };
 
 
@@ -207,15 +211,15 @@ var Visualizer = (function ($) {
 
         var json = result.data;
 
-        if (json.status === 'success') {
+        if (json.status === STATUS_SUCCESS) {
             if (json.message !== null) {
                 _nce.showNote(json.message);
             }
-            _loadedCubeName = _nce.getSelectedCubeName();
-            loadNetworkData(json.visInfo);
+            loadNetworkData(json.visInfo, json.status);
             trimNetworkData(null);
             draw();
             loadSelectedLevelListView();
+            saveScope();
             loadScopeView();
             loadHierarchicalView();
             loadAvailableGroupsView();
@@ -224,11 +228,9 @@ var Visualizer = (function ($) {
             _visualizerInfo.show();
             _visualizerNetwork.show();
         }
-        else if (json.status === 'missingStartScope') {
+        else if (json.status === STATUS_MISSING_START_SCOPE) {
             _nce.showNote(json.message);
-            _loadedCubeName = _nce.getSelectedCubeName();
-            _scope = json.visInfo.scope;
-            _savedScope = json.visInfo.scope;
+            loadNetworkData(json.visInfo, json.status);
             saveScope();
             loadScopeView();
             _visualizerContent.show();
@@ -243,9 +245,10 @@ var Visualizer = (function ($) {
             }
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
         }
-        _availableScopeKeys = json.visInfo.availableScopeKeys['@items'].sort();
-        if (_scopeBuilderListenersAdded === false){
+ 
+         if (_scopeBuilderListenersAdded === false){
             availableScopeKeys = _availableScopeKeys;
+            availableScopeValues = _availableScopeValues;
             addScopeBuilderListeners();
             _scopeBuilderListenersAdded = true;
         }
@@ -503,19 +506,26 @@ var Visualizer = (function ($) {
         _networkData = {nodes:nodes, edges:edges};
     }
 
-    function loadNetworkData(visInfo) {
-        _allGroups = visInfo.allGroups;
-        _availableGroupsAllLevels = visInfo.availableGroupsAllLevels['@items'];
-        _selectedGroups = visInfo.selectedGroups['@items'];
-        _selectedLevel = visInfo.selectedLevel;
-        _groupSuffix = visInfo.groupSuffix;
+    function loadNetworkData(visInfo, status) {
+
+        if (status === STATUS_SUCCESS) {
+            _allGroups = visInfo.allGroups;
+            _availableGroupsAllLevels = visInfo.availableGroupsAllLevels['@items'];
+            _selectedGroups = visInfo.selectedGroups['@items'];
+            _selectedLevel = visInfo.selectedLevel;
+            _groupSuffix = visInfo.groupSuffix;
+            _nodeCount = visInfo.nodeCount;
+            _maxLevel = visInfo.maxLevel;
+            _nodesAllLevels = visInfo.nodes['@items'];
+            _edgesAllLevels = visInfo.edges['@items'];
+        }
+        _savedScope = visInfo.scope;
+        _loadedCubeName = _nce.getSelectedCubeName();
+        _availableScopeValues = visInfo.availableScopeValues;
+        _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
         _scope = visInfo.scope;
         _startCube = visInfo.startCubeName.substring(visInfo.startCubeName.lastIndexOf('.') + 1);
-        _nodeCount = visInfo.nodeCount;
-        _maxLevel = visInfo.maxLevel;
-        _nodesAllLevels = visInfo.nodes['@items'];
-        _edgesAllLevels = visInfo.edges['@items'];
-     }
+    }
 
     var handleCubeSelected = function() {
         load();
@@ -885,12 +895,18 @@ var Visualizer = (function ($) {
 
     /*================================= BEGIN SCOPE BUILDER ==========================================================*/
     var availableScopeKeys = []
+    var availableScopeValues = {}
 
+    //TODO  1. Check the availableScopeValues map when the user selects a scope key. If the map contains 
+    //TODO  the selected key, make the scope value field a dropdown that contains the available scope values.
+    //TODO  2. Pre-populate the scope picker with scope that has already been added.
+    //TODO  3. Fix scope picker save, which is erroring now.
     function addScopeBuilderListeners() {
         var builderOptions = {
             title: 'Scope Builder',
             instructionsTitle: 'Instructions - Scope Builder',
             instructionsText: 'Add scoping for visualization.',
+            availableScopeValues: availableScopeValues,
             columns: {
                 isApplied: {
                     heading: 'Apply',
@@ -922,7 +938,6 @@ var Visualizer = (function ($) {
         var newScope = buildScopeText();
         _scopeInput.val(newScope);
         _scope = buildScopeFromText(newScope);
-        load();
     }
 
     function getSavedScope() {

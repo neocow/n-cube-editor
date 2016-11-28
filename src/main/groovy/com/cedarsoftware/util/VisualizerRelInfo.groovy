@@ -5,28 +5,7 @@ import com.cedarsoftware.ncube.RuleInfo
 import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
 
-import static com.cedarsoftware.util.VisualizerConstants.ALL_GROUPS_KEYS
-import static com.cedarsoftware.util.VisualizerConstants.ALL_GROUPS_MAP
-import static com.cedarsoftware.util.VisualizerConstants.AXIS_FIELD
-import static com.cedarsoftware.util.VisualizerConstants.AXIS_NAME
-import static com.cedarsoftware.util.VisualizerConstants.AXIS_TRAIT
-import static com.cedarsoftware.util.VisualizerConstants.BREAK
-import static com.cedarsoftware.util.VisualizerConstants.CLASS_TRAITS
-import static com.cedarsoftware.util.VisualizerConstants.DOUBLE_BREAK
-import static com.cedarsoftware.util.VisualizerConstants.EFFECTIVE_VERSION_SCOPE_KEY
-import static com.cedarsoftware.util.VisualizerConstants.GROUPS_TO_SHOW_IN_TITLE
-import static com.cedarsoftware.util.VisualizerConstants.NODE_LABEL_LINE_LENGTH_MULTIPLIER
-import static com.cedarsoftware.util.VisualizerConstants.NODE_LABEL_MAX_LINE_LENGTH
-import static com.cedarsoftware.util.VisualizerConstants.RPM_CLASS
-import static com.cedarsoftware.util.VisualizerConstants.RPM_CLASS_DOT
-import static com.cedarsoftware.util.VisualizerConstants.RPM_ENUM
-import static com.cedarsoftware.util.VisualizerConstants.RPM_ENUM_DOT
-import static com.cedarsoftware.util.VisualizerConstants.R_EXISTS
-import static com.cedarsoftware.util.VisualizerConstants.R_SCOPED_NAME
-import static com.cedarsoftware.util.VisualizerConstants.SPACE
-import static com.cedarsoftware.util.VisualizerConstants.SYSTEM_SCOPE_KEY_PREFIX
-import static com.cedarsoftware.util.VisualizerConstants.UNSPECIFIED
-import static com.cedarsoftware.util.VisualizerConstants._ENUM
+import static com.cedarsoftware.util.VisualizerConstants.*
 
 /**
  * Holds information about a source cube and target cube for purposes of creating a visualization of the cubes and their relationship.
@@ -228,7 +207,7 @@ class VisualizerRelInfo
 				return RPM_CLASS_DOT + sourceFieldRpmType
 			}
 		}
-		return targetFieldName
+		return RPM_CLASS_DOT + targetFieldName
 	}
 
     String getSourceMessage()
