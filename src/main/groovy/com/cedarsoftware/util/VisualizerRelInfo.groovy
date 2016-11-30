@@ -1,6 +1,8 @@
 package com.cedarsoftware.util
 
+import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
+import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.RuleInfo
 import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
@@ -15,6 +17,7 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 class VisualizerRelInfo
 {
 	boolean loadFieldsAndTraits = true
+	boolean loadTraits = false
 	Set<String> notes = []
 	Map<String, Object> scope
 	String group
@@ -32,8 +35,20 @@ class VisualizerRelInfo
 	String sourceFieldName
 	String sourceFieldRpmType
 
-	Set<String> requiredScopeKeys  = []
-	Set<String> optionalScopeKeys  = []
+	VisualizerRelInfo() {}
+
+	VisualizerRelInfo(ApplicationID appId, Map options)
+	{
+		Map node = options.node as Map
+		targetCube = NCubeManager.getCube(appId, node.name as String)
+		sourceFieldName = node.fromFieldName
+		targetId = Long.valueOf(node.id as String)
+		targetLevel = Long.valueOf(node.level as String)
+		targetScope = node.scope as CaseInsensitiveMap
+		scope = node.availableScope as CaseInsensitiveMap
+		loadTraits = options.loadTraits as boolean
+		group = setGroupName()
+	}
 
 	Set<String> getRequiredScope()
 	{
@@ -80,70 +95,112 @@ class VisualizerRelInfo
 
 	String getTitle()
 	{
-		boolean loadFieldsAndTraits = loadFieldsAndTraits
-		Map<String, Map<String, Object>> traitMaps = targetTraitMaps
-		Set<String> notes = notes
 		String scopedName = targetScopedName
 		StringBuilder sb = new StringBuilder()
 
 		//Scoped Name
 		if (scopedName)
 		{
-			sb.append('<b>scoped name = </b>')
-			sb.append(scopedName)
-			sb.append(DOUBLE_BREAK)
+			sb.append("<b>scoped name = </b>${scopedName}${DOUBLE_BREAK}")
 		}
+
+		//Level
+		sb.append("<b>level = </b>${String.valueOf(targetLevel)}${DOUBLE_BREAK}")
 
 		//Notes
 		if (notes)
 		{
-			sb.append('<b>Note: </b><br>')
+			sb.append("<b>note = </b>")
 			notes.each { String note ->
-				sb.append(' ')
-				sb.append(note)
-				sb.append(BREAK)
+				sb.append("${note} ")
 			}
-			sb.append(BREAK)
+			sb.append("${DOUBLE_BREAK}")
 		}
 
 		//Scope
 		if (loadFieldsAndTraits)
 		{
-			sb.append('<b>scope used to load class = </b>')
-			sb.append(targetScope.toString() - '{' - '}')
-			sb.append(DOUBLE_BREAK)
-		}
-		sb.append('<b>available scope to load class = </b>')
-		sb.append(scope.toString() - '{' - '}')
-		sb.append(DOUBLE_BREAK)
+			if (loadTraits)
+			{
+				sb.append("<b>scope used loading all traits</b>")
+			}
+			else
+			{
+				sb.append("<b>scope used loading minimal traits</b>")
 
-		//Level
-		sb.append('<b>level = </b>')
-		sb.append(String.valueOf(targetLevel))
-		sb.append(DOUBLE_BREAK)
+			}
+			sb.append("<pre><ul>")
+			targetScope.each { String key, Object value ->
+				sb.append("<li>${key}: ${value}</li>")
+			}
+			sb.append("</ul></pre>${BREAK}")
+		}
+
+		sb.append("<b>available scope</b>")
+		sb.append("<pre><ul>")
+		scope.each { String key, Object value ->
+			sb.append("<li>${key}: ${value}</li>")
+		}
+		sb.append("</ul></pre>${BREAK}")
 
 		//Fields
 		if (loadFieldsAndTraits)
 		{
-			sb.append("<b>fields = </b>${getFieldDetails(traitMaps)}")
+			if (loadTraits)
+			{
+				addClassTraits(sb)
+			}
+			addFieldDetails(sb)
 		}
-
 		return sb.toString()
 	}
 
-	private static String getFieldDetails(Map<String, Map<String, Object>> traitMaps)
+	private void addFieldDetails(StringBuilder sb)
 	{
-		StringBuilder fieldDetails = new StringBuilder()
-
-		traitMaps.each { String fieldName, v ->
+		if (loadTraits)
+		{
+			sb.append("<b>fields and traits</b>")
+	}
+		else
+		{
+			sb.append("<b>fields</b>")
+		}
+		sb.append("<pre><ul>")
+		targetTraitMaps.each { String fieldName, v ->
 			if (CLASS_TRAITS != fieldName)
 			{
-				fieldDetails.append(BREAK)
-				fieldDetails.append(SPACE)
-				fieldDetails.append(fieldName)
+				if (loadTraits)
+				{
+					sb.append("<li><b>${fieldName}</b></li>")
+					addTraits(sb, fieldName)
+				}
+				else
+				{
+					sb.append("<li>${fieldName}</li>")
+				}
 			}
 		}
-		return fieldDetails.toString()
+		sb.append("</ul></pre>")
+	}
+
+	private void addTraits(StringBuilder sb, String fieldName)
+	{
+		Map<String, Object> traits = targetTraitMaps[fieldName].sort() as Map
+		sb.append("<pre><ul>")
+		traits.each { String traitName, Object traitValue ->
+			if (traitValue != null)
+			{
+				sb.append("<li>${traitName}: ${traitValue}</li>")
+			}
+		}
+		sb.append("</ul></pre>")
+	}
+
+	private void addClassTraits(StringBuilder sb)
+	{
+		sb.append("<b>class traits</b>")
+		addTraits(sb, CLASS_TRAITS)
+		sb.append("${BREAK}")
 	}
 
 	String getNodeGroup()
@@ -162,7 +219,6 @@ class VisualizerRelInfo
 		String group = splits[2].toUpperCase()
 		this.group = ALL_GROUPS_KEYS.contains(group) ? group : UNSPECIFIED
 	}
-
 
 	String getSourceEffectiveName()
 	{
@@ -219,28 +275,28 @@ class VisualizerRelInfo
         return ''
     }
 
-    void getTraitMaps(VisualizerHelper helper, Map<String, Set<String>> requiredScopeKeyz, Map<String, Set<String>> optionalScopeKeyz)
+    void getTraitMaps(VisualizerHelper helper, ApplicationID appId, VisualizerInfo visInfo)
     {
         targetTraitMaps = [:]
         Map output = [:]
         if (targetCube.name.startsWith(RPM_ENUM))
         {
-            helper.loadRpmClassFields(RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetTraitMaps, output)
+            helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetTraitMaps, visInfo.loadTraits, output)
         }
         else
         {
-            helper.loadRpmClassFields(RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetTraitMaps, output)
+            helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetTraitMaps, visInfo.loadTraits, output)
         }
         removeNotExistsFields()
-        getRequiredAndOptionalScopeKeys(requiredScopeKeyz, optionalScopeKeyz)
-        retainUsedScope(output)
+		addRequiredAndOptionalScopeKeys(visInfo)
+        retainUsedScope(visInfo, output)
     }
 
-    void retainUsedScope(Map output)
+    void retainUsedScope(VisualizerInfo visInfo, Map output)
     {
         Set<String> scopeCollector = new CaseInsensitiveSet<>()
-        scopeCollector.addAll(requiredScopeKeys)
-        scopeCollector.addAll(optionalScopeKeys)
+        scopeCollector.addAll(visInfo.requiredScopeKeys[targetCube.name])
+        scopeCollector.addAll(visInfo.optionalScopeKeys[targetCube.name])
         scopeCollector << EFFECTIVE_VERSION_SCOPE_KEY
 
         RuleInfo ruleInfo = NCube.getRuleInfo(output)
@@ -262,25 +318,69 @@ class VisualizerRelInfo
     }
 
 	/**
-	 *  Gets the required and optional scope keys for the target cube from a map
-	 *  of scope keys for all cubes processed so far.
-	 *  If the map has not already been loaded with scope keys for this cube,
-	 *  then get the scope keys for this cube and add them to the map.
-	*/
-    private void getRequiredAndOptionalScopeKeys(Map<String, Set<String>> requiredScopeKeyz, Map<String, Set<String>> optionalScopeKeyz)
-    {
-        String cubeName = targetCube.name
-        if (requiredScopeKeyz.containsKey(cubeName))
-        {
-            requiredScopeKeys = requiredScopeKeyz[cubeName]
-            optionalScopeKeys = optionalScopeKeyz[cubeName]
-        }
-        else
-        {
-            requiredScopeKeys = this.requiredScope
-            optionalScopeKeys = targetCube.getOptionalScope(scope, [:])
-            requiredScopeKeyz[cubeName] = requiredScopeKeys
-            optionalScopeKeyz[cubeName] = optionalScopeKeys
-        }
-    }
+	 *  If the required and optional scope keys have not already been loaded for this cube,
+	 *  load them.
+	 */
+	private void addRequiredAndOptionalScopeKeys(VisualizerInfo visInfo)
+	{
+		String cubeName = targetCube.name
+		if (!visInfo.requiredScopeKeys.containsKey(cubeName))
+		{
+			visInfo.requiredScopeKeys[cubeName] = requiredScope
+			visInfo.optionalScopeKeys[cubeName] = targetCube.getOptionalScope(scope, [:])
+		}
+	}
+
+	Map<String, Object> createEdge(int edgeId)
+	{
+		String sourceFieldName = sourceFieldName
+		Map<String, Map<String, Object>> sourceTraitMaps = sourceTraitMaps
+
+		Map<String, Object> edge = [:]
+		String sourceCubeEffectiveName = sourceEffectiveName
+		String targetCubeEffectiveName = targetEffectiveName
+		edge.id = String.valueOf(edgeId + 1)
+		edge.from = String.valueOf(sourceId)
+		edge.to = String.valueOf(targetId)
+		edge.fromName = sourceCubeEffectiveName
+		edge.toName = targetCubeEffectiveName
+		edge.fromFieldName = sourceFieldName
+		edge.level = String.valueOf(targetLevel)
+		edge.label = ''
+		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceTraitMaps[sourceFieldName] as Map
+		String vMin = sourceFieldTraitMap[V_MIN]
+		String vMax = sourceFieldTraitMap[V_MAX]
+
+		if (vMin != null && vMax != null)
+		{
+			edge.title = "${vMin}:${vMax}"
+		}
+		else
+		{
+			edge.title = ''
+		}
+		return edge
+	}
+
+	Map<String, Object> createNode()
+	{
+		NCube targetCube = targetCube
+		String targetCubeName = targetCube.name
+		String sourceFieldName = sourceFieldName
+
+		Map<String, Object> node = [:]
+		node.id = String.valueOf(targetId)
+		node.level = String.valueOf(targetLevel)
+		node.name = targetCubeName
+		node.scope = targetScope
+		node.availableScope = scope
+		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
+		node.title = targetCubeName
+		node.desc = title
+		group ?: setGroupName()
+		node.label = label
+		node.group = nodeGroup
+		return node
+	}
+
 }
