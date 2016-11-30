@@ -45,6 +45,7 @@ var Visualizer = (function ($) {
     var _groupSuffix = null;
     var _startCube = null;
     var _hierarchical = false;
+    var _loadTraits = false;
     var _selectedLevel = null;
     var _visualizerInfo = null;
     var _visualizerNetwork = null;
@@ -113,6 +114,11 @@ var Visualizer = (function ($) {
                 draw();
             });
 
+            $('#loadTraits').change(function () {
+                _loadTraits = this.checked;
+             });
+            
+
             _scopeInput.change(function () {
                 _scope = buildScopeFromText(this.value);
             });
@@ -162,6 +168,49 @@ var Visualizer = (function ($) {
         _visualizerNetwork.show();
     };
 
+    var loadTraits = function(node)
+    {
+        var options =
+        {
+            loadTraits: true,
+            node: node,
+            scope: _scope,
+            availableScopeKeys: _availableScopeKeys,
+            availableScopeValues: _availableScopeValues
+        };
+        
+        var result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
+        if (result.status === false) {
+            _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + result.data);
+            return node;
+        }
+
+        var json = result.data;
+
+        if (json.status === STATUS_SUCCESS) {
+            if (json.message !== null) {
+                _nce.showNote(json.message);
+            }
+            var visInfo = json.visInfo
+            node = visInfo.nodes['@items'][0];
+            _scope = visInfo.scope;
+            _savedScope = visInfo.scope;
+            _availableScopeValues = visInfo.availableScopeValues;
+            _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
+            replaceNode(_nodes, node)
+            _nodeDesc[0].innerHTML = node.desc;
+            draw();
+         }
+        else {
+            var message = json.message;
+            if (json.stackTrace != null) {
+                message = message + TWO_LINE_BREAKS + json.stackTrace
+            }
+            _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + message);
+        }
+        return node;
+    }
+
     var load = function ()
     {
         clearVisLayoutEast()
@@ -178,6 +227,7 @@ var Visualizer = (function ($) {
             _selectedLevel = null;
             _selectedGroups = null;
             _hierarchical = false;
+            _loadTraits = false;
             _network = null;
             if (_keepScope)
             {
@@ -196,7 +246,8 @@ var Visualizer = (function ($) {
             scope: _scope,
             selectedGroups: _selectedGroups,
             availableScopeKeys: _availableScopeKeys,
-            availableScopeValues: _availableScopeValues
+            availableScopeValues: _availableScopeValues,
+            loadTraits: _loadTraits
         };
 
 
@@ -222,6 +273,7 @@ var Visualizer = (function ($) {
             saveScope();
             loadScopeView();
             loadHierarchicalView();
+            loadLoadTraitsView();
             loadAvailableGroupsView();
             loadCountsView();
             _visualizerContent.show();
@@ -266,8 +318,13 @@ var Visualizer = (function ($) {
         $('#hierarchical').prop('checked', _hierarchical);
     }
 
+    function loadLoadTraitsView() {
+        $('#loadTraits').prop('checked', _loadTraits);
+    }
+
     function loadScopeView() {
         delete _scope['@type'];
+        delete _scope['@id'];
         _scopeInput.val(getScopeString());
     }
 
@@ -519,11 +576,11 @@ var Visualizer = (function ($) {
             _nodesAllLevels = visInfo.nodes['@items'];
             _edgesAllLevels = visInfo.edges['@items'];
         }
+        _scope = visInfo.scope;
         _savedScope = visInfo.scope;
         _loadedCubeName = _nce.getSelectedCubeName();
         _availableScopeValues = visInfo.availableScopeValues;
         _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
-        _scope = visInfo.scope;
         _startCube = visInfo.startCubeName.substring(visInfo.startCubeName.lastIndexOf('.') + 1);
     }
 
@@ -737,7 +794,8 @@ var Visualizer = (function ($) {
         _network.clusteredNodeIds = [];
 
         _network.on('select', function(params) {
-            var node = getNodeById(_nodes, params.nodes[0]);
+            var nodeId = params.nodes[0]
+            var node = getNodeById(_nodes, nodeId );
             if (node) {
                 var cubeName = node.name;
                 var appId =_nce.getSelectedTabAppId()
@@ -756,8 +814,8 @@ var Visualizer = (function ($) {
                 visualizerLink.html('visualize');
                 visualizerLink.click(function (e) {
                     e.preventDefault();
-                    _keepScope = true
-                    _scope = node.scope
+                    _keepScope = true;
+                    _scope = node.scope;
                     _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
                  });
                 _nodeVisualizer[0].innerHTML = '';
@@ -768,11 +826,10 @@ var Visualizer = (function ($) {
                 traitsLink.html('load traits<BR><BR>');
                 traitsLink.click(function (e) {
                     e.preventDefault();
-                    _nce.showNote('The feature to load traits is under construction.');
-                });
+                    loadTraits(node);
+                  });
                 _nodeTraits[0].innerHTML = '';
                 _nodeTraits.append(traitsLink);
-
 
                 _nodeDesc[0].innerHTML = node.desc;
                 _layout.open('east');
@@ -788,6 +845,17 @@ var Visualizer = (function ($) {
                 }
             }
         });
+    }
+
+    function replaceNode(nodes, newNode) {
+        for (var i = 0, len = nodes.length; i < len; i++) {
+            var node = nodes[i];
+            if (node.id === newNode.id) {
+                nodes.splice(i, 1);
+                nodes.push(newNode)
+                return;
+            }
+        }
     }
 
     function getNodeById(nodes, nodeId) {

@@ -254,7 +254,7 @@ class NCubeController extends BaseController
     }
 
     // TODO: This needs to be externalized (loaded via Grapes)
-    Map getVisualizerJson(ApplicationID appId, Map options)
+    Map<String, Object> getVisualizerJson(ApplicationID appId, Map options)
     {
         String cubeName = options.startCubeName as String
         if (!cubeName.startsWith(VisualizerConstants.RPM_CLASS))
@@ -262,12 +262,16 @@ class NCubeController extends BaseController
             throw new IllegalArgumentException("Starting cube for visualization must begin with 'rpm.class', n-cube: ${cubeName} does not.")
         }
         appId = addTenant(appId)
-
         Visualizer vis = new Visualizer()
-        vis.input = [options:options]
-        vis.output = [:]
-        vis.ncube = nCubeService.getCube(appId, cubeName)
-        return vis.buildGraph()
+        return vis.buildGraph(appId, options)
+    }
+
+    // TODO: This needs to be externalized (loaded via Grapes)
+    Map getVisualizerTraits(ApplicationID appId, Map options)
+    {
+        appId = addTenant(appId)
+        Visualizer vis = new Visualizer()
+        return vis.getTraits(appId, options)
     }
 
     Boolean updateCubeMetaProperties(ApplicationID appId, String cubeName, Map<String, Object> newMetaProperties)

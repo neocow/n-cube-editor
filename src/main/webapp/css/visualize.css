@@ -56,3 +56,9 @@ div.col-width-large {
     -ms-user-select: initial;
     user-select: initial;
 }
+
+ul, li{
+    list-style-position: inside;
+    margin: 0;
+    padding: 0;
+}
