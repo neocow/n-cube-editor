@@ -29,6 +29,7 @@ var Visualizer = (function ($) {
     var _edges = null;
     var _scope = null;
     var _keepCurrentScope = false;
+    var _reset = false;
     var _availableScopeKeys = [];
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
@@ -122,7 +123,12 @@ var Visualizer = (function ($) {
             });
 
             $('#loadGraph').click(function () {
-                load()
+                load();
+            });
+
+            $('#reset').click(function () {
+                _reset = true;
+                load();
             });
         }
     };
@@ -238,14 +244,19 @@ var Visualizer = (function ($) {
 
         if (_keepCurrentScope)
         {
-            _keepCurrentScope = false
+            _keepCurrentScope = false;
+        }
+        else if (_reset)
+        {
+            _scope = null;
+            _reset = false;
         }
         else{
             _scope = getSavedScope();
         }
 
          
-        if (_selectedCubeName !== _loadedCubeName)
+        if (_reset || _selectedCubeName !== _loadedCubeName)
         {
             _selectedLevel = null;
             _selectedGroups = null;
