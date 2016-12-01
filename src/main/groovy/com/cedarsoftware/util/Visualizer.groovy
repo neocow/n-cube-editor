@@ -367,12 +367,12 @@ class Visualizer
 		if (NCubeManager.getCube(appId, cubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			String type = getTypeFromCubeName(cubeName)
-			String messageSuffixTypeScopeKey = "${DOUBLE_BREAK}Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value.${BREAK}"
+			String messageSuffixTypeScopeKey = "${DOUBLE_BREAK}Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
 			String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, type)
 			String messageSuffix = 'The other default scope values may also be changed as desired.'
 			if (scope)
 			{
-				hasMissingScope = visInfo.addMissingMinimumScope(type, DEFAULT_SCOPE_VALUE, messageSuffixTypeScopeKey + messageScopeValues, messages) ?: hasMissingScope
+				hasMissingScope = visInfo.addMissingMinimumScope(type, DEFAULT_SCOPE_VALUE, "${messageSuffixTypeScopeKey}${messageScopeValues}", messages) ?: hasMissingScope
 				hasMissingScope = visInfo.addMissingMinimumScope(POLICY_CONTROL_DATE, defaultScopeDate, messageSuffixScopeKey, messages) ?: hasMissingScope
 				hasMissingScope = visInfo.addMissingMinimumScope(QUOTE_DATE, defaultScopeDate, messageSuffixScopeKey, messages) ?: hasMissingScope
 				hasMissingScope = visInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffixScopeKey, messages) ?: hasMissingScope
@@ -520,7 +520,7 @@ class Visualizer
 		"""\
 The scope for the following scope keys was added since it was required: \
 ${DOUBLE_BREAK}${INDENT}${scope.keySet().join(COMMA_SPACE)}\
-${DOUBLE_BREAK}${messageSuffixType} ${messageSuffix} \
+${messageSuffixType} ${messageSuffix} \
 ${BREAK}${messageScopeValues}"""
 	}
 

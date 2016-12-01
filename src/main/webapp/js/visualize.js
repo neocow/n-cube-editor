@@ -33,7 +33,7 @@ var Visualizer = (function ($) {
     var _edges = null;
     var _networkData = null;
     var _scope = null;
-    var _keepScope = false;
+    var _keepCurrentScope = false;
     var _availableScopeKeys = [];
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
@@ -43,7 +43,7 @@ var Visualizer = (function ($) {
     var _maxLevel = null;
     var _nodeCount = null;
     var _groupSuffix = null;
-    var _startCube = null;
+    var _selectedCubeName = null;
     var _hierarchical = false;
     var _loadTraits = false;
     var _selectedLevel = null;
@@ -59,7 +59,7 @@ var Visualizer = (function ($) {
     var _layout = null;
     var _scopeBuilderTable = null;
     var _scopeBuilderModal = null;
-    var _savedScope = null;
+    var _scopeBuilderScope = [];
     var _scopeInput = null;
     var _scopeBuilderListenersAdded = false;
     var STATUS_SUCCESS = 'success';
@@ -121,6 +121,8 @@ var Visualizer = (function ($) {
 
             _scopeInput.change(function () {
                 _scope = buildScopeFromText(this.value);
+                saveScope();
+                updateScopeBuilderScope();
             });
 
             $('#loadGraph').click(function () {
@@ -128,6 +130,27 @@ var Visualizer = (function ($) {
             });
         }
     };
+
+    function updateScopeBuilderScope()
+    {
+        var keys = Object.keys(_scope);
+        for (var i = 0, len = keys.length; i < len; i++) {
+            var key = keys[i];
+            var value = _scope[key];
+            var shouldInsertNewExpression = true;
+            for (var j = 0, jLen = _scopeBuilderScope.length; j < jLen; j++) {
+                var expression = _scopeBuilderScope[j];
+                if (expression.isApplied && expression.key === key) {
+                    expression.value = value;
+                    shouldInsertNewExpression = false;
+                    break;
+                }
+            }
+            if (shouldInsertNewExpression) {
+                _scopeBuilderScope.push({'isApplied': true, 'key': key, 'value': value});
+            }
+        }
+    }
 
     function buildScopeFromText(scopeString) {
         var newScope = {};
@@ -139,22 +162,9 @@ var Visualizer = (function ($) {
                 var value = tuple[1];
                 if (value) {
                     newScope[key] = value.trim();
-                    var shouldInsertNewExpression = true;
-                    for (var j = 0, jLen = _savedScope.length; j < jLen; j++) {
-                        var expression = _savedScope[j];
-                        if (expression.isApplied && expression.key === key) {
-                            expression.value = value;
-                            shouldInsertNewExpression = false;
-                            break;
-                        }
-                    }
-                    if (shouldInsertNewExpression) {
-                        _savedScope.push = {isApplied: true, key: key, value: value};
-                    }
                 }
             }
          }
-        saveScope();
         return newScope;
     }
 
@@ -194,7 +204,10 @@ var Visualizer = (function ($) {
             var visInfo = json.visInfo
             node = visInfo.nodes['@items'][0];
             _scope = visInfo.scope;
-            _savedScope = visInfo.scope;
+            delete _scope['@type'];
+            delete _scope['@id'];
+            saveScope();
+            updateScopeBuilderScope();
             _availableScopeValues = visInfo.availableScopeValues;
             _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
             replaceNode(_nodes, node)
@@ -222,27 +235,33 @@ var Visualizer = (function ($) {
             return;
         }
 
-        if (_nce.getSelectedCubeName() !== _loadedCubeName)
+        //TODO: The .replace is temporary until figured out why nce.getSelectedCubeName()
+        //TODO: occasionally contains a cube name with "_" instead of "." (e.g. rpm_class_product instead of
+        //TODO: rpm.class.product) after a page refresh.
+        _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.')
+
+        if (_keepCurrentScope)
+        {
+            _keepCurrentScope = false
+        }
+        else{
+            _scope = getSavedScope();
+        }
+
+         
+        if (_selectedCubeName !== _loadedCubeName)
         {
             _selectedLevel = null;
             _selectedGroups = null;
             _hierarchical = false;
             _loadTraits = false;
             _network = null;
-            if (_keepScope)
-            {
-                _keepScope = false
-            }
-            else{
-                _scope = [];
-                _savedScope = [];
-            }
         }
-
+  
         var options =
         {
             selectedLevel: _selectedLevel,
-            startCubeName: _nce.getSelectedCubeName(),
+            startCubeName: _selectedCubeName,
             scope: _scope,
             selectedGroups: _selectedGroups,
             availableScopeKeys: _availableScopeKeys,
@@ -271,6 +290,7 @@ var Visualizer = (function ($) {
             draw();
             loadSelectedLevelListView();
             saveScope();
+            updateScopeBuilderScope();
             loadScopeView();
             loadHierarchicalView();
             loadLoadTraitsView();
@@ -284,6 +304,7 @@ var Visualizer = (function ($) {
             _nce.showNote(json.message);
             loadNetworkData(json.visInfo, json.status);
             saveScope();
+            updateScopeBuilderScope();
             loadScopeView();
             _visualizerContent.show();
             _visualizerInfo.hide();
@@ -323,8 +344,6 @@ var Visualizer = (function ($) {
     }
 
     function loadScopeView() {
-        delete _scope['@type'];
-        delete _scope['@id'];
         _scopeInput.val(getScopeString());
     }
 
@@ -577,12 +596,12 @@ var Visualizer = (function ($) {
             _edgesAllLevels = visInfo.edges['@items'];
         }
         _scope = visInfo.scope;
-        _savedScope = visInfo.scope;
-        _loadedCubeName = _nce.getSelectedCubeName();
+        delete _scope['@type'];
+        delete _scope['@id'];
+        _loadedCubeName = _selectedCubeName;
         _availableScopeValues = visInfo.availableScopeValues;
         _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
-        _startCube = visInfo.startCubeName.substring(visInfo.startCubeName.lastIndexOf('.') + 1);
-    }
+     }
 
     var handleCubeSelected = function() {
         load();
@@ -814,7 +833,7 @@ var Visualizer = (function ($) {
                 visualizerLink.html('visualize');
                 visualizerLink.click(function (e) {
                     e.preventDefault();
-                    _keepScope = true;
+                    _keepCurrentScope = true;
                     _scope = node.scope;
                     _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
                  });
@@ -965,10 +984,10 @@ var Visualizer = (function ($) {
     var availableScopeKeys = []
     var availableScopeValues = {}
 
-    //TODO  1. Check the availableScopeValues map when the user selects a scope key. If the map contains 
-    //TODO  the selected key, make the scope value field a dropdown that contains the available scope values.
-    //TODO  2. Pre-populate the scope picker with scope that has already been added.
-    //TODO  3. Fix scope picker save, which is erroring now.
+    //TODO  1. The key in the scope picker is case sensitive, which doesn’t play well with the case insensitive scope
+    //TODO     that comes across from the server (Product vs. product, etc.).
+    //TODO  2. Check the availableScopeValues map when the user selects a scope key. If the map contains
+    //TODO     the selected key, make the scope value field a dropdown that contains the available scope values.
     function addScopeBuilderListeners() {
         var builderOptions = {
             title: 'Scope Builder',
@@ -997,31 +1016,38 @@ var Visualizer = (function ($) {
         };
 
         $('#scopeBuilderOpen').click(function() {
-            PropertyBuilder.openBuilderModal(builderOptions, _savedScope);
+            PropertyBuilder.openBuilderModal(builderOptions, _scopeBuilderScope);
         });
     }
 
     function scopeBuilderSave() {
-        saveScope();
-        var newScope = buildScopeText();
+         var newScope = getScopeBuilderScopeText();
         _scopeInput.val(newScope);
-        _scope = buildScopeFromText(newScope);
-    }
+        _scope = buildScopeFromText(newScope)
+        saveScope();
+     }
 
     function getSavedScope() {
         var scopeMap = localStorage[getStorageKey(_nce, SCOPE_MAP)];
         return scopeMap ? JSON.parse(scopeMap) : {};
     }
 
-    function saveScope() {
-        saveOrDeleteValue(_savedScope, getStorageKey(_nce, SCOPE_MAP));
+    //TODO: Temporarily override this function in index.js until figured out why nce.getSelectedCubeName()
+    //TODO: occasionally contains a cube name with "_" instead of "." (e.g. rpm_class_product instead of
+    //TODO: rpm.class.product) after a page refresh.
+    function getStorageKey(nce, prefix) {
+        //return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + nce.getSelectedCubeName().toLowerCase();
+        return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + _selectedCubeName.toLowerCase();
     }
 
-    function buildScopeText() {
-        _savedScope = getSavedScope();
+    function saveScope() {
+        saveOrDeleteValue(_scope, getStorageKey(_nce, SCOPE_MAP));
+    }
+
+    function getScopeBuilderScopeText() {
         var scopeText = '';
-        for (var i = 0, len = _savedScope.length; i < len; i++) {
-            var expression = _savedScope[i];
+        for (var i = 0, len = _scopeBuilderScope.length; i < len; i++) {
+            var expression = _scopeBuilderScope[i];
             if (expression.isApplied) {
                 scopeText += expression.key + ':' + expression.value + ', ';
             }
