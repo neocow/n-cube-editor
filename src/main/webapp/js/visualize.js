@@ -189,7 +189,6 @@ var Visualizer = (function ($) {
     {
         var options =
         {
-            loadTraits: true,
             node: node,
             scope: _scope,
             availableScopeKeys: _availableScopeKeys,
@@ -219,7 +218,9 @@ var Visualizer = (function ($) {
             _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
             replaceNode(_nodes, node)
             _nodeDesc[0].innerHTML = node.desc;
-            draw();
+            _nodeTraits = $('#nodeTraits');
+            _nodeTraits[0].innerHTML = '';
+            _nodeTraits.append(createTraitsLink(node));
          }
         else {
             var message = json.message;
@@ -516,6 +517,14 @@ var Visualizer = (function ($) {
         for (var i = 0, iLen = _nodes.length; i < iLen; i++)
         {
             var node  = _nodes[i];
+
+            if (node.id === '1')
+            {
+                node.shapeProperties = {borderDashes:  [15,5]};
+                node.borderWidth = 3;
+                node.scaling = {min: 70, max: 70, label: {enabled: true}};
+            }
+
             var selectedGroup = isSelectedGroup(node);
 
             if (parseInt(node.level) > level)
@@ -542,12 +551,12 @@ var Visualizer = (function ($) {
         }
 
         //given the selected level, determine edges to exclude
-        for (var k = 0, kLen = _edges.length; k < kLen; k++)
-        {
-            var edge  = _edges[k];
-            if (parseInt(edge.level) > level)
-            {
-                _excludedEdgeIdList.push(edge.id);
+        if (_edges) {
+            for (var k = 0, kLen = _edges.length; k < kLen; k++) {
+                var edge = _edges[k];
+                if (parseInt(edge.level) > level) {
+                    _excludedEdgeIdList.push(edge.id);
+                }
             }
         }
         _selectedGroups = selectedGroups;
@@ -723,54 +732,67 @@ var Visualizer = (function ($) {
                 },
                 PRODUCT_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 RISK_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 COVERAGE_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 LIMIT_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 PREMIUM_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 RATE_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 RATEFACTOR_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 ROLE_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 ROLEPLAYER_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 CONTAINER_ENUM: {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 DEDUCTIBLE_ENUM: {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 PARTY_ENUM: {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 PLACE_ENUM: {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 }
             }
@@ -802,27 +824,11 @@ var Visualizer = (function ($) {
                 _nodeTitle[0].innerHTML = 'Class ';
                 _nodeTitle.append(cubeLink);
 
-                var visualizerLink = $('<a/>');
-                visualizerLink.addClass('nc-anc');
-                visualizerLink.html('visualize');
-                visualizerLink.click(function (e) {
-                    e.preventDefault();
-                    _keepCurrentScope = true;
-                    _scope = node.scope;
-                    _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
-                 });
                 _nodeVisualizer[0].innerHTML = '';
-                _nodeVisualizer.append(visualizerLink);
+                _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
 
-                var traitsLink = $('<a/>');
-                traitsLink.addClass('nc-anc');
-                traitsLink.html('load traits<BR><BR>');
-                traitsLink.click(function (e) {
-                    e.preventDefault();
-                    loadTraits(node);
-                  });
                 _nodeTraits[0].innerHTML = '';
-                _nodeTraits.append(traitsLink);
+                _nodeTraits.append(createTraitsLink(node));
 
                 _nodeDesc[0].innerHTML = node.desc;
                 _layout.open('east');
@@ -838,6 +844,37 @@ var Visualizer = (function ($) {
                 }
             }
         });
+    }
+
+    function createVisualizeFromHereLink(appId, cubeName, node)
+    {
+        var visualizerLink = $('<a/>');
+        visualizerLink.addClass('nc-anc');
+        visualizerLink.html('new visual from here');
+        visualizerLink.click(function (e) {
+            e.preventDefault();
+            _keepCurrentScope = true;
+            _scope = node.scope;
+            _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
+        });
+        return visualizerLink;
+    }
+
+    function createTraitsLink(node) {
+        var traitsLink = $('<a/>');
+        traitsLink.addClass('nc-anc');
+        if (node.loadTraits) {
+            traitsLink.html('hide traits<BR><BR>');
+        }
+        else {
+            traitsLink.html('show traits<BR><BR>');
+        }
+        traitsLink.click(function (e) {
+            e.preventDefault();
+            node.loadTraits = !node.loadTraits;
+            loadTraits(node);
+        });
+        return traitsLink;
     }
 
     function replaceNode(nodes, newNode) {

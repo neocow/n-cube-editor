@@ -67,7 +67,6 @@ class Visualizer
 	 *            Map scope, the context for which the visualizer is loaded
 	 *            Set<String> availableScopeKeys, scope keys available in the visualization
 	 *            Map<String, Set<Object>> availableScopeValues, scope values available in the visualization, by scope key
-	 *            boolean loadTraits, whether to load and display traits
 	 * @return node
      */
 	Map getTraits(ApplicationID applicationID, Map options)
