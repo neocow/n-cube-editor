@@ -2192,7 +2192,7 @@ var NCubeEditor2 = (function ($) {
 
     function getCalculatedColumnDefault(row, col) {
         var column, columnDefault, tempColumnDefault, i;
-        column = getColumnHeader(col);
+        column = getColumnHeader(colOffset ? col : row - 2);
         columnDefault = getColumnDefault(column);
 
         for (i = 0; i < colOffset; i++) {
