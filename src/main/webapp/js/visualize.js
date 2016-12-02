@@ -23,6 +23,7 @@ var Visualizer = (function ($) {
     var _network = null;
     var _nce = null;
     var _loadedCubeName = null;
+    var _loadedAppId = null;
     var _excludedNodeIdList = null;
     var _excludedEdgeIdList = null;
     var _nodes = null;
@@ -259,7 +260,12 @@ var Visualizer = (function ($) {
             _scope = getSavedScope();
         }
 
-         
+        if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))
+        {
+            _availableScopeKeys = null;
+            _availableScopeValues = null;
+        }
+
         if (_reset || _selectedCubeName !== _loadedCubeName)
         {
             _selectedLevel = null;
@@ -337,6 +343,14 @@ var Visualizer = (function ($) {
             _scopeBuilderListenersAdded = true;
         }
     };
+
+    function appIdMatch(appIdA, appIdB)
+    {
+        return appIdA.appId === appIdB.appId &&
+            appIdA.version === appIdB.version &&
+            appIdA.status ===  appIdB.status &&
+            appIdA.branch === appIdB.branch;
+    }
 
     function clearVisLayoutEast(){
         _nodeTitle[0].innerHTML = '';
@@ -557,6 +571,7 @@ var Visualizer = (function ($) {
         delete _scope['@type'];
         delete _scope['@id'];
         _loadedCubeName = _selectedCubeName;
+        _loadedAppId = _nce.getSelectedTabAppId();
         _availableScopeValues = visInfo.availableScopeValues;
         _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
      }
