@@ -130,7 +130,11 @@ var Visualizer = (function ($) {
                 _reset = true;
                 load();
             });
-        }
+
+            $('#refreshGroups').click(function () {
+                reload();
+            });
+         }
     };
 
     function updateScopeBuilderScope()
@@ -420,9 +424,7 @@ var Visualizer = (function ($) {
             }
         }
 
-        if (groupCurrentlyAvailable(group)){
-            reload();
-        }
+        groupCurrentlyAvailable(group)
     }
 
     function groupCurrentlyAvailable(group){
@@ -440,10 +442,8 @@ var Visualizer = (function ($) {
         if (group.checked && !currentlyIncluded) {
             var groupIdPrefix = group.id.split(_groupSuffix)[0];
             var levelLabel = _selectedLevel === 1 ? 'level' : 'levels';
-            _nce.showNote('The group ' + groupIdPrefix + ' is not included in the ' + _selectedLevel + ' ' + levelLabel + ' currently displayed. Increase the levels to include the group.', 'Note', 5000);
+            _nce.showNote('The group ' + groupIdPrefix + ' is not included in the ' + _selectedLevel + ' ' + levelLabel + ' currently displayed. Increase the levels to include the group.', 'Note', 3000);
         }
-
-        return currentlyIncluded
     }
 
     function groupIdsEqual(groupId1, groupId2)
