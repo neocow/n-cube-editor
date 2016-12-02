@@ -23,17 +23,14 @@ var Visualizer = (function ($) {
     var _network = null;
     var _nce = null;
     var _loadedCubeName = null;
-    var _nodesAllLevels = null;
-    var _edgesAllLevels = null;
-    var _nodesAtLevel = null;
-    var _edgesAtLevel = null;
-    var _nodesAboveLevel = null;
-    var _edgesAboveLevel = null;
+    var _loadedAppId = null;
+    var _excludedNodeIdList = null;
+    var _excludedEdgeIdList = null;
     var _nodes = null;
     var _edges = null;
-    var _networkData = null;
     var _scope = null;
     var _keepCurrentScope = false;
+    var _reset = false;
     var _availableScopeKeys = [];
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
@@ -105,8 +102,9 @@ var Visualizer = (function ($) {
                 }
             });
 
-            $('#selectedLevel-list').change(function () {
-                reload($('#selectedLevel-list').val());
+             $('#selectedLevel-list').change(function () {
+                _selectedLevel = $('#selectedLevel-list').val()
+                reload();
             });
 
             $('#hierarchical').change(function () {
@@ -126,9 +124,18 @@ var Visualizer = (function ($) {
             });
 
             $('#loadGraph').click(function () {
-                load()
+                load();
             });
-        }
+
+            $('#reset').click(function () {
+                _reset = true;
+                load();
+            });
+
+            $('#refreshGroups').click(function () {
+                reload();
+            });
+         }
     };
 
     function updateScopeBuilderScope()
@@ -168,8 +175,8 @@ var Visualizer = (function ($) {
         return newScope;
     }
 
-    var reload = function (level) {
-        trimNetworkData(level);
+    var reload = function () {
+        setGroupsAndExcluded();
         draw();
         loadSelectedLevelListView();
         loadAvailableGroupsView();
@@ -182,7 +189,6 @@ var Visualizer = (function ($) {
     {
         var options =
         {
-            loadTraits: true,
             node: node,
             scope: _scope,
             availableScopeKeys: _availableScopeKeys,
@@ -212,7 +218,9 @@ var Visualizer = (function ($) {
             _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
             replaceNode(_nodes, node)
             _nodeDesc[0].innerHTML = node.desc;
-            draw();
+            _nodeTraits = $('#nodeTraits');
+            _nodeTraits[0].innerHTML = '';
+            _nodeTraits.append(createTraitsLink(node));
          }
         else {
             var message = json.message;
@@ -242,14 +250,24 @@ var Visualizer = (function ($) {
 
         if (_keepCurrentScope)
         {
-            _keepCurrentScope = false
+            _keepCurrentScope = false;
+        }
+        else if (_reset)
+        {
+            _scope = null;
+            _reset = false;
         }
         else{
             _scope = getSavedScope();
         }
 
-         
-        if (_selectedCubeName !== _loadedCubeName)
+        if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))
+        {
+            _availableScopeKeys = null;
+            _availableScopeValues = null;
+        }
+
+        if (_reset || _selectedCubeName !== _loadedCubeName)
         {
             _selectedLevel = null;
             _selectedGroups = null;
@@ -285,8 +303,8 @@ var Visualizer = (function ($) {
             if (json.message !== null) {
                 _nce.showNote(json.message);
             }
-            loadNetworkData(json.visInfo, json.status);
-            trimNetworkData(null);
+            loadData(json.visInfo, json.status);
+            setGroupsAndExcluded();
             draw();
             loadSelectedLevelListView();
             saveScope();
@@ -302,7 +320,7 @@ var Visualizer = (function ($) {
         }
         else if (json.status === STATUS_MISSING_START_SCOPE) {
             _nce.showNote(json.message);
-            loadNetworkData(json.visInfo, json.status);
+            loadData(json.visInfo, json.status);
             saveScope();
             updateScopeBuilderScope();
             loadScopeView();
@@ -326,6 +344,14 @@ var Visualizer = (function ($) {
             _scopeBuilderListenersAdded = true;
         }
     };
+
+    function appIdMatch(appIdA, appIdB)
+    {
+        return appIdA.appId === appIdB.appId &&
+            appIdA.version === appIdB.version &&
+            appIdA.status ===  appIdB.status &&
+            appIdA.branch === appIdB.branch;
+    }
 
     function clearVisLayoutEast(){
         _nodeTitle[0].innerHTML = '';
@@ -413,9 +439,7 @@ var Visualizer = (function ($) {
             }
         }
 
-        if (groupCurrentlyAvailable(group)){
-            reload(_selectedLevel);
-        }
+        groupCurrentlyAvailable(group)
     }
 
     function groupCurrentlyAvailable(group){
@@ -433,10 +457,8 @@ var Visualizer = (function ($) {
         if (group.checked && !currentlyIncluded) {
             var groupIdPrefix = group.id.split(_groupSuffix)[0];
             var levelLabel = _selectedLevel === 1 ? 'level' : 'levels';
-            _nce.showNote('The group ' + groupIdPrefix + ' is not included in the ' + _selectedLevel + ' ' + levelLabel + ' currently displayed. Increase the levels to include the group.', 'Note', 5000);
+            _nce.showNote('The group ' + groupIdPrefix + ' is not included in the ' + _selectedLevel + ' ' + levelLabel + ' currently displayed. Increase the levels to include the group.', 'Note', 3000);
         }
-
-        return currentlyIncluded
     }
 
     function groupIdsEqual(groupId1, groupId2)
@@ -471,118 +493,77 @@ var Visualizer = (function ($) {
     function getVisNetworkHeight() {
         return  '' + ($(this).height() - $('#network').offset().top);
     }
-
-    function trimNetworkData(level)
+    
+    function isSelectedGroup(node)
     {
-        var selectedGroups = [];
-        var availableGroupsAtLevel = [];
-        var nodes = [];
-        var edges = [];
-        var nodesAtLevel = [];
-        var edgesAtLevel = [];
-        var nodesAboveLevel = [];
-        var edgesAboveLevel = [];
-        var nodesToProcess = [];
-        var edgesToProcess = [];
-
-        var levelInt = null;
-        if (level !=null) {
-            levelInt = parseInt(level);
-        }
-        var selectedLevelInt = parseInt(_selectedLevel);
-
-        //determine which nodes and edges to process
-        if (levelInt === null) {
-            level =  _selectedLevel;
-            levelInt =  selectedLevelInt;
-            Array.prototype.push.apply(nodesToProcess, _nodesAllLevels);
-            Array.prototype.push.apply(edgesToProcess, _edgesAllLevels);
-        }
-        else if (levelInt <= selectedLevelInt){
-            Array.prototype.push.apply(nodesToProcess, _nodesAtLevel);
-            Array.prototype.push.apply(edgesToProcess, _edgesAtLevel);
-            Array.prototype.push.apply(nodesAboveLevel, _nodesAboveLevel);
-            Array.prototype.push.apply(edgesAboveLevel, _edgesAboveLevel);
-        }
-        else if (levelInt > selectedLevelInt){
-            Array.prototype.push.apply(nodesToProcess, _nodesAboveLevel);
-            Array.prototype.push.apply(edgesToProcess, _edgesAboveLevel);
-            Array.prototype.push.apply(nodes, _nodesAtLevel);
-            Array.prototype.push.apply(edges, _edgesAtLevel);
-            Array.prototype.push.apply(nodesAtLevel, _nodesAtLevel);
-            Array.prototype.push.apply(edgesAtLevel, _edgesAtLevel);
-        }
-
-        //collect nodes
-        for (var i = 0, iLen = nodesToProcess.length; i < iLen; i++)
+        for (var j = 0, jLen = _selectedGroups.length; j < jLen; j++)
         {
-            var isSelectedGroup = false;
-            var node  = nodesToProcess[i];
-
-            for (var j = 0, jLen = _selectedGroups.length; j < jLen; j++)
-            {
-                if (groupIdsEqual(node.group, _selectedGroups[j])){
-                    isSelectedGroup = true;
-                    break;
-                }
-            }
-
-            if (parseInt(node.level) <= levelInt) {
-                nodesAtLevel.push(node);
-                if (isSelectedGroup ) {
-                    nodes.push(node);
-                }
-            } else {
-                nodesAboveLevel.push(node);
+            if (groupIdsEqual(node.group, _selectedGroups[j])){
+                return true;
             }
         }
-
-        //collect edges
-        for (var k = 0, kLen = edgesToProcess.length; k < kLen; k++)
-        {
-            var edge  = edgesToProcess[k];
-
-            if (parseInt(edge.level) <= levelInt) {
-                edges.push(edge);
-                edgesAtLevel.push(edge);
-            } else {
-                edgesAboveLevel.push(edge);
-            }
-        }
-
-        //collect available groups at level
-        for (var l = 0, lLen = nodesAtLevel.length; l < lLen; l++) {
-            var nodeAtLevel = nodesAtLevel[l];
-            var groupNamePrefix = nodeAtLevel.group.replace(_groupSuffix, '');
-            if (availableGroupsAtLevel.indexOf(groupNamePrefix) == -1) {
-                availableGroupsAtLevel.push(groupNamePrefix);
-            }
-        }
-
-        for (var m = 0, mLen = nodes.length; m < mLen; m++)
-        {
-            var node = nodes[m];
-            var groupNamePrefix = node.group.replace(_groupSuffix, '');
-            if (_selectedGroups.indexOf(groupNamePrefix) > -1 && selectedGroups.indexOf(groupNamePrefix) === -1) {
-                selectedGroups.push(groupNamePrefix);
-            }
-        }
-
-        _nodesAtLevel = nodesAtLevel;
-        _edgesAtLevel = edgesAtLevel;
-        _nodesAboveLevel = nodesAboveLevel;
-        _edgesAboveLevel = edgesAboveLevel;
-
-        _selectedGroups = selectedGroups;
-        _availableGroupsAtLevel = availableGroupsAtLevel;
-        _selectedLevel = level;
-
-        _nodes = nodes;
-        _edges = edges;
-        _networkData = {nodes:nodes, edges:edges};
+        return false;
     }
 
-    function loadNetworkData(visInfo, status) {
+    function setGroupsAndExcluded()
+    {
+        _excludedNodeIdList = [];
+        _excludedEdgeIdList = [];
+        var selectedGroups = [];
+        var availableGroupsAtLevel = [];
+        var   level = parseInt(_selectedLevel);
+        
+        //given the selected level, determine nodes to exclude, selected groups and available groups 
+        for (var i = 0, iLen = _nodes.length; i < iLen; i++)
+        {
+            var node  = _nodes[i];
+
+            if (node.id === '1')
+            {
+                node.shapeProperties = {borderDashes:  [15,5]};
+                node.borderWidth = 3;
+                node.scaling = {min: 70, max: 70, label: {enabled: true}};
+            }
+
+            var selectedGroup = isSelectedGroup(node);
+
+            if (parseInt(node.level) > level)
+            {
+                _excludedNodeIdList.push(node.id);
+            }
+            else {
+                if (selectedGroup) {
+                    //collect selected groups at level
+                    var groupNamePrefix = node.group.replace(_groupSuffix, '');
+                    if (_selectedGroups.indexOf(groupNamePrefix) > -1 && selectedGroups.indexOf(groupNamePrefix) === -1) {
+                        selectedGroups.push(groupNamePrefix);
+                    }
+                }
+                else{
+                    _excludedNodeIdList.push(node.id);
+                }
+                //collect available groups at level
+                var groupNamePrefix = node.group.replace(_groupSuffix, '');
+                if (availableGroupsAtLevel.indexOf(groupNamePrefix) == -1) {
+                    availableGroupsAtLevel.push(groupNamePrefix)
+                }
+            }
+        }
+
+        //given the selected level, determine edges to exclude
+        if (_edges) {
+            for (var k = 0, kLen = _edges.length; k < kLen; k++) {
+                var edge = _edges[k];
+                if (parseInt(edge.level) > level) {
+                    _excludedEdgeIdList.push(edge.id);
+                }
+            }
+        }
+        _selectedGroups = selectedGroups;
+        _availableGroupsAtLevel = availableGroupsAtLevel;
+    }
+
+    function loadData(visInfo, status) {
 
         if (status === STATUS_SUCCESS) {
             _allGroups = visInfo.allGroups;
@@ -592,13 +573,14 @@ var Visualizer = (function ($) {
             _groupSuffix = visInfo.groupSuffix;
             _nodeCount = visInfo.nodeCount;
             _maxLevel = visInfo.maxLevel;
-            _nodesAllLevels = visInfo.nodes['@items'];
-            _edgesAllLevels = visInfo.edges['@items'];
+            _nodes = visInfo.nodes['@items'];
+            _edges = visInfo.edges['@items'];
         }
         _scope = visInfo.scope;
         delete _scope['@type'];
         delete _scope['@id'];
         _loadedCubeName = _selectedCubeName;
+        _loadedAppId = _nce.getSelectedTabAppId();
         _availableScopeValues = visInfo.availableScopeValues;
         _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
      }
@@ -613,7 +595,6 @@ var Visualizer = (function ($) {
     }
 
     function clusterDescendants(immediateDescendantsOnly) {
-        _network.setData(_networkData);
         for (var i = 0; i < _network.clusteredNodeIds.length; i++) {
             var id = _network.clusteredNodeIds[i];
             clusterDescendantsByNodeId(id, immediateDescendantsOnly);
@@ -751,54 +732,67 @@ var Visualizer = (function ($) {
                 },
                 PRODUCT_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 RISK_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 COVERAGE_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 LIMIT_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 PREMIUM_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 RATE_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 RATEFACTOR_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 ROLE_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 ROLEPLAYER_ENUM : {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 CONTAINER_ENUM: {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 DEDUCTIBLE_ENUM: {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 PARTY_ENUM: {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 },
                 PLACE_ENUM: {
                     shape: 'dot',
+                    scaling: {min: 5, max: 5},
                     color: 'gray'   // gray
                 }
             }
@@ -808,16 +802,18 @@ var Visualizer = (function ($) {
             _network.destroy();
             _network = null;
         }
-        _network = new vis.Network(container, _networkData, options);
+        _network = new vis.Network(container, {nodes:_nodes, edges:_edges}, options);
+        _network.nodesHandler.remove(_excludedNodeIdList);
+        _network.edgesHandler.remove(_excludedEdgeIdList);
         customizeNetworkForNce(_network);
         _network.clusteredNodeIds = [];
 
         _network.on('select', function(params) {
-            var nodeId = params.nodes[0]
+            var nodeId = params.nodes[0];
             var node = getNodeById(_nodes, nodeId );
             if (node) {
                 var cubeName = node.name;
-                var appId =_nce.getSelectedTabAppId()
+                var appId =_nce.getSelectedTabAppId();
                 var cubeLink = $('<a/>');
                 cubeLink.addClass('nc-anc');
                 cubeLink.html(cubeName);
@@ -828,27 +824,11 @@ var Visualizer = (function ($) {
                 _nodeTitle[0].innerHTML = 'Class ';
                 _nodeTitle.append(cubeLink);
 
-                var visualizerLink = $('<a/>');
-                visualizerLink.addClass('nc-anc');
-                visualizerLink.html('visualize');
-                visualizerLink.click(function (e) {
-                    e.preventDefault();
-                    _keepCurrentScope = true;
-                    _scope = node.scope;
-                    _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
-                 });
                 _nodeVisualizer[0].innerHTML = '';
-                _nodeVisualizer.append(visualizerLink);
+                _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
 
-                var traitsLink = $('<a/>');
-                traitsLink.addClass('nc-anc');
-                traitsLink.html('load traits<BR><BR>');
-                traitsLink.click(function (e) {
-                    e.preventDefault();
-                    loadTraits(node);
-                  });
                 _nodeTraits[0].innerHTML = '';
-                _nodeTraits.append(traitsLink);
+                _nodeTraits.append(createTraitsLink(node));
 
                 _nodeDesc[0].innerHTML = node.desc;
                 _layout.open('east');
@@ -864,6 +844,37 @@ var Visualizer = (function ($) {
                 }
             }
         });
+    }
+
+    function createVisualizeFromHereLink(appId, cubeName, node)
+    {
+        var visualizerLink = $('<a/>');
+        visualizerLink.addClass('nc-anc');
+        visualizerLink.html('new visual from here');
+        visualizerLink.click(function (e) {
+            e.preventDefault();
+            _keepCurrentScope = true;
+            _scope = node.scope;
+            _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
+        });
+        return visualizerLink;
+    }
+
+    function createTraitsLink(node) {
+        var traitsLink = $('<a/>');
+        traitsLink.addClass('nc-anc');
+        if (node.loadTraits) {
+            traitsLink.html('hide traits<BR><BR>');
+        }
+        else {
+            traitsLink.html('show traits<BR><BR>');
+        }
+        traitsLink.click(function (e) {
+            e.preventDefault();
+            node.loadTraits = !node.loadTraits;
+            loadTraits(node);
+        });
+        return traitsLink;
     }
 
     function replaceNode(nodes, newNode) {

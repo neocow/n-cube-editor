@@ -46,7 +46,7 @@ class VisualizerRelInfo
 		targetLevel = Long.valueOf(node.level as String)
 		targetScope = node.scope as CaseInsensitiveMap
 		scope = node.availableScope as CaseInsensitiveMap
-		loadTraits = options.loadTraits as boolean
+		loadTraits = node.loadTraits as boolean
 		group = setGroupName()
 	}
 
@@ -346,19 +346,14 @@ class VisualizerRelInfo
 		edge.toName = targetCubeEffectiveName
 		edge.fromFieldName = sourceFieldName
 		edge.level = String.valueOf(targetLevel)
-		edge.label = ''
+		if (targetCube.name.startsWith(RPM_ENUM_DOT))
+		{
+			edge.label = sourceFieldName
+		}
 		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceTraitMaps[sourceFieldName] as Map
-		String vMin = sourceFieldTraitMap[V_MIN]
-		String vMax = sourceFieldTraitMap[V_MAX]
-
-		if (vMin != null && vMax != null)
-		{
-			edge.title = "${vMin}:${vMax}"
-		}
-		else
-		{
-			edge.title = ''
-		}
+		String vMin = sourceFieldTraitMap[V_MIN] as String ?: '0'
+		String vMax = sourceFieldTraitMap[V_MAX] as String ?: '999999'
+		edge.title = "Field ${sourceFieldName} with min:max cardinality of ${vMin}:${vMax}".toString()
 		return edge
 	}
 
@@ -375,11 +370,22 @@ class VisualizerRelInfo
 		node.scope = targetScope
 		node.availableScope = scope
 		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
-		node.title = targetCubeName
+		if (targetCubeName.startsWith(RPM_CLASS_DOT))
+		{
+			node.title = "${targetCubeName} for ${getDotSuffix(targetEffectiveName)}".toString()
+		}
+		else
+		{
+			node.title = "${targetCubeName} for field ${sourceFieldName}".toString()
+		}
 		node.desc = title
 		group ?: setGroupName()
-		node.label = label
+		if (targetCubeName.startsWith(RPM_CLASS_DOT))
+		{
+			node.label = label
+		}
 		node.group = nodeGroup
+		node.loadTraits = loadTraits
 		return node
 	}
 
