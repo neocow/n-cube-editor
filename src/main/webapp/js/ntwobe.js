@@ -4067,13 +4067,17 @@ var NCubeEditor2 = (function ($) {
     }
     
     function buildColumnHtml(column, isAxisRuleType) {
-        var html, prefix;
+        var html, prefix, val;
         prefix = '';
+        val = column.value;
         if (column.isUrl) {
             prefix += 'url|';
         }
         if (column.isCached) {
             prefix += 'cache|';
+        }
+        if (val !== undefined && val !== null) {
+            val = val.replace(/"/g, '&quot;');
         }
 
         html = '<div class="row"><div class="input-group">';
@@ -4081,7 +4085,7 @@ var NCubeEditor2 = (function ($) {
         if (isAxisRuleType) {
             html += '<input class="form-control" type="text" data-type="name" value="' + (column.metaProps ? column.metaProps.name : 'Condition') + '" />';
         }
-        html += '<input class="form-control" type="text" data-type="cond" value="' + prefix + column.value + '" />';
+        html += '<input class="form-control" type="text" data-type="cond" value="' + prefix + val + '" />';
         html += '</div></div>';
 
         return html;
