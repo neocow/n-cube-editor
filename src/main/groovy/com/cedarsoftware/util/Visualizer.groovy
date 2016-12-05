@@ -129,10 +129,10 @@ class Visualizer
 	{
 		String targetCubeName = relInfo.targetCube.name
 
-		boolean loadFieldsAndTraits = canLoadTargetAsRpmClass(relInfo)
-		if (loadFieldsAndTraits)
+		boolean hasFields = canLoadTargetAsRpmClass(relInfo)
+		if (hasFields)
 		{
-			loadFieldsAndTraits = getTraitMaps(visInfo, relInfo)
+			hasFields = getTraitMaps(visInfo, relInfo)
 		}
 
 		if (relInfo.sourceCube)
@@ -148,7 +148,7 @@ class Visualizer
 		visInfo.nodes << relInfo.createNode()
 		visInfo.availableGroupsAllLevels << relInfo.group
 
-		if (loadFieldsAndTraits)
+		if (hasFields)
 		{
 			relInfo.targetTraitMaps.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
@@ -200,9 +200,9 @@ class Visualizer
 			return
 		}
 
-		boolean loadFieldsAndTraits = getTraitMaps(visInfo, relInfo)
+		boolean hasFields = getTraitMaps(visInfo, relInfo)
 
-		if (loadFieldsAndTraits)
+		if (hasFields)
 		{
 			relInfo.targetTraitMaps.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
@@ -297,10 +297,10 @@ class Visualizer
 			String sourceFieldName = relInfo.sourceFieldName
 			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
 			{
-				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]] as Map
+				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + relInfo.sourceFieldName]] as Map
 				String msg = getLoadTargetAsRpmClassMessage(relInfo, type)
 				relInfo.notes << msg
-				relInfo.loadFieldsAndTraits = false
+				relInfo.hasFields = false
 				return false
 			}
 		}
@@ -404,11 +404,11 @@ class Visualizer
 		try
 		{
             relInfo.getTraitMaps(helper, appId, visInfo)
-            return true
+			relInfo.hasFields = true
 		}
 		catch (Exception e)
 		{
-			relInfo.loadFieldsAndTraits = false
+			relInfo.hasFields = false
 			Throwable t = getDeepestException(e)
 			if (t instanceof InvalidCoordinateException)
 			{
@@ -422,8 +422,8 @@ class Visualizer
 			{
 				handleException(t, relInfo)
 			}
-			return false
 		}
+		return relInfo.hasFields
 	}
 
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
@@ -434,10 +434,11 @@ class Visualizer
 
 		if (cubeName && axisName)
 		{
-			String msg = getCoordinateNotFoundMessage(visInfo, relInfo, axisName, value, cubeName)
+			String effectiveName = relInfo.getEffectiveNameByCubeName()
+			String msg = getCoordinateNotFoundMessage(visInfo, relInfo, axisName, value, effectiveName, cubeName)
 			relInfo.notes << msg
 			messages << msg
-			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): SCOPE_VALUE_NOT_FOUND]] as Map
+			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): SCOPE_VALUE_NOT_FOUND + effectiveName]] as Map
 		}
 		else
 		{
@@ -458,8 +459,9 @@ class Visualizer
 				expandedScope[key] = DEFAULT_SCOPE_VALUE
 			}
 			visInfo.scope = expandedScope
-			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE]] as Map
-			String msg = getInvalidCoordinateExceptionMessage(visInfo, relInfo, missingScope, cubeName)
+			String effectiveName = relInfo.getEffectiveNameByCubeName()
+			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE + effectiveName]] as Map
+			String msg = getInvalidCoordinateExceptionMessage(visInfo, relInfo, missingScope, effectiveName, cubeName)
 			relInfo.notes << msg
 			messages << msg
 		}
@@ -479,10 +481,11 @@ class Visualizer
 	private void handleException(Throwable e, VisualizerRelInfo relInfo)
 	{
 		Throwable t = getDeepestException(e)
-		String msg = getExceptionMessage(relInfo, e, t)
+		String effectiveName = relInfo.getEffectiveNameByCubeName()
+		String msg = getExceptionMessage(relInfo, effectiveName, e, t)
 		relInfo.notes << msg
 		messages << msg
-		relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD]] as Map
+		relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + effectiveName]] as Map
 	}
 
 	private static Throwable getDeepestException(Throwable e)
@@ -523,28 +526,29 @@ ${messageSuffixType} ${messageSuffix} \
 ${BREAK}${messageScopeValues}"""
 	}
 
-	private static String getExceptionMessage(VisualizerRelInfo relInfo, Throwable e, Throwable t)
+	private static String getExceptionMessage(VisualizerRelInfo relInfo, String effectiveName, Throwable e, Throwable t)
 	{
 		"""\
-An exception was thrown while loading fields and traits for ${relInfo.targetCube.name}${relInfo.sourceMessage}. \
+An exception was thrown while loading fields and traits for ${relInfo.targetCube.name}${relInfo.sourceMessage} for ${effectiveName}. \
 ${DOUBLE_BREAK}<b>Message:</b> ${DOUBLE_BREAK}${e.message}${DOUBLE_BREAK}<b>Root cause: </b>\
 ${DOUBLE_BREAK}${t.toString()}${DOUBLE_BREAK}<b>Stack trace: </b>${DOUBLE_BREAK}${t.stackTrace.toString()}"""
 	}
 
-	private static String getCoordinateNotFoundMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String key, Object value, String cubeName)
+	private static String getCoordinateNotFoundMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String key, Object value, String effectiveName, String cubeName)
 	{
 		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, key)
 		"""\
 The scope value ${value} for scope key ${key} cannot be found on axis ${key} in \
-cube ${cubeName}${relInfo.sourceMessage}.${DOUBLE_BREAK} Please supply a different value for ${key}.${BREAK}\
+cube ${cubeName}${relInfo.sourceMessage} for ${effectiveName}.${DOUBLE_BREAK} Please supply a different value for ${key}.${BREAK}\
 ${messageScopeValues}"""
 	}
 
-	private static String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set<String> missingScope, String cubeName)
+	private static String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set<String> missingScope, String effectiveName, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
+
 		message.append("""\
-Additional scope is required to load ${cubeName}${relInfo.sourceMessage}.${DOUBLE_BREAK} Please add scope \
+Additional scope is required to load ${cubeName}${relInfo.sourceMessage} for ${effectiveName}.${DOUBLE_BREAK} Please add scope \
 value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.${BREAK}""")
 
 		missingScope.each{ String key ->

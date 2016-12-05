@@ -47,12 +47,6 @@
                          </div>
                     </div>
 
-                    <div id="reset-div" class="inline-block">
-                        <div class="input-group input-group-sm" title="Reset scope and other graph inputs to defaults">
-                             <button id="reset" class="btn btn-primary btn-xs">Reset</button>
-                        </div>
-                    </div>
-
                 </div>
 
                 <div id="visualizer-info">
@@ -68,19 +62,17 @@
                         </div>
                     </div>
 
-                    <div id="counts-div" class="inline-block">
-                        <span id="counts" class="badge">Loading counts...</span>
+                    <div id="levelCounts-div" class="inline-block">
+                        <span id="levelCounts" class="badge">Loading node counts at current level...</span>
+                    </div>
+
+                    <div id="totalCounts-div" class="inline-block">
+                        <span id="totalCounts" class="badge">Loading total node counts...</span>
                     </div>
 
                     <div id="hierarchical-div" class="inline-block">
                         <div class="input-group input-group-sm" title="Show a hierarchical view of the graph">
                             <input id="hierarchical" type="checkbox"> Hierarchical
-                        </div>
-                    </div>
-
-                    <div id="loadTraits-div" class="inline-block">
-                        <div class="input-group input-group-sm" title="Include traits for all nodes. A faster alternative is to load traits for select nodes (click a node and then click 'Show Traits' in right-hand info pane).">
-                            <input id="loadTraits" type="checkbox"> Include traits for all nodes (slower, requires re-load)
                         </div>
                     </div>
 
@@ -94,13 +86,90 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="refreshGroups-div" class="inline-block">
-                            <div class="input-group input-group-sm" title="Refresh view of graph for included/excluded groups">
-                                <button id="refreshGroups" class="btn btn-primary btn-xs">Refresh</button>
-                            </div>
+                    </div>
+
+                <!--  Network physics parameters
+
+                <div id="network-parms">
+
+                    <div class="inline-block">
+                        <label>Network Physics: </label>
+                    </div>
+
+                    <div id="physics-div" class="inline-block">
+                        <div class="input-group input-group-sm" title="Show a hierarchical view of the graph">
+                            <input id="physicsEnabled" type="checkbox"> physics
                         </div>
                     </div>
 
+                    <div id="stabilization-div" class="inline-block">
+                        <div class="input-group input-group-sm" title="Show a hierarchical view of the graph">
+                            <input id="stabilizationEnabled" type="checkbox"> stabilization
+                        </div>
+                    </div>
+
+                    <div class="inline-block">
+                        updateInterval:
+                    </div>
+                    <div id="updateInterval-div" class="inline-block">
+                        <div class="input-group input-group-sm">
+                            <input id="updateInterval" type="text" size="8" title="default value is 50">
+                        </div>
+                    </div>
+
+                    <div class="inline-block">
+                       iterations:
+                    </div>
+                    <div id="iterations-div" class="inline-block">
+                        <div class="input-group input-group-sm">
+                            <input id="iterations" type="text" size="8" title="default value is 1000">
+                        </div>
+                    </div>
+
+                    <div class="inline-block">
+                       damping:
+                    </div>
+                    <div id="damping-div" class="inline-block">
+                        <div class="input-group input-group-sm">
+                            <input id="damping" type="text" size="8" title="default value is 0.09">
+                        </div>
+                    </div>
+
+                    <div class="inline-block">
+                       minVelocity:
+                    </div>
+                    <div id="minVelocity-div" class="inline-block">
+                        <div class="input-group input-group-sm">
+                            <input id="minVelocity" type="text" size="8" title="default value is 0.1">
+                        </div>
+                    </div>
+
+                    <div class="inline-block">
+                       maxVelocity:
+                    </div>
+                    <div id="maxVelocity-div" class="inline-block">
+                        <div class="input-group input-group-sm">
+                            <input id="maxVelocity" type="text"  size="8"  title="default value is 50">
+                        </div>
+                    </div>
+
+                    <div class="inline-block">
+                       gravitationalConstant:
+                    </div>
+                    <div id="gravitationalConstant-div" class="inline-block">
+                        <div class="input-group input-group-sm">
+                            <input id="gravitationalConstant" type="text" size="8" title="default value is -2000">
+                        </div>
+                    </div>
+
+                    <div id="refresh-div" class="inline-block">
+                        <div class="input-group input-group-sm" title="Refresh view of graph for included/excluded groups">
+                            <button id="refresh" class="btn btn-primary btn-xs">Refresh</button>
+                        </div>
+                    </div>
+
+                </div>
+                -->
                 </div>
 
                 <div id="visualizer-network">

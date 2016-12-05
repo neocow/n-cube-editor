@@ -67,9 +67,9 @@ public final class VisualizerConstants
 	public static final double NODE_LABEL_LINE_LENGTH_MULTIPLIER = 1.2d
 
 	public static final Set<String> MANDATORY_RPM_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
-	public static final String MISSING_SCOPE = 'missing scope'
-	public static final String UNABLE_TO_LOAD = 'unable to load'
-	public static final String SCOPE_VALUE_NOT_FOUND = 'scope value not found'
+	public static final String MISSING_SCOPE = 'missing scope for '
+	public static final String UNABLE_TO_LOAD = 'unable to load '
+	public static final String SCOPE_VALUE_NOT_FOUND = 'scope value not found for '
 
 	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
 	public static final String STATUS_SUCCESS = 'success'
