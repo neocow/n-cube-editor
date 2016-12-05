@@ -15,7 +15,7 @@ onmessage = function(e) {
     var req = new XMLHttpRequest();
 
     req.open('POST', getHeartBeatUrl(), false);
-    req.send(JSON.stringify([obj]));
+    req.send(encodeURI(JSON.stringify([obj])));     // tomcat 8.0.38+ implementeds stricter RFC for valid URL characters.
 
     if (req.response) {
         result = JSON.parse(req.response);

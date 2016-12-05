@@ -1121,7 +1121,7 @@ var NCE = (function ($) {
                 linkVal = null;
                 linkVal = menuOptions[linkText];
 
-                html += '<li><a href="' + linkVal.html + '">' + linkText + '</a>';
+                html += '<li><a href="' + encodeURI(linkVal.html) + '">' + linkText + '</a>';
                 if (linkVal.hasOwnProperty('divider')) {
                     html += '<div class="divider"/>';
                 }
@@ -1160,11 +1160,11 @@ var NCE = (function ($) {
                 }
                 iframeHtml = value['html'];
                 if (!iframeHtml.startsWith('http:') && !iframeHtml.startsWith('https:')) {
-                    iframeHtml += '?appId=' + JSON.stringify(appId).replace(/\"/g, '&quot;');
+                    iframeHtml += '?appId=' + JSON.stringify(appId);
                 }
 
                 html += '<div class="tab-pane" id="' + pageId + '" ' + 'style="overflow:hidden;height:calc(100% - ' + tabHeight + 'px);">';
-                html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + iframeHtml + '">';
+                html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + encodeURI(iframeHtml) + '">';
                 html += '</iframe></div>';
             }
         }
