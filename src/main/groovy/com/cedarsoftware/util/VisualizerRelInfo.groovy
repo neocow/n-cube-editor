@@ -16,7 +16,7 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerRelInfo
 {
-	boolean loadFieldsAndTraits = true
+	boolean hasFields = false
 	boolean loadTraits = false
 	Set<String> notes = []
 	Map<String, Object> scope
@@ -47,6 +47,7 @@ class VisualizerRelInfo
 		targetScope = node.scope as CaseInsensitiveMap
 		scope = node.availableScope as CaseInsensitiveMap
 		loadTraits = node.loadTraits as boolean
+		hasFields = node.hasFields as boolean
 		group = setGroupName()
 	}
 
@@ -95,38 +96,46 @@ class VisualizerRelInfo
 
 	String getTitle()
 	{
-		String scopedName = targetScopedName
+		boolean isScopedClass = targetScopedName
+		String effectiveName = getEffectiveNameByCubeName()
 		StringBuilder sb = new StringBuilder()
+		String notesLabel = "<b>Note: </b>"
 
 		//Scoped Name
-		if (scopedName)
+		if (isScopedClass)
 		{
-			sb.append("<b>scoped name = </b>${scopedName}${DOUBLE_BREAK}")
+			sb.append("<b>Scoped name: </b>${effectiveName}${DOUBLE_BREAK}")
 		}
 
-		//Level
-		sb.append("<b>level = </b>${String.valueOf(targetLevel)}${DOUBLE_BREAK}")
+		if (!hasFields)
+		{
+			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
+			notesLabel = "<b>Reason: </b>"
+		}
 
 		//Notes
 		if (notes)
 		{
-			sb.append("<b>note = </b>")
+			sb.append(notesLabel)
 			notes.each { String note ->
 				sb.append("${note} ")
 			}
 			sb.append("${DOUBLE_BREAK}")
 		}
 
+		//Level
+		sb.append("<b>Level: </b>${String.valueOf(targetLevel)}${DOUBLE_BREAK}")
+
 		//Scope
-		if (loadFieldsAndTraits)
+		if (hasFields)
 		{
 			if (loadTraits)
 			{
-				sb.append("<b>scope used loading all traits</b>")
+				sb.append("<b>Utilized scope</b>")
 			}
 			else
 			{
-				sb.append("<b>scope used loading minimal traits</b>")
+				sb.append("<b>Utilized scope for minimum traits</b>")
 
 			}
 			sb.append("<pre><ul>")
@@ -136,7 +145,7 @@ class VisualizerRelInfo
 			sb.append("</ul></pre>${BREAK}")
 		}
 
-		sb.append("<b>available scope</b>")
+		sb.append("<b>Available scope</b>")
 		sb.append("<pre><ul>")
 		scope.each { String key, Object value ->
 			sb.append("<li>${key}: ${value}</li>")
@@ -144,7 +153,7 @@ class VisualizerRelInfo
 		sb.append("</ul></pre>${BREAK}")
 
 		//Fields
-		if (loadFieldsAndTraits)
+		if (hasFields)
 		{
 			if (loadTraits)
 			{
@@ -159,11 +168,11 @@ class VisualizerRelInfo
 	{
 		if (loadTraits)
 		{
-			sb.append("<b>fields and traits</b>")
+			sb.append("<b>Fields and traits</b>")
 	}
 		else
 		{
-			sb.append("<b>fields</b>")
+			sb.append("<b>Fields</b>")
 		}
 		sb.append("<pre><ul>")
 		targetTraitMaps.each { String fieldName, v ->
@@ -198,7 +207,7 @@ class VisualizerRelInfo
 
 	private void addClassTraits(StringBuilder sb)
 	{
-		sb.append("<b>class traits</b>")
+		sb.append("<b>Class traits</b>")
 		addTraits(sb, CLASS_TRAITS)
 		sb.append("${BREAK}")
 	}
@@ -386,7 +395,14 @@ class VisualizerRelInfo
 		}
 		node.group = nodeGroup
 		node.loadTraits = loadTraits
+		node.hasFields = hasFields
 		return node
+	}
+
+	public String getEffectiveNameByCubeName()
+	{
+		String scopeKey = getDotSuffix(targetCube.name)
+		return scope[scopeKey] ?: targetEffectiveName
 	}
 
 }

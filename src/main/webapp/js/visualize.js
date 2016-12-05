@@ -24,13 +24,11 @@ var Visualizer = (function ($) {
     var _nce = null;
     var _loadedCubeName = null;
     var _loadedAppId = null;
-    var _excludedNodeIdList = null;
-    var _excludedEdgeIdList = null;
-    var _nodes = null;
-    var _edges = null;
+    var _nodes = [];
+    var _edges = [];
     var _scope = null;
+    var _scopeChange = false;
     var _keepCurrentScope = false;
-    var _reset = false;
     var _availableScopeKeys = [];
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
@@ -38,15 +36,16 @@ var Visualizer = (function ($) {
     var _availableScopeValues = {};
     var _allGroups = null;
     var _maxLevel = null;
-    var _nodeCount = null;
     var _groupSuffix = null;
     var _selectedCubeName = null;
     var _hierarchical = false;
     var _loadTraits = false;
     var _selectedLevel = null;
+    var _countNodesAtLevel = null;
     var _visualizerInfo = null;
     var _visualizerNetwork = null;
     var _visualizerContent = null;
+    var _networkParms = null;
     var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
     var _nodeTitle = null;
@@ -61,7 +60,16 @@ var Visualizer = (function ($) {
     var _scopeBuilderListenersAdded = false;
     var STATUS_SUCCESS = 'success';
     var STATUS_MISSING_START_SCOPE = 'missingStartScope';
-  
+    
+    var _physicsEnabled = true;
+    var _stabilizationEnabled = true;
+    var _updateInterval = "50";
+    var _iterations = 1000;
+    var _damping = 0.09;
+    var _minVelocity = 0.1;
+    var _maxVelocity = 50;
+    var _gravitationalConstant = -30000;
+    
     var init = function (info) {
         if (!_nce) {
             _nce = info;
@@ -87,6 +95,8 @@ var Visualizer = (function ($) {
             _visualizerContent = $('#visualizer-content');
             _visualizerHtmlError = $('#visualizer-error');
             _visualizerInfo = $('#visualizer-info');
+            //Network physics parameters. Commented out for now in case we want to do additional tweaking.
+            //_networkParms = $('#network-parms');
             _visualizerNetwork = $('#visualizer-network');
             _nodeTitle = $('#nodeTitle');
             _nodeTraits = $('#nodeTraits');
@@ -103,23 +113,31 @@ var Visualizer = (function ($) {
             });
 
              $('#selectedLevel-list').change(function () {
-                _selectedLevel = $('#selectedLevel-list').val()
+                _selectedLevel = Number($('#selectedLevel-list').val())
+                saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
                 reload();
             });
 
             $('#hierarchical').change(function () {
-                _hierarchical = this.checked;
-                draw();
+                //Hierarchical mode is disabled due to what appears to be a bug in vis.js or because the
+                //visualizer.js code is missing something. Tis problem started when convering to use
+                //visjs DataSets for network data.
+                //The problem is that when visjs creates the network.body nodes from the network.body.data
+                //nodes, it doesn't set the level on the network.body nodes. This causes an exception
+                //if hierarchical mode is selected since that mode requires either all or no nodes to
+                //have a defined level. Attempted short-term fix in setLevelOnNetworkNodes() method, but it's not enough.
+                //TODO: Keep investigating, submit question and possibly a bug fix to visjs.
+                $('#hierarchical').prop('checked', false);
+                _nce.showNote('Hierarchical mode is currently not available');
+                //_hierarchical = this.checked;
+                //saveToLocalStorage(_hierarchical, HIERARCHICAL);
+                //updateNetworkOptions();
             });
 
-            $('#loadTraits').change(function () {
-                _loadTraits = this.checked;
-             });
-            
-
             _scopeInput.change(function () {
+                _scopeChange = true;
                 _scope = buildScopeFromText(this.value);
-                saveScope();
+                saveToLocalStorage(_scope, SCOPE_MAP);
                 updateScopeBuilderScope();
             });
 
@@ -127,14 +145,33 @@ var Visualizer = (function ($) {
                 load();
             });
 
-            $('#reset').click(function () {
-                _reset = true;
-                load();
-            });
+            /*Network physics parameters. Commented out for now in case we want to do additional
+              tweaking. 
+            _networkParms.show();
 
-            $('#refreshGroups').click(function () {
+            //Network physics fields
+            $("#physicsEnabled").prop('checked', _physicsEnabled);
+            $("#stabilizationEnabled").prop('checked', _stabilizationEnabled);
+            $("#updateInterval").val(_updateInterval);
+            $("#iterations").val(_iterations);
+            $("#damping").val(_damping);
+            $("#minVelocity").val(_minVelocity);
+            $("#maxVelocity").val(_maxVelocity);
+            $("#gravitationalConstant").val(_gravitationalConstant);
+
+            //Refresh for network physics fields
+            $('#refresh').click(function ()
+            {
+                _physicsEnabled = document.getElementById('physicsEnabled').checked;
+                _stabilizationEnabled = document.getElementById('stabilizationEnabled').checked;
+                _updateInterval = document.getElementById('updateInterval').value;
+                _iterations = document.getElementById('iterations').value;
+                _damping = document.getElementById('damping').value;
+                _minVelocity = document.getElementById('minVelocity').value;
+                _maxVelocity = document.getElementById('maxVelocity').value;
+                _gravitationalConstant = document.getElementById('gravitationalConstant').value;
                 reload();
-            });
+            });*/
          }
     };
 
@@ -176,14 +213,14 @@ var Visualizer = (function ($) {
     }
 
     var reload = function () {
-        setGroupsAndExcluded();
-        draw();
+        updateNetworkOptions();
+        updateNetworkData();
         loadSelectedLevelListView();
         loadAvailableGroupsView();
         loadCountsView();
         _visualizerInfo.show();
         _visualizerNetwork.show();
-    };
+     };
 
     var loadTraits = function(node)
     {
@@ -212,12 +249,12 @@ var Visualizer = (function ($) {
             _scope = visInfo.scope;
             delete _scope['@type'];
             delete _scope['@id'];
-            saveScope();
+            saveAllToLocalStorage();
             updateScopeBuilderScope();
             _availableScopeValues = visInfo.availableScopeValues;
             _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
-            replaceNode(_nodes, node)
-            _nodeDesc[0].innerHTML = node.desc;
+            replaceNode(_nodes, node);
+             _nodeDesc[0].innerHTML = node.desc;
             _nodeTraits = $('#nodeTraits');
             _nodeTraits[0].innerHTML = '';
             _nodeTraits.append(createTraitsLink(node));
@@ -238,6 +275,7 @@ var Visualizer = (function ($) {
         _nce.clearError();
 
         if (!_nce.getSelectedCubeName()) {
+            destroyNetwork();
             _visualizerContent.hide();
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + 'No cube selected.');
             return;
@@ -252,14 +290,12 @@ var Visualizer = (function ($) {
         {
             _keepCurrentScope = false;
         }
-        else if (_reset)
-        {
-            _scope = null;
-            _reset = false;
-        }
         else{
-            _scope = getSavedScope();
+            _scope = getFromLocalStorage(SCOPE_MAP, null);
         }
+        _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
+        _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
+        _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
 
         if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))
         {
@@ -267,13 +303,14 @@ var Visualizer = (function ($) {
             _availableScopeValues = null;
         }
 
-        if (_reset || _selectedCubeName !== _loadedCubeName)
+        if (_selectedCubeName !== _loadedCubeName)
         {
-            _selectedLevel = null;
-            _selectedGroups = null;
-            _hierarchical = false;
-            _loadTraits = false;
-            _network = null;
+            destroyNetwork();
+        }
+        else if (_scopeChange)
+        {
+            _scopeChange = false;
+            destroyNetwork();
         }
   
         var options =
@@ -291,6 +328,7 @@ var Visualizer = (function ($) {
         var result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
         if (result.status === false) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
+            destroyNetwork();
             _visualizerContent.hide();
             _visualizerInfo.hide();
             _visualizerNetwork.hide();
@@ -304,14 +342,12 @@ var Visualizer = (function ($) {
                 _nce.showNote(json.message);
             }
             loadData(json.visInfo, json.status);
-            setGroupsAndExcluded();
-            draw();
+            initNetwork();
             loadSelectedLevelListView();
-            saveScope();
+            saveAllToLocalStorage();
             updateScopeBuilderScope();
             loadScopeView();
             loadHierarchicalView();
-            loadLoadTraitsView();
             loadAvailableGroupsView();
             loadCountsView();
             _visualizerContent.show();
@@ -321,7 +357,8 @@ var Visualizer = (function ($) {
         else if (json.status === STATUS_MISSING_START_SCOPE) {
             _nce.showNote(json.message);
             loadData(json.visInfo, json.status);
-            saveScope();
+            initNetwork();
+            saveAllToLocalStorage();
             updateScopeBuilderScope();
             loadScopeView();
             _visualizerContent.show();
@@ -329,6 +366,7 @@ var Visualizer = (function ($) {
             _visualizerNetwork.hide();
         }
         else {
+            destroyNetwork();
             _visualizerContent.hide();
              var message = json.message;
             if (json.stackTrace != null) {
@@ -365,25 +403,24 @@ var Visualizer = (function ($) {
         $('#hierarchical').prop('checked', _hierarchical);
     }
 
-    function loadLoadTraitsView() {
-        $('#loadTraits').prop('checked', _loadTraits);
-    }
-
     function loadScopeView() {
         _scopeInput.val(getScopeString());
     }
 
     function loadAvailableGroupsView()
     {
-        var div = $('#availableGroupsAllLevels');
-        div.empty();
+        var divAllGroups = $('#availableGroupsAllLevels');
+        divAllGroups.empty();
 
         _availableGroupsAllLevels.sort();
         for (var j = 0; j < _availableGroupsAllLevels.length; j++)
         {
             var groupName = _availableGroupsAllLevels[j];
             var id = groupName + _groupSuffix;
-            var input = $('<input>').attr({type: 'checkbox', id: id});
+            var available = groupCurrentlyAvailable(id);
+            var labelGroupName = _allGroups[groupName];
+            var label = available ? '<b>' + labelGroupName + '</b>' : labelGroupName;
+            var title = available ? "Show/hide " + labelGroupName + " in the graph" : "Increase level to enable show/hide of " + labelGroupName + " in the graph";
 
             var selected = false;
             for (var k = 0; k < _selectedGroups.length; k++)
@@ -394,14 +431,18 @@ var Visualizer = (function ($) {
                     break;
                 }
             }
-            input.prop('checked', selected);
 
+            var div = $('<div>').attr({title: title, class:'inline-block'});
+            var input = $('<input>').attr({type: 'checkbox', id: id});
+            input.prop('disabled', !available);
+            input.prop('checked', selected);
             input.change(function () {
                 selectedGroupChangeEvent(this);
             });
 
             div.append(input);
-            div.append(NBSP + _allGroups[groupName] + NBSP + NBSP);
+            div.append(NBSP + label + NBSP + NBSP);
+            divAllGroups.append(div);
         }
     }
 
@@ -438,27 +479,20 @@ var Visualizer = (function ($) {
                 }
             }
         }
-
-        groupCurrentlyAvailable(group)
+        saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+        reload();
     }
 
-    function groupCurrentlyAvailable(group){
-        var currentlyIncluded = false;
-
+    function groupCurrentlyAvailable(groupId)
+    {
         for (var l = 0; l < _availableGroupsAtLevel.length; l++)
         {
-            if (groupIdsEqual(group.id, _availableGroupsAtLevel[l]))
+            if (groupIdsEqual(groupId, _availableGroupsAtLevel[l]))
             {
-                currentlyIncluded = true;
-                break;
+                return true;
             }
         }
-
-        if (group.checked && !currentlyIncluded) {
-            var groupIdPrefix = group.id.split(_groupSuffix)[0];
-            var levelLabel = _selectedLevel === 1 ? 'level' : 'levels';
-            _nce.showNote('The group ' + groupIdPrefix + ' is not included in the ' + _selectedLevel + ' ' + levelLabel + ' currently displayed. Increase the levels to include the group.', 'Note', 3000);
-        }
+        return false
     }
 
     function groupIdsEqual(groupId1, groupId2)
@@ -470,9 +504,15 @@ var Visualizer = (function ($) {
 
     function loadCountsView()
     {
+        var totalNodeCount = _nodes.length;
         var maxLevelLabel = _maxLevel === 1 ? 'level' : 'levels';
-        var nodeCountLabel = _nodeCount === 1 ? 'node' : 'nodes';
-        $('#counts')[0].textContent = _nodeCount + ' ' + nodeCountLabel + ' over ' +  _maxLevel + ' ' + maxLevelLabel;
+        var nodeCountLabel = totalNodeCount === 1 ? 'node' : 'nodes';
+
+        var nodesDisplayingAtLevelCount = _network.body.data.nodes.length;
+        var nodesAtLevelLabel = nodesDisplayingAtLevelCount === 1 ? 'node' : 'nodes';
+
+        $('#levelCounts')[0].textContent = nodesDisplayingAtLevelCount  + ' ' + nodesAtLevelLabel + ' of ' + _countNodesAtLevel + ' displaying at current level';
+        $('#totalCounts')[0].textContent = totalNodeCount + ' ' + nodeCountLabel + ' total over ' +  _maxLevel + ' ' + maxLevelLabel ;
     }
 
     function loadSelectedLevelListView()
@@ -496,40 +536,44 @@ var Visualizer = (function ($) {
     
     function isSelectedGroup(node)
     {
-        for (var j = 0, jLen = _selectedGroups.length; j < jLen; j++)
-        {
-            if (groupIdsEqual(node.group, _selectedGroups[j])){
-                return true;
+        if (_selectedGroups) {
+            for (var j = 0, jLen = _selectedGroups.length; j < jLen; j++) {
+                if (groupIdsEqual(node.group, _selectedGroups[j])) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    function setGroupsAndExcluded()
+    function updateNetworkData()
     {
-        _excludedNodeIdList = [];
-        _excludedEdgeIdList = [];
+        updateNetworkDataNodes();
+        updateNetworkDataEdges();
+        _network.clusteredNodeIds = [];
+    }
+
+
+    function updateNetworkDataNodes()
+    {
+        var networkDataNodes =  _network.body.data.nodes;
+        var nodeIdsToRemove = [];
+        var nodesToAddBack = [];
+        var level = _selectedLevel;
         var selectedGroups = [];
         var availableGroupsAtLevel = [];
-        var   level = parseInt(_selectedLevel);
-        
-        //given the selected level, determine nodes to exclude, selected groups and available groups 
+        _countNodesAtLevel = 0;
+
+        //given the selected level, determine nodes to exclude, nodes to add back, selected groups and available groups
         for (var i = 0, iLen = _nodes.length; i < iLen; i++)
         {
             var node  = _nodes[i];
-
-            if (node.id === '1')
-            {
-                node.shapeProperties = {borderDashes:  [15,5]};
-                node.borderWidth = 3;
-                node.scaling = {min: 70, max: 70, label: {enabled: true}};
-            }
 
             var selectedGroup = isSelectedGroup(node);
 
             if (parseInt(node.level) > level)
             {
-                _excludedNodeIdList.push(node.id);
+                nodeIdsToRemove.push(node.id);
             }
             else {
                 if (selectedGroup) {
@@ -538,32 +582,85 @@ var Visualizer = (function ($) {
                     if (_selectedGroups.indexOf(groupNamePrefix) > -1 && selectedGroups.indexOf(groupNamePrefix) === -1) {
                         selectedGroups.push(groupNamePrefix);
                     }
+                    if (!networkDataNodes || !networkDataNodes.get(node.id)){
+                        nodesToAddBack.push(node);
+                    }
                 }
                 else{
-                    _excludedNodeIdList.push(node.id);
+                    nodeIdsToRemove.push(node.id);
                 }
                 //collect available groups at level
                 var groupNamePrefix = node.group.replace(_groupSuffix, '');
-                if (availableGroupsAtLevel.indexOf(groupNamePrefix) == -1) {
+                if (availableGroupsAtLevel.indexOf(groupNamePrefix) == -1)
+                {
                     availableGroupsAtLevel.push(groupNamePrefix)
                 }
+                _countNodesAtLevel++;
             }
         }
-
-        //given the selected level, determine edges to exclude
-        if (_edges) {
-            for (var k = 0, kLen = _edges.length; k < kLen; k++) {
-                var edge = _edges[k];
-                if (parseInt(edge.level) > level) {
-                    _excludedEdgeIdList.push(edge.id);
-                }
-            }
-        }
+        networkDataNodes.remove(nodeIdsToRemove);
+        networkDataNodes.add(nodesToAddBack);
         _selectedGroups = selectedGroups;
         _availableGroupsAtLevel = availableGroupsAtLevel;
     }
 
-    function loadData(visInfo, status) {
+    function updateNetworkDataEdges()
+    {
+        var networkDataEdges =  _network.body.data.edges;
+        var edgeIdsToRemove = [];
+        var edgesToAddBack = [];
+        var level = _selectedLevel;
+
+        //given the selected level, determine edges to exclude and edges to add back
+        if (_edges) {
+            for (var k = 0, kLen = _edges.length; k < kLen; k++) {
+                var edge = _edges[k];
+
+                if (parseInt(edge.level) > level) {
+                    edgeIdsToRemove.push(edge.id);
+                }
+                else if (!networkDataEdges || !networkDataEdges.get(edge.id)){
+                    {
+                        edgesToAddBack.push(edge);
+                    }
+                }
+            }
+        }
+        networkDataEdges.remove(edgeIdsToRemove);
+        networkDataEdges.add(edgesToAddBack);
+    }
+
+    /*
+     //TODO: Attempted short-term fix for issue with hierarchical mode, but it's not enough.
+     //TODO: Keep investigating, submit question and possibly a bug fix to visjs.
+    function setLevelOnNetworkNodes()
+    {
+        var level, node, supportNode, edge, id;
+        var networkNodes =  _network.body.nodes;
+        var networkDataNodes = _network.body.data.nodes;
+        var networkEdges =  _network.body.edges;
+        var networkDataEdges = _network.body.data.edges;
+
+
+        for (var i = 1, iLen = networkDataNodes.length; i < iLen; i++) {
+            node = networkNodes[i];
+            supportNode = networkNodes["edgeId:" + i];
+            id = node.parentEdgeId ? node.parentEdgeId : node.id;
+            level = networkDataNodes.get(id).level;
+            node.level = level;
+            supportNode.level = level;
+        }
+
+        for (var i = 1, iLen = networkDataEdges.length; i < iLen; i++) {
+            edge = networkEdges[i];
+            level = networkDataEdges.get(edge.id).level;
+            edge.level = level;
+        }
+    }*/
+
+    function loadData(visInfo, status)
+    {
+        var nodes, edges;
 
         if (status === STATUS_SUCCESS) {
             _allGroups = visInfo.allGroups;
@@ -571,10 +668,11 @@ var Visualizer = (function ($) {
             _selectedGroups = visInfo.selectedGroups['@items'];
             _selectedLevel = visInfo.selectedLevel;
             _groupSuffix = visInfo.groupSuffix;
-            _nodeCount = visInfo.nodeCount;
             _maxLevel = visInfo.maxLevel;
-            _nodes = visInfo.nodes['@items'];
-            _edges = visInfo.edges['@items'];
+            nodes = visInfo.nodes['@items'];
+            edges = visInfo.edges['@items']
+            _nodes =  nodes ? nodes : [];
+            _edges = edges ? edges : [];
         }
         _scope = visInfo.scope;
         delete _scope['@type'];
@@ -633,224 +731,100 @@ var Visualizer = (function ($) {
         _network.openCluster(clusterNodeId)
     }
 
-    function draw()
+    function destroyNetwork()
     {
-        var container = document.getElementById('network');
-        var options = {
-            height: getVisNetworkHeight(),
-            interaction: {
-                navigationButtons: true,
-                keyboard: {
-                    enabled: false,
-                    speed: {x: 5, y: 5, zoom: 0.02}
-                },
-                zoomView: true
-            },
-            nodes: {
-                value: 24,
-                scaling: {
-                    min: 24,
-                    max: 24,
-                    label: {
-                        enabled: false
-                    }
-                }
-            },
-            edges: {
-                arrows: 'to',
-                color: 'gray',
-                smooth: true,
-                hoverWidth: 3
-            },
-            physics: {
-                barnesHut: {gravitationalConstant: -30000},
-                stabilization: {iterations: 2500}
-            },
-            layout: {
-                hierarchical: _hierarchical,
-                improvedLayout : true,
-                randomSeed:2
-            },
-            groups: { 
-                PRODUCT: {
-                    shape: 'box',
-                    color: '#DAE4FA'
-                },
-                RISK: {
-                    shape: 'box',
-                    color: '#759BEC'
-                },
-                COVERAGE: {
-                    shape: 'box',
-                    color: '#113275',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                CONTAINER: {
-                    shape: 'star',
-                    color: "#731d1d" // dark red
-                },
-                LIMIT: {
-                    shape: 'ellipse',
-                    color: '#FFFF99'
-                },
-                DEDUCTIBLE: {
-                    shape: 'ellipse',
-                    color: '#FFFF99'
-                },
-                PREMIUM: {
-                    shape: 'circle',
-                    color: '#0B930B',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                RATE: {
-                    shape: 'ellipse',
-                    color: '#EAC259'
-                },
-                ROLE: {
-                    shape: 'box',
-                    color: '#F59D56'
-                },
-                ROLEPLAYER: {
-                    shape: 'box',
-                    color: '#F2F2F2'
-                },
-                RATEFACTOR: {
-                    shape: 'ellipse',
-                    color: '#EAC259'
-                },
-                PARTY: {
-                    shape: 'box',
-                    color: '#004000' // dark green
-                },
-                PLACE: {
-                    shape: 'box',
-                    color: '#481849' // dark purple
-                },
-                PRODUCT_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                RISK_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                COVERAGE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                LIMIT_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                PREMIUM_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                RATE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                RATEFACTOR_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                ROLE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                ROLEPLAYER_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                CONTAINER_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                DEDUCTIBLE_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                PARTY_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                PLACE_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                }
-            }
-        };
-
-        if (_network) { // clean up memory
+        if (_network) {
             _network.destroy();
             _network = null;
         }
-        _network = new vis.Network(container, {nodes:_nodes, edges:_edges}, options);
-        _network.nodesHandler.remove(_excludedNodeIdList);
-        _network.edgesHandler.remove(_excludedEdgeIdList);
-        customizeNetworkForNce(_network);
-        _network.clusteredNodeIds = [];
+    }
 
-        _network.on('select', function(params) {
-            var nodeId = params.nodes[0];
-            var node = getNodeById(_nodes, nodeId );
-            if (node) {
-                var cubeName = node.name;
-                var appId =_nce.getSelectedTabAppId();
-                var cubeLink = $('<a/>');
-                cubeLink.addClass('nc-anc');
-                cubeLink.html(cubeName);
-                cubeLink.click(function (e) {
-                    e.preventDefault();
-                    _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
-                });
-                _nodeTitle[0].innerHTML = 'Class ';
-                _nodeTitle.append(cubeLink);
-
-                _nodeVisualizer[0].innerHTML = '';
-                _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
-
-                _nodeTraits[0].innerHTML = '';
-                _nodeTraits.append(createTraitsLink(node));
-
-                _nodeDesc[0].innerHTML = node.desc;
-                _layout.open('east');
+    function markTopNodeSpecial()
+    {
+        var node = _nodes[0]
+        if (node) {
+            if (node.id !== '1') {
+                throw new Error('Expected node id of 1 for first node in list.')
             }
-        });
+            node.shapeProperties = {borderDashes: [15, 5]};
+            node.borderWidth = 3;
+            node.scaling = {min: 200, max: 200, label: {enabled: true}};
+        }
+    }
 
-        _network.on('doubleClick', function (params) {
-            if (params.nodes.length === 1) {
-                if (_network.isCluster(params.nodes[0])) {
-                    openClusterByClusterNodeId(params.nodes[0]);
-                } else {
-                    clusterDescendantsBySelectedNode(params.nodes[0], false);
+    function initNetwork()
+    {
+        if (_network)
+        {
+            updateNetworkOptions();
+            updateNetworkData();
+        }
+        else
+        {
+            var container = document.getElementById('network');
+            var nodeDataSet = new vis.DataSet({});
+            markTopNodeSpecial();
+            nodeDataSet.add(_nodes)
+            var edgeDataSet = new vis.DataSet({});
+             edgeDataSet.add(_edges)
+            _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, getNetworkOptions());
+            updateNetworkData();
+            customizeNetworkForNce(_network);
+
+            _network.on('select', function(params) {
+                var nodeId = params.nodes[0];
+                var node = getNodeById(_nodes, nodeId );
+                if (node) {
+                    var cubeName = node.name;
+                    var appId =_nce.getSelectedTabAppId();
+                    var cubeLink = $('<a/>');
+                    cubeLink.addClass('nc-anc');
+                    cubeLink.html(cubeName);
+                    cubeLink.click(function (e) {
+                        e.preventDefault();
+                        _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
+                    });
+                    _nodeTitle[0].innerHTML = 'Class ';
+                    _nodeTitle.append(cubeLink);
+
+                    _nodeVisualizer[0].innerHTML = '';
+                    _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
+
+                    if (node.hasFields) {
+                        _nodeTraits[0].innerHTML = '';
+                        _nodeTraits.append(createTraitsLink(node));
+                    }
+                    else {
+                        _nodeVisualizer.append(TWO_LINE_BREAKS);
+                    }
+
+                    _nodeDesc[0].innerHTML = node.desc;
+                    _layout.open('east');
                 }
-            }
-        });
+            });
+
+            _network.on('doubleClick', function (params) {
+                if (params.nodes.length === 1) {
+                    if (_network.isCluster(params.nodes[0])) {
+                        openClusterByClusterNodeId(params.nodes[0]);
+                    } else {
+                        clusterDescendantsBySelectedNode(params.nodes[0], false);
+                    }
+                }
+            });
+        }
+    }
+
+     function updateNetworkOptions()
+    {
+        _network.setOptions(getNetworkOptions());
     }
 
     function createVisualizeFromHereLink(appId, cubeName, node)
     {
         var visualizerLink = $('<a/>');
         visualizerLink.addClass('nc-anc');
-        visualizerLink.html('new visual from here');
+        visualizerLink.html('New visual from here');
         visualizerLink.click(function (e) {
             e.preventDefault();
             _keepCurrentScope = true;
@@ -864,10 +838,10 @@ var Visualizer = (function ($) {
         var traitsLink = $('<a/>');
         traitsLink.addClass('nc-anc');
         if (node.loadTraits) {
-            traitsLink.html('hide traits<BR><BR>');
+            traitsLink.html('Hide traits' + TWO_LINE_BREAKS);
         }
         else {
-            traitsLink.html('show traits<BR><BR>');
+            traitsLink.html('Show traits' + TWO_LINE_BREAKS);
         }
         traitsLink.click(function (e) {
             e.preventDefault();
@@ -897,7 +871,9 @@ var Visualizer = (function ($) {
         }
     }
 
-    function customizeNetworkForNce(network) {
+    function customizeNetworkForNce(network)
+    {
+        //TODO: Consider submitting pull request with these enhancements to visjs
         network.clustering.clusterDescendants = function(nodeId, immediateDescendantsOnly, options) {
             var collectDescendants = function(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this) {
 
@@ -990,6 +966,201 @@ var Visualizer = (function ($) {
             return this.clustering.clusterDescendants.apply(this.clustering, arguments);
         };
     }
+    
+    function getNetworkOptions()
+    {
+        var updateInterval = Number(_updateInterval);
+        var iterations = Number(_iterations);
+        var damping = Number(_damping);
+        var minVelocity = Number(_minVelocity);
+        var maxVelocity = Number(_maxVelocity);
+        var gravitationalConstant = Number(_gravitationalConstant);
+        var stabilizationEnabled = _stabilizationEnabled;
+        var physicsEnabled = _physicsEnabled;
+
+        var options = 
+        {
+            height: getVisNetworkHeight(),
+            interaction: {
+                navigationButtons: true,
+                keyboard: {
+                    enabled: false,
+                    speed: {x: 5, y: 5, zoom: 0.02}
+                },
+                zoomView: true
+            },
+            nodes: {
+                value: 24,
+                scaling: {
+                    min: 24,
+                    max: 24,
+                    label: {
+                        enabled: true
+                    }
+                }
+            },
+            edges: {
+                arrows: 'to',
+                color: 'gray',
+                smooth: true,
+                hoverWidth: 3
+            },
+            physics: {
+                enabled: physicsEnabled
+                ,minVelocity: minVelocity
+                ,maxVelocity: maxVelocity
+                ,barnesHut:
+                {
+                    gravitationalConstant: gravitationalConstant
+                    ,damping: damping
+                },
+                stabilization:
+                {
+                    enabled: stabilizationEnabled
+                    ,updateInterval: updateInterval
+                    ,iterations: iterations
+                }
+            },
+            layout: {
+                hierarchical: _hierarchical,
+                improvedLayout : true,
+                randomSeed:2
+            },
+            groups: {
+                PRODUCT: {
+                    shape: 'box',
+                    color: '#DAE4FA'
+                },
+                RISK: {
+                    shape: 'box',
+                    color: '#759BEC'
+                },
+                COVERAGE: {
+                    shape: 'box',
+                    color: '#113275',
+                    font: {
+                        color: '#D8D8D8'
+                    }
+                },
+                CONTAINER: {
+                    shape: 'star',
+                    color: "#731d1d" // dark red
+                },
+                LIMIT: {
+                    shape: 'ellipse',
+                    color: '#FFFF99'
+                },
+                DEDUCTIBLE: {
+                    shape: 'ellipse',
+                    color: '#FFFF99'
+                },
+                PREMIUM: {
+                    shape: 'ellipse',
+                    color: '#0B930B',
+                    font: {
+                        color: '#D8D8D8'
+                    }
+                },
+                RATE: {
+                    shape: 'ellipse',
+                    color: '#EAC259'
+                },
+                ROLE: {
+                    shape: 'box',
+                    color: '#F59D56'
+                },
+                ROLEPLAYER: {
+                    shape: 'box',
+                    color: '#F2F2F2'
+                },
+                RATEFACTOR: {
+                    shape: 'ellipse',
+                    color: '#EAC259'
+                },
+                PARTY: {
+                    shape: 'box',
+                    color: '#004000', // dark green
+                    font: {
+                        color: '#D8D8D8'
+                    }
+                },
+                PLACE: {
+                    shape: 'box',
+                    color: '#481849', // dark purple
+                    font: {
+                        color: '#D8D8D8'
+                    }
+                },
+                PRODUCT_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                RISK_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                COVERAGE_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                LIMIT_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                PREMIUM_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                RATE_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                RATEFACTOR_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                ROLE_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                ROLEPLAYER_ENUM : {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                CONTAINER_ENUM: {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                DEDUCTIBLE_ENUM: {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                PARTY_ENUM: {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                PLACE_ENUM: {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                }
+            }
+        };
+        return options;
+
+    }
 
     /*================================= BEGIN SCOPE BUILDER ==========================================================*/
     var availableScopeKeys = []
@@ -1035,12 +1206,12 @@ var Visualizer = (function ($) {
          var newScope = getScopeBuilderScopeText();
         _scopeInput.val(newScope);
         _scope = buildScopeFromText(newScope)
-        saveScope();
+        saveToLocalStorage(_scope, SCOPE_MAP);
      }
 
-    function getSavedScope() {
-        var scopeMap = localStorage[getStorageKey(_nce, SCOPE_MAP)];
-        return scopeMap ? JSON.parse(scopeMap) : {};
+    function getFromLocalStorage(key, defaultValue) {
+        var local = localStorage[getStorageKey(_nce, key)];
+        return local ? JSON.parse(local) : defaultValue;
     }
 
     //TODO: Temporarily override this function in index.js until figured out why nce.getSelectedCubeName()
@@ -1051,8 +1222,26 @@ var Visualizer = (function ($) {
         return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + _selectedCubeName.toLowerCase();
     }
 
-    function saveScope() {
-        saveOrDeleteValue(_scope, getStorageKey(_nce, SCOPE_MAP));
+    //TODO: Temporarily override this function in index.js to get it to work with a primitive
+    //TODO: value like a long. Check the deal with Tym and/or John.
+    function saveOrDeleteValue(obj, storageKey) {
+        //if (obj && Object.keys(obj).length > 0) {
+        if (obj) {
+            localStorage[storageKey] = JSON.stringify(obj);
+        } else {
+            delete localStorage[storageKey];
+        }
+    }
+
+    function saveAllToLocalStorage() {
+        saveToLocalStorage(_scope, SCOPE_MAP);
+        saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+        saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
+        saveToLocalStorage(_hierarchical, HIERARCHICAL);
+    }
+
+    function saveToLocalStorage(value, key) {
+        saveOrDeleteValue(value, getStorageKey(_nce, key));
     }
 
     function getScopeBuilderScopeText() {
