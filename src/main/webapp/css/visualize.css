@@ -24,6 +24,10 @@ div.col-width-large {
     width: 700px
 }
 
+div.col-width-xs {
+    width: 25px
+}
+
 .nc-anc {
     cursor: pointer;
 }
