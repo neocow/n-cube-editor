@@ -177,7 +177,7 @@ var NCE = (function ($) {
         try {
             _openCubes = JSON.parse(_openCubes);
             if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
-                || (_openCubes.length > 0 && typeof _openCubes[0] !== 'object')) {
+                || (_openCubes.length > 0 && typeof _openCubes[0] !== OBJECT)) {
                 _openCubes = [];
             } else if (!_openCubes[0].hasOwnProperty('cubeKey')) {
                 _openCubes = [];
@@ -4200,7 +4200,7 @@ var NCE = (function ($) {
         var delta, deltas, html, i, len, isCellChange, deltaLoc;
 
         // waiting on server response
-        if (typeof _diffLastResult !== 'object') {
+        if (typeof _diffLastResult !== OBJECT) {
             _diffOutput[0].innerHTML = _diffLastResult;
             if (_diffLastResult === 'Loading...') {
                 setTimeout(function () {
@@ -4305,7 +4305,7 @@ var NCE = (function ($) {
             for (i = 0, len = val.length; i < len; i++) {
                 ret.push(spacer + val[i]);
             }
-        } else if (typeof val === 'object') {
+        } else if (typeof val === OBJECT) {
             keys = Object.keys(val);
             ret.push(spacer + '{');
             for (i = 0, len = keys.length; i < len; i++) {

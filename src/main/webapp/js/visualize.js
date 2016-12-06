@@ -60,7 +60,10 @@ var Visualizer = (function ($) {
     var _scopeBuilderListenersAdded = false;
     var STATUS_SUCCESS = 'success';
     var STATUS_MISSING_START_SCOPE = 'missingStartScope';
-    
+    var _scopeLastKeyTime = Date.now();
+    var _scopeKeyPressed = false;
+    var SCOPE_KEY_DELAY = 3000;
+
     var _physicsEnabled = true;
     var _stabilizationEnabled = true;
     var _updateInterval = "50";
@@ -134,16 +137,17 @@ var Visualizer = (function ($) {
                 //updateNetworkOptions();
             });
 
-            _scopeInput.change(function () {
-                _scopeChange = true;
-                _scope = buildScopeFromText(this.value);
-                saveToLocalStorage(_scope, SCOPE_MAP);
-                updateScopeBuilderScope();
+            _scopeInput.on('change', function () {
+                _scopeKeyPressed = false;
+                scopeChange();
+            });
+            
+            _scopeInput.on('input', function () {
+                _scopeKeyPressed = true;
+                _scopeLastKeyTime = Date.now();
             });
 
-            $('#loadGraph').click(function () {
-                load();
-            });
+            scopeKeyDelayLoop();
 
             /*Network physics parameters. Commented out for now in case we want to do additional
               tweaking. 
@@ -174,6 +178,25 @@ var Visualizer = (function ($) {
             });*/
          }
     };
+
+    function scopeKeyDelayLoop() {
+        setInterval(function() {
+            var now = Date.now();
+            if (now - _scopeLastKeyTime > SCOPE_KEY_DELAY && _scopeKeyPressed) {
+                _scopeKeyPressed = false;
+                scopeChange();
+            }
+       }, SCOPE_KEY_DELAY);
+    }
+    
+    function scopeChange()
+    {
+        _scope = buildScopeFromText(_scopeInput.val());
+        _scopeChange = true;
+        saveToLocalStorage(_scope, SCOPE_MAP);
+        updateScopeBuilderScope();
+        load();
+    }
 
     function updateScopeBuilderScope()
     {
@@ -1159,8 +1182,33 @@ var Visualizer = (function ($) {
             }
         };
         return options;
-
     }
+
+
+    function getFromLocalStorage(key, defaultValue) {
+        var local = localStorage[getStorageKey(_nce, key)];
+        return local ? JSON.parse(local) : defaultValue;
+    }
+
+    //TODO: Temporarily override this function in index.js until figured out why nce.getSelectedCubeName()
+    //TODO: occasionally contains a cube name with "_" instead of "." (e.g. rpm_class_product instead of
+    //TODO: rpm.class.product) after a page refresh.
+    function getStorageKey(nce, prefix) {
+        //return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + nce.getSelectedCubeName().toLowerCase();
+        return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + _selectedCubeName.toLowerCase();
+    }
+
+    function saveAllToLocalStorage() {
+        saveToLocalStorage(_scope, SCOPE_MAP);
+        saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+        saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
+        saveToLocalStorage(_hierarchical, HIERARCHICAL);
+    }
+
+    function saveToLocalStorage(value, key) {
+        saveOrDeleteValue(value, getStorageKey(_nce, key));
+    }
+
 
     /*================================= BEGIN SCOPE BUILDER ==========================================================*/
     var availableScopeKeys = []
@@ -1208,41 +1256,6 @@ var Visualizer = (function ($) {
         _scope = buildScopeFromText(newScope)
         saveToLocalStorage(_scope, SCOPE_MAP);
      }
-
-    function getFromLocalStorage(key, defaultValue) {
-        var local = localStorage[getStorageKey(_nce, key)];
-        return local ? JSON.parse(local) : defaultValue;
-    }
-
-    //TODO: Temporarily override this function in index.js until figured out why nce.getSelectedCubeName()
-    //TODO: occasionally contains a cube name with "_" instead of "." (e.g. rpm_class_product instead of
-    //TODO: rpm.class.product) after a page refresh.
-    function getStorageKey(nce, prefix) {
-        //return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + nce.getSelectedCubeName().toLowerCase();
-        return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + _selectedCubeName.toLowerCase();
-    }
-
-    //TODO: Temporarily override this function in index.js to get it to work with a primitive
-    //TODO: value like a long. Check the deal with Tym and/or John.
-    function saveOrDeleteValue(obj, storageKey) {
-        //if (obj && Object.keys(obj).length > 0) {
-        if (obj) {
-            localStorage[storageKey] = JSON.stringify(obj);
-        } else {
-            delete localStorage[storageKey];
-        }
-    }
-
-    function saveAllToLocalStorage() {
-        saveToLocalStorage(_scope, SCOPE_MAP);
-        saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
-        saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
-        saveToLocalStorage(_hierarchical, HIERARCHICAL);
-    }
-
-    function saveToLocalStorage(value, key) {
-        saveOrDeleteValue(value, getStorageKey(_nce, key));
-    }
 
     function getScopeBuilderScopeText() {
         var scopeText = '';
