@@ -117,7 +117,7 @@ var DetailEditor = (function ($)
 
     var scrollToSavedPosition = function() {
         var pos = nce.getViewPosition();
-        if (typeof pos === 'object') {
+        if (typeof pos === OBJECT) {
             $(window).scrollTop(pos.scrollTop);
             $(window).scrollLeft(pos.scrollLeft);
         }

@@ -75,6 +75,7 @@ class Visualizer
 
 		VisualizerInfo visInfo = new VisualizerInfo(appId, options)
 		VisualizerRelInfo relInfo = new VisualizerRelInfo(appId, options)
+		visInfo.loadTraits = relInfo.loadTraits
 
 		getTraitMaps(visInfo, relInfo)
 		visInfo.nodes = [relInfo.createNode()]
