@@ -1164,7 +1164,7 @@ var NCE = (function ($) {
                 }
 
                 html += '<div class="tab-pane" id="' + pageId + '" ' + 'style="overflow:hidden;height:calc(100% - ' + tabHeight + 'px);">';
-                html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + encodeURIComponent(iframeHtml) + '">';
+                html += '<iframe id="iframe_' + pageId + '" class="panel-frame" src="' + encodeURI(iframeHtml) + '">';
                 html += '</iframe></div>';
             }
         }
