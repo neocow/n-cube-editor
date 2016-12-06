@@ -1011,8 +1011,8 @@ var NCubeEditor2 = (function ($) {
 
         val = rowHeader.value;
         if (valueType === 'date' && val !== DEFAULT_TEXT) {
-            if (typeof val === 'object') {
-                if (typeof val[0] === 'object') {
+            if (typeof val === OBJECT) {
+                if (typeof val[0] === OBJECT) {
                     temp = '';
                     for (i = 0, len = val.length; i < len; i++) {
                         temp += getDateRangeString(val[i]) + ', ';
@@ -2213,7 +2213,7 @@ var NCubeEditor2 = (function ($) {
         var val;
         if (column.hasOwnProperty(METAPROPERTIES.DEFAULT_VALUE)) {
             val = column[METAPROPERTIES.DEFAULT_VALUE];
-            if (typeof val === 'object') {
+            if (typeof val === OBJECT) {
                 return val;
             } else if (typeof val === 'boolean') {
                 return {type:'boolean', value:val}
@@ -3037,7 +3037,7 @@ var NCubeEditor2 = (function ($) {
             key = metaKeys[i];
             val = null;
             val = mpData[key];
-            if (typeof val === 'object') {
+            if (typeof val === OBJECT) {
                 metaProperties.push({
                     key: key,
                     dataType: val.dataType,
@@ -4670,7 +4670,7 @@ var NCubeEditor2 = (function ($) {
         }
         
         pos = nce.getViewPosition();
-        if (typeof pos === 'object') {
+        if (typeof pos === OBJECT) {
             row = pos.row;
             col = pos.col;
             left = pos.left;

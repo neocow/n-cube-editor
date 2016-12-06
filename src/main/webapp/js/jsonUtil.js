@@ -108,14 +108,11 @@ function buildJsonCmdUrl(target)
     return location.protocol + '//' + location.hostname + ":" + location.port + "/" + ctx + "/cmd/" + controller + "/" + method;
 }
 
-function buildJsonArgs(args)
-{
-    if (args == null)
-    {
+function buildJsonArgs(args) {
+    if (args === null) {
         args = [];  // empty args
     }
-
-    return encodeURI(JSON.stringify(args));
+    return encodeURIComponent(JSON.stringify(args));
 }
 
 function exec(target, args, params)
