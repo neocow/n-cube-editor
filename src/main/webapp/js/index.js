@@ -1121,7 +1121,7 @@ var NCE = (function ($) {
                 linkVal = null;
                 linkVal = menuOptions[linkText];
 
-                html += '<li><a href="' + encodeURI(linkVal.html) + '">' + linkText + '</a>';
+                html += '<li><a href="' + encodeURIComponent(linkVal.html) + '">' + linkText + '</a>';
                 if (linkVal.hasOwnProperty('divider')) {
                     html += '<div class="divider"/>';
                 }
