@@ -180,8 +180,9 @@ var Visualizer = (function ($) {
     };
 
     function scopeKeyDelayLoop() {
+        var now;
         setInterval(function() {
-            var now = Date.now();
+            now = Date.now();
             if (now - _scopeLastKeyTime > SCOPE_KEY_DELAY && _scopeKeyPressed) {
                 _scopeKeyPressed = false;
                 scopeChange();
@@ -200,13 +201,14 @@ var Visualizer = (function ($) {
 
     function updateScopeBuilderScope()
     {
+        var key, value, shouldInsertNewExpression, expression;
         var keys = Object.keys(_scope);
         for (var i = 0, len = keys.length; i < len; i++) {
-            var key = keys[i];
-            var value = _scope[key];
-            var shouldInsertNewExpression = true;
+            key = keys[i];
+            value = _scope[key];
+            shouldInsertNewExpression = true;
             for (var j = 0, jLen = _scopeBuilderScope.length; j < jLen; j++) {
-                var expression = _scopeBuilderScope[j];
+                expression = _scopeBuilderScope[j];
                 if (expression.isApplied && expression.key === key) {
                     expression.value = value;
                     shouldInsertNewExpression = false;
@@ -220,13 +222,14 @@ var Visualizer = (function ($) {
     }
 
     function buildScopeFromText(scopeString) {
+        var tuple, key, value;
         var newScope = {};
         if (scopeString) {
             var tuples = scopeString.split(',');
             for (var i = 0, iLen = tuples.length; i < iLen; i++) {
-                var tuple = tuples[i].split(':');
-                var key = tuple[0].trim();
-                var value = tuple[1];
+                tuple = tuples[i].split(':');
+                key = tuple[0].trim();
+                value = tuple[1];
                 if (value) {
                     newScope[key] = value.trim();
                 }
@@ -247,6 +250,7 @@ var Visualizer = (function ($) {
 
     var loadTraits = function(node)
     {
+        var message;
         var options =
         {
             node: node,
@@ -283,7 +287,7 @@ var Visualizer = (function ($) {
             _nodeTraits.append(createTraitsLink(node));
          }
         else {
-            var message = json.message;
+            message = json.message;
             if (json.stackTrace != null) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
@@ -294,6 +298,7 @@ var Visualizer = (function ($) {
 
     var load = function ()
     {
+        var options, result, json, message;
         clearVisLayoutEast()
         _nce.clearError();
 
@@ -336,7 +341,7 @@ var Visualizer = (function ($) {
             destroyNetwork();
         }
   
-        var options =
+        options =
         {
             selectedLevel: _selectedLevel,
             startCubeName: _selectedCubeName,
@@ -348,7 +353,7 @@ var Visualizer = (function ($) {
         };
 
 
-        var result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
+        result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
         if (result.status === false) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
             destroyNetwork();
@@ -358,7 +363,7 @@ var Visualizer = (function ($) {
             return;
         }
 
-        var json = result.data;
+        json = result.data;
 
         if (json.status === STATUS_SUCCESS) {
             if (json.message !== null) {
@@ -391,7 +396,7 @@ var Visualizer = (function ($) {
         else {
             destroyNetwork();
             _visualizerContent.hide();
-             var message = json.message;
+             message = json.message;
             if (json.stackTrace != null) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
@@ -432,20 +437,21 @@ var Visualizer = (function ($) {
 
     function loadAvailableGroupsView()
     {
+        var groupName, id, available, labelGroupName, label, title, div, input, selected;
         var divAllGroups = $('#availableGroupsAllLevels');
         divAllGroups.empty();
 
         _availableGroupsAllLevels.sort();
         for (var j = 0; j < _availableGroupsAllLevels.length; j++)
         {
-            var groupName = _availableGroupsAllLevels[j];
-            var id = groupName + _groupSuffix;
-            var available = groupCurrentlyAvailable(id);
-            var labelGroupName = _allGroups[groupName];
-            var label = available ? '<b>' + labelGroupName + '</b>' : labelGroupName;
-            var title = available ? "Show/hide " + labelGroupName + " in the graph" : "Increase level to enable show/hide of " + labelGroupName + " in the graph";
+            groupName = _availableGroupsAllLevels[j];
+            id = groupName + _groupSuffix;
+            available = groupCurrentlyAvailable(id);
+            labelGroupName = _allGroups[groupName];
+            label = available ? '<b>' + labelGroupName + '</b>' : labelGroupName;
+            title = available ? "Show/hide " + labelGroupName + " in the graph" : "Increase level to enable show/hide of " + labelGroupName + " in the graph";
 
-            var selected = false;
+            selected = false;
             for (var k = 0; k < _selectedGroups.length; k++)
             {
                 if (groupIdsEqual(id, _selectedGroups[k]))
@@ -455,8 +461,8 @@ var Visualizer = (function ($) {
                 }
             }
 
-            var div = $('<div>').attr({title: title, class:'inline-block'});
-            var input = $('<input>').attr({type: 'checkbox', id: id});
+            div = $('<div>').attr({title: title, class:'inline-block'});
+            input = $('<input>').attr({type: 'checkbox', id: id});
             input.prop('disabled', !available);
             input.prop('checked', selected);
             input.change(function () {
@@ -470,13 +476,14 @@ var Visualizer = (function ($) {
     }
 
     function getScopeString(){
+        var scopeLen, key;
         var scopeString = '';
         var keys = Object.keys(_scope);
         for (var i = 0, len = keys.length; i < len; i++) {
-            var key = keys[i];
+            key = keys[i];
             scopeString += key + ':' + _scope[key] + ', ';
         }
-        var scopeLen = scopeString.length;
+        scopeLen = scopeString.length;
         if (scopeLen > 1) {
             scopeString = scopeString.substring(0, scopeLen - 2);
         }
@@ -540,12 +547,13 @@ var Visualizer = (function ($) {
 
     function loadSelectedLevelListView()
     {
+        var option;
         var select = $('#selectedLevel-list');
         select.empty();
 
         for (var j = 1; j <= _maxLevel; j++)
         {
-            var option = $('<option/>');
+            option = $('<option/>');
             option[0].textContent = j.toString();
             select.append(option);
         }
@@ -579,6 +587,7 @@ var Visualizer = (function ($) {
 
     function updateNetworkDataNodes()
     {
+        var node, selectedGroup, groupNamePrefix;
         var networkDataNodes =  _network.body.data.nodes;
         var nodeIdsToRemove = [];
         var nodesToAddBack = [];
@@ -590,9 +599,9 @@ var Visualizer = (function ($) {
         //given the selected level, determine nodes to exclude, nodes to add back, selected groups and available groups
         for (var i = 0, iLen = _nodes.length; i < iLen; i++)
         {
-            var node  = _nodes[i];
+            node  = _nodes[i];
 
-            var selectedGroup = isSelectedGroup(node);
+            selectedGroup = isSelectedGroup(node);
 
             if (parseInt(node.level) > level)
             {
@@ -601,7 +610,7 @@ var Visualizer = (function ($) {
             else {
                 if (selectedGroup) {
                     //collect selected groups at level
-                    var groupNamePrefix = node.group.replace(_groupSuffix, '');
+                    groupNamePrefix = node.group.replace(_groupSuffix, '');
                     if (_selectedGroups.indexOf(groupNamePrefix) > -1 && selectedGroups.indexOf(groupNamePrefix) === -1) {
                         selectedGroups.push(groupNamePrefix);
                     }
@@ -613,8 +622,8 @@ var Visualizer = (function ($) {
                     nodeIdsToRemove.push(node.id);
                 }
                 //collect available groups at level
-                var groupNamePrefix = node.group.replace(_groupSuffix, '');
-                if (availableGroupsAtLevel.indexOf(groupNamePrefix) == -1)
+                groupNamePrefix = node.group.replace(_groupSuffix, '');
+                if (availableGroupsAtLevel.indexOf(groupNamePrefix) === -1)
                 {
                     availableGroupsAtLevel.push(groupNamePrefix)
                 }
@@ -629,6 +638,7 @@ var Visualizer = (function ($) {
 
     function updateNetworkDataEdges()
     {
+        var edge;
         var networkDataEdges =  _network.body.data.edges;
         var edgeIdsToRemove = [];
         var edgesToAddBack = [];
@@ -637,7 +647,7 @@ var Visualizer = (function ($) {
         //given the selected level, determine edges to exclude and edges to add back
         if (_edges) {
             for (var k = 0, kLen = _edges.length; k < kLen; k++) {
-                var edge = _edges[k];
+                edge = _edges[k];
 
                 if (parseInt(edge.level) > level) {
                     edgeIdsToRemove.push(edge.id);
@@ -716,8 +726,9 @@ var Visualizer = (function ($) {
     }
 
     function clusterDescendants(immediateDescendantsOnly) {
+        var id;
         for (var i = 0; i < _network.clusteredNodeIds.length; i++) {
-            var id = _network.clusteredNodeIds[i];
+            id = _network.clusteredNodeIds[i];
             clusterDescendantsByNodeId(id, immediateDescendantsOnly);
         }
     }
@@ -728,12 +739,12 @@ var Visualizer = (function ($) {
     }
 
     function getClusterOptionsByNodeId(nodeId) {
-        var clusterOptionsByData;
+        var clusterOptionsByData, node;
         return clusterOptionsByData = {
             processProperties: function (clusterOptions, childNodes) {
-                var node = getNodeById(childNodes, nodeId);
-                clusterOptions.label = node.label + ' cluster (double-click to expand)';
-                clusterOptions.title = node.title + TWO_LINE_BREAKS + '(double-click to expand)';
+                node = getNodeById(childNodes, nodeId);
+                clusterOptions.label = node.label;
+                clusterOptions.title = node.title;
                 return clusterOptions;
             }
         };
@@ -741,11 +752,12 @@ var Visualizer = (function ($) {
 
     function openClusterByClusterNodeId(clusterNodeId)  //TEMP: gets called when a clustered node is clicked
     {
+        var node, indexNode;
         var nodesInCluster = _network.getNodesInCluster(clusterNodeId);
         for (var i = 0; i < nodesInCluster.length; i++)
         {
-            var node = nodesInCluster[i];
-            var indexNode = _network.clusteredNodeIds.indexOf(node);
+            node = nodesInCluster[i];
+            indexNode = _network.clusteredNodeIds.indexOf(node);
             if (indexNode !== -1)
             {
                 _network.clusteredNodeIds.splice(indexNode, 1);
@@ -777,6 +789,7 @@ var Visualizer = (function ($) {
 
     function initNetwork()
     {
+        var container, nodeDataSet, edgeDataSet, nodeId, node, cubeName, appId, cubeLink;
         if (_network)
         {
             updateNetworkOptions();
@@ -784,23 +797,23 @@ var Visualizer = (function ($) {
         }
         else
         {
-            var container = document.getElementById('network');
-            var nodeDataSet = new vis.DataSet({});
+            container = document.getElementById('network');
+            nodeDataSet = new vis.DataSet({});
             markTopNodeSpecial();
             nodeDataSet.add(_nodes)
-            var edgeDataSet = new vis.DataSet({});
+            edgeDataSet = new vis.DataSet({});
              edgeDataSet.add(_edges)
             _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, getNetworkOptions());
             updateNetworkData();
             customizeNetworkForNce(_network);
 
             _network.on('select', function(params) {
-                var nodeId = params.nodes[0];
-                var node = getNodeById(_nodes, nodeId );
+                nodeId = params.nodes[0];
+                node = getNodeById(_nodes, nodeId );
                 if (node) {
-                    var cubeName = node.name;
-                    var appId =_nce.getSelectedTabAppId();
-                    var cubeLink = $('<a/>');
+                    cubeName = node.name;
+                    appId =_nce.getSelectedTabAppId();
+                    cubeLink = $('<a/>');
                     cubeLink.addClass('nc-anc');
                     cubeLink.html(cubeName);
                     cubeLink.click(function (e) {
@@ -875,8 +888,9 @@ var Visualizer = (function ($) {
     }
 
     function replaceNode(nodes, newNode) {
+        var node;
         for (var i = 0, len = nodes.length; i < len; i++) {
-            var node = nodes[i];
+            node = nodes[i];
             if (node.id === newNode.id) {
                 nodes.splice(i, 1);
                 nodes.push(newNode)
@@ -886,8 +900,9 @@ var Visualizer = (function ($) {
     }
 
     function getNodeById(nodes, nodeId) {
+        var node;
         for (var i = 0, len = nodes.length; i < len; i++) {
-            var node = nodes[i];
+            node = nodes[i];
             if (node.id === nodeId) {
                 return node;
             }
@@ -896,16 +911,18 @@ var Visualizer = (function ($) {
 
     function customizeNetworkForNce(network)
     {
+        var edge, childNodeId, childClonedOptions, refreshData, node, childNodesObj, childEdgesObj, parentNodeId, parentClonedOptions;
+
         //TODO: Consider submitting pull request with these enhancements to visjs
         network.clustering.clusterDescendants = function(nodeId, immediateDescendantsOnly, options) {
             var collectDescendants = function(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this) {
 
                 // collect the nodes that will be in the cluster
                 for (var i = 0; i < node.edges.length; i++) {
-                    var edge = node.edges[i];
+                    edge = node.edges[i];
                     //if (edge.hiddenByCluster !== true) {  //BBH:: commented this line
                     if (edge.hiddenByCluster !== true && edge.toId != parentNodeId) { //BBH: added this line
-                        var childNodeId = _this._getConnectedId(edge, parentNodeId);
+                        childNodeId = _this._getConnectedId(edge, parentNodeId);
 
                         // if the child node is not in a cluster (may not be needed now with the edge.hiddenByCluster check)
                         if (_this.clusteredNodes[childNodeId] === undefined) {
@@ -913,16 +930,16 @@ var Visualizer = (function ($) {
                                 if (options.joinCondition === undefined) {
                                     childEdgesObj[edge.id] = edge;
                                     childNodesObj[childNodeId] = _this.body.nodes[childNodeId];
-                                    if (immediateDescendantsOnly == false) {
+                                    if (immediateDescendantsOnly === false) {
                                         collectDescendants(_this.body.nodes[childNodeId], childNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this); //BBH: added this line
                                     }
                                 } else {
                                     // clone the options and insert some additional parameters that could be interesting.
-                                    var childClonedOptions = _this._cloneOptions(this.body.nodes[childNodeId]);
+                                    childClonedOptions = _this._cloneOptions(this.body.nodes[childNodeId]);
                                     if (options.joinCondition(parentClonedOptions, childClonedOptions) === true) {
                                         childEdgesObj[edge.id] = edge;
                                         childNodesObj[childNodeId] = _this.body.nodes[childNodeId];
-                                        if (immediateDescendantsOnly == false) {
+                                        if (immediateDescendantsOnly === false) {
                                             collectDescendants(_this.body.nodes[childNodeId], childNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this); //BBH: added this line
                                         }
                                     }
@@ -936,7 +953,7 @@ var Visualizer = (function ($) {
                 }
             };
 
-            var refreshData = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
+            refreshData = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
 
             // kill conditions
             if (nodeId === undefined) {
@@ -946,7 +963,7 @@ var Visualizer = (function ($) {
                 throw new Error('The nodeId given to clusterDescendants does not exist!');
             }
 
-            var node = this.body.nodes[nodeId];
+            node = this.body.nodes[nodeId];
             options = this._checkOptions(options, node);
             if (options.clusterNodeProperties.x === undefined) {
                 options.clusterNodeProperties.x = node.x;
@@ -960,10 +977,10 @@ var Visualizer = (function ($) {
                 options.clusterNodeProperties.fixed.y = node.options.fixed.y;
             }
 
-            var childNodesObj = {};
-            var childEdgesObj = {};
-            var parentNodeId = node.id;
-            var parentClonedOptions = this._cloneOptions(node);
+            childNodesObj = {};
+            childEdgesObj = {};
+            parentNodeId = node.id;
+            parentClonedOptions = this._cloneOptions(node);
             childNodesObj[parentNodeId] = node;
 
             collectDescendants(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, this);
@@ -1258,9 +1275,10 @@ var Visualizer = (function ($) {
      }
 
     function getScopeBuilderScopeText() {
+        var expression,i, len;
         var scopeText = '';
-        for (var i = 0, len = _scopeBuilderScope.length; i < len; i++) {
-            var expression = _scopeBuilderScope[i];
+        for (i = 0, len = _scopeBuilderScope.length; i < len; i++) {
+            expression = _scopeBuilderScope[i];
             if (expression.isApplied) {
                 scopeText += expression.key + ':' + expression.value + ', ';
             }
