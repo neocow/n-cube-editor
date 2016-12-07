@@ -346,19 +346,18 @@ class VisualizerRelInfo
 		node.availableScope = scope
 		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
 
+		String targetCubeDisplayName = getCubeDisplayName(targetCubeName)
+		node.cubeDisplayName = targetCubeDisplayName
 		if (targetCubeName.startsWith(RPM_CLASS_DOT))
 		{
 			String label = getDotSuffix(targetEffectiveName)
 			node.label = label
-			String cubeDisplayName = getCubeDisplayName(targetCubeName)
-			node.cubeDisplayName = cubeDisplayName
-			node.title = "${cubeDisplayName} - ${label}".toString()
+			node.title = "${targetCubeDisplayName} - ${label}".toString()
 		}
 		else
 		{
-			String cubeDisplayName = getCubeDisplayName(sourceCube.name)
-			node.cubeDisplayName = cubeDisplayName
-			node.title = "Valid values for field ${sourceFieldName} on ${cubeDisplayName}".toString()
+			String sourceCubeDisplayName = getCubeDisplayName(sourceCube.name)
+			node.title = "Valid values for field ${sourceFieldName} on ${sourceCubeDisplayName}".toString()
 		}
 		node.desc = description
 		group ?: setGroupName()

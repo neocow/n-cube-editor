@@ -820,6 +820,7 @@ var Visualizer = (function ($) {
                         e.preventDefault();
                         _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
                     });
+                    _nodeTitle[0].innerHTML = '';
                     _nodeTitle.append(cubeLink);
 
                     _nodeVisualizer[0].innerHTML = '';
