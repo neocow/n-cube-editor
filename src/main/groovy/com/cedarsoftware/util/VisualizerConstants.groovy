@@ -33,7 +33,6 @@ public final class VisualizerConstants
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
 	public static final Map<String, String> ALL_GROUPS_MAP = [PRODUCT: 'Product', FORM: 'Form', RISK: 'Risk', COVERAGE: 'Coverage', CONTAINER: 'Container', DEDUCTIBLE: 'Deductible', LIMIT: 'Limit', RATE: 'Rate', RATEFACTOR: 'Rate Factor', PREMIUM: 'Premium', PARTY: 'Party', PLACE: 'Place', ROLE: 'Role', ROLEPLAYER: 'Role Player', UNSPECIFIED: 'Unspecified']
 	public static final Set<String> ALL_GROUPS_KEYS = ALL_GROUPS_MAP.keySet()
-	public static final String[] GROUPS_TO_SHOW_IN_TITLE = ['COVERAGE', 'DEDUCTIBLE', 'LIMIT', 'PREMIUM', 'PRODUCT', 'RATE', 'RATEFACTOR', 'RISK', 'ROLEPLAYER', 'ROLE']
 
 	public static final String EFFECTIVE_VERSION = '_effectiveVersion'
 	public static final String POLICY_CONTROL_DATE = 'policyControlDate'
@@ -63,13 +62,10 @@ public final class VisualizerConstants
 	public static final String COMMA_SPACE = ', '
 	public static final String DOUBLE_BREAK = "${BREAK}${BREAK}"
 
-	public static final int NODE_LABEL_MAX_LINE_LENGTH = 16
-	public static final double NODE_LABEL_LINE_LENGTH_MULTIPLIER = 1.2d
-
 	public static final Set<String> MANDATORY_RPM_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
-	public static final String MISSING_SCOPE = 'missing scope for '
-	public static final String UNABLE_TO_LOAD = 'unable to load '
-	public static final String SCOPE_VALUE_NOT_FOUND = 'scope value not found for '
+	public static final String MISSING_SCOPE = 'Missing scope for '
+	public static final String UNABLE_TO_LOAD = 'Unable to load '
+	public static final String SCOPE_VALUE_NOT_FOUND = 'Scope value not found for '
 
 	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
 	public static final String STATUS_SUCCESS = 'success'

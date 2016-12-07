@@ -1042,7 +1042,10 @@ var Visualizer = (function ($) {
                 arrows: 'to',
                 color: 'gray',
                 smooth: true,
-                hoverWidth: 3
+                hoverWidth: 3,
+                font: {
+                    size: 20
+                }
             },
             physics: {
                 enabled: physicsEnabled

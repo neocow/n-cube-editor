@@ -40,7 +40,7 @@ class VisualizerRelInfo
 	VisualizerRelInfo(ApplicationID appId, Map options)
 	{
 		Map node = options.node as Map
-		targetCube = NCubeManager.getCube(appId, node.name as String)
+		targetCube = NCubeManager.getCube(appId, node.cubeName as String)
 		sourceFieldName = node.fromFieldName
 		targetId = Long.valueOf(node.id as String)
 		targetLevel = Long.valueOf(node.level as String)
@@ -60,41 +60,7 @@ class VisualizerRelInfo
 		return requiredScope
 	}
 
-	String getLabel()
-	{
-		String nodeGroup = nodeGroup
-		StringBuilder sb = new StringBuilder()
-		if (GROUPS_TO_SHOW_IN_TITLE.contains(nodeGroup))
-		{
-			String label = ALL_GROUPS_MAP[nodeGroup]
-			int len = label.length()
-			sb.append(label)
-			sb.append('\n')
-			sb.append('-' * Math.floor(len * NODE_LABEL_LINE_LENGTH_MULTIPLIER))
-			sb.append('\n')
-		}
-
-		String labelName = getDotSuffix(targetEffectiveName)
-		String[] splitName = labelName.split("(?=\\p{Upper})")
-		String line = ''
-		for (String part : splitName)
-		{
-			if (line.length() + part.length() < NODE_LABEL_MAX_LINE_LENGTH)
-			{
-				line += part
-			}
-			else
-			{
-				sb.append(line)
-				sb.append('\n')
-				line = part
-			}
-		}
-		sb.append(line)
-		return sb.toString()
-	}
-
-	String getTitle()
+	String getDescription()
 	{
 		boolean isScopedClass = targetScopedName
 		String effectiveName = getEffectiveNameByCubeName()
@@ -279,7 +245,7 @@ class VisualizerRelInfo
     {
         if (sourceTraitMaps)
         {
-            return sourceScopedName ? ", the target of ${sourceScopedName} on ${sourceCube.name}" : ""
+            return sourceScopedName ? ", the target of ${sourceScopedName} on ${getCubeDisplayName(sourceCube.name)}" : ""
         }
         return ''
     }
@@ -375,24 +341,27 @@ class VisualizerRelInfo
 		Map<String, Object> node = [:]
 		node.id = String.valueOf(targetId)
 		node.level = String.valueOf(targetLevel)
-		node.name = targetCubeName
+		node.cubeName = targetCubeName
 		node.scope = targetScope
 		node.availableScope = scope
 		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
+
 		if (targetCubeName.startsWith(RPM_CLASS_DOT))
 		{
-			node.title = "${targetCubeName} for ${getDotSuffix(targetEffectiveName)}".toString()
+			String label = getDotSuffix(targetEffectiveName)
+			node.label = label
+			String cubeDisplayName = getCubeDisplayName(targetCubeName)
+			node.cubeDisplayName = cubeDisplayName
+			node.title = "${cubeDisplayName} - ${label}".toString()
 		}
 		else
 		{
-			node.title = "${targetCubeName} for field ${sourceFieldName}".toString()
+			String cubeDisplayName = getCubeDisplayName(sourceCube.name)
+			node.cubeDisplayName = cubeDisplayName
+			node.title = "Valid values for field ${sourceFieldName} on ${cubeDisplayName}".toString()
 		}
-		node.desc = title
+		node.desc = description
 		group ?: setGroupName()
-		if (targetCubeName.startsWith(RPM_CLASS_DOT))
-		{
-			node.label = label
-		}
 		node.group = nodeGroup
 		node.loadTraits = loadTraits
 		node.hasFields = hasFields
@@ -405,4 +374,21 @@ class VisualizerRelInfo
 		return scope[scopeKey] ?: targetEffectiveName
 	}
 
+	public static String getCubeDisplayName(String cubeName)
+	{
+		String displayName
+		if (cubeName.startsWith(RPM_CLASS_DOT))
+		{
+			displayName = cubeName - RPM_CLASS_DOT
+		}
+		else if (cubeName.startsWith(RPM_ENUM_DOT))
+		{
+			displayName = cubeName - RPM_ENUM_DOT
+		}
+	    else
+		{
+			throw new IllegalArgumentException("Cube name is expected to start with one of the following: ${RPM_CLASS_DOT},  ${RPM_ENUM_DOT}.")
+		}
+		return displayName
+	}
 }
