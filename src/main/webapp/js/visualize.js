@@ -242,7 +242,7 @@ var Visualizer = (function ($) {
         updateNetworkOptions();
         updateNetworkData();
         loadSelectedLevelListView();
-        loadAvailableGroupsView();
+        loadGroupsView();
         loadCountsView();
         _visualizerInfo.show();
         _visualizerNetwork.show();
@@ -376,7 +376,7 @@ var Visualizer = (function ($) {
             updateScopeBuilderScope();
             loadScopeView();
             loadHierarchicalView();
-            loadAvailableGroupsView();
+            loadGroupsView();
             loadCountsView();
             _visualizerContent.show();
             _visualizerInfo.show();
@@ -435,45 +435,77 @@ var Visualizer = (function ($) {
         _scopeInput.val(getScopeString());
     }
 
-    function loadAvailableGroupsView()
+    var loadGroupsView = function()
     {
-        var groupName, id, available, labelGroupName, label, title, div, input, selected;
-        var divAllGroups = $('#availableGroupsAllLevels');
-        divAllGroups.empty();
+        var groupName, id, available, label, title, input, selected, button;
+        var divGroups = $('#groups');
+        divGroups.empty();
 
         _availableGroupsAllLevels.sort();
-        for (var j = 0; j < _availableGroupsAllLevels.length; j++)
-        {
+        for (var j = 0; j < _availableGroupsAllLevels.length; j++) {
+
             groupName = _availableGroupsAllLevels[j];
             id = groupName + _groupSuffix;
             available = groupCurrentlyAvailable(id);
-            labelGroupName = _allGroups[groupName];
-            label = available ? '<b>' + labelGroupName + '</b>' : labelGroupName;
-            title = available ? "Show/hide " + labelGroupName + " in the graph" : "Increase level to enable show/hide of " + labelGroupName + " in the graph";
+            label = _allGroups[groupName];
+            title = available ? "Show/hide " + label + " in the graph" : "Increase level to enable show/hide of " + label + " in the graph";
 
             selected = false;
-            for (var k = 0; k < _selectedGroups.length; k++)
-            {
-                if (groupIdsEqual(id, _selectedGroups[k]))
-                {
+            for (var k = 0; k < _selectedGroups.length; k++) {
+                if (groupIdsEqual(id, _selectedGroups[k])) {
                     selected = true;
                     break;
                 }
             }
 
-            div = $('<div>').attr({title: title, class:'inline-block'});
-            input = $('<input>').attr({type: 'checkbox', id: id});
-            input.prop('disabled', !available);
-            input.prop('checked', selected);
-            input.change(function () {
-                selectedGroupChangeEvent(this);
+            button = $('<button/>');
+            if (selected) {
+                button.attr({class: 'btn btn-primary btn-sm active'});
+            }
+            else if (available) {
+                button.attr({class: 'btn btn-default btn-sm'});
+            }
+            else{
+                button.attr({class: 'btn btn-default btn-sm'});
+                button.attr({disabled: 'disabled'});
+            }
+
+            button.attr({'data-cat': label, 'data-toggle': "buttons", 'id': id, 'title': title});
+            var input = $('<input>').attr({type: 'checkbox', autocomplete: 'off'});
+            button.append(input);
+            button.append(label);
+            button.click(function (e) {
+                e.preventDefault();
+                groupChangeEvent(this.id);
+            });
+            divGroups.append(button);
+        }
+
+        $('#selectAll').click(function(e)
+        {
+            e.preventDefault();
+            $('#groups').find('button').each(function()
+            {
+                $(this).addClass('active');
             });
 
-            div.append(input);
-            div.append(NBSP + label + NBSP + NBSP);
-            divAllGroups.append(div);
-        }
-    }
+            Array.prototype.push.apply(_selectedGroups, _availableGroupsAllLevels);
+            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+            reload();
+        });
+
+        $('#selectNone').click(function(e)
+        {
+            e.preventDefault();
+            $('#groups').find('button').each(function()
+            {
+                $(this).removeClass('active');
+            });
+            _selectedGroups = [];
+            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+            reload();
+        });
+    };
 
     function getScopeString(){
         var scopeLen, key;
@@ -490,27 +522,41 @@ var Visualizer = (function ($) {
         return scopeString;
     }
 
-    function selectedGroupChangeEvent(group)
+    function groupChangeEvent(groupId)
     {
-        if (group.checked) {
-            for (var k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++)
-            {
-                if (groupIdsEqual(group.id, _availableGroupsAllLevels[k])) {
-                    _selectedGroups.push(_availableGroupsAllLevels[k]);
-                    break;
+        var button;
+
+        $('#groups').find('button').each(function()
+        {
+            button = $(this);
+            if(button.attr('id') === groupId){
+
+                if  (button.hasClass('active'))
+                {
+                    for (var i = 0, len = _selectedGroups.length; i < len; i++) {
+                        if (groupIdsEqual(groupId, _selectedGroups[i])) {
+                            _selectedGroups.splice(i, 1);
+                            button.removeClass('active');
+                            break;
+                        }
+                    }
                 }
-            }
-        }
-        else {
-            for (var i = 0, len = _selectedGroups.length; i < len; i++) {
-                if (groupIdsEqual(group.id, _selectedGroups[i])) {
-                    _selectedGroups.splice(i, 1);
-                    break;
+                else
+                {
+                    for (var k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++)
+                    {
+                        if (groupIdsEqual(groupId, _availableGroupsAllLevels[k])) {
+                            _selectedGroups.push(_availableGroupsAllLevels[k]);
+                            button.addClass('active');
+                            break;
+                        }
+                    }
                 }
+                saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+                reload();
+                return;
             }
-        }
-        saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
-        reload();
+        });
     }
 
     function groupCurrentlyAvailable(groupId)
