@@ -449,9 +449,7 @@ class Visualizer
 
 	private void handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		String cubeName = e.cubeName
-		Set requiredKeys = e.requiredKeys
-		Set<String> missingScope = findMissingScope(relInfo.scope, requiredKeys)
+		Set<String> missingScope = findMissingScope(relInfo.scope, e.requiredKeys)
 
 		if (missingScope)
 		{
@@ -462,7 +460,7 @@ class Visualizer
 			visInfo.scope = expandedScope
 			String effectiveName = relInfo.getEffectiveNameByCubeName()
 			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE + effectiveName]] as Map
-			String msg = getInvalidCoordinateExceptionMessage(visInfo, relInfo, missingScope, effectiveName, cubeName)
+			String msg = getInvalidCoordinateExceptionMessage(visInfo, relInfo, missingScope, effectiveName, e.cubeName)
 			relInfo.notes << msg
 			messages << msg
 		}
@@ -529,29 +527,43 @@ ${BREAK}${messageScopeValues}"""
 
 	private static String getExceptionMessage(VisualizerRelInfo relInfo, String effectiveName, Throwable e, Throwable t)
 	{
+		String cubeDisplayName = relInfo.getCubeDisplayName(relInfo.targetCube.name)
 		"""\
-An exception was thrown while loading fields and traits for ${relInfo.targetCube.name}${relInfo.sourceMessage} for ${effectiveName}. \
+An exception was thrown while loading fields and traits for ${cubeDisplayName}${relInfo.sourceMessage} for ${effectiveName}. \
 ${DOUBLE_BREAK}<b>Message:</b> ${DOUBLE_BREAK}${e.message}${DOUBLE_BREAK}<b>Root cause: </b>\
 ${DOUBLE_BREAK}${t.toString()}${DOUBLE_BREAK}<b>Stack trace: </b>${DOUBLE_BREAK}${t.stackTrace.toString()}"""
 	}
 
 	private static String getCoordinateNotFoundMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String key, Object value, String effectiveName, String cubeName)
 	{
+		StringBuilder message = new StringBuilder()
 		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, key)
-		"""\
-The scope value ${value} for scope key ${key} cannot be found on axis ${key} in \
-cube ${cubeName}${relInfo.sourceMessage} for ${effectiveName}.${DOUBLE_BREAK} Please supply a different value for ${key}.${BREAK}\
-${messageScopeValues}"""
+		if (cubeName.startsWith(RPM_CLASS_DOT) || cubeName.startsWith(RPM_ENUM_DOT))
+		{
+			String cubeDisplayName = relInfo.getCubeDisplayName(cubeName)
+			message.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in ${cubeDisplayName}${relInfo.sourceMessage} for ${effectiveName}.")
+		}
+		else
+		{
+			message.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in cube ${cubeName} for ${effectiveName}.")
+		}
+		message.append("${DOUBLE_BREAK} Please supply a different value for ${key}.${BREAK}${messageScopeValues}")
 	}
 
 	private static String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set<String> missingScope, String effectiveName, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
 
-		message.append("""\
-Additional scope is required to load ${cubeName}${relInfo.sourceMessage} for ${effectiveName}.${DOUBLE_BREAK} Please add scope \
-value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.${BREAK}""")
-
+		if (cubeName.startsWith(RPM_CLASS_DOT) || cubeName.startsWith(RPM_ENUM_DOT))
+		{
+			String cubeDisplayName = relInfo.getCubeDisplayName(cubeName)
+			message.append("Additional scope is required to load ${effectiveName} of type ${cubeDisplayName}${relInfo.sourceMessage}.")
+		}
+		else
+		{
+			message.append("Additional scope is required to load cube ${cubeName} for ${effectiveName}${relInfo.sourceMessage}.")
+		}
+		message.append("${DOUBLE_BREAK} Please add scope value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.${BREAK}")
 		missingScope.each{ String key ->
 			message.append(getAvailableScopeValuesMessage(visInfo, cubeName, key))
 		}
@@ -559,9 +571,13 @@ value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.${BRE
 	}
 
 	private static String getLoadTargetAsRpmClassMessage(VisualizerRelInfo relInfo, String type) {
+
+		String sourceCubeDisplayName = relInfo.getCubeDisplayName(relInfo.sourceCube.name)
+		String targetCubeDisplayName = relInfo.getCubeDisplayName(relInfo.targetCube.name)
+
 		"""\
-The source ${relInfo.sourceCube.name} points directly to target ${relInfo.targetCube.name} via field ${relInfo.sourceFieldName}, but \
-there is no ${type} named ${relInfo.sourceFieldName} on this cube.  ${DOUBLE_BREAK}Therefore \
-it cannot be loaded as an rpm.class in the visualization."""
+${sourceCubeDisplayName} points directly to ${targetCubeDisplayName} via field ${relInfo.sourceFieldName}, but \
+there is no ${type.toLowerCase()} named ${relInfo.sourceFieldName} on ${type}.  ${DOUBLE_BREAK}Therefore \
+it cannot be loaded in the visualization."""
 	}
 }

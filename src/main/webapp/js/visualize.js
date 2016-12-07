@@ -811,16 +811,16 @@ var Visualizer = (function ($) {
                 nodeId = params.nodes[0];
                 node = getNodeById(_nodes, nodeId );
                 if (node) {
-                    cubeName = node.name;
+                    cubeName = node.cubeName;
                     appId =_nce.getSelectedTabAppId();
                     cubeLink = $('<a/>');
                     cubeLink.addClass('nc-anc');
-                    cubeLink.html(cubeName);
+                    cubeLink.html(node.cubeDisplayName);
                     cubeLink.click(function (e) {
                         e.preventDefault();
                         _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
                     });
-                    _nodeTitle[0].innerHTML = 'Class ';
+                    _nodeTitle[0].innerHTML = '';
                     _nodeTitle.append(cubeLink);
 
                     _nodeVisualizer[0].innerHTML = '';
@@ -1043,7 +1043,10 @@ var Visualizer = (function ($) {
                 arrows: 'to',
                 color: 'gray',
                 smooth: true,
-                hoverWidth: 3
+                hoverWidth: 3,
+                font: {
+                    size: 20
+                }
             },
             physics: {
                 enabled: physicsEnabled
