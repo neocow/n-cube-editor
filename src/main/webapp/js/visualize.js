@@ -48,10 +48,11 @@ var Visualizer = (function ($) {
     var _networkParms = null;
     var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
-    var _nodeTitle = null;
+    var _nodeDetailsTitle = null;
+    var _nodeCubeLink = null;
     var _nodeVisualizer = null;
     var _nodeTraits = null;
-    var _nodeDesc = null;
+    var _nodeDetails = null;
     var _layout = null;
     var _scopeBuilderTable = null;
     var _scopeBuilderModal = null;
@@ -101,10 +102,11 @@ var Visualizer = (function ($) {
             //Network physics parameters. Commented out for now in case we want to do additional tweaking.
             //_networkParms = $('#network-parms');
             _visualizerNetwork = $('#visualizer-network');
-            _nodeTitle = $('#nodeTitle');
+            _nodeDetailsTitle = $('#nodeDetailsTitle');
+            _nodeCubeLink = $('#nodeCubeLink');
             _nodeTraits = $('#nodeTraits');
             _nodeVisualizer = $('#nodeVisualizer');
-            _nodeDesc = $('#nodeDesc');
+            _nodeDetails = $('#nodeDetails');
             _scopeBuilderTable = $('#scopeBuilderTable');
             _scopeBuilderModal = $('#scopeBuilderModal');
             _scopeInput = $('#scope');
@@ -281,7 +283,7 @@ var Visualizer = (function ($) {
             _availableScopeValues = visInfo.availableScopeValues;
             _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
             replaceNode(_nodes, node);
-             _nodeDesc[0].innerHTML = node.desc;
+             _nodeDetails[0].innerHTML = node.details;
             _nodeTraits = $('#nodeTraits');
             _nodeTraits[0].innerHTML = '';
             _nodeTraits.append(createTraitsLink(node));
@@ -420,10 +422,11 @@ var Visualizer = (function ($) {
     }
 
     function clearVisLayoutEast(){
-        _nodeTitle[0].innerHTML = '';
+        _nodeDetailsTitle[0].innerHTML = '';
+        _nodeCubeLink[0].innerHTML = '';
         _nodeVisualizer[0].innerHTML = '';
         _nodeTraits[0].innerHTML = '';
-        _nodeDesc[0].innerHTML = '';
+        _nodeDetails[0].innerHTML = '';
         _layout.close('east');
     }
 
@@ -835,7 +838,7 @@ var Visualizer = (function ($) {
 
     function initNetwork()
     {
-        var container, nodeDataSet, edgeDataSet, nodeId, node, cubeName, appId, cubeLink;
+        var container, nodeDataSet, edgeDataSet, nodeId, node, cubeName, appId;
         if (_network)
         {
             updateNetworkOptions();
@@ -859,16 +862,9 @@ var Visualizer = (function ($) {
                 if (node) {
                     cubeName = node.cubeName;
                     appId =_nce.getSelectedTabAppId();
-                    cubeLink = $('<a/>');
-                    cubeLink.addClass('nc-anc');
-                    cubeLink.html(node.cubeDisplayName);
-                    cubeLink.click(function (e) {
-                        e.preventDefault();
-                        _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
-                    });
-                    _nodeTitle[0].innerHTML = '';
-                    _nodeTitle.append(cubeLink);
 
+                    _nodeDetailsTitle[0].innerHTML = node.detailsTitle;
+              
                     _nodeVisualizer[0].innerHTML = '';
                     _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
 
@@ -876,11 +872,12 @@ var Visualizer = (function ($) {
                         _nodeTraits[0].innerHTML = '';
                         _nodeTraits.append(createTraitsLink(node));
                     }
-                    else {
-                        _nodeVisualizer.append(TWO_LINE_BREAKS);
-                    }
+                  
+                    _nodeCubeLink[0].innerHTML = '';
+                    _nodeCubeLink.append(createCubeLink(cubeName, appId));
+                    _nodeCubeLink.append(TWO_LINE_BREAKS);
 
-                    _nodeDesc[0].innerHTML = node.desc;
+                    _nodeDetails[0].innerHTML = node.details;
                     _layout.open('east');
                 }
             });
@@ -916,14 +913,26 @@ var Visualizer = (function ($) {
         return visualizerLink;
     }
 
+    function createCubeLink(cubeName, appId)
+    {
+        var cubeLink = $('<a/>');
+        cubeLink.addClass('nc-anc');
+        cubeLink.html('View ' + cubeName);
+        cubeLink.click(function (e) {
+            e.preventDefault();
+            _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
+        });
+        return cubeLink;
+    }
+
     function createTraitsLink(node) {
         var traitsLink = $('<a/>');
         traitsLink.addClass('nc-anc');
         if (node.loadTraits) {
-            traitsLink.html('Hide traits' + TWO_LINE_BREAKS);
+            traitsLink.html('Hide traits');
         }
         else {
-            traitsLink.html('Show traits' + TWO_LINE_BREAKS);
+            traitsLink.html('Show traits');
         }
         traitsLink.click(function (e) {
             e.preventDefault();
