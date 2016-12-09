@@ -41,6 +41,8 @@ class VisualizerRelInfo
 	{
 		Map node = options.node as Map
 		targetCube = NCubeManager.getCube(appId, node.cubeName as String)
+		String sourceCubeName = node.sourceCubeName as String
+		sourceCube = sourceCubeName ? NCubeManager.getCube(appId, sourceCubeName) : null
 		sourceFieldName = node.fromFieldName
 		targetId = Long.valueOf(node.id as String)
 		targetLevel = Long.valueOf(node.level as String)
@@ -342,6 +344,7 @@ class VisualizerRelInfo
 		node.id = String.valueOf(targetId)
 		node.level = String.valueOf(targetLevel)
 		node.cubeName = targetCubeName
+		node.sourceCubeName = sourceCube ? sourceCube.name : null
 		node.scope = targetScope
 		node.availableScope = scope
 		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
