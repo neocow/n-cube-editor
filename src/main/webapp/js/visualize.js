@@ -48,10 +48,11 @@ var Visualizer = (function ($) {
     var _networkParms = null;
     var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
-    var _nodeTitle = null;
+    var _nodeDetailsTitle = null;
+    var _nodeCubeLink = null;
     var _nodeVisualizer = null;
     var _nodeTraits = null;
-    var _nodeDesc = null;
+    var _nodeDetails = null;
     var _layout = null;
     var _scopeBuilderTable = null;
     var _scopeBuilderModal = null;
@@ -101,10 +102,11 @@ var Visualizer = (function ($) {
             //Network physics parameters. Commented out for now in case we want to do additional tweaking.
             //_networkParms = $('#network-parms');
             _visualizerNetwork = $('#visualizer-network');
-            _nodeTitle = $('#nodeTitle');
+            _nodeDetailsTitle = $('#nodeDetailsTitle');
+            _nodeCubeLink = $('#nodeCubeLink');
             _nodeTraits = $('#nodeTraits');
             _nodeVisualizer = $('#nodeVisualizer');
-            _nodeDesc = $('#nodeDesc');
+            _nodeDetails = $('#nodeDetails');
             _scopeBuilderTable = $('#scopeBuilderTable');
             _scopeBuilderModal = $('#scopeBuilderModal');
             _scopeInput = $('#scope');
@@ -242,7 +244,7 @@ var Visualizer = (function ($) {
         updateNetworkOptions();
         updateNetworkData();
         loadSelectedLevelListView();
-        loadAvailableGroupsView();
+        loadGroupsView();
         loadCountsView();
         _visualizerInfo.show();
         _visualizerNetwork.show();
@@ -281,7 +283,7 @@ var Visualizer = (function ($) {
             _availableScopeValues = visInfo.availableScopeValues;
             _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
             replaceNode(_nodes, node);
-             _nodeDesc[0].innerHTML = node.desc;
+             _nodeDetails[0].innerHTML = node.details;
             _nodeTraits = $('#nodeTraits');
             _nodeTraits[0].innerHTML = '';
             _nodeTraits.append(createTraitsLink(node));
@@ -376,7 +378,7 @@ var Visualizer = (function ($) {
             updateScopeBuilderScope();
             loadScopeView();
             loadHierarchicalView();
-            loadAvailableGroupsView();
+            loadGroupsView();
             loadCountsView();
             _visualizerContent.show();
             _visualizerInfo.show();
@@ -420,10 +422,11 @@ var Visualizer = (function ($) {
     }
 
     function clearVisLayoutEast(){
-        _nodeTitle[0].innerHTML = '';
+        _nodeDetailsTitle[0].innerHTML = '';
+        _nodeCubeLink[0].innerHTML = '';
         _nodeVisualizer[0].innerHTML = '';
         _nodeTraits[0].innerHTML = '';
-        _nodeDesc[0].innerHTML = '';
+        _nodeDetails[0].innerHTML = '';
         _layout.close('east');
     }
 
@@ -435,45 +438,77 @@ var Visualizer = (function ($) {
         _scopeInput.val(getScopeString());
     }
 
-    function loadAvailableGroupsView()
+    var loadGroupsView = function()
     {
-        var groupName, id, available, labelGroupName, label, title, div, input, selected;
-        var divAllGroups = $('#availableGroupsAllLevels');
-        divAllGroups.empty();
+        var groupName, id, available, label, title, input, selected, button;
+        var divGroups = $('#groups');
+        divGroups.empty();
 
         _availableGroupsAllLevels.sort();
-        for (var j = 0; j < _availableGroupsAllLevels.length; j++)
-        {
+        for (var j = 0; j < _availableGroupsAllLevels.length; j++) {
+
             groupName = _availableGroupsAllLevels[j];
             id = groupName + _groupSuffix;
             available = groupCurrentlyAvailable(id);
-            labelGroupName = _allGroups[groupName];
-            label = available ? '<b>' + labelGroupName + '</b>' : labelGroupName;
-            title = available ? "Show/hide " + labelGroupName + " in the graph" : "Increase level to enable show/hide of " + labelGroupName + " in the graph";
+            label = _allGroups[groupName];
+            title = available ? "Show/hide " + label + " in the graph" : "Increase level to enable show/hide of " + label + " in the graph";
 
             selected = false;
-            for (var k = 0; k < _selectedGroups.length; k++)
-            {
-                if (groupIdsEqual(id, _selectedGroups[k]))
-                {
+            for (var k = 0; k < _selectedGroups.length; k++) {
+                if (groupIdsEqual(id, _selectedGroups[k])) {
                     selected = true;
                     break;
                 }
             }
 
-            div = $('<div>').attr({title: title, class:'inline-block'});
-            input = $('<input>').attr({type: 'checkbox', id: id});
-            input.prop('disabled', !available);
-            input.prop('checked', selected);
-            input.change(function () {
-                selectedGroupChangeEvent(this);
+            button = $('<button/>');
+            if (selected) {
+                button.attr({class: 'btn btn-primary btn-sm active'});
+            }
+            else if (available) {
+                button.attr({class: 'btn btn-default btn-sm'});
+            }
+            else{
+                button.attr({class: 'btn btn-default btn-sm'});
+                button.attr({disabled: 'disabled'});
+            }
+
+            button.attr({'data-cat': label, 'data-toggle': "buttons", 'id': id, 'title': title});
+            var input = $('<input>').attr({type: 'checkbox', autocomplete: 'off'});
+            button.append(input);
+            button.append(label);
+            button.click(function (e) {
+                e.preventDefault();
+                groupChangeEvent(this.id);
+            });
+            divGroups.append(button);
+        }
+
+        $('#selectAll').click(function(e)
+        {
+            e.preventDefault();
+            $('#groups').find('button').each(function()
+            {
+                $(this).addClass('active');
             });
 
-            div.append(input);
-            div.append(NBSP + label + NBSP + NBSP);
-            divAllGroups.append(div);
-        }
-    }
+            Array.prototype.push.apply(_selectedGroups, _availableGroupsAllLevels);
+            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+            reload();
+        });
+
+        $('#selectNone').click(function(e)
+        {
+            e.preventDefault();
+            $('#groups').find('button').each(function()
+            {
+                $(this).removeClass('active');
+            });
+            _selectedGroups = [];
+            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+            reload();
+        });
+    };
 
     function getScopeString(){
         var scopeLen, key;
@@ -490,27 +525,41 @@ var Visualizer = (function ($) {
         return scopeString;
     }
 
-    function selectedGroupChangeEvent(group)
+    function groupChangeEvent(groupId)
     {
-        if (group.checked) {
-            for (var k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++)
-            {
-                if (groupIdsEqual(group.id, _availableGroupsAllLevels[k])) {
-                    _selectedGroups.push(_availableGroupsAllLevels[k]);
-                    break;
+        var button;
+
+        $('#groups').find('button').each(function()
+        {
+            button = $(this);
+            if(button.attr('id') === groupId){
+
+                if  (button.hasClass('active'))
+                {
+                    for (var i = 0, len = _selectedGroups.length; i < len; i++) {
+                        if (groupIdsEqual(groupId, _selectedGroups[i])) {
+                            _selectedGroups.splice(i, 1);
+                            button.removeClass('active');
+                            break;
+                        }
+                    }
                 }
-            }
-        }
-        else {
-            for (var i = 0, len = _selectedGroups.length; i < len; i++) {
-                if (groupIdsEqual(group.id, _selectedGroups[i])) {
-                    _selectedGroups.splice(i, 1);
-                    break;
+                else
+                {
+                    for (var k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++)
+                    {
+                        if (groupIdsEqual(groupId, _availableGroupsAllLevels[k])) {
+                            _selectedGroups.push(_availableGroupsAllLevels[k]);
+                            button.addClass('active');
+                            break;
+                        }
+                    }
                 }
+                saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+                reload();
+                return;
             }
-        }
-        saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
-        reload();
+        });
     }
 
     function groupCurrentlyAvailable(groupId)
@@ -789,7 +838,7 @@ var Visualizer = (function ($) {
 
     function initNetwork()
     {
-        var container, nodeDataSet, edgeDataSet, nodeId, node, cubeName, appId, cubeLink;
+        var container, nodeDataSet, edgeDataSet, nodeId, node, cubeName, appId;
         if (_network)
         {
             updateNetworkOptions();
@@ -813,16 +862,9 @@ var Visualizer = (function ($) {
                 if (node) {
                     cubeName = node.cubeName;
                     appId =_nce.getSelectedTabAppId();
-                    cubeLink = $('<a/>');
-                    cubeLink.addClass('nc-anc');
-                    cubeLink.html(node.cubeDisplayName);
-                    cubeLink.click(function (e) {
-                        e.preventDefault();
-                        _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
-                    });
-                    _nodeTitle[0].innerHTML = '';
-                    _nodeTitle.append(cubeLink);
 
+                    _nodeDetailsTitle[0].innerHTML = node.detailsTitle;
+              
                     _nodeVisualizer[0].innerHTML = '';
                     _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
 
@@ -830,11 +872,12 @@ var Visualizer = (function ($) {
                         _nodeTraits[0].innerHTML = '';
                         _nodeTraits.append(createTraitsLink(node));
                     }
-                    else {
-                        _nodeVisualizer.append(TWO_LINE_BREAKS);
-                    }
+                  
+                    _nodeCubeLink[0].innerHTML = '';
+                    _nodeCubeLink.append(createCubeLink(cubeName, appId));
+                    _nodeCubeLink.append(TWO_LINE_BREAKS);
 
-                    _nodeDesc[0].innerHTML = node.desc;
+                    _nodeDetails[0].innerHTML = node.details;
                     _layout.open('east');
                 }
             });
@@ -870,14 +913,26 @@ var Visualizer = (function ($) {
         return visualizerLink;
     }
 
+    function createCubeLink(cubeName, appId)
+    {
+        var cubeLink = $('<a/>');
+        cubeLink.addClass('nc-anc');
+        cubeLink.html('View ' + cubeName);
+        cubeLink.click(function (e) {
+            e.preventDefault();
+            _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
+        });
+        return cubeLink;
+    }
+
     function createTraitsLink(node) {
         var traitsLink = $('<a/>');
         traitsLink.addClass('nc-anc');
         if (node.loadTraits) {
-            traitsLink.html('Hide traits' + TWO_LINE_BREAKS);
+            traitsLink.html('Hide traits');
         }
         else {
-            traitsLink.html('Show traits' + TWO_LINE_BREAKS);
+            traitsLink.html('Show traits');
         }
         traitsLink.click(function (e) {
             e.preventDefault();
