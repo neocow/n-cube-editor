@@ -45,7 +45,7 @@ var Visualizer = (function ($) {
     var _visualizerInfo = null;
     var _visualizerNetwork = null;
     var _visualizerContent = null;
-    var _networkParms = null;
+    var _networkPhysicsParms = null;
     var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
     var _nodeDetailsTitle = null;
@@ -64,6 +64,7 @@ var Visualizer = (function ($) {
     var _scopeLastKeyTime = Date.now();
     var _scopeKeyPressed = false;
     var SCOPE_KEY_DELAY = 3000;
+    var UNSPECIFIED = 'UNSPECIFIED';
 
     var _physicsEnabled = true;
     var _stabilizationEnabled = true;
@@ -99,8 +100,7 @@ var Visualizer = (function ($) {
             _visualizerContent = $('#visualizer-content');
             _visualizerHtmlError = $('#visualizer-error');
             _visualizerInfo = $('#visualizer-info');
-            //Network physics parameters. Commented out for now in case we want to do additional tweaking.
-            //_networkParms = $('#network-parms');
+            _networkPhysicsParms = $('#networkPhysics-parms');
             _visualizerNetwork = $('#visualizer-network');
             _nodeDetailsTitle = $('#nodeDetailsTitle');
             _nodeCubeLink = $('#nodeCubeLink');
@@ -151,11 +151,9 @@ var Visualizer = (function ($) {
 
             scopeKeyDelayLoop();
 
-            /*Network physics parameters. Commented out for now in case we want to do additional
-              tweaking. 
-            _networkParms.show();
+            //Network physics parameters. Hidden by default.
+            _networkPhysicsParms.hide();
 
-            //Network physics fields
             $("#physicsEnabled").prop('checked', _physicsEnabled);
             $("#stabilizationEnabled").prop('checked', _stabilizationEnabled);
             $("#updateInterval").val(_updateInterval);
@@ -165,8 +163,8 @@ var Visualizer = (function ($) {
             $("#maxVelocity").val(_maxVelocity);
             $("#gravitationalConstant").val(_gravitationalConstant);
 
-            //Refresh for network physics fields
-            $('#refresh').click(function ()
+            $('#physicsEnabled').add('#stabilizationEnabled').add('#updateInterval').add('#iterations').add('#damping').
+            add('#minVelocity').add('#maxVelocity').add('#gravitationalConstant').change(function ()
             {
                 _physicsEnabled = document.getElementById('physicsEnabled').checked;
                 _stabilizationEnabled = document.getElementById('stabilizationEnabled').checked;
@@ -176,8 +174,9 @@ var Visualizer = (function ($) {
                 _minVelocity = document.getElementById('minVelocity').value;
                 _maxVelocity = document.getElementById('maxVelocity').value;
                 _gravitationalConstant = document.getElementById('gravitationalConstant').value;
-                reload();
-            });*/
+                destroyNetwork();
+                initNetwork();
+             });
          }
     };
 
@@ -440,13 +439,17 @@ var Visualizer = (function ($) {
 
     var loadGroupsView = function()
     {
-        var groupName, id, available, label, title, input, selected, button;
+        var groupName, id, available, label, title, input, selected, button, groups,
+            background, fontMap, color, groupMap, boxShadow;
         var divGroups = $('#groups');
+
         divGroups.empty();
+        groups = getNetworkOptions().groups;
 
         _availableGroupsAllLevels.sort();
         for (var j = 0; j < _availableGroupsAllLevels.length; j++) {
-
+            color = null;
+            boxShadow = ''
             groupName = _availableGroupsAllLevels[j];
             id = groupName + _groupSuffix;
             available = groupCurrentlyAvailable(id);
@@ -461,18 +464,30 @@ var Visualizer = (function ($) {
                 }
             }
 
+            groupMap = groups[groupName];
+            groupMap = groupMap ? groupMap : options.groups[UNSPECIFIED];
+            background = groupMap.color;
+            fontMap = groupMap.font;
+            color = null;
+            if (fontMap)
+            {
+                color = fontMap.buttonColor ? fontMap.buttonColor : fontMap.color;
+            }
+            color = color ? color : '#000000';
+
             button = $('<button/>');
             if (selected) {
-                button.attr({class: 'btn btn-primary btn-sm active'});
+                button.attr({class: 'btn active btn-primary-group'});
+                boxShadow = 'box-shadow: 0 4px #575757;';
             }
             else if (available) {
-                button.attr({class: 'btn btn-default btn-sm'});
-            }
+                button.attr({class: 'btn btn-default-group'});
+             }
             else{
-                button.attr({class: 'btn btn-default btn-sm'});
+                button.attr({class: 'btn btn-default-group'});
                 button.attr({disabled: 'disabled'});
             }
-
+            button.attr({style:'background: ' +  background + '; color: ' + color + ';font-size: 12px; padding: 3px; margin-right: 3px; margin-bottom: 7px;border-radius: 15px;' + boxShadow});
             button.attr({'data-cat': label, 'data-toggle': "buttons", 'id': id, 'title': title});
             var input = $('<input>').attr({type: 'checkbox', autocomplete: 'off'});
             button.append(input);
@@ -1142,7 +1157,10 @@ var Visualizer = (function ($) {
                 },
                 CONTAINER: {
                     shape: 'star',
-                    color: "#731d1d" // dark red
+                    color: "#731d1d",
+                    font: {
+                        buttonColor: '#D8D8D8'
+                    }
                 },
                 LIMIT: {
                     shape: 'ellipse',
@@ -1177,17 +1195,25 @@ var Visualizer = (function ($) {
                 },
                 PARTY: {
                     shape: 'box',
-                    color: '#004000', // dark green
+                    color: '#004000',
                     font: {
                         color: '#D8D8D8'
                     }
                 },
                 PLACE: {
                     shape: 'box',
-                    color: '#481849', // dark purple
+                    color: '#481849',
                     font: {
                         color: '#D8D8D8'
                     }
+                },
+                UNSPECIFIED: {
+                    shape: 'box',
+                    color: '#7ac5cd'
+                },
+                FORM: {
+                    shape: 'box',
+                    color: '#d2691e'
                 },
                 PRODUCT_ENUM : {
                     shape: 'dot',
@@ -1250,6 +1276,11 @@ var Visualizer = (function ($) {
                     color: 'gray'   // gray
                 },
                 PLACE_ENUM: {
+                    shape: 'dot',
+                    scaling: {min: 5, max: 5},
+                    color: 'gray'   // gray
+                },
+                UNSPECIFIED_ENUM: {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
                     color: 'gray'   // gray

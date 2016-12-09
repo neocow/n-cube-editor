@@ -70,3 +70,16 @@ ul, li{
 h3{
     margin-top: 0px;
 }
+
+.btn-primary-group {
+}
+
+.btn-default-group {
+}
+
+#networkPhysics-parms
+{
+    display:none;
+    visibility:inherit;
+    background-color:#d2d8c9;
+}
