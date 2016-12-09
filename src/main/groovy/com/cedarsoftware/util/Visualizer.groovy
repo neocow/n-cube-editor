@@ -435,7 +435,7 @@ class Visualizer
 
 		if (cubeName && axisName)
 		{
-			String effectiveName = relInfo.getEffectiveNameByCubeName()
+			String effectiveName = relInfo.effectiveNameByCubeName
 			String msg = getCoordinateNotFoundMessage(visInfo, relInfo, axisName, value, effectiveName, cubeName)
 			relInfo.notes << msg
 			messages << msg
@@ -458,7 +458,7 @@ class Visualizer
 				expandedScope[key] = DEFAULT_SCOPE_VALUE
 			}
 			visInfo.scope = expandedScope
-			String effectiveName = relInfo.getEffectiveNameByCubeName()
+			String effectiveName = relInfo.effectiveNameByCubeName
 			relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE + effectiveName]] as Map
 			String msg = getInvalidCoordinateExceptionMessage(visInfo, relInfo, missingScope, effectiveName, e.cubeName)
 			relInfo.notes << msg
@@ -466,7 +466,7 @@ class Visualizer
 		}
 		else
 		{
-			throw new IllegalStateException("An InvalidCoordinateException was thrown, but no missing scope keys found for ${relInfo.targetCube.name} and scope ${visInfo.scope.toString()}.", e)
+			throw new IllegalStateException("InvalidCoordinateException thrown, but no missing scope keys found for ${relInfo.targetCube.name} and scope ${visInfo.scope.toString()}.", e)
 		}
 	}
 
@@ -480,7 +480,7 @@ class Visualizer
 	private void handleException(Throwable e, VisualizerRelInfo relInfo)
 	{
 		Throwable t = getDeepestException(e)
-		String effectiveName = relInfo.getEffectiveNameByCubeName()
+		String effectiveName = relInfo.effectiveNameByCubeName
 		String msg = getExceptionMessage(relInfo, effectiveName, e, t)
 		relInfo.notes << msg
 		messages << msg

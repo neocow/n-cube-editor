@@ -63,7 +63,7 @@ class VisualizerRelInfo
 	String getDetails()
 	{
 		boolean isScopedClass = targetScopedName
-		String effectiveName = getEffectiveNameByCubeName()
+		String effectiveName = effectiveNameByCubeName
 		StringBuilder sb = new StringBuilder()
 		String notesLabel = "<b>Note: </b>"
 
@@ -367,13 +367,13 @@ class VisualizerRelInfo
 		return node
 	}
 
-	public String getEffectiveNameByCubeName()
+	String getEffectiveNameByCubeName()
 	{
 		String scopeKey = getDotSuffix(targetCube.name)
 		return scope[scopeKey] ?: targetEffectiveName
 	}
 
-	public static String getCubeDisplayName(String cubeName)
+	static String getCubeDisplayName(String cubeName)
 	{
 		String displayName
 		if (cubeName.startsWith(RPM_CLASS_DOT))
@@ -386,7 +386,7 @@ class VisualizerRelInfo
 		}
 	    else
 		{
-			throw new IllegalArgumentException("Cube name is expected to start with one of the following: ${RPM_CLASS_DOT},  ${RPM_ENUM_DOT}.")
+			throw new IllegalArgumentException("Cube name is expected to start with one of the following: ${RPM_CLASS_DOT}, ${RPM_ENUM_DOT}.")
 		}
 		return displayName
 	}
