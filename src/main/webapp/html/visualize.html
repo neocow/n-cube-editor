@@ -69,6 +69,12 @@
                         </div>
                     </div>
 
+                    <div id="networkOptions-div" class="inline-block">
+                        <div class="input-group input-group-sm" title="Display network physics options">
+                            <button id="networkOptions" class="btn btn-sm"></button>
+                        </div>
+                    </div>
+
                     <div>
                         <div class="inline-block">
                             <label>Groups: </label>
@@ -91,78 +97,364 @@
 
                 <div id="networkPhysics-parms">
 
-                    <div class="inline-block">
-                        <label>Network Physics: </label>
+                    <div class="row">
+                        <div class="col-md-12">&nbsp;</div>
                     </div>
 
-                    <div id="physics-div" class="inline-block">
-                        <div class="input-group input-group-sm" title="Show a hierarchical view of the graph">
-                            <input id="physicsEnabled" type="checkbox"> physics
-                        </div>
+                    <div class="row">
+                        <div class="col-md-3"><h3><img src="./img/einstein.png"/>&nbsp;&nbsp;<b>Network Physics</b></h3></div>
+                        <div class="col-md-9"><a href="http://visjs.org/docs/network/physics.html" target="_blank">http://visjs.org/docs/network/physics.html </a></div>
                     </div>
 
-                    <div id="stabilization-div" class="inline-block">
-                        <div class="input-group input-group-sm" title="Show a hierarchical view of the graph">
-                            <input id="stabilizationEnabled" type="checkbox"> stabilization
-                        </div>
+                    <div class="row">
+                        <div class="col-md-12">&nbsp;&nbsp;</div>
+                     </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3"><b>Parameter</b></div>
+                        <div class="col-md-1"><b>Value</b></div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-2"><b>Default</b></div>
+                       <div class="col-md-5"><b>Visjs default, if different</b></div>
                     </div>
 
-                    <div class="inline-block">
-                        updateInterval:
-                    </div>
-                    <div id="updateInterval-div" class="inline-block">
-                        <div class="input-group input-group-sm">
-                            <input id="updateInterval" type="text" size="8" title="default value is 50">
+                    <div class="row borders">
+                        <div class="col-md-3">physicsEnabled</div>
+                        <div class="col-md-1">
+                            <input id="physicsEnabled" type="checkbox">
                         </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="physicsEnabledDefault" type="checkbox" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
                     </div>
 
-                    <div class="inline-block">
-                        iterations:
-                    </div>
-                    <div id="iterations-div" class="inline-block">
-                        <div class="input-group input-group-sm">
-                            <input id="iterations" type="text" size="8" title="default value is 1000">
+                    <div class="row borders">
+                        <div class="col-md-3">barnesHut_gravitationalConstant</div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_gravitationalConstant" type="text">
                         </div>
+                        <div class="col-md-1"></div>
+                        <div class="col-md-2">
+                            <input id="barnesHut_gravitationalConstantDefault" type="text" disabled="true">
+                        </div>
+                        <div class="col-md-5">-2000</div>
                     </div>
 
-                    <div class="inline-block">
-                        damping:
-                    </div>
-                    <div id="damping-div" class="inline-block">
-                        <div class="input-group input-group-sm">
-                            <input id="damping" type="text" size="8" title="default value is 0.09">
+                    <div class="row borders">
+                        <div class="col-md-3">barnesHut_centralGravity</div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_centralGravity" type="text">
                         </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_centralGravityDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
                     </div>
 
-                    <div class="inline-block">
-                        minVelocity:
-                    </div>
-                    <div id="minVelocity-div" class="inline-block">
-                        <div class="input-group input-group-sm">
-                            <input id="minVelocity" type="text" size="8" title="default value is 0.1">
+                    <div class="row borders">
+                        <div class="col-md-3">barnesHut_springLength</div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_springLength" type="text">
                         </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_springLengthDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
                     </div>
 
-                    <div class="inline-block">
-                        maxVelocity:
-                    </div>
-                    <div id="maxVelocity-div" class="inline-block">
-                        <div class="input-group input-group-sm">
-                            <input id="maxVelocity" type="text"  size="8"  title="default value is 50">
+                    <div class="row borders">
+                        <div class="col-md-3">barnesHut_springConstant</div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_springConstant" type="text">
                         </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_springConstantDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
                     </div>
 
-                    <div class="inline-block">
-                        gravitationalConstant:
-                    </div>
-                    <div id="gravitationalConstant-div" class="inline-block">
-                        <div class="input-group input-group-sm">
-                            <input id="gravitationalConstant" type="text" size="8" title="default value is -2000">
+                    <div class="row borders">
+                        <div class="col-md-3">barnesHut_damping</div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_damping" type="text">
                         </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_dampingDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">barnesHut_avoidOverlap</div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_avoidOverlap" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="barnesHut_avoidOverlapDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">repulsion_nodeDistance</div>
+                        <div class="col-md-1">
+                            <input id="repulsion_nodeDistance" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="repulsion_nodeDistanceDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">repulsion_centralGravity</div>
+                        <div class="col-md-1">
+                            <input id="repulsion_centralGravity" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="repulsion_centralGravityDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">repulsion_springLength</div>
+                        <div class="col-md-1">
+                            <input id="repulsion_springLength" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="repulsion_springLengthDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">repulsion_springConstant</div>
+                        <div class="col-md-1">
+                            <input id="repulsion_springConstant" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="repulsion_springConstantDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">repulsion_damping</div>
+                        <div class="col-md-1">
+                            <input id="repulsion_damping" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="repulsion_dampingDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">hierarchicalRepulsion_nodeDistance</div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_nodeDistance" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_nodeDistanceDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">hierarchicalRepulsion_centralGravity</div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_centralGravity" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_centralGravityDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">hierarchicalRepulsion_springLength</div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_springLength" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_springLengthDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">hierarchicalRepulsion_springConstant</div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_springConstant" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_springConstantDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">hierarchicalRepulsion_damping</div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_damping" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="hierarchicalRepulsion_dampingDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">maxVelocity</div>
+                        <div class="col-md-1">
+                            <input id="maxVelocity" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="maxVelocityDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">minVelocity</div>
+                        <div class="col-md-1">
+                            <input id="minVelocity" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="minVelocityDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">solver</div>
+                        <div class="col-md-1">
+                            <input id="solver" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="solverDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">stabilization_enabled</div>
+                        <div class="col-md-1">
+                            <input id="stabilization_enabled" type="checkbox">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="stabilization_enabledDefault" type="checkbox" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">stabilization_iterations</div>
+                        <div class="col-md-1">
+                            <input id="stabilization_iterations" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="stabilization_iterationsDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">stabilization_updateInterval</div>
+                        <div class="col-md-1">
+                            <input id="stabilization_updateInterval" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="stabilization_updateIntervalDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">stabilization_onlyDynamicEdges</div>
+                        <div class="col-md-1">
+                            <input id="stabilization_onlyDynamicEdges" type="checkbox">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="stabilization_onlyDynamicEdgesDefault" type="checkbox" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">stabilization_fit</div>
+                        <div class="col-md-1">
+                            <input id="stabilization_fit" type="checkbox">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="stabilization_fitDefault" type="checkbox" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">timestep</div>
+                        <div class="col-md-1">
+                            <input id="timestep" type="text">
+                        </div>
+                       <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="timestepDefault" type="text" disabled="true">
+                        </div>
+                       <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">adaptiveTimestep</div>
+                        <div class="col-md-1">
+                            <input id="adaptiveTimestep" type="checkbox">
+                        </div>
+                        <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="adaptiveTimestepDefault" type="checkbox" disabled="true">
+                        </div>
+                        <div class="col-md-6"></div>
+                    </div>
+
+                    <div class="row borders">
+                        <div class="col-md-3">improvedLayout</div>
+                        <div class="col-md-1">
+                            <input id="improvedLayout" type="checkbox">
+                        </div>
+                        <div class="col-md-1"></div>
+                        <div class="col-md-1">
+                            <input id="improvedLayoutDefault" type="checkbox" disabled="true">
+                        </div>
+                        <div class="col-md-6"></div>
                     </div>
 
                 </div>
-
             </div>
        </div>
     </div>
