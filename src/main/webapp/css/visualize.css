@@ -77,9 +77,29 @@ h3{
 .btn-default-group {
 }
 
+#networkOptions
+{
+    background-image: url('../img/einstein.png');
+    cursor:pointer;
+    width: 25px;
+    height: 25px;
+    border: none;
+    outline: none;
+    box-shadow: inset 0 6px 14px rgba(0,0,0,.70);
+}
+
+#networkOptions.active {
+    box-shadow: none;
+    border: none;
+}
+
 #networkPhysics-parms
 {
     display:none;
     visibility:inherit;
-    background-color:#d2d8c9;
+    background-color:#D1C5B7;
+}
+
+.borders div{
+
 }
