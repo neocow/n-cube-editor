@@ -239,14 +239,8 @@ class VisualizerRelInfo
 	{
 		if (sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
-			if (sourceTraitMaps[CLASS_TRAITS][R_SCOPED_NAME] == null)
-			{
-				return null
-			}
-			else
-			{
-				return RPM_CLASS_DOT + sourceFieldRpmType
-			}
+			String scopedName = sourceTraitMaps[CLASS_TRAITS][R_SCOPED_NAME]
+			return !scopedName ?: RPM_CLASS_DOT + sourceFieldRpmType
 		}
 		return RPM_CLASS_DOT + targetFieldName
 	}
@@ -360,13 +354,12 @@ class VisualizerRelInfo
 		if (targetCubeName.startsWith(RPM_CLASS_DOT))
 		{
 			node.label = getDotSuffix(targetEffectiveName)
-			String cubeDisplayName = getCubeDisplayName(targetCubeName)
-			node.detailsTitle = cubeDisplayName
-			node.title = cubeDisplayName
+			node.detailsTitle = getCubeDetailsTitle(targetCubeName)
+			node.title = getCubeDisplayName(targetCubeName)
 		}
 		else
 		{
-			String detailsTitle = "Valid values for field ${sourceFieldName} on ${getCubeDisplayName(sourceCube.name)}".toString()
+			String detailsTitle = getCubeDetailsTitle(targetCubeName)
 			node.detailsTitle = detailsTitle
 			node.title = detailsTitle
 		}
@@ -395,10 +388,28 @@ class VisualizerRelInfo
 		{
 			displayName = cubeName - RPM_ENUM_DOT
 		}
-	    else
-		{
-			throw new IllegalArgumentException("Cube name is expected to start with one of the following: ${RPM_CLASS_DOT}, ${RPM_ENUM_DOT}.")
-		}
 		return displayName
+	}
+
+	String getCubeDetailsTitle(String cubeName)
+	{
+		String detailsTitle
+		if (cubeName.startsWith(RPM_CLASS_DOT))
+		{
+			String targetScopedName = getTargetScopedName()
+			if (targetScopedName)
+			{
+				detailsTitle = "${getCubeDisplayName(cubeName)} ${getEffectiveNameByCubeName()}"
+			}
+			else
+			{
+				detailsTitle = getCubeDisplayName(cubeName)
+			}
+		}
+		else if (cubeName.startsWith(RPM_ENUM_DOT))
+		{
+			detailsTitle = "Valid values for field ${sourceFieldName} on ${getCubeDisplayName(sourceCube.name)}".toString()
+		}
+		return detailsTitle
 	}
 }

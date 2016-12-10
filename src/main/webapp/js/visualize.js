@@ -1094,7 +1094,7 @@ var Visualizer = (function ($) {
     {
         var cubeLink = $('<a/>');
         cubeLink.addClass('nc-anc');
-        cubeLink.html('View ' + cubeName);
+        cubeLink.html('Open n-cube');
         cubeLink.click(function (e) {
             e.preventDefault();
             _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_NCUBE + PAGE_ID);
