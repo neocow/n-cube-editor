@@ -47,6 +47,11 @@ class Visualizer
 
 		VisualizerInfo visInfo = new VisualizerInfo(appId, options)
 
+		if (!isValidStartCube(visInfo.startCubeName))
+		{
+			return [status: STATUS_INVALID_START_CUBE, visInfo: visInfo, message: messages.join(DOUBLE_BREAK)]
+		}
+
 		if (hasMissingMinimumScope(visInfo))
 		{
 			return [status: STATUS_MISSING_START_SCOPE, visInfo: visInfo, message: messages.join(DOUBLE_BREAK)]
@@ -355,6 +360,23 @@ class Visualizer
 		}
 		scope[EFFECTIVE_VERSION] = defaultScopeEffectiveVersion
 		return scope
+	}
+
+	private boolean isValidStartCube(String cubeName)
+	{
+		if (!cubeName.startsWith(RPM_CLASS_DOT))
+		{
+			messages << "Starting cube for visualization must begin with 'rpm.class', n-cube ${cubeName} does not.".toString()
+			return false
+		}
+
+		NCube cube = NCubeManager.getCube(appId, cubeName)
+		if (!cube.getAxis(AXIS_FIELD) || !cube.getAxis(AXIS_TRAIT) )
+		{
+			messages << "Cube ${cubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString()
+			return false
+		}
+		return true
 	}
 
 	private boolean hasMissingMinimumScope(VisualizerInfo visInfo)
