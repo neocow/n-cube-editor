@@ -350,16 +350,16 @@ class VisualizerRelInfo
 		node.scope = targetScope
 		node.availableScope = scope
 		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
+		String detailsTitle = getCubeDetailsTitle(targetCubeName)
 
 		if (targetCubeName.startsWith(RPM_CLASS_DOT))
 		{
 			node.label = getDotSuffix(targetEffectiveName)
-			node.detailsTitle = getCubeDetailsTitle(targetCubeName)
+			node.detailsTitle = detailsTitle
 			node.title = getCubeDisplayName(targetCubeName)
 		}
 		else
 		{
-			String detailsTitle = getCubeDetailsTitle(targetCubeName)
 			node.detailsTitle = detailsTitle
 			node.title = detailsTitle
 		}
