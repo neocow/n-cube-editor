@@ -167,7 +167,15 @@ class VisualizerRelInfo
 		traits.each { String traitName, Object traitValue ->
 			if (traitValue != null)
 			{
-				sb.append("<li>${traitName}: ${traitValue}</li>")
+				String traitString = traitValue.toString()
+				if (traitString.startsWith(HTTP) || traitString.startsWith(HTTPS) || traitString.startsWith(FILE))
+				{
+					sb.append("<li>${traitName}: <a href=\"${traitString}\" target=\"_blank\">${traitString}</a></li>")
+				}
+				else
+				{
+					sb.append("<li>${traitName}: ${traitValue}</li>")
+				}
 			}
 		}
 		sb.append("</ul></pre>")

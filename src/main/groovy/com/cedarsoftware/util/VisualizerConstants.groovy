@@ -70,4 +70,8 @@ public final class VisualizerConstants
 	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
 	public static final String STATUS_SUCCESS = 'success'
 	public static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
+
+	public static final String HTTP = 'http:'
+	public static final String HTTPS = 'https:'
+	public static final String FILE = 'file:'
 }
