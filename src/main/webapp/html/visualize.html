@@ -71,7 +71,7 @@
 
                     <div id="networkOptions-div" class="inline-block">
                         <div class="input-group input-group-sm" title="Display network physics options">
-                            <button id="networkOptions" class="btn btn-sm"></button>
+                            <button id="networkOptionsDisplay" class="btn btn-sm"></button>
                         </div>
                     </div>
 
@@ -80,13 +80,10 @@
                             <label>Groups: </label>
                         </div>
                         <div id="groups-div" class="inline-block" title="Show/hide group in the graph">
-                            <div>
-                                <div id="groups" class="btn-group btn-group-sm" data-toggle="buttons">Loading groups... </div>
-                                <div class="select-all pull-right">
-                                    &nbsp;&nbsp;<a id="selectAll" href="#">all</a>&nbsp;&nbsp;<a id="selectNone" href="#">none</a>
-                                </div>
+                            <div id="groups" class="btn-group btn-group-sm" data-toggle="buttons">Loading groups... </div>
+                            <div class="select-all pull-right">
+                                &nbsp;&nbsp;<a id="selectAll" href="#">all</a>&nbsp;&nbsp;<a id="selectNone" href="#">none</a>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -104,6 +101,17 @@
                     <div class="row">
                         <div class="col-md-3"><h3><img src="./img/einstein.png"/>&nbsp;&nbsp;<b>Network Physics</b></h3></div>
                         <div class="col-md-9"><a href="http://visjs.org/docs/network/physics.html" target="_blank">http://visjs.org/docs/network/physics.html </a></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">&nbsp;</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3"><b>Network status:</b></div>
+                        <div class="col-md-1"><input id="stabilizationStatus" type="text" disabled="true"></div>
+                        <div class="col-md-1"></div>
+                        <div class="col-md-7"><input id="iterationsToStabilize" type="text" disabled="true"></div>
                     </div>
 
                     <div class="row">

@@ -58,17 +58,21 @@ var Visualizer = (function ($) {
     var _scopeBuilderScope = [];
     var _scopeInput = null;
     var _scopeBuilderListenersAdded = false;
+    var _selectAllNoneListenersAdded = false;
     var STATUS_SUCCESS = 'success';
     var STATUS_MISSING_START_SCOPE = 'missingStartScope';
     var _scopeLastKeyTime = Date.now();
     var _scopeKeyPressed = false;
     var SCOPE_KEY_DELAY = 3000;
     var UNSPECIFIED = 'UNSPECIFIED';
+    var _clickTimer = null;
+    var _clicks = 0;
 
     //Network layout defaults
     var _improvedLayoutDefault = true;
 
     //Network physics defaults
+    //TODO: Figure out how to get defaults from visjs, rather than hard-coded here.
     var _physicsEnabledDefault = true;
 
     var _barnesHut_gravitationalConstantDefault = -30000; //Only one different than visjs default (-2000)
@@ -108,6 +112,7 @@ var Visualizer = (function ($) {
     var _improvedLayout = _improvedLayoutDefault;
 
     //Network physics parameters
+    var _networkOptionsDisplay = null;
     var _physicsEnabled = _physicsEnabledDefault;
 
     var _barnesHut_gravitationalConstant = _barnesHut_gravitationalConstantDefault;
@@ -141,6 +146,10 @@ var Visualizer = (function ($) {
 
     var _timestep = _timestepDefault;
     var _adaptiveTimestep = _adaptiveTimestepDefault;
+
+    //Set by network stabilize events
+    var _stabilizationStatus = null;
+    var _iterationsToStabilize = null;
 
 
     
@@ -220,10 +229,12 @@ var Visualizer = (function ($) {
 
             scopeKeyDelayLoop();
 
-            //Network physics parameters. Hidden by default.
+            //Network physics parameters
             _networkPhysicsParms.hide();
-            $('#networkOptions').click(function () {
-                $('#networkOptions').toggleClass('active');
+            $('#networkOptionsDisplay').click(function () {
+                $('#networkOptionsDisplay').toggleClass('active');
+                _networkOptionsDisplay = $('#networkOptionsDisplay').hasClass('active');
+                saveToLocalStorage(_networkOptionsDisplay, NETWORK_OPTIONS_DISPLAY);
                 _networkPhysicsParms.toggle();
             });
 
@@ -298,6 +309,9 @@ var Visualizer = (function ($) {
             $("#timestep").val(_timestep);
             $("#adaptiveTimestep").prop('checked', _adaptiveTimestep);
             $("#improvedLayout").prop('checked', _improvedLayout);
+
+            $("#stabilizationStatus").val(_stabilizationStatus);
+            $("#iterationsToStabilize").val(_iterationsToStabilize);
 
 
             $('#networkPhysics-parms').change(function ()
@@ -402,6 +416,13 @@ var Visualizer = (function ($) {
     }
 
     var reload = function () {
+        _nce.clearAllErrors();
+        setTimeout(function () {reloadNetwork();}, PROGRESS_DELAY);
+        _nce.showNote('Updating network...');
+    }
+
+    var reloadNetwork = function () {
+        _nce.clearError();
         updateNetworkOptions();
         updateNetworkData();
         loadSelectedLevelListView();
@@ -411,10 +432,17 @@ var Visualizer = (function ($) {
         _visualizerNetwork.show();
      };
 
-    var loadTraits = function(node)
+    var loadTraits = function (node) {
+        _nce.clearAllErrors();
+        setTimeout(function () {loadTraitsFromServer(node);}, PROGRESS_DELAY);
+        node.loadTraits ? _nce.showNote('Loading traits...') :  _nce.showNote('Removing traits...');
+    }
+
+    var loadTraitsFromServer = function(node)
     {
-        var message;
-        var options =
+         var message, options, result, json, visInfo;
+        _nce.clearError();
+        options =
         {
             node: node,
             scope: _scope,
@@ -422,19 +450,19 @@ var Visualizer = (function ($) {
             availableScopeValues: _availableScopeValues
         };
         
-        var result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
+        result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
         if (result.status === false) {
             _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + result.data);
             return node;
         }
 
-        var json = result.data;
+        json = result.data;
 
         if (json.status === STATUS_SUCCESS) {
             if (json.message !== null) {
                 _nce.showNote(json.message);
             }
-            var visInfo = json.visInfo
+            visInfo = json.visInfo
             node = visInfo.nodes['@items'][0];
             _scope = visInfo.scope;
             delete _scope['@type'];
@@ -459,11 +487,17 @@ var Visualizer = (function ($) {
         return node;
     }
 
-    var load = function ()
+    var load = function () {
+        _nce.clearAllErrors();
+        setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
+        _nce.showNote('Loading visualizer...');
+    }
+
+    var loadFromServer = function ()
     {
         var options, result, json, message;
-        clearVisLayoutEast()
         _nce.clearError();
+        clearVisLayoutEast()
 
         if (!_nce.getSelectedCubeName()) {
             destroyNetwork();
@@ -487,6 +521,7 @@ var Visualizer = (function ($) {
         _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
         _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
         _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
+        _networkOptionsDisplay = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, null);
 
         if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))
         {
@@ -539,6 +574,7 @@ var Visualizer = (function ($) {
             updateScopeBuilderScope();
             loadScopeView();
             loadHierarchicalView();
+            loadNetworkOptionsDisplayView();
             loadGroupsView();
             loadCountsView();
             _visualizerContent.show();
@@ -593,6 +629,21 @@ var Visualizer = (function ($) {
 
     function loadHierarchicalView() {
         $('#hierarchical').prop('checked', _hierarchical);
+    }
+
+    function loadNetworkOptionsDisplayView()
+    {
+        $('#networkOptionsDisplay').prop('checked', _networkOptionsDisplay);
+        if (_networkOptionsDisplay)
+        {
+            $('#networkOptionsDisplay').addClass('active');
+            _networkPhysicsParms.show();
+        }
+        else
+        {
+            $('#networkOptionsDisplay').removeClass('active');
+            _networkPhysicsParms.hide();
+        }
     }
 
     function loadScopeView() {
@@ -661,30 +712,29 @@ var Visualizer = (function ($) {
             divGroups.append(button);
         }
 
-        $('#selectAll').click(function(e)
-        {
-            e.preventDefault();
-            $('#groups').find('button').each(function()
-            {
-                $(this).addClass('active');
+        if (_selectAllNoneListenersAdded === false) {
+            $('#selectAll').click(function (e) {
+                e.preventDefault();
+                $('#groups').find('button').each(function () {
+                    $(this).addClass('active');
+                });
+
+                Array.prototype.push.apply(_selectedGroups, _availableGroupsAllLevels);
+                saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+                reload();
             });
 
-            Array.prototype.push.apply(_selectedGroups, _availableGroupsAllLevels);
-            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
-            reload();
-        });
-
-        $('#selectNone').click(function(e)
-        {
-            e.preventDefault();
-            $('#groups').find('button').each(function()
-            {
-                $(this).removeClass('active');
+            $('#selectNone').click(function (e) {
+                e.preventDefault();
+                $('#groups').find('button').each(function () {
+                    $(this).removeClass('active');
+                });
+                _selectedGroups = [];
+                saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+                reload();
             });
-            _selectedGroups = [];
-            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
-            reload();
-        });
+            _selectAllNoneListenersAdded = true;
+        }
     };
 
     function getScopeString(){
@@ -965,12 +1015,13 @@ var Visualizer = (function ($) {
     }
 
     function getClusterOptionsByNodeId(nodeId) {
-        var clusterOptionsByData, node;
+        var clusterOptionsByData, node, clusterLabel;
         return clusterOptionsByData = {
             processProperties: function (clusterOptions, childNodes) {
                 node = getNodeById(childNodes, nodeId);
-                clusterOptions.label = node.label;
-                clusterOptions.title = node.title;
+                clusterLabel = node.label + ' cluster';
+                clusterOptions.label = clusterLabel;
+                clusterOptions.title = clusterLabel;
                 return clusterOptions;
             }
         };
@@ -1015,7 +1066,7 @@ var Visualizer = (function ($) {
 
     function initNetwork()
     {
-        var container, nodeDataSet, edgeDataSet, nodeId, node, cubeName, appId;
+        var container, nodeDataSet, edgeDataSet;
         if (_network)
         {
             updateNetworkOptions();
@@ -1034,40 +1085,96 @@ var Visualizer = (function ($) {
             customizeNetworkForNce(_network);
 
             _network.on('select', function(params) {
-                nodeId = params.nodes[0];
-                node = getNodeById(_nodes, nodeId );
-                if (node) {
-                    cubeName = node.cubeName;
-                    appId =_nce.getSelectedTabAppId();
+                _clicks++;
+                if(_clicks === 1)
+                {
+                    _clickTimer = setTimeout(function()
+                    {
+                        networkSingleClick(params)
+                        _clickTimer = 0;
 
-                    _nodeDetailsTitle[0].innerHTML = node.detailsTitle;
-              
-                    _nodeVisualizer[0].innerHTML = '';
-                    _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
+                    }, PROGRESS_DELAY);
 
-                    if (node.hasFields) {
-                        _nodeTraits[0].innerHTML = '';
-                        _nodeTraits.append(createTraitsLink(node));
-                    }
-                  
-                    _nodeCubeLink[0].innerHTML = '';
-                    _nodeCubeLink.append(createCubeLink(cubeName, appId));
-                    _nodeCubeLink.append(TWO_LINE_BREAKS);
-
-                    _nodeDetails[0].innerHTML = node.details;
-                    _layout.open('east');
+                } else
+                {
+                    clearTimeout(_clickTimer);
+                    networkDoubleClick(params)
+                    _clicks = 0;
                 }
             });
 
             _network.on('doubleClick', function (params) {
-                if (params.nodes.length === 1) {
-                    if (_network.isCluster(params.nodes[0])) {
-                        openClusterByClusterNodeId(params.nodes[0]);
-                    } else {
-                        clusterDescendantsBySelectedNode(params.nodes[0], false);
-                    }
-                }
+                networkDoubleClick(params)
+             });
+
+            _network.on('startStabilizing', function () {
+                _nce.showNote('Stabilizing network...');
+                _iterationsToStabilize = 'iterating...';
+                _stabilizationStatus = 'stabilization started';
+                 $("#stabilizationStatus").val(_stabilizationStatus);
+                $("#iterationsToStabilize").val(_iterationsToStabilize);
+             });
+
+            _network.on('stabilizationProgress', function (params) {
+                 _stabilizationStatus = 'stabilization in progress';
+                 $("#stabilizationStatus").val(_stabilizationStatus);
+             });
+
+            _network.on('stabilizationIterationsDone', function () {
+                _stabilizationStatus = 'hidden stabilization complete';
+                $("#stabilizationStatus").val(_stabilizationStatus);
+                //Clear note 'Stabilizing network...' here when hidden stabilization is complete.
+                //The full stabilization is not done until the stabilized event has fired, but the network is
+                //showing to the user and the user can work the page at this point.
+                _nce.clearError();
             });
+
+            _network.on('stabilized', function (params) {
+                _stabilizationStatus = 'stabilization complete';
+                _iterationsToStabilize = params.iterations + ' iterations to stabilize';
+                $("#stabilizationStatus").val(_stabilizationStatus);
+                $("#iterationsToStabilize").val(_iterationsToStabilize);
+                _nce.clearError();
+            });
+        }
+    }
+
+    function networkDoubleClick(params)
+    {
+        if (params.nodes.length === 1) {
+            if (_network.isCluster(params.nodes[0])) {
+                openClusterByClusterNodeId(params.nodes[0]);
+            } else {
+                clusterDescendantsBySelectedNode(params.nodes[0], false);
+            }
+        }
+    }
+
+    function networkSingleClick(params)
+    {
+        var nodeId, node, cubeName, appId
+        nodeId = params.nodes[0];
+        node = getNodeById(_nodes, nodeId );
+        if (node) {
+            cubeName = node.cubeName;
+            appId =_nce.getSelectedTabAppId();
+
+            _nodeDetailsTitle[0].innerHTML = node.detailsTitle;
+
+            _nodeVisualizer[0].innerHTML = '';
+            _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
+
+            if (node.hasFields) {
+                _nodeTraits[0].innerHTML = '';
+                _nodeTraits.append(createTraitsLink(node));
+            }
+
+            _nodeCubeLink[0].innerHTML = '';
+            _nodeCubeLink.append(createCubeLink(cubeName, appId));
+            _nodeCubeLink.append(TWO_LINE_BREAKS);
+
+            _nodeDetails[0].innerHTML = node.details;
+            _layout.open('east');
         }
     }
 
