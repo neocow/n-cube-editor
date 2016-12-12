@@ -1182,6 +1182,7 @@ var NCE = (function ($) {
         return {
             call: call,
             clearError: clearError,
+            clearAllErrors: clearAllErrors,
             displayMap: displayMap,
             doesCubeExist: doesCubeExist,
             ensureModifiable: ensureModifiable,
@@ -4389,6 +4390,11 @@ var NCE = (function ($) {
             $.gritter.remove(_errorId);
             _errorId = null;
         }
+    }
+    
+    function clearAllErrors()
+    {
+        $('.gritter-item-wrapper').remove();
     }
 
     function isHeadSelected() {
