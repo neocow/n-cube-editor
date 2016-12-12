@@ -49,7 +49,7 @@ public final class VisualizerConstants
 
 	public static final Set<String> DEFAULT_OPTIONAL_SCOPE_KEYS = ['action', 'businessDivisionCode', 'context', 'date', 'edition', '_effectiveVersion', 'env', 'formId', 'LocationState', 'screen', 'state', 'transaction', 'transactionsubtype', 'username', 'view'] as Set
 	public static final Set<String> DEFAULT_AVAILABLE_SCOPE_KEYS = DERIVED_SCOPE_KEYS + DERIVED_SOURCE_SCOPE_KEYS + DEFAULT_OPTIONAL_SCOPE_KEYS + [POLICY_CONTROL_DATE, QUOTE_DATE, EFFECTIVE_VERSION]
-	public static final String DEFAULT_SCOPE_VALUE = '????'
+	public static final String DEFAULT_SCOPE_VALUE = 'XXXX'
 	public static final long DEFAULT_LEVEL = 3
 
 	public static final String ENT_APP = 'ENT.APP'
