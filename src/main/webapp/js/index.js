@@ -4394,7 +4394,8 @@ var NCE = (function ($) {
     
     function clearAllErrors()
     {
-        $('.gritter-item-wrapper').remove();
+        $.gritter.removeAll();
+        _errorId = null;
     }
 
     function isHeadSelected() {

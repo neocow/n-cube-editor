@@ -743,7 +743,7 @@ var Visualizer = (function ($) {
         var keys = Object.keys(_scope);
         for (var i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
-            scopeString += key + ':' + _scope[key] + ', ';
+            scopeString += key + ': ' + _scope[key] + ', ';
         }
         scopeLen = scopeString.length;
         if (scopeLen > 1) {
