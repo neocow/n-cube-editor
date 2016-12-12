@@ -96,6 +96,7 @@ var CLASS_SECTION_ALL = 'section-all';
 var CLASS_SECTION_NONE = 'section-none';
 
 var OBJECT = 'object';
+var BOOLEAN = 'boolean';
 
 var GLYPHICONS = {
     OPTION_HORIZONTAL: 'glyphicon-option-horizontal',

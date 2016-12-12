@@ -44,7 +44,6 @@ var Visualizer = (function ($) {
     var _visualizerInfo = null;
     var _visualizerNetwork = null;
     var _visualizerContent = null;
-    var _networkPhysicsParms = null;
     var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
     var _nodeDetailsTitle = null;
@@ -68,90 +67,27 @@ var Visualizer = (function ($) {
     var _clickTimer = null;
     var _clicks = 0;
 
-    //Network layout defaults
-    var _improvedLayoutDefault = true;
 
-    //Network physics defaults
-    //TODO: Figure out how to get defaults from visjs, rather than hard-coded here.
-    var _physicsEnabledDefault = true;
-
-    var _barnesHut_gravitationalConstantDefault = -30000; //Only one different than visjs default (-2000)
-    var _barnesHut_centralGravityDefault = 0.3;
-    var _barnesHut_springLengthDefault = 95;
-    var _barnesHut_springConstantDefault = 0.04;
-    var _barnesHut_dampingDefault = 0.09;
-    var _barnesHut_avoidOverlapDefault = 0;
-
-    var _repulsion_nodeDistanceDefault = 100;
-    var _repulsion_centralGravityDefault = 0.2;
-    var _repulsion_springLengthDefault = 200;
-    var _repulsion_springConstantDefault = 0.05;
-    var _repulsion_dampingDefault = 0.09;
-
-    var _hierarchicalRepulsion_nodeDistanceDefault = 120;
-    var _hierarchicalRepulsion_centralGravityDefault = 0.0;
-    var _hierarchicalRepulsion_springLengthDefault = 100;
-    var _hierarchicalRepulsion_springConstantDefault = 0.01;
-    var _hierarchicalRepulsion_dampingDefault = 0.09;
-
-    var _maxVelocityDefault = 50;
-    var _minVelocityDefault = 0.1;
-    var _solverDefault = 'barnesHut';
-
-    var _stabilization_enabledDefault = true;
-    var _stabilization_iterationsDefault = 1000;
-    var _stabilization_updateIntervalDefault = 50;
-    var _stabilization_onlyDynamicEdgesDefault = false;
-    var _stabilization_fitDefault = true;
-
-    var _timestepDefault = 0.5;
-    var _adaptiveTimestepDefault = true;
+    //Network physics
+    var _networkOptionsButton = null;
+    var _networkOptionsSection = null;
+    var _networkOptionsChangeSection = null;
+    var _physicsDefaultsVisJs = null;
+    var _physicsDefaults = null;
+    var _physicsParms = null;
+    var _overriddenPhysicsOptions =
+    {
+        barnesHut: {
+            gravitationalConstant: -30000
+        }
+    }
 
     //Network layout parameters
     var _hierarchical = false;
-    var _improvedLayout = _improvedLayoutDefault;
-
-    //Network physics parameters
-    var _networkOptionsDisplay = null;
-    var _physicsEnabled = _physicsEnabledDefault;
-
-    var _barnesHut_gravitationalConstant = _barnesHut_gravitationalConstantDefault;
-    var _barnesHut_centralGravity = _barnesHut_centralGravityDefault;
-    var _barnesHut_springLength = _barnesHut_springLengthDefault;
-    var _barnesHut_springConstant = _barnesHut_springConstantDefault;
-    var _barnesHut_damping = _barnesHut_dampingDefault;
-    var _barnesHut_avoidOverlap = _barnesHut_avoidOverlapDefault;
-
-    var _repulsion_nodeDistance = _repulsion_nodeDistanceDefault;
-    var _repulsion_centralGravity = _repulsion_centralGravityDefault;
-    var _repulsion_springLength = _repulsion_springLengthDefault;
-    var _repulsion_springConstant = _repulsion_springConstantDefault;
-    var _repulsion_damping = _repulsion_dampingDefault;
-
-    var _hierarchicalRepulsion_nodeDistance = _hierarchicalRepulsion_nodeDistanceDefault;
-    var _hierarchicalRepulsion_centralGravity = _hierarchicalRepulsion_centralGravityDefault;
-    var _hierarchicalRepulsion_springLength = _hierarchicalRepulsion_springLengthDefault;
-    var _hierarchicalRepulsion_springConstant = _hierarchicalRepulsion_springConstantDefault;
-    var _hierarchicalRepulsion_damping = _hierarchicalRepulsion_dampingDefault;
-
-    var _maxVelocity = _maxVelocityDefault;
-    var _minVelocity = _minVelocityDefault;
-    var _solver = _solverDefault;
-
-    var _stabilization_enabled = _stabilization_enabledDefault;
-    var _stabilization_iterations = _stabilization_iterationsDefault;
-    var _stabilization_updateInterval = _stabilization_updateIntervalDefault;
-    var _stabilization_onlyDynamicEdges = _stabilization_onlyDynamicEdgesDefault;
-    var _stabilization_fit = _stabilization_fitDefault;
-
-    var _timestep = _timestepDefault;
-    var _adaptiveTimestep = _adaptiveTimestepDefault;
 
     //Set by network stabilize events
     var _stabilizationStatus = null;
     var _iterationsToStabilize = null;
-
-
     
     var init = function (info) {
         if (!_nce) {
@@ -178,7 +114,6 @@ var Visualizer = (function ($) {
             _visualizerContent = $('#visualizer-content');
             _visualizerHtmlError = $('#visualizer-error');
             _visualizerInfo = $('#visualizer-info');
-            _networkPhysicsParms = $('#networkPhysics-parms');
             _visualizerNetwork = $('#visualizer-network');
             _nodeDetailsTitle = $('#nodeDetailsTitle');
             _nodeCubeLink = $('#nodeCubeLink');
@@ -188,6 +123,8 @@ var Visualizer = (function ($) {
             _scopeBuilderTable = $('#scopeBuilderTable');
             _scopeBuilderModal = $('#scopeBuilderModal');
             _scopeInput = $('#scope');
+            _networkOptionsSection = $('#networkOptionsSection');
+            _networkOptionsChangeSection = $('#networkOptionsChangeSection');
 
             $(window).resize(function() {
                 if (_network) {
@@ -229,132 +166,120 @@ var Visualizer = (function ($) {
 
             scopeKeyDelayLoop();
 
+            setNetworkOptions();
+
             //Network physics parameters
-            _networkPhysicsParms.hide();
-            $('#networkOptionsDisplay').click(function () {
-                $('#networkOptionsDisplay').toggleClass('active');
-                _networkOptionsDisplay = $('#networkOptionsDisplay').hasClass('active');
-                saveToLocalStorage(_networkOptionsDisplay, NETWORK_OPTIONS_DISPLAY);
-                _networkPhysicsParms.toggle();
+            _networkOptionsSection.hide();
+            $('#networkOptionsButton').click(function () {
+                $('#networkOptionsButton').toggleClass('active');
+                _networkOptionsButton = $('#networkOptionsButton').hasClass('active');
+                saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
+                _networkOptionsSection.toggle();
             });
-
-            //Defaults
-            $("#physicsEnabledDefault").prop('checked', _physicsEnabledDefault);
-     
-            $("#barnesHut_gravitationalConstantDefault").val(_barnesHut_gravitationalConstantDefault);
-            $("#barnesHut_centralGravityDefault").val(_barnesHut_centralGravityDefault);
-            $("#barnesHut_springLengthDefault").val(_barnesHut_springLengthDefault);
-            $("#barnesHut_springConstantDefault").val(_barnesHut_springConstantDefault);
-            $("#barnesHut_dampingDefault").val(_barnesHut_dampingDefault);
-            $("#barnesHut_avoidOverlapDefault").val(_barnesHut_avoidOverlapDefault);
-
-            $("#repulsion_nodeDistanceDefault").val(_repulsion_nodeDistanceDefault);
-            $("#repulsion_centralGravityDefault").val(_repulsion_centralGravityDefault);
-            $("#repulsion_springLengthDefault").val(_repulsion_springLengthDefault);
-            $("#repulsion_springConstantDefault").val(_repulsion_springConstantDefault);
-            $("#repulsion_dampingDefault").val(_repulsion_dampingDefault);
-
-            $("#hierarchicalRepulsion_nodeDistanceDefault").val(_hierarchicalRepulsion_nodeDistanceDefault);
-            $("#hierarchicalRepulsion_centralGravityDefault").val(_hierarchicalRepulsion_centralGravityDefault);
-            $("#hierarchicalRepulsion_springLengthDefault").val(_hierarchicalRepulsion_springLengthDefault);
-            $("#hierarchicalRepulsion_springConstantDefault").val(_hierarchicalRepulsion_springConstantDefault);
-            $("#hierarchicalRepulsion_dampingDefault").val(_hierarchicalRepulsion_dampingDefault);
-
-            $("#maxVelocityDefault").val(_maxVelocityDefault);
-            $("#minVelocityDefault").val(_minVelocityDefault);
-            $("#solverDefault").val(_solverDefault);
-
-            $("#stabilization_enabledDefault").prop('checked', _stabilization_enabledDefault);
-            $("#stabilization_iterationsDefault").val(_stabilization_iterationsDefault);
-            $("#stabilization_updateIntervalDefault").val(_stabilization_updateIntervalDefault);
-            $("#stabilization_onlyDynamicEdgesDefault").val(_stabilization_onlyDynamicEdgesDefault);
-            $("#stabilization_fitDefault").prop('checked', _stabilization_fitDefault);
-
-            $("#timestepDefault").val(_timestepDefault);
-            $("#adaptiveTimestepDefault").prop('checked', _adaptiveTimestepDefault);
-            $("#improvedLayoutDefault").prop('checked', _improvedLayoutDefault);
-
-            //Values
-            $("#physicsEnabled").prop('checked', _physicsEnabled);
-         
-            $("#barnesHut_gravitationalConstant").val(_barnesHut_gravitationalConstant);
-            $("#barnesHut_centralGravity").val(_barnesHut_centralGravity);
-            $("#barnesHut_springLength").val(_barnesHut_springLength);
-            $("#barnesHut_springConstant").val(_barnesHut_springConstant);
-            $("#barnesHut_damping").val(_barnesHut_damping);
-            $("#barnesHut_avoidOverlap").val(_barnesHut_avoidOverlap);
-
-            $("#repulsion_nodeDistance").val(_repulsion_nodeDistance);
-            $("#repulsion_centralGravity").val(_repulsion_centralGravity);
-            $("#repulsion_springLength").val(_repulsion_springLength);
-            $("#repulsion_springConstant").val(_repulsion_springConstant);
-            $("#repulsion_damping").val(_repulsion_damping);
-
-            $("#hierarchicalRepulsion_nodeDistance").val(_hierarchicalRepulsion_nodeDistance);
-            $("#hierarchicalRepulsion_centralGravity").val(_hierarchicalRepulsion_centralGravity);
-            $("#hierarchicalRepulsion_springLength").val(_hierarchicalRepulsion_springLength);
-            $("#hierarchicalRepulsion_springConstant").val(_hierarchicalRepulsion_springConstant);
-            $("#hierarchicalRepulsion_damping").val(_hierarchicalRepulsion_damping);
-
-            $("#maxVelocity").val(_maxVelocity);
-            $("#minVelocity").val(_minVelocity);
-            $("#solver").val(_solver);
-
-            $("#stabilization_enabled").prop('checked', _stabilization_enabled);
-            $("#stabilization_iterations").val(_stabilization_iterations);
-            $("#stabilization_updateInterval").val(_stabilization_updateInterval);
-            $("#stabilization_onlyDynamicEdges").prop('checked', _stabilization_onlyDynamicEdges);
-            $("#stabilization_fit").prop('checked', _stabilization_fit);
-
-            $("#timestep").val(_timestep);
-            $("#adaptiveTimestep").prop('checked', _adaptiveTimestep);
-            $("#improvedLayout").prop('checked', _improvedLayout);
-
-            $("#stabilizationStatus").val(_stabilizationStatus);
-            $("#iterationsToStabilize").val(_iterationsToStabilize);
-
-
-            $('#networkPhysics-parms').change(function ()
+            
+            $('#networkOptionsChangeSection').change(function ()
             {
-                _physicsEnabled =  $('#physicsEnabled').prop('checked');
-                _barnesHut_gravitationalConstant = $("#barnesHut_gravitationalConstant").val();
-                _barnesHut_centralGravity = $("#barnesHut_centralGravity").val();
-                _barnesHut_springLength = $("#barnesHut_springLength").val();
-                _barnesHut_springConstant = $("#barnesHut_springConstant").val();
-                _barnesHut_damping = $("#barnesHut_damping").val();
-                _barnesHut_avoidOverlap = $("#barnesHut_avoidOverlap").val();
-
-                _repulsion_nodeDistance = $("#repulsion_nodeDistance").val();
-                _repulsion_centralGravity = $("#repulsion_centralGravity").val();
-                _repulsion_springLength = $("#repulsion_springLength").val();
-                _repulsion_springConstant = $("#repulsion_springConstant").val();
-                _repulsion_damping = $("#repulsion_damping").val();
-
-                _hierarchicalRepulsion_nodeDistance = $("#hierarchicalRepulsion_nodeDistance").val();
-                _hierarchicalRepulsion_centralGravity = $("#hierarchicalRepulsion_centralGravity").val();
-                _hierarchicalRepulsion_springLength = $("#hierarchicalRepulsion_springLength").val();
-                _hierarchicalRepulsion_springConstant = $("#hierarchicalRepulsion_springConstant").val();
-                _hierarchicalRepulsion_damping = $("#hierarchicalRepulsion_damping").val();
-
-                _maxVelocity = $("#maxVelocity").val();
-                _minVelocity = $("#minVelocity").val();
-                _solver = $("#solver").val();
-
-                _stabilization_enabled =  $('#stabilization_enabled').prop('checked');
-                _stabilization_iterations = $("#stabilization_iterations").val();
-                _stabilization_updateInterval = $("#stabilization_updateInterval").val();
-                _stabilization_onlyDynamicEdges = $('#stabilization_onlyDynamicEdges').prop('checked');
-                _stabilization_fit = $('#stabilization_fit').prop('checked');
-
-                _timestep = $("#timestep").val();
-                _adaptiveTimestep = $('#adaptiveTimestep').prop('checked');
-                _improvedLayout =  $('#improvedLayout').prop('checked');
-                
+                _networkOptionsChangeSection = $('#networkOptionsChangeSection');
                 destroyNetwork();
                 initNetwork();
             });
          }
     };
+
+    function setNetworkOptions()
+    {
+        var emptyDataSet, emptyNetwork, container;
+        container = document.getElementById('network');
+        emptyDataSet = new vis.DataSet({});
+        emptyNetwork = new vis.Network(container, {nodes:emptyDataSet, edges:emptyDataSet}, {});
+        _physicsDefaultsVisJs = emptyNetwork.physics.defaultOptions;
+        delete _physicsDefaultsVisJs.barnesHut['theta'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
+        delete _physicsDefaultsVisJs.forceAtlas2Based['theta'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
+        delete _physicsDefaultsVisJs.repulsion['avoidOverlap'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
+        emptyNetwork.destroy();
+        _physicsDefaults = $.extend(true, {}, _physicsDefaultsVisJs);
+        _physicsParms = $.extend(true, _physicsDefaults, _overriddenPhysicsOptions);
+    }
+
+    function loadNetworkOptionsSectionView()
+    {
+        $('#networkOptionsButton').prop('checked', _networkOptionsButton);
+        if (_networkOptionsButton)
+        {
+            $('#networkOptionsButton').addClass('active');
+            _networkOptionsSection.show();
+        }
+        else
+        {
+            $('#networkOptionsButton').removeClass('active');
+            _networkOptionsSection.hide();
+        }
+        
+        $("#stabilizationStatus").val(_stabilizationStatus);
+        $("#iterationsToStabilize").val(_iterationsToStabilize);
+
+        $('#networkOptionsChangeSection').empty();
+        buildNetworkOptionsChangeSection(null, _physicsParms, _physicsDefaults, _physicsDefaultsVisJs);
+    }
+
+    function buildNetworkOptionsChangeSection(parentKey, options, defaultOptions, visjsDefaultOptions)
+    {
+        $.each(defaultOptions, function (key, defaultValue) {
+            var rowBordersDiv, value, defaultValueVisjs;
+            value = options[key];
+            defaultValueVisjs = visjsDefaultOptions[key];
+            rowBordersDiv = buildRowBordersDiv(parentKey, key, value, defaultValue, defaultValueVisjs);
+            $('#networkOptionsChangeSection').append(rowBordersDiv);
+        });
+    }
+
+    function buildRowBordersDiv(parentKey, key, value, defaultValue, defaultValueVisjs)
+    {
+        var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Input, col4Input, fullKey;
+
+        fullKey = parentKey ? parentKey + '.' + key : key;
+
+        rowBordersDiv = $('<div/>').prop({class: "row borders"});
+        col1Div = $('<div/>').prop({class: "col-md-3"});
+        col2Div = $('<div/>').prop({class: "col-md-1", title:"Value used for network"});
+        col3Div = $('<div/>').prop({class: "col-md-1"});
+        col4Div = $('<div/>').prop({class: "col-md-2", title:"Default value for network"});
+        col5Div = $('<div/>').prop({class: "col-md-5", title:"Visjs default value"});
+
+        if (typeof defaultValue === OBJECT)
+        {
+            buildNetworkOptionsChangeSection(key, value, defaultValue, defaultValueVisjs);
+        }
+        else
+        {
+            if (typeof defaultValue === BOOLEAN) {
+                col2Input = $('<input/>').prop({id: fullKey, type: "checkbox"});
+                col2Input[0].checked = value;
+                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "checkbox", disabled: "true"});
+                col4Input[0].checked = defaultValue;
+            }
+            else {
+                col2Input = $('<input/>').prop({id: fullKey, type: "text"});
+                col2Input[0].value = value;
+                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "text", disabled: "true"});
+                col4Input[0].value = defaultValue;
+            }
+
+
+            col1Div[0].innerHTML = fullKey
+            col2Div.append(col2Input);
+            col3Div[0].innerHTML = NBSP;
+            col4Div.append(col4Input);
+            col5Div[0].innerHTML = defaultValueVisjs === defaultValue ? null : defaultValueVisjs;
+
+            rowBordersDiv.append(col1Div);
+            rowBordersDiv.append(col2Div);
+            rowBordersDiv.append(col3Div);
+            rowBordersDiv.append(col4Div);
+            rowBordersDiv.append(col5Div);
+        }
+        return rowBordersDiv;
+    }
 
     function scopeKeyDelayLoop() {
         var now;
@@ -521,7 +446,7 @@ var Visualizer = (function ($) {
         _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
         _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
         _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
-        _networkOptionsDisplay = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, null);
+        _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, null);
 
         if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))
         {
@@ -574,7 +499,7 @@ var Visualizer = (function ($) {
             updateScopeBuilderScope();
             loadScopeView();
             loadHierarchicalView();
-            loadNetworkOptionsDisplayView();
+            loadNetworkOptionsSectionView();
             loadGroupsView();
             loadCountsView();
             _visualizerContent.show();
@@ -629,21 +554,6 @@ var Visualizer = (function ($) {
 
     function loadHierarchicalView() {
         $('#hierarchical').prop('checked', _hierarchical);
-    }
-
-    function loadNetworkOptionsDisplayView()
-    {
-        $('#networkOptionsDisplay').prop('checked', _networkOptionsDisplay);
-        if (_networkOptionsDisplay)
-        {
-            $('#networkOptionsDisplay').addClass('active');
-            _networkPhysicsParms.show();
-        }
-        else
-        {
-            $('#networkOptionsDisplay').removeClass('active');
-            _networkPhysicsParms.hide();
-        }
     }
 
     function loadScopeView() {
@@ -1379,50 +1289,11 @@ var Visualizer = (function ($) {
                 }
             },
             physics: {
-                enabled: _physicsEnabled,
-                barnesHut:
-                {
-                    gravitationalConstant: Number(_barnesHut_gravitationalConstant),
-                    centralGravity: Number(_barnesHut_centralGravity),
-                    springLength: Number(_barnesHut_springLength),
-                    springConstant: Number(_barnesHut_springConstant),
-                    damping: Number(_barnesHut_damping),
-                    avoidOverlap: Number(_barnesHut_avoidOverlap)
-                },
-                repulsion:
-                {
-                    nodeDistance: Number(_repulsion_nodeDistance),
-                    centralGravity: Number(_repulsion_centralGravity),
-                    springLength: Number(_repulsion_springLength),
-                    springConstant: Number(_repulsion_springConstant),
-                    damping: Number(_repulsion_damping)
-                },
-                hierarchicalRepulsion:
-                {
-                    nodeDistance: Number(_hierarchicalRepulsion_nodeDistance),
-                    centralGravity: Number(_hierarchicalRepulsion_centralGravity),
-                    springLength: Number(_hierarchicalRepulsion_springLength),
-                    springConstant: Number(_hierarchicalRepulsion_springConstant),
-                    damping: Number(_hierarchicalRepulsion_damping)
-                },
-                minVelocity:  Number(_minVelocity),
-                maxVelocity:  Number(_maxVelocity),
-                solver:  _solver,
-                stabilization:
-                {
-                    enabled: _stabilization_enabled,
-                    iterations: Number(_stabilization_iterations),
-                    updateInterval: Number(_stabilization_updateInterval),
-                    onlyDynamicEdges: _stabilization_onlyDynamicEdges,
-                    fit: _stabilization_fit
-                },
-                timestep:  Number(_timestep),
-                adaptiveTimestep:  _adaptiveTimestep
-
-            },
+                //Merged in from _physicsParms, below
+             },
             layout: {
                 hierarchical: _hierarchical,
-                improvedLayout : _improvedLayout,
+                improvedLayout : true,
                 randomSeed:2
             },
             groups: {
@@ -1504,75 +1375,77 @@ var Visualizer = (function ($) {
                 PRODUCT_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 RISK_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 COVERAGE_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 LIMIT_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 PREMIUM_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 RATE_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 RATEFACTOR_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 ROLE_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 ROLEPLAYER_ENUM : {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 CONTAINER_ENUM: {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 DEDUCTIBLE_ENUM: {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 PARTY_ENUM: {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 PLACE_ENUM: {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 },
                 UNSPECIFIED_ENUM: {
                     shape: 'dot',
                     scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
+                    color: 'gray'   
                 }
             }
         };
+
+        $.extend(true, options.physics, _physicsParms);
         return options;
     }
 
