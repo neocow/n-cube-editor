@@ -107,3 +107,7 @@ h3{
 .highlighted{
     background-color:#FFFF00;
 }
+
+.readOnly{
+    background-color:rgb(235, 235, 228);
+}

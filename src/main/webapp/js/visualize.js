@@ -77,6 +77,7 @@ var Visualizer = (function ($) {
     var DASH_LENGTH = 15;
     var EDGE_FONT = 20;
     var GRAVITATIONAL_CONSTANT = -30000;
+    var MIN_VELOCITY = 0.85;
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
     var _networkOptionsChangeSection = null;
@@ -125,6 +126,7 @@ var Visualizer = (function ($) {
             }
         },
         physics: {
+            minVelocity: MIN_VELOCITY,
             barnesHut: {
                 gravitationalConstant: GRAVITATIONAL_CONSTANT
             }
@@ -421,7 +423,7 @@ var Visualizer = (function ($) {
             }
             else if (FUNCTION === typeof value)
             {
-                options[key] = Function(inputOption.val());
+                //Not supporting updating of netork options that are functions.   
             }
             else
             {
@@ -487,7 +489,7 @@ var Visualizer = (function ($) {
     function buildNetworkOptionsChangeSection(section, parentKey, networkOptions, networkOptionsDefaults, networkOptionsVis)
     {
         var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Input, col4Input, col5Input, fullKey,
-            value, keyVis, valueVis, highlighted;
+            value, keyVis, valueVis, highlightedClass, readOnly, readOnlyClass, functionTitle;
 
         $.each(networkOptionsDefaults, function (key, defaultValue)
         {
@@ -513,22 +515,25 @@ var Visualizer = (function ($) {
             {
                 rowBordersDiv = $('<div/>').prop({class: "row borders"});
                 col1Div = $('<div/>').prop({class: "col-md-3"});
-                col2Div = $('<div/>').prop({class: "col-md-1", title:"Value used for network"});
+                col2Div = $('<div/>').prop({class: "col-md-1"});
                 col3Div = $('<div/>').prop({class: "col-md-1"});
-                col4Div = $('<div/>').prop({class: "col-md-2", title:"Default value for network"});
-                col5Div = $('<div/>').prop({class: "col-md-5", title:"Vis default value, if different"});
+                col4Div = $('<div/>').prop({class: "col-md-2"});
+                col5Div = $('<div/>').prop({class: "col-md-5"});
 
-                highlighted = value === defaultValue ? '' : ' highlighted';
+                highlightedClass = value === defaultValue ? '' : ' highlighted';
                 if (typeof defaultValue === BOOLEAN) {
-                    col2Input = $('<input/>').prop({class: 'networkOption' + highlighted, id: fullKey, type: "checkbox"});
+                    col2Input = $('<input/>').prop({class: 'networkOption' + highlightedClass, id: fullKey, type: "checkbox"});
                     col2Input[0].checked = value;
-                    col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "checkbox", disabled: "true"});
+                    col4Input = $('<input/>').prop({class: 'readOnly', id: fullKey + 'Default', type: "checkbox", readOnly: "true"});
                     col4Input[0].checked = defaultValue;
                 }
                 else {
-                    col2Input = $('<input/>').prop({class: 'networkOption' + highlighted, id: fullKey, type: "text"});
+                    readOnly = FUNCTION === typeof value ? true: false;
+                    readOnlyClass = readOnly ? ' readOnly' : '';
+                    functionTitle = "Not currently supporting update of network options that are functions.";
+                    col2Input = $('<input/>').prop({class: 'networkOption' + highlightedClass + readOnlyClass, id: fullKey, type: "text", readOnly: readOnly, title: functionTitle});
                     col2Input[0].value = value;
-                    col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "text", disabled: "true"});
+                    col4Input = $('<input/>').prop({class: 'readOnly', id: fullKey + 'Default', type: "text", readOnly: "true"});
                     col4Input[0].value = defaultValue;
                 }
                 col1Div[0].innerHTML = fullKey;
@@ -544,13 +549,13 @@ var Visualizer = (function ($) {
                     }
                     else if (BOOLEAN === typeof valueVis )
                     {
-                        col5Input = $('<input/>').prop({id: fullKey, type: "checkbox", disabled: "true"});
+                        col5Input = $('<input/>').prop({class: 'readOnly', id: fullKey, type: "checkbox", readOnly: "true"});
                         col5Input[0].checked = valueVis;
                         col5Div.append(col5Input);
                     }
                     else
                     {
-                        col5Input = $('<input/>').prop({id: fullKey, type: "text", disabled: "true"});
+                        col5Input = $('<input/>').prop({class: 'readOnly', id: fullKey, type: "text", readOnly: "true"});
                         col5Input[0].value = valueVis;
                         col5Div.append(col5Input);
                     }
@@ -769,8 +774,6 @@ var Visualizer = (function ($) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
             destroyNetwork();
             _visualizerContent.hide();
-            _visualizerInfo.hide();
-            _visualizerNetwork.hide();
             return;
         }
 
@@ -804,11 +807,12 @@ var Visualizer = (function ($) {
             _visualizerContent.show();
             _visualizerInfo.hide();
             _visualizerNetwork.hide();
+            _networkOptionsSection.hide();
         }
         else {
             destroyNetwork();
             _visualizerContent.hide();
-             message = json.message;
+            message = json.message;
             if (null !== json.stackTrace) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
@@ -1352,9 +1356,6 @@ var Visualizer = (function ($) {
 
      function updateNetworkOptions()
     {
-        console.log('_networkOptions: ' + JSON.stringify(_networkOptions, null, 4));
-        console.log('_networkOptionsDefaults: ' + JSON.stringify(_networkOptionsDefaults, null, 4));
-        console.log('_networkOptionsVis: '  + JSON.stringify(_networkOptionsVis, null, 4));
         _network.setOptions(_networkOptions);
     }
 
