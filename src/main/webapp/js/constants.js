@@ -98,6 +98,7 @@ var CLASS_SECTION_NONE = 'section-none';
 var OBJECT = 'object';
 var BOOLEAN = 'boolean';
 var NUMBER = 'number';
+var FUNCTION = 'function';
 
 var GLYPHICONS = {
     OPTION_HORIZONTAL: 'glyphicon-option-horizontal',

@@ -71,28 +71,37 @@ var Visualizer = (function ($) {
     var _hierarchical = false;
 
     //Network physics
+    var ZOOM = 0.02;
+    var NODE_SCALING = 24;
+    var NODE_SCALING_SPECIAL = 200;
+    var DASH_LENGTH = 15;
+    var EDGE_FONT = 20;
+    var GRAVITATIONAL_CONSTANT = -30000;
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
     var _networkOptionsChangeSection = null;
-    var _networkDefaultsVis = {};
-    var _networkDefaults = null;
+    var _networkOptionsVis = {};
+    var _networkOptionsDefaults = null;
     var _networkOptions = null;
-    var _overriddenNetworkOptions =
+    var _networkOptionsOverridden =
     {
         height: getVisNetworkHeight(),
         interaction: {
             navigationButtons: true,
             keyboard: {
                 enabled: false,
-                speed: {x: 5, y: 5, zoom: 0.02}
+                speed: {
+                    x: 5,
+                    y: 5,
+                    zoom: ZOOM}
             },
             zoomView: true
         },
         nodes: {
-            value: 24,
+            value: NODE_SCALING,
             scaling: {
-                min: 24,
-                max: 24,
+                min: NODE_SCALING,
+                max: NODE_SCALING,
                 label: {
                     enabled: true
                 }
@@ -112,12 +121,12 @@ var Visualizer = (function ($) {
             },
             hoverWidth: 3,
             font: {
-                size: 20
+                size: EDGE_FONT
             }
         },
         physics: {
             barnesHut: {
-                gravitationalConstant: -30000
+                gravitationalConstant: GRAVITATIONAL_CONSTANT
             }
         },
         layout: {
@@ -276,29 +285,34 @@ var Visualizer = (function ($) {
         }
     };
 
-
-
     //Set by network stabilize events
     var _stabilizationStatus = null;
     var _iterationsToStabilize = null;
+
+    var EAST_MIN_SIZE = 50;
+    var EAST_MAX_SIZE = 1000;
+    var EAST_SIZE = 250;
+    var EAST_LENGTH_OPEN = 60;
     
     var init = function (info) {
+        var button;
         if (!_nce) {
             _nce = info;
+
 
             _layout = $('#visBody').layout({
                 name: 'visLayout'
                 ,	livePaneResizing:			true
-                ,   east__minSize:              50
-                ,   east__maxSize:              1000
-                ,   east__size:                 250
+                ,   east__minSize:              EAST_MIN_SIZE
+                ,   east__maxSize:              EAST_MAX_SIZE
+                ,   east__size:                 EAST_SIZE
                 ,   east__closable:             true
                 ,   east__resizeable:           true
                 ,   east__initClosed:           true
                 ,   east__slidable:             true
                 ,   center__triggerEventsOnLoad: true
                 ,   center__maskContents:       true
-                ,   togglerLength_open:         60
+                ,   togglerLength_open:         EAST_LENGTH_OPEN
                 ,   togglerLength_closed:       '100%'
                 ,	spacing_open:			    5  // ALL panes
                 ,	spacing_closed:			    5 // ALL panes
@@ -326,7 +340,7 @@ var Visualizer = (function ($) {
             });
 
              $('#selectedLevel-list').change(function () {
-                _selectedLevel = Number($('#selectedLevel-list').val())
+                _selectedLevel = Number($('#selectedLevel-list').val());
                 saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
                 reload();
             });
@@ -364,23 +378,24 @@ var Visualizer = (function ($) {
             //Network options parameters
             _networkOptionsSection.hide();
             $('#networkOptionsButton').click(function () {
-                $('#networkOptionsButton').toggleClass('active');
-                _networkOptionsButton = $('#networkOptionsButton').hasClass('active');
+                button = $('#networkOptionsButton');
+                button.toggleClass('active');
+                _networkOptionsButton = button.hasClass('active');
                 saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
                 _networkOptionsSection.toggle();
+                loadNetworkOptionsSectionView();
             });
 
             $('#networkOptionsChangeSection').change(function ()
             {
-                _networkOptionsChangeSection = $('#networkOptionsChangeSection');
                 $('.networkOption').each(function(){
                     var id, keys;
                     id = $(this).attr('id');
                     keys = id.split('.');
                     setNetworkOption($(this), _networkOptions, keys);
                 });
-                destroyNetwork();
-                initNetwork();
+                loadNetworkOptionsSectionView();
+                reload();
             });
         }
     };
@@ -396,18 +411,17 @@ var Visualizer = (function ($) {
                 keys.splice(key, 1);
                 setNetworkOption(inputOption, value, keys)
             }
-            else if (typeof value === BOOLEAN)
+            else if (BOOLEAN === typeof value)
             {
                 options[key] = inputOption.prop('checked');
             }
-            else if (typeof value === NUMBER)
+            else if (NUMBER === typeof value)
             {
                 options[key] = Number(inputOption.val());
             }
-            else if (typeof value === 'function')
+            else if (FUNCTION === typeof value)
             {
-                //TODO: add this back in 
-                //options[key] = Function(inputOption.val());
+                options[key] = Function(inputOption.val());
             }
             else
             {
@@ -424,135 +438,135 @@ var Visualizer = (function ($) {
 
      function initNetworkOptions()
     {
-        var emptyDataSet, emptyNetwork, container;
+        var emptyDataSet, emptyNetwork, container, defaults;
         container = document.getElementById('network');
         emptyDataSet = new vis.DataSet({});
         emptyNetwork = new vis.Network(container, {nodes:emptyDataSet, edges:emptyDataSet}, {});
 
-        _networkDefaultsVis.physics = emptyNetwork.physics.defaultOptions;
-        _networkDefaultsVis.physics = emptyNetwork.physics.defaultOptions;
-        _networkDefaultsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
-        _networkDefaultsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
-        _networkDefaultsVis.edges = emptyNetwork.edgesHandler.defaultOptions;
-        _networkDefaultsVis.groups = emptyNetwork.groups.defaultOptions;
-        _networkDefaultsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
-        _networkDefaultsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
+        _networkOptionsVis.physics = emptyNetwork.physics.defaultOptions;
+        _networkOptionsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
+        _networkOptionsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
+        _networkOptionsVis.edges = emptyNetwork.edgesHandler.defaultOptions;
+        _networkOptionsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
+        _networkOptionsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
+        _networkOptionsVis.groups = emptyNetwork.groups.defaultOptions;
 
-        //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
-        delete _networkDefaultsVis.physics.barnesHut['theta'];  
-        delete _networkDefaultsVis.physics.forceAtlas2Based['theta'];  
-        delete _networkDefaultsVis.physics.repulsion['avoidOverlap'];
+        //TODO: Figure out why these keys throw "unknown" exception in vis when set on the network despite originating
+        //TODO: from vis. Removing keys for now.
+        delete _networkOptionsVis.physics.barnesHut['theta'];  
+        delete _networkOptionsVis.physics.forceAtlas2Based['theta'];  
+        delete _networkOptionsVis.physics.repulsion['avoidOverlap'];
 
-        _networkDefaults = $.extend(true, {}, _networkDefaultsVis);
-        _networkOptions = $.extend(true, _networkDefaults, _overriddenNetworkOptions);
-
+        defaults = $.extend(true, {}, _networkOptionsVis);
+        _networkOptionsDefaults = $.extend(true, defaults, _networkOptionsOverridden);
+        _networkOptions = $.extend(true, {}, _networkOptionsDefaults);
         emptyNetwork.destroy();
     }
 
     function loadNetworkOptionsSectionView()
     {
-        $('#networkOptionsButton').prop('checked', _networkOptionsButton);
+        var button = $('#networkOptionsButton');
+        var section =  $('#networkOptionsChangeSection');
+        section.empty();
+        button.prop('checked', _networkOptionsButton);
         if (_networkOptionsButton)
         {
-            $('#networkOptionsButton').addClass('active');
+            button.addClass('active');
             _networkOptionsSection.show();
+            $("#stabilizationStatus").val(_stabilizationStatus);
+            $("#iterationsToStabilize").val(_iterationsToStabilize);
+            buildNetworkOptionsChangeSection( section, null, _networkOptions, _networkOptionsDefaults, _networkOptionsVis);
         }
         else
         {
-            $('#networkOptionsButton').removeClass('active');
+            button.removeClass('active');
             _networkOptionsSection.hide();
         }
-        
-        $("#stabilizationStatus").val(_stabilizationStatus);
-        $("#iterationsToStabilize").val(_iterationsToStabilize);
-
-        $('#networkOptionsChangeSection').empty();
-        buildNetworkOptionsChangeSection( $('#networkOptionsChangeSection'), null, _networkOptions, _networkDefaults, _networkDefaultsVis);
     }
 
-    function buildNetworkOptionsChangeSection(section, parentKey, networkOptions, networkDefaults, networkDefaultsVis)
+    function buildNetworkOptionsChangeSection(section, parentKey, networkOptions, networkOptionsDefaults, networkOptionsVis)
     {
-        $.each(networkDefaults, function (key, defaultValue) {
-            var rowBordersDiv, value, defaultKeyVis, defaultValueVis;
+        var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Input, col4Input, col5Input, fullKey,
+            value, keyVis, valueVis, highlighted;
+
+        $.each(networkOptionsDefaults, function (key, defaultValue)
+        {
             value = networkOptions[key];
-            if (networkDefaultsVis)
+            if (networkOptionsVis)
             {
-                defaultKeyVis =  key in networkDefaultsVis ? key : null;
-                defaultValueVis = networkDefaultsVis[key];
+                keyVis =  key in networkOptionsVis ? key : null;
+                valueVis = networkOptionsVis[key];
             }
             else
             {
-                defaultKeyVis = null;
-                defaultValueVis = null;
+                keyVis = null;
+                valueVis = null;
             }
 
-            rowBordersDiv = buildRowBordersDiv(section, parentKey, key, value, defaultValue, defaultKeyVis, defaultValueVis);
+            fullKey = null === parentKey ? key : parentKey + '.' + key;
+
+            if (typeof defaultValue === OBJECT)
+            {
+                buildNetworkOptionsChangeSection(section, fullKey, value, defaultValue, valueVis);
+            }
+            else
+            {
+                rowBordersDiv = $('<div/>').prop({class: "row borders"});
+                col1Div = $('<div/>').prop({class: "col-md-3"});
+                col2Div = $('<div/>').prop({class: "col-md-1", title:"Value used for network"});
+                col3Div = $('<div/>').prop({class: "col-md-1"});
+                col4Div = $('<div/>').prop({class: "col-md-2", title:"Default value for network"});
+                col5Div = $('<div/>').prop({class: "col-md-5", title:"Vis default value, if different"});
+
+                highlighted = value === defaultValue ? '' : ' highlighted';
+                if (typeof defaultValue === BOOLEAN) {
+                    col2Input = $('<input/>').prop({class: 'networkOption' + highlighted, id: fullKey, type: "checkbox"});
+                    col2Input[0].checked = value;
+                    col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "checkbox", disabled: "true"});
+                    col4Input[0].checked = defaultValue;
+                }
+                else {
+                    col2Input = $('<input/>').prop({class: 'networkOption' + highlighted, id: fullKey, type: "text"});
+                    col2Input[0].value = value;
+                    col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "text", disabled: "true"});
+                    col4Input[0].value = defaultValue;
+                }
+                col1Div[0].innerHTML = fullKey;
+                col2Div.append(col2Input);
+                col3Div[0].innerHTML = NBSP;
+                col4Div.append(col4Input);
+
+                if (keyVis)
+                {
+                    if (valueVis === defaultValue)
+                    {
+                        col5Div[0].innerHTML = NBSP;
+                    }
+                    else if (BOOLEAN === typeof valueVis )
+                    {
+                        col5Input = $('<input/>').prop({id: fullKey, type: "checkbox", disabled: "true"});
+                        col5Input[0].checked = valueVis;
+                        col5Div.append(col5Input);
+                    }
+                    else
+                    {
+                        col5Input = $('<input/>').prop({id: fullKey, type: "text", disabled: "true"});
+                        col5Input[0].value = valueVis;
+                        col5Div.append(col5Input);
+                    }
+                }
+                else
+                {
+                    col5Div[0].innerHTML = 'Parameter does not exist in Vis'
+                }
+                rowBordersDiv.append(col1Div);
+                rowBordersDiv.append(col2Div);
+                rowBordersDiv.append(col3Div);
+                rowBordersDiv.append(col4Div);
+                rowBordersDiv.append(col5Div);
+            }
             section.append(rowBordersDiv);
         });
-    }
-
-    function buildRowBordersDiv(section, parentKey, key, value, defaultValue, defaultKeyVis, defaultValueVis)
-    {
-        var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Input, col4Input, col5Input, fullKey, differentVisDefaultValue;
-
-        fullKey = parentKey === null ? key : parentKey + '.' + key;
-
-        rowBordersDiv = $('<div/>').prop({class: "row borders"});
-        col1Div = $('<div/>').prop({class: "col-md-3"});
-        col2Div = $('<div/>').prop({class: "col-md-1", title:"Value used for network"});
-        col3Div = $('<div/>').prop({class: "col-md-1"});
-        col4Div = $('<div/>').prop({class: "col-md-2", title:"Default value for network"});
-        col5Div = $('<div/>').prop({class: "col-md-5", title:"Vis default value, if different"});
-
-        if (typeof defaultValue === OBJECT)
-        {
-            buildNetworkOptionsChangeSection(section, fullKey, value, defaultValue, defaultValueVis);
-        }
-        else
-        {
-            if (typeof defaultValue === BOOLEAN) {
-                col2Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "checkbox"});
-                col2Input[0].checked = value;
-                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "checkbox", disabled: "true"});
-                col4Input[0].checked = defaultValue;
-            }
-            else {
-                col2Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "text"});
-                col2Input[0].value = value;
-                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "text", disabled: "true"});
-                col4Input[0].value = defaultValue;
-            }
-            
-            col1Div[0].innerHTML = fullKey
-            col2Div.append(col2Input);
-            col3Div[0].innerHTML = NBSP;
-            col4Div.append(col4Input);
-
-            if (defaultKeyVis)
-            {
-                differentVisDefaultValue = defaultValueVis === defaultValue ? null : defaultValueVis;
-                if (typeof differentVisDefaultValue === BOOLEAN) {
-                    col5Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "checkbox", disabled: "true"});
-                    col5Input[0].checked = differentVisDefaultValue;
-                    }
-                else  if (differentVisDefaultValue !== null)
-                {
-                    col5Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "text", disabled: "true"});
-                    col5Input[0].value = differentVisDefaultValue;
-                 }
-                col5Div.append(col5Input);
-            }
-            else {
-                col5Div[0].innerHTML = 'Parameter does not exist in Vis'
-            }
-
-            rowBordersDiv.append(col1Div);
-            rowBordersDiv.append(col2Div);
-            rowBordersDiv.append(col3Div);
-            rowBordersDiv.append(col4Div);
-            rowBordersDiv.append(col5Div);
-        }
-        return rowBordersDiv;
     }
 
     function scopeKeyDelayLoop() {
@@ -577,13 +591,13 @@ var Visualizer = (function ($) {
 
     function updateScopeBuilderScope()
     {
-        var key, value, shouldInsertNewExpression, expression;
+        var key, value, shouldInsertNewExpression, expression, i, len, j, jLen;
         var keys = Object.keys(_scope);
-        for (var i = 0, len = keys.length; i < len; i++) {
+        for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             value = _scope[key];
             shouldInsertNewExpression = true;
-            for (var j = 0, jLen = _scopeBuilderScope.length; j < jLen; j++) {
+            for (j = 0, jLen = _scopeBuilderScope.length; j < jLen; j++) {
                 expression = _scopeBuilderScope[j];
                 if (expression.isApplied && expression.key === key) {
                     expression.value = value;
@@ -598,11 +612,11 @@ var Visualizer = (function ($) {
     }
 
     function buildScopeFromText(scopeString) {
-        var tuple, key, value;
+        var tuples, tuple, key, value, i, iLen;
         var newScope = {};
         if (scopeString) {
-            var tuples = scopeString.split(',');
-            for (var i = 0, iLen = tuples.length; i < iLen; i++) {
+            tuples = scopeString.split(',');
+            for ( i = 0, iLen = tuples.length; i < iLen; i++) {
                 tuple = tuples[i].split(':');
                 key = tuple[0].trim();
                 value = tuple[1];
@@ -618,7 +632,7 @@ var Visualizer = (function ($) {
         _nce.clearAllErrors();
         setTimeout(function () {reloadNetwork();}, PROGRESS_DELAY);
         _nce.showNote('Updating network...');
-    }
+    };
 
     var reloadNetwork = function () {
         _nce.clearError();
@@ -635,7 +649,7 @@ var Visualizer = (function ($) {
         _nce.clearAllErrors();
         setTimeout(function () {loadTraitsFromServer(node);}, PROGRESS_DELAY);
         node.loadTraits ? _nce.showNote('Loading traits...') :  _nce.showNote('Removing traits...');
-    }
+    };
 
     var loadTraitsFromServer = function(node)
     {
@@ -650,18 +664,18 @@ var Visualizer = (function ($) {
         };
         
         result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
-        if (result.status === false) {
+        if (false === result.status) {
             _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + result.data);
             return node;
         }
 
         json = result.data;
 
-        if (json.status === STATUS_SUCCESS) {
-            if (json.message !== null) {
+        if (STATUS_SUCCESS === json.status) {
+            if (null !== json.message) {
                 _nce.showNote(json.message);
             }
-            visInfo = json.visInfo
+            visInfo = json.visInfo;
             node = visInfo.nodes['@items'][0];
             _scope = visInfo.scope;
             delete _scope['@type'];
@@ -678,25 +692,25 @@ var Visualizer = (function ($) {
          }
         else {
             message = json.message;
-            if (json.stackTrace != null) {
+            if (null !== json.stackTrace) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
             _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + message);
         }
         return node;
-    }
+    };
 
     var load = function () {
         _nce.clearAllErrors();
         setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
         _nce.showNote('Loading visualizer...');
-    }
+    };
 
     var loadFromServer = function ()
     {
         var options, result, json, message;
         _nce.clearError();
-        clearVisLayoutEast()
+        clearVisLayoutEast();
 
         if (!_nce.getSelectedCubeName()) {
             destroyNetwork();
@@ -708,7 +722,7 @@ var Visualizer = (function ($) {
         //TODO: The .replace is temporary until figured out why nce.getSelectedCubeName()
         //TODO: occasionally contains a cube name with "_" instead of "." (e.g. rpm_class_product instead of
         //TODO: rpm.class.product) after a page refresh.
-        _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.')
+        _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
 
         if (_keepCurrentScope)
         {
@@ -751,7 +765,7 @@ var Visualizer = (function ($) {
 
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
-        if (result.status === false) {
+        if (false === result.status) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
             destroyNetwork();
             _visualizerContent.hide();
@@ -763,7 +777,7 @@ var Visualizer = (function ($) {
         json = result.data;
 
         if (json.status === STATUS_SUCCESS) {
-            if (json.message !== null) {
+            if (null !== json.message) {
                 _nce.showNote(json.message);
             }
             loadData(json.visInfo, json.status);
@@ -780,7 +794,7 @@ var Visualizer = (function ($) {
             _visualizerInfo.show();
             _visualizerNetwork.show();
         }
-        else if (json.status === STATUS_MISSING_START_SCOPE) {
+        else if (STATUS_MISSING_START_SCOPE === json.status) {
             _nce.showNote(json.message);
             loadData(json.visInfo, json.status);
             initNetwork();
@@ -795,13 +809,13 @@ var Visualizer = (function ($) {
             destroyNetwork();
             _visualizerContent.hide();
              message = json.message;
-            if (json.stackTrace != null) {
+            if (null !== json.stackTrace) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
         }
  
-         if (_scopeBuilderListenersAdded === false){
+         if (false === _scopeBuilderListenersAdded){
             availableScopeKeys = _availableScopeKeys;
             availableScopeValues = _availableScopeValues;
             addScopeBuilderListeners();
@@ -837,16 +851,16 @@ var Visualizer = (function ($) {
     var loadGroupsView = function()
     {
         var groupName, id, available, label, title, input, selected, button, groups,
-            background, fontMap, color, groupMap, boxShadow;
-        var divGroups = $('#groups');
+            background, fontMap, color, groupMap, boxShadow, j, k, divGroups;
 
+        divGroups = $('#groups');
         divGroups.empty();
         groups = _networkOptions.groups;
 
         _availableGroupsAllLevels.sort();
-        for (var j = 0; j < _availableGroupsAllLevels.length; j++) {
+        for (j = 0; j < _availableGroupsAllLevels.length; j++) {
             color = null;
-            boxShadow = ''
+            boxShadow = '';
             groupName = _availableGroupsAllLevels[j];
             id = groupName + _groupSuffix;
             available = groupCurrentlyAvailable(id);
@@ -854,7 +868,7 @@ var Visualizer = (function ($) {
             title = available ? "Show/hide " + label + " in the graph" : "Increase level to enable show/hide of " + label + " in the graph";
 
             selected = false;
-            for (var k = 0; k < _selectedGroups.length; k++) {
+            for (k = 0; k < _selectedGroups.length; k++) {
                 if (groupIdsEqual(id, _selectedGroups[k])) {
                     selected = true;
                     break;
@@ -877,16 +891,18 @@ var Visualizer = (function ($) {
                 button.attr({class: 'btn active btn-primary-group'});
                 boxShadow = 'box-shadow: 0 4px #575757;';
             }
-            else if (available) {
+            else if (available)
+            {
                 button.attr({class: 'btn btn-default-group'});
-             }
-            else{
+            }
+            else
+            {
                 button.attr({class: 'btn btn-default-group'});
                 button.attr({disabled: 'disabled'});
             }
             button.attr({style:'background: ' +  background + '; color: ' + color + ';font-size: 12px; padding: 3px; margin-right: 3px; margin-bottom: 7px;border-radius: 15px;' + boxShadow});
             button.attr({'data-cat': label, 'data-toggle': "buttons", 'id': id, 'title': title});
-            var input = $('<input>').attr({type: 'checkbox', autocomplete: 'off'});
+            input = $('<input>').attr({type: 'checkbox', autocomplete: 'off'});
             button.append(input);
             button.append(label);
             button.click(function (e) {
@@ -896,7 +912,7 @@ var Visualizer = (function ($) {
             divGroups.append(button);
         }
 
-        if (_selectAllNoneListenersAdded === false) {
+        if (false === _selectAllNoneListenersAdded) {
             $('#selectAll').click(function (e) {
                 e.preventDefault();
                 $('#groups').find('button').each(function () {
@@ -922,15 +938,15 @@ var Visualizer = (function ($) {
     };
 
     function getScopeString(){
-        var scopeLen, key;
+        var scopeLen, key, i, len;
         var scopeString = '';
         var keys = Object.keys(_scope);
-        for (var i = 0, len = keys.length; i < len; i++) {
+        for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             scopeString += key + ': ' + _scope[key] + ', ';
         }
         scopeLen = scopeString.length;
-        if (scopeLen > 1) {
+        if (1 < scopeLen) {
             scopeString = scopeString.substring(0, scopeLen - 2);
         }
         return scopeString;
@@ -938,7 +954,7 @@ var Visualizer = (function ($) {
 
     function groupChangeEvent(groupId)
     {
-        var button;
+        var button, i, len, k, kLen;
 
         $('#groups').find('button').each(function()
         {
@@ -947,7 +963,7 @@ var Visualizer = (function ($) {
 
                 if  (button.hasClass('active'))
                 {
-                    for (var i = 0, len = _selectedGroups.length; i < len; i++) {
+                    for (i = 0, len = _selectedGroups.length; i < len; i++) {
                         if (groupIdsEqual(groupId, _selectedGroups[i])) {
                             _selectedGroups.splice(i, 1);
                             button.removeClass('active');
@@ -957,7 +973,7 @@ var Visualizer = (function ($) {
                 }
                 else
                 {
-                    for (var k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++)
+                    for (k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++)
                     {
                         if (groupIdsEqual(groupId, _availableGroupsAllLevels[k])) {
                             _selectedGroups.push(_availableGroupsAllLevels[k]);
@@ -968,14 +984,14 @@ var Visualizer = (function ($) {
                 }
                 saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
                 reload();
-                return;
-            }
+             }
         });
     }
 
     function groupCurrentlyAvailable(groupId)
     {
-        for (var l = 0; l < _availableGroupsAtLevel.length; l++)
+        var l;
+        for ( l = 0; l < _availableGroupsAtLevel.length; l++)
         {
             if (groupIdsEqual(groupId, _availableGroupsAtLevel[l]))
             {
@@ -995,11 +1011,11 @@ var Visualizer = (function ($) {
     function loadCountsView()
     {
         var totalNodeCount = _nodes.length;
-        var maxLevelLabel = _maxLevel === 1 ? 'level' : 'levels';
-        var nodeCountLabel = totalNodeCount === 1 ? 'node' : 'nodes';
+        var maxLevelLabel = 1 === _maxLevel ? 'level' : 'levels';
+        var nodeCountLabel = 1 === totalNodeCount ? 'node' : 'nodes';
 
         var nodesDisplayingAtLevelCount = _network.body.data.nodes.length;
-        var nodesAtLevelLabel = nodesDisplayingAtLevelCount === 1 ? 'node' : 'nodes';
+        var nodesAtLevelLabel = 1 === nodesDisplayingAtLevelCount ? 'node' : 'nodes';
 
         $('#levelCounts')[0].textContent = nodesDisplayingAtLevelCount  + ' ' + nodesAtLevelLabel + ' of ' + _countNodesAtLevel + ' displaying at current level';
         $('#totalCounts')[0].textContent = totalNodeCount + ' ' + nodeCountLabel + ' total over ' +  _maxLevel + ' ' + maxLevelLabel ;
@@ -1007,11 +1023,11 @@ var Visualizer = (function ($) {
 
     function loadSelectedLevelListView()
     {
-        var option;
+        var option, j;
         var select = $('#selectedLevel-list');
         select.empty();
 
-        for (var j = 1; j <= _maxLevel; j++)
+        for (j = 1; j <= _maxLevel; j++)
         {
             option = $('<option/>');
             option[0].textContent = j.toString();
@@ -1027,8 +1043,9 @@ var Visualizer = (function ($) {
     
     function isSelectedGroup(node)
     {
+        var j, jLen;
         if (_selectedGroups) {
-            for (var j = 0, jLen = _selectedGroups.length; j < jLen; j++) {
+            for (j = 0, jLen = _selectedGroups.length; j < jLen; j++) {
                 if (groupIdsEqual(node.group, _selectedGroups[j])) {
                     return true;
                 }
@@ -1047,7 +1064,7 @@ var Visualizer = (function ($) {
 
     function updateNetworkDataNodes()
     {
-        var node, selectedGroup, groupNamePrefix;
+        var node, selectedGroup, groupNamePrefix, i, iLen;
         var networkDataNodes =  _network.body.data.nodes;
         var nodeIdsToRemove = [];
         var nodesToAddBack = [];
@@ -1057,7 +1074,7 @@ var Visualizer = (function ($) {
         _countNodesAtLevel = 0;
 
         //given the selected level, determine nodes to exclude, nodes to add back, selected groups and available groups
-        for (var i = 0, iLen = _nodes.length; i < iLen; i++)
+        for (i = 0, iLen = _nodes.length; i < iLen; i++)
         {
             node  = _nodes[i];
 
@@ -1098,58 +1115,29 @@ var Visualizer = (function ($) {
 
     function updateNetworkDataEdges()
     {
-        var edge;
+        var edge, k, kLen;
         var networkDataEdges =  _network.body.data.edges;
         var edgeIdsToRemove = [];
         var edgesToAddBack = [];
-        var level = _selectedLevel;
 
         //given the selected level, determine edges to exclude and edges to add back
         if (_edges) {
-            for (var k = 0, kLen = _edges.length; k < kLen; k++) {
+            for (k = 0, kLen = _edges.length; k < kLen; k++) {
                 edge = _edges[k];
 
-                if (parseInt(edge.level) > level) {
+                if (parseInt(edge.level) > _selectedLevel)
+                {
                     edgeIdsToRemove.push(edge.id);
                 }
-                else if (!networkDataEdges || !networkDataEdges.get(edge.id)){
-                    {
-                        edgesToAddBack.push(edge);
-                    }
+                else if (!networkDataEdges || !networkDataEdges.get(edge.id))
+                {
+                    edgesToAddBack.push(edge);
                 }
             }
         }
         networkDataEdges.remove(edgeIdsToRemove);
         networkDataEdges.add(edgesToAddBack);
     }
-
-    /*
-     //TODO: Attempted short-term fix for issue with hierarchical mode, but it's not enough.
-     //TODO: Keep investigating, submit question and possibly a bug fix to vis.
-    function setLevelOnNetworkNodes()
-    {
-        var level, node, supportNode, edge, id;
-        var networkNodes =  _network.body.nodes;
-        var networkDataNodes = _network.body.data.nodes;
-        var networkEdges =  _network.body.edges;
-        var networkDataEdges = _network.body.data.edges;
-
-
-        for (var i = 1, iLen = networkDataNodes.length; i < iLen; i++) {
-            node = networkNodes[i];
-            supportNode = networkNodes["edgeId:" + i];
-            id = node.parentEdgeId ? node.parentEdgeId : node.id;
-            level = networkDataNodes.get(id).level;
-            node.level = level;
-            supportNode.level = level;
-        }
-
-        for (var i = 1, iLen = networkDataEdges.length; i < iLen; i++) {
-            edge = networkEdges[i];
-            level = networkDataEdges.get(edge.id).level;
-            edge.level = level;
-        }
-    }*/
 
     function loadData(visInfo, status)
     {
@@ -1163,7 +1151,7 @@ var Visualizer = (function ($) {
             _groupSuffix = visInfo.groupSuffix;
             _maxLevel = visInfo.maxLevel;
             nodes = visInfo.nodes['@items'];
-            edges = visInfo.edges['@items']
+            edges = visInfo.edges['@items'];
             _nodes =  nodes ? nodes : [];
             _edges = edges ? edges : [];
         }
@@ -1186,8 +1174,8 @@ var Visualizer = (function ($) {
     }
 
     function clusterDescendants(immediateDescendantsOnly) {
-        var id;
-        for (var i = 0; i < _network.clusteredNodeIds.length; i++) {
+        var id, i;
+        for (i = 0; i < _network.clusteredNodeIds.length; i++) {
             id = _network.clusteredNodeIds[i];
             clusterDescendantsByNodeId(id, immediateDescendantsOnly);
         }
@@ -1199,8 +1187,8 @@ var Visualizer = (function ($) {
     }
 
     function getClusterOptionsByNodeId(nodeId) {
-        var clusterOptionsByData, node, clusterLabel;
-        return clusterOptionsByData = {
+        var node, clusterLabel;
+        return {
             processProperties: function (clusterOptions, childNodes) {
                 node = getNodeById(childNodes, nodeId);
                 clusterLabel = node.label + ' cluster';
@@ -1213,9 +1201,9 @@ var Visualizer = (function ($) {
 
     function openClusterByClusterNodeId(clusterNodeId)  //TEMP: gets called when a clustered node is clicked
     {
-        var node, indexNode;
+        var node, indexNode, i;
         var nodesInCluster = _network.getNodesInCluster(clusterNodeId);
-        for (var i = 0; i < nodesInCluster.length; i++)
+        for (i = 0; i < nodesInCluster.length; i++)
         {
             node = nodesInCluster[i];
             indexNode = _network.clusteredNodeIds.indexOf(node);
@@ -1237,14 +1225,14 @@ var Visualizer = (function ($) {
 
     function markTopNodeSpecial()
     {
-        var node = _nodes[0]
+        var node = _nodes[0];
         if (node) {
-            if (node.id !== '1') {
+            if ('1' !== node.id) {
                 throw new Error('Expected node id of 1 for first node in list.')
             }
-            node.shapeProperties = {borderDashes: [15, 5]};
+            node.shapeProperties = {borderDashes: [DASH_LENGTH, 5]};
             node.borderWidth = 3;
-            node.scaling = {min: 200, max: 200, label: {enabled: true}};
+            node.scaling = {min: NODE_SCALING_SPECIAL, max: NODE_SCALING_SPECIAL, label: {enabled: true}};
         }
     }
 
@@ -1261,20 +1249,20 @@ var Visualizer = (function ($) {
             container = document.getElementById('network');
             nodeDataSet = new vis.DataSet({});
             markTopNodeSpecial();
-            nodeDataSet.add(_nodes)
+            nodeDataSet.add(_nodes);
             edgeDataSet = new vis.DataSet({});
-             edgeDataSet.add(_edges)
+             edgeDataSet.add(_edges);
             _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, _networkOptions);
             updateNetworkData();
             customizeNetworkForNce(_network);
 
             _network.on('select', function(params) {
                 _clicks++;
-                if(_clicks === 1)
+                if(1 === _clicks)
                 {
                     _clickTimer = setTimeout(function()
                     {
-                        networkSingleClick(params)
+                        networkSingleClick(params);
                         _clickTimer = 0;
 
                     }, PROGRESS_DELAY);
@@ -1282,7 +1270,7 @@ var Visualizer = (function ($) {
                 } else
                 {
                     clearTimeout(_clickTimer);
-                    networkDoubleClick(params)
+                    networkDoubleClick(params);
                     _clicks = 0;
                 }
             });
@@ -1299,7 +1287,7 @@ var Visualizer = (function ($) {
                 $("#iterationsToStabilize").val(_iterationsToStabilize);
              });
 
-            _network.on('stabilizationProgress', function (params) {
+            _network.on('stabilizationProgress', function () {
                  _stabilizationStatus = 'stabilization in progress';
                  $("#stabilizationStatus").val(_stabilizationStatus);
              });
@@ -1325,7 +1313,7 @@ var Visualizer = (function ($) {
 
     function networkDoubleClick(params)
     {
-        if (params.nodes.length === 1) {
+        if (1 === params.nodes.length) {
             if (_network.isCluster(params.nodes[0])) {
                 openClusterByClusterNodeId(params.nodes[0]);
             } else {
@@ -1336,7 +1324,7 @@ var Visualizer = (function ($) {
 
     function networkSingleClick(params)
     {
-        var nodeId, node, cubeName, appId
+        var nodeId, node, cubeName, appId;
         nodeId = params.nodes[0];
         node = getNodeById(_nodes, nodeId );
         if (node) {
@@ -1364,6 +1352,9 @@ var Visualizer = (function ($) {
 
      function updateNetworkOptions()
     {
+        console.log('_networkOptions: ' + JSON.stringify(_networkOptions, null, 4));
+        console.log('_networkOptionsDefaults: ' + JSON.stringify(_networkOptionsDefaults, null, 4));
+        console.log('_networkOptionsVis: '  + JSON.stringify(_networkOptionsVis, null, 4));
         _network.setOptions(_networkOptions);
     }
 
@@ -1411,20 +1402,20 @@ var Visualizer = (function ($) {
     }
 
     function replaceNode(nodes, newNode) {
-        var node;
-        for (var i = 0, len = nodes.length; i < len; i++) {
+        var node, i, len;
+        for (i = 0, len = nodes.length; i < len; i++) {
             node = nodes[i];
             if (node.id === newNode.id) {
                 nodes.splice(i, 1);
-                nodes.push(newNode)
+                nodes.push(newNode);
                 return;
             }
         }
     }
 
     function getNodeById(nodes, nodeId) {
-        var node;
-        for (var i = 0, len = nodes.length; i < len; i++) {
+        var node, i, len;
+        for (i = 0, len = nodes.length; i < len; i++) {
             node = nodes[i];
             if (node.id === nodeId) {
                 return node;
@@ -1434,17 +1425,17 @@ var Visualizer = (function ($) {
 
     function customizeNetworkForNce(network)
     {
-        var edge, childNodeId, childClonedOptions, refreshData, node, childNodesObj, childEdgesObj, parentNodeId, parentClonedOptions;
+        var edge, childNodeId, childClonedOptions, refreshData, node, childNodesObj, childEdgesObj, parentNodeId, parentClonedOptions, i;
 
         //TODO: Consider submitting pull request with these enhancements to vis
         network.clustering.clusterDescendants = function(nodeId, immediateDescendantsOnly, options) {
             var collectDescendants = function(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this) {
 
                 // collect the nodes that will be in the cluster
-                for (var i = 0; i < node.edges.length; i++) {
+                for (i = 0; i < node.edges.length; i++) {
                     edge = node.edges[i];
                     //if (edge.hiddenByCluster !== true) {  //BBH:: commented this line
-                    if (edge.hiddenByCluster !== true && edge.toId != parentNodeId) { //BBH: added this line
+                    if (true !== edge.hiddenByCluster && edge.toId != parentNodeId) { //BBH: added this line
                         childNodeId = _this._getConnectedId(edge, parentNodeId);
 
                         // if the child node is not in a cluster (may not be needed now with the edge.hiddenByCluster check)
@@ -1453,16 +1444,16 @@ var Visualizer = (function ($) {
                                 if (options.joinCondition === undefined) {
                                     childEdgesObj[edge.id] = edge;
                                     childNodesObj[childNodeId] = _this.body.nodes[childNodeId];
-                                    if (immediateDescendantsOnly === false) {
+                                    if (false === immediateDescendantsOnly) {
                                         collectDescendants(_this.body.nodes[childNodeId], childNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this); //BBH: added this line
                                     }
                                 } else {
                                     // clone the options and insert some additional parameters that could be interesting.
                                     childClonedOptions = _this._cloneOptions(this.body.nodes[childNodeId]);
-                                    if (options.joinCondition(parentClonedOptions, childClonedOptions) === true) {
+                                    if (true === options.joinCondition(parentClonedOptions, childClonedOptions)) {
                                         childEdgesObj[edge.id] = edge;
                                         childNodesObj[childNodeId] = _this.body.nodes[childNodeId];
-                                        if (immediateDescendantsOnly === false) {
+                                        if (false === immediateDescendantsOnly) {
                                             collectDescendants(_this.body.nodes[childNodeId], childNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this); //BBH: added this line
                                         }
                                     }
@@ -1476,7 +1467,7 @@ var Visualizer = (function ($) {
                 }
             };
 
-            refreshData = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
+            refreshData = 3 >= arguments.length || arguments[3] === undefined ? true : arguments[3];
 
             // kill conditions
             if (nodeId === undefined) {
@@ -1514,7 +1505,7 @@ var Visualizer = (function ($) {
         network.clustering._cloneOptions = function(item, type) {
             var clonedOptions = {};
             var util = vis.util;
-            if (type === undefined || type === 'node') {
+            if (type === undefined || 'node' === type) {
                 util.deepExtend(clonedOptions, item.options, true);
                 clonedOptions.x = item.x;
                 clonedOptions.y = item.y;
@@ -1556,8 +1547,8 @@ var Visualizer = (function ($) {
 
 
     /*================================= BEGIN SCOPE BUILDER ==========================================================*/
-    var availableScopeKeys = []
-    var availableScopeValues = {}
+    var availableScopeKeys = [];
+    var availableScopeValues = {};
 
     //TODO  1. The key in the scope picker is case sensitive, which doesn’t play well with the case insensitive scope
     //TODO     that comes across from the server (Product vs. product, etc.).
@@ -1598,7 +1589,7 @@ var Visualizer = (function ($) {
     function scopeBuilderSave() {
          var newScope = getScopeBuilderScopeText();
         _scopeInput.val(newScope);
-        _scope = buildScopeFromText(newScope)
+        _scope = buildScopeFromText(newScope);
         saveToLocalStorage(_scope, SCOPE_MAP);
      }
 
