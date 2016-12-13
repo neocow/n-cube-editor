@@ -67,23 +67,216 @@ var Visualizer = (function ($) {
     var _clickTimer = null;
     var _clicks = 0;
 
+    //Network layout parameters
+    var _hierarchical = false;
 
     //Network physics
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
     var _networkOptionsChangeSection = null;
-    var _physicsDefaultsVis = null;
-    var _physicsDefaults = null;
-    var _physicsParms = null;
-    var _overriddenPhysicsOptions =
+    var _networkDefaultsVis = {};
+    var _networkDefaults = null;
+    var _networkOptions = null;
+    var _overriddenNetworkOptions =
     {
-        barnesHut: {
-            gravitationalConstant: -30000
+        height: getVisNetworkHeight(),
+        interaction: {
+            navigationButtons: true,
+            keyboard: {
+                enabled: false,
+                speed: {x: 5, y: 5, zoom: 0.02}
+            },
+            zoomView: true
+        },
+        nodes: {
+            value: 24,
+            scaling: {
+                min: 24,
+                max: 24,
+                label: {
+                    enabled: true
+                }
+            }
+        },
+        edges: {
+            arrows: {
+                to: {
+                    enabled: true
+                }
+            },
+            color: {
+                color: 'gray'
+            },
+            smooth: {
+                enabled: true
+            },
+            hoverWidth: 3,
+            font: {
+                size: 20
+            }
+        },
+        physics: {
+            barnesHut: {
+                gravitationalConstant: -30000
+            }
+        },
+        layout: {
+            hierarchical: {
+                enabled: _hierarchical
+            },
+            improvedLayout : true,
+            randomSeed:2
+        },
+        groups: {
+            PRODUCT: {
+                shape: 'box',
+                color: '#DAE4FA'
+            },
+            RISK: {
+                shape: 'box',
+                color: '#759BEC'
+            },
+            COVERAGE: {
+                shape: 'box',
+                color: '#113275',
+                font: {
+                    color: '#D8D8D8'
+                }
+            },
+            CONTAINER: {
+                shape: 'star',
+                color: "#731d1d",
+                font: {
+                    buttonColor: '#D8D8D8'
+                }
+            },
+            LIMIT: {
+                shape: 'ellipse',
+                color: '#FFFF99'
+            },
+            DEDUCTIBLE: {
+                shape: 'ellipse',
+                color: '#FFFF99'
+            },
+            PREMIUM: {
+                shape: 'ellipse',
+                color: '#0B930B',
+                font: {
+                    color: '#D8D8D8'
+                }
+            },
+            RATE: {
+                shape: 'ellipse',
+                color: '#EAC259'
+            },
+            ROLE: {
+                shape: 'box',
+                color: '#F59D56'
+            },
+            ROLEPLAYER: {
+                shape: 'box',
+                color: '#F2F2F2'
+            },
+            RATEFACTOR: {
+                shape: 'ellipse',
+                color: '#EAC259'
+            },
+            PARTY: {
+                shape: 'box',
+                color: '#004000',
+                font: {
+                    color: '#D8D8D8'
+                }
+            },
+            PLACE: {
+                shape: 'box',
+                color: '#481849',
+                font: {
+                    color: '#D8D8D8'
+                }
+            },
+            UNSPECIFIED: {
+                shape: 'box',
+                color: '#7ac5cd'
+            },
+            FORM: {
+                shape: 'box',
+                color: '#d2691e'
+            },
+            PRODUCT_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            RISK_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            COVERAGE_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            LIMIT_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            PREMIUM_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            RATE_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            RATEFACTOR_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            ROLE_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            ROLEPLAYER_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            CONTAINER_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            DEDUCTIBLE_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            PARTY_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            PLACE_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            UNSPECIFIED_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            }
         }
-    }
+    };
 
-    //Network layout parameters
-    var _hierarchical = false;
+
 
     //Set by network stabilize events
     var _stabilizationStatus = null;
@@ -147,11 +340,11 @@ var Visualizer = (function ($) {
                 //if hierarchical mode is selected since that mode requires either all or no nodes to
                 //have a defined level. Attempted short-term fix in setLevelOnNetworkNodes() method, but it's not enough.
                 //TODO: Keep investigating, submit question and possibly a bug fix to visjs.
-                $('#hierarchical').prop('checked', false);
-                _nce.showNote('Hierarchical mode is currently not available');
-                //_hierarchical = this.checked;
-                //saveToLocalStorage(_hierarchical, HIERARCHICAL);
-                //updateNetworkOptions();
+               // $('#hierarchical').prop('checked', false);
+               // _nce.showNote('Hierarchical mode is currently not available');
+                _hierarchical = this.checked;
+                saveToLocalStorage(_hierarchical, HIERARCHICAL);
+                updateNetworkOptions();
             });
 
             _scopeInput.on('change', function () {
@@ -177,45 +370,55 @@ var Visualizer = (function ($) {
                 _networkOptionsSection.toggle();
             });
 
-            $('#networkOptionsChangeSection').change(function () {
+            $('#networkOptionsChangeSection').change(function ()
+            {
                 _networkOptionsChangeSection = $('#networkOptionsChangeSection');
                 $('.networkOption').each(function(){
-                    setNetworkOptions($(this),_physicsParms)
+                    var id, keys;
+                    id = $(this).attr('id');
+                    keys = id.split('.');
+                    setNetworkOption($(this), _networkOptions, keys);
                 });
-
                 destroyNetwork();
                 initNetwork();
             });
         }
     };
 
-
-    function setNetworkOptions(element, options)
+    function setNetworkOption(inputOption, options, keys)
     {
-        var id, fullKey, partKey, optionValue, value;
-        id = element.attr('id');
-        fullKey = id.split('.');
-        optionValue = options[fullKey[1]];
-        for (var i = 2, iLen = fullKey.length; i < iLen; i++)//TODO: change to 0 when all options
-        {
-            partKey = fullKey[i];
-            value = optionValue[partKey];
-            if(typeof value === OBJECT)
+        var key, value, errorMessage;
+        if (keys) {
+            key = keys[0];
+            value = options[key];
+            if (typeof value === OBJECT)
             {
-                optionValue = value;
+                keys.splice(key, 1);
+                setNetworkOption(inputOption, value, keys)
             }
             else if (typeof value === BOOLEAN)
             {
-                optionValue[partKey] =  element.prop('checked');
+                options[key] = inputOption.prop('checked');
             }
             else if (typeof value === NUMBER)
             {
-                optionValue[partKey] = Number(element.val());
+                options[key] = Number(inputOption.val());
+            }
+            else if (typeof value === 'function')
+            {
+                //TODO: add this back in 
+                //options[key] = Function(inputOption.val());
             }
             else
             {
-                optionValue[partKey] = element.val();
+                options[key] = inputOption.val();
             }
+        }
+        else
+        {
+            errorMessage = 'Invalid state encountered while updating network options for parameter ' + inputOption.attr('id') + '.';
+            _nce.showNote(errorMessage);
+            throw new Error(errorMessage);
         }
     }
 
@@ -225,13 +428,25 @@ var Visualizer = (function ($) {
         container = document.getElementById('network');
         emptyDataSet = new vis.DataSet({});
         emptyNetwork = new vis.Network(container, {nodes:emptyDataSet, edges:emptyDataSet}, {});
-        _physicsDefaultsVis = emptyNetwork.physics.defaultOptions;
-        delete _physicsDefaultsVis.barnesHut['theta'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
-        delete _physicsDefaultsVis.forceAtlas2Based['theta'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
-        delete _physicsDefaultsVis.repulsion['avoidOverlap'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
+
+        _networkDefaultsVis.physics = emptyNetwork.physics.defaultOptions;
+        _networkDefaultsVis.physics = emptyNetwork.physics.defaultOptions;
+        _networkDefaultsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
+        _networkDefaultsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
+        _networkDefaultsVis.edges = emptyNetwork.edgesHandler.defaultOptions;
+        _networkDefaultsVis.groups = emptyNetwork.groups.defaultOptions;
+        _networkDefaultsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
+        _networkDefaultsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
+
+        //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
+        delete _networkDefaultsVis.physics.barnesHut['theta'];  
+        delete _networkDefaultsVis.physics.forceAtlas2Based['theta'];  
+        delete _networkDefaultsVis.physics.repulsion['avoidOverlap'];
+
+        _networkDefaults = $.extend(true, {}, _networkDefaultsVis);
+        _networkOptions = $.extend(true, _networkDefaults, _overriddenNetworkOptions);
+
         emptyNetwork.destroy();
-        _physicsDefaults = $.extend(true, {}, _physicsDefaultsVis);
-        _physicsParms = $.extend(true, _physicsDefaults, _overriddenPhysicsOptions);
     }
 
     function loadNetworkOptionsSectionView()
@@ -252,25 +467,35 @@ var Visualizer = (function ($) {
         $("#iterationsToStabilize").val(_iterationsToStabilize);
 
         $('#networkOptionsChangeSection').empty();
-        buildNetworkOptionsChangeSection( $('#networkOptionsChangeSection'), 'physics', _physicsParms, _physicsDefaults, _physicsDefaultsVis);
+        buildNetworkOptionsChangeSection( $('#networkOptionsChangeSection'), null, _networkOptions, _networkDefaults, _networkDefaultsVis);
     }
 
-    function buildNetworkOptionsChangeSection(section, parentKey, options, defaultOptions, visDefaultOptions)
+    function buildNetworkOptionsChangeSection(section, parentKey, networkOptions, networkDefaults, networkDefaultsVis)
     {
-        $.each(defaultOptions, function (key, defaultValue) {
-            var rowBordersDiv, value, defaultValueVis;
-            value = options[key];
-            defaultValueVis = visDefaultOptions[key];
-            rowBordersDiv = buildRowBordersDiv(section, parentKey, key, value, defaultValue, defaultValueVis);
+        $.each(networkDefaults, function (key, defaultValue) {
+            var rowBordersDiv, value, defaultKeyVis, defaultValueVis;
+            value = networkOptions[key];
+            if (networkDefaultsVis)
+            {
+                defaultKeyVis =  key in networkDefaultsVis ? key : null;
+                defaultValueVis = networkDefaultsVis[key];
+            }
+            else
+            {
+                defaultKeyVis = null;
+                defaultValueVis = null;
+            }
+
+            rowBordersDiv = buildRowBordersDiv(section, parentKey, key, value, defaultValue, defaultKeyVis, defaultValueVis);
             section.append(rowBordersDiv);
         });
     }
 
-    function buildRowBordersDiv(section, parentKey, key, value, defaultValue, defaultValueVis)
+    function buildRowBordersDiv(section, parentKey, key, value, defaultValue, defaultKeyVis, defaultValueVis)
     {
-        var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Input, col4Input, fullKey;
+        var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Input, col4Input, col5Input, fullKey, differentVisDefaultValue;
 
-        fullKey = parentKey + '.' + key;
+        fullKey = parentKey === null ? key : parentKey + '.' + key;
 
         rowBordersDiv = $('<div/>').prop({class: "row borders"});
         col1Div = $('<div/>').prop({class: "col-md-3"});
@@ -288,22 +513,38 @@ var Visualizer = (function ($) {
             if (typeof defaultValue === BOOLEAN) {
                 col2Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "checkbox"});
                 col2Input[0].checked = value;
-                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "checkbox", readOnly: "true"});
+                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "checkbox", disabled: "true"});
                 col4Input[0].checked = defaultValue;
             }
             else {
                 col2Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "text"});
                 col2Input[0].value = value;
-                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "text", readOnly: "true"});
+                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "text", disabled: "true"});
                 col4Input[0].value = defaultValue;
             }
-
-
+            
             col1Div[0].innerHTML = fullKey
             col2Div.append(col2Input);
             col3Div[0].innerHTML = NBSP;
             col4Div.append(col4Input);
-            col5Div[0].innerHTML = defaultValueVis === defaultValue ? null : defaultValueVis;
+
+            if (defaultKeyVis)
+            {
+                differentVisDefaultValue = defaultValueVis === defaultValue ? null : defaultValueVis;
+                if (typeof differentVisDefaultValue === BOOLEAN) {
+                    col5Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "checkbox", disabled: "true"});
+                    col5Input[0].checked = differentVisDefaultValue;
+                    }
+                else  if (differentVisDefaultValue !== null)
+                {
+                    col5Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "text", disabled: "true"});
+                    col5Input[0].value = differentVisDefaultValue;
+                 }
+                col5Div.append(col5Input);
+            }
+            else {
+                col5Div[0].innerHTML = 'Parameter does not exist in Vis'
+            }
 
             rowBordersDiv.append(col1Div);
             rowBordersDiv.append(col2Div);
@@ -600,7 +841,7 @@ var Visualizer = (function ($) {
         var divGroups = $('#groups');
 
         divGroups.empty();
-        groups = getNetworkOptions().groups;
+        groups = _networkOptions.groups;
 
         _availableGroupsAllLevels.sort();
         for (var j = 0; j < _availableGroupsAllLevels.length; j++) {
@@ -1023,7 +1264,7 @@ var Visualizer = (function ($) {
             nodeDataSet.add(_nodes)
             edgeDataSet = new vis.DataSet({});
              edgeDataSet.add(_edges)
-            _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, getNetworkOptions());
+            _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, _networkOptions);
             updateNetworkData();
             customizeNetworkForNce(_network);
 
@@ -1123,7 +1364,7 @@ var Visualizer = (function ($) {
 
      function updateNetworkOptions()
     {
-        _network.setOptions(getNetworkOptions());
+        _network.setOptions(_networkOptions);
     }
 
     function createVisualizeFromHereLink(appId, cubeName, node)
@@ -1288,200 +1529,6 @@ var Visualizer = (function ($) {
             return this.clustering.clusterDescendants.apply(this.clustering, arguments);
         };
     }
-    
-    function getNetworkOptions()
-    {
-        var options =
-        {
-            height: getVisNetworkHeight(),
-            interaction: {
-                navigationButtons: true,
-                keyboard: {
-                    enabled: false,
-                    speed: {x: 5, y: 5, zoom: 0.02}
-                },
-                zoomView: true
-            },
-            nodes: {
-                value: 24,
-                scaling: {
-                    min: 24,
-                    max: 24,
-                    label: {
-                        enabled: true
-                    }
-                }
-            },
-            edges: {
-                arrows: 'to',
-                color: 'gray',
-                smooth: true,
-                hoverWidth: 3,
-                font: {
-                    size: 20
-                }
-            },
-            physics: {
-                //Merged in from _physicsParms, below
-             },
-            layout: {
-                hierarchical: _hierarchical,
-                improvedLayout : true,
-                randomSeed:2
-            },
-            groups: {
-                PRODUCT: {
-                    shape: 'box',
-                    color: '#DAE4FA'
-                },
-                RISK: {
-                    shape: 'box',
-                    color: '#759BEC'
-                },
-                COVERAGE: {
-                    shape: 'box',
-                    color: '#113275',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                CONTAINER: {
-                    shape: 'star',
-                    color: "#731d1d",
-                    font: {
-                        buttonColor: '#D8D8D8'
-                    }
-                },
-                LIMIT: {
-                    shape: 'ellipse',
-                    color: '#FFFF99'
-                },
-                DEDUCTIBLE: {
-                    shape: 'ellipse',
-                    color: '#FFFF99'
-                },
-                PREMIUM: {
-                    shape: 'ellipse',
-                    color: '#0B930B',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                RATE: {
-                    shape: 'ellipse',
-                    color: '#EAC259'
-                },
-                ROLE: {
-                    shape: 'box',
-                    color: '#F59D56'
-                },
-                ROLEPLAYER: {
-                    shape: 'box',
-                    color: '#F2F2F2'
-                },
-                RATEFACTOR: {
-                    shape: 'ellipse',
-                    color: '#EAC259'
-                },
-                PARTY: {
-                    shape: 'box',
-                    color: '#004000',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                PLACE: {
-                    shape: 'box',
-                    color: '#481849',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                UNSPECIFIED: {
-                    shape: 'box',
-                    color: '#7ac5cd'
-                },
-                FORM: {
-                    shape: 'box',
-                    color: '#d2691e'
-                },
-                PRODUCT_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                RISK_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                COVERAGE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                LIMIT_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                PREMIUM_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                RATE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                RATEFACTOR_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                ROLE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                ROLEPLAYER_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                CONTAINER_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                DEDUCTIBLE_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                PARTY_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                PLACE_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                },
-                UNSPECIFIED_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   
-                }
-            }
-        };
-
-        $.extend(true, options.physics, _physicsParms);
-        return options;
-    }
-
 
     function getFromLocalStorage(key, defaultValue) {
         var local = localStorage[getStorageKey(_nce, key)];
