@@ -72,7 +72,7 @@ var Visualizer = (function ($) {
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
     var _networkOptionsChangeSection = null;
-    var _physicsDefaultsVisJs = null;
+    var _physicsDefaultsVis = null;
     var _physicsDefaults = null;
     var _physicsParms = null;
     var _overriddenPhysicsOptions =
@@ -166,9 +166,9 @@ var Visualizer = (function ($) {
 
             scopeKeyDelayLoop();
 
-            setNetworkOptions();
+            initNetworkOptions();
 
-            //Network physics parameters
+            //Network options parameters
             _networkOptionsSection.hide();
             $('#networkOptionsButton').click(function () {
                 $('#networkOptionsButton').toggleClass('active');
@@ -176,28 +176,61 @@ var Visualizer = (function ($) {
                 saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
                 _networkOptionsSection.toggle();
             });
-            
-            $('#networkOptionsChangeSection').change(function ()
-            {
+
+            $('#networkOptionsChangeSection').change(function () {
                 _networkOptionsChangeSection = $('#networkOptionsChangeSection');
+                $('.networkOption').each(function(){
+                    setNetworkOptions($(this),_physicsParms)
+                });
+
                 destroyNetwork();
                 initNetwork();
             });
-         }
+        }
     };
 
-    function setNetworkOptions()
+
+    function setNetworkOptions(element, options)
+    {
+        var id, fullKey, partKey, optionValue, value;
+        id = element.attr('id');
+        fullKey = id.split('.');
+        optionValue = options[fullKey[1]];
+        for (var i = 2, iLen = fullKey.length; i < iLen; i++)//TODO: change to 0 when all options
+        {
+            partKey = fullKey[i];
+            value = optionValue[partKey];
+            if(typeof value === OBJECT)
+            {
+                optionValue = value;
+            }
+            else if (typeof value === BOOLEAN)
+            {
+                optionValue[partKey] =  element.prop('checked');
+            }
+            else if (typeof value === NUMBER)
+            {
+                optionValue[partKey] = Number(element.val());
+            }
+            else
+            {
+                optionValue[partKey] = element.val();
+            }
+        }
+    }
+
+     function initNetworkOptions()
     {
         var emptyDataSet, emptyNetwork, container;
         container = document.getElementById('network');
         emptyDataSet = new vis.DataSet({});
         emptyNetwork = new vis.Network(container, {nodes:emptyDataSet, edges:emptyDataSet}, {});
-        _physicsDefaultsVisJs = emptyNetwork.physics.defaultOptions;
-        delete _physicsDefaultsVisJs.barnesHut['theta'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
-        delete _physicsDefaultsVisJs.forceAtlas2Based['theta'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
-        delete _physicsDefaultsVisJs.repulsion['avoidOverlap'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
+        _physicsDefaultsVis = emptyNetwork.physics.defaultOptions;
+        delete _physicsDefaultsVis.barnesHut['theta'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
+        delete _physicsDefaultsVis.forceAtlas2Based['theta'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
+        delete _physicsDefaultsVis.repulsion['avoidOverlap'];  //TODO: Figure out why key throws "unknown" exception in visjs when set on the network. Removing for now.
         emptyNetwork.destroy();
-        _physicsDefaults = $.extend(true, {}, _physicsDefaultsVisJs);
+        _physicsDefaults = $.extend(true, {}, _physicsDefaultsVis);
         _physicsParms = $.extend(true, _physicsDefaults, _overriddenPhysicsOptions);
     }
 
@@ -219,49 +252,49 @@ var Visualizer = (function ($) {
         $("#iterationsToStabilize").val(_iterationsToStabilize);
 
         $('#networkOptionsChangeSection').empty();
-        buildNetworkOptionsChangeSection(null, _physicsParms, _physicsDefaults, _physicsDefaultsVisJs);
+        buildNetworkOptionsChangeSection( $('#networkOptionsChangeSection'), 'physics', _physicsParms, _physicsDefaults, _physicsDefaultsVis);
     }
 
-    function buildNetworkOptionsChangeSection(parentKey, options, defaultOptions, visjsDefaultOptions)
+    function buildNetworkOptionsChangeSection(section, parentKey, options, defaultOptions, visDefaultOptions)
     {
         $.each(defaultOptions, function (key, defaultValue) {
-            var rowBordersDiv, value, defaultValueVisjs;
+            var rowBordersDiv, value, defaultValueVis;
             value = options[key];
-            defaultValueVisjs = visjsDefaultOptions[key];
-            rowBordersDiv = buildRowBordersDiv(parentKey, key, value, defaultValue, defaultValueVisjs);
-            $('#networkOptionsChangeSection').append(rowBordersDiv);
+            defaultValueVis = visDefaultOptions[key];
+            rowBordersDiv = buildRowBordersDiv(section, parentKey, key, value, defaultValue, defaultValueVis);
+            section.append(rowBordersDiv);
         });
     }
 
-    function buildRowBordersDiv(parentKey, key, value, defaultValue, defaultValueVisjs)
+    function buildRowBordersDiv(section, parentKey, key, value, defaultValue, defaultValueVis)
     {
         var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Input, col4Input, fullKey;
 
-        fullKey = parentKey ? parentKey + '.' + key : key;
+        fullKey = parentKey + '.' + key;
 
         rowBordersDiv = $('<div/>').prop({class: "row borders"});
         col1Div = $('<div/>').prop({class: "col-md-3"});
         col2Div = $('<div/>').prop({class: "col-md-1", title:"Value used for network"});
         col3Div = $('<div/>').prop({class: "col-md-1"});
         col4Div = $('<div/>').prop({class: "col-md-2", title:"Default value for network"});
-        col5Div = $('<div/>').prop({class: "col-md-5", title:"Visjs default value"});
+        col5Div = $('<div/>').prop({class: "col-md-5", title:"Vis default value, if different"});
 
         if (typeof defaultValue === OBJECT)
         {
-            buildNetworkOptionsChangeSection(key, value, defaultValue, defaultValueVisjs);
+            buildNetworkOptionsChangeSection(section, fullKey, value, defaultValue, defaultValueVis);
         }
         else
         {
             if (typeof defaultValue === BOOLEAN) {
-                col2Input = $('<input/>').prop({id: fullKey, type: "checkbox"});
+                col2Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "checkbox"});
                 col2Input[0].checked = value;
-                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "checkbox", disabled: "true"});
+                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "checkbox", readOnly: "true"});
                 col4Input[0].checked = defaultValue;
             }
             else {
-                col2Input = $('<input/>').prop({id: fullKey, type: "text"});
+                col2Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "text"});
                 col2Input[0].value = value;
-                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "text", disabled: "true"});
+                col4Input = $('<input/>').prop({id: fullKey + 'Default', type: "text", readOnly: "true"});
                 col4Input[0].value = defaultValue;
             }
 
@@ -270,7 +303,7 @@ var Visualizer = (function ($) {
             col2Div.append(col2Input);
             col3Div[0].innerHTML = NBSP;
             col4Div.append(col4Input);
-            col5Div[0].innerHTML = defaultValueVisjs === defaultValue ? null : defaultValueVisjs;
+            col5Div[0].innerHTML = defaultValueVis === defaultValue ? null : defaultValueVis;
 
             rowBordersDiv.append(col1Div);
             rowBordersDiv.append(col2Div);
@@ -851,7 +884,7 @@ var Visualizer = (function ($) {
 
     /*
      //TODO: Attempted short-term fix for issue with hierarchical mode, but it's not enough.
-     //TODO: Keep investigating, submit question and possibly a bug fix to visjs.
+     //TODO: Keep investigating, submit question and possibly a bug fix to vis.
     function setLevelOnNetworkNodes()
     {
         var level, node, supportNode, edge, id;
@@ -1162,7 +1195,7 @@ var Visualizer = (function ($) {
     {
         var edge, childNodeId, childClonedOptions, refreshData, node, childNodesObj, childEdgesObj, parentNodeId, parentClonedOptions;
 
-        //TODO: Consider submitting pull request with these enhancements to visjs
+        //TODO: Consider submitting pull request with these enhancements to vis
         network.clustering.clusterDescendants = function(nodeId, immediateDescendantsOnly, options) {
             var collectDescendants = function(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this) {
 
