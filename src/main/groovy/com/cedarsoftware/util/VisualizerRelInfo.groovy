@@ -332,11 +332,11 @@ class VisualizerRelInfo
 		if (targetCube.name.startsWith(RPM_ENUM_DOT))
 		{
 			edge.label = sourceFieldName
-			edge.title = "Field ${sourceFieldName} with min:max cardinality of ${vMin}:${vMax}".toString()
+			edge.title = "Field ${sourceFieldName} cardinality ${vMin}:${vMax}".toString()
 		}
 		else
 		{
-			edge.title = "Valid value ${sourceFieldName} with min:max cardinality of ${vMin}:${vMax}".toString()
+			edge.title = "Valid value ${sourceFieldName} cardinality ${vMin}:${vMax}".toString()
 		}
 
 		return edge
