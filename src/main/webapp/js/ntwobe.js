@@ -904,6 +904,17 @@ var NCubeEditor2 = (function ($) {
     function getAxisIdFromString(id) {
         return id.substring(0, id.length - AXIS_DEFAULT.length);
     }
+    
+    function getAxisById(id) {
+        var axis, axisId, i, len;
+        axisId = getAxisIdFromString(id);
+        for (i = 0, len = axes.length; i < len; i++) {
+            axis = axes[i];
+            if (axis.id === axisId) {
+                return axis;
+            }
+        }
+    }
 
     function getAxisColumn(axis, colNum) {
         var key, obj;
@@ -2210,16 +2221,23 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getColumnDefault(column) {
-        var val;
+        var val, axis;
         if (column.hasOwnProperty(METAPROPERTIES.DEFAULT_VALUE)) {
             val = column[METAPROPERTIES.DEFAULT_VALUE];
+        } else if (column.value === DEFAULT_TEXT) {
+            axis = getAxisById(column.id);
+            if (axis.hasOwnProperty(METAPROPERTIES.DEFAULT_COLUMN_DEFAULT_VALUE)) {
+                val = axis[METAPROPERTIES.DEFAULT_COLUMN_DEFAULT_VALUE];
+            }
+        }
+        if (val !== undefined) {
             if (typeof val === OBJECT) {
                 return val;
-            } else if (typeof val === 'boolean') {
-                return {type:'boolean', value:val}
-            } else {
-                return {type:'string', value:val};
             }
+            if (typeof val === 'boolean') {
+                return {type: 'boolean', value: val}
+            }
+            return {type: 'string', value: val};
         }
         return null;
     }
