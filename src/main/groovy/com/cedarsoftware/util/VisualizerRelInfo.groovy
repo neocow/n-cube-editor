@@ -414,7 +414,8 @@ class VisualizerRelInfo
 		}
 		else if (cubeName.startsWith(RPM_ENUM_DOT))
 		{
-			detailsTitle = "Valid values for field ${sourceFieldName} on ${getCubeDisplayName(sourceCube.name)}".toString()
+			String sourceName =  sourceTraitMaps ? getDotSuffix(sourceEffectiveName) : getCubeDisplayName(sourceCube.name)
+			detailsTitle = "Valid values for field ${sourceFieldName} on ${sourceName}".toString()
 		}
 		return detailsTitle
 	}
