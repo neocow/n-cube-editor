@@ -160,6 +160,7 @@ var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 var DELTA_IGNORE_LIST = ['@id', '@type', 'cache', 'hasBeenCached', 'hash'];
 var METAPROPERTIES = {
     COLUMN_BLACKLIST: ['value','url','type','id','name'],
+    DEFAULT_COLUMN_DEFAULT_VALUE: 'default_column_default_value',
     DEFAULT_VALUE: 'default_value',
     DEFAULT_VIEW: {
         AXIS_ORDER: 'default_view_axis_order',
