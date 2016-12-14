@@ -44,7 +44,6 @@ var Visualizer = (function ($) {
     var _visualizerInfo = null;
     var _visualizerNetwork = null;
     var _visualizerContent = null;
-    var _networkPhysicsParms = null;
     var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
     var _nodeDetailsTitle = null;
@@ -65,93 +64,241 @@ var Visualizer = (function ($) {
     var _scopeKeyPressed = false;
     var SCOPE_KEY_DELAY = 3000;
     var UNSPECIFIED = 'UNSPECIFIED';
-    var _clickTimer = null;
-    var _clicks = 0;
-
-    //Network layout defaults
-    var _improvedLayoutDefault = true;
-
-    //Network physics defaults
-    //TODO: Figure out how to get defaults from visjs, rather than hard-coded here.
-    var _physicsEnabledDefault = true;
-
-    var _barnesHut_gravitationalConstantDefault = -30000; //Only one different than visjs default (-2000)
-    var _barnesHut_centralGravityDefault = 0.3;
-    var _barnesHut_springLengthDefault = 95;
-    var _barnesHut_springConstantDefault = 0.04;
-    var _barnesHut_dampingDefault = 0.09;
-    var _barnesHut_avoidOverlapDefault = 0;
-
-    var _repulsion_nodeDistanceDefault = 100;
-    var _repulsion_centralGravityDefault = 0.2;
-    var _repulsion_springLengthDefault = 200;
-    var _repulsion_springConstantDefault = 0.05;
-    var _repulsion_dampingDefault = 0.09;
-
-    var _hierarchicalRepulsion_nodeDistanceDefault = 120;
-    var _hierarchicalRepulsion_centralGravityDefault = 0.0;
-    var _hierarchicalRepulsion_springLengthDefault = 100;
-    var _hierarchicalRepulsion_springConstantDefault = 0.01;
-    var _hierarchicalRepulsion_dampingDefault = 0.09;
-
-    var _maxVelocityDefault = 50;
-    var _minVelocityDefault = 0.1;
-    var _solverDefault = 'barnesHut';
-
-    var _stabilization_enabledDefault = true;
-    var _stabilization_iterationsDefault = 1000;
-    var _stabilization_updateIntervalDefault = 50;
-    var _stabilization_onlyDynamicEdgesDefault = false;
-    var _stabilization_fitDefault = true;
-
-    var _timestepDefault = 0.5;
-    var _adaptiveTimestepDefault = true;
 
     //Network layout parameters
     var _hierarchical = false;
-    var _improvedLayout = _improvedLayoutDefault;
 
-    //Network physics parameters
-    var _networkOptionsDisplay = null;
-    var _physicsEnabled = _physicsEnabledDefault;
-
-    var _barnesHut_gravitationalConstant = _barnesHut_gravitationalConstantDefault;
-    var _barnesHut_centralGravity = _barnesHut_centralGravityDefault;
-    var _barnesHut_springLength = _barnesHut_springLengthDefault;
-    var _barnesHut_springConstant = _barnesHut_springConstantDefault;
-    var _barnesHut_damping = _barnesHut_dampingDefault;
-    var _barnesHut_avoidOverlap = _barnesHut_avoidOverlapDefault;
-
-    var _repulsion_nodeDistance = _repulsion_nodeDistanceDefault;
-    var _repulsion_centralGravity = _repulsion_centralGravityDefault;
-    var _repulsion_springLength = _repulsion_springLengthDefault;
-    var _repulsion_springConstant = _repulsion_springConstantDefault;
-    var _repulsion_damping = _repulsion_dampingDefault;
-
-    var _hierarchicalRepulsion_nodeDistance = _hierarchicalRepulsion_nodeDistanceDefault;
-    var _hierarchicalRepulsion_centralGravity = _hierarchicalRepulsion_centralGravityDefault;
-    var _hierarchicalRepulsion_springLength = _hierarchicalRepulsion_springLengthDefault;
-    var _hierarchicalRepulsion_springConstant = _hierarchicalRepulsion_springConstantDefault;
-    var _hierarchicalRepulsion_damping = _hierarchicalRepulsion_dampingDefault;
-
-    var _maxVelocity = _maxVelocityDefault;
-    var _minVelocity = _minVelocityDefault;
-    var _solver = _solverDefault;
-
-    var _stabilization_enabled = _stabilization_enabledDefault;
-    var _stabilization_iterations = _stabilization_iterationsDefault;
-    var _stabilization_updateInterval = _stabilization_updateIntervalDefault;
-    var _stabilization_onlyDynamicEdges = _stabilization_onlyDynamicEdgesDefault;
-    var _stabilization_fit = _stabilization_fitDefault;
-
-    var _timestep = _timestepDefault;
-    var _adaptiveTimestep = _adaptiveTimestepDefault;
+    //Network physics
+    var ZOOM = 0.02;
+    var NODE_SCALING = 24;
+    var NODE_SCALING_SPECIAL = 200;
+    var DASH_LENGTH = 15;
+    var EDGE_FONT = 20;
+    var GRAVITATIONAL_CONSTANT = -30000;
+    var MIN_VELOCITY = 0.85;
+    var _networkOptionsButton = null;
+    var _networkOptionsSection = null;
+    var _networkOptionsChangeSection = null;
+    var _networkOptionsVis = {};
+    var _networkOptionsDefaults = null;
+    var _networkOptions = null;
+    var _networkOptionsOverridden =
+    {
+        height: '600',
+        interaction: {
+            navigationButtons: true,
+            keyboard: {
+                enabled: false,
+                speed: {
+                    x: 5,
+                    y: 5,
+                    zoom: ZOOM}
+            },
+            zoomView: true
+        },
+        nodes: {
+            value: NODE_SCALING,
+            scaling: {
+                min: NODE_SCALING,
+                max: NODE_SCALING,
+                label: {
+                    enabled: true
+                }
+            },
+            shadow: {
+                enabled: true
+            },
+        },
+        edges: {
+            arrows: {
+                to: {
+                    enabled: true
+                }
+            },
+            color: {
+                color: 'gray'
+            },
+            smooth: {
+                enabled: true
+            },
+            shadow: {
+                enabled: true
+            },
+            hoverWidth: 3,
+            font: {
+                size: EDGE_FONT
+            }
+        },
+        physics: {
+            minVelocity: MIN_VELOCITY,
+            barnesHut: {
+                gravitationalConstant: GRAVITATIONAL_CONSTANT
+            }
+        },
+        layout: {
+            hierarchical: {
+                enabled: false
+            },
+            improvedLayout : true,
+            randomSeed:2
+        },
+        groups: {
+            PRODUCT: {
+                shape: 'box',
+                color: '#DAE4FA'
+            },
+            RISK: {
+                shape: 'box',
+                color: '#759BEC'
+            },
+            COVERAGE: {
+                shape: 'box',
+                color: '#113275',
+                font: {
+                    color: '#D8D8D8'
+                }
+            },
+            CONTAINER: {
+                shape: 'star',
+                color: "#731d1d",
+                font: {
+                    buttonColor: '#D8D8D8'
+                }
+            },
+            LIMIT: {
+                shape: 'ellipse',
+                color: '#FFFF99'
+            },
+            DEDUCTIBLE: {
+                shape: 'ellipse',
+                color: '#FFFF99'
+            },
+            PREMIUM: {
+                shape: 'ellipse',
+                color: '#0B930B',
+                font: {
+                    color: '#D8D8D8'
+                }
+            },
+            RATE: {
+                shape: 'ellipse',
+                color: '#EAC259'
+            },
+            ROLE: {
+                shape: 'box',
+                color: '#F59D56'
+            },
+            ROLEPLAYER: {
+                shape: 'box',
+                color: '#F2F2F2'
+            },
+            RATEFACTOR: {
+                shape: 'ellipse',
+                color: '#EAC259'
+            },
+            PARTY: {
+                shape: 'box',
+                color: '#004000',
+                font: {
+                    color: '#D8D8D8'
+                }
+            },
+            PLACE: {
+                shape: 'box',
+                color: '#481849',
+                font: {
+                    color: '#D8D8D8'
+                }
+            },
+            UNSPECIFIED: {
+                shape: 'box',
+                color: '#7ac5cd'
+            },
+            FORM: {
+                shape: 'box',
+                color: '#d2691e'
+            },
+            PRODUCT_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            RISK_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            COVERAGE_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            LIMIT_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            PREMIUM_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            RATE_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            RATEFACTOR_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            ROLE_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            ROLEPLAYER_ENUM : {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            CONTAINER_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            DEDUCTIBLE_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            PARTY_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            PLACE_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            },
+            UNSPECIFIED_ENUM: {
+                shape: 'dot',
+                scaling: {min: 5, max: 5},
+                color: 'gray'
+            }
+        }
+    };
 
     //Set by network stabilize events
     var _stabilizationStatus = null;
     var _iterationsToStabilize = null;
 
-
+    var EAST_MIN_SIZE = 50;
+    var EAST_MAX_SIZE = 1000;
+    var EAST_SIZE = 250;
+    var EAST_LENGTH_OPEN = 60;
     
     var init = function (info) {
         if (!_nce) {
@@ -160,16 +307,16 @@ var Visualizer = (function ($) {
             _layout = $('#visBody').layout({
                 name: 'visLayout'
                 ,	livePaneResizing:			true
-                ,   east__minSize:              50
-                ,   east__maxSize:              1000
-                ,   east__size:                 250
+                ,   east__minSize:              EAST_MIN_SIZE
+                ,   east__maxSize:              EAST_MAX_SIZE
+                ,   east__size:                 EAST_SIZE
                 ,   east__closable:             true
                 ,   east__resizeable:           true
                 ,   east__initClosed:           true
                 ,   east__slidable:             true
                 ,   center__triggerEventsOnLoad: true
                 ,   center__maskContents:       true
-                ,   togglerLength_open:         60
+                ,   togglerLength_open:         EAST_LENGTH_OPEN
                 ,   togglerLength_closed:       '100%'
                 ,	spacing_open:			    5  // ALL panes
                 ,	spacing_closed:			    5 // ALL panes
@@ -178,7 +325,6 @@ var Visualizer = (function ($) {
             _visualizerContent = $('#visualizer-content');
             _visualizerHtmlError = $('#visualizer-error');
             _visualizerInfo = $('#visualizer-info');
-            _networkPhysicsParms = $('#networkPhysics-parms');
             _visualizerNetwork = $('#visualizer-network');
             _nodeDetailsTitle = $('#nodeDetailsTitle');
             _nodeCubeLink = $('#nodeCubeLink');
@@ -188,15 +334,17 @@ var Visualizer = (function ($) {
             _scopeBuilderTable = $('#scopeBuilderTable');
             _scopeBuilderModal = $('#scopeBuilderModal');
             _scopeInput = $('#scope');
+            _networkOptionsSection = $('#networkOptionsSection');
+            _networkOptionsChangeSection = $('#networkOptionsChangeSection');
 
             $(window).resize(function() {
                 if (_network) {
-                    _network.setSize('100%', getVisNetworkHeight());
+                   _network.setSize('100%', getVisNetworkHeight());
                 }
             });
 
              $('#selectedLevel-list').change(function () {
-                _selectedLevel = Number($('#selectedLevel-list').val())
+                _selectedLevel = Number($('#selectedLevel-list').val());
                 saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
                 reload();
             });
@@ -228,133 +376,206 @@ var Visualizer = (function ($) {
             });
 
             scopeKeyDelayLoop();
+        }
+    };
 
-            //Network physics parameters
-            _networkPhysicsParms.hide();
-            $('#networkOptionsDisplay').click(function () {
-                $('#networkOptionsDisplay').toggleClass('active');
-                _networkOptionsDisplay = $('#networkOptionsDisplay').hasClass('active');
-                saveToLocalStorage(_networkOptionsDisplay, NETWORK_OPTIONS_DISPLAY);
-                _networkPhysicsParms.toggle();
+    function setNetworkOption(inputOption, options, keys)
+    {
+        var key, value, errorMessage;
+        if (keys) {
+            key = keys[0];
+            value = options[key];
+            if (typeof value === OBJECT)
+            {
+                keys.splice(key, 1);
+                setNetworkOption(inputOption, value, keys)
+            }
+            else if (BOOLEAN === typeof value)
+            {
+                options[key] = inputOption.prop('checked');
+            }
+            else if (NUMBER === typeof value)
+            {
+                options[key] = Number(inputOption.val());
+            }
+            else if (FUNCTION === typeof value)
+            {
+                //Not currently supporting updating of netork options that are functions (only one).
+            }
+            else
+            {
+                options[key] = inputOption.val();
+            }
+        }
+        else
+        {
+            errorMessage = 'Invalid state encountered while updating network options for parameter ' + inputOption.attr('id') + '.';
+            _nce.showNote(errorMessage);
+            throw new Error(errorMessage);
+        }
+    }
+
+     function initNetworkOptions(container)
+    {
+        var emptyDataSet, emptyNetwork, defaults, button;
+        if (!_networkOptions) {
+            _networkOptionsSection.hide();
+            _networkOptionsOverridden.height = getVisNetworkHeight();
+            emptyDataSet = new vis.DataSet({});
+            emptyNetwork = new vis.Network(container, {nodes: emptyDataSet, edges: emptyDataSet}, {});
+
+            _networkOptionsVis.physics = emptyNetwork.physics.defaultOptions;
+            _networkOptionsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
+            _networkOptionsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
+            _networkOptionsVis.edges = emptyNetwork.edgesHandler.defaultOptions;
+            _networkOptionsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
+            _networkOptionsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
+            _networkOptionsVis.groups = emptyNetwork.groups.defaultOptions;
+
+            //TODO: Figure out why these keys throw "unknown" exception in vis when set on the network despite originating
+            //TODO: from vis. Removing keys for now.
+            delete _networkOptionsVis.physics.barnesHut['theta'];
+            delete _networkOptionsVis.physics.forceAtlas2Based['theta'];
+            delete _networkOptionsVis.physics.repulsion['avoidOverlap'];
+
+            defaults = $.extend(true, {}, _networkOptionsVis);
+            _networkOptionsDefaults = $.extend(true, defaults, _networkOptionsOverridden);
+            _networkOptions = $.extend(true, {}, _networkOptionsDefaults);
+            emptyNetwork.destroy();
+
+            $('#networkOptionsButton').click(function () {
+                button = $('#networkOptionsButton');
+                button.toggleClass('active');
+                _networkOptionsButton = button.hasClass('active');
+                saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
+                _networkOptionsSection.toggle();
+                loadNetworkOptionsSectionView();
             });
 
-            //Defaults
-            $("#physicsEnabledDefault").prop('checked', _physicsEnabledDefault);
-     
-            $("#barnesHut_gravitationalConstantDefault").val(_barnesHut_gravitationalConstantDefault);
-            $("#barnesHut_centralGravityDefault").val(_barnesHut_centralGravityDefault);
-            $("#barnesHut_springLengthDefault").val(_barnesHut_springLengthDefault);
-            $("#barnesHut_springConstantDefault").val(_barnesHut_springConstantDefault);
-            $("#barnesHut_dampingDefault").val(_barnesHut_dampingDefault);
-            $("#barnesHut_avoidOverlapDefault").val(_barnesHut_avoidOverlapDefault);
+            $('#networkOptionsChangeSection').change(function () {
+                $('.networkOption').each(function () {
+                    var id, keys;
+                    id = $(this).attr('id');
+                    keys = id.split('.');
+                    setNetworkOption($(this), _networkOptions, keys);
+                });
+                loadNetworkOptionsSectionView();
+                reload();
+            });
+        }
+    }
 
-            $("#repulsion_nodeDistanceDefault").val(_repulsion_nodeDistanceDefault);
-            $("#repulsion_centralGravityDefault").val(_repulsion_centralGravityDefault);
-            $("#repulsion_springLengthDefault").val(_repulsion_springLengthDefault);
-            $("#repulsion_springConstantDefault").val(_repulsion_springConstantDefault);
-            $("#repulsion_dampingDefault").val(_repulsion_dampingDefault);
-
-            $("#hierarchicalRepulsion_nodeDistanceDefault").val(_hierarchicalRepulsion_nodeDistanceDefault);
-            $("#hierarchicalRepulsion_centralGravityDefault").val(_hierarchicalRepulsion_centralGravityDefault);
-            $("#hierarchicalRepulsion_springLengthDefault").val(_hierarchicalRepulsion_springLengthDefault);
-            $("#hierarchicalRepulsion_springConstantDefault").val(_hierarchicalRepulsion_springConstantDefault);
-            $("#hierarchicalRepulsion_dampingDefault").val(_hierarchicalRepulsion_dampingDefault);
-
-            $("#maxVelocityDefault").val(_maxVelocityDefault);
-            $("#minVelocityDefault").val(_minVelocityDefault);
-            $("#solverDefault").val(_solverDefault);
-
-            $("#stabilization_enabledDefault").prop('checked', _stabilization_enabledDefault);
-            $("#stabilization_iterationsDefault").val(_stabilization_iterationsDefault);
-            $("#stabilization_updateIntervalDefault").val(_stabilization_updateIntervalDefault);
-            $("#stabilization_onlyDynamicEdgesDefault").val(_stabilization_onlyDynamicEdgesDefault);
-            $("#stabilization_fitDefault").prop('checked', _stabilization_fitDefault);
-
-            $("#timestepDefault").val(_timestepDefault);
-            $("#adaptiveTimestepDefault").prop('checked', _adaptiveTimestepDefault);
-            $("#improvedLayoutDefault").prop('checked', _improvedLayoutDefault);
-
-            //Values
-            $("#physicsEnabled").prop('checked', _physicsEnabled);
-         
-            $("#barnesHut_gravitationalConstant").val(_barnesHut_gravitationalConstant);
-            $("#barnesHut_centralGravity").val(_barnesHut_centralGravity);
-            $("#barnesHut_springLength").val(_barnesHut_springLength);
-            $("#barnesHut_springConstant").val(_barnesHut_springConstant);
-            $("#barnesHut_damping").val(_barnesHut_damping);
-            $("#barnesHut_avoidOverlap").val(_barnesHut_avoidOverlap);
-
-            $("#repulsion_nodeDistance").val(_repulsion_nodeDistance);
-            $("#repulsion_centralGravity").val(_repulsion_centralGravity);
-            $("#repulsion_springLength").val(_repulsion_springLength);
-            $("#repulsion_springConstant").val(_repulsion_springConstant);
-            $("#repulsion_damping").val(_repulsion_damping);
-
-            $("#hierarchicalRepulsion_nodeDistance").val(_hierarchicalRepulsion_nodeDistance);
-            $("#hierarchicalRepulsion_centralGravity").val(_hierarchicalRepulsion_centralGravity);
-            $("#hierarchicalRepulsion_springLength").val(_hierarchicalRepulsion_springLength);
-            $("#hierarchicalRepulsion_springConstant").val(_hierarchicalRepulsion_springConstant);
-            $("#hierarchicalRepulsion_damping").val(_hierarchicalRepulsion_damping);
-
-            $("#maxVelocity").val(_maxVelocity);
-            $("#minVelocity").val(_minVelocity);
-            $("#solver").val(_solver);
-
-            $("#stabilization_enabled").prop('checked', _stabilization_enabled);
-            $("#stabilization_iterations").val(_stabilization_iterations);
-            $("#stabilization_updateInterval").val(_stabilization_updateInterval);
-            $("#stabilization_onlyDynamicEdges").prop('checked', _stabilization_onlyDynamicEdges);
-            $("#stabilization_fit").prop('checked', _stabilization_fit);
-
-            $("#timestep").val(_timestep);
-            $("#adaptiveTimestep").prop('checked', _adaptiveTimestep);
-            $("#improvedLayout").prop('checked', _improvedLayout);
-
+    function loadNetworkOptionsSectionView()
+    {
+        var button = $('#networkOptionsButton');
+        var section =  $('#networkOptionsChangeSection');
+        section.empty();
+        button.prop('checked', _networkOptionsButton);
+        if (_networkOptionsButton)
+        {
+            button.addClass('active');
+            _networkOptionsSection.show();
             $("#stabilizationStatus").val(_stabilizationStatus);
             $("#iterationsToStabilize").val(_iterationsToStabilize);
+            buildNetworkOptionsChangeSection( section, null, _networkOptions, _networkOptionsDefaults, _networkOptionsVis);
+        }
+        else
+        {
+            button.removeClass('active');
+            _networkOptionsSection.hide();
+        }
+    }
 
+    function buildNetworkOptionsChangeSection(section, parentKey, networkOptions, networkOptionsDefaults, networkOptionsVis)
+    {
+        var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Span, col2Input, col4Input, col5Input, fullKey,
+            value, keyVis, valueVis, highlightedClass, readOnly, readOnlyClass, functionTitle;
 
-            $('#networkPhysics-parms').change(function ()
+        $.each(networkOptionsDefaults, function (key, defaultValue)
+        {
+            value = networkOptions[key];
+            if (networkOptionsVis)
             {
-                _physicsEnabled =  $('#physicsEnabled').prop('checked');
-                _barnesHut_gravitationalConstant = $("#barnesHut_gravitationalConstant").val();
-                _barnesHut_centralGravity = $("#barnesHut_centralGravity").val();
-                _barnesHut_springLength = $("#barnesHut_springLength").val();
-                _barnesHut_springConstant = $("#barnesHut_springConstant").val();
-                _barnesHut_damping = $("#barnesHut_damping").val();
-                _barnesHut_avoidOverlap = $("#barnesHut_avoidOverlap").val();
+                keyVis =  key in networkOptionsVis ? key : null;
+                valueVis = networkOptionsVis[key];
+            }
+            else
+            {
+                keyVis = null;
+                valueVis = null;
+            }
 
-                _repulsion_nodeDistance = $("#repulsion_nodeDistance").val();
-                _repulsion_centralGravity = $("#repulsion_centralGravity").val();
-                _repulsion_springLength = $("#repulsion_springLength").val();
-                _repulsion_springConstant = $("#repulsion_springConstant").val();
-                _repulsion_damping = $("#repulsion_damping").val();
+            fullKey = null === parentKey ? key : parentKey + '.' + key;
 
-                _hierarchicalRepulsion_nodeDistance = $("#hierarchicalRepulsion_nodeDistance").val();
-                _hierarchicalRepulsion_centralGravity = $("#hierarchicalRepulsion_centralGravity").val();
-                _hierarchicalRepulsion_springLength = $("#hierarchicalRepulsion_springLength").val();
-                _hierarchicalRepulsion_springConstant = $("#hierarchicalRepulsion_springConstant").val();
-                _hierarchicalRepulsion_damping = $("#hierarchicalRepulsion_damping").val();
+            if (typeof defaultValue === OBJECT)
+            {
+                buildNetworkOptionsChangeSection(section, fullKey, value, defaultValue, valueVis);
+            }
+            else
+            {
+                rowBordersDiv = $('<div/>').prop({class: "row borders"});
+                col1Div = $('<div/>').prop({class: "col-md-4"});
+                col2Div = $('<div/>').prop({class: "col-md-1"});
+                col3Div = $('<div/>').prop({class: "col-md-1"});
+                col4Div = $('<div/>').prop({class: "col-md-2"});
+                col5Div = $('<div/>').prop({class: "col-md-4"});
 
-                _maxVelocity = $("#maxVelocity").val();
-                _minVelocity = $("#minVelocity").val();
-                _solver = $("#solver").val();
+                highlightedClass = value === defaultValue ? '' : ' highlighted';
+                if (typeof defaultValue === BOOLEAN) {
+                    col2Span = $('<span/>').prop({class: highlightedClass});
+                    col2Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "checkbox" });
+                    col2Input[0].checked = value;
+                    col4Input = $('<input/>').prop({class: 'readOnly', id: fullKey + 'Default', type: "checkbox", readOnly: "true"});
+                    col4Input[0].checked = defaultValue;
+                }
+                else {
+                    readOnly = FUNCTION === typeof value ? true: false;
+                    readOnlyClass = readOnly ? ' readOnly' : '';
+                    functionTitle = "Not currently supporting update of network options that are functions.";
+                    col2Span = $('<span/>');
+                    col2Input = $('<input/>').prop({class: 'networkOption' + highlightedClass + readOnlyClass, id: fullKey, type: "text", readOnly: readOnly, title: functionTitle});
+                    col2Input[0].value = value;
+                    col4Input = $('<input/>').prop({class: 'readOnly', id: fullKey + 'Default', type: "text", readOnly: "true"});
+                    col4Input[0].value = defaultValue;
+                }
+                col1Div[0].innerHTML = fullKey;
+                col2Span.append(col2Input);
+                col2Div.append(col2Span);
+                col3Div[0].innerHTML = NBSP;
+                col4Div.append(col4Input);
 
-                _stabilization_enabled =  $('#stabilization_enabled').prop('checked');
-                _stabilization_iterations = $("#stabilization_iterations").val();
-                _stabilization_updateInterval = $("#stabilization_updateInterval").val();
-                _stabilization_onlyDynamicEdges = $('#stabilization_onlyDynamicEdges').prop('checked');
-                _stabilization_fit = $('#stabilization_fit').prop('checked');
-
-                _timestep = $("#timestep").val();
-                _adaptiveTimestep = $('#adaptiveTimestep').prop('checked');
-                _improvedLayout =  $('#improvedLayout').prop('checked');
-                
-                destroyNetwork();
-                initNetwork();
-            });
-         }
-    };
+                if (keyVis)
+                {
+                    if (valueVis === defaultValue)
+                    {
+                        col5Div[0].innerHTML = NBSP;
+                    }
+                    else if (BOOLEAN === typeof valueVis )
+                    {
+                        col5Input = $('<input/>').prop({class: 'readOnly', id: fullKey, type: "checkbox", readOnly: "true"});
+                        col5Input[0].checked = valueVis;
+                        col5Div.append(col5Input);
+                    }
+                    else
+                    {
+                        col5Input = $('<input/>').prop({class: 'readOnly', id: fullKey, type: "text", readOnly: "true"});
+                        col5Input[0].value = valueVis;
+                        col5Div.append(col5Input);
+                    }
+                }
+                else
+                {
+                    col5Div[0].innerHTML = 'Parameter does not exist in Vis'
+                }
+                rowBordersDiv.append(col1Div);
+                rowBordersDiv.append(col2Div);
+                rowBordersDiv.append(col3Div);
+                rowBordersDiv.append(col4Div);
+                rowBordersDiv.append(col5Div);
+            }
+            section.append(rowBordersDiv);
+        });
+    }
 
     function scopeKeyDelayLoop() {
         var now;
@@ -378,13 +599,13 @@ var Visualizer = (function ($) {
 
     function updateScopeBuilderScope()
     {
-        var key, value, shouldInsertNewExpression, expression;
+        var key, value, shouldInsertNewExpression, expression, i, len, j, jLen;
         var keys = Object.keys(_scope);
-        for (var i = 0, len = keys.length; i < len; i++) {
+        for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             value = _scope[key];
             shouldInsertNewExpression = true;
-            for (var j = 0, jLen = _scopeBuilderScope.length; j < jLen; j++) {
+            for (j = 0, jLen = _scopeBuilderScope.length; j < jLen; j++) {
                 expression = _scopeBuilderScope[j];
                 if (expression.isApplied && expression.key === key) {
                     expression.value = value;
@@ -399,11 +620,11 @@ var Visualizer = (function ($) {
     }
 
     function buildScopeFromText(scopeString) {
-        var tuple, key, value;
+        var tuples, tuple, key, value, i, iLen;
         var newScope = {};
         if (scopeString) {
-            var tuples = scopeString.split(',');
-            for (var i = 0, iLen = tuples.length; i < iLen; i++) {
+            tuples = scopeString.split(',');
+            for ( i = 0, iLen = tuples.length; i < iLen; i++) {
                 tuple = tuples[i].split(':');
                 key = tuple[0].trim();
                 value = tuple[1];
@@ -419,7 +640,7 @@ var Visualizer = (function ($) {
         _nce.clearAllErrors();
         setTimeout(function () {reloadNetwork();}, PROGRESS_DELAY);
         _nce.showNote('Updating network...');
-    }
+    };
 
     var reloadNetwork = function () {
         _nce.clearError();
@@ -436,7 +657,7 @@ var Visualizer = (function ($) {
         _nce.clearAllErrors();
         setTimeout(function () {loadTraitsFromServer(node);}, PROGRESS_DELAY);
         node.loadTraits ? _nce.showNote('Loading traits...') :  _nce.showNote('Removing traits...');
-    }
+    };
 
     var loadTraitsFromServer = function(node)
     {
@@ -451,18 +672,18 @@ var Visualizer = (function ($) {
         };
         
         result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
-        if (result.status === false) {
+        if (false === result.status) {
             _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + result.data);
             return node;
         }
 
         json = result.data;
 
-        if (json.status === STATUS_SUCCESS) {
-            if (json.message !== null) {
+        if (STATUS_SUCCESS === json.status) {
+            if (null !== json.message) {
                 _nce.showNote(json.message);
             }
-            visInfo = json.visInfo
+            visInfo = json.visInfo;
             node = visInfo.nodes['@items'][0];
             _scope = visInfo.scope;
             delete _scope['@type'];
@@ -479,25 +700,25 @@ var Visualizer = (function ($) {
          }
         else {
             message = json.message;
-            if (json.stackTrace != null) {
+            if (null !== json.stackTrace) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
             _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + message);
         }
         return node;
-    }
+    };
 
     var load = function () {
         _nce.clearAllErrors();
         setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
         _nce.showNote('Loading visualizer...');
-    }
+    };
 
     var loadFromServer = function ()
     {
         var options, result, json, message;
         _nce.clearError();
-        clearVisLayoutEast()
+        clearVisLayoutEast();
 
         if (!_nce.getSelectedCubeName()) {
             destroyNetwork();
@@ -509,7 +730,7 @@ var Visualizer = (function ($) {
         //TODO: The .replace is temporary until figured out why nce.getSelectedCubeName()
         //TODO: occasionally contains a cube name with "_" instead of "." (e.g. rpm_class_product instead of
         //TODO: rpm.class.product) after a page refresh.
-        _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.')
+        _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
 
         if (_keepCurrentScope)
         {
@@ -521,7 +742,7 @@ var Visualizer = (function ($) {
         _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
         _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
         _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
-        _networkOptionsDisplay = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, null);
+        _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, false);
 
         if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))
         {
@@ -552,19 +773,17 @@ var Visualizer = (function ($) {
 
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
-        if (result.status === false) {
+        if (false === result.status) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
             destroyNetwork();
             _visualizerContent.hide();
-            _visualizerInfo.hide();
-            _visualizerNetwork.hide();
             return;
         }
 
         json = result.data;
 
         if (json.status === STATUS_SUCCESS) {
-            if (json.message !== null) {
+            if (null !== json.message) {
                 _nce.showNote(json.message);
             }
             loadData(json.visInfo, json.status);
@@ -574,14 +793,14 @@ var Visualizer = (function ($) {
             updateScopeBuilderScope();
             loadScopeView();
             loadHierarchicalView();
-            loadNetworkOptionsDisplayView();
+            loadNetworkOptionsSectionView();
             loadGroupsView();
             loadCountsView();
             _visualizerContent.show();
             _visualizerInfo.show();
             _visualizerNetwork.show();
         }
-        else if (json.status === STATUS_MISSING_START_SCOPE) {
+        else if (STATUS_MISSING_START_SCOPE === json.status) {
             _nce.showNote(json.message);
             loadData(json.visInfo, json.status);
             initNetwork();
@@ -591,18 +810,19 @@ var Visualizer = (function ($) {
             _visualizerContent.show();
             _visualizerInfo.hide();
             _visualizerNetwork.hide();
+            _networkOptionsSection.hide();
         }
         else {
             destroyNetwork();
             _visualizerContent.hide();
-             message = json.message;
-            if (json.stackTrace != null) {
+            message = json.message;
+            if (null !== json.stackTrace) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
         }
  
-         if (_scopeBuilderListenersAdded === false){
+         if (false === _scopeBuilderListenersAdded){
             availableScopeKeys = _availableScopeKeys;
             availableScopeValues = _availableScopeValues;
             addScopeBuilderListeners();
@@ -631,21 +851,6 @@ var Visualizer = (function ($) {
         $('#hierarchical').prop('checked', _hierarchical);
     }
 
-    function loadNetworkOptionsDisplayView()
-    {
-        $('#networkOptionsDisplay').prop('checked', _networkOptionsDisplay);
-        if (_networkOptionsDisplay)
-        {
-            $('#networkOptionsDisplay').addClass('active');
-            _networkPhysicsParms.show();
-        }
-        else
-        {
-            $('#networkOptionsDisplay').removeClass('active');
-            _networkPhysicsParms.hide();
-        }
-    }
-
     function loadScopeView() {
         _scopeInput.val(getScopeString());
     }
@@ -653,16 +858,16 @@ var Visualizer = (function ($) {
     var loadGroupsView = function()
     {
         var groupName, id, available, label, title, input, selected, button, groups,
-            background, fontMap, color, groupMap, boxShadow;
-        var divGroups = $('#groups');
+            background, fontMap, color, groupMap, boxShadow, j, k, divGroups;
 
+        divGroups = $('#groups');
         divGroups.empty();
-        groups = getNetworkOptions().groups;
+        groups = _networkOptions.groups;
 
         _availableGroupsAllLevels.sort();
-        for (var j = 0; j < _availableGroupsAllLevels.length; j++) {
+        for (j = 0; j < _availableGroupsAllLevels.length; j++) {
             color = null;
-            boxShadow = ''
+            boxShadow = '';
             groupName = _availableGroupsAllLevels[j];
             id = groupName + _groupSuffix;
             available = groupCurrentlyAvailable(id);
@@ -670,7 +875,7 @@ var Visualizer = (function ($) {
             title = available ? "Show/hide " + label + " in the graph" : "Increase level to enable show/hide of " + label + " in the graph";
 
             selected = false;
-            for (var k = 0; k < _selectedGroups.length; k++) {
+            for (k = 0; k < _selectedGroups.length; k++) {
                 if (groupIdsEqual(id, _selectedGroups[k])) {
                     selected = true;
                     break;
@@ -693,16 +898,18 @@ var Visualizer = (function ($) {
                 button.attr({class: 'btn active btn-primary-group'});
                 boxShadow = 'box-shadow: 0 4px #575757;';
             }
-            else if (available) {
+            else if (available)
+            {
                 button.attr({class: 'btn btn-default-group'});
-             }
-            else{
+            }
+            else
+            {
                 button.attr({class: 'btn btn-default-group'});
                 button.attr({disabled: 'disabled'});
             }
             button.attr({style:'background: ' +  background + '; color: ' + color + ';font-size: 12px; padding: 3px; margin-right: 3px; margin-bottom: 7px;border-radius: 15px;' + boxShadow});
             button.attr({'data-cat': label, 'data-toggle': "buttons", 'id': id, 'title': title});
-            var input = $('<input>').attr({type: 'checkbox', autocomplete: 'off'});
+            input = $('<input>').attr({type: 'checkbox', autocomplete: 'off'});
             button.append(input);
             button.append(label);
             button.click(function (e) {
@@ -712,7 +919,7 @@ var Visualizer = (function ($) {
             divGroups.append(button);
         }
 
-        if (_selectAllNoneListenersAdded === false) {
+        if (false === _selectAllNoneListenersAdded) {
             $('#selectAll').click(function (e) {
                 e.preventDefault();
                 $('#groups').find('button').each(function () {
@@ -738,15 +945,15 @@ var Visualizer = (function ($) {
     };
 
     function getScopeString(){
-        var scopeLen, key;
+        var scopeLen, key, i, len;
         var scopeString = '';
         var keys = Object.keys(_scope);
-        for (var i = 0, len = keys.length; i < len; i++) {
+        for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             scopeString += key + ': ' + _scope[key] + ', ';
         }
         scopeLen = scopeString.length;
-        if (scopeLen > 1) {
+        if (1 < scopeLen) {
             scopeString = scopeString.substring(0, scopeLen - 2);
         }
         return scopeString;
@@ -754,7 +961,7 @@ var Visualizer = (function ($) {
 
     function groupChangeEvent(groupId)
     {
-        var button;
+        var button, i, len, k, kLen;
 
         $('#groups').find('button').each(function()
         {
@@ -763,7 +970,7 @@ var Visualizer = (function ($) {
 
                 if  (button.hasClass('active'))
                 {
-                    for (var i = 0, len = _selectedGroups.length; i < len; i++) {
+                    for (i = 0, len = _selectedGroups.length; i < len; i++) {
                         if (groupIdsEqual(groupId, _selectedGroups[i])) {
                             _selectedGroups.splice(i, 1);
                             button.removeClass('active');
@@ -773,7 +980,7 @@ var Visualizer = (function ($) {
                 }
                 else
                 {
-                    for (var k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++)
+                    for (k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++)
                     {
                         if (groupIdsEqual(groupId, _availableGroupsAllLevels[k])) {
                             _selectedGroups.push(_availableGroupsAllLevels[k]);
@@ -784,14 +991,14 @@ var Visualizer = (function ($) {
                 }
                 saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
                 reload();
-                return;
-            }
+             }
         });
     }
 
     function groupCurrentlyAvailable(groupId)
     {
-        for (var l = 0; l < _availableGroupsAtLevel.length; l++)
+        var l;
+        for ( l = 0; l < _availableGroupsAtLevel.length; l++)
         {
             if (groupIdsEqual(groupId, _availableGroupsAtLevel[l]))
             {
@@ -811,11 +1018,11 @@ var Visualizer = (function ($) {
     function loadCountsView()
     {
         var totalNodeCount = _nodes.length;
-        var maxLevelLabel = _maxLevel === 1 ? 'level' : 'levels';
-        var nodeCountLabel = totalNodeCount === 1 ? 'node' : 'nodes';
+        var maxLevelLabel = 1 === _maxLevel ? 'level' : 'levels';
+        var nodeCountLabel = 1 === totalNodeCount ? 'node' : 'nodes';
 
         var nodesDisplayingAtLevelCount = _network.body.data.nodes.length;
-        var nodesAtLevelLabel = nodesDisplayingAtLevelCount === 1 ? 'node' : 'nodes';
+        var nodesAtLevelLabel = 1 === nodesDisplayingAtLevelCount ? 'node' : 'nodes';
 
         $('#levelCounts')[0].textContent = nodesDisplayingAtLevelCount  + ' ' + nodesAtLevelLabel + ' of ' + _countNodesAtLevel + ' displaying at current level';
         $('#totalCounts')[0].textContent = totalNodeCount + ' ' + nodeCountLabel + ' total over ' +  _maxLevel + ' ' + maxLevelLabel ;
@@ -823,11 +1030,11 @@ var Visualizer = (function ($) {
 
     function loadSelectedLevelListView()
     {
-        var option;
+        var option, j;
         var select = $('#selectedLevel-list');
         select.empty();
 
-        for (var j = 1; j <= _maxLevel; j++)
+        for (j = 1; j <= _maxLevel; j++)
         {
             option = $('<option/>');
             option[0].textContent = j.toString();
@@ -843,8 +1050,9 @@ var Visualizer = (function ($) {
     
     function isSelectedGroup(node)
     {
+        var j, jLen;
         if (_selectedGroups) {
-            for (var j = 0, jLen = _selectedGroups.length; j < jLen; j++) {
+            for (j = 0, jLen = _selectedGroups.length; j < jLen; j++) {
                 if (groupIdsEqual(node.group, _selectedGroups[j])) {
                     return true;
                 }
@@ -857,13 +1065,12 @@ var Visualizer = (function ($) {
     {
         updateNetworkDataNodes();
         updateNetworkDataEdges();
-        _network.clusteredNodeIds = [];
-    }
+     }
 
 
     function updateNetworkDataNodes()
     {
-        var node, selectedGroup, groupNamePrefix;
+        var node, selectedGroup, groupNamePrefix, i, iLen;
         var networkDataNodes =  _network.body.data.nodes;
         var nodeIdsToRemove = [];
         var nodesToAddBack = [];
@@ -873,7 +1080,7 @@ var Visualizer = (function ($) {
         _countNodesAtLevel = 0;
 
         //given the selected level, determine nodes to exclude, nodes to add back, selected groups and available groups
-        for (var i = 0, iLen = _nodes.length; i < iLen; i++)
+        for (i = 0, iLen = _nodes.length; i < iLen; i++)
         {
             node  = _nodes[i];
 
@@ -914,58 +1121,29 @@ var Visualizer = (function ($) {
 
     function updateNetworkDataEdges()
     {
-        var edge;
+        var edge, k, kLen;
         var networkDataEdges =  _network.body.data.edges;
         var edgeIdsToRemove = [];
         var edgesToAddBack = [];
-        var level = _selectedLevel;
 
         //given the selected level, determine edges to exclude and edges to add back
         if (_edges) {
-            for (var k = 0, kLen = _edges.length; k < kLen; k++) {
+            for (k = 0, kLen = _edges.length; k < kLen; k++) {
                 edge = _edges[k];
 
-                if (parseInt(edge.level) > level) {
+                if (parseInt(edge.level) > _selectedLevel)
+                {
                     edgeIdsToRemove.push(edge.id);
                 }
-                else if (!networkDataEdges || !networkDataEdges.get(edge.id)){
-                    {
-                        edgesToAddBack.push(edge);
-                    }
+                else if (!networkDataEdges || !networkDataEdges.get(edge.id))
+                {
+                    edgesToAddBack.push(edge);
                 }
             }
         }
         networkDataEdges.remove(edgeIdsToRemove);
         networkDataEdges.add(edgesToAddBack);
     }
-
-    /*
-     //TODO: Attempted short-term fix for issue with hierarchical mode, but it's not enough.
-     //TODO: Keep investigating, submit question and possibly a bug fix to visjs.
-    function setLevelOnNetworkNodes()
-    {
-        var level, node, supportNode, edge, id;
-        var networkNodes =  _network.body.nodes;
-        var networkDataNodes = _network.body.data.nodes;
-        var networkEdges =  _network.body.edges;
-        var networkDataEdges = _network.body.data.edges;
-
-
-        for (var i = 1, iLen = networkDataNodes.length; i < iLen; i++) {
-            node = networkNodes[i];
-            supportNode = networkNodes["edgeId:" + i];
-            id = node.parentEdgeId ? node.parentEdgeId : node.id;
-            level = networkDataNodes.get(id).level;
-            node.level = level;
-            supportNode.level = level;
-        }
-
-        for (var i = 1, iLen = networkDataEdges.length; i < iLen; i++) {
-            edge = networkEdges[i];
-            level = networkDataEdges.get(edge.id).level;
-            edge.level = level;
-        }
-    }*/
 
     function loadData(visInfo, status)
     {
@@ -979,7 +1157,7 @@ var Visualizer = (function ($) {
             _groupSuffix = visInfo.groupSuffix;
             _maxLevel = visInfo.maxLevel;
             nodes = visInfo.nodes['@items'];
-            edges = visInfo.edges['@items']
+            edges = visInfo.edges['@items'];
             _nodes =  nodes ? nodes : [];
             _edges = edges ? edges : [];
         }
@@ -996,54 +1174,7 @@ var Visualizer = (function ($) {
         load();
     };
 
-    function clusterDescendantsBySelectedNode(nodeId, immediateDescendantsOnly) {
-        _network.clusteredNodeIds.push(nodeId);
-        clusterDescendants(immediateDescendantsOnly)
-    }
-
-    function clusterDescendants(immediateDescendantsOnly) {
-        var id;
-        for (var i = 0; i < _network.clusteredNodeIds.length; i++) {
-            id = _network.clusteredNodeIds[i];
-            clusterDescendantsByNodeId(id, immediateDescendantsOnly);
-        }
-    }
-
-    function clusterDescendantsByNodeId(nodeId, immediateDescendantsOnly) {
-        var clusterOptionsByData = getClusterOptionsByNodeId(nodeId);
-        _network.clusterDescendants(nodeId, immediateDescendantsOnly, clusterOptionsByData, true)
-    }
-
-    function getClusterOptionsByNodeId(nodeId) {
-        var clusterOptionsByData, node, clusterLabel;
-        return clusterOptionsByData = {
-            processProperties: function (clusterOptions, childNodes) {
-                node = getNodeById(childNodes, nodeId);
-                clusterLabel = node.label + ' cluster';
-                clusterOptions.label = clusterLabel;
-                clusterOptions.title = clusterLabel;
-                return clusterOptions;
-            }
-        };
-    }
-
-    function openClusterByClusterNodeId(clusterNodeId)  //TEMP: gets called when a clustered node is clicked
-    {
-        var node, indexNode;
-        var nodesInCluster = _network.getNodesInCluster(clusterNodeId);
-        for (var i = 0; i < nodesInCluster.length; i++)
-        {
-            node = nodesInCluster[i];
-            indexNode = _network.clusteredNodeIds.indexOf(node);
-            if (indexNode !== -1)
-            {
-                _network.clusteredNodeIds.splice(indexNode, 1);
-            }
-        }
-        _network.openCluster(clusterNodeId)
-    }
-
-    function destroyNetwork()
+     function destroyNetwork()
     {
         if (_network) {
             _network.destroy();
@@ -1053,14 +1184,14 @@ var Visualizer = (function ($) {
 
     function markTopNodeSpecial()
     {
-        var node = _nodes[0]
+        var node = _nodes[0];
         if (node) {
-            if (node.id !== '1') {
+            if ('1' !== node.id) {
                 throw new Error('Expected node id of 1 for first node in list.')
             }
-            node.shapeProperties = {borderDashes: [15, 5]};
+            node.shapeProperties = {borderDashes: [DASH_LENGTH, 5]};
             node.borderWidth = 3;
-            node.scaling = {min: 200, max: 200, label: {enabled: true}};
+            node.scaling = {min: NODE_SCALING_SPECIAL, max: NODE_SCALING_SPECIAL, label: {enabled: true}};
         }
     }
 
@@ -1075,37 +1206,18 @@ var Visualizer = (function ($) {
         else
         {
             container = document.getElementById('network');
+            initNetworkOptions(container);
             nodeDataSet = new vis.DataSet({});
             markTopNodeSpecial();
-            nodeDataSet.add(_nodes)
+            nodeDataSet.add(_nodes);
             edgeDataSet = new vis.DataSet({});
-             edgeDataSet.add(_edges)
-            _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, getNetworkOptions());
+            edgeDataSet.add(_edges);
+            _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, _networkOptions);
             updateNetworkData();
-            customizeNetworkForNce(_network);
 
             _network.on('select', function(params) {
-                _clicks++;
-                if(_clicks === 1)
-                {
-                    _clickTimer = setTimeout(function()
-                    {
-                        networkSingleClick(params)
-                        _clickTimer = 0;
-
-                    }, PROGRESS_DELAY);
-
-                } else
-                {
-                    clearTimeout(_clickTimer);
-                    networkDoubleClick(params)
-                    _clicks = 0;
-                }
+                networkSelectEvent(params);
             });
-
-            _network.on('doubleClick', function (params) {
-                networkDoubleClick(params)
-             });
 
             _network.on('startStabilizing', function () {
                 _nce.showNote('Stabilizing network...');
@@ -1115,7 +1227,7 @@ var Visualizer = (function ($) {
                 $("#iterationsToStabilize").val(_iterationsToStabilize);
              });
 
-            _network.on('stabilizationProgress', function (params) {
+            _network.on('stabilizationProgress', function () {
                  _stabilizationStatus = 'stabilization in progress';
                  $("#stabilizationStatus").val(_stabilizationStatus);
              });
@@ -1139,20 +1251,9 @@ var Visualizer = (function ($) {
         }
     }
 
-    function networkDoubleClick(params)
+    function networkSelectEvent(params)
     {
-        if (params.nodes.length === 1) {
-            if (_network.isCluster(params.nodes[0])) {
-                openClusterByClusterNodeId(params.nodes[0]);
-            } else {
-                clusterDescendantsBySelectedNode(params.nodes[0], false);
-            }
-        }
-    }
-
-    function networkSingleClick(params)
-    {
-        var nodeId, node, cubeName, appId
+        var nodeId, node, cubeName, appId;
         nodeId = params.nodes[0];
         node = getNodeById(_nodes, nodeId );
         if (node) {
@@ -1178,9 +1279,9 @@ var Visualizer = (function ($) {
         }
     }
 
-     function updateNetworkOptions()
+    function updateNetworkOptions()
     {
-        _network.setOptions(getNetworkOptions());
+       _network.setOptions(_networkOptions);
     }
 
     function createVisualizeFromHereLink(appId, cubeName, node)
@@ -1227,20 +1328,20 @@ var Visualizer = (function ($) {
     }
 
     function replaceNode(nodes, newNode) {
-        var node;
-        for (var i = 0, len = nodes.length; i < len; i++) {
+        var node, i, len;
+        for (i = 0, len = nodes.length; i < len; i++) {
             node = nodes[i];
             if (node.id === newNode.id) {
                 nodes.splice(i, 1);
-                nodes.push(newNode)
+                nodes.push(newNode);
                 return;
             }
         }
     }
 
     function getNodeById(nodes, nodeId) {
-        var node;
-        for (var i = 0, len = nodes.length; i < len; i++) {
+        var node, i, len;
+        for (i = 0, len = nodes.length; i < len; i++) {
             node = nodes[i];
             if (node.id === nodeId) {
                 return node;
@@ -1248,336 +1349,7 @@ var Visualizer = (function ($) {
         }
     }
 
-    function customizeNetworkForNce(network)
-    {
-        var edge, childNodeId, childClonedOptions, refreshData, node, childNodesObj, childEdgesObj, parentNodeId, parentClonedOptions;
-
-        //TODO: Consider submitting pull request with these enhancements to visjs
-        network.clustering.clusterDescendants = function(nodeId, immediateDescendantsOnly, options) {
-            var collectDescendants = function(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this) {
-
-                // collect the nodes that will be in the cluster
-                for (var i = 0; i < node.edges.length; i++) {
-                    edge = node.edges[i];
-                    //if (edge.hiddenByCluster !== true) {  //BBH:: commented this line
-                    if (edge.hiddenByCluster !== true && edge.toId != parentNodeId) { //BBH: added this line
-                        childNodeId = _this._getConnectedId(edge, parentNodeId);
-
-                        // if the child node is not in a cluster (may not be needed now with the edge.hiddenByCluster check)
-                        if (_this.clusteredNodes[childNodeId] === undefined) {
-                            if (childNodeId !== parentNodeId) {
-                                if (options.joinCondition === undefined) {
-                                    childEdgesObj[edge.id] = edge;
-                                    childNodesObj[childNodeId] = _this.body.nodes[childNodeId];
-                                    if (immediateDescendantsOnly === false) {
-                                        collectDescendants(_this.body.nodes[childNodeId], childNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this); //BBH: added this line
-                                    }
-                                } else {
-                                    // clone the options and insert some additional parameters that could be interesting.
-                                    childClonedOptions = _this._cloneOptions(this.body.nodes[childNodeId]);
-                                    if (options.joinCondition(parentClonedOptions, childClonedOptions) === true) {
-                                        childEdgesObj[edge.id] = edge;
-                                        childNodesObj[childNodeId] = _this.body.nodes[childNodeId];
-                                        if (immediateDescendantsOnly === false) {
-                                            collectDescendants(_this.body.nodes[childNodeId], childNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this); //BBH: added this line
-                                        }
-                                    }
-                                }
-                            } else {
-                                // swallow the edge if it is self-referencing.
-                                childEdgesObj[edge.id] = edge;
-                            }
-                        }
-                    }
-                }
-            };
-
-            refreshData = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
-
-            // kill conditions
-            if (nodeId === undefined) {
-                throw new Error('No nodeId supplied to clusterDescendants!');
-            }
-            if (this.body.nodes[nodeId] === undefined) {
-                throw new Error('The nodeId given to clusterDescendants does not exist!');
-            }
-
-            node = this.body.nodes[nodeId];
-            options = this._checkOptions(options, node);
-            if (options.clusterNodeProperties.x === undefined) {
-                options.clusterNodeProperties.x = node.x;
-            }
-            if (options.clusterNodeProperties.y === undefined) {
-                options.clusterNodeProperties.y = node.y;
-            }
-            if (options.clusterNodeProperties.fixed === undefined) {
-                options.clusterNodeProperties.fixed = {};
-                options.clusterNodeProperties.fixed.x = node.options.fixed.x;
-                options.clusterNodeProperties.fixed.y = node.options.fixed.y;
-            }
-
-            childNodesObj = {};
-            childEdgesObj = {};
-            parentNodeId = node.id;
-            parentClonedOptions = this._cloneOptions(node);
-            childNodesObj[parentNodeId] = node;
-
-            collectDescendants(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, this);
-
-            this._cluster(childNodesObj, childEdgesObj, options, refreshData);
-        };
-
-        network.clustering._cloneOptions = function(item, type) {
-            var clonedOptions = {};
-            var util = vis.util;
-            if (type === undefined || type === 'node') {
-                util.deepExtend(clonedOptions, item.options, true);
-                clonedOptions.x = item.x;
-                clonedOptions.y = item.y;
-                clonedOptions.amountOfConnections = item.edges.length;
-            } else {
-                util.deepExtend(clonedOptions, item.options, true);
-            }
-            return clonedOptions;
-        };
-
-        network.clusterDescendants = function () {
-            return this.clustering.clusterDescendants.apply(this.clustering, arguments);
-        };
-    }
-    
-    function getNetworkOptions()
-    {
-        var options =
-        {
-            height: getVisNetworkHeight(),
-            interaction: {
-                navigationButtons: true,
-                keyboard: {
-                    enabled: false,
-                    speed: {x: 5, y: 5, zoom: 0.02}
-                },
-                zoomView: true
-            },
-            nodes: {
-                value: 24,
-                scaling: {
-                    min: 24,
-                    max: 24,
-                    label: {
-                        enabled: true
-                    }
-                }
-            },
-            edges: {
-                arrows: 'to',
-                color: 'gray',
-                smooth: true,
-                hoverWidth: 3,
-                font: {
-                    size: 20
-                }
-            },
-            physics: {
-                enabled: _physicsEnabled,
-                barnesHut:
-                {
-                    gravitationalConstant: Number(_barnesHut_gravitationalConstant),
-                    centralGravity: Number(_barnesHut_centralGravity),
-                    springLength: Number(_barnesHut_springLength),
-                    springConstant: Number(_barnesHut_springConstant),
-                    damping: Number(_barnesHut_damping),
-                    avoidOverlap: Number(_barnesHut_avoidOverlap)
-                },
-                repulsion:
-                {
-                    nodeDistance: Number(_repulsion_nodeDistance),
-                    centralGravity: Number(_repulsion_centralGravity),
-                    springLength: Number(_repulsion_springLength),
-                    springConstant: Number(_repulsion_springConstant),
-                    damping: Number(_repulsion_damping)
-                },
-                hierarchicalRepulsion:
-                {
-                    nodeDistance: Number(_hierarchicalRepulsion_nodeDistance),
-                    centralGravity: Number(_hierarchicalRepulsion_centralGravity),
-                    springLength: Number(_hierarchicalRepulsion_springLength),
-                    springConstant: Number(_hierarchicalRepulsion_springConstant),
-                    damping: Number(_hierarchicalRepulsion_damping)
-                },
-                minVelocity:  Number(_minVelocity),
-                maxVelocity:  Number(_maxVelocity),
-                solver:  _solver,
-                stabilization:
-                {
-                    enabled: _stabilization_enabled,
-                    iterations: Number(_stabilization_iterations),
-                    updateInterval: Number(_stabilization_updateInterval),
-                    onlyDynamicEdges: _stabilization_onlyDynamicEdges,
-                    fit: _stabilization_fit
-                },
-                timestep:  Number(_timestep),
-                adaptiveTimestep:  _adaptiveTimestep
-
-            },
-            layout: {
-                hierarchical: _hierarchical,
-                improvedLayout : _improvedLayout,
-                randomSeed:2
-            },
-            groups: {
-                PRODUCT: {
-                    shape: 'box',
-                    color: '#DAE4FA'
-                },
-                RISK: {
-                    shape: 'box',
-                    color: '#759BEC'
-                },
-                COVERAGE: {
-                    shape: 'box',
-                    color: '#113275',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                CONTAINER: {
-                    shape: 'star',
-                    color: "#731d1d",
-                    font: {
-                        buttonColor: '#D8D8D8'
-                    }
-                },
-                LIMIT: {
-                    shape: 'ellipse',
-                    color: '#FFFF99'
-                },
-                DEDUCTIBLE: {
-                    shape: 'ellipse',
-                    color: '#FFFF99'
-                },
-                PREMIUM: {
-                    shape: 'ellipse',
-                    color: '#0B930B',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                RATE: {
-                    shape: 'ellipse',
-                    color: '#EAC259'
-                },
-                ROLE: {
-                    shape: 'box',
-                    color: '#F59D56'
-                },
-                ROLEPLAYER: {
-                    shape: 'box',
-                    color: '#F2F2F2'
-                },
-                RATEFACTOR: {
-                    shape: 'ellipse',
-                    color: '#EAC259'
-                },
-                PARTY: {
-                    shape: 'box',
-                    color: '#004000',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                PLACE: {
-                    shape: 'box',
-                    color: '#481849',
-                    font: {
-                        color: '#D8D8D8'
-                    }
-                },
-                UNSPECIFIED: {
-                    shape: 'box',
-                    color: '#7ac5cd'
-                },
-                FORM: {
-                    shape: 'box',
-                    color: '#d2691e'
-                },
-                PRODUCT_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                RISK_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                COVERAGE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                LIMIT_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                PREMIUM_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                RATE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                RATEFACTOR_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                ROLE_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                ROLEPLAYER_ENUM : {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                CONTAINER_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                DEDUCTIBLE_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                PARTY_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                PLACE_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                },
-                UNSPECIFIED_ENUM: {
-                    shape: 'dot',
-                    scaling: {min: 5, max: 5},
-                    color: 'gray'   // gray
-                }
-            }
-        };
-        return options;
-    }
-
-
-    function getFromLocalStorage(key, defaultValue) {
+     function getFromLocalStorage(key, defaultValue) {
         var local = localStorage[getStorageKey(_nce, key)];
         return local ? JSON.parse(local) : defaultValue;
     }
@@ -1595,6 +1367,7 @@ var Visualizer = (function ($) {
         saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
         saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
         saveToLocalStorage(_hierarchical, HIERARCHICAL);
+        saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
     }
 
     function saveToLocalStorage(value, key) {
@@ -1603,8 +1376,8 @@ var Visualizer = (function ($) {
 
 
     /*================================= BEGIN SCOPE BUILDER ==========================================================*/
-    var availableScopeKeys = []
-    var availableScopeValues = {}
+    var availableScopeKeys = [];
+    var availableScopeValues = {};
 
     //TODO  1. The key in the scope picker is case sensitive, which doesn’t play well with the case insensitive scope
     //TODO     that comes across from the server (Product vs. product, etc.).
@@ -1645,7 +1418,7 @@ var Visualizer = (function ($) {
     function scopeBuilderSave() {
          var newScope = getScopeBuilderScopeText();
         _scopeInput.val(newScope);
-        _scope = buildScopeFromText(newScope)
+        _scope = buildScopeFromText(newScope);
         saveToLocalStorage(_scope, SCOPE_MAP);
      }
 
