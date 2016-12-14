@@ -411,6 +411,7 @@ span.selected-count {
 }
 .navbar-custom .navbar-brand {
     color: #ffffff;
+    height: 40px;
     line-height: 40px;
     font-size: 16px;
     padding: 0 12px;
