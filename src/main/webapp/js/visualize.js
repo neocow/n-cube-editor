@@ -64,8 +64,6 @@ var Visualizer = (function ($) {
     var _scopeKeyPressed = false;
     var SCOPE_KEY_DELAY = 3000;
     var UNSPECIFIED = 'UNSPECIFIED';
-    var _clickTimer = null;
-    var _clicks = 0;
 
     //Network layout parameters
     var _hierarchical = false;
@@ -86,7 +84,7 @@ var Visualizer = (function ($) {
     var _networkOptions = null;
     var _networkOptionsOverridden =
     {
-        height: getVisNetworkHeight(),
+        height: '800',
         interaction: {
             navigationButtons: true,
             keyboard: {
@@ -133,7 +131,7 @@ var Visualizer = (function ($) {
         },
         layout: {
             hierarchical: {
-                enabled: _hierarchical
+                enabled: false
             },
             improvedLayout : true,
             randomSeed:2
@@ -297,10 +295,8 @@ var Visualizer = (function ($) {
     var EAST_LENGTH_OPEN = 60;
     
     var init = function (info) {
-        var button;
         if (!_nce) {
             _nce = info;
-
 
             _layout = $('#visBody').layout({
                 name: 'visLayout'
@@ -336,8 +332,11 @@ var Visualizer = (function ($) {
             _networkOptionsChangeSection = $('#networkOptionsChangeSection');
 
             $(window).resize(function() {
+                var height;
                 if (_network) {
-                    _network.setSize('100%', getVisNetworkHeight());
+                    height = getVisNetworkHeight();
+                    _network.setSize('100%', height);
+                    _networkOptions.height = height;
                 }
             });
 
@@ -356,11 +355,11 @@ var Visualizer = (function ($) {
                 //if hierarchical mode is selected since that mode requires either all or no nodes to
                 //have a defined level. Attempted short-term fix in setLevelOnNetworkNodes() method, but it's not enough.
                 //TODO: Keep investigating, submit question and possibly a bug fix to visjs.
-               // $('#hierarchical').prop('checked', false);
-               // _nce.showNote('Hierarchical mode is currently not available');
-                _hierarchical = this.checked;
-                saveToLocalStorage(_hierarchical, HIERARCHICAL);
-                updateNetworkOptions();
+                $('#hierarchical').prop('checked', false);
+                //_nce.showNote('Hierarchical mode is currently not available');
+                //_hierarchical = this.checked;
+                //saveToLocalStorage(_hierarchical, HIERARCHICAL);
+                //updateNetworkOptions();
             });
 
             _scopeInput.on('change', function () {
@@ -374,31 +373,6 @@ var Visualizer = (function ($) {
             });
 
             scopeKeyDelayLoop();
-
-            initNetworkOptions();
-
-            //Network options parameters
-            _networkOptionsSection.hide();
-            $('#networkOptionsButton').click(function () {
-                button = $('#networkOptionsButton');
-                button.toggleClass('active');
-                _networkOptionsButton = button.hasClass('active');
-                saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
-                _networkOptionsSection.toggle();
-                loadNetworkOptionsSectionView();
-            });
-
-            $('#networkOptionsChangeSection').change(function ()
-            {
-                $('.networkOption').each(function(){
-                    var id, keys;
-                    id = $(this).attr('id');
-                    keys = id.split('.');
-                    setNetworkOption($(this), _networkOptions, keys);
-                });
-                loadNetworkOptionsSectionView();
-                reload();
-            });
         }
     };
 
@@ -423,7 +397,7 @@ var Visualizer = (function ($) {
             }
             else if (FUNCTION === typeof value)
             {
-                //Not supporting updating of netork options that are functions.   
+                //Not currently supporting updating of netork options that are functions.   
             }
             else
             {
@@ -438,31 +412,53 @@ var Visualizer = (function ($) {
         }
     }
 
-     function initNetworkOptions()
+     function initNetworkOptions(container)
     {
-        var emptyDataSet, emptyNetwork, container, defaults;
-        container = document.getElementById('network');
-        emptyDataSet = new vis.DataSet({});
-        emptyNetwork = new vis.Network(container, {nodes:emptyDataSet, edges:emptyDataSet}, {});
+        var emptyDataSet, emptyNetwork, container, defaults, button;
+        if (!_networkOptions) {
+            _networkOptionsSection.hide();
+            emptyDataSet = new vis.DataSet({});
+            emptyNetwork = new vis.Network(container, {nodes: emptyDataSet, edges: emptyDataSet}, {});
 
-        _networkOptionsVis.physics = emptyNetwork.physics.defaultOptions;
-        _networkOptionsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
-        _networkOptionsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
-        _networkOptionsVis.edges = emptyNetwork.edgesHandler.defaultOptions;
-        _networkOptionsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
-        _networkOptionsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
-        _networkOptionsVis.groups = emptyNetwork.groups.defaultOptions;
+            _networkOptionsVis.physics = emptyNetwork.physics.defaultOptions;
+            _networkOptionsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
+            _networkOptionsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
+            _networkOptionsVis.edges = emptyNetwork.edgesHandler.defaultOptions;
+            _networkOptionsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
+            _networkOptionsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
+            _networkOptionsVis.groups = emptyNetwork.groups.defaultOptions;
 
-        //TODO: Figure out why these keys throw "unknown" exception in vis when set on the network despite originating
-        //TODO: from vis. Removing keys for now.
-        delete _networkOptionsVis.physics.barnesHut['theta'];  
-        delete _networkOptionsVis.physics.forceAtlas2Based['theta'];  
-        delete _networkOptionsVis.physics.repulsion['avoidOverlap'];
+            //TODO: Figure out why these keys throw "unknown" exception in vis when set on the network despite originating
+            //TODO: from vis. Removing keys for now.
+            delete _networkOptionsVis.physics.barnesHut['theta'];
+            delete _networkOptionsVis.physics.forceAtlas2Based['theta'];
+            delete _networkOptionsVis.physics.repulsion['avoidOverlap'];
 
-        defaults = $.extend(true, {}, _networkOptionsVis);
-        _networkOptionsDefaults = $.extend(true, defaults, _networkOptionsOverridden);
-        _networkOptions = $.extend(true, {}, _networkOptionsDefaults);
-        emptyNetwork.destroy();
+            defaults = $.extend(true, {}, _networkOptionsVis);
+            _networkOptionsDefaults = $.extend(true, defaults, _networkOptionsOverridden);
+            _networkOptions = $.extend(true, {}, _networkOptionsDefaults);
+            emptyNetwork.destroy();
+
+            $('#networkOptionsButton').click(function () {
+                button = $('#networkOptionsButton');
+                button.toggleClass('active');
+                _networkOptionsButton = button.hasClass('active');
+                saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
+                _networkOptionsSection.toggle();
+                loadNetworkOptionsSectionView();
+            });
+
+            $('#networkOptionsChangeSection').change(function () {
+                $('.networkOption').each(function () {
+                    var id, keys;
+                    id = $(this).attr('id');
+                    keys = id.split('.');
+                    setNetworkOption($(this), _networkOptions, keys);
+                });
+                loadNetworkOptionsSectionView();
+                reload();
+            });
+        }
     }
 
     function loadNetworkOptionsSectionView()
@@ -488,7 +484,7 @@ var Visualizer = (function ($) {
 
     function buildNetworkOptionsChangeSection(section, parentKey, networkOptions, networkOptionsDefaults, networkOptionsVis)
     {
-        var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Input, col4Input, col5Input, fullKey,
+        var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Span, col2Input, col4Input, col5Input, fullKey,
             value, keyVis, valueVis, highlightedClass, readOnly, readOnlyClass, functionTitle;
 
         $.each(networkOptionsDefaults, function (key, defaultValue)
@@ -514,15 +510,16 @@ var Visualizer = (function ($) {
             else
             {
                 rowBordersDiv = $('<div/>').prop({class: "row borders"});
-                col1Div = $('<div/>').prop({class: "col-md-3"});
+                col1Div = $('<div/>').prop({class: "col-md-4"});
                 col2Div = $('<div/>').prop({class: "col-md-1"});
                 col3Div = $('<div/>').prop({class: "col-md-1"});
                 col4Div = $('<div/>').prop({class: "col-md-2"});
-                col5Div = $('<div/>').prop({class: "col-md-5"});
+                col5Div = $('<div/>').prop({class: "col-md-4"});
 
                 highlightedClass = value === defaultValue ? '' : ' highlighted';
                 if (typeof defaultValue === BOOLEAN) {
-                    col2Input = $('<input/>').prop({class: 'networkOption' + highlightedClass, id: fullKey, type: "checkbox"});
+                    col2Span = $('<span/>').prop({class: highlightedClass});
+                    col2Input = $('<input/>').prop({class: 'networkOption', id: fullKey, type: "checkbox" });
                     col2Input[0].checked = value;
                     col4Input = $('<input/>').prop({class: 'readOnly', id: fullKey + 'Default', type: "checkbox", readOnly: "true"});
                     col4Input[0].checked = defaultValue;
@@ -531,13 +528,15 @@ var Visualizer = (function ($) {
                     readOnly = FUNCTION === typeof value ? true: false;
                     readOnlyClass = readOnly ? ' readOnly' : '';
                     functionTitle = "Not currently supporting update of network options that are functions.";
+                    col2Span = $('<span/>');
                     col2Input = $('<input/>').prop({class: 'networkOption' + highlightedClass + readOnlyClass, id: fullKey, type: "text", readOnly: readOnly, title: functionTitle});
                     col2Input[0].value = value;
                     col4Input = $('<input/>').prop({class: 'readOnly', id: fullKey + 'Default', type: "text", readOnly: "true"});
                     col4Input[0].value = defaultValue;
                 }
                 col1Div[0].innerHTML = fullKey;
-                col2Div.append(col2Input);
+                col2Span.append(col2Input);
+                col2Div.append(col2Span);
                 col3Div[0].innerHTML = NBSP;
                 col4Div.append(col4Input);
 
@@ -739,7 +738,7 @@ var Visualizer = (function ($) {
         _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
         _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
         _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
-        _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, null);
+        _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, false);
 
         if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))
         {
@@ -1062,8 +1061,7 @@ var Visualizer = (function ($) {
     {
         updateNetworkDataNodes();
         updateNetworkDataEdges();
-        _network.clusteredNodeIds = [];
-    }
+     }
 
 
     function updateNetworkDataNodes()
@@ -1172,54 +1170,7 @@ var Visualizer = (function ($) {
         load();
     };
 
-    function clusterDescendantsBySelectedNode(nodeId, immediateDescendantsOnly) {
-        _network.clusteredNodeIds.push(nodeId);
-        clusterDescendants(immediateDescendantsOnly)
-    }
-
-    function clusterDescendants(immediateDescendantsOnly) {
-        var id, i;
-        for (i = 0; i < _network.clusteredNodeIds.length; i++) {
-            id = _network.clusteredNodeIds[i];
-            clusterDescendantsByNodeId(id, immediateDescendantsOnly);
-        }
-    }
-
-    function clusterDescendantsByNodeId(nodeId, immediateDescendantsOnly) {
-        var clusterOptionsByData = getClusterOptionsByNodeId(nodeId);
-        _network.clusterDescendants(nodeId, immediateDescendantsOnly, clusterOptionsByData, true)
-    }
-
-    function getClusterOptionsByNodeId(nodeId) {
-        var node, clusterLabel;
-        return {
-            processProperties: function (clusterOptions, childNodes) {
-                node = getNodeById(childNodes, nodeId);
-                clusterLabel = node.label + ' cluster';
-                clusterOptions.label = clusterLabel;
-                clusterOptions.title = clusterLabel;
-                return clusterOptions;
-            }
-        };
-    }
-
-    function openClusterByClusterNodeId(clusterNodeId)  //TEMP: gets called when a clustered node is clicked
-    {
-        var node, indexNode, i;
-        var nodesInCluster = _network.getNodesInCluster(clusterNodeId);
-        for (i = 0; i < nodesInCluster.length; i++)
-        {
-            node = nodesInCluster[i];
-            indexNode = _network.clusteredNodeIds.indexOf(node);
-            if (indexNode !== -1)
-            {
-                _network.clusteredNodeIds.splice(indexNode, 1);
-            }
-        }
-        _network.openCluster(clusterNodeId)
-    }
-
-    function destroyNetwork()
+     function destroyNetwork()
     {
         if (_network) {
             _network.destroy();
@@ -1251,37 +1202,19 @@ var Visualizer = (function ($) {
         else
         {
             container = document.getElementById('network');
+            initNetworkOptions(container);
             nodeDataSet = new vis.DataSet({});
             markTopNodeSpecial();
             nodeDataSet.add(_nodes);
             edgeDataSet = new vis.DataSet({});
-             edgeDataSet.add(_edges);
+            edgeDataSet.add(_edges);
             _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, _networkOptions);
+            _networkOptions.height = getVisNetworkHeight();
             updateNetworkData();
-            customizeNetworkForNce(_network);
 
             _network.on('select', function(params) {
-                _clicks++;
-                if(1 === _clicks)
-                {
-                    _clickTimer = setTimeout(function()
-                    {
-                        networkSingleClick(params);
-                        _clickTimer = 0;
-
-                    }, PROGRESS_DELAY);
-
-                } else
-                {
-                    clearTimeout(_clickTimer);
-                    networkDoubleClick(params);
-                    _clicks = 0;
-                }
+                networkSelectEvent(params);
             });
-
-            _network.on('doubleClick', function (params) {
-                networkDoubleClick(params)
-             });
 
             _network.on('startStabilizing', function () {
                 _nce.showNote('Stabilizing network...');
@@ -1315,18 +1248,7 @@ var Visualizer = (function ($) {
         }
     }
 
-    function networkDoubleClick(params)
-    {
-        if (1 === params.nodes.length) {
-            if (_network.isCluster(params.nodes[0])) {
-                openClusterByClusterNodeId(params.nodes[0]);
-            } else {
-                clusterDescendantsBySelectedNode(params.nodes[0], false);
-            }
-        }
-    }
-
-    function networkSingleClick(params)
+    function networkSelectEvent(params)
     {
         var nodeId, node, cubeName, appId;
         nodeId = params.nodes[0];
@@ -1424,105 +1346,7 @@ var Visualizer = (function ($) {
         }
     }
 
-    function customizeNetworkForNce(network)
-    {
-        var edge, childNodeId, childClonedOptions, refreshData, node, childNodesObj, childEdgesObj, parentNodeId, parentClonedOptions, i;
-
-        //TODO: Consider submitting pull request with these enhancements to vis
-        network.clustering.clusterDescendants = function(nodeId, immediateDescendantsOnly, options) {
-            var collectDescendants = function(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this) {
-
-                // collect the nodes that will be in the cluster
-                for (i = 0; i < node.edges.length; i++) {
-                    edge = node.edges[i];
-                    //if (edge.hiddenByCluster !== true) {  //BBH:: commented this line
-                    if (true !== edge.hiddenByCluster && edge.toId != parentNodeId) { //BBH: added this line
-                        childNodeId = _this._getConnectedId(edge, parentNodeId);
-
-                        // if the child node is not in a cluster (may not be needed now with the edge.hiddenByCluster check)
-                        if (_this.clusteredNodes[childNodeId] === undefined) {
-                            if (childNodeId !== parentNodeId) {
-                                if (options.joinCondition === undefined) {
-                                    childEdgesObj[edge.id] = edge;
-                                    childNodesObj[childNodeId] = _this.body.nodes[childNodeId];
-                                    if (false === immediateDescendantsOnly) {
-                                        collectDescendants(_this.body.nodes[childNodeId], childNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this); //BBH: added this line
-                                    }
-                                } else {
-                                    // clone the options and insert some additional parameters that could be interesting.
-                                    childClonedOptions = _this._cloneOptions(this.body.nodes[childNodeId]);
-                                    if (true === options.joinCondition(parentClonedOptions, childClonedOptions)) {
-                                        childEdgesObj[edge.id] = edge;
-                                        childNodesObj[childNodeId] = _this.body.nodes[childNodeId];
-                                        if (false === immediateDescendantsOnly) {
-                                            collectDescendants(_this.body.nodes[childNodeId], childNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, _this); //BBH: added this line
-                                        }
-                                    }
-                                }
-                            } else {
-                                // swallow the edge if it is self-referencing.
-                                childEdgesObj[edge.id] = edge;
-                            }
-                        }
-                    }
-                }
-            };
-
-            refreshData = 3 >= arguments.length || arguments[3] === undefined ? true : arguments[3];
-
-            // kill conditions
-            if (nodeId === undefined) {
-                throw new Error('No nodeId supplied to clusterDescendants!');
-            }
-            if (this.body.nodes[nodeId] === undefined) {
-                throw new Error('The nodeId given to clusterDescendants does not exist!');
-            }
-
-            node = this.body.nodes[nodeId];
-            options = this._checkOptions(options, node);
-            if (options.clusterNodeProperties.x === undefined) {
-                options.clusterNodeProperties.x = node.x;
-            }
-            if (options.clusterNodeProperties.y === undefined) {
-                options.clusterNodeProperties.y = node.y;
-            }
-            if (options.clusterNodeProperties.fixed === undefined) {
-                options.clusterNodeProperties.fixed = {};
-                options.clusterNodeProperties.fixed.x = node.options.fixed.x;
-                options.clusterNodeProperties.fixed.y = node.options.fixed.y;
-            }
-
-            childNodesObj = {};
-            childEdgesObj = {};
-            parentNodeId = node.id;
-            parentClonedOptions = this._cloneOptions(node);
-            childNodesObj[parentNodeId] = node;
-
-            collectDescendants(node, parentNodeId, childEdgesObj, childNodesObj, immediateDescendantsOnly, options, parentClonedOptions, this);
-
-            this._cluster(childNodesObj, childEdgesObj, options, refreshData);
-        };
-
-        network.clustering._cloneOptions = function(item, type) {
-            var clonedOptions = {};
-            var util = vis.util;
-            if (type === undefined || 'node' === type) {
-                util.deepExtend(clonedOptions, item.options, true);
-                clonedOptions.x = item.x;
-                clonedOptions.y = item.y;
-                clonedOptions.amountOfConnections = item.edges.length;
-            } else {
-                util.deepExtend(clonedOptions, item.options, true);
-            }
-            return clonedOptions;
-        };
-
-        network.clusterDescendants = function () {
-            return this.clustering.clusterDescendants.apply(this.clustering, arguments);
-        };
-    }
-
-    function getFromLocalStorage(key, defaultValue) {
+     function getFromLocalStorage(key, defaultValue) {
         var local = localStorage[getStorageKey(_nce, key)];
         return local ? JSON.parse(local) : defaultValue;
     }
@@ -1540,6 +1364,7 @@ var Visualizer = (function ($) {
         saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
         saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
         saveToLocalStorage(_hierarchical, HIERARCHICAL);
+        saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
     }
 
     function saveToLocalStorage(value, key) {
