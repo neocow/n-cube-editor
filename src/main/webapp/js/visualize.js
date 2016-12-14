@@ -84,7 +84,7 @@ var Visualizer = (function ($) {
     var _networkOptions = null;
     var _networkOptionsOverridden =
     {
-        height: '800',
+        height: '600',
         interaction: {
             navigationButtons: true,
             keyboard: {
@@ -104,7 +104,10 @@ var Visualizer = (function ($) {
                 label: {
                     enabled: true
                 }
-            }
+            },
+            shadow: {
+                enabled: true
+            },
         },
         edges: {
             arrows: {
@@ -116,6 +119,9 @@ var Visualizer = (function ($) {
                 color: 'gray'
             },
             smooth: {
+                enabled: true
+            },
+            shadow: {
                 enabled: true
             },
             hoverWidth: 3,
@@ -332,11 +338,8 @@ var Visualizer = (function ($) {
             _networkOptionsChangeSection = $('#networkOptionsChangeSection');
 
             $(window).resize(function() {
-                var height;
                 if (_network) {
-                    height = getVisNetworkHeight();
-                    _network.setSize('100%', height);
-                    _networkOptions.height = height;
+                   _network.setSize('100%', getVisNetworkHeight());
                 }
             });
 
@@ -356,7 +359,7 @@ var Visualizer = (function ($) {
                 //have a defined level. Attempted short-term fix in setLevelOnNetworkNodes() method, but it's not enough.
                 //TODO: Keep investigating, submit question and possibly a bug fix to visjs.
                 $('#hierarchical').prop('checked', false);
-                //_nce.showNote('Hierarchical mode is currently not available');
+                _nce.showNote('Hierarchical mode is currently not available');
                 //_hierarchical = this.checked;
                 //saveToLocalStorage(_hierarchical, HIERARCHICAL);
                 //updateNetworkOptions();
@@ -397,7 +400,7 @@ var Visualizer = (function ($) {
             }
             else if (FUNCTION === typeof value)
             {
-                //Not currently supporting updating of netork options that are functions.   
+                //Not currently supporting updating of netork options that are functions (only one).
             }
             else
             {
@@ -414,9 +417,10 @@ var Visualizer = (function ($) {
 
      function initNetworkOptions(container)
     {
-        var emptyDataSet, emptyNetwork, container, defaults, button;
+        var emptyDataSet, emptyNetwork, defaults, button;
         if (!_networkOptions) {
             _networkOptionsSection.hide();
+            _networkOptionsOverridden.height = getVisNetworkHeight();
             emptyDataSet = new vis.DataSet({});
             emptyNetwork = new vis.Network(container, {nodes: emptyDataSet, edges: emptyDataSet}, {});
 
@@ -1209,7 +1213,6 @@ var Visualizer = (function ($) {
             edgeDataSet = new vis.DataSet({});
             edgeDataSet.add(_edges);
             _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, _networkOptions);
-            _networkOptions.height = getVisNetworkHeight();
             updateNetworkData();
 
             _network.on('select', function(params) {
@@ -1276,9 +1279,9 @@ var Visualizer = (function ($) {
         }
     }
 
-     function updateNetworkOptions()
+    function updateNetworkOptions()
     {
-        _network.setOptions(_networkOptions);
+       _network.setOptions(_networkOptions);
     }
 
     function createVisualizeFromHereLink(appId, cubeName, node)
