@@ -325,14 +325,20 @@ class VisualizerRelInfo
 		edge.toName = targetCubeEffectiveName
 		edge.fromFieldName = sourceFieldName
 		edge.level = String.valueOf(targetLevel)
-		if (targetCube.name.startsWith(RPM_ENUM_DOT))
-		{
-			edge.label = sourceFieldName
-		}
 		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceTraitMaps[sourceFieldName] as Map
 		String vMin = sourceFieldTraitMap[V_MIN] as String ?: '0'
 		String vMax = sourceFieldTraitMap[V_MAX] as String ?: '999999'
-		edge.title = "Field ${sourceFieldName} with min:max cardinality of ${vMin}:${vMax}".toString()
+
+		if (targetCube.name.startsWith(RPM_ENUM_DOT))
+		{
+			edge.label = sourceFieldName
+			edge.title = "Field ${sourceFieldName} with min:max cardinality of ${vMin}:${vMax}".toString()
+		}
+		else
+		{
+			edge.title = "Valid value ${sourceFieldName} with min:max cardinality of ${vMin}:${vMax}".toString()
+		}
+
 		return edge
 	}
 
