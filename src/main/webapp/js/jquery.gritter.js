@@ -65,6 +65,15 @@
     };
 
     /**
+     * Get notice wrapper
+     * @see Gritter#noticeWrapper();
+     */
+    $.gritter.noticeWrapper = function()
+    {
+        return Gritter.noticeWrapper();
+    };
+
+    /**
      * @constructor
      */
     var Gritter = {
@@ -368,6 +377,15 @@
                 $(this).remove();
                 after_close();
             });
+        },
+
+        /**
+         * Get notice wrapper
+         * @return e The notice wrapper element.
+         */
+        noticeWrapper: function()
+        {
+            return $('#gritter-notice-wrapper');
         },
 
         /**
