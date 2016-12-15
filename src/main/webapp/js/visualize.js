@@ -44,7 +44,6 @@ var Visualizer = (function ($) {
     var _visualizerInfo = null;
     var _visualizerNetwork = null;
     var _visualizerContent = null;
-    var _visualizerHtmlError = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
     var _nodeDetailsTitle = null;
     var _nodeCubeLink = null;
@@ -52,12 +51,8 @@ var Visualizer = (function ($) {
     var _nodeTraits = null;
     var _nodeDetails = null;
     var _layout = null;
-    var _scopeBuilderTable = null;
-    var _scopeBuilderModal = null;
     var _scopeBuilderScope = [];
     var _scopeInput = null;
-    var _scopeBuilderListenersAdded = false;
-    var _selectAllNoneListenersAdded = false;
     var STATUS_SUCCESS = 'success';
     var STATUS_MISSING_START_SCOPE = 'missingStartScope';
     var _scopeLastKeyTime = Date.now();
@@ -78,15 +73,10 @@ var Visualizer = (function ($) {
     var MIN_VELOCITY = 1;
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
-    var _networkOptionsChangeSection = null;
     var _networkOptionsVis = {};
     var _networkOptionsDefaults = null;
     var _networkOptions = null;
-    
-    //TODO: Move these parms into visualizer.groovy
-    var _networkOptionsOverridden =
-    {
-        height: '600',
+    var _networkOptionsOverridden = {
         interaction: {
             navigationButtons: true,
             keyboard: {
@@ -109,7 +99,7 @@ var Visualizer = (function ($) {
             },
             shadow: {
                 enabled: true
-            },
+            }
         },
         edges: {
             arrows: {
@@ -303,7 +293,7 @@ var Visualizer = (function ($) {
     var EAST_SIZE = 250;
     var EAST_LENGTH_OPEN = 60;
     
-    var init = function (info) {
+    function init(info) {
         if (!_nce) {
             _nce = info;
 
@@ -326,7 +316,6 @@ var Visualizer = (function ($) {
             });
 
             _visualizerContent = $('#visualizer-content');
-            _visualizerHtmlError = $('#visualizer-error');
             _visualizerInfo = $('#visualizer-info');
             _visualizerNetwork = $('#visualizer-network');
             _nodeDetailsTitle = $('#nodeDetailsTitle');
@@ -334,25 +323,22 @@ var Visualizer = (function ($) {
             _nodeTraits = $('#nodeTraits');
             _nodeVisualizer = $('#nodeVisualizer');
             _nodeDetails = $('#nodeDetails');
-            _scopeBuilderTable = $('#scopeBuilderTable');
-            _scopeBuilderModal = $('#scopeBuilderModal');
             _scopeInput = $('#scope');
             _networkOptionsSection = $('#networkOptionsSection');
-            _networkOptionsChangeSection = $('#networkOptionsChangeSection');
 
-            $(window).resize(function() {
+            $(window).on('resize', function() {
                 if (_network) {
                    _network.setSize('100%', getVisNetworkHeight());
                 }
             });
 
-             $('#selectedLevel-list').change(function () {
+             $('#selectedLevel-list').on('change', function () {
                 _selectedLevel = Number($('#selectedLevel-list').val());
                 saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
                 reload();
             });
 
-            $('#hierarchical').change(function () {
+            $('#hierarchical').on('change', function () {
                 //Hierarchical mode is disabled due to what appears to be a bug in vis.js or because the
                 //visualizer.js code is missing something. Tis problem started when convering to use
                 //visjs DataSets for network data.
@@ -379,16 +365,17 @@ var Visualizer = (function ($) {
                 _scopeLastKeyTime = Date.now();
             });
 
+            addSelectAllNoneGroupsListeners();
+            addNetworkOptionsListeners();
+
             scopeKeyDelayLoop();
         }
-    };
+    }
 
-    var onNoteClick = function (e)
-    {
+    function onNoteClick(e) {
         var target, id, scopeParts, key, value;
         target = e.target;
-        if (target.className.indexOf('missingScope') > -1)
-        {
+        if (target.className.indexOf('missingScope') > -1) {
             id = target.title;
             scopeParts = id.split(':');
             key = scopeParts[0];
@@ -398,8 +385,48 @@ var Visualizer = (function ($) {
         }
     };
 
-    function setNetworkOption(inputOption, options, keys)
-    {
+    function addNetworkOptionsListeners() {
+        $('#networkOptionsButton').click(function () {
+            button = $('#networkOptionsButton');
+            button.toggleClass('active');
+            _networkOptionsButton = button.hasClass('active');
+            saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
+            _networkOptionsSection.toggle();
+            loadNetworkOptionsSectionView();
+        });
+
+        $('#networkOptionsChangeSection').change(function () {
+            $('.networkOption').each(function () {
+                var id, keys;
+                id = $(this).attr('id');
+                keys = id.split('.');
+                setNetworkOption($(this), _networkOptions, keys);
+            });
+            loadNetworkOptionsSectionView();
+            reload();
+        });
+    }
+    
+    function addSelectAllNoneGroupsListeners() {
+        $('#selectAll').on('click', function (e) {
+            e.preventDefault();
+            $('#groups').find('button').addClass('active');
+            Array.prototype.push.apply(_selectedGroups, _availableGroupsAllLevels);
+            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+            reload();
+        });
+
+        $('#selectNone').on('click', function (e) {
+            e.preventDefault();
+            $('#groups').find('button').removeClass('active');
+            _selectedGroups = null;
+            _selectedGroups = [];
+            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+            reload();
+        });
+    }
+
+    function setNetworkOption(inputOption, options, keys) {
         var key, value, errorMessage;
         if (keys) {
             key = keys[0];
@@ -434,8 +461,7 @@ var Visualizer = (function ($) {
         }
     }
 
-     function initNetworkOptions(container)
-    {
+     function initNetworkOptions(container) {
         var emptyDataSet, emptyNetwork, defaults, button;
         if (!_networkOptions) {
             _networkOptionsSection.hide();
@@ -461,26 +487,6 @@ var Visualizer = (function ($) {
             _networkOptionsDefaults = $.extend(true, defaults, _networkOptionsOverridden);
             _networkOptions = $.extend(true, {}, _networkOptionsDefaults);
             emptyNetwork.destroy();
-
-            $('#networkOptionsButton').click(function () {
-                button = $('#networkOptionsButton');
-                button.toggleClass('active');
-                _networkOptionsButton = button.hasClass('active');
-                saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
-                _networkOptionsSection.toggle();
-                loadNetworkOptionsSectionView();
-            });
-
-            $('#networkOptionsChangeSection').change(function () {
-                $('.networkOption').each(function () {
-                    var id, keys;
-                    id = $(this).attr('id');
-                    keys = id.split('.');
-                    setNetworkOption($(this), _networkOptions, keys);
-                });
-                loadNetworkOptionsSectionView();
-                reload();
-            });
         }
     }
 
@@ -655,13 +661,13 @@ var Visualizer = (function ($) {
         return newScope;
     }
 
-    var reload = function () {
+    function reload() {
         _nce.clearAllNotes();
         setTimeout(function () {reloadNetwork();}, PROGRESS_DELAY);
         _nce.showNote('Updating network...');
-    };
+    }
 
-    var reloadNetwork = function () {
+    function reloadNetwork() {
         _nce.clearNote();
         updateNetworkOptions();
         updateNetworkData();
@@ -670,20 +676,19 @@ var Visualizer = (function ($) {
         loadCountsView();
         _visualizerInfo.show();
         _visualizerNetwork.show();
-     };
+     }
 
-    var loadTraits = function (node) {
+    function loadTraits(node) {
         _nce.clearAllNotes();
         setTimeout(function () {loadTraitsFromServer(node);}, PROGRESS_DELAY);
-        node.loadTraits ? _nce.showNote('Loading traits...') :  _nce.showNote('Removing traits...');
-    };
+        _nce.showNote(node.loadTraits ? 'Loading traits...' : 'Removing traits...');
+    }
 
-    var loadTraitsFromServer = function(node)
+    function loadTraitsFromServer(node)
     {
          var message, options, result, json, visInfo;
         _nce.clearNote();
-        options =
-        {
+        options = {
             node: node,
             scope: _scope,
             availableScopeKeys: _availableScopeKeys,
@@ -725,16 +730,15 @@ var Visualizer = (function ($) {
             _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + message);
         }
         return node;
-    };
+    }
 
-    var load = function () {
+    function load() {
         _nce.clearAllNotes();
         setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
         _nce.showNote('Loading visualizer...');
-    };
+    }
 
-    var loadFromServer = function ()
-    {
+    function loadFromServer() {
         var options, result, json, message;
         _nce.clearNote();
         clearVisLayoutEast();
@@ -751,11 +755,9 @@ var Visualizer = (function ($) {
         //TODO: rpm.class.product) after a page refresh.
         _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
 
-        if (_keepCurrentScope)
-        {
+        if (_keepCurrentScope) {
             _keepCurrentScope = false;
-        }
-        else{
+        } else {
             _scope = getFromLocalStorage(SCOPE_MAP, null);
         }
         _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
@@ -763,24 +765,19 @@ var Visualizer = (function ($) {
         _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
         _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, false);
 
-        if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))
-        {
+        if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId())) {
             _availableScopeKeys = null;
             _availableScopeValues = null;
         }
 
-        if (_selectedCubeName !== _loadedCubeName)
-        {
+        if (_selectedCubeName !== _loadedCubeName) {
             destroyNetwork();
-        }
-        else if (_scopeChange)
-        {
+        } else if (_scopeChange) {
             _scopeChange = false;
             destroyNetwork();
         }
   
-        options =
-        {
+        options = {
             selectedLevel: _selectedLevel,
             startCubeName: _selectedCubeName,
             scope: _scope,
@@ -792,7 +789,7 @@ var Visualizer = (function ($) {
 
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
-        if (false === result.status) {
+        if (!result.status) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
             destroyNetwork();
             _visualizerContent.hide();
@@ -841,13 +838,8 @@ var Visualizer = (function ($) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
         }
  
-         if (false === _scopeBuilderListenersAdded){
-            availableScopeKeys = _availableScopeKeys;
-            availableScopeValues = _availableScopeValues;
             addScopeBuilderListeners();
-            _scopeBuilderListenersAdded = true;
-        }
-    };
+    }
 
     function appIdMatch(appIdA, appIdB)
     {
@@ -874,17 +866,16 @@ var Visualizer = (function ($) {
         _scopeInput.val(getScopeString());
     }
 
-    var loadGroupsView = function()
-    {
+    function loadGroupsView() {
         var groupName, id, available, label, title, input, selected, button, groups,
-            background, fontMap, color, groupMap, boxShadow, j, k, divGroups;
+            background, fontMap, color, groupMap, boxShadow, j, jLen, k, kLen, divGroups;
 
         divGroups = $('#groups');
         divGroups.empty();
         groups = _networkOptions.groups;
 
         _availableGroupsAllLevels.sort();
-        for (j = 0; j < _availableGroupsAllLevels.length; j++) {
+        for (j = 0, jLen = _availableGroupsAllLevels.length; j < jLen; j++) {
             color = null;
             boxShadow = '';
             groupName = _availableGroupsAllLevels[j];
@@ -894,36 +885,31 @@ var Visualizer = (function ($) {
             title = available ? "Show/hide " + label + " in the graph" : "Increase level to enable show/hide of " + label + " in the graph";
 
             selected = false;
-            for (k = 0; k < _selectedGroups.length; k++) {
+            for (k = 0, kLen = _selectedGroups.length; k < kLen; k++) {
                 if (groupIdsEqual(id, _selectedGroups[k])) {
                     selected = true;
                     break;
                 }
             }
 
-            groupMap = groups[groupName];
-            groupMap = groupMap ? groupMap : options.groups[UNSPECIFIED];
+            groupMap = groups.hasOwnProperty(groupName) ? groups[groupName] : options.groups[UNSPECIFIED];
             background = groupMap.color;
             fontMap = groupMap.font;
-            color = null;
-            if (fontMap)
-            {
-                color = fontMap.buttonColor ? fontMap.buttonColor : fontMap.color;
+            if (fontMap) {
+                color = fontMap.hasOwnProperty('buttonColor') ? fontMap.buttonColor : fontMap.color;
             }
-            color = color ? color : '#000000';
+            if (!color) {
+                color = '#000000';
+            }
 
-            button = $('<button/>');
+            button = $('<button/>').addClass('btn');
             if (selected) {
-                button.attr({class: 'btn active btn-primary-group'});
+                button.addClass('active btn-primary-group');
                 boxShadow = 'box-shadow: 0 4px #575757;';
-            }
-            else if (available)
-            {
-                button.attr({class: 'btn btn-default-group'});
-            }
-            else
-            {
-                button.attr({class: 'btn btn-default-group'});
+            } else if (available) {
+                button.addClass('btn-default-group');
+            } else {
+                button.addClass('btn-default-group');
                 button.attr({disabled: 'disabled'});
             }
             button.attr({style:'background: ' +  background + '; color: ' + color + ';font-size: 12px; padding: 3px; margin-right: 3px; margin-bottom: 7px;border-radius: 15px;' + boxShadow});
@@ -937,31 +923,7 @@ var Visualizer = (function ($) {
             });
             divGroups.append(button);
         }
-
-        if (false === _selectAllNoneListenersAdded) {
-            $('#selectAll').click(function (e) {
-                e.preventDefault();
-                $('#groups').find('button').each(function () {
-                    $(this).addClass('active');
-                });
-
-                Array.prototype.push.apply(_selectedGroups, _availableGroupsAllLevels);
-                saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
-                reload();
-            });
-
-            $('#selectNone').click(function (e) {
-                e.preventDefault();
-                $('#groups').find('button').each(function () {
-                    $(this).removeClass('active');
-                });
-                _selectedGroups = [];
-                saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
-                reload();
-            });
-            _selectAllNoneListenersAdded = true;
-        }
-    };
+    }
 
     function getScopeString(){
         var scopeLen, key, i, len;
@@ -1189,9 +1151,9 @@ var Visualizer = (function ($) {
         _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
      }
 
-    var handleCubeSelected = function() {
+    function handleCubeSelected() {
         load();
-    };
+    }
 
      function destroyNetwork()
     {
@@ -1408,9 +1370,6 @@ var Visualizer = (function ($) {
 
 
     /*================================= BEGIN SCOPE BUILDER ==========================================================*/
-    var availableScopeKeys = [];
-    var availableScopeValues = {};
-
     //TODO  1. The key in the scope picker is case sensitive, which doesn’t play well with the case insensitive scope
     //TODO     that comes across from the server (Product vs. product, etc.).
     //TODO  2. Check the availableScopeValues map when the user selects a scope key. If the map contains
@@ -1420,7 +1379,7 @@ var Visualizer = (function ($) {
             title: 'Scope Builder',
             instructionsTitle: 'Instructions - Scope Builder',
             instructionsText: 'Add scoping for visualization.',
-            availableScopeValues: availableScopeValues,
+            availableScopeValues: _availableScopeValues,
             columns: {
                 isApplied: {
                     heading: 'Apply',
@@ -1430,7 +1389,7 @@ var Visualizer = (function ($) {
                 key: {
                     heading: 'Key',
                     type: PropertyBuilder.COLUMN_TYPES.SELECT,
-                    selectOptions: availableScopeKeys
+                    selectOptions: _availableScopeKeys
                 },
                 value: {
                     heading: 'Value',
@@ -1442,7 +1401,7 @@ var Visualizer = (function ($) {
             }
         };
 
-        $('#scopeBuilderOpen').click(function() {
+        $('#scopeBuilderOpen').on('click', function() {
             PropertyBuilder.openBuilderModal(builderOptions, _scopeBuilderScope);
         });
     }
@@ -1484,18 +1443,15 @@ var Visualizer = (function ($) {
 
 })(jQuery);
 
-var tabActivated = function tabActivated(info)
-{
+function tabActivated(info) {
     Visualizer.init(info);
     Visualizer.load();
-};
+}
 
-var cubeSelected = function cubeSelected()
-{
+function cubeSelected() {
     Visualizer.handleCubeSelected();
-};
+}
 
-var onNoteClick = function onNoteClick(e, element)
-{
+function onNoteClick(e, element) {
     Visualizer.onNoteClick(e, element);
-};
+}
