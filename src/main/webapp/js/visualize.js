@@ -75,13 +75,15 @@ var Visualizer = (function ($) {
     var DASH_LENGTH = 15;
     var EDGE_FONT = 20;
     var GRAVITATIONAL_CONSTANT = -30000;
-    var MIN_VELOCITY = 0.85;
+    var MIN_VELOCITY = 1;
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
     var _networkOptionsChangeSection = null;
     var _networkOptionsVis = {};
     var _networkOptionsDefaults = null;
     var _networkOptions = null;
+    
+    //TODO: Move these parms into visualizer.groovy
     var _networkOptionsOverridden =
     {
         height: '600',
@@ -119,12 +121,13 @@ var Visualizer = (function ($) {
                 color: 'gray'
             },
             smooth: {
-                enabled: true
+                enabled: false
             },
             shadow: {
                 enabled: true
             },
             hoverWidth: 3,
+            selectionWidth: 2,
             font: {
                 size: EDGE_FONT
             }
@@ -367,6 +370,7 @@ var Visualizer = (function ($) {
 
             _scopeInput.on('change', function () {
                 _scopeKeyPressed = false;
+                _scope = buildScopeFromText(_scopeInput.val());
                 scopeChange();
             });
             
@@ -376,6 +380,21 @@ var Visualizer = (function ($) {
             });
 
             scopeKeyDelayLoop();
+        }
+    };
+
+    var onNoteClick = function (e)
+    {
+        var target, id, scopeParts, key, value;
+        target = e.target;
+        if (target.className.indexOf('missingScope') > -1)
+        {
+            id = target.title;
+            scopeParts = id.split(':');
+            key = scopeParts[0];
+            value = scopeParts[1].trim();
+            _scope[key] = value;
+            scopeChange();
         }
     };
 
@@ -583,6 +602,7 @@ var Visualizer = (function ($) {
             now = Date.now();
             if (now - _scopeLastKeyTime > SCOPE_KEY_DELAY && _scopeKeyPressed) {
                 _scopeKeyPressed = false;
+                _scope = buildScopeFromText(_scopeInput.val());
                 scopeChange();
             }
        }, SCOPE_KEY_DELAY);
@@ -590,7 +610,6 @@ var Visualizer = (function ($) {
     
     function scopeChange()
     {
-        _scope = buildScopeFromText(_scopeInput.val());
         _scopeChange = true;
         saveToLocalStorage(_scope, SCOPE_MAP);
         updateScopeBuilderScope();
@@ -637,13 +656,13 @@ var Visualizer = (function ($) {
     }
 
     var reload = function () {
-        _nce.clearAllErrors();
+        _nce.clearAllNotes();
         setTimeout(function () {reloadNetwork();}, PROGRESS_DELAY);
         _nce.showNote('Updating network...');
     };
 
     var reloadNetwork = function () {
-        _nce.clearError();
+        _nce.clearNote();
         updateNetworkOptions();
         updateNetworkData();
         loadSelectedLevelListView();
@@ -654,7 +673,7 @@ var Visualizer = (function ($) {
      };
 
     var loadTraits = function (node) {
-        _nce.clearAllErrors();
+        _nce.clearAllNotes();
         setTimeout(function () {loadTraitsFromServer(node);}, PROGRESS_DELAY);
         node.loadTraits ? _nce.showNote('Loading traits...') :  _nce.showNote('Removing traits...');
     };
@@ -662,7 +681,7 @@ var Visualizer = (function ($) {
     var loadTraitsFromServer = function(node)
     {
          var message, options, result, json, visInfo;
-        _nce.clearError();
+        _nce.clearNote();
         options =
         {
             node: node,
@@ -709,7 +728,7 @@ var Visualizer = (function ($) {
     };
 
     var load = function () {
-        _nce.clearAllErrors();
+        _nce.clearAllNotes();
         setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
         _nce.showNote('Loading visualizer...');
     };
@@ -717,7 +736,7 @@ var Visualizer = (function ($) {
     var loadFromServer = function ()
     {
         var options, result, json, message;
-        _nce.clearError();
+        _nce.clearNote();
         clearVisLayoutEast();
 
         if (!_nce.getSelectedCubeName()) {
@@ -1238,7 +1257,7 @@ var Visualizer = (function ($) {
                 //Clear note 'Stabilizing network...' here when hidden stabilization is complete.
                 //The full stabilization is not done until the stabilized event has fired, but the network is
                 //showing to the user and the user can work the page at this point.
-                _nce.clearError();
+                _nce.clearNote();
             });
 
             _network.on('stabilized', function (params) {
@@ -1246,7 +1265,7 @@ var Visualizer = (function ($) {
                 _iterationsToStabilize = params.iterations + ' iterations to stabilize';
                 $("#stabilizationStatus").val(_stabilizationStatus);
                 $("#iterationsToStabilize").val(_iterationsToStabilize);
-                _nce.clearError();
+                _nce.clearNote();
             });
         }
     }
@@ -1275,7 +1294,20 @@ var Visualizer = (function ($) {
             _nodeCubeLink.append(TWO_LINE_BREAKS);
 
             _nodeDetails[0].innerHTML = node.details;
+            addNodeDetailsListeners();
             _layout.open('east');
+        }
+    }
+
+    function addNodeDetailsListeners()
+    {
+        if (!_nodeDetails.hasClass(HAS_CLICK_EVENT))
+        {
+            _nodeDetails.click(function (e) {
+                e.preventDefault();
+                onNoteClick(e);
+            });
+            _nodeDetails.addClass(HAS_CLICK_EVENT)
         }
     }
 
@@ -1446,7 +1478,8 @@ var Visualizer = (function ($) {
     return {
         init: init,
         handleCubeSelected: handleCubeSelected,
-        load: load
+        load: load,
+        onNoteClick: onNoteClick
     };
 
 })(jQuery);
@@ -1460,4 +1493,9 @@ var tabActivated = function tabActivated(info)
 var cubeSelected = function cubeSelected()
 {
     Visualizer.handleCubeSelected();
+};
+
+var onNoteClick = function onNoteClick(e, element)
+{
+    Visualizer.onNoteClick(e, element);
 };
