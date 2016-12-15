@@ -1443,15 +1443,15 @@ var Visualizer = (function ($) {
 
 })(jQuery);
 
-var tabActivated = function tabActivated(info) {
+function tabActivated(info) {
     Visualizer.init(info);
     Visualizer.load();
-};
+}
 
-var cubeSelected = function cubeSelected() {
+function cubeSelected() {
     Visualizer.handleCubeSelected();
-};
+}
 
-var onNoteClick = function onNoteClick(e, element) {
+function onNoteClick(e, element) {
     Visualizer.onNoteClick(e, element);
-};
+}
