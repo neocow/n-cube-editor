@@ -331,3 +331,5 @@ var cubeSelected = function cubeSelected()
 {
     RpmEditor.handleCubeSelected();
 };
+
+var onNoteClick = function onNoteClick(e, element){};

@@ -530,7 +530,8 @@ class Visualizer
 			StringBuilder sb = new StringBuilder()
 			sb.append("${BREAK}The following values are available for ${key}:${DOUBLE_BREAK}<pre><ul>")
 			scopeValues.each{
-				sb.append("<li>${it.toString()}</li>")
+				String value = it.toString()
+				sb.append("<li><a class=\"missingScope\" title=\"${key}: ${value}\" href=\"#\">${value}</a></li>")
 			}
 			sb.append("</ul></pre>")
 			return sb.toString()

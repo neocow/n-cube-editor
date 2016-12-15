@@ -256,3 +256,5 @@ var cubeSelected = function cubeSelected()
 {
     DetailEditor.handleCubeSelected();
 };
+
+var onNoteClick = function onNoteClick(e, element){};

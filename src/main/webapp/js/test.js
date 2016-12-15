@@ -520,7 +520,7 @@ var TestEditor = (function ($)
 
     var deleteTestItem = function(title, label, isRenumberable, paramId)
     {
-        nce.clearError();
+        nce.clearNote();
         if (!nce.getSelectedCubeName())
         {
             nce.showNote('No n-cube selected. Nothing to delete.');
@@ -574,7 +574,7 @@ var TestEditor = (function ($)
 
     var deleteCurrentTestMenu = function()
     {
-        nce.clearError();
+        nce.clearNote();
         if (!nce.getSelectedCubeName())
         {
             nce.showNote('No n-cube is currently selected. There are not tests to delete.');
@@ -608,7 +608,7 @@ var TestEditor = (function ($)
 
     var deleteTestOk = function()
     {
-        nce.clearError();
+        nce.clearNote();
 
         $('#deleteTestModal').modal('hide');
 
@@ -621,7 +621,7 @@ var TestEditor = (function ($)
 
     var renameCurrentTestMenu = function()
     {
-        nce.clearError();
+        nce.clearNote();
         if (!nce.getSelectedCubeName())
         {
             nce.showNote('No n-cube is currently selected. Cannot rename test.');
@@ -694,7 +694,7 @@ var TestEditor = (function ($)
 
     var renameTestOk = function()
     {
-        nce.clearError();
+        nce.clearNote();
         var newName = $('#renameTestNewName').val();
 
         if (!validateTestName(newName))
@@ -755,7 +755,7 @@ var TestEditor = (function ($)
 
     var runCurrentTest = function()
     {
-        nce.clearError();
+        nce.clearNote();
         if (!nce.getSelectedCubeName())
         {
             nce.showNote('No n-cube selected. Test cannot be run.');
@@ -1023,7 +1023,7 @@ var TestEditor = (function ($)
 
     var deleteAllTestsMenu = function()
     {
-        nce.clearError();
+        nce.clearNote();
 
         if ($('#deleteAllTestsMenu').parent().hasClass('disabled'))
         {
@@ -1095,7 +1095,7 @@ var TestEditor = (function ($)
 
     var duplicateCurrentTestMenu = function()
     {
-        nce.clearError();
+        nce.clearNote();
 
         if ($('#duplicateCurrentTestMenu').parent().hasClass('disabled'))
         {
@@ -1315,3 +1315,5 @@ var cubeSelected = function cubeSelected()
 {
     TestEditor.handleCubeSelected();
 };
+
+var onNoteClick = function onNoteClick(e, element){};

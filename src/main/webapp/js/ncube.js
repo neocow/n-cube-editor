@@ -240,7 +240,7 @@ var NCubeEditor = (function ($)
             var anchor = $(this);
             anchor.click(function(event)
             {
-                nce.clearError();
+                nce.clearNote();
                 var link = anchor[0].innerHTML;
                 if (link.indexOf('http:') == 0 || link.indexOf('https:') == 0 || link.indexOf('file:') == 0)
                 {
@@ -322,7 +322,7 @@ var NCubeEditor = (function ($)
                 var result = nce.call("ncubeController.getCellCoordinate", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _cellId]);
                 if (result.status === true)
                 {
-                    nce.clearError();
+                    nce.clearNote();
                     nce.displayMap(result.data, 'Coordinate');
                 }
             }
@@ -1542,7 +1542,7 @@ var NCubeEditor = (function ($)
             }
             else
             {
-                nce.clearError();
+                nce.clearNote();
                 nce.showNote('Error pasting cells:<hr class="hr-small"/>' + result.data);
             }
         }, 100);
@@ -1584,3 +1584,5 @@ var cubeSelected = function cubeSelected()
 {
     NCubeEditor.handleCubeSelected();
 };
+
+var onNoteClick = function onNoteClick(e, element){};

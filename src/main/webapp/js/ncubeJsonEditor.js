@@ -57,7 +57,7 @@ var NCubeJsonEditor = (function ($) {
         // Attach listener
         $('#saveButton').click(function () {
             var result;
-            nce.clearError();
+            nce.clearNote();
             if (nce.isHeadSelected()) {
                 nce.selectBranch();
                 return;
@@ -138,3 +138,5 @@ function tabActivated(info) {
 function cubeSelected() {
     NCubeJsonEditor.handleCubeSelected();
 }
+
+var onNoteClick = function onNoteClick(e, element){};

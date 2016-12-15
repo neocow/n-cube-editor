@@ -2340,7 +2340,7 @@ var NCubeEditor2 = (function ($) {
         // Add click handler that opens clicked cube names
         $(element).find('a.nc-anc-url').on('click', function (e) {
             var link, result, msg;
-            nce.clearError();
+            nce.clearNote();
             link = this.innerHTML;
             if (!link.indexOf('http:') || !link.indexOf('https:') || !link.indexOf('file:')) {
                 window.open(link);
@@ -3400,7 +3400,7 @@ var NCubeEditor2 = (function ($) {
         if (result.status) {
             reload(true);
         } else {
-            nce.clearError();
+            nce.clearNote();
             nce.showNote('Error pasting cells:<hr class="hr-small"/>' + result.data);
         }
     }
@@ -4737,3 +4737,5 @@ function tabActivated(info) {
 function cubeSelected() {
     NCubeEditor2.handleCubeSelected();
 }
+
+var onNoteClick = function onNoteClick(e, element){};
