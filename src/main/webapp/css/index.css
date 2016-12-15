@@ -265,7 +265,6 @@ span.selected-count {
 .click-space {
     display: inline-block;
     width: 22px;
-    margin-right: 1px;
     position: relative;
     top: -1px;
 }
