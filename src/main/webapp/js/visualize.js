@@ -59,6 +59,7 @@ var Visualizer = (function ($) {
     var _scopeKeyPressed = false;
     var SCOPE_KEY_DELAY = 3000;
     var UNSPECIFIED = 'UNSPECIFIED';
+    var _noteIdList = [];
 
     //Network layout parameters
     var _hierarchical = false;
@@ -69,8 +70,9 @@ var Visualizer = (function ($) {
     var NODE_SCALING_SPECIAL = 200;
     var DASH_LENGTH = 15;
     var EDGE_FONT = 20;
-    var GRAVITATIONAL_CONSTANT = -30000;
-    var MIN_VELOCITY = 1;
+    var GRAVITATIONAL_CONSTANT = -300000;
+    var MIN_VELOCITY = 5;
+    var SPRING_CONSTANT = 0.3;
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
     var _networkOptionsVis = {};
@@ -125,7 +127,8 @@ var Visualizer = (function ($) {
         physics: {
             minVelocity: MIN_VELOCITY,
             barnesHut: {
-                gravitationalConstant: GRAVITATIONAL_CONSTANT
+                gravitationalConstant: GRAVITATIONAL_CONSTANT,
+                springConstant: SPRING_CONSTANT
             }
         },
         layout: {
@@ -419,7 +422,6 @@ var Visualizer = (function ($) {
         $('#selectNone').on('click', function (e) {
             e.preventDefault();
             $('#groups').find('button').removeClass('active');
-            _selectedGroups = null;
             _selectedGroups = [];
             saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
             reload();
@@ -662,13 +664,11 @@ var Visualizer = (function ($) {
     }
 
     function reload() {
-        _nce.clearAllNotes();
-        setTimeout(function () {reloadNetwork();}, PROGRESS_DELAY);
+         setTimeout(function () {reloadNetwork();}, PROGRESS_DELAY);
         _nce.showNote('Updating network...');
     }
 
     function reloadNetwork() {
-        _nce.clearNote();
         updateNetworkOptions();
         updateNetworkData();
         loadSelectedLevelListView();
@@ -676,10 +676,11 @@ var Visualizer = (function ($) {
         loadCountsView();
         _visualizerInfo.show();
         _visualizerNetwork.show();
+        _nce.clearNote();
      }
 
     function loadTraits(node) {
-        _nce.clearAllNotes();
+        _nce.clearNotes(_noteIdList);
         setTimeout(function () {loadTraitsFromServer(node);}, PROGRESS_DELAY);
         _nce.showNote(node.loadTraits ? 'Loading traits...' : 'Removing traits...');
     }
@@ -687,8 +688,7 @@ var Visualizer = (function ($) {
     function loadTraitsFromServer(node)
     {
          var message, options, result, json, visInfo;
-        _nce.clearNote();
-        options = {
+         options = {
             node: node,
             scope: _scope,
             availableScopeKeys: _availableScopeKeys,
@@ -696,6 +696,7 @@ var Visualizer = (function ($) {
         };
         
         result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
+        _nce.clearNote();
         if (false === result.status) {
             _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + result.data);
             return node;
@@ -705,8 +706,8 @@ var Visualizer = (function ($) {
 
         if (STATUS_SUCCESS === json.status) {
             if (null !== json.message) {
-                _nce.showNote(json.message);
-            }
+                _noteIdList.push(_nce.showNote(json.message));
+             }
             visInfo = json.visInfo;
             node = visInfo.nodes['@items'][0];
             _scope = visInfo.scope;
@@ -733,14 +734,13 @@ var Visualizer = (function ($) {
     }
 
     function load() {
-        _nce.clearAllNotes();
+        _nce.clearNotes(_noteIdList);
         setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
-        _nce.showNote('Loading visualizer...');
+        _noteIdList.push(_nce.showNote('Loading visualizer...'));
     }
 
     function loadFromServer() {
         var options, result, json, message;
-        _nce.clearNote();
         clearVisLayoutEast();
 
         if (!_nce.getSelectedCubeName()) {
@@ -789,6 +789,7 @@ var Visualizer = (function ($) {
 
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
+        _nce.clearNotes(_noteIdList);
         if (!result.status) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
             destroyNetwork();
@@ -800,7 +801,7 @@ var Visualizer = (function ($) {
 
         if (json.status === STATUS_SUCCESS) {
             if (null !== json.message) {
-                _nce.showNote(json.message);
+                _noteIdList.push(_nce.showNote(json.message));
             }
             loadData(json.visInfo, json.status);
             initNetwork();
@@ -817,7 +818,7 @@ var Visualizer = (function ($) {
             _visualizerNetwork.show();
         }
         else if (STATUS_MISSING_START_SCOPE === json.status) {
-            _nce.showNote(json.message);
+            _noteIdList.push(_nce.showNote(json.message));
             loadData(json.visInfo, json.status);
             initNetwork();
             saveAllToLocalStorage();
@@ -837,8 +838,7 @@ var Visualizer = (function ($) {
             }
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
         }
- 
-            addScopeBuilderListeners();
+        addScopeBuilderListeners();
     }
 
     function appIdMatch(appIdA, appIdB)
@@ -1201,7 +1201,7 @@ var Visualizer = (function ($) {
             });
 
             _network.on('startStabilizing', function () {
-                _nce.showNote('Stabilizing network...');
+                _noteIdList.push(_nce.showNote('Stabilizing network...'));
                 _iterationsToStabilize = 'iterating...';
                 _stabilizationStatus = 'stabilization started';
                  $("#stabilizationStatus").val(_stabilizationStatus);

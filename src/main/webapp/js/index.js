@@ -1208,7 +1208,7 @@ var NCE = (function ($) {
         return {
             call: call,
             clearNote: clearNote,
-            clearAllNotes: clearAllNotes,
+            clearNotes: clearNotes,
             displayMap: displayMap,
             doesCubeExist: doesCubeExist,
             ensureModifiable: ensureModifiable,
@@ -4410,8 +4410,9 @@ var NCE = (function ($) {
             time: (millis || 0)
         });
         addNoteListeners();
-     }
-    
+        return _noteId;
+    }
+
     function addNoteListeners()
     {
         _noteWrapper = $.gritter.noticeWrapper();
@@ -4431,13 +4432,18 @@ var NCE = (function ($) {
             _noteId = null;
         }
     }
-    
-    function clearAllNotes()
-    {
-        $.gritter.removeAll();
-        _noteId = null;
-    }
 
+    function clearNotes(idList){
+        var id;
+        while(idList.length) {
+            id = idList.pop();
+            $.gritter.remove(id);
+            if (id === _noteId){
+                _noteId = null;
+            }
+        };
+    }
+    
     function isHeadSelected() {
         return head === _selectedBranch;
     }
