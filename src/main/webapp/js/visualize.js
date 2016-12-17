@@ -51,7 +51,6 @@ var Visualizer = (function ($) {
     var _nodeTraits = null;
     var _nodeDetails = null;
     var _layout = null;
-    var _scopeBuilderScope = [];
     var _scopeInput = null;
     var STATUS_SUCCESS = 'success';
     var STATUS_MISSING_START_SCOPE = 'missingStartScope';
@@ -621,32 +620,10 @@ var Visualizer = (function ($) {
     {
         _scopeChange = true;
         saveToLocalStorage(_scope, SCOPE_MAP);
-        updateScopeBuilderScope();
         load();
     }
 
-    function updateScopeBuilderScope()
-    {
-        var key, value, shouldInsertNewExpression, expression, i, len, j, jLen;
-        var keys = Object.keys(_scope);
-        for (i = 0, len = keys.length; i < len; i++) {
-            key = keys[i];
-            value = _scope[key];
-            shouldInsertNewExpression = true;
-            for (j = 0, jLen = _scopeBuilderScope.length; j < jLen; j++) {
-                expression = _scopeBuilderScope[j];
-                if (expression.isApplied && expression.key === key) {
-                    expression.value = value;
-                    shouldInsertNewExpression = false;
-                    break;
-                }
-            }
-            if (shouldInsertNewExpression) {
-                _scopeBuilderScope.push({'isApplied': true, 'key': key, 'value': value});
-            }
-        }
-    }
-
+  
     function buildScopeFromText(scopeString) {
         var tuples, tuple, key, value, i, iLen;
         var newScope = {};
@@ -715,7 +692,6 @@ var Visualizer = (function ($) {
             delete _scope['@type'];
             delete _scope['@id'];
             saveAllToLocalStorage();
-            updateScopeBuilderScope();
             _availableScopeValues = visInfo.availableScopeValues;
             _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
             replaceNode(_nodes, node);
@@ -808,7 +784,6 @@ var Visualizer = (function ($) {
             initNetwork();
             loadSelectedLevelListView();
             saveAllToLocalStorage();
-            updateScopeBuilderScope();
             loadScopeView();
             loadHierarchicalView();
             loadNetworkOptionsSectionView();
@@ -823,7 +798,6 @@ var Visualizer = (function ($) {
             loadData(json.visInfo, json.status);
             initNetwork();
             saveAllToLocalStorage();
-            updateScopeBuilderScope();
             loadScopeView();
             _visualizerContent.show();
             _visualizerInfo.hide();
@@ -839,7 +813,6 @@ var Visualizer = (function ($) {
             }
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
         }
-        addScopeBuilderListeners();
     }
 
     function appIdMatch(appIdA, appIdB)
@@ -864,7 +837,9 @@ var Visualizer = (function ($) {
     }
 
     function loadScopeView() {
-        _scopeInput.val(getScopeString());
+        var scope = getScopeString();
+        _scopeInput.val(scope);
+        _scopeInput.prop('title', scope);
     }
 
     function loadGroupsView() {
@@ -1368,67 +1343,7 @@ var Visualizer = (function ($) {
     function saveToLocalStorage(value, key) {
         saveOrDeleteValue(value, getStorageKey(_nce, key));
     }
-
-
-    /*================================= BEGIN SCOPE BUILDER ==========================================================*/
-    //TODO  1. The key in the scope picker is case sensitive, which doesn’t play well with the case insensitive scope
-    //TODO     that comes across from the server (Product vs. product, etc.).
-    //TODO  2. Check the availableScopeValues map when the user selects a scope key. If the map contains
-    //TODO     the selected key, make the scope value field a dropdown that contains the available scope values.
-    function addScopeBuilderListeners() {
-        var builderOptions = {
-            title: 'Scope Builder',
-            instructionsTitle: 'Instructions - Scope Builder',
-            instructionsText: 'Add scoping for visualization.',
-            availableScopeValues: _availableScopeValues,
-            columns: {
-                isApplied: {
-                    heading: 'Apply',
-                    default: true,
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX
-                },
-                key: {
-                    heading: 'Key',
-                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
-                    selectOptions: _availableScopeKeys
-                },
-                value: {
-                    heading: 'Value',
-                    type: PropertyBuilder.COLUMN_TYPES.TEXT
-                }
-            },
-            afterSave: function() {
-                scopeBuilderSave();
-            }
-        };
-
-        $('#scopeBuilderOpen').on('click', function() {
-            PropertyBuilder.openBuilderModal(builderOptions, _scopeBuilderScope);
-        });
-    }
-
-    function scopeBuilderSave() {
-         var newScope = getScopeBuilderScopeText();
-        _scopeInput.val(newScope);
-        _scope = buildScopeFromText(newScope);
-        saveToLocalStorage(_scope, SCOPE_MAP);
-     }
-
-    function getScopeBuilderScopeText() {
-        var expression,i, len;
-        var scopeText = '';
-        for (i = 0, len = _scopeBuilderScope.length; i < len; i++) {
-            expression = _scopeBuilderScope[i];
-            if (expression.isApplied) {
-                scopeText += expression.key + ':' + expression.value + ', ';
-            }
-        }
-        scopeText = scopeText.substring(0, scopeText.length - 2);
-        return scopeText;
-    }
-
-    /*================================= END SCOPE BUILDER ============================================================*/
-
+    
 // Let parent (main frame) know that the child window has loaded.
 // The loading of all of the Javascript (deeply) is continuous on the main thread.
 // Therefore, the setTimeout(, 1) ensures that the main window (parent frame)
