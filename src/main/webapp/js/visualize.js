@@ -389,6 +389,7 @@ var Visualizer = (function ($) {
     };
 
     function addNetworkOptionsListeners() {
+        var button;
         $('#networkOptionsButton').click(function () {
             button = $('#networkOptionsButton');
             button.toggleClass('active');
@@ -464,7 +465,7 @@ var Visualizer = (function ($) {
     }
 
      function initNetworkOptions(container) {
-        var emptyDataSet, emptyNetwork, defaults, button;
+        var emptyDataSet, emptyNetwork, defaults;
         if (!_networkOptions) {
             _networkOptionsSection.hide();
             _networkOptionsOverridden.height = getVisNetworkHeight();
@@ -541,7 +542,7 @@ var Visualizer = (function ($) {
             else
             {
                 rowBordersDiv = $('<div/>').prop({class: "row borders"});
-                col1Div = $('<div/>').prop({class: "col-md-4"});
+                col1Div = $('<div/>').prop({class: "col-md-4", align: "right"});
                 col2Div = $('<div/>').prop({class: "col-md-1"});
                 col3Div = $('<div/>').prop({class: "col-md-1"});
                 col4Div = $('<div/>').prop({class: "col-md-2"});
