@@ -776,8 +776,12 @@ var NCubeEditor2 = (function ($) {
             colLen = colKeys.length;
             rowSpacing /= colLen;
 
-            rowSpacingHelper.push({axisName:axis.name, order:getAxisId(axis), rowSpacing:rowSpacing, horizAxis:isHorizAxis(axisNum)});
-
+            rowSpacingHelper.push({
+                axisName: axis.name,
+                order: axis.id,
+                rowSpacing: rowSpacing,
+                horizAxis: isHorizAxis(axisNum)
+            });
             // search all columns for an axis
             for (colNum = 0; colNum < colLen; colNum++)
             {
@@ -824,7 +828,7 @@ var NCubeEditor2 = (function ($) {
                     addToSearchCoords(r + 2, c + (colOffset || 1));
                 } else {
                     topAxis = axes[colOffset];
-                    topAxisId = getAxisId(topAxis);
+                    topAxisId = topAxis.id;
                     for (cellIdIdx = 0, cellIdLen = colIds.length; cellIdIdx < cellIdLen; cellIdIdx++) {
                         if (getAxisIdFromString(colIds[cellIdIdx]) === topAxisId) {
                             topColId = colIds.splice(cellIdIdx, 1)[0];
@@ -884,21 +888,6 @@ var NCubeEditor2 = (function ($) {
         }
         axis.columnLength = colLen;
         return colLen;
-    }
-
-    function getAxisId(axis) {
-        var col, id;
-        if (axis.hasOwnProperty('id')) {
-            return axis.id;
-        }
-
-        col = Object.keys(axis.columns)[0];
-        if (!col) {
-            return;
-        }
-        id = getAxisIdFromString(col);
-        axis.id = id;
-        return id;
     }
 
     function getAxisIdFromString(id) {
@@ -1261,6 +1250,15 @@ var NCubeEditor2 = (function ($) {
         }
     }
 
+    function setAxisIds(cubeAxes) {
+        var i, len, axis, keys;
+        keys = Object.keys(cubeAxes);
+        for (i = 0, len = keys.length; i < len; i++) {
+            axis = cubeAxes[keys[i]];
+            axis.id = (i + 1).toString();
+        }
+    }
+
     function setUpAxisOrder(cubeAxes) {
         var i, len, axis, order;
         axes = null;
@@ -1273,7 +1271,7 @@ var NCubeEditor2 = (function ($) {
                 axis = cubeAxes[order[i]];
                 getColumnLength(axis);
                 axes.push(axis);
-                _axisIdsInOrder.push(getAxisId(axis));
+                _axisIdsInOrder.push(axis.id);
             }
         } else {
             determineAxisOrder(cubeAxes);
@@ -1309,7 +1307,7 @@ var NCubeEditor2 = (function ($) {
         axes.push(horizontal[0]);
 
         for (i = 0, len = axes.length; i < len; i++) {
-            _axisIdsInOrder.push(getAxisId(axes[i]));
+            _axisIdsInOrder.push(axes[i].id);
         }
     }
 
@@ -1484,6 +1482,7 @@ var NCubeEditor2 = (function ($) {
         _defaultCellText = null;
 
         data = cubeData;
+        setAxisIds(data.axes);
         setUpAxisOrder(data.axes);
         setUpGhostAxes();
         setUpHideColumns();
@@ -1543,7 +1542,7 @@ var NCubeEditor2 = (function ($) {
         var axis = axes[colOffset];
         var columns = axis.columns;
         var columnKeys = axisColumnMap[axis.name];
-        var horizAxisId = getAxisId(axes[colOffset]);
+        var horizAxisId = axes[colOffset].id;
 
         topWidths[columnKeys[0]] = savedWidths.hasOwnProperty(colOffset)
             ? savedWidths[colOffset] : getAxisHeaderWidth(axis);
