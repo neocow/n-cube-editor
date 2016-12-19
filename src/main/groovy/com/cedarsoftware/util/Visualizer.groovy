@@ -125,8 +125,8 @@ class Visualizer
 			{
 				NCube cube = NCubeManager.getCube(appId, TYPES_TO_ADD_NCUBE_NAME)
 				Map<String, Boolean> map = cube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): [] as Set]) as Map
-				typesToAdd = map.findAll {key, value->
-					value == true
+				typesToAdd = map.findAll {String type, Boolean available->
+					available == true
 				}.keySet() as List
 				typesToAddMap[sourceType] = typesToAdd
 			}

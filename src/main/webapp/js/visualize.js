@@ -1345,14 +1345,14 @@ var Visualizer = (function ($) {
             a.html(typesToAdd[i]);
             a.click(function (e) {
                 e.preventDefault();
-                _nce.showNote('Add of ' + this.innerHTML + ' is not yet implemented.');
+                _nce.showNote('Add ' + this.innerHTML + ' is not yet implemented.');
             });
             li.append(a);
             ul.append(li);
         }
 
         _nodeAddTypes.append(addLink);
-       _nodeAddTypes.append(ul);
+        _nodeAddTypes.append(ul);
     }
 
     function replaceNode(nodes, newNode) {
