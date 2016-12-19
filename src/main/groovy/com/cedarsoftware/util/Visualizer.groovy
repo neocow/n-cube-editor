@@ -36,6 +36,7 @@ class Visualizer
 	 *            String selectedLevel, the depth of traversal from the start cube
 	 *            Set<String> availableScopeKeys, scope keys available in the visualization
 	 *            Map<String, Set<Object>> availableScopeValues, scope values available in the visualization, by scope key
+	 *            Map<String, List<String>> typesToAdd, type of classes that can be added to classes
 	 *            boolean loadTraits, whether to load and display traits
      * @return a map containing status, messages and visualizer information
      */
@@ -72,6 +73,7 @@ class Visualizer
 	 *            Map scope, the context for which the visualizer is loaded
 	 *            Set<String> availableScopeKeys, scope keys available in the visualization
 	 *            Map<String, Set<Object>> availableScopeValues, scope values available in the visualization, by scope key
+	 *            Map<String, List<String>> typesToAdd, type of classes that can be added to classes
 	 * @return node
      */
 	Map getTraits(ApplicationID applicationID, Map options)
@@ -98,6 +100,7 @@ class Visualizer
 		relInfo.loadTraits = visInfo.loadTraits
 		relInfo.targetLevel = 1
 		relInfo.targetId = 1
+		relInfo.typesToAdd = getTypesToAdd(visInfo, relInfo.targetCube.name)
 		stack.push(relInfo)
 
 		while (!stack.empty)
@@ -109,6 +112,30 @@ class Visualizer
 		addSets(visInfo.availableScopeKeys, visInfo.optionalScopeKeys.values() as Set)
         visInfo.trimSelectedLevel()
         visInfo.trimSelectedGroups()
+	}
+
+	List getTypesToAdd(VisualizerInfo visInfo, String cubeName)
+	{
+		List<String> typesToAdd
+		if (cubeName.startsWith(RPM_CLASS_DOT))
+		{
+			String sourceType = cubeName - RPM_CLASS_DOT
+			Map typesToAddMap = visInfo.typesToAddMap
+			if (!typesToAddMap.containsKey(sourceType))
+			{
+				NCube cube = NCubeManager.getCube(appId, TYPES_TO_ADD_NCUBE_NAME)
+				Map<String, Boolean> map = cube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): [] as Set]) as Map
+				typesToAdd = map.findAll {key, value->
+					value == true
+				}.keySet() as List
+				typesToAddMap[sourceType] = typesToAdd
+			}
+			else
+			{
+				typesToAdd = typesToAddMap[sourceType]
+			}
+		}
+		return typesToAdd
 	}
 
 	private static Set<Set> addSets(Set<String> set, Set<Set> sets)
@@ -270,6 +297,7 @@ class Visualizer
 			nextRelInfo.sourceTraitMaps = relInfo.targetTraitMaps
 			nextRelInfo.sourceId = relInfo.targetId
 			nextRelInfo.loadTraits = visInfo.loadTraits
+			nextRelInfo.typesToAdd = getTypesToAdd(visInfo, nextTargetCube.name)
 
 			long nextTargetTargetLevel = relInfo.targetLevel + 1
 			nextRelInfo.targetLevel = nextTargetTargetLevel

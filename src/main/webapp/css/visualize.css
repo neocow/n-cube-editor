@@ -71,6 +71,10 @@ h3{
     margin-top: 0;
 }
 
+.title1{
+    color: darkgray;
+}
+
 #groups-div {
     min-height: 47px;
 }

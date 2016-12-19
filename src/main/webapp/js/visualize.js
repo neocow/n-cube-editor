@@ -39,16 +39,19 @@ var Visualizer = (function ($) {
     var _groupSuffix = null;
     var _selectedCubeName = null;
     var _loadTraits = false;
+    var _typesToAddMap = null;
     var _selectedLevel = null;
     var _countNodesAtLevel = null;
     var _visualizerInfo = null;
     var _visualizerNetwork = null;
     var _visualizerContent = null;
     var TWO_LINE_BREAKS = '<BR><BR>';
-    var _nodeDetailsTitle = null;
+    var _nodeDetailsTitle1 = null;
+    var _nodeDetailsTitle2 = null;
     var _nodeCubeLink = null;
     var _nodeVisualizer = null;
     var _nodeTraits = null;
+    var _nodeAddTypes = null;
     var _nodeDetails = null;
     var _layout = null;
     var _scopeInput = null;
@@ -320,9 +323,11 @@ var Visualizer = (function ($) {
             _visualizerContent = $('#visualizer-content');
             _visualizerInfo = $('#visualizer-info');
             _visualizerNetwork = $('#visualizer-network');
-            _nodeDetailsTitle = $('#nodeDetailsTitle');
+            _nodeDetailsTitle1 = $('#nodeDetailsTitle1');
+            _nodeDetailsTitle2 = $('#nodeDetailsTitle2');
             _nodeCubeLink = $('#nodeCubeLink');
             _nodeTraits = $('#nodeTraits');
+            _nodeAddTypes = $('#nodeAddTypes');
             _nodeVisualizer = $('#nodeVisualizer');
             _nodeDetails = $('#nodeDetails');
             _scopeInput = $('#scope');
@@ -670,7 +675,8 @@ var Visualizer = (function ($) {
             node: node,
             scope: _scope,
             availableScopeKeys: _availableScopeKeys,
-            availableScopeValues: _availableScopeValues
+            availableScopeValues: _availableScopeValues,
+            typesToAddMap: _typesToAddMap
         };
         
         result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
@@ -694,9 +700,11 @@ var Visualizer = (function ($) {
             saveAllToLocalStorage();
             _availableScopeValues = visInfo.availableScopeValues;
             _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
+            _typesToAddMap = visInfo.typesToAddMap;
             replaceNode(_nodes, node);
              _nodeDetails[0].innerHTML = node.details;
             _nodeTraits = $('#nodeTraits');
+            _nodeAddTypes = $('#nodeAddTypes');
             _nodeTraits[0].innerHTML = '';
             _nodeTraits.append(createTraitsLink(node));
          }
@@ -749,6 +757,8 @@ var Visualizer = (function ($) {
 
         if (_selectedCubeName !== _loadedCubeName) {
             destroyNetwork();
+            _availableScopeKeys = null;
+            _availableScopeValues = null;
         } else if (_scopeChange) {
             _scopeChange = false;
             destroyNetwork();
@@ -761,7 +771,8 @@ var Visualizer = (function ($) {
             selectedGroups: _selectedGroups,
             availableScopeKeys: _availableScopeKeys,
             availableScopeValues: _availableScopeValues,
-            loadTraits: _loadTraits
+            loadTraits: _loadTraits,
+            typesToAddMap: _typesToAddMap
         };
 
 
@@ -824,10 +835,12 @@ var Visualizer = (function ($) {
     }
 
     function clearVisLayoutEast(){
-        _nodeDetailsTitle[0].innerHTML = '';
+        _nodeDetailsTitle1[0].innerHTML = '';
+        _nodeDetailsTitle2[0].innerHTML = '';
         _nodeCubeLink[0].innerHTML = '';
         _nodeVisualizer[0].innerHTML = '';
         _nodeTraits[0].innerHTML = '';
+        _nodeAddTypes.innerHTML = '';
         _nodeDetails[0].innerHTML = '';
         _layout.close('east');
     }
@@ -1125,6 +1138,7 @@ var Visualizer = (function ($) {
         _loadedAppId = _nce.getSelectedTabAppId();
         _availableScopeValues = visInfo.availableScopeValues;
         _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
+        _typesToAddMap  = visInfo.typesToAddMap;
      }
 
     function handleCubeSelected() {
@@ -1210,26 +1224,42 @@ var Visualizer = (function ($) {
 
     function networkSelectEvent(params)
     {
-        var nodeId, node, cubeName, appId;
+        var nodeId, node, cubeName, appId, typesToAdd, title2;
         nodeId = params.nodes[0];
         node = getNodeById(_nodes, nodeId );
         if (node) {
             cubeName = node.cubeName;
             appId =_nce.getSelectedTabAppId();
 
-            _nodeDetailsTitle[0].innerHTML = node.detailsTitle;
-
+            _nodeDetailsTitle1[0].innerHTML = node.detailsTitle1;
+            title2 = node.detailsTitle2;
+            if (typeof title2 === STRING){
+                _nodeDetailsTitle2[0].innerHTML = title2;
+                _nodeDetailsTitle1.addClass('title1');
+            }
+            else{
+                _nodeDetailsTitle1.removeClass('title1');
+                _nodeDetailsTitle2[0].innerHTML = '';
+            }
+            
             _nodeVisualizer[0].innerHTML = '';
             _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
+
+            _nodeCubeLink[0].innerHTML = '';
+            _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
             if (node.hasFields) {
                 _nodeTraits[0].innerHTML = '';
                 _nodeTraits.append(createTraitsLink(node));
             }
 
-            _nodeCubeLink[0].innerHTML = '';
-            _nodeCubeLink.append(createCubeLink(cubeName, appId));
-            _nodeCubeLink.append(TWO_LINE_BREAKS);
+            _nodeAddTypes[0].innerHTML = '';
+            if (typeof node.typesToAdd === OBJECT) {
+                typesToAdd = node.typesToAdd['@items'];
+                if (typeof typesToAdd === OBJECT && typesToAdd.length > 0) {
+                    createAddTypesDropdown(typesToAdd, node.label);
+                }
+            }
 
             _nodeDetails[0].innerHTML = node.details;
             addNodeDetailsListeners();
@@ -1295,6 +1325,34 @@ var Visualizer = (function ($) {
             loadTraits(node);
         });
         return traitsLink;
+    }
+
+    function createAddTypesDropdown(typesToAdd, label) {
+        var li, addLink, a, ul, i, len;
+
+        addLink = $('<a/>');
+        addLink.prop({class: 'nc-anc', id:"addLink" });
+        addLink.attr("data-toggle", "dropdown");
+        addLink.html('Add to ' + label);
+
+        ul = $('<ul/>');
+        ul.addClass('dropdown-menu');
+
+        for (i = 0, len = typesToAdd.length; i < len; i++) {
+            li = $('<li/>');
+            a = $('<a/>');
+            a.prop({href: '#' });
+            a.html(typesToAdd[i]);
+            a.click(function (e) {
+                e.preventDefault();
+                _nce.showNote('Add of ' + this.innerHTML + ' is not yet implemented.');
+            });
+            li.append(a);
+            ul.append(li);
+        }
+
+        _nodeAddTypes.append(addLink);
+       _nodeAddTypes.append(ul);
     }
 
     function replaceNode(nodes, newNode) {

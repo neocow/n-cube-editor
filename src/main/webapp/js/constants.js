@@ -99,6 +99,7 @@ var CLASS_SECTION_NONE = 'section-none';
 var OBJECT = 'object';
 var BOOLEAN = 'boolean';
 var NUMBER = 'number';
+var STRING = 'string';
 var FUNCTION = 'function';
 
 var GLYPHICONS = {

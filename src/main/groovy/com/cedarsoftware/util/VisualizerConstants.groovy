@@ -75,4 +75,8 @@ public final class VisualizerConstants
 	public static final String HTTP = 'http:'
 	public static final String HTTPS = 'https:'
 	public static final String FILE = 'file:'
+
+	public static final String TYPES_TO_ADD_NCUBE_NAME = 'visualizer.TypesToAdd'
+	public static final String SOURCE_TYPE = 'sourceType'
+	public static final String TARGET_TYPE = 'targetType'
 }
