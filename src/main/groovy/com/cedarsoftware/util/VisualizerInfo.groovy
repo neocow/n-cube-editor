@@ -39,6 +39,8 @@ class VisualizerInfo
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
 
+    Map<String, List<String>> typesToAddMap = [:]
+
     VisualizerInfo(ApplicationID applicationID, Map options)
     {
         appId = applicationID
@@ -49,6 +51,7 @@ class VisualizerInfo
         this.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL : Converter.convert(selectedLevel, long.class) as long
         availableScopeKeys =  options.availableScopeKeys as Set ?: DEFAULT_AVAILABLE_SCOPE_KEYS
         availableScopeValues = options.availableScopeValues as Map ?: loadAvailableScopeValues()
+        typesToAddMap = options.typesToAddMap as Map ?: [:]
         loadTraits = options.loadTraits as boolean
         allGroups = ALL_GROUPS_MAP
         groupSuffix = _ENUM

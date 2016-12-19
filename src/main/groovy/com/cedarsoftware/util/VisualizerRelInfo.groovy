@@ -34,6 +34,7 @@ class VisualizerRelInfo
 	Map<String, Map<String, Object>> sourceTraitMaps
 	String sourceFieldName
 	String sourceFieldRpmType
+	List<String> typesToAdd
 
 	VisualizerRelInfo() {}
 
@@ -49,6 +50,7 @@ class VisualizerRelInfo
 		targetScope = node.scope as CaseInsensitiveMap
 		scope = node.availableScope as CaseInsensitiveMap
 		loadTraits = node.loadTraits as boolean
+		typesToAdd = node.typesToAdd as List
 		hasFields = node.hasFields as boolean
 		group = setGroupName()
 	}
@@ -64,16 +66,9 @@ class VisualizerRelInfo
 
 	String getDetails()
 	{
-		boolean isScopedClass = targetScopedName
 		String effectiveName = effectiveNameByCubeName
 		StringBuilder sb = new StringBuilder()
 		String notesLabel = "<b>Note: </b>"
-
-		//Scoped Name
-		if (isScopedClass)
-		{
-			sb.append("<b>Scoped name: </b>${effectiveName}${DOUBLE_BREAK}")
-		}
 
 		if (!hasFields)
 		{
@@ -91,9 +86,6 @@ class VisualizerRelInfo
 			sb.append("${DOUBLE_BREAK}")
 		}
 
-		//Level
-		sb.append("<b>Level: </b>${String.valueOf(targetLevel)}${DOUBLE_BREAK}")
-
 		//Scope
 		if (hasFields)
 		{
@@ -103,7 +95,7 @@ class VisualizerRelInfo
 			}
 			else
 			{
-				sb.append("<b>Utilized scope for minimum traits</b>")
+				sb.append("<b>Utilized scope to load class without all traits</b>")
 
 			}
 			sb.append("<pre><ul>")
@@ -356,18 +348,21 @@ class VisualizerRelInfo
 		node.scope = targetScope
 		node.availableScope = scope
 		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
-		String detailsTitle = getCubeDetailsTitle(targetCubeName)
+		String detailsTitle1 = getCubeDetailsTitle1(targetCubeName)
+		String detailsTitle2 = getCubeDetailsTitle2(targetCubeName)
 
 		if (targetCubeName.startsWith(RPM_CLASS_DOT))
 		{
 			node.label = getDotSuffix(targetEffectiveName)
-			node.detailsTitle = detailsTitle
+			node.detailsTitle1 = detailsTitle1
+			node.detailsTitle2 = detailsTitle2
 			node.title = getCubeDisplayName(targetCubeName)
+			node.typesToAdd = typesToAdd
 		}
 		else
 		{
-			node.detailsTitle = detailsTitle
-			node.title = detailsTitle
+			node.detailsTitle1 = detailsTitle1
+			node.title = detailsTitle1
 		}
 		node.details = details
 		group ?: setGroupName()
@@ -397,20 +392,12 @@ class VisualizerRelInfo
 		return displayName
 	}
 
-	String getCubeDetailsTitle(String cubeName)
+	String getCubeDetailsTitle1(String cubeName)
 	{
 		String detailsTitle
 		if (cubeName.startsWith(RPM_CLASS_DOT))
 		{
-			String targetScopedName = getTargetScopedName()
-			if (targetScopedName)
-			{
-				detailsTitle = "${getCubeDisplayName(cubeName)} ${getEffectiveNameByCubeName()}"
-			}
-			else
-			{
-				detailsTitle = getCubeDisplayName(cubeName)
-			}
+			detailsTitle = getCubeDisplayName(cubeName)
 		}
 		else if (cubeName.startsWith(RPM_ENUM_DOT))
 		{
@@ -418,5 +405,14 @@ class VisualizerRelInfo
 			detailsTitle = "Valid values for field ${sourceFieldName} on ${sourceName}".toString()
 		}
 		return detailsTitle
+	}
+
+	String getCubeDetailsTitle2(String cubeName)
+	{
+		if (cubeName.startsWith(RPM_CLASS_DOT) && getTargetScopedName())
+		{
+			return getEffectiveNameByCubeName()
+		}
+		return null
 	}
 }
