@@ -1255,7 +1255,7 @@ var NCubeEditor2 = (function ($) {
         keys = Object.keys(cubeAxes);
         for (i = 0, len = keys.length; i < len; i++) {
             axis = cubeAxes[keys[i]];
-            axis.id = (i + 1).toString();
+            axis.id = axis.id.toString();
         }
     }
 
