@@ -933,12 +933,8 @@ var NCubeEditor2 = (function ($) {
         return getColumnHeader(col).id;
     }
 
-    function getAxisIndex(axis) {
-        return Object.keys(data.axes).indexOf(axis.name.toLowerCase()) + 1;
-    }
-
     function getAxisDefault(axis) {
-        var defaultId = getAxisIndex(axis) + AXIS_DEFAULT;
+        var defaultId = axis.id + AXIS_DEFAULT;
         return {id:defaultId, value:DEFAULT_TEXT};
     }
 
