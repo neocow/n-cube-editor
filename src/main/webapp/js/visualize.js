@@ -430,13 +430,10 @@ var Visualizer = (function ($) {
         });
 
         $('#networkOptionsChangeSection').change(function (e) {
-            var target = e.target;
-            $('.networkOption').each(function () {
-                var id, keys;
-                id = $(this).attr('id');
-                keys = id.split('.');
-                setNetworkOption($(this), _networkOptionsInput, keys);
-            });
+            var target, keys;
+            target = e.target;
+            keys = target.id.split('.');
+            setNetworkOption(target, _networkOptionsInput, keys);
             updateNetworkOptions();
         });
     }
@@ -471,11 +468,11 @@ var Visualizer = (function ($) {
             }
             else if (BOOLEAN === typeof value)
             {
-                options[key] = inputOption.prop('checked');
+                options[key] = inputOption.checked;
             }
             else if (NUMBER === typeof value)
             {
-                options[key] = Number(inputOption.val());
+                options[key] = Number(inputOption.value);
             }
             else if (FUNCTION === typeof value)
             {
@@ -483,7 +480,7 @@ var Visualizer = (function ($) {
             }
             else
             {
-                options[key] = inputOption.val();
+                options[key] = inputOption.value;
             }
         }
         else
