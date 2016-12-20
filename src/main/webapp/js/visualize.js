@@ -318,12 +318,15 @@ var Visualizer = (function ($) {
 
     var _dataLoadStatus = null;
     var _dataLoadDuration = null;
+    var _dataLoadStart = null;
     var _basicStabilizationStatus = null;
     var _basicStabilizationIterations = null;
     var _basicStabilizationDuration = null;
+    var _basicStabilizationStart = null;
     var _stabilizationStatus = null;
     var _stabilizationIterations = null;
     var _stabilizationDuration = null;
+    var _stabilizationStart = null;
 
     var EAST_MIN_SIZE = 50;
     var EAST_MAX_SIZE = 1000;
@@ -746,6 +749,11 @@ var Visualizer = (function ($) {
     }
 
     function load() {
+        _dataLoadStart = performance.now();
+        _dataLoadStatus = 'loading';
+        _dataLoadDuration = '...';
+        $("#dataLoadStatus").val(_dataLoadStatus);
+        $("#dataLoadDuration").val(_dataLoadDuration);
         _nce.clearNotes(_noteIdList);
         setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
         _noteIdList.push(_nce.showNote('Loading data...'));
@@ -841,7 +849,12 @@ var Visualizer = (function ($) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
+            return;
         }
+        _dataLoadStatus = 'complete';
+        $("#dataLoadStatus").val(_dataLoadStatus);
+        _dataLoadDuration = Math.round(performance.now() - _dataLoadStart);
+        $("#dataLoadDuration").val(_dataLoadDuration);
     }
 
     function appIdMatch(appIdA, appIdB)
@@ -1239,29 +1252,41 @@ var Visualizer = (function ($) {
 
     function networkStartStabilizingEvent(){
         if (_basicStabilizationNewNetwork || _basicStabilizationDataChange) {
-            _basicStabilizationStatus = 'first stabilization started';
-            _basicStabilizationIterations = 'iterating...';
+            _basicStabilizationStart = performance.now();
+            _basicStabilizationStatus = 'iterating...';
+            _basicStabilizationIterations = '...';
+            _basicStabilizationDuration = '...';
             $("#basicStabilizationStatus").val(_basicStabilizationStatus);
             $("#basicStabilizationIterations").val(_basicStabilizationIterations);
+            $("#basicStabilizationDuration").val(_basicStabilizationDuration);
             _noteIdList.push(_nce.showNote('Stabilizing network with basic settings...'));
         }
         else if (_fullStabilizationAfterBasic) {
-            _stabilizationStatus = 'second stabilization started';
-            _stabilizationIterations = 'iterating...';
+            _stabilizationStart = performance.now();
+            _stabilizationStatus = 'iterating...';
+            _stabilizationIterations = '...';
+            _stabilizationDuration = '...';
             $("#stabilizationStatus").val(_stabilizationStatus);
             $("#stabilizationIterations").val(_stabilizationIterations);
+            $("#stabilizationDuration").val(_basicStabilizationDuration);
             _nce.clearNote();
             _noteIdList.push(_nce.showNote('Stabilizing network...'));
         }
         else{
+            _stabilizationStart = performance.now();
+
             _basicStabilizationStatus = 'n/a';
             _basicStabilizationIterations = 'n/a';
+            _basicStabilizationDuration = 'n/a';
             $("#basicStabilizationStatus").val(_basicStabilizationStatus);
             $("#basicStabilizationIterations").val(_basicStabilizationIterations);
-            _stabilizationStatus = 'single stabilization started';
-            _stabilizationIterations = 'iterating...';
+            $("#basicStabilizationDuration").val(_basicStabilizationDuration);
+            _stabilizationStatus = 'iterating...';
+            _stabilizationIterations = '...';
+            _stabilizationDuration = '...';
             $("#stabilizationStatus").val(_stabilizationStatus);
             $("#stabilizationIterations").val(_stabilizationIterations);
+            $("#stabilizationDuration").val(_stabilizationDuration);
             _noteIdList.push(_nce.showNote('Stabilizing network...'));
         }
     }
@@ -1303,6 +1328,8 @@ var Visualizer = (function ($) {
         $("#stabilizationStatus").val(_stabilizationStatus);
         $("#stabilizationIterations").val(_stabilizationIterations);
         _nce.clearNote();
+        _stabilizationDuration = Math.round(performance.now() - _stabilizationStart);
+        $("#stabilizationDuration").val(_stabilizationDuration);
     }
     
     function basicStabilizationComplete(iterations){
@@ -1311,6 +1338,8 @@ var Visualizer = (function ($) {
         _basicStabilizationIterations = iterations;
         $("#basicStabilizationStatus").val(_basicStabilizationStatus);
         $("#basicStabilizationIterations").val(_basicStabilizationIterations);
+        _basicStabilizationDuration = Math.round(performance.now() - _basicStabilizationStart);
+        $("#basicStabilizationDuration").val(_basicStabilizationDuration);
         updateNetworkOptions();
     }
 
