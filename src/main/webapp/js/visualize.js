@@ -61,6 +61,10 @@ var Visualizer = (function ($) {
     var SCOPE_KEY_DELAY = 3000;
     var UNSPECIFIED = 'UNSPECIFIED';
     var _noteIdList = [];
+    var COMPLETE = 'complete';
+    var ITERATING = 'iterating...';
+    var DOT_DOT_DOT = '...';
+    var NA = 'n/a';
 
     //Network layout parameters
     var _hierarchical = false;
@@ -78,8 +82,8 @@ var Visualizer = (function ($) {
     
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
-    var _basicStabilizationDataChange = false;
-    var _basicStabilizationNewNetwork = false;
+    var _basicStabilizationAfterNetworkUpdate = false;
+    var _basicStabilizationAfterInitNetwork = false;
     var _fullStabilizationAfterBasic = false;
     var _networkOptionsVis = {};
     var _networkOptionsBasicStabilization = null;
@@ -316,16 +320,8 @@ var Visualizer = (function ($) {
         }
     };
 
-    var _dataLoadStatus = null;
-    var _dataLoadDuration = null;
     var _dataLoadStart = null;
-    var _basicStabilizationStatus = null;
-    var _basicStabilizationIterations = null;
-    var _basicStabilizationDuration = null;
     var _basicStabilizationStart = null;
-    var _stabilizationStatus = null;
-    var _stabilizationIterations = null;
-    var _stabilizationDuration = null;
     var _stabilizationStart = null;
 
     var EAST_MIN_SIZE = 50;
@@ -442,7 +438,7 @@ var Visualizer = (function ($) {
             target = e.target;
             keys = target.id.split('.');
             setNetworkOption(target, _networkOptionsInput, keys);
-            updateNetworkOptions();
+            networkChangeEvent();
         });
     }
     
@@ -501,9 +497,7 @@ var Visualizer = (function ($) {
 
     function initNetworkOptions(container) {
         var emptyDataSet, emptyNetwork, copy;
-        _fullStabilizationAfterBasic = false;
-        _basicStabilizationDataChange = false;
-        _basicStabilizationNewNetwork  = true;
+        _basicStabilizationAfterInitNetwork  = true;
         _networkOptionsSection.hide();
         _networkOptionOverridesBasicStabilization.height = getVisNetworkHeight();
         emptyDataSet = new vis.DataSet({});
@@ -539,14 +533,6 @@ var Visualizer = (function ($) {
         {
             button.addClass('active');
             _networkOptionsSection.show();
-            $("#dataLoadStatus").val(_dataLoadStatus);
-            $("#dataLoadDuration").val(_dataLoadDuration);
-            $("#basicStabilizationStatus").val(_basicStabilizationStatus);
-            $("#basicStabilizationIterations").val(_basicStabilizationIterations);
-            $("#basicStabilizationDuration").val(_basicStabilizationDuration);
-            $("#stabilizationStatus").val(_stabilizationStatus);
-            $("#stabilizationIterations").val(_stabilizationIterations);
-            $("#stabilizationDuration").val(_stabilizationDuration);
             buildNetworkOptionsChangeSection( section, null, _networkOptionsInput, _networkOptionsDefaults, _networkOptionsVis);
         }
         else
@@ -750,10 +736,8 @@ var Visualizer = (function ($) {
 
     function load() {
         _dataLoadStart = performance.now();
-        _dataLoadStatus = 'loading';
-        _dataLoadDuration = '...';
-        $("#dataLoadStatus").val(_dataLoadStatus);
-        $("#dataLoadDuration").val(_dataLoadDuration);
+        $("#dataLoadStatus").val('loading');
+        $("#dataLoadDuration").val(DOT_DOT_DOT);
         _nce.clearNotes(_noteIdList);
         setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
         _noteIdList.push(_nce.showNote('Loading data...'));
@@ -834,7 +818,6 @@ var Visualizer = (function ($) {
         else if (STATUS_MISSING_START_SCOPE === json.status) {
             _noteIdList.push(_nce.showNote(json.message));
             loadData(json.visInfo, json.status);
-            initNetwork();
             saveAllToLocalStorage();
             loadScopeView();
             _visualizerContent.show();
@@ -851,10 +834,8 @@ var Visualizer = (function ($) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
             return;
         }
-        _dataLoadStatus = 'complete';
-        $("#dataLoadStatus").val(_dataLoadStatus);
-        _dataLoadDuration = Math.round(performance.now() - _dataLoadStart);
-        $("#dataLoadDuration").val(_dataLoadDuration);
+        $("#dataLoadStatus").val(COMPLETE);
+        $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
     }
 
     function appIdMatch(appIdA, appIdB)
@@ -1224,91 +1205,66 @@ var Visualizer = (function ($) {
                 networkStartStabilizingEvent();
              });
 
-             _network.on('stabilizationIterationsDone', function () {
-                 stabilizationIterationsDoneEvent();
-            });
-
             _network.on('stabilized', function (params) {
                 networkStabilizedEvent(params);
             });
 
             nodeDataSet.on('add', function () {
-                dataSetChangeEvent()
+                networkChangeEvent()
             });
 
             nodeDataSet.on('remove', function () {
-                dataSetChangeEvent()
+                networkChangeEvent()
             });
 
             edgeDataSet.on('add', function () {
-                dataSetChangeEvent()
+                networkChangeEvent()
             });
 
             edgeDataSet.on('remove', function () {
-                dataSetChangeEvent()
+                networkChangeEvent()
             });
         }
     }
 
     function networkStartStabilizingEvent(){
-        if (_basicStabilizationNewNetwork || _basicStabilizationDataChange) {
+        if (_basicStabilizationAfterInitNetwork || _basicStabilizationAfterNetworkUpdate) {
             _basicStabilizationStart = performance.now();
-            _basicStabilizationStatus = 'iterating...';
-            _basicStabilizationIterations = '...';
-            _basicStabilizationDuration = '...';
-            $("#basicStabilizationStatus").val(_basicStabilizationStatus);
-            $("#basicStabilizationIterations").val(_basicStabilizationIterations);
-            $("#basicStabilizationDuration").val(_basicStabilizationDuration);
-            _noteIdList.push(_nce.showNote('Stabilizing network with basic settings...'));
+            $("#basicStabilizationStatus").val(ITERATING);
+            $("#basicStabilizationIterations").val(DOT_DOT_DOT);
+            $("#basicStabilizationDuration").val(DOT_DOT_DOT);
+            _noteIdList.push(_nce.showNote('Stabilizing network...'));
         }
         else if (_fullStabilizationAfterBasic) {
             _stabilizationStart = performance.now();
-            _stabilizationStatus = 'iterating...';
-            _stabilizationIterations = '...';
-            _stabilizationDuration = '...';
-            $("#stabilizationStatus").val(_stabilizationStatus);
-            $("#stabilizationIterations").val(_stabilizationIterations);
-            $("#stabilizationDuration").val(_basicStabilizationDuration);
-            _nce.clearNote();
-            _noteIdList.push(_nce.showNote('Stabilizing network...'));
+            $("#stabilizationStatus").val(ITERATING);
+            $("#stabilizationIterations").val(DOT_DOT_DOT);
+            $("#stabilizationDuration").val(DOT_DOT_DOT);
         }
         else{
             _stabilizationStart = performance.now();
-
-            _basicStabilizationStatus = 'n/a';
-            _basicStabilizationIterations = 'n/a';
-            _basicStabilizationDuration = 'n/a';
-            $("#basicStabilizationStatus").val(_basicStabilizationStatus);
-            $("#basicStabilizationIterations").val(_basicStabilizationIterations);
-            $("#basicStabilizationDuration").val(_basicStabilizationDuration);
-            _stabilizationStatus = 'iterating...';
-            _stabilizationIterations = '...';
-            _stabilizationDuration = '...';
-            $("#stabilizationStatus").val(_stabilizationStatus);
-            $("#stabilizationIterations").val(_stabilizationIterations);
-            $("#stabilizationDuration").val(_stabilizationDuration);
+            $("#basicStabilizationStatus").val(NA);
+            $("#basicStabilizationIterations").val(NA);
+            $("#basicStabilizationDuration").val(NA);
+            $("#stabilizationStatus").val(ITERATING);
+            $("#stabilizationIterations").val(DOT_DOT_DOT);
+            $("#stabilizationDuration").val(DOT_DOT_DOT);
             _noteIdList.push(_nce.showNote('Stabilizing network...'));
         }
-    }
-
-    function stabilizationIterationsDoneEvent(){
-        //Clear note 'Stabilizing network...' here when hidden stabilization is complete.
-        //The stabilization is not fully complete until the stabilized event has fired, but the network is
-        //showing to the user and the user can work the page at this point.
-        _nce.clearNote();
+       
     }
 
     function networkStabilizedEvent(params){
         var copy;
-        if (_basicStabilizationNewNetwork) {
-            _basicStabilizationNewNetwork = false;
+        if (_basicStabilizationAfterInitNetwork) {
+            _basicStabilizationAfterInitNetwork = false;
             copy = $.extend(true, {}, _networkOptionsBasicStabilization);
             _networkOptionsDefaults = $.extend(true, copy, _networkOptionOverridesFullStabilization);
             _networkOptionsInput = $.extend(true, {}, _networkOptionsDefaults);
             basicStabilizationComplete(params.iterations);
         }
-        else if (_basicStabilizationDataChange) {
-            _basicStabilizationDataChange = false;
+        else if (_basicStabilizationAfterNetworkUpdate) {
+            _basicStabilizationAfterNetworkUpdate = false;
             _networkOptionsInput = $.extend(true, {}, _networkOptionsInputHold);
             _networkOptionsInputHold = {};
             basicStabilizationComplete(params.iterations);
@@ -1323,30 +1279,23 @@ var Visualizer = (function ($) {
     }
     
     function stabilizationComplete(iterations){
-        _stabilizationStatus = 'complete';
-        _stabilizationIterations = iterations;
-        $("#stabilizationStatus").val(_stabilizationStatus);
-        $("#stabilizationIterations").val(_stabilizationIterations);
         _nce.clearNote();
-        _stabilizationDuration = Math.round(performance.now() - _stabilizationStart);
-        $("#stabilizationDuration").val(_stabilizationDuration);
+        $("#stabilizationStatus").val(COMPLETE);
+        $("#stabilizationIterations").val(iterations);
+        $("#stabilizationDuration").val(Math.round(performance.now() - _stabilizationStart));
     }
     
     function basicStabilizationComplete(iterations){
         _fullStabilizationAfterBasic = true;
-        _basicStabilizationStatus = 'complete';
-        _basicStabilizationIterations = iterations;
-        $("#basicStabilizationStatus").val(_basicStabilizationStatus);
-        $("#basicStabilizationIterations").val(_basicStabilizationIterations);
-        _basicStabilizationDuration = Math.round(performance.now() - _basicStabilizationStart);
-        $("#basicStabilizationDuration").val(_basicStabilizationDuration);
+        $("#basicStabilizationStatus").val(COMPLETE);
+        $("#basicStabilizationIterations").val(iterations);
+        $("#basicStabilizationDuration").val(Math.round(performance.now() - _basicStabilizationStart));
         updateNetworkOptions();
     }
 
-    function dataSetChangeEvent(){
-        _fullStabilizationAfterBasic = false;
-        if (!_basicStabilizationNewNetwork && !_basicStabilizationDataChange) {
-            _basicStabilizationDataChange = true;
+    function networkChangeEvent(){
+        if (!_basicStabilizationAfterInitNetwork && !_basicStabilizationAfterNetworkUpdate) {
+            _basicStabilizationAfterNetworkUpdate = true;
             _networkOptionsInputHold = $.extend(true, {}, _networkOptionsInput);
             _networkOptionsInput = $.extend(true, {}, _networkOptionsBasicStabilization);
             updateNetworkOptions();
