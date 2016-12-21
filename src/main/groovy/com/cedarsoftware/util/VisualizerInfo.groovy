@@ -46,7 +46,8 @@ class VisualizerInfo
         appId = applicationID
         startCubeName = options.startCubeName as String
         scope = options.scope as CaseInsensitiveMap
-        selectedGroups = options.selectedGroups as Set ?: ALL_GROUPS_KEYS
+        Set groups = options.selectedGroups as Set
+        selectedGroups = groups == null ? ALL_GROUPS_KEYS : groups; //If null, use all groups. If empty or not empty set, use set.
         String selectedLevel = options.selectedLevel as String
         this.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL : Converter.convert(selectedLevel, long.class) as long
         availableScopeKeys =  options.availableScopeKeys as Set ?: DEFAULT_AVAILABLE_SCOPE_KEYS

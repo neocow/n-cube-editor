@@ -27,7 +27,6 @@ var Visualizer = (function ($) {
     var _nodes = [];
     var _edges = [];
     var _scope = null;
-    var _scopeChange = false;
     var _keepCurrentScope = false;
     var _availableScopeKeys = [];
     var _selectedGroups = null;
@@ -62,6 +61,11 @@ var Visualizer = (function ($) {
     var SCOPE_KEY_DELAY = 3000;
     var UNSPECIFIED = 'UNSPECIFIED';
     var _noteIdList = [];
+    var COMPLETE = 'complete';
+    var ITERATING = 'iterating...';
+    var DOT_DOT_DOT = '...';
+    var NA = 'n/a';
+    var NO_GROUPS_SELECTED = 'NO GROUPS SELECTED';
 
     //Network layout parameters
     var _hierarchical = false;
@@ -75,12 +79,38 @@ var Visualizer = (function ($) {
     var GRAVITATIONAL_CONSTANT = -300000;
     var MIN_VELOCITY = 5;
     var SPRING_CONSTANT = 0.3;
+    var CENTRAL_GRAVITY = 3;
+    
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
+    var _basicStabilizationAfterNetworkUpdate = false;
+    var _basicStabilizationAfterInitNetwork = false;
+    var _fullStabilizationAfterBasic = false;
     var _networkOptionsVis = {};
+    var _networkOptionsBasicStabilization = null;
     var _networkOptionsDefaults = null;
-    var _networkOptions = null;
-    var _networkOptionsOverridden = {
+    var _networkOptionsInput = null;
+    var _networkOptionsInputHold = null;
+    var _networkOptionOverridesFullStabilization = {
+         nodes: {
+            shadow: {
+                enabled: true
+            }
+        },
+        edges: {
+            arrowStrikethrough: true,
+            arrows: {
+                to: {
+                    enabled: true
+                }
+            },
+            shadow: {
+                enabled: true
+            }
+        }
+    };
+
+    var _networkOptionOverridesBasicStabilization = {
         interaction: {
             navigationButtons: true,
             keyboard: {
@@ -102,13 +132,14 @@ var Visualizer = (function ($) {
                 }
             },
             shadow: {
-                enabled: true
+                enabled: false
             }
         },
         edges: {
+            arrowStrikethrough: false,
             arrows: {
                 to: {
-                    enabled: true
+                    enabled: false
                 }
             },
             color: {
@@ -118,7 +149,7 @@ var Visualizer = (function ($) {
                 enabled: false
             },
             shadow: {
-                enabled: true
+                enabled: false
             },
             hoverWidth: 3,
             selectionWidth: 2,
@@ -130,7 +161,8 @@ var Visualizer = (function ($) {
             minVelocity: MIN_VELOCITY,
             barnesHut: {
                 gravitationalConstant: GRAVITATIONAL_CONSTANT,
-                springConstant: SPRING_CONSTANT
+                springConstant: SPRING_CONSTANT,
+                centralGravity: CENTRAL_GRAVITY
             }
         },
         layout: {
@@ -289,9 +321,9 @@ var Visualizer = (function ($) {
         }
     };
 
-    //Set by network stabilize events
-    var _stabilizationStatus = null;
-    var _iterationsToStabilize = null;
+    var _dataLoadStart = null;
+    var _basicStabilizationStart = null;
+    var _stabilizationStart = null;
 
     var EAST_MIN_SIZE = 50;
     var EAST_MAX_SIZE = 1000;
@@ -393,9 +425,8 @@ var Visualizer = (function ($) {
     };
 
     function addNetworkOptionsListeners() {
-        var button;
         $('#networkOptionsButton').click(function () {
-            button = $('#networkOptionsButton');
+            var button = $('#networkOptionsButton');
             button.toggleClass('active');
             _networkOptionsButton = button.hasClass('active');
             saveToLocalStorage(_networkOptionsButton, NETWORK_OPTIONS_DISPLAY);
@@ -403,15 +434,12 @@ var Visualizer = (function ($) {
             loadNetworkOptionsSectionView();
         });
 
-        $('#networkOptionsChangeSection').change(function () {
-            $('.networkOption').each(function () {
-                var id, keys;
-                id = $(this).attr('id');
-                keys = id.split('.');
-                setNetworkOption($(this), _networkOptions, keys);
-            });
-            loadNetworkOptionsSectionView();
-            reload();
+        $('#networkOptionsChangeSection').change(function (e) {
+            var target, keys;
+            target = e.target;
+            keys = target.id.split('.');
+            setNetworkOption(target, _networkOptionsInput, keys);
+            networkChangeEvent();
         });
     }
     
@@ -428,7 +456,7 @@ var Visualizer = (function ($) {
             e.preventDefault();
             $('#groups').find('button').removeClass('active');
             _selectedGroups = [];
-            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+            saveToLocalStorage(NO_GROUPS_SELECTED, SELECTED_GROUPS);
             reload();
         });
     }
@@ -445,11 +473,11 @@ var Visualizer = (function ($) {
             }
             else if (BOOLEAN === typeof value)
             {
-                options[key] = inputOption.prop('checked');
+                options[key] = inputOption.checked;
             }
             else if (NUMBER === typeof value)
             {
-                options[key] = Number(inputOption.val());
+                options[key] = Number(inputOption.value);
             }
             else if (FUNCTION === typeof value)
             {
@@ -457,7 +485,7 @@ var Visualizer = (function ($) {
             }
             else
             {
-                options[key] = inputOption.val();
+                options[key] = inputOption.value;
             }
         }
         else
@@ -468,33 +496,32 @@ var Visualizer = (function ($) {
         }
     }
 
-     function initNetworkOptions(container) {
-        var emptyDataSet, emptyNetwork, defaults;
-        if (!_networkOptions) {
-            _networkOptionsSection.hide();
-            _networkOptionsOverridden.height = getVisNetworkHeight();
-            emptyDataSet = new vis.DataSet({});
-            emptyNetwork = new vis.Network(container, {nodes: emptyDataSet, edges: emptyDataSet}, {});
+    function initNetworkOptions(container) {
+        var emptyDataSet, emptyNetwork, copy;
+        _basicStabilizationAfterInitNetwork  = true;
+        _networkOptionsSection.hide();
+        _networkOptionOverridesBasicStabilization.height = getVisNetworkHeight();
+        emptyDataSet = new vis.DataSet({});
+        emptyNetwork = new vis.Network(container, {nodes: emptyDataSet, edges: emptyDataSet}, {});
 
-            _networkOptionsVis.physics = emptyNetwork.physics.defaultOptions;
-            _networkOptionsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
-            _networkOptionsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
-            _networkOptionsVis.edges = emptyNetwork.edgesHandler.defaultOptions;
-            _networkOptionsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
-            _networkOptionsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
-            _networkOptionsVis.groups = emptyNetwork.groups.defaultOptions;
+        _networkOptionsVis.physics = emptyNetwork.physics.defaultOptions;
+        _networkOptionsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
+        _networkOptionsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
+        _networkOptionsVis.edges = emptyNetwork.edgesHandler.defaultOptions;
+        _networkOptionsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
+        _networkOptionsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
+        _networkOptionsVis.groups = emptyNetwork.groups.defaultOptions;
 
-            //TODO: Figure out why these keys throw "unknown" exception in vis when set on the network despite originating
-            //TODO: from vis. Removing keys for now.
-            delete _networkOptionsVis.physics.barnesHut['theta'];
-            delete _networkOptionsVis.physics.forceAtlas2Based['theta'];
-            delete _networkOptionsVis.physics.repulsion['avoidOverlap'];
+        //TODO: Figure out why these keys throw "unknown" exception in vis when set on the network despite originating
+        //TODO: from vis. Removing keys for now.
+        delete _networkOptionsVis.physics.barnesHut['theta'];
+        delete _networkOptionsVis.physics.forceAtlas2Based['theta'];
+        delete _networkOptionsVis.physics.repulsion['avoidOverlap'];
 
-            defaults = $.extend(true, {}, _networkOptionsVis);
-            _networkOptionsDefaults = $.extend(true, defaults, _networkOptionsOverridden);
-            _networkOptions = $.extend(true, {}, _networkOptionsDefaults);
-            emptyNetwork.destroy();
-        }
+        copy = $.extend(true, {}, _networkOptionsVis);
+        _networkOptionsBasicStabilization = $.extend(true, copy, _networkOptionOverridesBasicStabilization);
+        _networkOptionsInput = $.extend(true, {}, _networkOptionsBasicStabilization);
+        emptyNetwork.destroy();
     }
 
     function loadNetworkOptionsSectionView()
@@ -507,9 +534,7 @@ var Visualizer = (function ($) {
         {
             button.addClass('active');
             _networkOptionsSection.show();
-            $("#stabilizationStatus").val(_stabilizationStatus);
-            $("#iterationsToStabilize").val(_iterationsToStabilize);
-            buildNetworkOptionsChangeSection( section, null, _networkOptions, _networkOptionsDefaults, _networkOptionsVis);
+            buildNetworkOptionsChangeSection( section, null, _networkOptionsInput, _networkOptionsDefaults, _networkOptionsVis);
         }
         else
         {
@@ -623,21 +648,20 @@ var Visualizer = (function ($) {
     
     function scopeChange()
     {
-        _scopeChange = true;
         saveToLocalStorage(_scope, SCOPE_MAP);
         load();
     }
 
   
     function buildScopeFromText(scopeString) {
-        var tuples, tuple, key, value, i, iLen;
+        var parts, part, key, value, i, iLen;
         var newScope = {};
         if (scopeString) {
-            tuples = scopeString.split(',');
-            for ( i = 0, iLen = tuples.length; i < iLen; i++) {
-                tuple = tuples[i].split(':');
-                key = tuple[0].trim();
-                value = tuple[1];
+            parts = scopeString.split(',');
+            for ( i = 0, iLen = parts.length; i < iLen; i++) {
+                part = parts[i].split(':');
+                key = part[0].trim();
+                value = part[1];
                 if (value) {
                     newScope[key] = value.trim();
                 }
@@ -647,19 +671,12 @@ var Visualizer = (function ($) {
     }
 
     function reload() {
-         setTimeout(function () {reloadNetwork();}, PROGRESS_DELAY);
-        _nce.showNote('Updating network...');
-    }
-
-    function reloadNetwork() {
-        updateNetworkOptions();
         updateNetworkData();
         loadSelectedLevelListView();
         loadGroupsView();
         loadCountsView();
         _visualizerInfo.show();
         _visualizerNetwork.show();
-        _nce.clearNote();
      }
 
     function loadTraits(node) {
@@ -719,18 +736,21 @@ var Visualizer = (function ($) {
     }
 
     function load() {
+        _dataLoadStart = performance.now();
+        $("#dataLoadStatus").val('loading');
+        $("#dataLoadDuration").val(DOT_DOT_DOT);
         _nce.clearNotes(_noteIdList);
         setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
-        _noteIdList.push(_nce.showNote('Loading visualizer...'));
+        _noteIdList.push(_nce.showNote('Loading data...'));
     }
 
     function loadFromServer() {
         var options, result, json, message;
         clearVisLayoutEast();
+        destroyNetwork();
 
         if (!_nce.getSelectedCubeName()) {
-            destroyNetwork();
-            _visualizerContent.hide();
+             _visualizerContent.hide();
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + 'No cube selected.');
             return;
         }
@@ -740,30 +760,15 @@ var Visualizer = (function ($) {
         //TODO: rpm.class.product) after a page refresh.
         _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
 
-        if (_keepCurrentScope) {
-            _keepCurrentScope = false;
-        } else {
-            _scope = getFromLocalStorage(SCOPE_MAP, null);
-        }
-        _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
-        _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
-        _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
-        _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, false);
-
-        if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId())) {
+       if ((_selectedCubeName !== _loadedCubeName) ||
+            (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))) {
             _availableScopeKeys = null;
             _availableScopeValues = null;
         }
 
-        if (_selectedCubeName !== _loadedCubeName) {
-            destroyNetwork();
-            _availableScopeKeys = null;
-            _availableScopeValues = null;
-        } else if (_scopeChange) {
-            _scopeChange = false;
-            destroyNetwork();
-        }
-  
+        getAllFromLocalStorage();
+        _keepCurrentScope = false;
+
         options = {
             selectedLevel: _selectedLevel,
             startCubeName: _selectedCubeName,
@@ -780,8 +785,7 @@ var Visualizer = (function ($) {
         _nce.clearNotes(_noteIdList);
         if (!result.status) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
-            destroyNetwork();
-            _visualizerContent.hide();
+             _visualizerContent.hide();
             return;
         }
 
@@ -797,7 +801,6 @@ var Visualizer = (function ($) {
             saveAllToLocalStorage();
             loadScopeView();
             loadHierarchicalView();
-            loadNetworkOptionsSectionView();
             loadGroupsView();
             loadCountsView();
             _visualizerContent.show();
@@ -807,7 +810,6 @@ var Visualizer = (function ($) {
         else if (STATUS_MISSING_START_SCOPE === json.status) {
             _noteIdList.push(_nce.showNote(json.message));
             loadData(json.visInfo, json.status);
-            initNetwork();
             saveAllToLocalStorage();
             loadScopeView();
             _visualizerContent.show();
@@ -816,14 +818,16 @@ var Visualizer = (function ($) {
             _networkOptionsSection.hide();
         }
         else {
-            destroyNetwork();
-            _visualizerContent.hide();
+             _visualizerContent.hide();
             message = json.message;
             if (null !== json.stackTrace) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
+            return;
         }
+        $("#dataLoadStatus").val(COMPLETE);
+        $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
     }
 
     function appIdMatch(appIdA, appIdB)
@@ -861,7 +865,7 @@ var Visualizer = (function ($) {
 
         divGroups = $('#groups');
         divGroups.empty();
-        groups = _networkOptions.groups;
+        groups = _networkOptionsInput.groups;
 
         _availableGroupsAllLevels.sort();
         for (j = 0, jLen = _availableGroupsAllLevels.length; j < jLen; j++) {
@@ -1171,7 +1175,6 @@ var Visualizer = (function ($) {
         var container, nodeDataSet, edgeDataSet;
         if (_network)
         {
-            updateNetworkOptions();
             updateNetworkData();
         }
         else
@@ -1183,7 +1186,7 @@ var Visualizer = (function ($) {
             nodeDataSet.add(_nodes);
             edgeDataSet = new vis.DataSet({});
             edgeDataSet.add(_edges);
-            _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, _networkOptions);
+            _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, _networkOptionsInput);
             updateNetworkData();
 
             _network.on('select', function(params) {
@@ -1191,34 +1194,103 @@ var Visualizer = (function ($) {
             });
 
             _network.on('startStabilizing', function () {
-                _noteIdList.push(_nce.showNote('Stabilizing network...'));
-                _iterationsToStabilize = 'iterating...';
-                _stabilizationStatus = 'stabilization started';
-                 $("#stabilizationStatus").val(_stabilizationStatus);
-                $("#iterationsToStabilize").val(_iterationsToStabilize);
+                networkStartStabilizingEvent();
              });
-
-            _network.on('stabilizationProgress', function () {
-                 _stabilizationStatus = 'stabilization in progress';
-                 $("#stabilizationStatus").val(_stabilizationStatus);
-             });
-
-            _network.on('stabilizationIterationsDone', function () {
-                _stabilizationStatus = 'hidden stabilization complete';
-                $("#stabilizationStatus").val(_stabilizationStatus);
-                //Clear note 'Stabilizing network...' here when hidden stabilization is complete.
-                //The full stabilization is not done until the stabilized event has fired, but the network is
-                //showing to the user and the user can work the page at this point.
-                _nce.clearNote();
-            });
 
             _network.on('stabilized', function (params) {
-                _stabilizationStatus = 'stabilization complete';
-                _iterationsToStabilize = params.iterations + ' iterations to stabilize';
-                $("#stabilizationStatus").val(_stabilizationStatus);
-                $("#iterationsToStabilize").val(_iterationsToStabilize);
-                _nce.clearNote();
+                networkStabilizedEvent(params);
             });
+
+            nodeDataSet.on('add', function () {
+                networkChangeEvent()
+            });
+
+            nodeDataSet.on('remove', function () {
+                networkChangeEvent()
+            });
+
+            edgeDataSet.on('add', function () {
+                networkChangeEvent()
+            });
+
+            edgeDataSet.on('remove', function () {
+                networkChangeEvent()
+            });
+        }
+    }
+
+    function networkStartStabilizingEvent(){
+        if (_basicStabilizationAfterInitNetwork || _basicStabilizationAfterNetworkUpdate) {
+            _basicStabilizationStart = performance.now();
+            $("#basicStabilizationStatus").val(ITERATING);
+            $("#basicStabilizationIterations").val(DOT_DOT_DOT);
+            $("#basicStabilizationDuration").val(DOT_DOT_DOT);
+            $("#stabilizationStatus").val(DOT_DOT_DOT);
+            $("#stabilizationIterations").val(DOT_DOT_DOT);
+            $("#stabilizationDuration").val(DOT_DOT_DOT);
+            _noteIdList.push(_nce.showNote('Stabilizing network...'));
+        }
+        else if (_fullStabilizationAfterBasic) {
+            _stabilizationStart = performance.now();
+            $("#stabilizationStatus").val(ITERATING);
+        }
+        else{
+            _stabilizationStart = performance.now();
+            $("#basicStabilizationStatus").val(NA);
+            $("#basicStabilizationIterations").val(NA);
+            $("#basicStabilizationDuration").val(NA);
+            $("#stabilizationStatus").val(ITERATING);
+            $("#stabilizationIterations").val(DOT_DOT_DOT);
+            $("#stabilizationDuration").val(DOT_DOT_DOT);
+            _noteIdList.push(_nce.showNote('Stabilizing network...'));
+        }
+    }
+
+    function networkStabilizedEvent(params){
+        var copy;
+        if (_basicStabilizationAfterInitNetwork) {
+            _basicStabilizationAfterInitNetwork = false;
+            copy = $.extend(true, {}, _networkOptionsBasicStabilization);
+            _networkOptionsDefaults = $.extend(true, copy, _networkOptionOverridesFullStabilization);
+            _networkOptionsInput = $.extend(true, {}, _networkOptionsDefaults);
+            basicStabilizationComplete(params.iterations);
+        }
+        else if (_basicStabilizationAfterNetworkUpdate) {
+            _basicStabilizationAfterNetworkUpdate = false;
+            _networkOptionsInput = $.extend(true, {}, _networkOptionsInputHold);
+            _networkOptionsInputHold = {};
+            basicStabilizationComplete(params.iterations);
+        }
+        else if (_fullStabilizationAfterBasic) {
+            _fullStabilizationAfterBasic = false;
+             stabilizationComplete(params.iterations);
+        }
+        else{
+            stabilizationComplete(params.iterations);
+         }
+    }
+    
+    function stabilizationComplete(iterations){
+        _nce.clearNote();
+        $("#stabilizationStatus").val(COMPLETE);
+        $("#stabilizationIterations").val(iterations);
+        $("#stabilizationDuration").val(Math.round(performance.now() - _stabilizationStart));
+    }
+    
+    function basicStabilizationComplete(iterations){
+        _fullStabilizationAfterBasic = true;
+        $("#basicStabilizationStatus").val(COMPLETE);
+        $("#basicStabilizationIterations").val(iterations);
+        $("#basicStabilizationDuration").val(Math.round(performance.now() - _basicStabilizationStart));
+        updateNetworkOptions();
+    }
+
+    function networkChangeEvent(){
+        if (!_basicStabilizationAfterInitNetwork && !_basicStabilizationAfterNetworkUpdate) {
+            _basicStabilizationAfterNetworkUpdate = true;
+            _networkOptionsInputHold = $.extend(true, {}, _networkOptionsInput);
+            _networkOptionsInput = $.extend(true, {}, _networkOptionsBasicStabilization);
+            updateNetworkOptions();
         }
     }
 
@@ -1281,7 +1353,8 @@ var Visualizer = (function ($) {
 
     function updateNetworkOptions()
     {
-       _network.setOptions(_networkOptions);
+        loadNetworkOptionsSectionView();
+       _network.setOptions(_networkOptionsInput);
     }
 
     function createVisualizeFromHereLink(appId, cubeName, node)
@@ -1380,6 +1453,19 @@ var Visualizer = (function ($) {
      function getFromLocalStorage(key, defaultValue) {
         var local = localStorage[getStorageKey(_nce, key)];
         return local ? JSON.parse(local) : defaultValue;
+    }
+
+    function getAllFromLocalStorage() {
+        if (!_keepCurrentScope) {
+            _scope = getFromLocalStorage(SCOPE_MAP, null);
+        }
+        _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
+        if (_selectedGroups === NO_GROUPS_SELECTED) {
+            _selectedGroups = [];
+        }
+        _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
+        _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
+        _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, false);
     }
 
     //TODO: Temporarily override this function in index.js until figured out why nce.getSelectedCubeName()
