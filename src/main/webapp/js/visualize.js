@@ -920,7 +920,7 @@ var Visualizer = (function ($) {
 
     //TODO: Is there a better way to get the override maps from the server into the format vis.js needs?
     function formatNetworkOverrides(overrides){
-        var keys,k, kLen, key, value, valueOfValue;
+        var keys,k, kLen, key, value, valueOfValue, type;
         delete overrides['@type'];
         keys = Object.keys(overrides);
         for (k = 0, kLen = keys.length; k < kLen; k++) {
@@ -928,9 +928,11 @@ var Visualizer = (function ($) {
             value = overrides[key];
             if (OBJECT === typeof value){
                 valueOfValue = value.value;
-                if (undefined !== valueOfValue && OBJECT !== typeof valueOfValue)
+                type = value['@type'];
+                delete value['@type'];
+                if (1 === Object.keys(value).length && undefined !== valueOfValue && OBJECT !== typeof valueOfValue)
                 {
-                    if ('java.math.BigDecimal' === value['@type']){
+                    if ('java.math.BigDecimal' === type){
                         overrides[key] = parseFloat(valueOfValue);
                     }
                     else if (NUMBER === typeof valueOfValue){
