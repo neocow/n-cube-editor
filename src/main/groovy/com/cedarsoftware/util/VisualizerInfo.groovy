@@ -26,18 +26,19 @@ class VisualizerInfo
 
 	long maxLevel = 1
 	long nodeCount  = 1
-	long selectedLevel
+    long defaultLevel
     boolean loadTraits = false
 
 	Map<String,String> allGroups
     String groupSuffix
 
-    Set<String> selectedGroups
 	Set<String> availableGroupsAllLevels = [] as Set
 	Set<String> availableScopeKeys = []
 	Map<String, Set<Object>> availableScopeValues = [:]
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
+    Map<String, Object> networkOverridesBasic = null
+    Map<String, Object> networkOverridesFull = null
 
     Map<String, List<String>> typesToAddMap = [:]
 
@@ -46,27 +47,20 @@ class VisualizerInfo
         appId = applicationID
         startCubeName = options.startCubeName as String
         scope = options.scope as CaseInsensitiveMap
-        Set groups = options.selectedGroups as Set
-        selectedGroups = groups == null ? ALL_GROUPS_KEYS : groups; //If null, use all groups. If empty or not empty set, use set.
-        String selectedLevel = options.selectedLevel as String
-        this.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL : Converter.convert(selectedLevel, long.class) as long
-        availableScopeKeys =  options.availableScopeKeys as Set ?: DEFAULT_AVAILABLE_SCOPE_KEYS
+        availableScopeKeys = options.availableScopeKeys as Set ?:  DEFAULT_AVAILABLE_SCOPE_KEYS
         availableScopeValues = options.availableScopeValues as Map ?: loadAvailableScopeValues()
-        typesToAddMap = options.typesToAddMap as Map ?: [:]
+        typesToAddMap = options.typesToAddMap as Map ?: loadTypesToAddMap()
         loadTraits = options.loadTraits as boolean
+        defaultLevel = DEFAULT_LEVEL
         allGroups = ALL_GROUPS_MAP
         groupSuffix = _ENUM
+        networkOverridesBasic = options.networkOverridesBasic as Map
+        networkOverridesFull = options.networkOverridesFull as Map
+        if (!networkOverridesBasic || !networkOverridesFull)
+        {
+            loadNetworkOverrides()
+        }
     }
-
-	void trimSelectedLevel()
-	{
-		selectedLevel = selectedLevel > nodeCount ? nodeCount : selectedLevel
-	}
-
-	void trimSelectedGroups()
-	{
-		selectedGroups = availableGroupsAllLevels.intersect(selectedGroups)
-	}
 
     boolean addMissingMinimumScope(String key, String value, String messageSuffix, Set<String> messages)
     {
@@ -95,6 +89,37 @@ class VisualizerInfo
             messages << "Scope is required for ${key}. ${messageSuffix}".toString()
         }
         return missingScope
+    }
+
+    List getTypesToAdd(String cubeName)
+    {
+        if (cubeName.startsWith(RPM_CLASS_DOT))
+        {
+            String sourceType = cubeName - RPM_CLASS_DOT
+            return typesToAddMap[sourceType]
+        }
+        return null
+    }
+
+    Map<String, List<String>> loadTypesToAddMap()
+    {
+        Map<String, List<String>> typesToAddMap = [:]
+        NCube cube = NCubeManager.getCube(appId, TYPES_TO_ADD_NCUBE_NAME)
+        ALL_EPM_TYPES.each { String sourceType ->
+            Map<String, Boolean> map = cube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): [] as Set]) as Map
+            List<String> typesToAdd = map.findAll { String type, Boolean available ->
+                available == true
+            }.keySet() as List
+            typesToAddMap[sourceType] = typesToAdd
+        }
+        return typesToAddMap
+    }
+
+    void loadNetworkOverrides()
+    {
+        NCube cube = NCubeManager.getCube(appId, NETWORK_OVERRIDES_NCUBE_NAME)
+        networkOverridesBasic = cube.getCell([(OVERRIDE_TYPE): OVERRIDE_TYPE_BASIC, (CUBE_TYPE): CUBE_TYPE_RPM]) as Map
+        networkOverridesFull = cube.getCell([(OVERRIDE_TYPE): OVERRIDE_TYPE_FULL, (CUBE_TYPE): CUBE_TYPE_RPM]) as Map
     }
 
     Map<String, Set<Object>> loadAvailableScopeValues()

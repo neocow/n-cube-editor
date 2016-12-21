@@ -31,6 +31,8 @@ public final class VisualizerConstants
 
 	public static final String _ENUM = '_ENUM'
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
+	//TODO: Convert this set and others that list business types from constants to using n-cubes.
+	public static final Set<String> ALL_EPM_TYPES = ['Product', 'Risk', 'Coverage', 'Container', 'Deductible', 'Limit', 'Rate', 'Ratefactor', 'Premium', 'Party', 'Place', 'Role', 'Roleplayer'] as Set
 	public static final Map<String, String> ALL_GROUPS_MAP = [PRODUCT: 'Product', FORM: 'Form', RISK: 'Risk', COVERAGE: 'Coverage', CONTAINER: 'Container', DEDUCTIBLE: 'Deductible', LIMIT: 'Limit', RATE: 'Rate', RATEFACTOR: 'Rate Factor', PREMIUM: 'Premium', PARTY: 'Party', PLACE: 'Place', ROLE: 'Role', ROLEPLAYER: 'Role Player', UNSPECIFIED: 'Unspecified']
 	public static final Set<String> ALL_GROUPS_KEYS = ALL_GROUPS_MAP.keySet()
 
@@ -79,4 +81,11 @@ public final class VisualizerConstants
 	public static final String TYPES_TO_ADD_NCUBE_NAME = 'visualizer.TypesToAdd'
 	public static final String SOURCE_TYPE = 'sourceType'
 	public static final String TARGET_TYPE = 'targetType'
+
+	public static final String NETWORK_OVERRIDES_NCUBE_NAME = 'visualizer.NetworkOverrides'
+	public static final String OVERRIDE_TYPE = 'overrideType'
+	public static final String OVERRIDE_TYPE_BASIC = 'basic'
+	public static final String OVERRIDE_TYPE_FULL = 'full'
+	public static final String CUBE_TYPE = 'cubeType'
+	public static final String CUBE_TYPE_RPM = 'rpm'
 }

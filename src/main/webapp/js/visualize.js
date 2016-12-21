@@ -28,11 +28,11 @@ var Visualizer = (function ($) {
     var _edges = [];
     var _scope = null;
     var _keepCurrentScope = false;
-    var _availableScopeKeys = [];
+    var _availableScopeKeys = null;
+    var _availableScopeValues = null;
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
     var _availableGroupsAllLevels = null;
-    var _availableScopeValues = {};
     var _allGroups = null;
     var _maxLevel = null;
     var _groupSuffix = null;
@@ -71,16 +71,9 @@ var Visualizer = (function ($) {
     var _hierarchical = false;
 
     //Network physics
-    var ZOOM = 0.02;
-    var NODE_SCALING = 24;
     var NODE_SCALING_SPECIAL = 200;
     var DASH_LENGTH = 15;
-    var EDGE_FONT = 20;
-    var GRAVITATIONAL_CONSTANT = -300000;
-    var MIN_VELOCITY = 5;
-    var SPRING_CONSTANT = 0.3;
-    var CENTRAL_GRAVITY = 3;
-    
+
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
     var _basicStabilizationAfterNetworkUpdate = false;
@@ -91,236 +84,8 @@ var Visualizer = (function ($) {
     var _networkOptionsDefaults = null;
     var _networkOptionsInput = null;
     var _networkOptionsInputHold = null;
-    var _networkOptionOverridesFullStabilization = {
-         nodes: {
-            shadow: {
-                enabled: true
-            }
-        },
-        edges: {
-            arrowStrikethrough: true,
-            arrows: {
-                to: {
-                    enabled: true
-                }
-            },
-            shadow: {
-                enabled: true
-            }
-        }
-    };
-
-    var _networkOptionOverridesBasicStabilization = {
-        interaction: {
-            navigationButtons: true,
-            keyboard: {
-                enabled: false,
-                speed: {
-                    x: 5,
-                    y: 5,
-                    zoom: ZOOM}
-            },
-            zoomView: true
-        },
-        nodes: {
-            value: NODE_SCALING,
-            scaling: {
-                min: NODE_SCALING,
-                max: NODE_SCALING,
-                label: {
-                    enabled: true
-                }
-            },
-            shadow: {
-                enabled: false
-            }
-        },
-        edges: {
-            arrowStrikethrough: false,
-            arrows: {
-                to: {
-                    enabled: false
-                }
-            },
-            color: {
-                color: 'gray'
-            },
-            smooth: {
-                enabled: false
-            },
-            shadow: {
-                enabled: false
-            },
-            hoverWidth: 3,
-            selectionWidth: 2,
-            font: {
-                size: EDGE_FONT
-            }
-        },
-        physics: {
-            minVelocity: MIN_VELOCITY,
-            barnesHut: {
-                gravitationalConstant: GRAVITATIONAL_CONSTANT,
-                springConstant: SPRING_CONSTANT,
-                centralGravity: CENTRAL_GRAVITY
-            }
-        },
-        layout: {
-            hierarchical: {
-                enabled: false
-            },
-            improvedLayout : true,
-            randomSeed:2
-        },
-        groups: {
-            PRODUCT: {
-                shape: 'box',
-                color: '#DAE4FA'
-            },
-            RISK: {
-                shape: 'box',
-                color: '#759BEC'
-            },
-            COVERAGE: {
-                shape: 'box',
-                color: '#113275',
-                font: {
-                    color: '#D8D8D8'
-                }
-            },
-            CONTAINER: {
-                shape: 'star',
-                color: "#731d1d",
-                font: {
-                    buttonColor: '#D8D8D8'
-                }
-            },
-            LIMIT: {
-                shape: 'ellipse',
-                color: '#FFFF99'
-            },
-            DEDUCTIBLE: {
-                shape: 'ellipse',
-                color: '#FFFF99'
-            },
-            PREMIUM: {
-                shape: 'ellipse',
-                color: '#0B930B',
-                font: {
-                    color: '#D8D8D8'
-                }
-            },
-            RATE: {
-                shape: 'ellipse',
-                color: '#EAC259'
-            },
-            ROLE: {
-                shape: 'box',
-                color: '#F59D56'
-            },
-            ROLEPLAYER: {
-                shape: 'box',
-                color: '#F2F2F2'
-            },
-            RATEFACTOR: {
-                shape: 'ellipse',
-                color: '#EAC259'
-            },
-            PARTY: {
-                shape: 'box',
-                color: '#004000',
-                font: {
-                    color: '#D8D8D8'
-                }
-            },
-            PLACE: {
-                shape: 'box',
-                color: '#481849',
-                font: {
-                    color: '#D8D8D8'
-                }
-            },
-            UNSPECIFIED: {
-                shape: 'box',
-                color: '#7ac5cd'
-            },
-            FORM: {
-                shape: 'box',
-                color: '#d2691e'
-            },
-            PRODUCT_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            RISK_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            COVERAGE_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            LIMIT_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            PREMIUM_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            RATE_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            RATEFACTOR_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            ROLE_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            ROLEPLAYER_ENUM : {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            CONTAINER_ENUM: {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            DEDUCTIBLE_ENUM: {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            PARTY_ENUM: {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            PLACE_ENUM: {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            },
-            UNSPECIFIED_ENUM: {
-                shape: 'dot',
-                scaling: {min: 5, max: 5},
-                color: 'gray'
-            }
-        }
-    };
-
+    var _networkOverridesBasic = null;
+    var _networkOverridesFull = null;
     var _dataLoadStart = null;
     var _basicStabilizationStart = null;
     var _stabilizationStart = null;
@@ -500,7 +265,7 @@ var Visualizer = (function ($) {
         var emptyDataSet, emptyNetwork, copy;
         _basicStabilizationAfterInitNetwork  = true;
         _networkOptionsSection.hide();
-        _networkOptionOverridesBasicStabilization.height = getVisNetworkHeight();
+        _networkOverridesBasic.height = getVisNetworkHeight();
         emptyDataSet = new vis.DataSet({});
         emptyNetwork = new vis.Network(container, {nodes: emptyDataSet, edges: emptyDataSet}, {});
 
@@ -519,7 +284,7 @@ var Visualizer = (function ($) {
         delete _networkOptionsVis.physics.repulsion['avoidOverlap'];
 
         copy = $.extend(true, {}, _networkOptionsVis);
-        _networkOptionsBasicStabilization = $.extend(true, copy, _networkOptionOverridesBasicStabilization);
+        _networkOptionsBasicStabilization = $.extend(true, copy, _networkOverridesBasic);
         _networkOptionsInput = $.extend(true, {}, _networkOptionsBasicStabilization);
         emptyNetwork.destroy();
     }
@@ -687,14 +452,10 @@ var Visualizer = (function ($) {
 
     function loadTraitsFromServer(node)
     {
-         var message, options, result, json, visInfo;
-         options = {
-            node: node,
-            scope: _scope,
-            availableScopeKeys: _availableScopeKeys,
-            availableScopeValues: _availableScopeValues,
-            typesToAddMap: _typesToAddMap
-        };
+        var message, options, result, json;
+
+        options = getVisualizerOptions();
+        options['node'] = node;
         
         result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNote();
@@ -708,23 +469,16 @@ var Visualizer = (function ($) {
         if (STATUS_SUCCESS === json.status) {
             if (null !== json.message) {
                 _noteIdList.push(_nce.showNote(json.message));
-             }
-            visInfo = json.visInfo;
-            node = visInfo.nodes['@items'][0];
-            _scope = visInfo.scope;
-            delete _scope['@type'];
-            delete _scope['@id'];
-            saveAllToLocalStorage();
-            _availableScopeValues = visInfo.availableScopeValues;
-            _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
-            _typesToAddMap = visInfo.typesToAddMap;
+            }
+            loadData(json.visInfo, json.status);
+            node = _nodes[0];
             replaceNode(_nodes, node);
-             _nodeDetails[0].innerHTML = node.details;
+            _nodeDetails[0].innerHTML = node.details;
             _nodeTraits = $('#nodeTraits');
             _nodeAddTypes = $('#nodeAddTypes');
             _nodeTraits[0].innerHTML = '';
             _nodeTraits.append(createTraitsLink(node));
-         }
+        }
         else {
             message = json.message;
             if (null !== json.stackTrace) {
@@ -764,22 +518,15 @@ var Visualizer = (function ($) {
             (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))) {
             _availableScopeKeys = null;
             _availableScopeValues = null;
+            _typesToAddMap = null;
+            _networkOverridesBasic = null;
+            _networkOverridesFull = null;
         }
 
         getAllFromLocalStorage();
         _keepCurrentScope = false;
 
-        options = {
-            selectedLevel: _selectedLevel,
-            startCubeName: _selectedCubeName,
-            scope: _scope,
-            selectedGroups: _selectedGroups,
-            availableScopeKeys: _availableScopeKeys,
-            availableScopeValues: _availableScopeValues,
-            loadTraits: _loadTraits,
-            typesToAddMap: _typesToAddMap
-        };
-
+        options = getVisualizerOptions();
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNotes(_noteIdList);
@@ -828,6 +575,19 @@ var Visualizer = (function ($) {
         }
         $("#dataLoadStatus").val(COMPLETE);
         $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
+    }
+
+    function getVisualizerOptions(){
+        return {
+            startCubeName: _selectedCubeName,
+            scope: _scope,
+            availableScopeKeys: _availableScopeKeys,
+            availableScopeValues: _availableScopeValues,
+            loadTraits: _loadTraits,
+            typesToAddMap: _typesToAddMap,
+            networkOverridesBasic: _networkOverridesBasic,
+            networkOverridesFull: _networkOverridesFull
+        }
     }
 
     function appIdMatch(appIdA, appIdB)
@@ -1124,16 +884,23 @@ var Visualizer = (function ($) {
         var nodes, edges;
 
         if (status === STATUS_SUCCESS) {
-            _allGroups = visInfo.allGroups;
-            _availableGroupsAllLevels = visInfo.availableGroupsAllLevels['@items'];
-            _selectedGroups = visInfo.selectedGroups['@items'];
-            _selectedLevel = visInfo.selectedLevel;
-            _groupSuffix = visInfo.groupSuffix;
-            _maxLevel = visInfo.maxLevel;
             nodes = visInfo.nodes['@items'];
             edges = visInfo.edges['@items'];
             _nodes =  nodes ? nodes : [];
             _edges = edges ? edges : [];
+            _allGroups = visInfo.allGroups;
+            _groupSuffix = visInfo.groupSuffix;
+            _availableGroupsAllLevels = visInfo.availableGroupsAllLevels['@items'];
+            if (_selectedGroups === null){
+                _selectedGroups = _availableGroupsAllLevels;
+            }
+            _maxLevel = visInfo.maxLevel;
+            if (_selectedLevel === null){
+                _selectedLevel = visInfo.defaultLevel;
+            }
+            if (_selectedLevel > _maxLevel){
+                _selectedLevel = _maxLevel;
+            }
         }
         _scope = visInfo.scope;
         delete _scope['@type'];
@@ -1143,7 +910,40 @@ var Visualizer = (function ($) {
         _availableScopeValues = visInfo.availableScopeValues;
         _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
         _typesToAddMap  = visInfo.typesToAddMap;
+        _networkOverridesBasic  = visInfo.networkOverridesBasic;
+        _networkOverridesFull  = visInfo.networkOverridesFull;
+        formatNetworkOverrides(_networkOverridesBasic);
+        formatNetworkOverrides(_networkOverridesFull);
      }
+
+    function formatNetworkOverrides(overrides){
+        var valueOfValue;
+        delete overrides['@type'];
+        $.each(overrides, function (key, value)
+        {
+            if (OBJECT === typeof value){
+                valueOfValue = value.value;
+                if (undefined !== valueOfValue && OBJECT !== typeof valueOfValue)
+                {
+                    if ('java.math.BigDecimal' === value['@type']){
+                        overrides[key] = parseFloat(valueOfValue);
+                    }
+                    else if (NUMBER === typeof valueOfValue){
+                        overrides[key] = Number(valueOfValue);
+                    }
+                    else{
+                        overrides[key] = valueOfValue;
+                    }
+                }
+                else{
+                    formatNetworkOverrides(value);
+                }
+            }
+            else{
+                //primitive value
+            }
+        });
+    }
 
     function handleCubeSelected() {
         load();
@@ -1251,7 +1051,7 @@ var Visualizer = (function ($) {
         if (_basicStabilizationAfterInitNetwork) {
             _basicStabilizationAfterInitNetwork = false;
             copy = $.extend(true, {}, _networkOptionsBasicStabilization);
-            _networkOptionsDefaults = $.extend(true, copy, _networkOptionOverridesFullStabilization);
+            _networkOptionsDefaults = $.extend(true, copy, _networkOverridesFull);
             _networkOptionsInput = $.extend(true, {}, _networkOptionsDefaults);
             basicStabilizationComplete(params.iterations);
         }
