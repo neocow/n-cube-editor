@@ -311,10 +311,12 @@ var Visualizer = (function ($) {
     function buildNetworkOptionsChangeSection(section, parentKey, networkOptions, networkOptionsDefaults, networkOptionsVis)
     {
         var rowBordersDiv, col1Div, col2Div, col3Div, col4Div, col5Div, col2Span, col2Input, col4Input, col5Input, fullKey,
-            value, keyVis, valueVis, highlightedClass, readOnly, readOnlyClass, functionTitle;
+            defaultValue, value, keys, key, k, kLen, keyVis, valueVis, highlightedClass, readOnly, readOnlyClass, functionTitle;
 
-        $.each(networkOptionsDefaults, function (key, defaultValue)
-        {
+        keys = Object.keys(networkOptionsDefaults);
+        for (k = 0, kLen = keys.length; k < kLen; k++) {
+            key = keys[k];
+            defaultValue = networkOptionsDefaults[key];
             value = networkOptions[key];
             if (networkOptionsVis)
             {
@@ -396,7 +398,7 @@ var Visualizer = (function ($) {
                 rowBordersDiv.append(col5Div);
             }
             section.append(rowBordersDiv);
-        });
+        }
     }
 
     function scopeKeyDelayLoop() {
@@ -918,10 +920,12 @@ var Visualizer = (function ($) {
 
     //TODO: Is there a better way to get the override maps from the server into the format vis.js needs?
     function formatNetworkOverrides(overrides){
-        var valueOfValue;
+        var keys,k, kLen, key, value, valueOfValue;
         delete overrides['@type'];
-        $.each(overrides, function (key, value)
-        {
+        keys = Object.keys(overrides);
+        for (k = 0, kLen = keys.length; k < kLen; k++) {
+            key = keys[k];
+            value = overrides[key];
             if (OBJECT === typeof value){
                 valueOfValue = value.value;
                 if (undefined !== valueOfValue && OBJECT !== typeof valueOfValue)
@@ -943,7 +947,7 @@ var Visualizer = (function ($) {
             else{
                 //primitive value
             }
-        });
+        }
     }
 
     function handleCubeSelected() {
