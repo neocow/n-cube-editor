@@ -65,6 +65,7 @@ var Visualizer = (function ($) {
     var ITERATING = 'iterating...';
     var DOT_DOT_DOT = '...';
     var NA = 'n/a';
+    var NO_GROUPS_SELECTED = 'NO GROUPS SELECTED';
 
     //Network layout parameters
     var _hierarchical = false;
@@ -455,7 +456,7 @@ var Visualizer = (function ($) {
             e.preventDefault();
             $('#groups').find('button').removeClass('active');
             _selectedGroups = [];
-            saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
+            saveToLocalStorage(NO_GROUPS_SELECTED, SELECTED_GROUPS);
             reload();
         });
     }
@@ -759,23 +760,14 @@ var Visualizer = (function ($) {
         //TODO: rpm.class.product) after a page refresh.
         _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
 
-        if (_keepCurrentScope) {
-            _keepCurrentScope = false;
-        }
-        else{
-            _scope = getFromLocalStorage(SCOPE_MAP, null);
-        }
-
-        _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
-        _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
-        _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
-        _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, false);
-
-        if ((_selectedCubeName !== _loadedCubeName) ||
+       if ((_selectedCubeName !== _loadedCubeName) ||
             (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))) {
             _availableScopeKeys = null;
             _availableScopeValues = null;
         }
+
+        getAllFromLocalStorage();
+        _keepCurrentScope = false;
 
         options = {
             selectedLevel: _selectedLevel,
@@ -1233,13 +1225,14 @@ var Visualizer = (function ($) {
             $("#basicStabilizationStatus").val(ITERATING);
             $("#basicStabilizationIterations").val(DOT_DOT_DOT);
             $("#basicStabilizationDuration").val(DOT_DOT_DOT);
+            $("#stabilizationStatus").val(DOT_DOT_DOT);
+            $("#stabilizationIterations").val(DOT_DOT_DOT);
+            $("#stabilizationDuration").val(DOT_DOT_DOT);
             _noteIdList.push(_nce.showNote('Stabilizing network...'));
         }
         else if (_fullStabilizationAfterBasic) {
             _stabilizationStart = performance.now();
             $("#stabilizationStatus").val(ITERATING);
-            $("#stabilizationIterations").val(DOT_DOT_DOT);
-            $("#stabilizationDuration").val(DOT_DOT_DOT);
         }
         else{
             _stabilizationStart = performance.now();
@@ -1251,7 +1244,6 @@ var Visualizer = (function ($) {
             $("#stabilizationDuration").val(DOT_DOT_DOT);
             _noteIdList.push(_nce.showNote('Stabilizing network...'));
         }
-       
     }
 
     function networkStabilizedEvent(params){
@@ -1461,6 +1453,19 @@ var Visualizer = (function ($) {
      function getFromLocalStorage(key, defaultValue) {
         var local = localStorage[getStorageKey(_nce, key)];
         return local ? JSON.parse(local) : defaultValue;
+    }
+
+    function getAllFromLocalStorage() {
+        if (!_keepCurrentScope) {
+            _scope = getFromLocalStorage(SCOPE_MAP, null);
+        }
+        _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
+        if (_selectedGroups === NO_GROUPS_SELECTED) {
+            _selectedGroups = [];
+        }
+        _selectedLevel = getFromLocalStorage(SELECTED_LEVEL, null);
+        _hierarchical = getFromLocalStorage(HIERARCHICAL, false);
+        _networkOptionsButton = getFromLocalStorage(NETWORK_OPTIONS_DISPLAY, false);
     }
 
     //TODO: Temporarily override this function in index.js until figured out why nce.getSelectedCubeName()
