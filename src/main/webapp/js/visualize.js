@@ -916,6 +916,7 @@ var Visualizer = (function ($) {
         formatNetworkOverrides(_networkOverridesFull);
      }
 
+    //TODO: Is there a better way to get the override maps from the server into the format vis.js needs?
     function formatNetworkOverrides(overrides){
         var valueOfValue;
         delete overrides['@type'];
