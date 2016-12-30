@@ -19,54 +19,37 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 class VisualizerInfo
 {
     ApplicationID appId
-	String startCubeName
 	Map<String, Object> scope
 	List<Map<String, Object>> nodes = []
 	List<Map<String, Object>> edges = []
 
-	long maxLevel = 1
-	long nodeCount  = 1
-	long selectedLevel
-    boolean loadTraits = false
+	long maxLevel
+	long nodeCount
+    long defaultLevel
 
 	Map<String,String> allGroups
+    Set<String> allGroupsKeys
     String groupSuffix
+	Set<String> availableGroupsAllLevels
 
-    Set<String> selectedGroups
-	Set<String> availableGroupsAllLevels = [] as Set
-	Set<String> availableScopeKeys = []
+	//Set<String> availableScopeKeys = [] TODO: Not needed currently, but will revisit
 	Map<String, Set<Object>> availableScopeValues = [:]
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
 
+    Map<String, Object> networkOverridesBasic = null
+    Map<String, Object> networkOverridesFull = null
+
     Map<String, List<String>> typesToAddMap = [:]
+
+    VisualizerInfo(){}
 
     VisualizerInfo(ApplicationID applicationID, Map options)
     {
         appId = applicationID
-        startCubeName = options.startCubeName as String
         scope = options.scope as CaseInsensitiveMap
-        Set groups = options.selectedGroups as Set
-        selectedGroups = groups == null ? ALL_GROUPS_KEYS : groups; //If null, use all groups. If empty or not empty set, use set.
-        String selectedLevel = options.selectedLevel as String
-        this.selectedLevel = selectedLevel == null ? DEFAULT_LEVEL : Converter.convert(selectedLevel, long.class) as long
-        availableScopeKeys =  options.availableScopeKeys as Set ?: DEFAULT_AVAILABLE_SCOPE_KEYS
-        availableScopeValues = options.availableScopeValues as Map ?: loadAvailableScopeValues()
-        typesToAddMap = options.typesToAddMap as Map ?: [:]
-        loadTraits = options.loadTraits as boolean
-        allGroups = ALL_GROUPS_MAP
-        groupSuffix = _ENUM
+        loadConfigurations()
     }
-
-	void trimSelectedLevel()
-	{
-		selectedLevel = selectedLevel > nodeCount ? nodeCount : selectedLevel
-	}
-
-	void trimSelectedGroups()
-	{
-		selectedGroups = availableGroupsAllLevels.intersect(selectedGroups)
-	}
 
     boolean addMissingMinimumScope(String key, String value, String messageSuffix, Set<String> messages)
     {
@@ -97,12 +80,60 @@ class VisualizerInfo
         return missingScope
     }
 
-    Map<String, Set<Object>> loadAvailableScopeValues()
+    List getTypesToAdd(String cubeName)
+    {
+        if (cubeName.startsWith(RPM_CLASS_DOT))
+        {
+            String sourceType = cubeName - RPM_CLASS_DOT
+            return typesToAddMap[sourceType]
+        }
+        return null
+    }
+
+   void loadTypesToAddMap(NCube configCube)
+    {
+        typesToAddMap = [:]
+        String json = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + TYPES_TO_ADD_CUBE_NAME + JSON_FILE_SUFFIX)
+        NCube typesToAddCube = NCube.fromSimpleJson(json)
+        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): CUBE_TYPE_RPM]) as Set
+
+        allTypes.each { String sourceType ->
+            Map<String, Boolean> map = typesToAddCube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): [] as Set]) as Map
+            List<String> typesToAdd = map.findAll { String type, Boolean available ->
+                available == true
+            }.keySet() as List
+            typesToAddMap[sourceType] = typesToAdd
+        }
+    }
+
+    void loadConfigurations()
+    {
+        String json = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_CUBE_NAME + JSON_FILE_SUFFIX)
+        NCube configCube = NCube.fromSimpleJson(json)
+
+        networkOverridesBasic = configCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_BASIC, (CUBE_TYPE): CUBE_TYPE_RPM]) as Map
+        networkOverridesFull = configCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_FULL, (CUBE_TYPE): CUBE_TYPE_RPM]) as Map
+        defaultLevel = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_LEVEL, (CUBE_TYPE): CUBE_TYPE_RPM]) as long
+        allGroups = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_GROUPS, (CUBE_TYPE): CUBE_TYPE_RPM]) as Map
+        allGroupsKeys = new LinkedHashSet(allGroups.keySet())
+        groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): CUBE_TYPE_RPM]) as String
+        loadTypesToAddMap(configCube)
+        loadAvailableScopeKeysAndValues(configCube)
+    }
+
+    void loadAvailableScopeKeysAndValues(NCube configCube)
     {
         Map<String, Set<Object>> valuesByKey = new CaseInsensitiveMap<>()
+        Set<String> derivedScopeKeys = configCube.getCell([(CONFIG_ITEM): CONFIG_DERIVED_SCOPE_KEYS, (CUBE_TYPE): CUBE_TYPE_RPM]) as Set
+
+        /*TODO: Not needed currently, but will revisit
+        Set<String> derivedSourceScopeKeys = configCube.getCell([(CONFIG_ITEM): CONFIG_DERIVED_SOURCE_SCOPE_KEYS, (CUBE_TYPE): CUBE_TYPE_RPM]) as Set
+         Set<String> defaultOptionalScopeKeys = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_OPTIONAL_SCOPE_KEYS, (CUBE_TYPE): CUBE_TYPE_RPM]) as Set
+         availableScopeKeys = derivedScopeKeys + derivedSourceScopeKeys + defaultOptionalScopeKeys + [POLICY_CONTROL_DATE, QUOTE_DATE, EFFECTIVE_VERSION]
+         */
 
         //Values for Risk, SourceRisk, Coverage, SourceCoverage, etc.
-        DERIVED_SCOPE_KEYS.each { String key ->
+        derivedScopeKeys.each { String key ->
             String cubeName = RPM_SCOPE_CLASS_DOT + key + DOT_TRAITS
             Set<Object> values = getColumnValues(appId, cubeName, key)
             valuesByKey[key] = values
@@ -121,7 +152,7 @@ class VisualizerInfo
         valuesByKey[STATE] = stateValues
         valuesByKey[LOCATION_STATE] = stateValues
 
-        return valuesByKey
+        availableScopeValues = valuesByKey
     }
 
     Set<Object> loadAvailableScopeValues(String cubeName, String key)

@@ -9,6 +9,40 @@ import groovy.transform.CompileStatic
 @CompileStatic
 public final class VisualizerConstants
 {
+	public static final String SPACE = '&nbsp;'
+	public static final String INDENT = "${SPACE}${SPACE}${SPACE}"
+	public static final String BREAK = '<br>'
+	public static final String COMMA_SPACE = ', '
+	public static final String DOUBLE_BREAK = "${BREAK}${BREAK}"
+
+	public static final String MISSING_SCOPE = 'Missing scope for '
+	public static final String UNABLE_TO_LOAD = 'Unable to load '
+	public static final String SCOPE_VALUE_NOT_FOUND = 'Scope value not found for '
+	public static final String UNSPECIFIED = 'UNSPECIFIED'
+	public static final String DEFAULT_SCOPE_VALUE = 'XXXX'
+
+	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
+	public static final String STATUS_SUCCESS = 'success'
+	public static final String STATUS_INVALID_START_CUBE = 'invalidStartCube'
+
+	public static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
+	public static final String HTTP = 'http:'
+	public static final String HTTPS = 'https:'
+	public static final String FILE = 'file:'
+
+	public static final String JSON_FILE_PREFIX = 'config/'
+	public static final String JSON_FILE_SUFFIX = '.json'
+	public static final String VISUALIZER_CONFIG_CUBE_NAME = 'VisualizerConfig'
+	public static final String CONFIG_ITEM = 'configItem'
+	public static final String CONFIG_NETWORK_OVERRIDES_BASIC = 'networkOverridesBasic'
+	public static final String CONFIG_NETWORK_OVERRIDES_FULL = 'networkOverridesFull'
+	public static final String CONFIG_DEFAULT_LEVEL = 'defaultLevel'
+	public static final String CONFIG_ALL_GROUPS = 'allGroups'
+	public static final String CONFIG_ALL_TYPES = 'allTypes'
+	public static final String CONFIG_GROUP_SUFFIX = 'groupSuffix'
+	public static final String CUBE_TYPE = 'cubeType'
+
+	//RPM related constants
 	public static final String RPM_CLASS = 'rpm.class'
 	public static final String RPM_ENUM = 'rpm.enum'
 	public static final String RPM_CLASS_DOT = 'rpm.class.'
@@ -23,16 +57,10 @@ public final class VisualizerConstants
 	public static final String R_SCOPED_NAME = 'r:scopedName'
 	public static final String V_MIN = 'v:min'
 	public static final String V_MAX = 'v:max'
-
 	public static final String SOURCE_FIELD_NAME = 'sourceFieldName'
 	public static final String AXIS_FIELD = 'field'
 	public static final String AXIS_NAME = 'name'
 	public static final String AXIS_TRAIT = 'trait'
-
-	public static final String _ENUM = '_ENUM'
-	public static final String UNSPECIFIED = 'UNSPECIFIED'
-	public static final Map<String, String> ALL_GROUPS_MAP = [PRODUCT: 'Product', FORM: 'Form', RISK: 'Risk', COVERAGE: 'Coverage', CONTAINER: 'Container', DEDUCTIBLE: 'Deductible', LIMIT: 'Limit', RATE: 'Rate', RATEFACTOR: 'Rate Factor', PREMIUM: 'Premium', PARTY: 'Party', PLACE: 'Place', ROLE: 'Role', ROLEPLAYER: 'Role Player', UNSPECIFIED: 'Unspecified']
-	public static final Set<String> ALL_GROUPS_KEYS = ALL_GROUPS_MAP.keySet()
 
 	public static final String EFFECTIVE_VERSION = '_effectiveVersion'
 	public static final String POLICY_CONTROL_DATE = 'policyControlDate'
@@ -40,43 +68,23 @@ public final class VisualizerConstants
 	public static final String BUSINESS_DIVISION_CODE = 'businessDivisionCode'
 	public static final String STATE = 'state'
 	public static final String LOCATION_STATE = 'locationState'
-	public static final Set<String> DERIVED_SCOPE_KEYS = ['product', 'risk', 'coverage', 'container', 'deductible', 'limit', 'rate', 'ratefactor', 'premium', 'party', 'place', 'role', 'roleplayer'] as Set
-	public static final Set<String> DERIVED_SOURCE_SCOPE_KEYS = ['sourceRisk', 'sourceCoverage', 'sourceContainer', 'sourceDeductible', 'sourceLimit', 'sourceRate', 'sourceRatefactor', 'sourcePremium', 'sourceParty', 'sourcePlace', 'sourceRole', 'sourceRoleplayer'] as Set
 	public static final String SOURCE_SCOPE_KEY_PREFIX = 'source'
-
 	public static final String SYSTEM_SCOPE_KEY_PREFIX = "_"
 	public static final String EFFECTIVE_VERSION_SCOPE_KEY = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion"
-
-	public static final Set<String> DEFAULT_OPTIONAL_SCOPE_KEYS = ['action', 'businessDivisionCode', 'context', 'date', 'edition', '_effectiveVersion', 'env', 'formId', 'LocationState', 'screen', 'state', 'transaction', 'transactionsubtype', 'username', 'view'] as Set
-	public static final Set<String> DEFAULT_AVAILABLE_SCOPE_KEYS = DERIVED_SCOPE_KEYS + DERIVED_SOURCE_SCOPE_KEYS + DEFAULT_OPTIONAL_SCOPE_KEYS + [POLICY_CONTROL_DATE, QUOTE_DATE, EFFECTIVE_VERSION]
-	public static final String DEFAULT_SCOPE_VALUE = 'XXXX'
-	public static final long DEFAULT_LEVEL = 3
-
 	public static final String ENT_APP = 'ENT.APP'
 	public static final String BUSINESS_DIVISION_CUBE_NAME = 'ent.manual.BusinessDivision'
 	public static final String STATE_CUBE_NAME = 'ent.manual.State'
-
-	public static final String SPACE = '&nbsp;'
-	public static final String INDENT = "${SPACE}${SPACE}${SPACE}"
-	public static final String BREAK = '<br>'
-	public static final String COMMA_SPACE = ', '
-	public static final String DOUBLE_BREAK = "${BREAK}${BREAK}"
-
 	public static final Set<String> MANDATORY_RPM_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
-	public static final String MISSING_SCOPE = 'Missing scope for '
-	public static final String UNABLE_TO_LOAD = 'Unable to load '
-	public static final String SCOPE_VALUE_NOT_FOUND = 'Scope value not found for '
 
-	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
-	public static final String STATUS_SUCCESS = 'success'
-	public static final String STATUS_INVALID_START_CUBE = 'invalidStartCube'
-	public static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
+	public static final String CUBE_TYPE_RPM = 'rpm'
+	public static final String CONFIG_DERIVED_SCOPE_KEYS = 'derivedScopeKeys'
 
-	public static final String HTTP = 'http:'
-	public static final String HTTPS = 'https:'
-	public static final String FILE = 'file:'
+	/*TODO: Not needed currently, but will revisit
+	public static final String CONFIG_DERIVED_SOURCE_SCOPE_KEYS = 'derivedSourceScopeKeys'
+	public static final String CONFIG_DEFAULT_OPTIONAL_SCOPE_KEYS = 'defaultOptionalScopeKeys'
+    */
 
-	public static final String TYPES_TO_ADD_NCUBE_NAME = 'visualizer.TypesToAdd'
+	public static final String TYPES_TO_ADD_CUBE_NAME = 'VisualizerTypesToAdd'
 	public static final String SOURCE_TYPE = 'sourceType'
 	public static final String TARGET_TYPE = 'targetType'
 }

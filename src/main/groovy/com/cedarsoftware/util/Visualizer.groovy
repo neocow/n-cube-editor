@@ -30,14 +30,9 @@ class Visualizer
 	 *
 	 * @param applicationID
 	 * @param options - a map containing:
-	 *            String startCubeName, name of the starting cube
-	 *            Map scope, the context for which the visualizer is loaded
-	 *            Set selectedGroups, which groups should be included in the visualization
-	 *            String selectedLevel, the depth of traversal from the start cube
-	 *            Set<String> availableScopeKeys, scope keys available in the visualization
-	 *            Map<String, Set<Object>> availableScopeValues, scope values available in the visualization, by scope key
-	 *            Map<String, List<String>> typesToAdd, type of classes that can be added to classes
-	 *            boolean loadTraits, whether to load and display traits
+	 *           String startCubeName, name of the starting cube,
+	 *           Map scope, the context for which the visualizer is loaded, OR
+	 *           VisualizerInfo, information about the visualization, including scope
      * @return a map containing status, messages and visualizer information
      */
 	Map<String, Object> buildGraph(ApplicationID applicationID, Map options)
@@ -45,20 +40,20 @@ class Visualizer
 		appId = applicationID
 		defaultScopeEffectiveVersion = applicationID.version.replace('.', '-')
 		defaultScopeDate = DATE_TIME_FORMAT.format(new Date())
+		String startCubeName = options.startCubeName as String
+		VisualizerInfo visInfo = options.visInfo as VisualizerInfo ?: new VisualizerInfo(appId, options)
 
-		VisualizerInfo visInfo = new VisualizerInfo(appId, options)
-
-		if (!isValidStartCube(visInfo.startCubeName))
+		if (!isValidStartCube(startCubeName))
 		{
 			return [status: STATUS_INVALID_START_CUBE, visInfo: visInfo, message: messages.join(DOUBLE_BREAK)]
 		}
 
-		if (hasMissingMinimumScope(visInfo))
+		if (hasMissingMinimumScope(visInfo, startCubeName))
 		{
 			return [status: STATUS_MISSING_START_SCOPE, visInfo: visInfo, message: messages.join(DOUBLE_BREAK)]
 		}
 
-		getRpmVisualization(visInfo)
+		getRpmVisualization(visInfo, startCubeName)
 
 		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
@@ -69,38 +64,37 @@ class Visualizer
 	 *
 	 * @param applicationID
 	 * @param options (map containing:
-	 *            Map node, representing a class
-	 *            Map scope, the context for which the visualizer is loaded
-	 *            Set<String> availableScopeKeys, scope keys available in the visualization
-	 *            Map<String, Set<Object>> availableScopeValues, scope values available in the visualization, by scope key
-	 *            Map<String, List<String>> typesToAdd, type of classes that can be added to classes
+	 *            Map node, representing a class,
+	 *            VisualizerInfo, information about the visualization
 	 * @return node
      */
 	Map getTraits(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
 
-		VisualizerInfo visInfo = new VisualizerInfo(appId, options)
-		VisualizerRelInfo relInfo = new VisualizerRelInfo(appId, options)
-		visInfo.loadTraits = relInfo.loadTraits
+		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
+		VisualizerRelInfo relInfo = new VisualizerRelInfo(appId, visInfo.allGroupsKeys, options.node as Map)
 
 		getTraitMaps(visInfo, relInfo)
-		visInfo.nodes = [relInfo.createNode()]
+		visInfo.nodes = [relInfo.createNode(visInfo.allGroupsKeys, visInfo.groupSuffix)]
 		visInfo.availableGroupsAllLevels << relInfo.group
 
 		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
 
-	private void getRpmVisualization(VisualizerInfo visInfo)
+	private void getRpmVisualization(VisualizerInfo visInfo, String startCubeName)
 	{
+		visInfo.maxLevel = 1
+		visInfo.nodeCount = 1
+		visInfo.availableGroupsAllLevels = [] as Set
+
 		VisualizerRelInfo relInfo = new VisualizerRelInfo()
-		relInfo.targetCube = NCubeManager.getCube(appId, visInfo.startCubeName)
+		relInfo.targetCube = NCubeManager.getCube(appId, startCubeName)
 		relInfo.scope = visInfo.scope
-		relInfo.loadTraits = visInfo.loadTraits
 		relInfo.targetLevel = 1
 		relInfo.targetId = 1
-		relInfo.typesToAdd = getTypesToAdd(visInfo, relInfo.targetCube.name)
+		relInfo.typesToAdd = visInfo.getTypesToAdd(relInfo.targetCube.name)
 		stack.push(relInfo)
 
 		while (!stack.empty)
@@ -108,43 +102,21 @@ class Visualizer
 			processCube(visInfo, stack.pop())
 		}
 
+		/* TODO: Not needed currently, but will revisit
 		addSets(visInfo.availableScopeKeys, visInfo.requiredScopeKeys.values() as Set)
 		addSets(visInfo.availableScopeKeys, visInfo.optionalScopeKeys.values() as Set)
-        visInfo.trimSelectedLevel()
-        visInfo.trimSelectedGroups()
+		*/
 	}
 
-	List getTypesToAdd(VisualizerInfo visInfo, String cubeName)
-	{
-		List<String> typesToAdd
-		if (cubeName.startsWith(RPM_CLASS_DOT))
-		{
-			String sourceType = cubeName - RPM_CLASS_DOT
-			Map typesToAddMap = visInfo.typesToAddMap
-			if (!typesToAddMap.containsKey(sourceType))
-			{
-				NCube cube = NCubeManager.getCube(appId, TYPES_TO_ADD_NCUBE_NAME)
-				Map<String, Boolean> map = cube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): [] as Set]) as Map
-				typesToAdd = map.findAll {String type, Boolean available->
-					available == true
-				}.keySet() as List
-				typesToAddMap[sourceType] = typesToAdd
-			}
-			else
-			{
-				typesToAdd = typesToAddMap[sourceType]
-			}
-		}
-		return typesToAdd
-	}
-
+	/*
+	TODO: Not needed currently, but will revisit
 	private static Set<Set> addSets(Set<String> set, Set<Set> sets)
 	{
 		sets.each {
 			set.addAll(it)
 		}
 		return sets
-	}
+	}*/
 
 	private void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
@@ -178,7 +150,7 @@ class Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode()
+		visInfo.nodes << relInfo.createNode(visInfo.allGroupsKeys, visInfo.groupSuffix)
 		visInfo.availableGroupsAllLevels << relInfo.group
 
 		if (hasFields)
@@ -253,7 +225,7 @@ class Visualizer
 
 								if (relInfo.group == UNSPECIFIED)
 								{
-									relInfo.groupName = nextTargetCubeName
+									relInfo.setGroupName(visInfo.allGroupsKeys, nextTargetCubeName)
 								}
 							}
 							else
@@ -277,7 +249,7 @@ class Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode()
+		visInfo.nodes << relInfo.createNode(visInfo.allGroupsKeys, visInfo.groupSuffix)
 		visInfo.availableGroupsAllLevels << relInfo.group
 	}
 
@@ -296,8 +268,7 @@ class Visualizer
 			nextRelInfo.sourceFieldRpmType = rpmType
 			nextRelInfo.sourceTraitMaps = relInfo.targetTraitMaps
 			nextRelInfo.sourceId = relInfo.targetId
-			nextRelInfo.loadTraits = visInfo.loadTraits
-			nextRelInfo.typesToAdd = getTypesToAdd(visInfo, nextTargetCube.name)
+			nextRelInfo.typesToAdd = visInfo.getTypesToAdd(nextTargetCube.name)
 
 			long nextTargetTargetLevel = relInfo.targetLevel + 1
 			nextRelInfo.targetLevel = nextTargetTargetLevel
@@ -407,18 +378,17 @@ class Visualizer
 		return true
 	}
 
-	private boolean hasMissingMinimumScope(VisualizerInfo visInfo)
+	private boolean hasMissingMinimumScope(VisualizerInfo visInfo, String startCubeName)
 	{
 		boolean hasMissingScope = false
-		String cubeName = visInfo.startCubeName
 		Map<String, Object> scope = visInfo.scope
 		String messageSuffixScopeKey = "Its default value may be changed as desired."
 
-		if (NCubeManager.getCube(appId, cubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		if (NCubeManager.getCube(appId, startCubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
-			String type = getTypeFromCubeName(cubeName)
+			String type = getTypeFromCubeName(startCubeName)
 			String messageSuffixTypeScopeKey = "${DOUBLE_BREAK}Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
-			String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, type)
+			String messageScopeValues = getAvailableScopeValuesMessage(visInfo, startCubeName, type)
 			String messageSuffix = 'The other default scope values may also be changed as desired.'
 			if (scope)
 			{

@@ -38,9 +38,8 @@ class VisualizerRelInfo
 
 	VisualizerRelInfo() {}
 
-	VisualizerRelInfo(ApplicationID appId, Map options)
+	VisualizerRelInfo(ApplicationID appId, Set allGroupsKeys, Map node)
 	{
-		Map node = options.node as Map
 		targetCube = NCubeManager.getCube(appId, node.cubeName as String)
 		String sourceCubeName = node.sourceCubeName as String
 		sourceCube = sourceCubeName ? NCubeManager.getCube(appId, sourceCubeName) : null
@@ -52,7 +51,7 @@ class VisualizerRelInfo
 		loadTraits = node.loadTraits as boolean
 		typesToAdd = node.typesToAdd as List
 		hasFields = node.hasFields as boolean
-		group = setGroupName()
+		group = setGroupName(allGroupsKeys)
 	}
 
 	Set<String> getRequiredScope()
@@ -180,21 +179,21 @@ class VisualizerRelInfo
 		sb.append("${BREAK}")
 	}
 
-	String getNodeGroup()
+	String getNodeGroup(String groupSuffix)
 	{
 		if (!group)
 		{
 			throw new IllegalStateException("Group must be set prior to getting node group.")
 		}
 
-		return targetCube.name.startsWith(RPM_ENUM) ? group + _ENUM : group
+		return targetCube.name.startsWith(RPM_ENUM) ? group + groupSuffix : group
 	}
 
-	String setGroupName(String cubeName = targetCube.name)
+	String setGroupName(Set<String> allGroupsKeys, String cubeName = targetCube.name)
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		this.group = ALL_GROUPS_KEYS.contains(group) ? group : UNSPECIFIED
+		this.group = allGroupsKeys.contains(group) ? group : UNSPECIFIED
 	}
 
 	String getSourceEffectiveName()
@@ -252,11 +251,11 @@ class VisualizerRelInfo
         Map output = [:]
         if (targetCube.name.startsWith(RPM_ENUM))
         {
-            helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetTraitMaps, visInfo.loadTraits, output)
+            helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetTraitMaps, loadTraits, output)
         }
         else
         {
-            helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetTraitMaps, visInfo.loadTraits, output)
+            helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetTraitMaps, loadTraits, output)
         }
         removeNotExistsFields()
 		addRequiredAndOptionalScopeKeys(visInfo)
@@ -334,7 +333,7 @@ class VisualizerRelInfo
 		return edge
 	}
 
-	Map<String, Object> createNode()
+	Map<String, Object> createNode(Set<String> allGroupsKeys, String groupSuffix)
 	{
 		NCube targetCube = targetCube
 		String targetCubeName = targetCube.name
@@ -365,8 +364,8 @@ class VisualizerRelInfo
 			node.title = detailsTitle1
 		}
 		node.details = details
-		group ?: setGroupName()
-		node.group = nodeGroup
+		group ?: setGroupName(allGroupsKeys)
+		node.group = getNodeGroup(groupSuffix)
 		node.loadTraits = loadTraits
 		node.hasFields = hasFields
 		return node

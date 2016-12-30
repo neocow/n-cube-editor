@@ -101,6 +101,7 @@ var BOOLEAN = 'boolean';
 var NUMBER = 'number';
 var STRING = 'string';
 var FUNCTION = 'function';
+var BIG_DECIMAL = 'java.math.BigDecimal';
 
 var GLYPHICONS = {
     OPTION_HORIZONTAL: 'glyphicon-option-horizontal',
