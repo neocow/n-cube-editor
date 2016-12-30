@@ -73,11 +73,12 @@ class Visualizer
 		appId = applicationID
 
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
-		VisualizerRelInfo relInfo = new VisualizerRelInfo(appId, visInfo.allGroupsKeys, options.node as Map)
+		Map node = options.node as Map
+		VisualizerRelInfo relInfo = new VisualizerRelInfo(appId, visInfo.allGroupsKeys, node)
 
 		getTraitMaps(visInfo, relInfo)
-		visInfo.nodes = [relInfo.createNode(visInfo.allGroupsKeys, visInfo.groupSuffix)]
-		visInfo.availableGroupsAllLevels << relInfo.group
+		node.details = relInfo.details
+		visInfo.nodes = [node]
 
 		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
