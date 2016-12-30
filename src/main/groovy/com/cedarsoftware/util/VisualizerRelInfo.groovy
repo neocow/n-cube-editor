@@ -226,6 +226,11 @@ class VisualizerRelInfo
 		return lastIndexOfDot == -1 ? value : value.substring(lastIndexOfDot + 1)
 	}
 
+	private static String getDotPrefix(String value) {
+		int indexOfDot = value.indexOf('.')
+		return indexOfDot == -1 ? value : value.substring(0, value.indexOf('.'))
+	}
+
 	String getNextTargetCubeName(String targetFieldName)
 	{
 		if (sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
@@ -337,24 +342,25 @@ class VisualizerRelInfo
 	{
 		NCube targetCube = targetCube
 		String targetCubeName = targetCube.name
+		String sourceCubeName = sourceCube ? sourceCube.name : null
 		String sourceFieldName = sourceFieldName
 
 		Map<String, Object> node = [:]
 		node.id = String.valueOf(targetId)
 		node.level = String.valueOf(targetLevel)
 		node.cubeName = targetCubeName
-		node.sourceCubeName = sourceCube ? sourceCube.name : null
+		node.sourceCubeName = sourceCubeName
 		node.scope = targetScope
 		node.availableScope = scope
 		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
-		String detailsTitle1 = getCubeDetailsTitle1(targetCubeName)
-		String detailsTitle2 = getCubeDetailsTitle2(targetCubeName)
+		node.sourceDescription = sourceCubeName ? sourceDescription : null
+		String detailsTitle1 = cubeDetailsTitle1
 
 		if (targetCubeName.startsWith(RPM_CLASS_DOT))
 		{
 			node.label = getDotSuffix(targetEffectiveName)
 			node.detailsTitle1 = detailsTitle1
-			node.detailsTitle2 = detailsTitle2
+			node.detailsTitle2 = cubeDetailsTitle2
 			node.title = getCubeDisplayName(targetCubeName)
 			node.typesToAdd = typesToAdd
 		}
@@ -391,14 +397,40 @@ class VisualizerRelInfo
 		return displayName
 	}
 
-	String getCubeDetailsTitle1(String cubeName)
+	String getSourceDescription()
+	{
+		String description
+		String sourceCubeName = sourceCube.name
+		if (sourceCubeName.startsWith(RPM_CLASS_DOT))
+		{
+			description = getDotSuffix(sourceEffectiveName)
+		}
+		else if (sourceCubeName.startsWith(RPM_ENUM_DOT))
+		{
+			if (targetScopedName)
+			{
+				String sourceDisplayName = getCubeDisplayName(sourceCubeName)
+				String scopeKeyForSourceOfSource = getDotPrefix(sourceDisplayName)
+				String nameOfSourceOfSource = sourceScope[scopeKeyForSourceOfSource]
+				String fieldNameSourceOfSource = sourceScope[SOURCE_FIELD_NAME]
+				description = "field ${fieldNameSourceOfSource} on ${nameOfSourceOfSource}".toString()
+			}
+			else{
+				description = getCubeDisplayName(sourceCubeName)
+			}
+		}
+		return description
+	}
+
+	String getCubeDetailsTitle1()
 	{
 		String detailsTitle
-		if (cubeName.startsWith(RPM_CLASS_DOT))
+		String targetCubeName = targetCube.name
+		if (targetCubeName.startsWith(RPM_CLASS_DOT))
 		{
-			detailsTitle = getCubeDisplayName(cubeName)
+			detailsTitle = getCubeDisplayName(targetCubeName)
 		}
-		else if (cubeName.startsWith(RPM_ENUM_DOT))
+		else if (targetCubeName.startsWith(RPM_ENUM_DOT))
 		{
 			String sourceName =  sourceTraitMaps ? getDotSuffix(sourceEffectiveName) : getCubeDisplayName(sourceCube.name)
 			detailsTitle = "Valid values for field ${sourceFieldName} on ${sourceName}".toString()
@@ -406,9 +438,9 @@ class VisualizerRelInfo
 		return detailsTitle
 	}
 
-	String getCubeDetailsTitle2(String cubeName)
+	String getCubeDetailsTitle2()
 	{
-		if (cubeName.startsWith(RPM_CLASS_DOT) && getTargetScopedName())
+		if (targetCube.name.startsWith(RPM_CLASS_DOT) && getTargetScopedName())
 		{
 			return getEffectiveNameByCubeName()
 		}

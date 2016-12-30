@@ -21,6 +21,8 @@
 var Visualizer = (function ($) {
 
     var _network = null;
+    var _nodeDataSet = null;
+    var _edgeDataSet = null;
     var _nce = null;
     var _visInfo = null;
     var _loadedCubeName = null;
@@ -48,6 +50,7 @@ var Visualizer = (function ($) {
     var _nodeDetails = null;
     var _layout = null;
     var _scopeInput = null;
+    var _findNode = null;
     var STATUS_SUCCESS = 'success';
     var STATUS_MISSING_START_SCOPE = 'missingStartScope';
     var _scopeLastKeyTime = Date.now();
@@ -122,6 +125,7 @@ var Visualizer = (function ($) {
             _nodeVisualizer = $('#nodeVisualizer');
             _nodeDetails = $('#nodeDetails');
             _scopeInput = $('#scope');
+            _findNode = $('#findNode');
             _networkOptionsSection = $('#networkOptionsSection');
 
             $(window).on('resize', function() {
@@ -163,6 +167,45 @@ var Visualizer = (function ($) {
                 _scopeLastKeyTime = Date.now();
             });
 
+
+            _findNode.on('change', function () {
+                var nodeLabel, nodeLabelLowerCase, nodes, nodeId, params, note, k, kLen, node, linkText, sourceDescription;
+                nodeLabel = _findNode.val();
+                if (nodeLabel) {
+                    nodeLabelLowerCase = nodeLabel.toLowerCase();
+                    nodes = _nodeDataSet.get({
+                        filter: function (node) {
+                            return node.label && node.label.toLowerCase().indexOf(nodeLabelLowerCase) > -1;
+                        }
+                    });
+                    if (0 === nodes.length) {
+                        _nce.showNote(nodeLabel + ' not found');
+                    }
+                    else if (1 === nodes.length) {
+                        nodeId = nodes[0].id;
+                        params = {nodes: [nodeId]};
+                        _network.selectNodes([nodeId])
+                        networkSelectNodeEvent(params);
+                    }
+                    else {
+                        note = 'Multiple nodes found: ';
+                        note += TWO_LINE_BREAKS + '<pre><ul>';
+                        for (k = 0, kLen = nodes.length; k < kLen; k++) {
+                            node = nodes[k];
+                            linkText = node.label;
+                            sourceDescription = node.sourceDescription;
+                            if (sourceDescription){
+                                linkText += ' via ' + sourceDescription;
+                            }
+                            note += '<li><a class="findNode" id="' + node.id +  '" href="#">'  + linkText + '</a></li>';
+                        }
+                        note += '</ul></pre>';
+                        _nce.showNote(note);
+                    }
+                }
+                _findNode.val('');
+            });
+
             addSelectAllNoneGroupsListeners();
             addNetworkOptionsListeners();
 
@@ -171,7 +214,7 @@ var Visualizer = (function ($) {
     }
 
     function onNoteClick(e) {
-        var target, id, scopeParts, key, value;
+        var target, id, scopeParts, key, value, params;
         target = e.target;
         if (target.className.indexOf('missingScope') > -1) {
             id = target.title;
@@ -180,6 +223,13 @@ var Visualizer = (function ($) {
             value = scopeParts[1].trim();
             _visInfo.scope[key] = value;
             scopeChange();
+        }
+        else if (target.className.indexOf('findNode') > -1) {
+            id = target.id;
+            params = {nodes: [id]};
+            _network.selectNodes([id]);
+            networkSelectNodeEvent(params);
+            _nce.clearNote();
         }
     };
 
@@ -468,7 +518,9 @@ var Visualizer = (function ($) {
             }
             loadData(json.visInfo, json.status);
             node = _nodes[0];
-            replaceNode(_nodes, node);
+            _nodeDataSet.remove(node.id);
+            _nodeDataSet.add(_nodes);
+            _nodes = _nodeDataSet.get();
             _nodeDetails[0].innerHTML = node.details;
             _nodeTraits = $('#nodeTraits');
             _nodeAddTypes = $('#nodeAddTypes');
@@ -799,7 +851,6 @@ var Visualizer = (function ($) {
     {
         var node, selectedGroup, groupNamePrefix, i, iLen;
         var groupSuffix = _visInfo.groupSuffix;
-        var networkDataNodes =  _network.body.data.nodes;
         var nodeIdsToRemove = [];
         var nodesToAddBack = [];
         var level = _selectedLevel;
@@ -825,7 +876,7 @@ var Visualizer = (function ($) {
                     if (_selectedGroups.indexOf(groupNamePrefix) > -1 && selectedGroups.indexOf(groupNamePrefix) === -1) {
                         selectedGroups.push(groupNamePrefix);
                     }
-                    if (!networkDataNodes || !networkDataNodes.get(node.id)){
+                    if (!_nodeDataSet.get(node.id)){
                         nodesToAddBack.push(node);
                     }
                 }
@@ -841,8 +892,8 @@ var Visualizer = (function ($) {
                 _countNodesAtLevel++;
             }
         }
-        networkDataNodes.remove(nodeIdsToRemove);
-        networkDataNodes.add(nodesToAddBack);
+        _nodeDataSet.remove(nodeIdsToRemove);
+        _nodeDataSet.add(nodesToAddBack);
         _selectedGroups = selectedGroups;
         _availableGroupsAtLevel = availableGroupsAtLevel;
     }
@@ -850,7 +901,6 @@ var Visualizer = (function ($) {
     function updateNetworkDataEdges()
     {
         var edge, k, kLen;
-        var networkDataEdges =  _network.body.data.edges;
         var edgeIdsToRemove = [];
         var edgesToAddBack = [];
 
@@ -859,18 +909,16 @@ var Visualizer = (function ($) {
             for (k = 0, kLen = _edges.length; k < kLen; k++) {
                 edge = _edges[k];
 
-                if (parseInt(edge.level) > _selectedLevel)
-                {
+                if (parseInt(edge.level) > _selectedLevel) {
                     edgeIdsToRemove.push(edge.id);
                 }
-                else if (!networkDataEdges || !networkDataEdges.get(edge.id))
-                {
+                else if (!_edgeDataSet.get(edge.id)) {
                     edgesToAddBack.push(edge);
                 }
             }
         }
-        networkDataEdges.remove(edgeIdsToRemove);
-        networkDataEdges.add(edgesToAddBack);
+        _edgeDataSet.remove(edgeIdsToRemove);
+        _edgeDataSet.add(edgesToAddBack);
     }
 
     function loadData(visInfo, status)
@@ -957,20 +1005,18 @@ var Visualizer = (function ($) {
 
     function markTopNodeSpecial()
     {
-        var node = _nodes[0];
+        var node = _nodeDataSet.get(1);
         if (node) {
-            if ('1' !== node.id) {
-                throw new Error('Expected node id of 1 for first node in list.')
-            }
             node.shapeProperties = {borderDashes: [DASH_LENGTH, 5]};
-            node.borderWidth = 3;
+            node.borderWidth = 25;
             node.scaling = {min: NODE_SCALING_SPECIAL, max: NODE_SCALING_SPECIAL, label: {enabled: true}};
+            _nodeDataSet.update(node);
         }
     }
 
     function initNetwork()
     {
-        var container, nodeDataSet, edgeDataSet;
+        var container;
         if (_network)
         {
             updateNetworkData();
@@ -979,16 +1025,16 @@ var Visualizer = (function ($) {
         {
             container = document.getElementById('network');
             initNetworkOptions(container);
-            nodeDataSet = new vis.DataSet({});
+            _nodeDataSet = new vis.DataSet({});
+            _nodeDataSet.add(_nodes);
             markTopNodeSpecial();
-            nodeDataSet.add(_nodes);
-            edgeDataSet = new vis.DataSet({});
-            edgeDataSet.add(_edges);
-            _network = new vis.Network(container, {nodes:nodeDataSet, edges:edgeDataSet}, _networkOptionsInput);
+            _edgeDataSet = new vis.DataSet({});
+            _edgeDataSet.add(_edges);
+            _network = new vis.Network(container, {nodes: _nodeDataSet, edges: _edgeDataSet}, _networkOptionsInput);
             updateNetworkData();
 
-            _network.on('select', function(params) {
-                networkSelectEvent(params);
+            _network.on('selectNode', function(params) {
+                networkSelectNodeEvent(params);
             });
 
             _network.on('startStabilizing', function () {
@@ -999,19 +1045,19 @@ var Visualizer = (function ($) {
                 networkStabilizedEvent(params);
             });
 
-            nodeDataSet.on('add', function () {
+            _nodeDataSet.on('add', function () {
                 networkChangeEvent()
             });
 
-            nodeDataSet.on('remove', function () {
+            _nodeDataSet.on('remove', function () {
                 networkChangeEvent()
             });
 
-            edgeDataSet.on('add', function () {
+            _edgeDataSet.on('add', function () {
                 networkChangeEvent()
             });
 
-            edgeDataSet.on('remove', function () {
+            _edgeDataSet.on('remove', function () {
                 networkChangeEvent()
             });
         }
@@ -1092,49 +1138,48 @@ var Visualizer = (function ($) {
         }
     }
 
-    function networkSelectEvent(params)
+    function networkSelectNodeEvent(params)
     {
         var nodeId, node, cubeName, appId, typesToAdd, title2;
         nodeId = params.nodes[0];
-        node = getNodeById(_nodes, nodeId );
-        if (node) {
-            cubeName = node.cubeName;
-            appId =_nce.getSelectedTabAppId();
+        node = _nodeDataSet.get(nodeId);
 
-            _nodeDetailsTitle1[0].innerHTML = node.detailsTitle1;
-            title2 = node.detailsTitle2;
-            if (typeof title2 === STRING){
-                _nodeDetailsTitle2[0].innerHTML = title2;
-                _nodeDetailsTitle1.addClass('title1');
-            }
-            else{
-                _nodeDetailsTitle1.removeClass('title1');
-                _nodeDetailsTitle2[0].innerHTML = '';
-            }
-            
-            _nodeVisualizer[0].innerHTML = '';
-            _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
+        cubeName = node.cubeName;
+        appId =_nce.getSelectedTabAppId();
 
-            _nodeCubeLink[0].innerHTML = '';
-            _nodeCubeLink.append(createCubeLink(cubeName, appId));
-
-            if (node.hasFields) {
-                _nodeTraits[0].innerHTML = '';
-                _nodeTraits.append(createTraitsLink(node));
-            }
-
-            _nodeAddTypes[0].innerHTML = '';
-            if (typeof node.typesToAdd === OBJECT) {
-                typesToAdd = node.typesToAdd['@items'];
-                if (typeof typesToAdd === OBJECT && typesToAdd.length > 0) {
-                    createAddTypesDropdown(typesToAdd, node.label);
-                }
-            }
-
-            _nodeDetails[0].innerHTML = node.details;
-            addNodeDetailsListeners();
-            _layout.open('east');
+        _nodeDetailsTitle1[0].innerHTML = node.detailsTitle1;
+        title2 = node.detailsTitle2;
+        if (typeof title2 === STRING){
+            _nodeDetailsTitle2[0].innerHTML = title2;
+            _nodeDetailsTitle1.addClass('title1');
         }
+        else{
+            _nodeDetailsTitle1.removeClass('title1');
+            _nodeDetailsTitle2[0].innerHTML = '';
+        }
+
+        _nodeVisualizer[0].innerHTML = '';
+        _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, node));
+
+        _nodeCubeLink[0].innerHTML = '';
+        _nodeCubeLink.append(createCubeLink(cubeName, appId));
+
+        if (node.hasFields) {
+            _nodeTraits[0].innerHTML = '';
+            _nodeTraits.append(createTraitsLink(node));
+        }
+
+        _nodeAddTypes[0].innerHTML = '';
+        if (node.typesToAdd) {
+            typesToAdd = node.typesToAdd['@items'];
+            if (typeof typesToAdd === OBJECT && typesToAdd.length > 0) {
+                createAddTypesDropdown(typesToAdd, node.label);
+            }
+        }
+
+        _nodeDetails[0].innerHTML = node.details;
+        addNodeDetailsListeners();
+        _layout.open('east');
     }
 
     function addNodeDetailsListeners()
@@ -1226,29 +1271,7 @@ var Visualizer = (function ($) {
         _nodeAddTypes.append(ul);
     }
 
-    function replaceNode(nodes, newNode) {
-        var node, i, len;
-        for (i = 0, len = nodes.length; i < len; i++) {
-            node = nodes[i];
-            if (node.id === newNode.id) {
-                nodes.splice(i, 1);
-                nodes.push(newNode);
-                return;
-            }
-        }
-    }
-
-    function getNodeById(nodes, nodeId) {
-        var node, i, len;
-        for (i = 0, len = nodes.length; i < len; i++) {
-            node = nodes[i];
-            if (node.id === nodeId) {
-                return node;
-            }
-        }
-    }
-
-     function getFromLocalStorage(key, defaultValue) {
+    function getFromLocalStorage(key, defaultValue) {
         var local = localStorage[getStorageKey(_nce, key)];
         return local ? JSON.parse(local) : defaultValue;
     }
