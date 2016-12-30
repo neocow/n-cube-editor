@@ -22,23 +22,17 @@ var Visualizer = (function ($) {
 
     var _network = null;
     var _nce = null;
+    var _visInfo = null;
     var _loadedCubeName = null;
     var _loadedAppId = null;
     var _nodes = [];
     var _edges = [];
     var _scope = null;
     var _keepCurrentScope = false;
-    var _availableScopeKeys = null;
-    var _availableScopeValues = null;
     var _selectedGroups = null;
     var _availableGroupsAtLevel = null;
     var _availableGroupsAllLevels = null;
-    var _allGroups = null;
-    var _maxLevel = null;
-    var _groupSuffix = null;
     var _selectedCubeName = null;
-    var _loadTraits = false;
-    var _typesToAddMap = null;
     var _selectedLevel = null;
     var _countNodesAtLevel = null;
     var _visualizerInfo = null;
@@ -160,7 +154,7 @@ var Visualizer = (function ($) {
 
             _scopeInput.on('change', function () {
                 _scopeKeyPressed = false;
-                _scope = buildScopeFromText(_scopeInput.val());
+                _visInfo.scope = buildScopeFromText(_scopeInput.val());
                 scopeChange();
             });
             
@@ -184,7 +178,7 @@ var Visualizer = (function ($) {
             scopeParts = id.split(':');
             key = scopeParts[0];
             value = scopeParts[1].trim();
-            _scope[key] = value;
+            _visInfo.scope[key] = value;
             scopeChange();
         }
     };
@@ -407,7 +401,7 @@ var Visualizer = (function ($) {
             now = Date.now();
             if (now - _scopeLastKeyTime > SCOPE_KEY_DELAY && _scopeKeyPressed) {
                 _scopeKeyPressed = false;
-                _scope = buildScopeFromText(_scopeInput.val());
+                _visInfo.scope = buildScopeFromText(_scopeInput.val());
                 scopeChange();
             }
        }, SCOPE_KEY_DELAY);
@@ -415,7 +409,7 @@ var Visualizer = (function ($) {
     
     function scopeChange()
     {
-        saveToLocalStorage(_scope, SCOPE_MAP);
+        saveToLocalStorage(_visInfo.scope, SCOPE_MAP);
         load();
     }
 
@@ -423,6 +417,7 @@ var Visualizer = (function ($) {
     function buildScopeFromText(scopeString) {
         var parts, part, key, value, i, iLen;
         var newScope = {};
+        newScope['@type'] = _visInfo.scope['@type'];
         if (scopeString) {
             parts = scopeString.split(',');
             for ( i = 0, iLen = parts.length; i < iLen; i++) {
@@ -456,9 +451,8 @@ var Visualizer = (function ($) {
     {
         var message, options, result, json;
 
-        options = getVisualizerOptions();
-        options['node'] = node;
-        
+        options =  {visInfo: _visInfo, node: node};
+
         result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNote();
         if (false === result.status) {
@@ -516,19 +510,22 @@ var Visualizer = (function ($) {
         //TODO: rpm.class.product) after a page refresh.
         _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
 
-       if ((_selectedCubeName !== _loadedCubeName) ||
-            (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId()))) {
-            _availableScopeKeys = null;
-            _availableScopeValues = null;
-            _typesToAddMap = null;
-            _networkOverridesBasic = null;
-            _networkOverridesFull = null;
+        if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId())) {
+            _visInfo = null;
+        }
+        else if (_loadedCubeName && _loadedCubeName !== _selectedCubeName){
+            getAllFromLocalStorage();
+            _visInfo.scope = _scope;
         }
 
-        getAllFromLocalStorage();
-        _keepCurrentScope = false;
+        if (_visInfo){
+            options =  {startCubeName: _selectedCubeName, visInfo: _visInfo};
+        }
+        else{
+            getAllFromLocalStorage();
+            options =  {startCubeName: _selectedCubeName, scope: _scope};
+        }
 
-        options = getVisualizerOptions();
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNotes(_noteIdList);
@@ -579,20 +576,7 @@ var Visualizer = (function ($) {
         $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
     }
 
-    function getVisualizerOptions(){
-        return {
-            startCubeName: _selectedCubeName,
-            scope: _scope,
-            availableScopeKeys: _availableScopeKeys,
-            availableScopeValues: _availableScopeValues,
-            loadTraits: _loadTraits,
-            typesToAddMap: _typesToAddMap,
-            networkOverridesBasic: _networkOverridesBasic,
-            networkOverridesFull: _networkOverridesFull
-        }
-    }
-
-    function appIdMatch(appIdA, appIdB)
+     function appIdMatch(appIdA, appIdB)
     {
         return appIdA.appId === appIdB.appId &&
             appIdA.version === appIdB.version &&
@@ -623,20 +607,22 @@ var Visualizer = (function ($) {
 
     function loadGroupsView() {
         var groupName, id, available, label, title, input, selected, button, groups,
-            background, fontMap, color, groupMap, boxShadow, j, jLen, k, kLen, divGroups;
+            background, fontMap, color, groupMap, boxShadow, j, jLen, k, kLen, divGroups, groupSuffix, allGroups;
 
         divGroups = $('#groups');
         divGroups.empty();
         groups = _networkOptionsInput.groups;
+        groupSuffix =  _visInfo.groupSuffix;
+        allGroups = _visInfo.allGroups;
 
         _availableGroupsAllLevels.sort();
         for (j = 0, jLen = _availableGroupsAllLevels.length; j < jLen; j++) {
             color = null;
             boxShadow = '';
             groupName = _availableGroupsAllLevels[j];
-            id = groupName + _groupSuffix;
+            id = groupName + groupSuffix;
             available = groupCurrentlyAvailable(id);
-            label = _allGroups[groupName];
+            label = allGroups[groupName];
             title = available ? "Show/hide " + label + " in the graph" : "Increase level to enable show/hide of " + label + " in the graph";
 
             selected = false;
@@ -681,12 +667,15 @@ var Visualizer = (function ($) {
     }
 
     function getScopeString(){
-        var scopeLen, key, i, len;
+        var scopeLen, key, i, len, scope;
+        scope = $.extend(true, {}, _visInfo.scope);
+        delete scope['@type'];
+        delete scope['@id'];
         var scopeString = '';
-        var keys = Object.keys(_scope);
+        var keys = Object.keys(scope);
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
-            scopeString += key + ': ' + _scope[key] + ', ';
+            scopeString += key + ': ' + scope[key] + ', ';
         }
         scopeLen = scopeString.length;
         if (1 < scopeLen) {
@@ -746,22 +735,24 @@ var Visualizer = (function ($) {
 
     function groupIdsEqual(groupId1, groupId2)
     {
-        var groupId1Prefix = groupId1.split(_groupSuffix)[0];
-        var groupId2Prefix = groupId2.split(_groupSuffix)[0];
+        var groupSuffix = _visInfo.groupSuffix;
+        var groupId1Prefix = groupId1.split(groupSuffix)[0];
+        var groupId2Prefix = groupId2.split(groupSuffix)[0];
         return groupId1Prefix === groupId2Prefix;
     }
 
     function loadCountsView()
     {
+        var  maxLevel = _visInfo.maxLevel;
         var totalNodeCount = _nodes.length;
-        var maxLevelLabel = 1 === _maxLevel ? 'level' : 'levels';
+        var maxLevelLabel = 1 === maxLevel ? 'level' : 'levels';
         var nodeCountLabel = 1 === totalNodeCount ? 'node' : 'nodes';
 
         var nodesDisplayingAtLevelCount = _network.body.data.nodes.length;
         var nodesAtLevelLabel = 1 === nodesDisplayingAtLevelCount ? 'node' : 'nodes';
 
         $('#levelCounts')[0].textContent = nodesDisplayingAtLevelCount  + ' ' + nodesAtLevelLabel + ' of ' + _countNodesAtLevel + ' displaying at current level';
-        $('#totalCounts')[0].textContent = totalNodeCount + ' ' + nodeCountLabel + ' total over ' +  _maxLevel + ' ' + maxLevelLabel ;
+        $('#totalCounts')[0].textContent = totalNodeCount + ' ' + nodeCountLabel + ' total over ' +  maxLevel + ' ' + maxLevelLabel ;
     }
 
     function loadSelectedLevelListView()
@@ -770,7 +761,7 @@ var Visualizer = (function ($) {
         var select = $('#selectedLevel-list');
         select.empty();
 
-        for (j = 1; j <= _maxLevel; j++)
+        for (j = 1; j <= _visInfo.maxLevel; j++)
         {
             option = $('<option/>');
             option[0].textContent = j.toString();
@@ -807,6 +798,7 @@ var Visualizer = (function ($) {
     function updateNetworkDataNodes()
     {
         var node, selectedGroup, groupNamePrefix, i, iLen;
+        var groupSuffix = _visInfo.groupSuffix;
         var networkDataNodes =  _network.body.data.nodes;
         var nodeIdsToRemove = [];
         var nodesToAddBack = [];
@@ -829,7 +821,7 @@ var Visualizer = (function ($) {
             else {
                 if (selectedGroup) {
                     //collect selected groups at level
-                    groupNamePrefix = node.group.replace(_groupSuffix, '');
+                    groupNamePrefix = node.group.replace(groupSuffix, '');
                     if (_selectedGroups.indexOf(groupNamePrefix) > -1 && selectedGroups.indexOf(groupNamePrefix) === -1) {
                         selectedGroups.push(groupNamePrefix);
                     }
@@ -841,7 +833,7 @@ var Visualizer = (function ($) {
                     nodeIdsToRemove.push(node.id);
                 }
                 //collect available groups at level
-                groupNamePrefix = node.group.replace(_groupSuffix, '');
+                groupNamePrefix = node.group.replace(groupSuffix, '');
                 if (availableGroupsAtLevel.indexOf(groupNamePrefix) === -1)
                 {
                     availableGroupsAtLevel.push(groupNamePrefix)
@@ -883,42 +875,41 @@ var Visualizer = (function ($) {
 
     function loadData(visInfo, status)
     {
-        var nodes, edges;
+        var nodes, edges, maxLevel;
+
+        if (!_networkOverridesBasic){
+            _networkOverridesBasic = visInfo.networkOverridesBasic;
+            _networkOverridesFull = visInfo.networkOverridesFull;
+            formatNetworkOverrides(_networkOverridesBasic);
+            formatNetworkOverrides(_networkOverridesFull);
+        }
 
         if (status === STATUS_SUCCESS) {
             nodes = visInfo.nodes['@items'];
             edges = visInfo.edges['@items'];
             _nodes =  nodes ? nodes : [];
             _edges = edges ? edges : [];
-            _allGroups = visInfo.allGroups;
-            _groupSuffix = visInfo.groupSuffix;
+            delete visInfo['nodes'];
+            delete visInfo['edges'];
             _availableGroupsAllLevels = visInfo.availableGroupsAllLevels['@items'];
             if (_selectedGroups === null){
                 _selectedGroups = _availableGroupsAllLevels;
             }
-            _maxLevel = visInfo.maxLevel;
+            maxLevel = visInfo.maxLevel;
             if (_selectedLevel === null){
                 _selectedLevel = visInfo.defaultLevel;
             }
-            if (_selectedLevel > _maxLevel){
-                _selectedLevel = _maxLevel;
+            if (_selectedLevel > maxLevel){
+                _selectedLevel = maxLevel;
             }
         }
-        _scope = visInfo.scope;
-        delete _scope['@type'];
-        delete _scope['@id'];
+
+        _visInfo = visInfo;
+
         _loadedCubeName = _selectedCubeName;
         _loadedAppId = _nce.getSelectedTabAppId();
-        _availableScopeValues = visInfo.availableScopeValues;
-        _availableScopeKeys = visInfo.availableScopeKeys['@items'].sort();
-        _typesToAddMap  = visInfo.typesToAddMap;
-        _networkOverridesBasic  = visInfo.networkOverridesBasic;
-        _networkOverridesFull  = visInfo.networkOverridesFull;
-        formatNetworkOverrides(_networkOverridesBasic);
-        formatNetworkOverrides(_networkOverridesFull);
      }
-
-    //TODO: Is there a better way to get the override maps from the server into the format vis.js needs?
+    
     function formatNetworkOverrides(overrides){
         var keys,k, kLen, key, value, valueOfValue, type;
         delete overrides['@type'];
@@ -932,7 +923,7 @@ var Visualizer = (function ($) {
                 delete value['@type'];
                 if (1 === Object.keys(value).length && undefined !== valueOfValue && OBJECT !== typeof valueOfValue)
                 {
-                    if ('java.math.BigDecimal' === type){
+                    if (BIG_DECIMAL === type){
                         overrides[key] = parseFloat(valueOfValue);
                     }
                     else if (NUMBER === typeof valueOfValue){
@@ -1172,7 +1163,7 @@ var Visualizer = (function ($) {
         visualizerLink.click(function (e) {
             e.preventDefault();
             _keepCurrentScope = true;
-            _scope = node.scope;
+            _visInfo.scope = node.scope;
             _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
         });
         return visualizerLink;
@@ -1263,9 +1254,14 @@ var Visualizer = (function ($) {
     }
 
     function getAllFromLocalStorage() {
-        if (!_keepCurrentScope) {
+        if (_keepCurrentScope) {
+            _keepCurrentScope = false;
+            _scope = _visInfo.scope;
+        }
+        else{
             _scope = getFromLocalStorage(SCOPE_MAP, null);
         }
+
         _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
         if (_selectedGroups === NO_GROUPS_SELECTED) {
             _selectedGroups = [];
@@ -1284,7 +1280,7 @@ var Visualizer = (function ($) {
     }
 
     function saveAllToLocalStorage() {
-        saveToLocalStorage(_scope, SCOPE_MAP);
+        saveToLocalStorage(_visInfo.scope, SCOPE_MAP);
         saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
         saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
         saveToLocalStorage(_hierarchical, HIERARCHICAL);
@@ -1294,12 +1290,16 @@ var Visualizer = (function ($) {
     function saveToLocalStorage(value, key) {
         saveOrDeleteValue(value, getStorageKey(_nce, key));
     }
-    
-// Let parent (main frame) know that the child window has loaded.
-// The loading of all of the Javascript (deeply) is continuous on the main thread.
-// Therefore, the setTimeout(, 1) ensures that the main window (parent frame)
-// is called after all Javascript has been loaded.
-    setTimeout(function() { window.parent.frameLoaded(); }, 1);
+
+    // Let parent (main frame) know that the child window has loaded.
+    // The loading of all of the Javascript (deeply) is continuous on the main thread.
+    // Therefore, the setTimeout(, 1) ensures that the main window (parent frame)
+    // is called after all Javascript has been loaded.
+    if (window.parent.frameLoaded) {
+        setTimeout(function () {
+            window.parent.frameLoaded();
+        }, 1);
+    }
 
     return {
         init: init,
