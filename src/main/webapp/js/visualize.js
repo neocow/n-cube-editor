@@ -1011,7 +1011,6 @@ var Visualizer = (function ($) {
         if (node) {
             node.shapeProperties = {borderDashes: [DASH_LENGTH, 5]};
             node.borderWidth = 25;
-            node.scaling = {min: NODE_SCALING_SPECIAL, max: NODE_SCALING_SPECIAL, label: {enabled: true}};
             _nodeDataSet.update(node);
         }
     }
