@@ -42,6 +42,10 @@
         {
           "id": 1000052809612,
           "type": "string",
+          "default_value": {
+            "type": "exp",
+            "value": "[] as Set"
+          },
           "value": "allTypes"
         },
         {
@@ -71,6 +75,7 @@
         {
           "id": 1000017855263,
           "type": "string",
+          "default_value": "_GROUP",
           "value": "groupSuffix"
         },
         {
@@ -79,7 +84,7 @@
           "default_value": {
             "type": "exp",
             "cache": true,
-            "value": "[:]"
+            "value": "[                 interaction: [                         navigationButtons: true,                         keyboard: [                                 enabled: false,                                 speed: [                                         x: 5,                                         y: 5,                                         zoom: 0.02]                         ],                         zoomView: true                 ],                 nodes: [ \t\t\t\t        borderWidthSelected: 25,                         value: 24,                         scaling: [                                 min: 24,                                 max: 24,                                 label: [                                         enabled: true                                 ]                         ],                         shadow: [                                 enabled: false                         ]                 ],                 edges: [                         arrowStrikethrough: false,                         arrows: [                                 to: [                                         enabled: false                                 ]                         ],                         color: [                                 color: 'gray'                         ],                         smooth: [                                 enabled: false                         ],                         shadow: [                                 enabled: false                         ],                         hoverWidth: 3,                         selectionWidth: 2,                         font: [                                 size: 20                         ]                 ],                 physics: [                         minVelocity: 5,                         barnesHut: [                                 gravitationalConstant: -300000,                                 springConstant: 0.3,                                 centralGravity: 3                         ]                 ],                 layout: [                         hierarchical: [                                 enabled: false                         ],                         improvedLayout : true,                         randomSeed:2                 ],                 groups: [                         UNSPECIFIED: [                                 shape: 'box',                                 color: '#7ac5cd'                         ],                         UNSPECIFIED_GROUP: [                                 shape: 'dot',                                 scaling: [min: 5, max: 5],                                 color: 'gray'                         ]                 ]         ]"
           },
           "value": "networkOverridesBasic"
         },
@@ -89,7 +94,7 @@
           "default_value": {
             "type": "exp",
             "cache": true,
-            "value": "[:]"
+            "value": "[ nodes: [ shadow: [ enabled: true ] ], edges: [ arrowStrikethrough: true, arrows: [ to: [ enabled: true ] ], shadow: [ enabled: true ] ] ]"
           },
           "value": "networkOverridesFull"
         }
@@ -134,21 +139,20 @@
     },
     {
       "id": [
+        1001273450632
+      ],
+      "type": "exp",
+      "cache": true,
+      "value": "[UNSPECIFIED: 'Unspecified']"
+    },
+    {
+      "id": [
         1000054577899,
         2001950513622
       ],
       "type": "exp",
       "cache": true,
       "value": "['sourceRisk', 'sourceCoverage', 'sourceContainer', 'sourceDeductible', 'sourceLimit', 'sourceRate', 'sourceRatefactor', 'sourcePremium', 'sourceParty', 'sourcePlace', 'sourceRole', 'sourceRoleplayer'] as Set"
-    },
-    {
-      "id": [
-        1001110976360,
-        2001950513622
-      ],
-      "type": "exp",
-      "cache": true,
-      "value": "[\nnodes: [\nshadow: [\nenabled: true\n]\n],\nedges: [\narrowStrikethrough: true,\narrows: [\nto: [\nenabled: true\n]\n],\nshadow: [\nenabled: true\n]\n]\n]"
     },
     {
       "id": [

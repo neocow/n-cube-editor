@@ -20,7 +20,8 @@ import java.util.regex.Pattern
  */
 
 @CompileStatic
-public class VisualizerHelper {
+public class RpmVisualizerHelper
+{
 
 	/**
 	 * ORIGINAL: Not copied from Dynamis

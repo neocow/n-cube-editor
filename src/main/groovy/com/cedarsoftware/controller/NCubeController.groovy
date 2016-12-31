@@ -36,6 +36,8 @@ import com.cedarsoftware.util.CaseInsensitiveSet
 import com.cedarsoftware.util.Converter
 import com.cedarsoftware.util.InetAddressUtilities
 import com.cedarsoftware.util.PoolInterceptor
+import com.cedarsoftware.util.RpmVisualizer
+import com.cedarsoftware.util.RpmVisualizerConstants
 import com.cedarsoftware.util.StringUtilities
 import com.cedarsoftware.util.SystemUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
@@ -256,8 +258,9 @@ class NCubeController extends BaseController
     // TODO: This needs to be externalized (loaded via Grapes)
     Map<String, Object> getVisualizerJson(ApplicationID appId, Map options)
     {
+        String cubeName = options.startCubeName
+        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
         appId = addTenant(appId)
-        Visualizer vis = new Visualizer()
         return vis.buildGraph(appId, options)
     }
 
@@ -265,7 +268,7 @@ class NCubeController extends BaseController
     Map getVisualizerTraits(ApplicationID appId, Map options)
     {
         appId = addTenant(appId)
-        Visualizer vis = new Visualizer()
+        RpmVisualizer vis = new RpmVisualizer()
         return vis.getTraits(appId, options)
     }
 
