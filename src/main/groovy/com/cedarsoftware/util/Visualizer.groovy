@@ -87,7 +87,7 @@ class Visualizer
 
 	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		messages << "*** UNDER CONSTRUCTION *** ${DOUBLE_BREAK} Full visualization of non-rpm class cubes is not yet available.".toString()
+		messages << "*** UNDER CONSTRUCTION *** ${DOUBLE_BREAK} Full visualization of non-rpm cubes is not yet available.".toString()
 
 		String targetCubeName = relInfo.targetCube.name
 
