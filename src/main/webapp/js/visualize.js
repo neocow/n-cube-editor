@@ -27,6 +27,7 @@ var Visualizer = (function ($) {
     var _visInfo = null;
     var _loadedCubeName = null;
     var _loadedAppId = null;
+    var _loadedVisInfoType = null;
     var _nodes = [];
     var _edges = [];
     var _scope = null;
@@ -158,7 +159,7 @@ var Visualizer = (function ($) {
 
             _scopeInput.on('change', function () {
                 _scopeKeyPressed = false;
-                _visInfo.scope = buildScopeFromText(_scopeInput.val());
+                _scope = buildScopeFromText(_scopeInput.val());
                 scopeChange();
             });
             
@@ -184,7 +185,7 @@ var Visualizer = (function ($) {
                     else if (1 === nodes.length) {
                         nodeId = nodes[0].id;
                         params = {nodes: [nodeId]};
-                        _network.selectNodes([nodeId])
+                        _network.selectNodes([nodeId]);
                         networkSelectNodeEvent(params);
                     }
                     else {
@@ -221,7 +222,7 @@ var Visualizer = (function ($) {
             scopeParts = id.split(':');
             key = scopeParts[0];
             value = scopeParts[1].trim();
-            _visInfo.scope[key] = value;
+            _scope[key] = value;
             scopeChange();
         }
         else if (target.className.indexOf('findNode') > -1) {
@@ -231,7 +232,7 @@ var Visualizer = (function ($) {
             networkSelectNodeEvent(params);
             _nce.clearNote();
         }
-    };
+    }
 
     function addNetworkOptionsListeners() {
         $('#networkOptionsButton').click(function () {
@@ -451,7 +452,7 @@ var Visualizer = (function ($) {
             now = Date.now();
             if (now - _scopeLastKeyTime > SCOPE_KEY_DELAY && _scopeKeyPressed) {
                 _scopeKeyPressed = false;
-                _visInfo.scope = buildScopeFromText(_scopeInput.val());
+                _scope = buildScopeFromText(_scopeInput.val());
                 scopeChange();
             }
        }, SCOPE_KEY_DELAY);
@@ -459,7 +460,7 @@ var Visualizer = (function ($) {
     
     function scopeChange()
     {
-        saveToLocalStorage(_visInfo.scope, SCOPE_MAP);
+        saveToLocalStorage(_scope, SCOPE_MAP);
         load();
     }
 
@@ -467,7 +468,7 @@ var Visualizer = (function ($) {
     function buildScopeFromText(scopeString) {
         var parts, part, key, value, i, iLen;
         var newScope = {};
-        newScope['@type'] = _visInfo.scope['@type'];
+        newScope['@type'] = _scope['@type'];
         if (scopeString) {
             parts = scopeString.split(',');
             for ( i = 0, iLen = parts.length; i < iLen; i++) {
@@ -567,11 +568,10 @@ var Visualizer = (function ($) {
         }
         else if (_loadedCubeName && _loadedCubeName !== _selectedCubeName){
             getAllFromLocalStorage();
-            _visInfo.scope = _scope;
-        }
+         }
 
         if (_visInfo){
-            options =  {startCubeName: _selectedCubeName, visInfo: _visInfo};
+            options =  {startCubeName: _selectedCubeName, scope: _scope, visInfo: _visInfo};
         }
         else{
             getAllFromLocalStorage();
@@ -685,7 +685,7 @@ var Visualizer = (function ($) {
                 }
             }
 
-            groupMap = groups.hasOwnProperty(groupName) ? groups[groupName] : options.groups[UNSPECIFIED];
+            groupMap = groups.hasOwnProperty(groupName) ? groups[groupName] : _networkOptionsInput.groups[UNSPECIFIED];
             background = groupMap.color;
             fontMap = groupMap.font;
             if (fontMap) {
@@ -720,7 +720,7 @@ var Visualizer = (function ($) {
 
     function getScopeString(){
         var scopeLen, key, i, len, scope;
-        scope = $.extend(true, {}, _visInfo.scope);
+        scope = $.extend(true, {}, _scope);
         delete scope['@type'];
         delete scope['@id'];
         var scopeString = '';
@@ -925,7 +925,7 @@ var Visualizer = (function ($) {
     {
         var nodes, edges, maxLevel;
 
-        if (!_networkOverridesBasic){
+        if (!_loadedVisInfoType || _loadedVisInfoType !== visInfo['@type']){
             _networkOverridesBasic = visInfo.networkOverridesBasic;
             _networkOverridesFull = visInfo.networkOverridesFull;
             formatNetworkOverrides(_networkOverridesBasic);
@@ -951,11 +951,13 @@ var Visualizer = (function ($) {
                 _selectedLevel = maxLevel;
             }
         }
+        _scope = visInfo.scope;
 
         _visInfo = visInfo;
 
         _loadedCubeName = _selectedCubeName;
         _loadedAppId = _nce.getSelectedTabAppId();
+        _loadedVisInfoType = _visInfo['@type'];
      }
     
     function formatNetworkOverrides(overrides){
@@ -1208,7 +1210,7 @@ var Visualizer = (function ($) {
         visualizerLink.click(function (e) {
             e.preventDefault();
             _keepCurrentScope = true;
-            _visInfo.scope = node.scope;
+            _scope = node.scope;
             _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
         });
         return visualizerLink;
@@ -1279,7 +1281,6 @@ var Visualizer = (function ($) {
     function getAllFromLocalStorage() {
         if (_keepCurrentScope) {
             _keepCurrentScope = false;
-            _scope = _visInfo.scope;
         }
         else{
             _scope = getFromLocalStorage(SCOPE_MAP, null);
@@ -1303,7 +1304,7 @@ var Visualizer = (function ($) {
     }
 
     function saveAllToLocalStorage() {
-        saveToLocalStorage(_visInfo.scope, SCOPE_MAP);
+        saveToLocalStorage(_scope, SCOPE_MAP);
         saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
         saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
         saveToLocalStorage(_hierarchical, HIERARCHICAL);

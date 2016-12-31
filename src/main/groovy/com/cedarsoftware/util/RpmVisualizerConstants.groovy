@@ -48,4 +48,6 @@ final class RpmVisualizerConstants extends VisualizerConstants
 	public static final String TYPES_TO_ADD_CUBE_NAME = 'VisualizerTypesToAdd'
 	public static final String SOURCE_TYPE = 'sourceType'
 	public static final String TARGET_TYPE = 'targetType'
+
+	public static final String UNSPECIFIED_ENUM = 'UNSPECIFIED_ENUM'
 }

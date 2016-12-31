@@ -16,7 +16,6 @@ class VisualizerRelInfo
 {
 	Set<String> notes = []
 	Map<String, Object> scope
-	String group
 
 	long targetId
     NCube targetCube
@@ -30,7 +29,7 @@ class VisualizerRelInfo
 
 	VisualizerRelInfo() {}
 
-	VisualizerRelInfo(ApplicationID appId, Set allGroupsKeys, Map node)
+	VisualizerRelInfo(ApplicationID appId, Map node)
 	{
 		targetCube = NCubeManager.getCube(appId, node.cubeName as String)
 		String sourceCubeName = node.sourceCubeName as String
@@ -40,7 +39,6 @@ class VisualizerRelInfo
 		targetLevel = Long.valueOf(node.level as String)
 		targetScope = node.scope as CaseInsensitiveMap
 		scope = node.availableScope as CaseInsensitiveMap
-		group = setGroupName(allGroupsKeys)
 	}
 
 	Set<String> getRequiredScope()
@@ -82,18 +80,9 @@ class VisualizerRelInfo
 		return sb.toString()
 	}
 
-	String getNodeGroup(String groupSuffix)
+	String getGroupName(VisualizerInfo visInfo = null, String cubeName = targetCube.name)
 	{
-		if (!group)
-		{
-			throw new IllegalStateException("Group must be set prior to getting node group.")
-		}
-		return group
-	}
-
-	String setGroupName(Set<String> allGroupsKeys, String cubeName = targetCube.name)
-	{
-		this.group = UNSPECIFIED
+		return targetCube.hasRuleAxis() ? RULE_NCUBE : NCUBE
 	}
 
 	protected static String getDotSuffix(String value)
@@ -157,7 +146,7 @@ class VisualizerRelInfo
 		return edge
 	}
 
-	Map<String, Object> createNode(Set<String> allGroupsKeys, String groupSuffix)
+	Map<String, Object> createNode(VisualizerInfo visInfo, String group = null)
 	{
 		NCube targetCube = targetCube
 		String targetCubeName = targetCube.name
@@ -181,8 +170,9 @@ class VisualizerRelInfo
 		node.title = getCubeDisplayName(targetCubeName)
 
 		node.details = details
-		group ?: setGroupName(allGroupsKeys)
-		node.group = getNodeGroup(groupSuffix)
+		group = group ?: getGroupName(visInfo)
+		node.group = group
+		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
 		return node
 	}
 

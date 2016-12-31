@@ -24,9 +24,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
     RpmVisualizerRelInfo() {}
 
-    RpmVisualizerRelInfo(ApplicationID appId, Set allGroupsKeys, Map node)
+    RpmVisualizerRelInfo(ApplicationID appId, Map node)
 	{
-		super(appId, allGroupsKeys, node)
+		super(appId, node)
 		loadTraits = node.loadTraits as boolean
 		typesToAdd = node.typesToAdd as List
 		hasFields = node.hasFields as boolean
@@ -158,22 +158,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	String getNodeGroup(String groupSuffix)
-	{
-		if (!group)
-		{
-			throw new IllegalStateException("Group must be set prior to getting node group.")
-		}
-
-		return targetCube.name.startsWith(RPM_ENUM) ? group + groupSuffix : group
-	}
-
-	@Override
-	String setGroupName(Set<String> allGroupsKeys, String cubeName = targetCube.name)
+	String getGroupName(VisualizerInfo visInfo, String cubeName = targetCube.name)
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		this.group = allGroupsKeys.contains(group) ? group : UNSPECIFIED
+		return visInfo.allGroupsKeys.contains(group) ? group : UNSPECIFIED
 	}
 
 	@Override
@@ -289,9 +278,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	Map<String, Object> createNode(Set<String> allGroupsKeys, String groupSuffix)
+	Map<String, Object> createNode(VisualizerInfo visInfo, String group = null)
 	{
-		Map<String, Object> node = super.createNode(allGroupsKeys, groupSuffix )
+		Map<String, Object> node = super.createNode(visInfo, group)
 		if (targetCube.name.startsWith(RPM_CLASS_DOT))
 		{
 			node.typesToAdd = typesToAdd

@@ -18,8 +18,11 @@ class VisualizerConstants
 	public static final String MISSING_SCOPE = 'Missing scope for '
 	public static final String UNABLE_TO_LOAD = 'Unable to load '
 	public static final String SCOPE_VALUE_NOT_FOUND = 'Scope value not found for '
-	public static final String UNSPECIFIED = 'UNSPECIFIED'
 	public static final String DEFAULT_SCOPE_VALUE = 'XXXX'
+
+	public static final String UNSPECIFIED = 'UNSPECIFIED'
+	public static final String NCUBE = 'NCUBE'
+	public static final String RULE_NCUBE = 'RULE_NCUBE'
 
 	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
 	public static final String STATUS_SUCCESS = 'success'
