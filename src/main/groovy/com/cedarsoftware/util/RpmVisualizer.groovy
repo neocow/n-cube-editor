@@ -36,7 +36,7 @@ class RpmVisualizer extends Visualizer
 
 		RpmVisualizerInfo visInfo = options.visInfo as RpmVisualizerInfo
 		Map node = options.node as Map
-		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId, visInfo.allGroupsKeys, node)
+		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId, node)
 
 		getTraitMaps(visInfo, relInfo)
 		node.details = relInfo.details
@@ -49,10 +49,20 @@ class RpmVisualizer extends Visualizer
 	@Override
 	protected RpmVisualizerInfo getVisualizerInfo(Map options)
 	{
-		RpmVisualizerInfo visInfo = options.visInfo as RpmVisualizerInfo ?: new RpmVisualizerInfo(appId, options)
-		String json = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_CUBE_NAME + JSON_FILE_SUFFIX)
-		NCube configCube = NCube.fromSimpleJson(json)
-		visInfo.loadTypesToAddMap(configCube)
+	    RpmVisualizerInfo visInfo
+		Object optionsVisInfo = options.visInfo
+		if (optionsVisInfo && optionsVisInfo instanceof RpmVisualizerInfo)
+		{
+			visInfo = optionsVisInfo as RpmVisualizerInfo
+		}
+		else
+		{
+			visInfo = new RpmVisualizerInfo(appId, options)
+			String json = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_CUBE_NAME + JSON_FILE_SUFFIX)
+			NCube configCube = NCube.fromSimpleJson(json)
+			visInfo.loadTypesToAddMap(configCube)
+		}
+		visInfo.scope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
 		return visInfo
 	}
 
@@ -101,8 +111,7 @@ class RpmVisualizer extends Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo.allGroupsKeys, visInfo.groupSuffix)
-		visInfo.availableGroupsAllLevels << relInfo.group
+		visInfo.nodes << relInfo.createNode(visInfo)
 
 		if (hasFields)
 		{
@@ -142,7 +151,7 @@ class RpmVisualizer extends Visualizer
 
 	private void processEnumCube(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo)
 	{
-		relInfo.group = UNSPECIFIED
+		String group = UNSPECIFIED_ENUM
 		String targetCubeName = relInfo.targetCube.name
 		String sourceFieldRpmType = relInfo.sourceFieldRpmType
 
@@ -173,10 +182,9 @@ class RpmVisualizer extends Visualizer
 							if (nextTargetCube)
 							{
 								addToStack(visInfo, relInfo, nextTargetCube, relInfo.sourceFieldRpmType, targetFieldName)
-
-								if (relInfo.group == UNSPECIFIED)
+								if (group == UNSPECIFIED_ENUM)
 								{
-									relInfo.setGroupName(visInfo.allGroupsKeys, nextTargetCubeName)
+									group = relInfo.getGroupName(visInfo, nextTargetCube.name) + visInfo.groupSuffix
 								}
 							}
 							else
@@ -200,8 +208,8 @@ class RpmVisualizer extends Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo.allGroupsKeys, visInfo.groupSuffix)
-		visInfo.availableGroupsAllLevels << relInfo.group
+		visInfo.nodes << relInfo.createNode(visInfo, group)
+
 	}
 
 	private void addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, NCube nextTargetCube, String rpmType, String targetFieldName)

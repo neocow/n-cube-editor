@@ -90,7 +90,8 @@ class VisualizerInfo
         defaultLevel = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_LEVEL, (CUBE_TYPE): cubeType]) as long
         allGroups = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_GROUPS, (CUBE_TYPE): cubeType]) as Map
         allGroupsKeys = new LinkedHashSet(allGroups.keySet())
-        groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
+        String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
+        this.groupSuffix = groupSuffix ?: ''
         loadAvailableScopeKeysAndValues(configCube)
 
         return configCube

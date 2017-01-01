@@ -55,8 +55,12 @@ class Visualizer
 
 	protected VisualizerInfo getVisualizerInfo(Map options)
 	{
-		VisualizerInfo visInfo = options.visInfo as VisualizerInfo ?: new VisualizerInfo(appId, options)
-		visInfo.scope = visInfo.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
+		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
+		if (!visInfo || visInfo.class.name != VisualizerInfo.class.name)
+		{
+			visInfo = new VisualizerInfo(appId, options)
+		}
+		visInfo.scope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
 		return visInfo
 	}
 
@@ -103,9 +107,7 @@ class Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo.allGroupsKeys, visInfo.groupSuffix)
-		visInfo.availableGroupsAllLevels << relInfo.group
-
+		visInfo.nodes << relInfo.createNode(visInfo)
 
 		NCube nextTargetCube
 		String nextTargetCubeName = ""
