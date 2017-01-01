@@ -41,7 +41,8 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return requiredScope
 	}
 
-	String getDetails()
+	@Override
+	String getDetails(VisualizerInfo visInfo)
 	{
 		String effectiveName = effectiveNameByCubeName
 		StringBuilder sb = new StringBuilder()
@@ -66,28 +67,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		//Scope
 		if (hasFields)
 		{
-			if (loadTraits)
-			{
-				sb.append("<b>Utilized scope</b>")
-			}
-			else
-			{
-				sb.append("<b>Utilized scope to load class without all traits</b>")
-
-			}
-			sb.append("<pre><ul>")
-			targetScope.each { String key, Object value ->
-				sb.append("<li>${key}: ${value}</li>")
-			}
-			sb.append("</ul></pre>${BREAK}")
+			String title = loadTraits ? 'Utilized scope' : 'Utilized scope to load class without all traits'
+			getDetailsMap(sb, title, targetScope)
 		}
-
-		sb.append("<b>Available scope</b>")
-		sb.append("<pre><ul>")
-		scope.each { String key, Object value ->
-			sb.append("<li>${key}: ${value}</li>")
-		}
-		sb.append("</ul></pre>${BREAK}")
+		getDetailsMap(sb, 'Available scope', scope)
 
 		//Fields
 		if (hasFields)

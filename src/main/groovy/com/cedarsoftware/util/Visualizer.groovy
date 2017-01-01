@@ -27,8 +27,8 @@ class Visualizer
 	 * @param applicationID
 	 * @param options - a map containing:
 	 *           String startCubeName, name of the starting cube,
-	 *           Map scope, the context for which the visualizer is loaded, OR
-	 *           VisualizerInfo, information about the visualization, including scope
+	 *           Map scope, the context for which the visualizer is loaded
+	 *           VisualizerInfo, information about the visualization
      * @return a map containing status, messages and visualizer information
      */
 	Map<String, Object> buildGraph(ApplicationID applicationID, Map options)
@@ -93,8 +93,10 @@ class Visualizer
 	{
 		messages << "*** UNDER CONSTRUCTION *** ${DOUBLE_BREAK} Full visualization of non-rpm cubes is not yet available.".toString()
 
-		String targetCubeName = relInfo.targetCube.name
+		NCube targetCube = relInfo.targetCube
+		String targetCubeName = targetCube.name
 
+		relInfo.targetScope = new CaseInsensitiveMap()
 		relInfo.addRequiredAndOptionalScopeKeys(visInfo)
 
 		if (relInfo.sourceCube)
@@ -109,46 +111,54 @@ class Visualizer
 
 		visInfo.nodes << relInfo.createNode(visInfo)
 
-		NCube nextTargetCube
-		String nextTargetCubeName = ""
+		Set<String> refs = []
+		NCubeManager.getReferencedCubeNames(appId, targetCubeName, refs)
 
-		if (nextTargetCube)
+		if (refs)
 		{
-			addToStack(visInfo, relInfo, nextTargetCube)
+			addToStack(visInfo, relInfo, refs)
 		}
 	}
 
-	protected VisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, NCube nextTargetCube)
+	protected Set<VisualizerRelInfo> addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set<String> refs)
 	{
+		Set<VisualizerRelInfo> nextRelInfoSet = []
+		refs.each { String nextTargetCubeName ->
+			NCube nextTargetCube = NCubeManager.getCube(appId, nextTargetCubeName)
+			if (nextTargetCube)
+			{
+				try
+				{
+					VisualizerRelInfo nextRelInfo = visualizerRelInfo
 
-		VisualizerRelInfo nextRelInfo
-		try
-		{
-			NCube nextSourceCube = relInfo.targetCube
+					long nextTargetTargetLevel = relInfo.targetLevel + 1
+					long maxLevel = visInfo.maxLevel
+					visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
+					visInfo.nodeCount += 1
 
-			nextRelInfo = visualizerRelInfo
-			nextRelInfo.targetCube = nextTargetCube
-			nextRelInfo.scope = [:]  //TODO
-			nextRelInfo.sourceCube = nextSourceCube
-			nextRelInfo.sourceScope = relInfo.targetScope
-			nextRelInfo.sourceFieldName = '' //TODO
-			nextRelInfo.sourceId = relInfo.targetId
+					nextRelInfo.targetId = visInfo.nodeCount
+					nextRelInfo.targetLevel = nextTargetTargetLevel
+					nextRelInfo.targetCube = nextTargetCube
+					nextRelInfo.scope = [:] as CaseInsensitiveMap //TODO
+					nextRelInfo.sourceCube = relInfo.targetCube
+					nextRelInfo.sourceScope = relInfo.targetScope
+					nextRelInfo.sourceFieldName = visInfo.nodeCount //TODO: coordinates go here
+					nextRelInfo.sourceId = relInfo.targetId
 
-			long nextTargetTargetLevel = relInfo.targetLevel + 1
-			nextRelInfo.targetLevel = nextTargetTargetLevel
-
-			long maxLevel = visInfo.maxLevel
-			visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
-			visInfo.nodeCount += 1
-			nextRelInfo.targetId = visInfo.nodeCount
-
-			stack.push(nextRelInfo)
+					nextRelInfoSet << nextRelInfo
+					stack.push(nextRelInfo)
+				}
+				catch (Exception e)
+				{
+					throw new IllegalStateException("Error processing ${relInfo.sourceFieldName} in cube ${nextTargetCube.name}.", e)
+				}
+			}
+			else
+			{
+				messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization.".toString()
+			}
 		}
-		catch (Exception e)
-		{
-			throw new IllegalStateException("Error processing ${relInfo.sourceFieldName} in cube ${nextTargetCube.name}.", e)
-		}
-		return nextRelInfo
+		return nextRelInfoSet
 	}
 
 	protected VisualizerRelInfo getVisualizerRelInfo()
