@@ -47,10 +47,11 @@ class VisualizerRelInfo
 		return requiredScope
 	}
 
-	String getDetails()
+	String getDetails(VisualizerInfo visInfo)
 	{
 		StringBuilder sb = new StringBuilder()
 		String notesLabel = "<b>Note: </b>"
+		String targetCubeName = targetCube.name
 
 		//Notes
 		if (notes)
@@ -62,22 +63,46 @@ class VisualizerRelInfo
 			sb.append("${DOUBLE_BREAK}")
 		}
 
-		//Scope
-		sb.append("<b>Scope</b>")
-		sb.append("<pre><ul>")
-		targetScope.each { String key, Object value ->
-			sb.append("<li>${key}: ${value}</li>")
-		}
-		sb.append("</ul></pre>${BREAK}")
-
-		sb.append("<b>Available scope</b>")
-		sb.append("<pre><ul>")
-		scope.each { String key, Object value ->
-			sb.append("<li>${key}: ${value}</li>")
-		}
-		sb.append("</ul></pre>${BREAK}")
+		getDetailsMap(sb, 'Scope', targetScope)
+		getDetailsMap(sb, 'Available scope', scope)
+		getDetailsSet(sb, 'Required scope keys', visInfo.requiredScopeKeys[targetCubeName])
+		getDetailsSet(sb, 'Optional scope keys', visInfo.optionalScopeKeys[targetCubeName])
 
 		return sb.toString()
+	}
+
+	static String getDetailsMap(StringBuilder sb, String title, Map<String, Object> map)
+	{
+		sb.append("<b>${title}</b>")
+		sb.append("<pre><ul>")
+		if (map)
+		{
+			map.each { String key, Object value ->
+				sb.append("<li>${key}: ${value}</li>")
+			}
+		}
+		else
+		{
+			sb.append("<li>n/a</li>")
+		}
+		sb.append("</ul></pre>${BREAK}")
+	}
+
+	static String getDetailsSet(StringBuilder sb, String title, Set<String> set)
+	{
+		sb.append("<b>${title}</b>")
+		sb.append("<pre><ul>")
+		if (set)
+		{
+			set.each { String value ->
+				sb.append("<li>${value}</li>")
+			}
+		}
+		else
+		{
+			sb.append("<li>n/a</li>")
+		}
+		sb.append("</ul></pre>${BREAK}")
 	}
 
 	String getGroupName(VisualizerInfo visInfo = null, String cubeName = targetCube.name)
@@ -169,7 +194,7 @@ class VisualizerRelInfo
 		node.detailsTitle2 = cubeDetailsTitle2
 		node.title = getCubeDisplayName(targetCubeName)
 
-		node.details = details
+		node.details = getDetails(visInfo)
 		group = group ?: getGroupName(visInfo)
 		node.group = group
 		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
