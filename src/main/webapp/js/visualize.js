@@ -69,9 +69,6 @@ var Visualizer = (function ($) {
     var _hierarchical = false;
 
     //Network physics
-    var NODE_SCALING_SPECIAL = 200;
-    var DASH_LENGTH = 15;
-
     var _networkOptionsButton = null;
     var _networkOptionsSection = null;
     var _basicStabilizationAfterNetworkUpdate = false;
@@ -84,6 +81,7 @@ var Visualizer = (function ($) {
     var _networkOptionsInputHold = null;
     var _networkOverridesBasic = null;
     var _networkOverridesFull = null;
+    var _networkOverridesTopNode = null;
     var _dataLoadStart = null;
     var _basicStabilizationStart = null;
     var _stabilizationStart = null;
@@ -844,6 +842,7 @@ var Visualizer = (function ($) {
     {
         updateNetworkDataNodes();
         updateNetworkDataEdges();
+        markTopNodeSpecial();
      }
 
 
@@ -928,8 +927,10 @@ var Visualizer = (function ($) {
         if (!_loadedVisInfoType || _loadedVisInfoType !== visInfo['@type']){
             _networkOverridesBasic = visInfo.networkOverridesBasic;
             _networkOverridesFull = visInfo.networkOverridesFull;
+            _networkOverridesTopNode = visInfo.networkOverridesTopNode;
             formatNetworkOverrides(_networkOverridesBasic);
             formatNetworkOverrides(_networkOverridesFull);
+            formatNetworkOverrides(_networkOverridesTopNode);
         }
 
         if (status === STATUS_SUCCESS) {
@@ -959,7 +960,7 @@ var Visualizer = (function ($) {
         _loadedAppId = _nce.getSelectedTabAppId();
         _loadedVisInfoType = _visInfo['@type'];
      }
-    
+
     function formatNetworkOverrides(overrides){
         var keys,k, kLen, key, value, valueOfValue, type;
         delete overrides['@type'];
@@ -968,23 +969,32 @@ var Visualizer = (function ($) {
             key = keys[k];
             value = overrides[key];
             if (OBJECT === typeof value){
-                valueOfValue = value.value;
                 type = value['@type'];
-                delete value['@type'];
-                if (1 === Object.keys(value).length && undefined !== valueOfValue && OBJECT !== typeof valueOfValue)
-                {
-                    if (BIG_DECIMAL === type){
-                        overrides[key] = parseFloat(valueOfValue);
-                    }
-                    else if (NUMBER === typeof valueOfValue){
-                        overrides[key] = Number(valueOfValue);
-                    }
-                    else{
-                        overrides[key] = valueOfValue;
-                    }
+                if (ARRAY_LIST === type){
+                    valueOfValue = value['@items'].valueOf();
+                    formatNetworkOverrides(valueOfValue);
+                    overrides[key] = valueOfValue
+                    delete value['@items'];
+                    delete value['@type'];
                 }
                 else{
-                    formatNetworkOverrides(value);
+                    valueOfValue = value.value;
+                    delete value['@type'];
+                    if (1 === Object.keys(value).length && undefined !== valueOfValue && OBJECT !== typeof valueOfValue)
+                    {
+                        if (BIG_DECIMAL === type){
+                            overrides[key] = parseFloat(valueOfValue);
+                        }
+                        else if (NUMBER === typeof valueOfValue){
+                            overrides[key] = Number(valueOfValue);
+                        }
+                        else{
+                            overrides[key] = valueOfValue;
+                        }
+                    }
+                    else{
+                        formatNetworkOverrides(value);
+                    }
                 }
             }
             else{
@@ -1005,13 +1015,21 @@ var Visualizer = (function ($) {
         }
     }
 
-    function markTopNodeSpecial()
-    {
-        var node = _nodeDataSet.get(1);
+    function markTopNodeSpecial()  {
+        var node, keys, k, kLen, key;
+        node = _nodeDataSet.get(1);
         if (node) {
-            node.shapeProperties = {borderDashes: [DASH_LENGTH, 5]};
-            node.borderWidth = 25;
-            _nodeDataSet.update(node);
+            //TODO: Figure out why the only way to make it work is to json stringify, then json parse.
+            _networkOverridesTopNode = JSON.parse(JSON.stringify(_networkOverridesTopNode));
+
+            if (_networkOverridesTopNode) {
+                keys = Object.keys(_networkOverridesTopNode);
+                for (k = 0, kLen = keys.length; k < kLen; k++) {
+                    key = keys[k];
+                    node[key] = _networkOverridesTopNode[key];
+                }
+                _nodeDataSet.update(node);
+            }
         }
     }
 
@@ -1028,7 +1046,6 @@ var Visualizer = (function ($) {
             initNetworkOptions(container);
             _nodeDataSet = new vis.DataSet({});
             _nodeDataSet.add(_nodes);
-            markTopNodeSpecial();
             _edgeDataSet = new vis.DataSet({});
             _edgeDataSet.add(_edges);
             _network = new vis.Network(container, {nodes: _nodeDataSet, edges: _edgeDataSet}, _networkOptionsInput);
