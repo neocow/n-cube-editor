@@ -96,7 +96,6 @@ class Visualizer
 		NCube targetCube = relInfo.targetCube
 		String targetCubeName = targetCube.name
 
-		relInfo.targetScope = new CaseInsensitiveMap()
 		relInfo.addRequiredAndOptionalScopeKeys(visInfo)
 
 		if (relInfo.sourceCube)
@@ -111,54 +110,54 @@ class Visualizer
 
 		visInfo.nodes << relInfo.createNode(visInfo)
 
-		Set<String> refs = []
-		NCubeManager.getReferencedCubeNames(appId, targetCubeName, refs)
+		Map<Map, Set<String>> refs = targetCube.referencedCubeNames
 
-		if (refs)
-		{
-			addToStack(visInfo, relInfo, refs)
+		refs.each {Map coordinates, Set<String> cubeNames ->
+			cubeNames.each { String cubeName ->
+				addToStack(visInfo, relInfo, cubeName, coordinates)
+			}
 		}
 	}
 
-	protected Set<VisualizerRelInfo> addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set<String> refs)
+	protected VisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String nextTargetCubeName, Map coordinates = [:])
 	{
-		Set<VisualizerRelInfo> nextRelInfoSet = []
-		refs.each { String nextTargetCubeName ->
-			NCube nextTargetCube = NCubeManager.getCube(appId, nextTargetCubeName)
-			if (nextTargetCube)
+		VisualizerRelInfo nextRelInfo
+		NCube nextTargetCube = NCubeManager.getCube(appId, nextTargetCubeName)
+		if (nextTargetCube)
+		{
+			try
 			{
-				try
-				{
-					VisualizerRelInfo nextRelInfo = visualizerRelInfo
+				nextRelInfo = visualizerRelInfo
 
-					long nextTargetTargetLevel = relInfo.targetLevel + 1
-					long maxLevel = visInfo.maxLevel
-					visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
-					visInfo.nodeCount += 1
+				long nextTargetTargetLevel = relInfo.targetLevel + 1
+				long maxLevel = visInfo.maxLevel
+				visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
+				visInfo.nodeCount += 1
 
-					nextRelInfo.targetId = visInfo.nodeCount
-					nextRelInfo.targetLevel = nextTargetTargetLevel
-					nextRelInfo.targetCube = nextTargetCube
-					nextRelInfo.scope = [:] as CaseInsensitiveMap //TODO
-					nextRelInfo.sourceCube = relInfo.targetCube
-					nextRelInfo.sourceScope = relInfo.targetScope
-					nextRelInfo.sourceFieldName = visInfo.nodeCount //TODO: coordinates go here
-					nextRelInfo.sourceId = relInfo.targetId
+				nextRelInfo.targetId = visInfo.nodeCount
+				nextRelInfo.targetLevel = nextTargetTargetLevel
+				nextRelInfo.targetCube = nextTargetCube
+				nextRelInfo.sourceCube = relInfo.targetCube
+				nextRelInfo.sourceScope = relInfo.targetScope
+				nextRelInfo.sourceId = relInfo.targetId
 
-					nextRelInfoSet << nextRelInfo
-					stack.push(nextRelInfo)
-				}
-				catch (Exception e)
-				{
-					throw new IllegalStateException("Error processing ${relInfo.sourceFieldName} in cube ${nextTargetCube.name}.", e)
-				}
+				nextRelInfo.targetScope = coordinates
+				nextRelInfo.scope = relInfo.targetScope
+				nextRelInfo.scope.putAll(coordinates)
+				nextRelInfo.sourceFieldName = coordinates.toString()
+
+				stack.push(nextRelInfo)
 			}
-			else
+			catch (Exception e)
 			{
-				messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization.".toString()
+				throw new IllegalStateException("Error processing ${relInfo.sourceFieldName} in cube ${nextTargetCubeName}.", e)
 			}
 		}
-		return nextRelInfoSet
+		else
+		{
+			messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization.".toString()
+		}
+		return nextRelInfo
 	}
 
 	protected VisualizerRelInfo getVisualizerRelInfo()
