@@ -167,8 +167,8 @@ class RpmVisualizer extends Visualizer
 
 						if (nextTargetCubeName)
 						{
-							Set<RpmVisualizerRelInfo> set = addToStack(visInfo, relInfo, nextTargetCubeName, relInfo.sourceFieldRpmType, targetFieldName)
-							if (set && group == UNSPECIFIED_ENUM)
+							RpmVisualizerRelInfo nextRelInfo = addToStack(visInfo, relInfo, nextTargetCubeName, relInfo.sourceFieldRpmType, targetFieldName)
+							if (nextRelInfo && group == UNSPECIFIED_ENUM)
 							{
 								group = relInfo.getGroupName(visInfo, nextTargetCubeName) + visInfo.groupSuffix
 							}
@@ -193,26 +193,23 @@ class RpmVisualizer extends Visualizer
 
 	}
 
-	private Set<RpmVisualizerRelInfo> addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)
+	private RpmVisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)
 	{
-		Set<RpmVisualizerRelInfo> nextRelInfoSet = super.addToStack(visInfo, relInfo, [nextTargetCubeName] as Set) as Set<RpmVisualizerRelInfo>
-		nextRelInfoSet.each { RpmVisualizerRelInfo nextRelInfo ->
-			NCube nextTargetCube = nextRelInfo.targetCube
-			try
-			{
-				nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
-				nextRelInfo.sourceFieldName = targetFieldName
-				nextRelInfo.sourceFieldRpmType = rpmType
-				nextRelInfo.sourceTraitMaps = (relInfo as RpmVisualizerRelInfo).targetTraitMaps
-				nextRelInfo.typesToAdd = (visInfo as RpmVisualizerInfo).getTypesToAdd(nextTargetCube.name)
-			}
-
-			catch (Exception e)
-			{
-				throw new IllegalStateException("Error processing the class for field ${relInfo.sourceFieldName} in class ${nextTargetCube.name}.", e)
-			}
+		RpmVisualizerRelInfo nextRelInfo = super.addToStack(visInfo, relInfo, nextTargetCubeName) as RpmVisualizerRelInfo
+		NCube nextTargetCube = nextRelInfo.targetCube
+		try
+		{
+			nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
+			nextRelInfo.sourceFieldName = targetFieldName
+			nextRelInfo.sourceFieldRpmType = rpmType
+			nextRelInfo.sourceTraitMaps = (relInfo as RpmVisualizerRelInfo).targetTraitMaps
+			nextRelInfo.typesToAdd = (visInfo as RpmVisualizerInfo).getTypesToAdd(nextTargetCube.name)
 		}
-		return nextRelInfoSet
+		catch (Exception e)
+		{
+			throw new IllegalStateException("Error processing the class for field ${relInfo.sourceFieldName} in class ${nextTargetCube.name}.", e)
+		}
+		return nextRelInfo
 	}
 
 	@Override

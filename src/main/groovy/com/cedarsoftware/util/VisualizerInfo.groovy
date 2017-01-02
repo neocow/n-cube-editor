@@ -34,8 +34,9 @@ class VisualizerInfo
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
 
-    Map<String, Object> networkOverridesBasic = null
-    Map<String, Object> networkOverridesFull = null
+    Map<String, Object> networkOverridesBasic
+    Map<String, Object> networkOverridesFull
+    Map<String, Object> networkOverridesTopNode
 
     VisualizerInfo(){}
 
@@ -87,6 +88,7 @@ class VisualizerInfo
 
         networkOverridesBasic = configCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_BASIC, (CUBE_TYPE): cubeType]) as Map
         networkOverridesFull = configCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_FULL, (CUBE_TYPE): cubeType]) as Map
+        networkOverridesTopNode = configCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_TOP_NODE, (CUBE_TYPE): cubeType]) as Map
         defaultLevel = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_LEVEL, (CUBE_TYPE): cubeType]) as long
         allGroups = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_GROUPS, (CUBE_TYPE): cubeType]) as Map
         allGroupsKeys = new LinkedHashSet(allGroups.keySet())
