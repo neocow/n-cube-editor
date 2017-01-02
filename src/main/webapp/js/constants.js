@@ -102,6 +102,7 @@ var NUMBER = 'number';
 var STRING = 'string';
 var FUNCTION = 'function';
 var BIG_DECIMAL = 'java.math.BigDecimal';
+var ARRAY_LIST = 'java.util.ArrayList';
 
 var GLYPHICONS = {
     OPTION_HORIZONTAL: 'glyphicon-option-horizontal',
