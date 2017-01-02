@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
+import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.VisualizerConstants.*
@@ -20,6 +21,7 @@ class Visualizer
 	protected Set<String> messages = []
 	protected Set<String> visited = []
 	protected Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
+	protected Joiner.MapJoiner mapJoiner = Joiner.on(",").withKeyValueSeparator(": ")
 
 	/**
 	 * Provides the information used to visualize n-cubes.
@@ -114,21 +116,18 @@ class Visualizer
 
 		refs.each {Map coordinates, Set<String> cubeNames ->
 			cubeNames.each { String cubeName ->
-				addToStack(visInfo, relInfo, cubeName, coordinates)
+				addToStack(visInfo, relInfo, new VisualizerRelInfo(), cubeName, coordinates)
 			}
 		}
 	}
 
-	protected VisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String nextTargetCubeName, Map coordinates = [:])
+	protected void addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, VisualizerRelInfo nextRelInfo, String nextTargetCubeName, Map coordinates = [:])
 	{
-		VisualizerRelInfo nextRelInfo
 		NCube nextTargetCube = NCubeManager.getCube(appId, nextTargetCubeName)
 		if (nextTargetCube)
 		{
 			try
 			{
-				nextRelInfo = visualizerRelInfo
-
 				long nextTargetTargetLevel = relInfo.targetLevel + 1
 				long maxLevel = visInfo.maxLevel
 				visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
@@ -140,11 +139,11 @@ class Visualizer
 				nextRelInfo.sourceCube = relInfo.targetCube
 				nextRelInfo.sourceScope = relInfo.targetScope
 				nextRelInfo.sourceId = relInfo.targetId
+				nextRelInfo.sourceFieldName = mapJoiner.join(coordinates)
 
 				nextRelInfo.targetScope = coordinates
-				nextRelInfo.scope = relInfo.targetScope
+				nextRelInfo.scope = new CaseInsensitiveMap<>(relInfo.targetScope)
 				nextRelInfo.scope.putAll(coordinates)
-				nextRelInfo.sourceFieldName = coordinates.toString()
 
 				stack.push(nextRelInfo)
 			}
@@ -157,7 +156,6 @@ class Visualizer
 		{
 			messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization.".toString()
 		}
-		return nextRelInfo
 	}
 
 	protected VisualizerRelInfo getVisualizerRelInfo()

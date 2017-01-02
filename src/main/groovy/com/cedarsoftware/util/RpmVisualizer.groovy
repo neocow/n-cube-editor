@@ -195,7 +195,8 @@ class RpmVisualizer extends Visualizer
 
 	private RpmVisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)
 	{
-		RpmVisualizerRelInfo nextRelInfo = super.addToStack(visInfo, relInfo, nextTargetCubeName) as RpmVisualizerRelInfo
+		RpmVisualizerRelInfo nextRelInfo = new RpmVisualizerRelInfo()
+		super.addToStack(visInfo, relInfo, nextRelInfo, nextTargetCubeName) as RpmVisualizerRelInfo
 		NCube nextTargetCube = nextRelInfo.targetCube
 		try
 		{

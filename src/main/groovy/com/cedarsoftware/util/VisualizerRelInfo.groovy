@@ -83,7 +83,7 @@ class VisualizerRelInfo
 		}
 		else
 		{
-			sb.append("<li>n/a</li>")
+			sb.append("<li>none</li>")
 		}
 		sb.append("</ul></pre>${BREAK}")
 	}
@@ -100,7 +100,7 @@ class VisualizerRelInfo
 		}
 		else
 		{
-			sb.append("<li>n/a</li>")
+			sb.append("<li>none</li>")
 		}
 		sb.append("</ul></pre>${BREAK}")
 	}
