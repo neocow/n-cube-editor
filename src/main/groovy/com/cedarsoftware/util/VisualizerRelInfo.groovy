@@ -43,8 +43,7 @@ class VisualizerRelInfo
 
 	Set<String> getRequiredScope()
 	{
-		Set<String> requiredScope = targetCube.getRequiredScope(targetScope, [:] as Map)
-		return requiredScope
+		return targetCube.getRequiredScope(targetScope, [:] as Map)
 	}
 
 	String getDetails(VisualizerInfo visInfo)
@@ -83,7 +82,7 @@ class VisualizerRelInfo
 		}
 		else
 		{
-			sb.append("<li>n/a</li>")
+			sb.append("<li>none</li>")
 		}
 		sb.append("</ul></pre>${BREAK}")
 	}
@@ -100,7 +99,7 @@ class VisualizerRelInfo
 		}
 		else
 		{
-			sb.append("<li>n/a</li>")
+			sb.append("<li>none</li>")
 		}
 		sb.append("</ul></pre>${BREAK}")
 	}
@@ -198,6 +197,10 @@ class VisualizerRelInfo
 		group = group ?: getGroupName(visInfo)
 		node.group = group
 		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
+		long maxLevel = visInfo.maxLevel
+		visInfo.maxLevel = maxLevel < targetLevel ? targetLevel : maxLevel
+		visInfo.nodeCount += 1
+
 		return node
 	}
 

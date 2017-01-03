@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
+import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.VisualizerConstants.*
@@ -20,6 +21,7 @@ class Visualizer
 	protected Set<String> messages = []
 	protected Set<String> visited = []
 	protected Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
+	protected Joiner.MapJoiner mapJoiner = Joiner.on(", ").withKeyValueSeparator(": ")
 
 	/**
 	 * Provides the information used to visualize n-cubes.
@@ -29,8 +31,8 @@ class Visualizer
 	 *           String startCubeName, name of the starting cube,
 	 *           Map scope, the context for which the visualizer is loaded
 	 *           VisualizerInfo, information about the visualization
-     * @return a map containing status, messages and visualizer information
-     */
+	 * @return a map containing status, messages and visualizer information
+	 */
 	Map<String, Object> buildGraph(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
@@ -68,8 +70,10 @@ class Visualizer
 	{
 		visInfo.maxLevel = 1
 		visInfo.nodeCount = 1
+		visInfo.relInfoCount = 1
 		visInfo.availableGroupsAllLevels = [] as Set
-		VisualizerRelInfo relInfo = getVisualizerRelInfo(visInfo, startCubeName)
+		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		loadFirstVisualizerRelInfo(visInfo, relInfo, startCubeName)
 		stack.push(relInfo)
 
 		while (!stack.empty)
@@ -78,25 +82,20 @@ class Visualizer
 		}
 	}
 
-	protected VisualizerRelInfo getVisualizerRelInfo(VisualizerInfo visInfo, String startCubeName)
+	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
 	{
-		VisualizerRelInfo relInfo = new VisualizerRelInfo()
 		relInfo.targetCube = NCubeManager.getCube(appId, startCubeName)
-		relInfo.scope = visInfo.scope
+		relInfo.scope = new CaseInsensitiveMap(visInfo.scope)
 		relInfo.targetLevel = 1
 		relInfo.targetId = 1
-		relInfo.targetScope = [:]
-		return relInfo
+		relInfo.addRequiredAndOptionalScopeKeys(visInfo)
+		relInfo.targetScope = new CaseInsensitiveMap()
 	}
 
 	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		messages << "*** UNDER CONSTRUCTION *** ${DOUBLE_BREAK} Full visualization of non-rpm cubes is not yet available.".toString()
-
 		NCube targetCube = relInfo.targetCube
 		String targetCubeName = targetCube.name
-
-		relInfo.addRequiredAndOptionalScopeKeys(visInfo)
 
 		if (relInfo.sourceCube)
 		{
@@ -114,37 +113,33 @@ class Visualizer
 
 		refs.each {Map coordinates, Set<String> cubeNames ->
 			cubeNames.each { String cubeName ->
-				addToStack(visInfo, relInfo, cubeName, coordinates)
+				addToStack(visInfo, relInfo, new VisualizerRelInfo(), cubeName, coordinates)
 			}
 		}
 	}
 
-	protected VisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String nextTargetCubeName, Map coordinates = [:])
+	protected void addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, VisualizerRelInfo nextRelInfo, String nextTargetCubeName, Map coordinates = [:])
 	{
-		VisualizerRelInfo nextRelInfo
 		NCube nextTargetCube = NCubeManager.getCube(appId, nextTargetCubeName)
 		if (nextTargetCube)
 		{
 			try
 			{
-				nextRelInfo = visualizerRelInfo
-
 				long nextTargetTargetLevel = relInfo.targetLevel + 1
-				long maxLevel = visInfo.maxLevel
-				visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
-				visInfo.nodeCount += 1
-
-				nextRelInfo.targetId = visInfo.nodeCount
 				nextRelInfo.targetLevel = nextTargetTargetLevel
+				visInfo.relInfoCount += 1
+				nextRelInfo.targetId = visInfo.relInfoCount
 				nextRelInfo.targetCube = nextTargetCube
 				nextRelInfo.sourceCube = relInfo.targetCube
-				nextRelInfo.sourceScope = relInfo.targetScope
+				nextRelInfo.sourceScope = new CaseInsensitiveMap(relInfo.targetScope)
 				nextRelInfo.sourceId = relInfo.targetId
+				nextRelInfo.sourceFieldName = mapJoiner.join(coordinates)
 
-				nextRelInfo.targetScope = coordinates
-				nextRelInfo.scope = relInfo.targetScope
+				nextRelInfo.targetScope = new CaseInsensitiveMap(coordinates)
+				nextRelInfo.scope = new CaseInsensitiveMap(relInfo.scope)
 				nextRelInfo.scope.putAll(coordinates)
-				nextRelInfo.sourceFieldName = coordinates.toString()
+
+				nextRelInfo.addRequiredAndOptionalScopeKeys(visInfo)
 
 				stack.push(nextRelInfo)
 			}
@@ -157,7 +152,6 @@ class Visualizer
 		{
 			messages << "No cube exists with name of ${nextTargetCubeName}. Cube not included in the visualization.".toString()
 		}
-		return nextRelInfo
 	}
 
 	protected VisualizerRelInfo getVisualizerRelInfo()
@@ -221,8 +215,8 @@ class Visualizer
 	protected static Set<String> findMissingScope(Map<String, Object> scope, Set<String> requiredKeys, Set mandatoryScopeKeys)
 	{
 		return requiredKeys.findAll { String key ->
-            !mandatoryScopeKeys.contains(key) && (scope == null || !scope.containsKey(key))
-        }
+			!mandatoryScopeKeys.contains(key) && (scope == null || !scope.containsKey(key))
+		}
 	}
 
 	protected String handleException(Throwable e, VisualizerRelInfo relInfo)

@@ -1055,6 +1055,10 @@ var Visualizer = (function ($) {
                 networkSelectNodeEvent(params);
             });
 
+            _network.on('deselectNode', function(params) {
+                clearVisLayoutEast();
+            });
+
             _network.on('startStabilizing', function () {
                 networkStartStabilizingEvent();
              });

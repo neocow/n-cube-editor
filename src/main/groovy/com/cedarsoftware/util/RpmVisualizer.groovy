@@ -67,15 +67,10 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
-	protected RpmVisualizerRelInfo getVisualizerRelInfo(VisualizerInfo visInfo, String startCubeName)
+	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
 	{
-		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo()
-		relInfo.targetCube = NCubeManager.getCube(appId, startCubeName)
-		relInfo.scope = visInfo.scope
-		relInfo.targetLevel = 1
-		relInfo.targetId = 1
-		relInfo.typesToAdd = (visInfo as RpmVisualizerInfo).getTypesToAdd(relInfo.targetCube.name)
-		return relInfo
+		super.loadFirstVisualizerRelInfo(visInfo, relInfo, startCubeName)
+		(relInfo as RpmVisualizerRelInfo).typesToAdd = (visInfo as RpmVisualizerInfo).getTypesToAdd(relInfo.targetCube.name)
 	}
 
 	@Override
@@ -195,7 +190,8 @@ class RpmVisualizer extends Visualizer
 
 	private RpmVisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)
 	{
-		RpmVisualizerRelInfo nextRelInfo = super.addToStack(visInfo, relInfo, nextTargetCubeName) as RpmVisualizerRelInfo
+		RpmVisualizerRelInfo nextRelInfo = new RpmVisualizerRelInfo()
+		super.addToStack(visInfo, relInfo, nextRelInfo, nextTargetCubeName) as RpmVisualizerRelInfo
 		NCube nextTargetCube = nextRelInfo.targetCube
 		try
 		{
