@@ -31,8 +31,8 @@ class Visualizer
 	 *           String startCubeName, name of the starting cube,
 	 *           Map scope, the context for which the visualizer is loaded
 	 *           VisualizerInfo, information about the visualization
-     * @return a map containing status, messages and visualizer information
-     */
+	 * @return a map containing status, messages and visualizer information
+	 */
 	Map<String, Object> buildGraph(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
@@ -70,6 +70,7 @@ class Visualizer
 	{
 		visInfo.maxLevel = 1
 		visInfo.nodeCount = 1
+		visInfo.relInfoCount = 1
 		visInfo.availableGroupsAllLevels = [] as Set
 		VisualizerRelInfo relInfo = getVisualizerRelInfo()
 		loadFirstVisualizerRelInfo(visInfo, relInfo, startCubeName)
@@ -87,17 +88,14 @@ class Visualizer
 		relInfo.scope = new CaseInsensitiveMap(visInfo.scope)
 		relInfo.targetLevel = 1
 		relInfo.targetId = 1
+		relInfo.addRequiredAndOptionalScopeKeys(visInfo)
 		relInfo.targetScope = new CaseInsensitiveMap()
 	}
 
 	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
-		messages << "*** UNDER CONSTRUCTION *** ${DOUBLE_BREAK} Full visualization of non-rpm cubes is not yet available.".toString()
-
 		NCube targetCube = relInfo.targetCube
 		String targetCubeName = targetCube.name
-
-		relInfo.addRequiredAndOptionalScopeKeys(visInfo)
 
 		if (relInfo.sourceCube)
 		{
@@ -128,12 +126,9 @@ class Visualizer
 			try
 			{
 				long nextTargetTargetLevel = relInfo.targetLevel + 1
-				long maxLevel = visInfo.maxLevel
-				visInfo.maxLevel = maxLevel < nextTargetTargetLevel ? nextTargetTargetLevel : maxLevel
-				visInfo.nodeCount += 1
-
-				nextRelInfo.targetId = visInfo.nodeCount
 				nextRelInfo.targetLevel = nextTargetTargetLevel
+				visInfo.relInfoCount += 1
+				nextRelInfo.targetId = visInfo.relInfoCount
 				nextRelInfo.targetCube = nextTargetCube
 				nextRelInfo.sourceCube = relInfo.targetCube
 				nextRelInfo.sourceScope = new CaseInsensitiveMap(relInfo.targetScope)
@@ -143,6 +138,8 @@ class Visualizer
 				nextRelInfo.targetScope = new CaseInsensitiveMap(coordinates)
 				nextRelInfo.scope = new CaseInsensitiveMap(relInfo.scope)
 				nextRelInfo.scope.putAll(coordinates)
+
+				nextRelInfo.addRequiredAndOptionalScopeKeys(visInfo)
 
 				stack.push(nextRelInfo)
 			}
@@ -218,8 +215,8 @@ class Visualizer
 	protected static Set<String> findMissingScope(Map<String, Object> scope, Set<String> requiredKeys, Set mandatoryScopeKeys)
 	{
 		return requiredKeys.findAll { String key ->
-            !mandatoryScopeKeys.contains(key) && (scope == null || !scope.containsKey(key))
-        }
+			!mandatoryScopeKeys.contains(key) && (scope == null || !scope.containsKey(key))
+		}
 	}
 
 	protected String handleException(Throwable e, VisualizerRelInfo relInfo)

@@ -23,6 +23,7 @@ class VisualizerInfo
 
 	long maxLevel
 	long nodeCount
+    long relInfoCount
     long defaultLevel
 
 	Map<String,String> allGroups
