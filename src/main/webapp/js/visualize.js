@@ -498,7 +498,10 @@ var Visualizer = (function ($) {
 
     function loadTraitsFromServer(node)
     {
-        var message, options, result, json;
+        var message, options, result, json, dataSetNode;
+        node.details = null;
+        _visInfo.nodes = {};
+        _visInfo.edges = {};
 
         options =  {visInfo: _visInfo, node: node};
 
@@ -515,10 +518,10 @@ var Visualizer = (function ($) {
             if (null !== json.message) {
                 _noteIdList.push(_nce.showNote(json.message));
             }
-            loadData(json.visInfo, json.status);
-            node = _nodes[0];
-            _nodeDataSet.remove(node.id);
-            _nodeDataSet.add(_nodes);
+            node = json.visInfo.nodes['@items'][0];
+            dataSetNode = _nodeDataSet.get(node.id);
+            dataSetNode.details = node.details;
+            _nodeDataSet.update(dataSetNode);
             _nodes = _nodeDataSet.get();
             _nodeDetails[0].innerHTML = node.details;
             _nodeTraits = $('#nodeTraits');
@@ -569,6 +572,8 @@ var Visualizer = (function ($) {
          }
 
         if (_visInfo){
+            _visInfo.nodes = {};
+            _visInfo.edges = {};
             options =  {startCubeName: _selectedCubeName, scope: _scope, visInfo: _visInfo};
         }
         else{
@@ -931,6 +936,8 @@ var Visualizer = (function ($) {
             formatNetworkOverrides(_networkOverridesBasic);
             formatNetworkOverrides(_networkOverridesFull);
             formatNetworkOverrides(_networkOverridesTopNode);
+            //TODO: Figure out why the only way to make it work is to json stringify, then json parse.
+            _networkOverridesTopNode = JSON.parse(JSON.stringify(_networkOverridesTopNode));
         }
 
         if (status === STATUS_SUCCESS) {
@@ -1019,9 +1026,6 @@ var Visualizer = (function ($) {
         var node, keys, k, kLen, key;
         node = _nodeDataSet.get(1);
         if (node) {
-            //TODO: Figure out why the only way to make it work is to json stringify, then json parse.
-            _networkOverridesTopNode = JSON.parse(JSON.stringify(_networkOverridesTopNode));
-
             if (_networkOverridesTopNode) {
                 keys = Object.keys(_networkOverridesTopNode);
                 for (k = 0, kLen = keys.length; k < kLen; k++) {
