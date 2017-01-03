@@ -46,4 +46,6 @@ class VisualizerConstants
 	public static final String CONFIG_GROUP_SUFFIX = 'groupSuffix'
 	public static final String CUBE_TYPE = 'cubeType'
 	public static final String CUBE_TYPE_DEFAULT = null
+
+	public static final String LOAD_CELL_VALUES_LABEL = 'cell values'
 }

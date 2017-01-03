@@ -46,7 +46,7 @@ var Visualizer = (function ($) {
     var _nodeDetailsTitle2 = null;
     var _nodeCubeLink = null;
     var _nodeVisualizer = null;
-    var _nodeTraits = null;
+    var _nodeCellValues = null;
     var _nodeAddTypes = null;
     var _nodeDetails = null;
     var _layout = null;
@@ -119,7 +119,7 @@ var Visualizer = (function ($) {
             _nodeDetailsTitle1 = $('#nodeDetailsTitle1');
             _nodeDetailsTitle2 = $('#nodeDetailsTitle2');
             _nodeCubeLink = $('#nodeCubeLink');
-            _nodeTraits = $('#nodeTraits');
+            _nodeCellValues = $('#nodeCellValues');
             _nodeAddTypes = $('#nodeAddTypes');
             _nodeVisualizer = $('#nodeVisualizer');
             _nodeDetails = $('#nodeDetails');
@@ -490,22 +490,22 @@ var Visualizer = (function ($) {
         _visualizerNetwork.show();
      }
 
-    function loadTraits(node) {
+    function loadCellValues(node) {
         _nce.clearNotes(_noteIdList);
-        setTimeout(function () {loadTraitsFromServer(node);}, PROGRESS_DELAY);
-        _nce.showNote(node.loadTraits ? 'Loading traits...' : 'Removing traits...');
+        setTimeout(function () {loadCellValuesFromServer(node);}, PROGRESS_DELAY);
+        _nce.showNote(node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Removing ' + _visInfo.loadAllCellValuesLabel + '...');
     }
 
-    function loadTraitsFromServer(node)
+    function loadCellValuesFromServer(node)
     {
         var message, options, result, json;
 
         options =  {visInfo: _visInfo, node: node};
 
-        result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
+        result = _nce.call('ncubeController.getVisualizerCellValues', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNote();
         if (false === result.status) {
-            _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + result.data);
+            _nce.showNote('Failed to load ' + _visInfo.loadAllCellValuesLabel + ': ' + TWO_LINE_BREAKS + result.data);
             return node;
         }
 
@@ -521,17 +521,17 @@ var Visualizer = (function ($) {
             _nodeDataSet.add(_nodes);
             _nodes = _nodeDataSet.get();
             _nodeDetails[0].innerHTML = node.details;
-            _nodeTraits = $('#nodeTraits');
+            _nodeCellValues = $('#nodeCellValues');
             _nodeAddTypes = $('#nodeAddTypes');
-            _nodeTraits[0].innerHTML = '';
-            _nodeTraits.append(createTraitsLink(node));
+            _nodeCellValues[0].innerHTML = '';
+            _nodeCellValues.append(createCellValuesLink(node));
         }
         else {
             message = json.message;
             if (null !== json.stackTrace) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
-            _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + message);
+            _nce.showNote('Failed to load ' + _visInfo.loadAllCellValuesLabel +  ': ' + TWO_LINE_BREAKS + message);
         }
         return node;
     }
@@ -639,7 +639,7 @@ var Visualizer = (function ($) {
         _nodeDetailsTitle2[0].innerHTML = '';
         _nodeCubeLink[0].innerHTML = '';
         _nodeVisualizer[0].innerHTML = '';
-        _nodeTraits[0].innerHTML = '';
+        _nodeCellValues[0].innerHTML = '';
         _nodeAddTypes.innerHTML = '';
         _nodeDetails[0].innerHTML = '';
         _layout.close('east');
@@ -931,7 +931,10 @@ var Visualizer = (function ($) {
             formatNetworkOverrides(_networkOverridesBasic);
             formatNetworkOverrides(_networkOverridesFull);
             formatNetworkOverrides(_networkOverridesTopNode);
+            //TODO: Figure out why the only way to make _networkOverridesTopNode work is to json stringify, then json parse.
+            _networkOverridesTopNode = JSON.parse(JSON.stringify(_networkOverridesTopNode));
         }
+
 
         if (status === STATUS_SUCCESS) {
             nodes = visInfo.nodes['@items'];
@@ -1019,9 +1022,6 @@ var Visualizer = (function ($) {
         var node, keys, k, kLen, key;
         node = _nodeDataSet.get(1);
         if (node) {
-            //TODO: Figure out why the only way to make it work is to json stringify, then json parse.
-            _networkOverridesTopNode = JSON.parse(JSON.stringify(_networkOverridesTopNode));
-
             if (_networkOverridesTopNode) {
                 keys = Object.keys(_networkOverridesTopNode);
                 for (k = 0, kLen = keys.length; k < kLen; k++) {
@@ -1186,9 +1186,9 @@ var Visualizer = (function ($) {
         _nodeCubeLink[0].innerHTML = '';
         _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
-        if (node.hasFields) {
-            _nodeTraits[0].innerHTML = '';
-            _nodeTraits.append(createTraitsLink(node));
+        if (node.cellValuesLoaded) {
+            _nodeCellValues[0].innerHTML = '';
+            _nodeCellValues.append(createCellValuesLink(node));
         }
 
         _nodeAddTypes[0].innerHTML = '';
@@ -1248,21 +1248,21 @@ var Visualizer = (function ($) {
         return cubeLink;
     }
 
-    function createTraitsLink(node) {
-        var traitsLink = $('<a/>');
-        traitsLink.addClass('nc-anc');
-        if (node.loadTraits) {
-            traitsLink.html('Hide traits');
+    function createCellValuesLink(node) {
+        var cellValuesLink = $('<a/>');
+        cellValuesLink.addClass('nc-anc');
+        if (node.showAllCellValues) {
+            cellValuesLink.html('Hide ' + _visInfo.loadAllCellValuesLabel);
         }
         else {
-            traitsLink.html('Show traits');
+            cellValuesLink.html('Show ' + _visInfo.loadAllCellValuesLabel);
         }
-        traitsLink.click(function (e) {
+        cellValuesLink.click(function (e) {
             e.preventDefault();
-            node.loadTraits = !node.loadTraits;
-            loadTraits(node);
+            node.showAllCellValues = !node.showAllCellValues;
+            loadCellValues(node);
         });
-        return traitsLink;
+        return cellValuesLink;
     }
 
     function createAddTypesDropdown(typesToAdd, label) {

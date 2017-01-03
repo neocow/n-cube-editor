@@ -22,28 +22,20 @@ class RpmVisualizer extends Visualizer
 	protected String defaultScopeDate
 
 	/**
-	 * Loads all traits available for a given rpm class.
+	 * Loads all cell values available for a given cube.
 	 *
 	 * @param applicationID
 	 * @param options (map containing:
 	 *            Map node, representing a class,
-	 *            RpmVisualizerInfo, information about the visualization
+	 *            VisualizerInfo, information about the visualization
 	 * @return node
 	 */
-	Map getTraits(ApplicationID applicationID, Map options)
+	@Override
+	Map getCellValues(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
-
-		RpmVisualizerInfo visInfo = options.visInfo as RpmVisualizerInfo
-		Map node = options.node as Map
-		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId, node)
-
-		getTraitMaps(visInfo, relInfo)
-		node.details = relInfo.getDetails(visInfo)
-		visInfo.nodes = [node]
-
-		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
-		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
+		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId, options.node as Map)
+		return getCellValues(relInfo, options)
 	}
 
 	@Override
@@ -90,10 +82,10 @@ class RpmVisualizer extends Visualizer
 	{
 		String targetCubeName = relInfo.targetCube.name
 
-		boolean hasFields = canLoadTargetAsRpmClass(relInfo)
-		if (hasFields)
+		boolean cellValuesLoaded = canLoadTargetAsRpmClass(relInfo)
+		if (cellValuesLoaded)
 		{
-			hasFields = getTraitMaps(visInfo, relInfo)
+			cellValuesLoaded = loadCellValues(visInfo, relInfo)
 		}
 
 		if (relInfo.sourceCube)
@@ -108,9 +100,9 @@ class RpmVisualizer extends Visualizer
 
 		visInfo.nodes << relInfo.createNode(visInfo)
 
-		if (hasFields)
+		if (cellValuesLoaded)
 		{
-			relInfo.targetTraitMaps.each { String targetFieldName, Map targetTraits ->
+			relInfo.targetCellValues.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
@@ -149,11 +141,11 @@ class RpmVisualizer extends Visualizer
 			return
 		}
 
-		boolean hasFields = getTraitMaps(visInfo, relInfo)
+		boolean cellValuesLoaded = loadCellValues(visInfo, relInfo)
 
-		if (hasFields)
+		if (cellValuesLoaded)
 		{
-			relInfo.targetTraitMaps.each { String targetFieldName, Map targetTraits ->
+			relInfo.targetCellValues.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					try
@@ -198,7 +190,7 @@ class RpmVisualizer extends Visualizer
 			nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
 			nextRelInfo.sourceFieldName = targetFieldName
 			nextRelInfo.sourceFieldRpmType = rpmType
-			nextRelInfo.sourceTraitMaps = (relInfo as RpmVisualizerRelInfo).targetTraitMaps
+			nextRelInfo.sourceCellValues = (relInfo as RpmVisualizerRelInfo).targetCellValues
 			nextRelInfo.typesToAdd = (visInfo as RpmVisualizerInfo).getTypesToAdd(nextTargetCube.name)
 		}
 		catch (Exception e)
@@ -230,10 +222,10 @@ class RpmVisualizer extends Visualizer
 			String sourceFieldName = relInfo.sourceFieldName
 			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
 			{
-				relInfo.targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + relInfo.sourceFieldName]] as Map
+				relInfo.targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + relInfo.sourceFieldName]] as Map
 				String msg = getLoadTargetAsRpmClassMessage(relInfo, type)
 				relInfo.notes << msg
-				relInfo.hasFields = false
+				relInfo.cellValuesLoaded = false
 				return false
 			}
 		}
@@ -353,38 +345,16 @@ class RpmVisualizer extends Visualizer
 		return hasMissingScope
 	}
 
-	private boolean getTraitMaps(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo)
+	protected Set getMandatoryScopeKeys()
 	{
-		try
-		{
-			relInfo.getTraitMaps(helper, appId, visInfo)
-			relInfo.hasFields = true
-		}
-		catch (Exception e)
-		{
-			relInfo.hasFields = false
-			Throwable t = getDeepestException(e)
-			if (t instanceof InvalidCoordinateException)
-			{
-				handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, relInfo, MANDATORY_SCOPE_KEYS)
-			}
-			else if (t instanceof CoordinateNotFoundException)
-			{
-				handleCoordinateNotFoundException(t as CoordinateNotFoundException, visInfo, relInfo)
-			}
-			else
-			{
-				handleException(t, relInfo)
-			}
-		}
-		return relInfo.hasFields
+		return MANDATORY_SCOPE_KEYS
 	}
 
 	@Override
 	protected String handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		String reason = super.handleCoordinateNotFoundException(e, visInfo, relInfo)
-		(relInfo as RpmVisualizerRelInfo).targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): reason + relInfo.effectiveNameByCubeName]] as Map
+		(relInfo as RpmVisualizerRelInfo).targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): reason + relInfo.effectiveNameByCubeName]] as Map
 		return reason
 	}
 
@@ -392,7 +362,7 @@ class RpmVisualizer extends Visualizer
 	protected String handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set mandatoryScopeKeys)
 	{
 		String reason = super.handleInvalidCoordinateException(e, visInfo, relInfo, mandatoryScopeKeys)
-		(relInfo as RpmVisualizerRelInfo).targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): reason + relInfo.effectiveNameByCubeName]] as Map
+		(relInfo as RpmVisualizerRelInfo).targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): reason + relInfo.effectiveNameByCubeName]] as Map
 		return reason
 	}
 
@@ -400,7 +370,7 @@ class RpmVisualizer extends Visualizer
 	protected String handleException(Throwable e, VisualizerRelInfo relInfo)
 	{
 		String reason = super.handleException(e, relInfo)
-		(relInfo as RpmVisualizerRelInfo).targetTraitMaps = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + reason]] as Map
+		(relInfo as RpmVisualizerRelInfo).targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + reason]] as Map
 		return reason
 	}
 

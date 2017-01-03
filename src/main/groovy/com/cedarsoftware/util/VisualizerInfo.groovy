@@ -25,6 +25,7 @@ class VisualizerInfo
 	long nodeCount
     long relInfoCount
     long defaultLevel
+    String loadAllCellValuesLabel
 
 	Map<String,String> allGroups
     Set<String> allGroupsKeys
@@ -97,10 +98,16 @@ class VisualizerInfo
         String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
         this.groupSuffix = groupSuffix ?: ''
         loadAvailableScopeKeysAndValues(configCube)
-
+        loadAllCellValuesLabel = getLoadAllCellValuesLabel()
         return configCube
     }
 
+
+    protected String getLoadAllCellValuesLabel()
+    {
+        LOAD_CELL_VALUES_LABEL
+    }
+    
     void loadAvailableScopeKeysAndValues(NCube configCube)
     {
          availableScopeValues = new CaseInsensitiveMap<>()

@@ -265,11 +265,11 @@ class NCubeController extends BaseController
     }
 
     // TODO: This needs to be externalized (loaded via Grapes)
-    Map getVisualizerTraits(ApplicationID appId, Map options)
+    Map getVisualizerCellValues(ApplicationID appId, Map options)
     {
         appId = addTenant(appId)
         RpmVisualizer vis = new RpmVisualizer()
-        return vis.getTraits(appId, options)
+        return vis.getCellValues(appId, options)
     }
 
     Boolean updateCubeMetaProperties(ApplicationID appId, String cubeName, Map<String, Object> newMetaProperties)

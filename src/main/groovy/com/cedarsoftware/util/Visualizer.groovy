@@ -55,6 +55,62 @@ class Visualizer
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
 
+	/**
+	 * Loads all cell values available for a given cube.
+	 *
+	 * @param applicationID
+	 * @param options (map containing:
+	 *            Map node, representing a class,
+	 *            VisualizerInfo, information about the visualization
+	 * @return node
+	 */
+	Map getCellValues(ApplicationID applicationID, Map options)
+	{
+		appId = applicationID
+		VisualizerRelInfo relInfo = new VisualizerRelInfo(appId, options.node as Map)
+		return getCellValues(relInfo, options)
+	}
+
+	protected Map getCellValues(VisualizerRelInfo relInfo, Map options)
+	{
+		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
+		Map node = options.node as Map
+
+		loadCellValues(visInfo, relInfo)
+		node.details = relInfo.getDetails(visInfo)
+		visInfo.nodes = [node]
+
+		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
+		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
+	}
+	
+	protected boolean loadCellValues(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
+	{
+		try
+		{
+			relInfo.loadCellValues(appId, visInfo)
+			relInfo.cellValuesLoaded = true
+		}
+		catch (Exception e)
+		{
+			relInfo.cellValuesLoaded = false
+			Throwable t = getDeepestException(e)
+			if (t instanceof InvalidCoordinateException)
+			{
+				handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, relInfo, getMandatoryScopeKeys())
+			}
+			else if (t instanceof CoordinateNotFoundException)
+			{
+				handleCoordinateNotFoundException(t as CoordinateNotFoundException, visInfo, relInfo)
+			}
+			else
+			{
+				handleException(t, relInfo)
+			}
+		}
+		return relInfo.cellValuesLoaded
+	}
+	
 	protected VisualizerInfo getVisualizerInfo(Map options)
 	{
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
@@ -217,6 +273,11 @@ class Visualizer
 		return requiredKeys.findAll { String key ->
 			!mandatoryScopeKeys.contains(key) && (scope == null || !scope.containsKey(key))
 		}
+	}
+
+	protected Set getMandatoryScopeKeys()
+	{
+		return [] as Set
 	}
 
 	protected String handleException(Throwable e, VisualizerRelInfo relInfo)

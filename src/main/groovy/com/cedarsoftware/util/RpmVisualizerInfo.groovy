@@ -58,6 +58,12 @@ class RpmVisualizerInfo extends VisualizerInfo
     }
 
     @Override
+    protected String getLoadAllCellValuesLabel()
+    {
+        LOAD_CELL_VALUES_LABEL
+    }
+
+    @Override
     void loadAvailableScopeKeysAndValues(NCube configCube)
     {
         Map<String, Set<Object>> valuesByKey = new CaseInsensitiveMap<>()

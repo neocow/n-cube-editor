@@ -15,10 +15,7 @@ import static com.cedarsoftware.util.RpmVisualizerConstants.*
 @CompileStatic
 class RpmVisualizerRelInfo extends VisualizerRelInfo
 {
-	boolean hasFields = false
-	boolean loadTraits = false
-	Map<String, Map<String, Object>> targetTraitMaps
-	Map<String, Map<String, Object>> sourceTraitMaps
+	protected RpmVisualizerHelper helper = new RpmVisualizerHelper()
 	String sourceFieldRpmType
 	List<String> typesToAdd
 
@@ -27,9 +24,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
     RpmVisualizerRelInfo(ApplicationID appId, Map node)
 	{
 		super(appId, node)
-		loadTraits = node.loadTraits as boolean
 		typesToAdd = node.typesToAdd as List
-		hasFields = node.hasFields as boolean
 	}
 
 	Set<String> getRequiredScope()
@@ -48,7 +43,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		String notesLabel = "<b>Note: </b>"
 
-		if (!hasFields)
+		if (!cellValuesLoaded)
 		{
 			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
 			notesLabel = "<b>Reason: </b>"
@@ -65,17 +60,17 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 
 		//Scope
-		if (hasFields)
+		if (cellValuesLoaded)
 		{
-			String title = loadTraits ? 'Utilized scope' : 'Utilized scope to load class without all traits'
+			String title = showAllCellValues ? 'Utilized scope' : 'Utilized scope to load class without all traits'
 			getDetailsMap(sb, title, targetScope)
 		}
 		getDetailsMap(sb, 'Available scope', scope)
 
 		//Fields
-		if (hasFields)
+		if (cellValuesLoaded)
 		{
-			if (loadTraits)
+			if (showAllCellValues)
 			{
 				addClassTraits(sb)
 			}
@@ -86,7 +81,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void addFieldDetails(StringBuilder sb)
 	{
-		if (loadTraits)
+		if (showAllCellValues)
 		{
 			sb.append("<b>Fields and traits</b>")
 	}
@@ -95,10 +90,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			sb.append("<b>Fields</b>")
 		}
 		sb.append("<pre><ul>")
-		targetTraitMaps.each { String fieldName, v ->
+		targetCellValues.each { String fieldName, v ->
 			if (CLASS_TRAITS != fieldName)
 			{
-				if (loadTraits)
+				if (showAllCellValues)
 				{
 					sb.append("<li><b>${fieldName}</b></li>")
 					addTraits(sb, fieldName)
@@ -114,7 +109,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void addTraits(StringBuilder sb, String fieldName)
 	{
-		Map<String, Object> traits = targetTraitMaps[fieldName].sort() as Map
+		Map<String, Object> traits = targetCellValues[fieldName].sort() as Map
 		sb.append("<pre><ul>")
 		traits.each { String traitName, Object traitValue ->
 			if (traitValue != null)
@@ -164,13 +159,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	String getSourceScopedName()
 	{
-		Map<String, Object> classTraitsTraitMap = sourceTraitMaps[CLASS_TRAITS] as Map
+		Map<String, Object> classTraitsTraitMap = sourceCellValues[CLASS_TRAITS] as Map
 		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
 	}
 
 	String getTargetScopedName()
 	{
-		Map<String, Object> classTraitsTraitMap = targetTraitMaps[CLASS_TRAITS] as Map
+		Map<String, Object> classTraitsTraitMap = targetCellValues[CLASS_TRAITS] as Map
 		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
 	}
 
@@ -179,7 +174,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		if (sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
-			String scopedName = sourceTraitMaps[CLASS_TRAITS][R_SCOPED_NAME]
+			String scopedName = sourceCellValues[CLASS_TRAITS][R_SCOPED_NAME]
 			return !scopedName ?: RPM_CLASS_DOT + sourceFieldRpmType
 		}
 		return RPM_CLASS_DOT + targetFieldName
@@ -188,24 +183,25 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	@Override
     String getSourceMessage()
     {
-        if (sourceTraitMaps)
+        if (sourceCellValues)
         {
             return sourceScopedName ? ", the target of ${sourceScopedName} on ${getCubeDisplayName(sourceCube.name)}" : ""
         }
         return ''
     }
 
-    void getTraitMaps(RpmVisualizerHelper helper, ApplicationID appId, VisualizerInfo visInfo)
+	@Override
+    void loadCellValues(ApplicationID appId, VisualizerInfo visInfo)
     {
-        targetTraitMaps = [:]
+        targetCellValues = [:]
         Map output = [:]
         if (targetCube.name.startsWith(RPM_ENUM))
         {
-            helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetTraitMaps, loadTraits, output)
+            helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetCellValues, showAllCellValues, output)
         }
         else
         {
-            helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetTraitMaps, loadTraits, output)
+            helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetCellValues, showAllCellValues, output)
         }
         removeNotExistsFields()
 		addRequiredAndOptionalScopeKeys(visInfo)
@@ -229,7 +225,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
     void removeNotExistsFields()
     {
-        targetTraitMaps.keySet().removeAll { String fieldName -> !targetTraitMaps[fieldName][R_EXISTS] }
+        targetCellValues.keySet().removeAll { String fieldName -> !targetCellValues[fieldName][R_EXISTS] }
     }
 
     static void cullScope(Set<String> scopeKeys, Set scopeCollector)
@@ -241,9 +237,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	Map<String, Object> createEdge(int edgeId)
 	{
 		Map<String, Object> edge = super.createEdge(edgeId)
-		Map<String, Map<String, Object>> sourceTraitMaps = sourceTraitMaps
+		Map<String, Map<String, Object>> sourceCellValues = sourceCellValues
 
-		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceTraitMaps[sourceFieldName] as Map
+		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceCellValues[sourceFieldName] as Map
 		String vMin = sourceFieldTraitMap[V_MIN] as String ?: '0'
 		String vMax = sourceFieldTraitMap[V_MAX] as String ?: '999999'
 
@@ -274,8 +270,8 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			node.detailsTitle2 = null
 			node.title = node.detailsTitle1
 		}
-		node.loadTraits = loadTraits
-		node.hasFields = hasFields
+		node.showAllCellValues = showAllCellValues
+		node.cellValuesLoaded = cellValuesLoaded
 		return node
 	}
 
@@ -344,7 +340,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 		else if (targetCubeName.startsWith(RPM_ENUM_DOT))
 		{
-			String sourceName =  sourceTraitMaps ? getDotSuffix(sourceEffectiveName) : getCubeDisplayName(sourceCube.name)
+			String sourceName =  sourceCellValues ? getDotSuffix(sourceEffectiveName) : getCubeDisplayName(sourceCube.name)
 			detailsTitle = "Valid values for field ${sourceFieldName} on ${sourceName}".toString()
 		}
 		return detailsTitle

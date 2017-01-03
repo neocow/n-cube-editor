@@ -27,6 +27,11 @@ class VisualizerRelInfo
 	Map<String, Object> sourceScope
 	String sourceFieldName
 
+	boolean cellValuesLoaded = false
+	boolean showAllCellValues = false
+	Map<String, Map<String, Object>> targetCellValues
+	Map<String, Map<String, Object>> sourceCellValues
+
 	VisualizerRelInfo() {}
 
 	VisualizerRelInfo(ApplicationID appId, Map node)
@@ -39,6 +44,15 @@ class VisualizerRelInfo
 		targetLevel = Long.valueOf(node.level as String)
 		targetScope = node.scope as CaseInsensitiveMap
 		scope = node.availableScope as CaseInsensitiveMap
+		showAllCellValues = node.showAllCellValues as boolean
+		cellValuesLoaded = node.cellValuesLoaded as boolean
+	}
+
+	void loadCellValues(ApplicationID appId, VisualizerInfo visInfo)
+	{
+		targetCellValues = [:]
+		Map output = [:]
+		addRequiredAndOptionalScopeKeys(visInfo)
 	}
 
 	Set<String> getRequiredScope()
