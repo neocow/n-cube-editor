@@ -71,7 +71,8 @@ class Visualizer
 		visInfo.maxLevel = 1
 		visInfo.nodeCount = 1
 		visInfo.availableGroupsAllLevels = [] as Set
-		VisualizerRelInfo relInfo = getVisualizerRelInfo(visInfo, startCubeName)
+		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		loadFirstVisualizerRelInfo(visInfo, relInfo, startCubeName)
 		stack.push(relInfo)
 
 		while (!stack.empty)
@@ -80,15 +81,13 @@ class Visualizer
 		}
 	}
 
-	protected VisualizerRelInfo getVisualizerRelInfo(VisualizerInfo visInfo, String startCubeName)
+	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
 	{
-		VisualizerRelInfo relInfo = new VisualizerRelInfo()
 		relInfo.targetCube = NCubeManager.getCube(appId, startCubeName)
-		relInfo.scope = visInfo.scope
+		relInfo.scope = new CaseInsensitiveMap(visInfo.scope)
 		relInfo.targetLevel = 1
 		relInfo.targetId = 1
-		relInfo.targetScope = [:]
-		return relInfo
+		relInfo.targetScope = new CaseInsensitiveMap()
 	}
 
 	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
@@ -137,12 +136,12 @@ class Visualizer
 				nextRelInfo.targetLevel = nextTargetTargetLevel
 				nextRelInfo.targetCube = nextTargetCube
 				nextRelInfo.sourceCube = relInfo.targetCube
-				nextRelInfo.sourceScope = relInfo.targetScope
+				nextRelInfo.sourceScope = new CaseInsensitiveMap(relInfo.targetScope)
 				nextRelInfo.sourceId = relInfo.targetId
 				nextRelInfo.sourceFieldName = mapJoiner.join(coordinates)
 
-				nextRelInfo.targetScope = coordinates
-				nextRelInfo.scope = new CaseInsensitiveMap<>(relInfo.targetScope)
+				nextRelInfo.targetScope = new CaseInsensitiveMap(coordinates)
+				nextRelInfo.scope = new CaseInsensitiveMap(relInfo.scope)
 				nextRelInfo.scope.putAll(coordinates)
 
 				stack.push(nextRelInfo)

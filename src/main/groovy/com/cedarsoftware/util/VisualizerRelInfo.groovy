@@ -43,8 +43,7 @@ class VisualizerRelInfo
 
 	Set<String> getRequiredScope()
 	{
-		Set<String> requiredScope = targetCube.getRequiredScope(targetScope, [:] as Map)
-		return requiredScope
+		return targetCube.getRequiredScope(targetScope, [:] as Map)
 	}
 
 	String getDetails(VisualizerInfo visInfo)
