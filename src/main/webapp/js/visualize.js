@@ -505,10 +505,10 @@ var Visualizer = (function ($) {
 
         options =  {visInfo: _visInfo, node: node};
 
-        result = _nce.call('ncubeController.getVisualizerTraits', [_nce.getSelectedTabAppId(), options]);
+        result = _nce.call('ncubeController.getVisualizerCellValues', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNote();
         if (false === result.status) {
-            _nce.showNote('Failed to load traits: ' + TWO_LINE_BREAKS + result.data);
+            _nce.showNote('Failed to load ' + _visInfo.loadAllCellValuesLabel + ': ' + TWO_LINE_BREAKS + result.data);
             return node;
         }
 
@@ -936,7 +936,7 @@ var Visualizer = (function ($) {
             formatNetworkOverrides(_networkOverridesBasic);
             formatNetworkOverrides(_networkOverridesFull);
             formatNetworkOverrides(_networkOverridesTopNode);
-            //TODO: Figure out why the only way to make it work is to json stringify, then json parse.
+            //TODO: Figure out why the only way to make _networkOverridesTopNode work is to json stringify, then json parse.
             _networkOverridesTopNode = JSON.parse(JSON.stringify(_networkOverridesTopNode));
         }
 
