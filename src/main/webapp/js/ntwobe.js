@@ -2097,9 +2097,6 @@ var NCubeEditor2 = (function ($) {
         }
         td.className += CLASS_HANDSON_TABLE_HEADER;
         cellProperties.editor = ColumnEditor;
-        if (axis.isRef) {
-            cellProperties.readOnly = true;
-        }
     }
 
     function renderRowHeader(td, row, col, cellProperties) {
@@ -2116,9 +2113,6 @@ var NCubeEditor2 = (function ($) {
         }
 
         cellProperties.editor = ColumnEditor;
-        if (axis.isRef) {
-            cellProperties.readOnly = true;
-        }
     }
     
     function renderCell(td, row, col, cellProperties) {
@@ -2401,10 +2395,6 @@ var NCubeEditor2 = (function ($) {
         });
         div.find('a.anc-edit-axis-metadata').on('click', function(e) {
             e.preventDefault();
-            if (isRef) {
-                e.stopImmediatePropagation();
-                return;
-            }
             closeAxisMenu();
             editAxisMetadata(axis);
         });
@@ -2703,11 +2693,7 @@ var NCubeEditor2 = (function ($) {
         html += '<li><a href="#" class="anc-update-axis">Update Axis...</a></li>';
         html += '<li><a href="#" class="anc-add-axis">Add Axis...</a></li>';
         html += '<li><a href="#" class="anc-delete-axis">Delete Axis...</a></li>';
-        html += '<li';
-        if (isRef) {
-            html += ' class="disabled"';
-        }
-        html += '><a href="#" class="anc-edit-axis-metadata">Edit Axis Metadata...</a></li>';
+        html += '<li><a href="#" class="anc-edit-axis-metadata">Edit Axis Metadata...</a></li>';
         html += '<li class="divider"/>';
 
         html += '<li';
