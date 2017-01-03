@@ -21,7 +21,7 @@ class Visualizer
 	protected Set<String> messages = []
 	protected Set<String> visited = []
 	protected Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
-	protected Joiner.MapJoiner mapJoiner = Joiner.on(",").withKeyValueSeparator(": ")
+	protected Joiner.MapJoiner mapJoiner = Joiner.on(", ").withKeyValueSeparator(": ")
 
 	/**
 	 * Provides the information used to visualize n-cubes.
