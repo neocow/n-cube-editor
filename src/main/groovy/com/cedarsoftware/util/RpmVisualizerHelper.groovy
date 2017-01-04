@@ -20,7 +20,7 @@ import java.util.regex.Pattern
  */
 
 @CompileStatic
-public class RpmVisualizerHelper
+class RpmVisualizerHelper
 {
 
 	/**
@@ -785,7 +785,7 @@ public class RpmVisualizerHelper
 						return 0;
 
 					default:
-						throw new RuntimeException("invalid item: " + item.getClass());
+						throw new RuntimeException("invalid item: ${item?.class.name}")
 				}
 			}
 
