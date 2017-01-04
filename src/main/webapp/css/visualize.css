@@ -103,7 +103,6 @@ h3{
 }
 
 .borders div{
-
 }
 
 .highlighted{
@@ -114,11 +113,13 @@ h3{
     background-color:rgb(235, 235, 228);
 }
 
-.executeNonUrlCommandCell{
+.executeNonUrlCommandCell, .executeNonUrlCommandCells{
+    color:#008080;
+}
+
+.executeUrlCommandCell, .executeUrlCommandCells{
     color:#4B0082;
 }
 
-.executeNonUrlCommandCells{
-    color:#4B0082;
-}
+
 

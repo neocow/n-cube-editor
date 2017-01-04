@@ -73,7 +73,8 @@ class VisualizerRelInfo
 	void loadCellValues(ApplicationID appId, VisualizerInfo visInfo)
 	{
 		targetCellValues = [:]
-		if (showCellValuesSection())
+		cellValuesLoaded = null
+		if (showAllCellValues)
 		{
 			Map<LongHashSet, Object> cellMap = targetCube.getCellMap()
 			cellMap.each { LongHashSet ids, Object noExecuteCell ->
@@ -111,6 +112,7 @@ class VisualizerRelInfo
 				targetCellValues[processingCoordinate] = [(cellString): noExecuteCell]
 			}
 			targetCellValues.sort()
+			cellValuesLoaded = true
 		}
 	}
 
@@ -120,9 +122,21 @@ class VisualizerRelInfo
 		executingNonUrlCommandCells = executeNonUrlCommandCell || executeNonUrlCommandCells
 	}
 
-	private boolean showCellValuesSection()
+	void setExecuteTriggers(Map node)
 	{
-		return showAllCellValues || executeUrlCommandCell || executeUrlCommandCells || executeNonUrlCommandCell || executeNonUrlCommandCells
+		node.executeUrlCommandCell = executeUrlCommandCell
+		node.executeUrlCommandCells = executeUrlCommandCells
+		node.executeNonUrlCommandCell = executeNonUrlCommandCell
+		node.executeNonUrlCommandCells = executeNonUrlCommandCells
+	}
+
+	void resetAllExecuteTriggers(Map node)
+	{
+		executeUrlCommandCell = null
+		executeUrlCommandCells = false
+		executeNonUrlCommandCell = null
+		executeNonUrlCommandCells = false
+		setExecuteTriggers(node)
 	}
 
 	void resetExecuteTriggers()
@@ -184,7 +198,7 @@ class VisualizerRelInfo
 		getDetailsSet(sb, 'Optional scope keys', visInfo.optionalScopeKeys[targetCubeName])
 
 		//Cell values
-		if (null != cellValuesLoaded && showCellValuesSection())
+		if (null != cellValuesLoaded && showAllCellValues)
 		{
 			addCellValueSection(sb)
 		}
@@ -208,6 +222,8 @@ class VisualizerRelInfo
 	{
 		boolean hasNonExecutedUrlCommandCells = false
 		boolean hasNonExecutedNonUrlCommandCells = false
+		boolean hasUrlLinks = false
+		boolean hasStringValue = false
 		String id = String.valueOf(targetId)
 
 		targetCellValues.each { String coordinate, Map<String, Object> cellValues ->
@@ -220,36 +236,38 @@ class VisualizerRelInfo
 						if (executeUrlCommandCells || coordinate == executeUrlCommandCell)
 						{
 							//The executed URL cell value is displayed as text.
-							cellValuesBuilder.append("<li>${coordinate} ==> ${cellString}</li>")
+							cellValuesBuilder.append("<li>${coordinate} <b>==></b> ${cellString}</li>")
+							hasStringValue = true
 						}
 						else
 						{
 							//The non-executed URL cell value is displayed as a link. If clicked, the cell is executed.
-							cellValuesBuilder.append("""<li>${coordinate}= <a class="executeUrlCommandCell" id="${id}" title="${coordinate}" href="#">${noExecuteCell}</a></li>""")
+							cellValuesBuilder.append("""<li><a class="executeUrlCommandCell" id="${id}" title="${coordinate}" href="#">${coordinate} <b>==></b>  ${noExecuteCell}</a></li>""")
 							hasNonExecutedUrlCommandCells = true
 						}
 					}
 					else if (executeNonUrlCommandCells || coordinate == executeNonUrlCommandCell)
 					{
 						//The executed non-URL cell value is displayed as text.
-						cellValuesBuilder.append("<li>${coordinate} ==> ${cellString}</li>")
+						cellValuesBuilder.append("<li>${coordinate} <b>==></b> ${cellString}</li>")
+						hasStringValue = true
 					}
 					else
 					{
 						//The non-executed non-URL cell value is displayed as a link. If clicked, the cell is executed.
-						cellValuesBuilder.append("""<li>${coordinate}= <a class="executeNonUrlCommandCell" id="${id}" title="${coordinate}" href="#">${noExecuteCell}</a></li>""")
+						cellValuesBuilder.append("""<li><a class="executeNonUrlCommandCell" id="${id}" title="${coordinate}" href="#">${coordinate} <b>==></b>  ${noExecuteCell}</a></li>""")
 						hasNonExecutedNonUrlCommandCells = true
 					}
 				}
 				else if (cellString.startsWith(HTTP) || cellString.startsWith(HTTPS) || cellString.startsWith(FILE))
 				{
 					//The executed cell value is displayed as a link. If clicked, the link opens in a new window.
-					cellValuesBuilder.append("""<li>${coordinate}= <a href="${cellString}" target="_blank">${cellString}</a></li>""")
+					cellValuesBuilder.append("""<li>${coordinate} <b>==></b>  <a href="#" onclick='window.open("${cellString}");return false;'>${cellString}</a></li>""")
 				}
 				else
 				{
 					//The executed cell value is displayed as text.
-					cellValuesBuilder.append("<li>${coordinate} ==> ${cellString}</li>")
+					cellValuesBuilder.append("<li>${coordinate} <b>==></b> ${cellString}</li>")
 				}
 			}
 		}
@@ -259,14 +277,15 @@ class VisualizerRelInfo
 			linkBuilder.append(DOUBLE_BREAK)
 			if (hasNonExecutedUrlCommandCells)
 			{
-				linkBuilder.append("""<a class="executeUrlCommandCells" id="${id}" href="#">Execute URL cells</a></li>""")
+				linkBuilder.append("""${SPACE}<a class="executeUrlCommandCells" id="${id}" href="#">Execute all URL cells</a>""")
 				linkBuilder.append(BREAK)
 			}
 			if (hasNonExecutedNonUrlCommandCells)
 			{
-				linkBuilder.append("""<a class="executeNonUrlCommandCells" id="${id}" href="#">Execute non-URL cells</a></li>""")
+				linkBuilder.append("""${SPACE}<a class="executeNonUrlCommandCells" id="${id}" href="#">Execute all command cells</a>""")
+				linkBuilder.append(BREAK)
 			}
-			linkBuilder.append(DOUBLE_BREAK)
+			linkBuilder.append(BREAK)
 		}
 	}
 

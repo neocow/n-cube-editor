@@ -78,12 +78,17 @@ class Visualizer
 
 		loadCellValues(visInfo, relInfo)
 		node.details = relInfo.getDetails(visInfo)
-		node.showAllCellValues = relInfo.showAllCellValues
 		node.cellValuesLoaded = relInfo.cellValuesLoaded
-		node.executeUrlCommandCell = relInfo.executeUrlCommandCell
-		node.executeUrlCommandCells = relInfo.executeUrlCommandCells
-		node.executeNonUrlCommandCell = relInfo.executeNonUrlCommandCell
-		node.executeNonUrlCommandCells = relInfo.executeNonUrlCommandCells
+		boolean showAllCellValues = relInfo.showAllCellValues
+		node.showAllCellValues = showAllCellValues
+		if (showAllCellValues)
+		{
+			relInfo.setExecuteTriggers(node)
+		}
+		else
+		{
+			relInfo.resetAllExecuteTriggers(node)
+		}
 		visInfo.nodes = [node]
 
 		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
@@ -95,7 +100,6 @@ class Visualizer
 		try
 		{
 			relInfo.loadCellValues(appId, visInfo)
-			relInfo.cellValuesLoaded = true
 		}
 		catch (Exception e)
 		{

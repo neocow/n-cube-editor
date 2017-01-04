@@ -1294,7 +1294,7 @@ var Visualizer = (function ($) {
         cellValuesLink.click(function (e) {
             e.preventDefault();
             node.showAllCellValues = !node.showAllCellValues;
-            note = node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Removing ' + _visInfo.loadAllCellValuesLabel + '...'
+            note = node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadAllCellValuesLabel + '...'
             loadCellValues(node, note);
         });
         return cellValuesLink;

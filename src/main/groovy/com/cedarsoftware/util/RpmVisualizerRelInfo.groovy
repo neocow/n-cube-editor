@@ -114,7 +114,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				String traitString = traitValue.toString()
 				if (traitString.startsWith(HTTP) || traitString.startsWith(HTTPS) || traitString.startsWith(FILE))
 				{
-					sb.append("<li>${traitName}: <a href=\"${traitString}\" target=\"_blank\">${traitString}</a></li>")
+					sb.append("""<li>${traitName}: <a href="#" onclick='window.open("${traitString}");return false;'>${traitString}</a></li>""")
 				}
 				else
 				{
@@ -190,6 +190,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	@Override
 	void loadCellValues(ApplicationID appId, VisualizerInfo visInfo)
 	{
+		cellValuesLoaded = null
 		targetCellValues = [:]
 		Map output = [:]
 		if (targetCube.name.startsWith(RPM_ENUM))
@@ -203,6 +204,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		removeNotExistsFields()
 		addRequiredAndOptionalScopeKeys(visInfo)
 		retainUsedScope(visInfo, output)
+		cellValuesLoaded = true
 	}
 
 	void retainUsedScope(VisualizerInfo visInfo, Map output)
