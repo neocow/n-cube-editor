@@ -232,13 +232,13 @@ var Visualizer = (function ($) {
         }
         else if (target.className.indexOf('executeNonUrlCommandCell') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.executeNonUrlCommandCell = true;
+            node.executeNonUrlCommandCell = target.title;
             loadCellValues(node);
             node.executeNonUrlCommandCell = false;
         }
         else if (target.className.indexOf('executeUrlCommandCell') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.executeUrlCommandCell = true;
+            node.executeUrlCommandCell = target.title;
             loadCellValues(node);
             node.executeUrlCommandCell = false;
         }

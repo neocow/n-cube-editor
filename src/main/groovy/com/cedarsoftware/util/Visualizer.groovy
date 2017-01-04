@@ -78,6 +78,10 @@ class Visualizer
 
 		loadCellValues(visInfo, relInfo)
 		node.details = relInfo.getDetails(visInfo)
+		node.executeUrlCommandCell = null
+		node.executeUrlCommandCells = false
+		node.executeNonUrlCommandCell = null
+		node.executeNonUrlCommandCells = false
 		visInfo.nodes = [node]
 
 		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
