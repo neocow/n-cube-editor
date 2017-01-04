@@ -108,7 +108,7 @@ class VisualizerRelInfo
 				{
 					cell = targetCube.getCell(coordinate)
 				}
-				String cellString = cell ? cell.toString() : 'null'
+				String cellString = cell == null ? 'null' : cell.toString()
 				targetCellValues[processingCoordinate] = [(cellString): noExecuteCell]
 			}
 			targetCellValues.sort()

@@ -20,6 +20,7 @@
 
 var Visualizer = (function ($) {
 
+    var _tempNote = null;
     var _network = null;
     var _nodeDataSet = null;
     var _edgeDataSet = null;
@@ -1172,6 +1173,10 @@ var Visualizer = (function ($) {
     
     function stabilizationComplete(iterations){
         _nce.clearNote();
+        if (_tempNote) {
+            _nce.showNote(_tempNote, 'Note', 5000);
+        }
+        _tempNote = null;
         $("#stabilizationStatus").val(COMPLETE);
         $("#stabilizationIterations").val(iterations);
         $("#stabilizationDuration").val(Math.round(performance.now() - _stabilizationStart));
@@ -1294,7 +1299,10 @@ var Visualizer = (function ($) {
         cellValuesLink.click(function (e) {
             e.preventDefault();
             node.showAllCellValues = !node.showAllCellValues;
-            note = node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadAllCellValuesLabel + '...'
+            note = node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadAllCellValuesLabel + '...';
+            if (node.showAllCellValues && _visInfo['@type'] === 'com.cedarsoftware.util.VisualizerInfo'){
+                _tempNote = 'Showing cell values is still *** UNDER CONSTRUCTION ***<BR><BR>Better display of cell values and better exception handling is on the way.';
+            }
             loadCellValues(node, note);
         });
         return cellValuesLink;
