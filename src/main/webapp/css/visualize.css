@@ -113,3 +113,12 @@ h3{
 .readOnly{
     background-color:rgb(235, 235, 228);
 }
+
+.executeNonUrlCommandCell{
+    color:#4B0082;
+}
+
+.executeNonUrlCommandCells{
+    color:#4B0082;
+}
+

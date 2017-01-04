@@ -213,7 +213,7 @@ var Visualizer = (function ($) {
     }
 
     function onNoteClick(e) {
-        var target, id, scopeParts, key, value, params, node;
+        var target, id, scopeParts, key, value, params, node, note;
         target = e.target;
         if (target.className.indexOf('missingScope') > -1) {
             id = target.title;
@@ -230,29 +230,29 @@ var Visualizer = (function ($) {
             networkSelectNodeEvent(params);
             _nce.clearNote();
         }
-        else if (target.className.indexOf('executeNonUrlCommandCell') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.executeNonUrlCommandCell = target.title;
-            loadCellValues(node);
-            node.executeNonUrlCommandCell = false;
-        }
-        else if (target.className.indexOf('executeUrlCommandCell') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.executeUrlCommandCell = target.title;
-            loadCellValues(node);
-            node.executeUrlCommandCell = false;
-        }
         else if (target.className.indexOf('executeNonUrlCommandCells') > -1) {
             node = _nodeDataSet.get(target.id);
             node.executeNonUrlCommandCells = true;
-            loadCellValues(node);
-            node.executeNonUrlCommandCells = false;
+            note = 'Loading ' + _visInfo.loadAllCellValuesLabel + '...'
+            loadCellValues(node, note);
         }
         else if (target.className.indexOf('executeUrlCommandCells') > -1) {
             node = _nodeDataSet.get(target.id);
             node.executeUrlCommandCells = true;
-            loadCellValues(node);
-            node.executeUrlCommandCells = false;
+            note = 'Loading ' + _visInfo.loadAllCellValuesLabel + '...'
+            loadCellValues(node, note);
+        }
+        else if (target.className.indexOf('executeNonUrlCommandCell') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeNonUrlCommandCell = target.title;
+            note = 'Loading cell value for coordinate ' + target.title + '...'
+            loadCellValues(node, note);
+        }
+        else if (target.className.indexOf('executeUrlCommandCell') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeUrlCommandCell = target.title;
+            note = 'Loading cell value for coordinate ' + target.title + '...'
+            loadCellValues(node, note);
         }
     }
 
@@ -514,10 +514,10 @@ var Visualizer = (function ($) {
         _visualizerNetwork.show();
      }
 
-    function loadCellValues(node) {
+    function loadCellValues(node, note) {
         _nce.clearNotes(_noteIdList);
         setTimeout(function () {loadCellValuesFromServer(node);}, PROGRESS_DELAY);
-        _nce.showNote(node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Removing ' + _visInfo.loadAllCellValuesLabel + '...');
+        _nce.showNote(note);
     }
 
     function loadCellValuesFromServer(node)
@@ -545,6 +545,12 @@ var Visualizer = (function ($) {
             node = json.visInfo.nodes['@items'][0];
             dataSetNode = _nodeDataSet.get(node.id);
             dataSetNode.details = node.details;
+            dataSetNode.showAllCellValues = node.showAllCellValues;
+            dataSetNode.cellValuesLoaded = node.cellValuesLoaded;
+            dataSetNode.executeUrlCommandCell = node.executeUrlCommandCell;
+            dataSetNode.executeUrlCommandCells = node.executeUrlCommandCells;
+            dataSetNode.executeNonUrlCommandCell = node.executeNonUrlCommandCell;
+            dataSetNode.executeNonUrlCommandCells = node.executeNonUrlCommandCells;
             _nodeDataSet.update(dataSetNode);
             _nodes = _nodeDataSet.get();
             _nodeDetails[0].innerHTML = node.details;
@@ -1214,10 +1220,10 @@ var Visualizer = (function ($) {
         _nodeCubeLink[0].innerHTML = '';
         _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
-        //if (node.cellValuesLoaded) {//TODO
+        if (false !== node.cellValuesLoaded) {
             _nodeCellValues[0].innerHTML = '';
             _nodeCellValues.append(createCellValuesLink(node));
-        //}
+        }
 
         _nodeAddTypes[0].innerHTML = '';
         if (node.typesToAdd) {
@@ -1277,7 +1283,7 @@ var Visualizer = (function ($) {
     }
 
     function createCellValuesLink(node) {
-        var cellValuesLink = $('<a/>');
+        var note, cellValuesLink = $('<a/>');
         cellValuesLink.addClass('nc-anc');
         if (node.showAllCellValues) {
             cellValuesLink.html('Hide ' + _visInfo.loadAllCellValuesLabel);
@@ -1288,7 +1294,8 @@ var Visualizer = (function ($) {
         cellValuesLink.click(function (e) {
             e.preventDefault();
             node.showAllCellValues = !node.showAllCellValues;
-            loadCellValues(node);
+            note = node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Removing ' + _visInfo.loadAllCellValuesLabel + '...'
+            loadCellValues(node, note);
         });
         return cellValuesLink;
     }
