@@ -21,14 +21,14 @@
       "id": 1,
       "name": "configItem",
       "hasDefault": false,
-      "type": "DISCRETE",
-      "valueType": "STRING",
-      "preferredOrder": 0,
-      "fireAll": true,
       "default_value": {
         "type": "exp",
         "value": "[:]"
       },
+      "type": "DISCRETE",
+      "valueType": "STRING",
+      "preferredOrder": 0,
+      "fireAll": true,
       "columns": [
         {
           "id": 1001273450632,
@@ -122,6 +122,14 @@
       "type": "exp",
       "cache": true,
       "value": "['Product', 'Risk', 'Coverage', 'Container', 'Deductible', 'Limit', 'Rate', 'Ratefactor', 'Premium', 'Party', 'Place', 'Role', 'Roleplayer'] as Set"
+    },
+    {
+      "id": [
+        1000052809612
+      ],
+      "type": "exp",
+      "cache": true,
+      "value": "['n-cube', 'rule cube']"
     },
     {
       "id": [

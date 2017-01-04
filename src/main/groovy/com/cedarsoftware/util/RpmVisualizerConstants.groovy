@@ -50,4 +50,6 @@ final class RpmVisualizerConstants extends VisualizerConstants
 	public static final String TARGET_TYPE = 'targetType'
 
 	public static final String UNSPECIFIED_ENUM = 'UNSPECIFIED_ENUM'
+
+	public static final String LOAD_CELL_VALUES_LABEL = 'traits'
 }
