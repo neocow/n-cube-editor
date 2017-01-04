@@ -40,6 +40,8 @@ class VisualizerInfo
     Map<String, Object> networkOverridesFull
     Map<String, Object> networkOverridesTopNode
 
+    Map<String, List<String>> typesToAddMap = [:]
+
     VisualizerInfo(){}
 
     VisualizerInfo(ApplicationID applicationID, Map options)
@@ -97,11 +99,28 @@ class VisualizerInfo
         allGroupsKeys = new LinkedHashSet(allGroups.keySet())
         String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
         this.groupSuffix = groupSuffix ?: ''
+        loadTypesToAddMap(configCube)
         loadAvailableScopeKeysAndValues(configCube)
         loadAllCellValuesLabel = getLoadAllCellValuesLabel()
         return configCube
     }
 
+    List getTypesToAdd(String group)
+    {
+        return typesToAddMap[allGroups[group]]
+    }
+
+    void loadTypesToAddMap(NCube configCube)
+    {
+        typesToAddMap = [:]
+        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): getCubeType()]) as Set
+        allTypes.each{String type ->
+            Map.Entry<String, String> entry = allGroups.find{ String key, String value ->
+                value == type
+            }
+            typesToAddMap[entry.value] = allTypes as List
+        }
+    }
 
     protected String getLoadAllCellValuesLabel()
     {

@@ -6,8 +6,6 @@ import com.cedarsoftware.ncube.RuleInfo
 import com.google.common.base.Splitter
 import groovy.transform.CompileStatic
 
-import static com.cedarsoftware.util.RpmVisualizerConstants.*
-
 /**
  * Holds information about a source cube and target cube for purposes of creating a visualization of the cubes and their relationship.
  */
@@ -17,22 +15,20 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 {
 	protected RpmVisualizerHelper helper = new RpmVisualizerHelper()
 	String sourceFieldRpmType
-	List<String> typesToAdd
 
     RpmVisualizerRelInfo() {}
 
-    RpmVisualizerRelInfo(ApplicationID appId, Map node)
+	RpmVisualizerRelInfo(ApplicationID appId, Map node)
 	{
 		super(appId, node)
-		typesToAdd = node.typesToAdd as List
 	}
 
-	Set<String> getRequiredScope()
+  	Set<String> getRequiredScope()
 	{
 		Set<String> requiredScope = super.requiredScope
-		requiredScope.remove(AXIS_FIELD)
-		requiredScope.remove(AXIS_NAME)
-		requiredScope.remove(AXIS_TRAIT)
+		requiredScope.remove(RpmVisualizerConstants.AXIS_FIELD)
+		requiredScope.remove(RpmVisualizerConstants.AXIS_NAME)
+		requiredScope.remove(RpmVisualizerConstants.AXIS_TRAIT)
 		return requiredScope
 	}
 
@@ -45,7 +41,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 		if (!cellValuesLoaded)
 		{
-			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
+			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${VisualizerConstants.DOUBLE_BREAK}")
 			notesLabel = "<b>Reason: </b>"
 		}
 
@@ -56,7 +52,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			notes.each { String note ->
 				sb.append("${note} ")
 			}
-			sb.append("${DOUBLE_BREAK}")
+			sb.append("${VisualizerConstants.DOUBLE_BREAK}")
 		}
 
 		//Scope
@@ -91,7 +87,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 		sb.append("<pre><ul>")
 		targetCellValues.each { String fieldName, v ->
-			if (CLASS_TRAITS != fieldName)
+			if (RpmVisualizerConstants.CLASS_TRAITS != fieldName)
 			{
 				if (showAllCellValues)
 				{
@@ -115,7 +111,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			if (traitValue != null)
 			{
 				String traitString = traitValue.toString()
-				if (traitString.startsWith(HTTP) || traitString.startsWith(HTTPS) || traitString.startsWith(FILE))
+				if (traitString.startsWith(VisualizerConstants.HTTP) || traitString.startsWith(VisualizerConstants.HTTPS) || traitString.startsWith(VisualizerConstants.FILE))
 				{
 					sb.append("<li>${traitName}: <a href=\"${traitString}\" target=\"_blank\">${traitString}</a></li>")
 				}
@@ -131,8 +127,8 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	private void addClassTraits(StringBuilder sb)
 	{
 		sb.append("<b>Class traits</b>")
-		addTraits(sb, CLASS_TRAITS)
-		sb.append("${BREAK}")
+		addTraits(sb, RpmVisualizerConstants.CLASS_TRAITS)
+		sb.append("${VisualizerConstants.BREAK}")
 	}
 
 	@Override
@@ -140,7 +136,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		return visInfo.allGroupsKeys.contains(group) ? group : UNSPECIFIED
+		return visInfo.allGroupsKeys.contains(group) ? group : VisualizerConstants.UNSPECIFIED
 	}
 
 	@Override
@@ -159,25 +155,25 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	String getSourceScopedName()
 	{
-		Map<String, Object> classTraitsTraitMap = sourceCellValues[CLASS_TRAITS] as Map
-		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
+		Map<String, Object> classTraitsTraitMap = sourceCellValues[RpmVisualizerConstants.CLASS_TRAITS] as Map
+		return classTraitsTraitMap ? classTraitsTraitMap[RpmVisualizerConstants.R_SCOPED_NAME] : null
 	}
 
 	String getTargetScopedName()
 	{
-		Map<String, Object> classTraitsTraitMap = targetCellValues[CLASS_TRAITS] as Map
-		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
+		Map<String, Object> classTraitsTraitMap = targetCellValues[RpmVisualizerConstants.CLASS_TRAITS] as Map
+		return classTraitsTraitMap ? classTraitsTraitMap[RpmVisualizerConstants.R_SCOPED_NAME] : null
 	}
 
 	@Override
 	String getNextTargetCubeName(String targetFieldName)
 	{
-		if (sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		if (sourceCube.getAxis(RpmVisualizerConstants.AXIS_TRAIT).findColumn(RpmVisualizerConstants.R_SCOPED_NAME))
 		{
-			String scopedName = sourceCellValues[CLASS_TRAITS][R_SCOPED_NAME]
-			return !scopedName ?: RPM_CLASS_DOT + sourceFieldRpmType
+			String scopedName = sourceCellValues[RpmVisualizerConstants.CLASS_TRAITS][RpmVisualizerConstants.R_SCOPED_NAME]
+			return !scopedName ?: RpmVisualizerConstants.RPM_CLASS_DOT + sourceFieldRpmType
 		}
-		return RPM_CLASS_DOT + targetFieldName
+		return RpmVisualizerConstants.RPM_CLASS_DOT + targetFieldName
 	}
 
 	@Override
@@ -195,13 +191,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
     {
         targetCellValues = [:]
         Map output = [:]
-        if (targetCube.name.startsWith(RPM_ENUM))
+        if (targetCube.name.startsWith(RpmVisualizerConstants.RPM_ENUM))
         {
-            helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetCellValues, showAllCellValues, output)
+            helper.loadRpmClassFields(appId, RpmVisualizerConstants.RPM_ENUM, targetCube.name - RpmVisualizerConstants.RPM_ENUM_DOT, scope, targetCellValues, showAllCellValues, output)
         }
         else
         {
-            helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetCellValues, showAllCellValues, output)
+            helper.loadRpmClassFields(appId, RpmVisualizerConstants.RPM_CLASS, targetCube.name - RpmVisualizerConstants.RPM_CLASS_DOT, scope, targetCellValues, showAllCellValues, output)
         }
         removeNotExistsFields()
 		addRequiredAndOptionalScopeKeys(visInfo)
@@ -213,7 +209,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
         Set<String> scopeCollector = new CaseInsensitiveSet<>()
         scopeCollector.addAll(visInfo.requiredScopeKeys[targetCube.name])
         scopeCollector.addAll(visInfo.optionalScopeKeys[targetCube.name])
-        scopeCollector << EFFECTIVE_VERSION_SCOPE_KEY
+        scopeCollector << RpmVisualizerConstants.EFFECTIVE_VERSION_SCOPE_KEY
 
         RuleInfo ruleInfo = NCube.getRuleInfo(output)
         Set keysUsed = ruleInfo.getInputKeysUsed()
@@ -225,12 +221,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
     void removeNotExistsFields()
     {
-        targetCellValues.keySet().removeAll { String fieldName -> !targetCellValues[fieldName][R_EXISTS] }
+        targetCellValues.keySet().removeAll { String fieldName -> !targetCellValues[fieldName][RpmVisualizerConstants.R_EXISTS] }
     }
 
     static void cullScope(Set<String> scopeKeys, Set scopeCollector)
     {
-        scopeKeys.removeAll { String item -> !(scopeCollector.contains(item) || item.startsWith(SYSTEM_SCOPE_KEY_PREFIX)) }
+        scopeKeys.removeAll { String item -> !(scopeCollector.contains(item) || item.startsWith(RpmVisualizerConstants.SYSTEM_SCOPE_KEY_PREFIX)) }
     }
 
 	@Override
@@ -240,10 +236,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		Map<String, Map<String, Object>> sourceCellValues = sourceCellValues
 
 		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceCellValues[sourceFieldName] as Map
-		String vMin = sourceFieldTraitMap[V_MIN] as String ?: '0'
-		String vMax = sourceFieldTraitMap[V_MAX] as String ?: '999999'
+		String vMin = sourceFieldTraitMap[RpmVisualizerConstants.V_MIN] as String ?: '0'
+		String vMax = sourceFieldTraitMap[RpmVisualizerConstants.V_MAX] as String ?: '999999'
 
-		if (targetCube.name.startsWith(RPM_ENUM_DOT))
+		if (targetCube.name.startsWith(RpmVisualizerConstants.RPM_ENUM_DOT))
 		{
 			edge.label = sourceFieldName
 			edge.title = "Field ${sourceFieldName} cardinality ${vMin}:${vMax}".toString()
@@ -260,18 +256,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	Map<String, Object> createNode(VisualizerInfo visInfo, String group = null)
 	{
 		Map<String, Object> node = super.createNode(visInfo, group)
-		if (targetCube.name.startsWith(RPM_CLASS_DOT))
-		{
-			node.typesToAdd = typesToAdd
-		}
-		else
+		if (targetCube.name.startsWith(RpmVisualizerConstants.RPM_ENUM_DOT))
 		{
 			node.label = null
 			node.detailsTitle2 = null
 			node.title = node.detailsTitle1
+			node.typesToAdd = null
 		}
-		node.showAllCellValues = showAllCellValues
-		node.cellValuesLoaded = cellValuesLoaded
 		return node
 	}
 
@@ -292,13 +283,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	String getCubeDisplayName(String cubeName)
 	{
 		String displayName
-		if (cubeName.startsWith(RPM_CLASS_DOT))
+		if (cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS_DOT))
 		{
-			displayName = cubeName - RPM_CLASS_DOT
+			displayName = cubeName - RpmVisualizerConstants.RPM_CLASS_DOT
 		}
-		else if (cubeName.startsWith(RPM_ENUM_DOT))
+		else if (cubeName.startsWith(RpmVisualizerConstants.RPM_ENUM_DOT))
 		{
-			displayName = cubeName - RPM_ENUM_DOT
+			displayName = cubeName - RpmVisualizerConstants.RPM_ENUM_DOT
 		}
 		return displayName
 	}
@@ -308,18 +299,18 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		String description
 		String sourceCubeName = sourceCube.name
-		if (sourceCubeName.startsWith(RPM_CLASS_DOT))
+		if (sourceCubeName.startsWith(RpmVisualizerConstants.RPM_CLASS_DOT))
 		{
 			description = getDotSuffix(sourceEffectiveName)
 		}
-		else if (sourceCubeName.startsWith(RPM_ENUM_DOT))
+		else if (sourceCubeName.startsWith(RpmVisualizerConstants.RPM_ENUM_DOT))
 		{
 			if (targetScopedName)
 			{
 				String sourceDisplayName = getCubeDisplayName(sourceCubeName)
 				String scopeKeyForSourceOfSource = getDotPrefix(sourceDisplayName)
 				String nameOfSourceOfSource = sourceScope[scopeKeyForSourceOfSource]
-				String fieldNameSourceOfSource = sourceScope[SOURCE_FIELD_NAME]
+				String fieldNameSourceOfSource = sourceScope[RpmVisualizerConstants.SOURCE_FIELD_NAME]
 				description = "field ${fieldNameSourceOfSource} on ${nameOfSourceOfSource}".toString()
 			}
 			else{
@@ -334,11 +325,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		String detailsTitle
 		String targetCubeName = targetCube.name
-		if (targetCubeName.startsWith(RPM_CLASS_DOT))
+		if (targetCubeName.startsWith(RpmVisualizerConstants.RPM_CLASS_DOT))
 		{
 			detailsTitle = getCubeDisplayName(targetCubeName)
 		}
-		else if (targetCubeName.startsWith(RPM_ENUM_DOT))
+		else if (targetCubeName.startsWith(RpmVisualizerConstants.RPM_ENUM_DOT))
 		{
 			String sourceName =  sourceCellValues ? getDotSuffix(sourceEffectiveName) : getCubeDisplayName(sourceCube.name)
 			detailsTitle = "Valid values for field ${sourceFieldName} on ${sourceName}".toString()
@@ -349,7 +340,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	@Override
 	String getCubeDetailsTitle2()
 	{
-		if (targetCube.name.startsWith(RPM_CLASS_DOT) && targetScopedName)
+		if (targetCube.name.startsWith(RpmVisualizerConstants.RPM_CLASS_DOT) && targetScopedName)
 		{
 			return effectiveNameByCubeName
 		}

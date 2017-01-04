@@ -213,7 +213,7 @@ var Visualizer = (function ($) {
     }
 
     function onNoteClick(e) {
-        var target, id, scopeParts, key, value, params;
+        var target, id, scopeParts, key, value, params, node;
         target = e.target;
         if (target.className.indexOf('missingScope') > -1) {
             id = target.title;
@@ -229,6 +229,30 @@ var Visualizer = (function ($) {
             _network.selectNodes([id]);
             networkSelectNodeEvent(params);
             _nce.clearNote();
+        }
+        else if (target.className.indexOf('executeNonUrlCommandCell') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeNonUrlCommandCell = true;
+            loadCellValues(node);
+            node.executeNonUrlCommandCell = false;
+        }
+        else if (target.className.indexOf('executeUrlCommandCell') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeUrlCommandCell = true;
+            loadCellValues(node);
+            node.executeUrlCommandCell = false;
+        }
+        else if (target.className.indexOf('executeNonUrlCommandCells') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeNonUrlCommandCells = true;
+            loadCellValues(node);
+            node.executeNonUrlCommandCells = false;
+        }
+        else if (target.className.indexOf('executeUrlCommandCells') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeUrlCommandCells = true;
+            loadCellValues(node);
+            node.executeUrlCommandCells = false;
         }
     }
 
@@ -503,7 +527,7 @@ var Visualizer = (function ($) {
         _visInfo.nodes = {};
         _visInfo.edges = {};
 
-        options =  {visInfo: _visInfo, node: node};
+        options =  {startCubeName: _selectedCubeName, visInfo: _visInfo, node: node};
 
         result = _nce.call('ncubeController.getVisualizerCellValues', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNote();
@@ -1190,10 +1214,10 @@ var Visualizer = (function ($) {
         _nodeCubeLink[0].innerHTML = '';
         _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
-        if (node.cellValuesLoaded) {
+        //if (node.cellValuesLoaded) {//TODO
             _nodeCellValues[0].innerHTML = '';
             _nodeCellValues.append(createCellValuesLink(node));
-        }
+        //}
 
         _nodeAddTypes[0].innerHTML = '';
         if (node.typesToAdd) {

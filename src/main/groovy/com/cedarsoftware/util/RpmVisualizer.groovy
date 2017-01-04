@@ -41,7 +41,7 @@ class RpmVisualizer extends Visualizer
 	@Override
 	protected RpmVisualizerInfo getVisualizerInfo(Map options)
 	{
-	    RpmVisualizerInfo visInfo
+		RpmVisualizerInfo visInfo
 		Object optionsVisInfo = options.visInfo
 		if (optionsVisInfo && optionsVisInfo instanceof RpmVisualizerInfo)
 		{
@@ -50,19 +50,10 @@ class RpmVisualizer extends Visualizer
 		else
 		{
 			visInfo = new RpmVisualizerInfo(appId, options)
-			String json = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_CUBE_NAME + JSON_FILE_SUFFIX)
-			NCube configCube = NCube.fromSimpleJson(json)
-			visInfo.loadTypesToAddMap(configCube)
 		}
+
 		visInfo.scope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
 		return visInfo
-	}
-
-	@Override
-	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
-	{
-		super.loadFirstVisualizerRelInfo(visInfo, relInfo, startCubeName)
-		(relInfo as RpmVisualizerRelInfo).typesToAdd = (visInfo as RpmVisualizerInfo).getTypesToAdd(relInfo.targetCube.name)
 	}
 
 	@Override
@@ -191,7 +182,6 @@ class RpmVisualizer extends Visualizer
 			nextRelInfo.sourceFieldName = targetFieldName
 			nextRelInfo.sourceFieldRpmType = rpmType
 			nextRelInfo.sourceCellValues = (relInfo as RpmVisualizerRelInfo).targetCellValues
-			nextRelInfo.typesToAdd = (visInfo as RpmVisualizerInfo).getTypesToAdd(nextTargetCube.name)
 		}
 		catch (Exception e)
 		{

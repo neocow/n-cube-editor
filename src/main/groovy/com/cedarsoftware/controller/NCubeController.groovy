@@ -267,8 +267,9 @@ class NCubeController extends BaseController
     // TODO: This needs to be externalized (loaded via Grapes)
     Map getVisualizerCellValues(ApplicationID appId, Map options)
     {
+        String cubeName = options.startCubeName
+        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
         appId = addTenant(appId)
-        RpmVisualizer vis = new RpmVisualizer()
         return vis.getCellValues(appId, options)
     }
 

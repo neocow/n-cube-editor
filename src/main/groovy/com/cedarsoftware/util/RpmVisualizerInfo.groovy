@@ -10,14 +10,12 @@ import groovy.transform.CompileStatic
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
 
 /**
- * Holds information related to the visualization of cubes and their relationships.
+ * Holds information related to the visualization of rpm classes and their relationships.
  */
 
 @CompileStatic
 class RpmVisualizerInfo extends VisualizerInfo
 {
-    Map<String, List<String>> typesToAddMap = [:]
-
     RpmVisualizerInfo(){}
 
     RpmVisualizerInfo(ApplicationID applicationID, Map options)
@@ -31,22 +29,23 @@ class RpmVisualizerInfo extends VisualizerInfo
         return CUBE_TYPE_RPM
     }
 
-    List getTypesToAdd(String cubeName)
+    @Override
+    List getTypesToAdd(String group)
     {
-        if (cubeName.startsWith(RPM_CLASS_DOT))
+        if (!group.endsWith(groupSuffix))
         {
-            String sourceType = cubeName - RPM_CLASS_DOT
-            return typesToAddMap[sourceType]
+            return typesToAddMap[allGroups[group]]
         }
         return null
     }
 
+   @Override
    void loadTypesToAddMap(NCube configCube)
     {
         typesToAddMap = [:]
         String json = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + TYPES_TO_ADD_CUBE_NAME + JSON_FILE_SUFFIX)
         NCube typesToAddCube = NCube.fromSimpleJson(json)
-        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): CUBE_TYPE_RPM]) as Set
+        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): getCubeType()]) as Set
 
         allTypes.each { String sourceType ->
             Map<String, Boolean> map = typesToAddCube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): [] as Set]) as Map
