@@ -113,11 +113,7 @@ h3{
     background-color:rgb(235, 235, 228);
 }
 
-.executeNonUrlCommandCell, .executeNonUrlCommandCells{
-    color:#008080;
-}
-
-.executeUrlCommandCell, .executeUrlCommandCells{
+.executeCell, .executeCells{
     color:#4B0082;
 }
 

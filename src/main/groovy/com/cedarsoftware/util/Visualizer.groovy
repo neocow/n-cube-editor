@@ -28,10 +28,11 @@ class Visualizer
 	 *
 	 * @param applicationID
 	 * @param options - a map containing:
-	 *           String startCubeName, name of the starting cube,
+	 *           String startCubeName, name of the starting cube
 	 *           Map scope, the context for which the visualizer is loaded
 	 *           VisualizerInfo, information about the visualization
-	 * @return a map containing status, messages and visualizer information
+	 * @return a map containing status, messages and visualizer information,
+	 *           including graph nodes adn edges
 	 */
 	Map<String, Object> buildGraph(ApplicationID applicationID, Map options)
 	{
@@ -56,13 +57,14 @@ class Visualizer
 	}
 
 	/**
-	 * Loads all cell values available for a given cube.
+	 * Loads all cell values for a cube given the scope provided.
 	 *
 	 * @param applicationID
 	 * @param options (map containing:
-	 *            Map node, representing a class,
+	 *            Map node, representing a cube and its scope
 	 *            VisualizerInfo, information about the visualization
-	 * @return node
+	 * @return a map containing status, messages and visualizer information,
+	 *            including the updated graph node
 	 */
 	Map getCellValues(ApplicationID applicationID, Map options)
 	{
@@ -78,32 +80,28 @@ class Visualizer
 
 		loadCellValues(visInfo, relInfo)
 		node.details = relInfo.getDetails(visInfo)
-		node.cellValuesLoaded = relInfo.cellValuesLoaded
-		boolean showAllCellValues = relInfo.showAllCellValues
-		node.showAllCellValues = showAllCellValues
-		if (showAllCellValues)
+		node.cellValuesLoadedOk = relInfo.cellValuesLoadedOk
+		boolean showCellValues = relInfo.showCellValues
+		node.showCellValues = showCellValues
+		if (showCellValues)
 		{
 			relInfo.setExecuteTriggers(node)
-		}
-		else
-		{
-			relInfo.resetAllExecuteTriggers(node)
 		}
 		visInfo.nodes = [node]
 
 		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
 		return [status: STATUS_SUCCESS, visInfo: visInfo, message: message]
 	}
-	
+
 	protected boolean loadCellValues(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		try
 		{
-			relInfo.loadCellValues(appId, visInfo)
+			relInfo.loadCellValues(visInfo)
 		}
 		catch (Exception e)
 		{
-			relInfo.cellValuesLoaded = false
+			relInfo.cellValuesLoadedOk = false
 			Throwable t = getDeepestException(e)
 			if (t instanceof InvalidCoordinateException)
 			{
@@ -118,9 +116,9 @@ class Visualizer
 				handleException(t, relInfo)
 			}
 		}
-		return relInfo.cellValuesLoaded
+		return relInfo.cellValuesLoadedOk
 	}
-	
+
 	protected VisualizerInfo getVisualizerInfo(Map options)
 	{
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
@@ -150,6 +148,7 @@ class Visualizer
 
 	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
 	{
+		relInfo.appId = appId
 		relInfo.targetCube = NCubeManager.getCube(appId, startCubeName)
 		relInfo.scope = new CaseInsensitiveMap(visInfo.scope)
 		relInfo.targetLevel = 1
@@ -191,8 +190,9 @@ class Visualizer
 		{
 			try
 			{
-				long nextTargetTargetLevel = relInfo.targetLevel + 1
-				nextRelInfo.targetLevel = nextTargetTargetLevel
+				nextRelInfo.appId = appId
+				long nextTargetLevel = relInfo.targetLevel + 1
+				nextRelInfo.targetLevel = nextTargetLevel
 				visInfo.relInfoCount += 1
 				nextRelInfo.targetId = visInfo.relInfoCount
 				nextRelInfo.targetCube = nextTargetCube
@@ -340,7 +340,7 @@ ${BREAK}${messageScopeValues}"""
 	protected static String getExceptionMessage(VisualizerRelInfo relInfo, String effectiveName, Throwable e, Throwable t)
 	{
 		"""\
-An exception was thrown while loading coordinate ${relInfo.processingCoordinate} for ${effectiveName}${relInfo.sourceMessage}.. \
+An exception was thrown while loading coordinate ${relInfo.currentCoordinate} for ${effectiveName}${relInfo.sourceMessage}. \
 ${DOUBLE_BREAK}<b>Message:</b> ${DOUBLE_BREAK}${e.message}${DOUBLE_BREAK}<b>Root cause: </b>\
 ${DOUBLE_BREAK}${t.toString()}${DOUBLE_BREAK}<b>Stack trace: </b>${DOUBLE_BREAK}${t.stackTrace.toString()}"""
 	}
@@ -349,14 +349,14 @@ ${DOUBLE_BREAK}${t.toString()}${DOUBLE_BREAK}<b>Stack trace: </b>${DOUBLE_BREAK}
 	{
 		StringBuilder message = new StringBuilder()
 		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, key)
-		message.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in cube ${cubeName} for coordinate ${relInfo.processingCoordinate}.")
+		message.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in cube ${cubeName} for coordinate ${relInfo.currentCoordinate}.")
 		message.append("${DOUBLE_BREAK} Please supply a different value for ${key}.${BREAK}${messageScopeValues}")
 	}
 
 	protected String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set<String> missingScope, String effectiveName, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
-		message.append("Additional scope is required to load coordinate ${relInfo.processingCoordinate} for ${effectiveName}${relInfo.sourceMessage}.")
+		message.append("Additional scope is required to load coordinate ${relInfo.currentCoordinate} for ${effectiveName}${relInfo.sourceMessage}.")
 		message.append("${DOUBLE_BREAK} Please add scope value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.${BREAK}")
 		missingScope.each{ String key ->
 			message.append(getAvailableScopeValuesMessage(visInfo, cubeName, key))

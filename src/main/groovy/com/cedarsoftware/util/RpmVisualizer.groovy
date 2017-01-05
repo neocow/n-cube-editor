@@ -73,10 +73,10 @@ class RpmVisualizer extends Visualizer
 	{
 		String targetCubeName = relInfo.targetCube.name
 
-		boolean cellValuesLoaded = canLoadTargetAsRpmClass(relInfo)
-		if (cellValuesLoaded)
+		boolean cellValuesLoadedOk = canLoadTargetAsRpmClass(relInfo)
+		if (cellValuesLoadedOk)
 		{
-			cellValuesLoaded = loadCellValues(visInfo, relInfo)
+			cellValuesLoadedOk = loadCellValues(visInfo, relInfo)
 		}
 
 		if (relInfo.sourceCube)
@@ -91,7 +91,7 @@ class RpmVisualizer extends Visualizer
 
 		visInfo.nodes << relInfo.createNode(visInfo)
 
-		if (cellValuesLoaded)
+		if (cellValuesLoadedOk)
 		{
 			relInfo.targetCellValues.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
@@ -132,9 +132,9 @@ class RpmVisualizer extends Visualizer
 			return
 		}
 
-		boolean cellValuesLoaded = loadCellValues(visInfo, relInfo)
+		boolean cellValuesLoadedOk = loadCellValues(visInfo, relInfo)
 
-		if (cellValuesLoaded)
+		if (cellValuesLoadedOk)
 		{
 			relInfo.targetCellValues.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
@@ -215,7 +215,7 @@ class RpmVisualizer extends Visualizer
 				relInfo.targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + relInfo.sourceFieldName]] as Map
 				String msg = getLoadTargetAsRpmClassMessage(relInfo, type)
 				relInfo.notes << msg
-				relInfo.cellValuesLoaded = false
+				relInfo.cellValuesLoadedOk = false
 				return false
 			}
 		}

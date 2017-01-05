@@ -231,27 +231,15 @@ var Visualizer = (function ($) {
             networkSelectNodeEvent(params);
             _nce.clearNote();
         }
-        else if (target.className.indexOf('executeNonUrlCommandCells') > -1) {
+        else if (target.className.indexOf('executeCells') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.executeNonUrlCommandCells = true;
-            note = 'Loading ' + _visInfo.loadAllCellValuesLabel + '...'
+            node.executeCells = true;
+            note = 'Loading ' + _visInfo.loadCellValuesLabel + '...'
             loadCellValues(node, note);
         }
-        else if (target.className.indexOf('executeUrlCommandCells') > -1) {
+        else if (target.className.indexOf('executeCell') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.executeUrlCommandCells = true;
-            note = 'Loading ' + _visInfo.loadAllCellValuesLabel + '...'
-            loadCellValues(node, note);
-        }
-        else if (target.className.indexOf('executeNonUrlCommandCell') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.executeNonUrlCommandCell = target.title;
-            note = 'Loading cell value for coordinate ' + target.title + '...'
-            loadCellValues(node, note);
-        }
-        else if (target.className.indexOf('executeUrlCommandCell') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.executeUrlCommandCell = target.title;
+            node.executeCell = target.title;
             note = 'Loading cell value for coordinate ' + target.title + '...'
             loadCellValues(node, note);
         }
@@ -523,7 +511,7 @@ var Visualizer = (function ($) {
 
     function loadCellValuesFromServer(node)
     {
-        var message, options, result, json, dataSetNode;
+        var message, options, result, json;
         node.details = null;
         _visInfo.nodes = {};
         _visInfo.edges = {};
@@ -533,7 +521,7 @@ var Visualizer = (function ($) {
         result = _nce.call('ncubeController.getVisualizerCellValues', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNote();
         if (false === result.status) {
-            _nce.showNote('Failed to load ' + _visInfo.loadAllCellValuesLabel + ': ' + TWO_LINE_BREAKS + result.data);
+            _nce.showNote('Failed to load ' + _visInfo.loadCellValuesLabel + ': ' + TWO_LINE_BREAKS + result.data);
             return node;
         }
 
@@ -544,30 +532,33 @@ var Visualizer = (function ($) {
                 _noteIdList.push(_nce.showNote(json.message));
             }
             node = json.visInfo.nodes['@items'][0];
-            dataSetNode = _nodeDataSet.get(node.id);
-            dataSetNode.details = node.details;
-            dataSetNode.showAllCellValues = node.showAllCellValues;
-            dataSetNode.cellValuesLoaded = node.cellValuesLoaded;
-            dataSetNode.executeUrlCommandCell = node.executeUrlCommandCell;
-            dataSetNode.executeUrlCommandCells = node.executeUrlCommandCells;
-            dataSetNode.executeNonUrlCommandCell = node.executeNonUrlCommandCell;
-            dataSetNode.executeNonUrlCommandCells = node.executeNonUrlCommandCells;
-            _nodeDataSet.update(dataSetNode);
-            _nodes = _nodeDataSet.get();
-            _nodeDetails[0].innerHTML = node.details;
-            _nodeCellValues = $('#nodeCellValues');
-            _nodeAddTypes = $('#nodeAddTypes');
-            _nodeCellValues[0].innerHTML = '';
-            _nodeCellValues.append(createCellValuesLink(node));
+            loadDataForNode(node)
         }
         else {
             message = json.message;
             if (null !== json.stackTrace) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
-            _nce.showNote('Failed to load ' + _visInfo.loadAllCellValuesLabel +  ': ' + TWO_LINE_BREAKS + message);
+            _nce.showNote('Failed to load ' + _visInfo.loadCellValuesLabel +  ': ' + TWO_LINE_BREAKS + message);
         }
         return node;
+    }
+
+    function loadDataForNode(node){
+        var dataSetNode;
+        dataSetNode = _nodeDataSet.get(node.id);
+        dataSetNode.details = node.details;
+        dataSetNode.showCellValues = node.showCellValues;
+        dataSetNode.cellValuesLoadedOk = node.cellValuesLoadedOk;
+        dataSetNode.executeCell = node.executeCell;
+        dataSetNode.executeCells = node.executeCells;
+        _nodeDataSet.update(dataSetNode);
+
+        _nodeDetails[0].innerHTML = node.details;
+        _nodeCellValues = $('#nodeCellValues');
+        _nodeAddTypes = $('#nodeAddTypes');
+        _nodeCellValues[0].innerHTML = '';
+        _nodeCellValues.append(createCellValuesLink(node));
     }
 
     function load() {
@@ -1225,7 +1216,7 @@ var Visualizer = (function ($) {
         _nodeCubeLink[0].innerHTML = '';
         _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
-        if (false !== node.cellValuesLoaded) {
+        if (false !== node.cellValuesLoadedOk) {
             _nodeCellValues[0].innerHTML = '';
             _nodeCellValues.append(createCellValuesLink(node));
         }
@@ -1290,18 +1281,18 @@ var Visualizer = (function ($) {
     function createCellValuesLink(node) {
         var note, cellValuesLink = $('<a/>');
         cellValuesLink.addClass('nc-anc');
-        if (node.showAllCellValues) {
-            cellValuesLink.html('Hide ' + _visInfo.loadAllCellValuesLabel);
+        if (node.showCellValues) {
+            cellValuesLink.html('Hide ' + _visInfo.loadCellValuesLabel);
         }
         else {
-            cellValuesLink.html('Show ' + _visInfo.loadAllCellValuesLabel);
+            cellValuesLink.html('Show ' + _visInfo.loadCellValuesLabel);
         }
         cellValuesLink.click(function (e) {
             e.preventDefault();
-            node.showAllCellValues = !node.showAllCellValues;
-            note = node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadAllCellValuesLabel + '...';
-            if (node.showAllCellValues && _visInfo['@type'] === 'com.cedarsoftware.util.VisualizerInfo'){
-                _tempNote = 'Showing cell values is still *** UNDER CONSTRUCTION ***<BR><BR>Better display of cell values and better exception handling is on the way.';
+            node.showCellValues = !node.showCellValues;
+            note = node.showCellValues ? 'Loading ' + _visInfo.loadCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadCellValuesLabel + '...';
+            if (node.showCellValues && _visInfo['@type'] === 'com.cedarsoftware.util.VisualizerInfo'){
+                _tempNote = 'Showing cell values is *** UNDER CONSTRUCTION ***<BR><BR>Improved exception handling for cell values and improved display of cell values, among other things, are on the way.';
             }
             loadCellValues(node, note);
         });

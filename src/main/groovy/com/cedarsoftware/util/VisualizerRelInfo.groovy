@@ -4,7 +4,6 @@ import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.CommandCell
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.ncube.UrlCommandCell
 import com.cedarsoftware.ncube.util.LongHashSet
 import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
@@ -18,7 +17,7 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerRelInfo
 {
-	protected Joiner.MapJoiner mapJoiner = Joiner.on(", ").withKeyValueSeparator(": ")
+	ApplicationID appId
 
 	Set<String> notes = []
 	Map<String, Object> scope
@@ -33,25 +32,25 @@ class VisualizerRelInfo
 	Map<String, Object> sourceScope
 	String sourceFieldName
 
-	Boolean cellValuesLoaded
-	boolean showAllCellValues = false
-	String processingCoordinate
-	boolean executingUrlCommandCells = false
-	String executeUrlCommandCell
-	boolean executeUrlCommandCells = false
-	boolean executingNonUrlCommandCells = false
-	String executeNonUrlCommandCell
-	boolean executeNonUrlCommandCells = false
+	Boolean cellValuesLoadedOk
+	boolean showCellValues = false
+	String currentCoordinate
+	boolean executingCells = false
+	String executeCell
+	boolean executeCells = false
 
 	Map<String, Map<String, Object>> targetCellValues
 	Map<String, Map<String, Object>> sourceCellValues
 
 	List<String> typesToAdd
 
+	protected Joiner.MapJoiner mapJoiner = Joiner.on(", ").withKeyValueSeparator(": ")
+
 	VisualizerRelInfo() {}
 
-	VisualizerRelInfo(ApplicationID appId, Map node)
+	VisualizerRelInfo(ApplicationID applicationId, Map node)
 	{
+		appId  = applicationId
 		targetCube = NCubeManager.getCube(appId, node.cubeName as String)
 		String sourceCubeName = node.sourceCubeName as String
 		sourceCube = sourceCubeName ? NCubeManager.getCube(appId, sourceCubeName) : null
@@ -60,42 +59,28 @@ class VisualizerRelInfo
 		targetLevel = Long.valueOf(node.level as String)
 		targetScope = node.scope as CaseInsensitiveMap
 		scope = node.availableScope as CaseInsensitiveMap
-		showAllCellValues = node.showAllCellValues as boolean
-		executeUrlCommandCell = node.executeUrlCommandCell as String
-		executeUrlCommandCells = node.executeUrlCommandCells as boolean
-		executeNonUrlCommandCell = node.executeNonUrlCommandCell as String
-		executeNonUrlCommandCells = node.executeNonUrlCommandCells as boolean
+		showCellValues = node.showCellValues as boolean
+		executeCell = node.executeCell as String
+		executeCells = node.executeCells as boolean
 		setExecutingFlags()
-		cellValuesLoaded = node.cellValuesLoaded as Boolean
+		cellValuesLoadedOk = node.cellValuesLoadedOk as Boolean
 		typesToAdd = node.typesToAdd as List
 	}
 
-	void loadCellValues(ApplicationID appId, VisualizerInfo visInfo)
+	void loadCellValues(VisualizerInfo visInfo)
 	{
 		targetCellValues = [:]
-		cellValuesLoaded = null
-		if (showAllCellValues)
+		cellValuesLoadedOk = null
+		if (showCellValues)
 		{
 			Map<LongHashSet, Object> cellMap = targetCube.getCellMap()
 			cellMap.each { LongHashSet ids, Object noExecuteCell ->
 				Map<String, Object> coordinate = targetCube.getCoordinateFromIds(ids)
-				String processingCoordinate = getCoordinateString(coordinate)
+				currentCoordinate = getCoordinateString(coordinate)
 				Object cell
 				if (noExecuteCell instanceof CommandCell)
 				{
-					CommandCell cmd = noExecuteCell as CommandCell
-					if (cmd.url)
-					{
-						if(executeUrlCommandCells || processingCoordinate == executeUrlCommandCell)
-						{
-							cell = targetCube.getCell(coordinate)
-						}
-						else
-						{
-							cell = noExecuteCell
-						}
-					}
-					else if (executeNonUrlCommandCells || processingCoordinate == executeNonUrlCommandCell)
+					if(executeCells || currentCoordinate == executeCell)
 					{
 						cell = targetCube.getCell(coordinate)
 					}
@@ -109,47 +94,30 @@ class VisualizerRelInfo
 					cell = targetCube.getCell(coordinate)
 				}
 				String cellString = cell == null ? 'null' : cell.toString()
-				targetCellValues[processingCoordinate] = [(cellString): noExecuteCell]
+				targetCellValues[currentCoordinate] = [(cellString): noExecuteCell]
 			}
 			targetCellValues.sort()
-			cellValuesLoaded = true
+			cellValuesLoadedOk = true
 		}
 	}
 
 	private boolean setExecutingFlags()
 	{
-		executingUrlCommandCells = executeUrlCommandCell || executeUrlCommandCells
-		executingNonUrlCommandCells = executeNonUrlCommandCell || executeNonUrlCommandCells
+		executingCells = executeCells || executeCell
 	}
 
 	void setExecuteTriggers(Map node)
 	{
-		node.executeUrlCommandCell = executeUrlCommandCell
-		node.executeUrlCommandCells = executeUrlCommandCells
-		node.executeNonUrlCommandCell = executeNonUrlCommandCell
-		node.executeNonUrlCommandCells = executeNonUrlCommandCells
-	}
-
-	void resetAllExecuteTriggers(Map node)
-	{
-		executeUrlCommandCell = null
-		executeUrlCommandCells = false
-		executeNonUrlCommandCell = null
-		executeNonUrlCommandCells = false
-		setExecuteTriggers(node)
+		node.executeCells = executeCells
+		node.executeCell = executeCell
 	}
 
 	void resetExecuteTriggers()
 	{
-		if (executingUrlCommandCells)
+		if (executingCells)
 		{
-			executeUrlCommandCell = null
-			executeUrlCommandCells = false
-		}
-		else if (executingNonUrlCommandCells)
-		{
-			executeNonUrlCommandCell = null
-			executeNonUrlCommandCells = false
+			executeCell = null
+			executeCells = false
 		}
 	}
 
@@ -175,10 +143,10 @@ class VisualizerRelInfo
 		String notesLabel = "<b>Note: </b>"
 		String targetCubeName = targetCube.name
 
-		if (false == cellValuesLoaded)
+		if (false == cellValuesLoadedOk)
 		{
-			sb.append("<b>*** Unable to load cell value for coordinate ${processingCoordinate}</b>${DOUBLE_BREAK}")
-			processingCoordinate = null
+			String msg = currentCoordinate ? "for coordinate ${currentCoordinate}" : ''
+			sb.append("<b>*** Unable to load cell values ${msg}</b>${DOUBLE_BREAK}")
 			notesLabel = "<b>Reason: </b>"
 		}
 
@@ -198,11 +166,12 @@ class VisualizerRelInfo
 		getDetailsSet(sb, 'Optional scope keys', visInfo.optionalScopeKeys[targetCubeName])
 
 		//Cell values
-		if (null != cellValuesLoaded && showAllCellValues)
+		if (null != cellValuesLoadedOk && showCellValues)
 		{
 			addCellValueSection(sb)
 		}
 
+		currentCoordinate = null
 		return sb.toString()
 	}
 
@@ -220,71 +189,46 @@ class VisualizerRelInfo
 
 	private void getCellValues(StringBuilder cellValuesBuilder, StringBuilder linkBuilder)
 	{
-		boolean hasNonExecutedUrlCommandCells = false
-		boolean hasNonExecutedNonUrlCommandCells = false
-		boolean hasUrlLinks = false
-		boolean hasStringValue = false
+		boolean hasNonExecutedCells = false
+		boolean hasExecutedCells = false
 		String id = String.valueOf(targetId)
 
 		targetCellValues.each { String coordinate, Map<String, Object> cellValues ->
 			cellValues.each { String cellString, Object noExecuteCell ->
 				if (noExecuteCell instanceof CommandCell)
 				{
-					CommandCell cmd = noExecuteCell as CommandCell
-					if (cmd.url)
+					if (executeCells || coordinate == executeCell)
 					{
-						if (executeUrlCommandCells || coordinate == executeUrlCommandCell)
-						{
-							//The executed URL cell value is displayed as text.
-							cellValuesBuilder.append("<li>${coordinate} <b>==></b> ${cellString}</li>")
-							hasStringValue = true
-						}
-						else
-						{
-							//The non-executed URL cell value is displayed as a link. If clicked, the cell is executed.
-							cellValuesBuilder.append("""<li><a class="executeUrlCommandCell" id="${id}" title="${coordinate}" href="#">${coordinate} <b>==></b>  ${noExecuteCell}</a></li>""")
-							hasNonExecutedUrlCommandCells = true
-						}
-					}
-					else if (executeNonUrlCommandCells || coordinate == executeNonUrlCommandCell)
-					{
-						//The executed non-URL cell value is displayed as text.
+						//The executed cell value is displayed as text.
 						cellValuesBuilder.append("<li>${coordinate} <b>==></b> ${cellString}</li>")
-						hasStringValue = true
+						hasExecutedCells = true
 					}
 					else
 					{
-						//The non-executed non-URL cell value is displayed as a link. If clicked, the cell is executed.
-						cellValuesBuilder.append("""<li><a class="executeNonUrlCommandCell" id="${id}" title="${coordinate}" href="#">${coordinate} <b>==></b>  ${noExecuteCell}</a></li>""")
-						hasNonExecutedNonUrlCommandCells = true
+						//The non-executed cell value is displayed as a link. If clicked, the cell is executed.
+						cellValuesBuilder.append("""<li><a class="executeCell" id="${id}" title="${coordinate}" href="#">${coordinate} <b>==></b>  ${noExecuteCell}</a></li>""")
+						hasNonExecutedCells = true
 					}
 				}
 				else if (cellString.startsWith(HTTP) || cellString.startsWith(HTTPS) || cellString.startsWith(FILE))
 				{
 					//The executed cell value is displayed as a link. If clicked, the link opens in a new window.
 					cellValuesBuilder.append("""<li>${coordinate} <b>==></b>  <a href="#" onclick='window.open("${cellString}");return false;'>${cellString}</a></li>""")
+					hasExecutedCells = true
 				}
 				else
 				{
 					//The executed cell value is displayed as text.
 					cellValuesBuilder.append("<li>${coordinate} <b>==></b> ${cellString}</li>")
+					hasExecutedCells = true
 				}
 			}
 		}
 
-		if (hasNonExecutedUrlCommandCells || hasNonExecutedNonUrlCommandCells)
+		if (hasNonExecutedCells)
 		{
 			linkBuilder.append(DOUBLE_BREAK)
-			if (hasNonExecutedUrlCommandCells)
-			{
-				linkBuilder.append("""${SPACE}<a class="executeUrlCommandCells" id="${id}" href="#">Execute all URL cells</a>""")
-				linkBuilder.append(BREAK)
-			}
-			if (hasNonExecutedNonUrlCommandCells)
-			{
-				linkBuilder.append("""${SPACE}<a class="executeNonUrlCommandCells" id="${id}" href="#">Execute all command cells</a>""")
-				linkBuilder.append(BREAK)
-			}
+			linkBuilder.append("""${SPACE}<a class="executeCell" id="${id}" href="#">Execute all</a>""")
 			linkBuilder.append(BREAK)
 		}
 	}
@@ -359,10 +303,10 @@ class VisualizerRelInfo
 		return ''  //TODO
 	}
 
-	/**
-	 *  If the required and optional scope keys have not already been loaded for this cube,
-	 *  load them.
-	 */
+/**
+ *  If the required and optional scope keys have not already been loaded for this cube,
+ *  load them.
+ */
 	protected void addRequiredAndOptionalScopeKeys(VisualizerInfo visInfo)
 	{
 		String cubeName = targetCube.name
@@ -417,12 +361,10 @@ class VisualizerRelInfo
 		node.group = group
 		node.typesToAdd = visInfo.getTypesToAdd(group)
 
-		node.executeUrlCommandCell = executeUrlCommandCell
-		node.executeUrlCommandCells = executeUrlCommandCells
-		node.executeNonUrlCommandCell = executeNonUrlCommandCell
-		node.executeNonUrlCommandCells = executeNonUrlCommandCells
-		node.showAllCellValues = showAllCellValues
-		node.cellValuesLoaded = cellValuesLoaded
+		node.executeCell = executeCell
+		node.executeCells = executeCell
+		node.showCellValues = showCellValues
+		node.cellValuesLoadedOk = cellValuesLoadedOk
 
 		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
 		long maxLevel = visInfo.maxLevel
