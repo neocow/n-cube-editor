@@ -40,9 +40,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		String notesLabel = "<b>Note: </b>"
 
-		if (false == cellValuesLoaded)
+		if (false == cellValuesLoadedOk)
 		{
-			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
+			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${VisualizerConstants.DOUBLE_BREAK}")
 			notesLabel = "<b>Reason: </b>"
 		}
 
@@ -53,21 +53,21 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			notes.each { String note ->
 				sb.append("${note} ")
 			}
-			sb.append("${DOUBLE_BREAK}")
+			sb.append("${VisualizerConstants.DOUBLE_BREAK}")
 		}
 
 		//Scope
-		if (cellValuesLoaded)
+		if (cellValuesLoadedOk)
 		{
-			String title = showAllCellValues ? 'Utilized scope' : 'Utilized scope to load class without all traits'
+			String title = showCellValues ? 'Utilized scope' : 'Utilized scope to load class without all traits'
 			getDetailsMap(sb, title, targetScope)
 		}
 		getDetailsMap(sb, 'Available scope', scope)
 
 		//Fields
-		if (cellValuesLoaded)
+		if (cellValuesLoadedOk)
 		{
-			if (showAllCellValues)
+			if (showCellValues)
 			{
 				addClassTraits(sb)
 			}
@@ -78,7 +78,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void addFieldDetails(StringBuilder sb)
 	{
-		if (showAllCellValues)
+		if (showCellValues)
 		{
 			sb.append("<b>Fields and traits</b>")
 		}
@@ -90,7 +90,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		targetCellValues.each { String fieldName, v ->
 			if (CLASS_TRAITS != fieldName)
 			{
-				if (showAllCellValues)
+				if (showCellValues)
 				{
 					sb.append("<li><b>${fieldName}</b></li>")
 					addTraits(sb, fieldName)
@@ -112,7 +112,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			if (traitValue != null)
 			{
 				String traitString = traitValue.toString()
-				if (traitString.startsWith(HTTP) || traitString.startsWith(HTTPS) || traitString.startsWith(FILE))
+				if (traitString.startsWith(VisualizerConstants.HTTP) || traitString.startsWith(VisualizerConstants.HTTPS) || traitString.startsWith(VisualizerConstants.FILE))
 				{
 					sb.append("""<li>${traitName}: <a href="#" onclick='window.open("${traitString}");return false;'>${traitString}</a></li>""")
 				}
@@ -129,7 +129,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		sb.append("<b>Class traits</b>")
 		addTraits(sb, CLASS_TRAITS)
-		sb.append("${BREAK}")
+		sb.append("${VisualizerConstants.BREAK}")
 	}
 
 	@Override
@@ -137,7 +137,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		return visInfo.allGroupsKeys.contains(group) ? group : UNSPECIFIED
+		return visInfo.allGroupsKeys.contains(group) ? group : VisualizerConstants.UNSPECIFIED
 	}
 
 	@Override
@@ -188,23 +188,23 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	void loadCellValues(ApplicationID appId, VisualizerInfo visInfo)
+	void loadCellValues(VisualizerInfo visInfo)
 	{
-		cellValuesLoaded = null
+		cellValuesLoadedOk = null
 		targetCellValues = [:]
 		Map output = [:]
 		if (targetCube.name.startsWith(RPM_ENUM))
 		{
-			helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetCellValues, showAllCellValues, output)
+			helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, scope, targetCellValues, showCellValues, output)
 		}
 		else
 		{
-			helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetCellValues, showAllCellValues, output)
+			helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, scope, targetCellValues, showCellValues, output)
 		}
 		removeNotExistsFields()
 		addRequiredAndOptionalScopeKeys(visInfo)
 		retainUsedScope(visInfo, output)
-		cellValuesLoaded = true
+		cellValuesLoadedOk = true
 	}
 
 	void retainUsedScope(VisualizerInfo visInfo, Map output)

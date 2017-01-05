@@ -57,7 +57,7 @@ class RpmVisualizerInfo extends VisualizerInfo
     }
 
     @Override
-    protected String getLoadAllCellValuesLabel()
+    protected String getLoadCellValuesLabel()
     {
         LOAD_CELL_VALUES_LABEL
     }

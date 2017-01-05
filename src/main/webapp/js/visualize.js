@@ -546,8 +546,8 @@ var Visualizer = (function ($) {
             node = json.visInfo.nodes['@items'][0];
             dataSetNode = _nodeDataSet.get(node.id);
             dataSetNode.details = node.details;
-            dataSetNode.showAllCellValues = node.showAllCellValues;
-            dataSetNode.cellValuesLoaded = node.cellValuesLoaded;
+            dataSetNode.showCellValues = node.showCellValues;
+            dataSetNode.cellValuesLoadedOk = node.cellValuesLoadedOk;
             dataSetNode.executeUrlCommandCell = node.executeUrlCommandCell;
             dataSetNode.executeUrlCommandCells = node.executeUrlCommandCells;
             dataSetNode.executeNonUrlCommandCell = node.executeNonUrlCommandCell;
@@ -1225,7 +1225,7 @@ var Visualizer = (function ($) {
         _nodeCubeLink[0].innerHTML = '';
         _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
-        if (false !== node.cellValuesLoaded) {
+        if (false !== node.cellValuesLoadedOk) {
             _nodeCellValues[0].innerHTML = '';
             _nodeCellValues.append(createCellValuesLink(node));
         }
@@ -1290,7 +1290,7 @@ var Visualizer = (function ($) {
     function createCellValuesLink(node) {
         var note, cellValuesLink = $('<a/>');
         cellValuesLink.addClass('nc-anc');
-        if (node.showAllCellValues) {
+        if (node.showCellValues) {
             cellValuesLink.html('Hide ' + _visInfo.loadAllCellValuesLabel);
         }
         else {
@@ -1298,10 +1298,10 @@ var Visualizer = (function ($) {
         }
         cellValuesLink.click(function (e) {
             e.preventDefault();
-            node.showAllCellValues = !node.showAllCellValues;
-            note = node.showAllCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadAllCellValuesLabel + '...';
-            if (node.showAllCellValues && _visInfo['@type'] === 'com.cedarsoftware.util.VisualizerInfo'){
-                _tempNote = 'Showing cell values is still *** UNDER CONSTRUCTION ***<BR><BR>Better display of cell values and better exception handling is on the way.';
+            node.showCellValues = !node.showCellValues;
+            note = node.showCellValues ? 'Loading ' + _visInfo.loadAllCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadAllCellValuesLabel + '...';
+            if (node.showCellValues && _visInfo['@type'] === 'com.cedarsoftware.util.VisualizerInfo'){
+                _tempNote = 'Showing cell values is *** UNDER CONSTRUCTION ***<BR><BR>Improved exception handling for cell values and improved display of cell values, among other things, is on the way.';
             }
             loadCellValues(node, note);
         });

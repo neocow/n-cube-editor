@@ -25,7 +25,7 @@ class VisualizerInfo
 	long nodeCount
     long relInfoCount
     long defaultLevel
-    String loadAllCellValuesLabel
+    String loadCellValuesLabel
 
 	Map<String,String> allGroups
     Set<String> allGroupsKeys
@@ -101,7 +101,7 @@ class VisualizerInfo
         this.groupSuffix = groupSuffix ?: ''
         loadTypesToAddMap(configCube)
         loadAvailableScopeKeysAndValues(configCube)
-        loadAllCellValuesLabel = getLoadAllCellValuesLabel()
+        loadCellValuesLabel = getLoadCellValuesLabel()
         return configCube
     }
 
@@ -122,7 +122,7 @@ class VisualizerInfo
         }
     }
 
-    protected String getLoadAllCellValuesLabel()
+    protected String getLoadCellValuesLabel()
     {
         LOAD_CELL_VALUES_LABEL
     }
