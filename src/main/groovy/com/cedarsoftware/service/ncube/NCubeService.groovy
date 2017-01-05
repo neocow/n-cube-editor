@@ -353,7 +353,7 @@ class NCubeService
             throw new IllegalArgumentException("Column ID passed in (" + colId + ") does not match any axis on NCube '" + cubeName + "'")
         }
 
-        ncube.updateColumn(id, axis.convertStringToColumnValue(value))
+        ncube.updateColumn(id, value)
         NCubeManager.updateCube(appId, ncube, false)
     }
 
