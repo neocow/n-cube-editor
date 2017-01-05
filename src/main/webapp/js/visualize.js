@@ -231,27 +231,15 @@ var Visualizer = (function ($) {
             networkSelectNodeEvent(params);
             _nce.clearNote();
         }
-        else if (target.className.indexOf('executeNonUrlCommandCells') > -1) {
+        else if (target.className.indexOf('executeCells') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.executeNonUrlCommandCells = true;
+            node.executeCells = true;
             note = 'Loading ' + _visInfo.loadCellValuesLabel + '...'
             loadCellValues(node, note);
         }
-        else if (target.className.indexOf('executeUrlCommandCells') > -1) {
+        else if (target.className.indexOf('executeCell') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.executeUrlCommandCells = true;
-            note = 'Loading ' + _visInfo.loadCellValuesLabel + '...'
-            loadCellValues(node, note);
-        }
-        else if (target.className.indexOf('executeNonUrlCommandCell') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.executeNonUrlCommandCell = target.title;
-            note = 'Loading cell value for coordinate ' + target.title + '...'
-            loadCellValues(node, note);
-        }
-        else if (target.className.indexOf('executeUrlCommandCell') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.executeUrlCommandCell = target.title;
+            node.executeCell = target.title;
             note = 'Loading cell value for coordinate ' + target.title + '...'
             loadCellValues(node, note);
         }
@@ -562,10 +550,8 @@ var Visualizer = (function ($) {
         dataSetNode.details = node.details;
         dataSetNode.showCellValues = node.showCellValues;
         dataSetNode.cellValuesLoadedOk = node.cellValuesLoadedOk;
-        dataSetNode.executeUrlCommandCell = node.executeUrlCommandCell;
-        dataSetNode.executeUrlCommandCells = node.executeUrlCommandCells;
-        dataSetNode.executeNonUrlCommandCell = node.executeNonUrlCommandCell;
-        dataSetNode.executeNonUrlCommandCells = node.executeNonUrlCommandCells;
+        dataSetNode.executeCell = node.executeCell;
+        dataSetNode.executeCells = node.executeCells;
         _nodeDataSet.update(dataSetNode);
 
         _nodeDetails[0].innerHTML = node.details;

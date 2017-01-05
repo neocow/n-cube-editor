@@ -87,10 +87,6 @@ class Visualizer
 		{
 			relInfo.setExecuteTriggers(node)
 		}
-		else
-		{
-			relInfo.resetAllExecuteTriggers(node)
-		}
 		visInfo.nodes = [node]
 
 		String message = messages.empty ? null : messages.join(DOUBLE_BREAK)
