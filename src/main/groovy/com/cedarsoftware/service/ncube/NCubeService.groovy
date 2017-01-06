@@ -191,7 +191,7 @@ class NCubeService
                 maxId = axis.id
             }
         }
-        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY, maxId + 1)
+        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), true, Axis.DISPLAY, maxId + 1)
         ncube.addAxis(axis)
         NCubeManager.updateCube(appId, ncube, false)
     }
@@ -236,7 +236,7 @@ class NCubeService
         args[ReferenceAxisLoader.TRANSFORM_METHOD_NAME] = transformMethodName
         ReferenceAxisLoader refAxisLoader = new ReferenceAxisLoader(cubeName, axisName, args)
 
-        Axis axis = new Axis(axisName, maxId + 1, false, refAxisLoader)
+        Axis axis = new Axis(axisName, maxId + 1, true, refAxisLoader)
         nCube.addAxis(axis)
         NCubeManager.updateCube(appId, nCube, false)
     }
