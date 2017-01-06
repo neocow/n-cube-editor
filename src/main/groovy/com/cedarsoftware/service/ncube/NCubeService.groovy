@@ -191,7 +191,7 @@ class NCubeService
                 maxId = axis.id
             }
         }
-        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), false, Axis.DISPLAY, maxId + 1)
+        Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), true, Axis.DISPLAY, maxId + 1)
         ncube.addAxis(axis)
         NCubeManager.updateCube(appId, ncube, false)
     }
