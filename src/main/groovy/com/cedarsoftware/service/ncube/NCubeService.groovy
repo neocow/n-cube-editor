@@ -236,7 +236,7 @@ class NCubeService
         args[ReferenceAxisLoader.TRANSFORM_METHOD_NAME] = transformMethodName
         ReferenceAxisLoader refAxisLoader = new ReferenceAxisLoader(cubeName, axisName, args)
 
-        Axis axis = new Axis(axisName, maxId + 1, false, refAxisLoader)
+        Axis axis = new Axis(axisName, maxId + 1, true, refAxisLoader)
         nCube.addAxis(axis)
         NCubeManager.updateCube(appId, nCube, false)
     }
