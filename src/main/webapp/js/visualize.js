@@ -1240,21 +1240,19 @@ var Visualizer = (function ($) {
     }
 
     function executeCell(e) {
-        var target, node, note;
+        var target, node, note, coord;
         target = e.target;
         if (target.className.indexOf('executeall') > -1) {
             node = _nodeDataSet.get(target.id);
             note = 'Executing ' + _visInfo.loadCellValuesLabel + '...';
             loadCellValues(node, note);
         }
-        //TODO: Show/hide of cell contents yet to be implemented.
-         else if (target.className.indexOf('executedCell') > -1 ||
+        else if (target.className.indexOf('executedCell') > -1 ||
             target.className.indexOf('InvalidCoordinateException') > -1 ||
             target.className.indexOf('CoordinateNotFoundException') > -1 ||
             target.className.indexOf('Exception') > -1) {
-            node = _nodeDataSet.get(target.id);
-            note = 'Showing/hiding cell contents not yet implemented...';
-            loadCellValues(node, note);
+            coord = target.className.split(' ')[1];
+            $("pre." + coord + "").toggle();
         }
      }
 

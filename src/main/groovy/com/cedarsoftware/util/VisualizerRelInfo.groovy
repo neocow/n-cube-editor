@@ -125,18 +125,17 @@ class VisualizerRelInfo
 		StringBuilder cellValuesBuilder = new StringBuilder()
 		StringBuilder linkBuilder = new StringBuilder()
 		sb.append("<b>Cell values</b>")
-		getCellValues(visInfo, cellValuesBuilder, linkBuilder )
-		sb.append(linkBuilder.toString())
+		getCellValues(visInfo, cellValuesBuilder)
 		sb.append("""<pre><ul class="cellValues">""")
 		sb.append(cellValuesBuilder.toString())
 		sb.append("</ul></pre>")
 	}
 
-	private void getCellValues(VisualizerInfo visInfo, StringBuilder cellValuesBuilder, StringBuilder linkBuilder)
+	private void getCellValues(VisualizerInfo visInfo, StringBuilder cellValuesBuilder)
 	{
-		String id = String.valueOf(targetId)
+		Long id = 0l
 		cellInfo.each { VisualizerCellInfo visCellInfo ->
-			visCellInfo.getCellValue(visInfo, this, cellValuesBuilder)
+			visCellInfo.getCellValue(visInfo, this,  id++, cellValuesBuilder)
 		}
 	}
 
