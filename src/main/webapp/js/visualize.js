@@ -394,7 +394,7 @@ var Visualizer = (function ($) {
                     col4Input[0].checked = defaultValue;
                 }
                 else {
-                    readOnly = FUNCTION === typeof value ? true: false;
+                    readOnly = FUNCTION === typeof value;
                     readOnlyClass = readOnly ? ' readOnly' : '';
                     functionTitle = "Not currently supporting update of network options that are functions.";
                     col2Span = $('<span/>');
@@ -541,6 +541,7 @@ var Visualizer = (function ($) {
         var dataSetNode;
         dataSetNode = _nodeDataSet.get(node.id);
         dataSetNode.details = node.details;
+        dataSetNode.showCellValuesLink = node.showCellValuesLink;
         dataSetNode.showCellValues = node.showCellValues;
         dataSetNode.cellValuesLoaded = node.cellValuesLoaded;
         dataSetNode.executeCell = node.executeCell;
@@ -735,12 +736,12 @@ var Visualizer = (function ($) {
     }
 
     function getScopeString(){
-        var scopeLen, key, i, len, scope;
+        var scopeLen, key, i, len, scope, scopeString, keys;
         scope = $.extend(true, {}, _scope);
         delete scope['@type'];
         delete scope['@id'];
-        var scopeString = '';
-        var keys = Object.keys(scope);
+        scopeString = '';
+        keys = Object.keys(scope);
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             scopeString += key + ': ' + scope[key] + ', ';
@@ -993,7 +994,7 @@ var Visualizer = (function ($) {
                 if (ARRAY_LIST === type){
                     valueOfValue = value['@items'].valueOf();
                     formatNetworkOverrides(valueOfValue);
-                    overrides[key] = valueOfValue
+                    overrides[key] = valueOfValue;
                     delete value['@items'];
                     delete value['@type'];
                 }
@@ -1072,7 +1073,7 @@ var Visualizer = (function ($) {
                 networkSelectNodeEvent(params);
             });
 
-            _network.on('deselectNode', function(params) {
+            _network.on('deselectNode', function() {
                 clearVisLayoutEast();
             });
 
@@ -1207,7 +1208,7 @@ var Visualizer = (function ($) {
         _nodeCubeLink[0].innerHTML = '';
         _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
-        if (node.cellValuesLoaded) {
+        if (node.showCellValuesLink) {
             _nodeCellValues[0].innerHTML = '';
             _nodeCellValues.append(createCellValuesLink(node));
          }
@@ -1244,19 +1245,19 @@ var Visualizer = (function ($) {
         if (target.className.indexOf('executeCells') > -1) {
             node = _nodeDataSet.get(target.id);
             node.executeCells = true;
-            note = 'Loading ' + _visInfo.loadCellValuesLabel + '...'
+            note = 'Loading ' + _visInfo.loadCellValuesLabel + '...';
             loadCellValues(node, note);
         }
         else if (target.className.indexOf('noExecuteCell') > -1) {
             node = _nodeDataSet.get(target.id);
             node.noExecuteCell = target.title;
-            note = 'Loading cell value for coordinate ' + target.title + '...'
+            note = 'Loading cell value for coordinate ' + target.title + '...';
             loadCellValues(node, note);
         }
         else if (target.className.indexOf('errorCell') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.noExecuteCell = target.title;
-            note = 'Loading cell value for coordinate ' + target.title + '...'
+            node.errorCell = target.title;
+            note = 'Loading cell value for coordinate ' + target.title + '...';
             loadCellValues(node, note);
         }
     }

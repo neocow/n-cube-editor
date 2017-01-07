@@ -80,6 +80,7 @@ class Visualizer
 
 		relInfo.loadCellValues(visInfo)
 		node.details = relInfo.getDetails(visInfo)
+		node.showCellValuesLink = relInfo.showCellValuesLink
 		node.cellValuesLoaded = relInfo.cellValuesLoaded
 		boolean showCellValues = relInfo.showCellValues
 		node.showCellValues = showCellValues
@@ -125,6 +126,7 @@ class Visualizer
 		relInfo.targetId = 1
 		relInfo.addRequiredAndOptionalScopeKeys(visInfo)
 		relInfo.targetScope = new CaseInsensitiveMap()
+		relInfo.showCellValuesLink = true
 	}
 
 	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
@@ -176,6 +178,7 @@ class Visualizer
 				nextRelInfo.scope.putAll(coordinates)
 
 				nextRelInfo.addRequiredAndOptionalScopeKeys(visInfo)
+				nextRelInfo.showCellValuesLink = true
 
 				stack.push(nextRelInfo)
 			}

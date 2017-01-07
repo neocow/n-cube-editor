@@ -54,6 +54,13 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
+	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
+	{
+		super.loadFirstVisualizerRelInfo(visInfo, relInfo, startCubeName)
+		relInfo.showCellValuesLink = false
+	}
+
+	@Override
 	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		if (relInfo.targetCube.name.startsWith(RPM_CLASS))
@@ -179,6 +186,7 @@ class RpmVisualizer extends Visualizer
 			nextRelInfo.sourceFieldName = targetFieldName
 			nextRelInfo.sourceFieldRpmType = rpmType
 			nextRelInfo.sourceTraits = relInfo.targetTraits
+			nextRelInfo.showCellValuesLink = false
 		}
 		catch (Exception e)
 		{
@@ -213,6 +221,7 @@ class RpmVisualizer extends Visualizer
 				String msg = getLoadTargetAsRpmClassMessage(relInfo, type)
 				relInfo.notes << msg
 				relInfo.cellValuesLoaded = false
+				relInfo.showCellValuesLink = false
 				return false
 			}
 		}

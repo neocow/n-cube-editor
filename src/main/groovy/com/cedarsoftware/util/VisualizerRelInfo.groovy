@@ -31,7 +31,7 @@ class VisualizerRelInfo
 	String sourceFieldName
 
 	boolean cellValuesLoaded
-	boolean cellValuesLoadedWithIssues
+	boolean showCellValuesLink
 	boolean showCellValues
 	boolean executingCells
 	String executeCell
@@ -56,6 +56,7 @@ class VisualizerRelInfo
 		targetLevel = Long.valueOf(node.level as String)
 		targetScope = node.scope as CaseInsensitiveMap
 		scope = node.availableScope as CaseInsensitiveMap
+		showCellValuesLink = node.showCellValuesLink as boolean
 		showCellValues = node.showCellValues as boolean
 		executeCell = node.executeCell as String
 		executeCells = node.executeCells as boolean
@@ -68,7 +69,6 @@ class VisualizerRelInfo
 	{
 		cellInfo = [] as Set
 		cellValuesLoaded = true
-		cellValuesLoadedWithIssues = false
 		if (showCellValues)
 		{
 			Map<LongHashSet, Object> cellMap = targetCube.cellMap
@@ -82,7 +82,6 @@ class VisualizerRelInfo
 				}
 				catch (Exception e)
 				{
-					cellValuesLoadedWithIssues = true
 					visCellInfo.exception = e
 				}
 				visCellInfo.noExecuteCell = noExecuteCell
@@ -304,6 +303,7 @@ class VisualizerRelInfo
 
 		node.executeCell = executeCell
 		node.executeCells = executeCell
+		node.showCellValuesLink = showCellValuesLink
 		node.showCellValues = showCellValues
 		node.cellValuesLoaded = cellValuesLoaded
 

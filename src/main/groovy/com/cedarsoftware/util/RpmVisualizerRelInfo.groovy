@@ -354,10 +354,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			addRequiredAndOptionalScopeKeys(visInfo)
 			retainUsedScope(visInfo, output)
 			cellValuesLoaded = true
+			showCellValuesLink = true
 		}
 		catch (Exception e)
 		{
 			cellValuesLoaded = false
+			showCellValuesLink = false
 			Throwable t = helper.getDeepestException(e)
 			if (t instanceof InvalidCoordinateException)
 			{
