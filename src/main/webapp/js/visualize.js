@@ -1240,19 +1240,20 @@ var Visualizer = (function ($) {
     }
 
     function executeCell(e) {
-        var target, node, note, coord;
+        var target, coordinateId;
         target = e.target;
-        if (target.className.indexOf('executeall') > -1) {
-            node = _nodeDataSet.get(target.id);
-            note = 'Executing ' + _visInfo.loadCellValuesLabel + '...';
-            loadCellValues(node, note);
+        if (target.className.indexOf('expandAll') > -1) {
+            $('.cellDetail').show();
+        }
+        else if (target.className.indexOf('collapseAll') > -1) {
+            $('.cellDetail').hide();
         }
         else if (target.className.indexOf('executedCell') > -1 ||
             target.className.indexOf('InvalidCoordinateException') > -1 ||
             target.className.indexOf('CoordinateNotFoundException') > -1 ||
             target.className.indexOf('Exception') > -1) {
-            coord = target.className.split(' ')[1];
-            $("pre." + coord + "").toggle();
+            coordinateId = target.className.split(' ')[1];
+            $("pre." + coordinateId).toggle();
         }
      }
 

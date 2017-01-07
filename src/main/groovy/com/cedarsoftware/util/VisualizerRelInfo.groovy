@@ -125,18 +125,25 @@ class VisualizerRelInfo
 		StringBuilder cellValuesBuilder = new StringBuilder()
 		StringBuilder linkBuilder = new StringBuilder()
 		sb.append("<b>Cell values</b>")
-		getCellValues(visInfo, cellValuesBuilder)
+		getCellValues(visInfo, cellValuesBuilder, linkBuilder )
+		sb.append(linkBuilder.toString())
 		sb.append("""<pre><ul class="cellValues">""")
 		sb.append(cellValuesBuilder.toString())
 		sb.append("</ul></pre>")
 	}
 
-	private void getCellValues(VisualizerInfo visInfo, StringBuilder cellValuesBuilder)
+	private void getCellValues(VisualizerInfo visInfo, StringBuilder cellValuesBuilder, StringBuilder linkBuilder)
 	{
 		Long id = 0l
 		cellInfo.each { VisualizerCellInfo visCellInfo ->
 			visCellInfo.getCellValue(visInfo, this,  id++, cellValuesBuilder)
 		}
+
+		linkBuilder.append(DOUBLE_BREAK)
+		linkBuilder.append("""<a href="#" title="Expand all cell details" class="expandAll"">Expand all</a>""")
+		linkBuilder.append("${SPACE}${SPACE}")
+		linkBuilder.append("""<a href="#" title="Collapse all cell details" class="collapseAll"">Collapse all</a>""")
+		linkBuilder.append(BREAK)
 	}
 
 	static String getDetailsMap(StringBuilder sb, String title, Map<String, Object> map)
