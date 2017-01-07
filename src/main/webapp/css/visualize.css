@@ -61,6 +61,14 @@ div.col-width-xs {
     user-select: initial;
 }
 
+pre {
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -pre-wrap;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;
+}
+
 ul, li{
     list-style-position: inside;
     margin: 0;
