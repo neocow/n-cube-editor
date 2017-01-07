@@ -67,6 +67,40 @@ ul, li{
     padding: 0;
 }
 
+.cellValues li.cell
+{
+    background-image: url('../img/greenokcircle.png');
+    width: 15px;
+    height: 15px;
+    border: none;
+    outline: none;
+    background-repeat: no-repeat;
+    background-position: 0 .5em;
+}
+
+.cellValues li.errorCell
+{
+    background-image: url('../img/greenruntriangle.png');
+    cursor:pointer;
+    width: 15px;
+    height: 15px;
+    border: none;
+    outline: none;
+    background-repeat: no-repeat;
+    background-position: 0 .5em;
+}
+
+.cellValues li.noExecuteCell
+{
+    background-image: url('../img/redexclamationmarkcircle.png');
+    width: 15px;
+    height: 15px;
+    border: none;
+    outline: none;
+    background-repeat: no-repeat;
+    background-position: 0 .5em;
+}
+
 h3{
     margin-top: 0;
 }

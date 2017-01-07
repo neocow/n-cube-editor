@@ -1,11 +1,9 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
-import com.cedarsoftware.ncube.CommandCell
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.util.LongHashSet
-import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.VisualizerConstants.*
@@ -32,19 +30,18 @@ class VisualizerRelInfo
 	Map<String, Object> sourceScope
 	String sourceFieldName
 
-	Boolean cellValuesLoadedOk
-	boolean showCellValues = false
-	String currentCoordinate
-	boolean executingCells = false
+	boolean cellValuesLoaded
+	boolean cellValuesLoadedWithIssues
+	boolean showCellValues
+	boolean executingCells
 	String executeCell
-	boolean executeCells = false
+	boolean executeCells
 
-	Map<String, Map<String, Object>> targetCellValues
-	Map<String, Map<String, Object>> sourceCellValues
+	Set<VisualizerCellInfo> cellInfo
 
 	List<String> typesToAdd
 
-	protected Joiner.MapJoiner mapJoiner = Joiner.on(", ").withKeyValueSeparator(": ")
+	protected VisualizerHelper helper = new VisualizerHelper()
 
 	VisualizerRelInfo() {}
 
@@ -63,41 +60,36 @@ class VisualizerRelInfo
 		executeCell = node.executeCell as String
 		executeCells = node.executeCells as boolean
 		setExecutingFlags()
-		cellValuesLoadedOk = node.cellValuesLoadedOk as Boolean
+		cellValuesLoaded = node.cellValuesLoaded as boolean
 		typesToAdd = node.typesToAdd as List
 	}
 
-	void loadCellValues(VisualizerInfo visInfo)
+	boolean loadCellValues(VisualizerInfo visInfo)
 	{
-		targetCellValues = [:]
-		cellValuesLoadedOk = null
+		cellInfo = [] as Set
+		cellValuesLoaded = true
+		cellValuesLoadedWithIssues = false
 		if (showCellValues)
 		{
-			Map<LongHashSet, Object> cellMap = targetCube.getCellMap()
+			Map<LongHashSet, Object> cellMap = targetCube.cellMap
 			cellMap.each { LongHashSet ids, Object noExecuteCell ->
 				Map<String, Object> coordinate = targetCube.getCoordinateFromIds(ids)
-				currentCoordinate = getCoordinateString(coordinate)
-				Object cell
-				if (noExecuteCell instanceof CommandCell)
+				VisualizerCellInfo visCellInfo = new VisualizerCellInfo(String.valueOf(targetId), coordinate)
+				try
 				{
-					if(executeCells || currentCoordinate == executeCell)
-					{
-						cell = targetCube.getCell(coordinate)
-					}
-					else
-					{
-						cell = noExecuteCell
-					}
+					visCellInfo.cell = targetCube.getCell(coordinate)
+
 				}
-				else
+				catch (Exception e)
 				{
-					cell = targetCube.getCell(coordinate)
+					cellValuesLoadedWithIssues = true
+					visCellInfo.exception = e
 				}
-				String cellString = cell == null ? 'null' : cell.toString()
-				targetCellValues[currentCoordinate] = [(cellString): noExecuteCell]
+				visCellInfo.noExecuteCell = noExecuteCell
+				cellInfo << visCellInfo
 			}
-			cellValuesLoadedOk = true
 		}
+		return true
 	}
 
 	private boolean setExecutingFlags()
@@ -120,17 +112,6 @@ class VisualizerRelInfo
 		}
 	}
 
-	private String getCoordinateString(Map<String, Object> coordinates)
-	{
-		coordinates.each {String key, Object value ->
-			if (!value)
-			{
-				coordinates[key] = 'null'
-			}
-		}
-		return mapJoiner.join(coordinates)
-	}
-
 	Set<String> getRequiredScope()
 	{
 		return targetCube.getRequiredScope(targetScope, [:] as Map)
@@ -139,20 +120,12 @@ class VisualizerRelInfo
 	String getDetails(VisualizerInfo visInfo)
 	{
 		StringBuilder sb = new StringBuilder()
-		String notesLabel = "<b>Note: </b>"
 		String targetCubeName = targetCube.name
-
-		if (false == cellValuesLoadedOk)
-		{
-			String msg = currentCoordinate ? "for coordinate ${currentCoordinate}" : ''
-			sb.append("<b>*** Unable to load cell values ${msg}</b>${DOUBLE_BREAK}")
-			notesLabel = "<b>Reason: </b>"
-		}
 
 		//Notes
 		if (notes)
 		{
-			sb.append(notesLabel)
+			sb.append("<b>Note: </b>")
 			notes.each { String note ->
 				sb.append("${note} ")
 			}
@@ -165,64 +138,33 @@ class VisualizerRelInfo
 		getDetailsSet(sb, 'Optional scope keys', visInfo.optionalScopeKeys[targetCubeName])
 
 		//Cell values
-		if (null != cellValuesLoadedOk && showCellValues)
+		if (cellValuesLoaded && showCellValues)
 		{
-			addCellValueSection(sb)
+			addCellValueSection(visInfo, sb)
 		}
-
-		currentCoordinate = null
 		return sb.toString()
 	}
 
-	private void addCellValueSection(StringBuilder sb)
+	private void addCellValueSection(VisualizerInfo visInfo, StringBuilder sb)
 	{
 		StringBuilder cellValuesBuilder = new StringBuilder()
 		StringBuilder linkBuilder = new StringBuilder()
 		sb.append("<b>Cell values</b>")
-		getCellValues(cellValuesBuilder, linkBuilder )
+		getCellValues(visInfo, cellValuesBuilder, linkBuilder )
 		sb.append(linkBuilder.toString())
-		sb.append("<pre><ul>")
+		sb.append("""<pre><ul class="cellValues">""")
 		sb.append(cellValuesBuilder.toString())
 		sb.append("</ul></pre>")
 	}
 
-	private void getCellValues(StringBuilder cellValuesBuilder, StringBuilder linkBuilder)
+	private void getCellValues(VisualizerInfo visInfo, StringBuilder cellValuesBuilder, StringBuilder linkBuilder)
 	{
 		boolean hasNonExecutedCells = false
-		boolean hasExecutedCells = false
 		String id = String.valueOf(targetId)
 
-		targetCellValues.each { String coordinate, Map<String, Object> cellValues ->
-			cellValues.each { String cellString, Object noExecuteCell ->
-				if (noExecuteCell instanceof CommandCell)
-				{
-					if (executeCells || coordinate == executeCell)
-					{
-						//The executed cell value is displayed as text.
-						cellValuesBuilder.append("<li>${coordinate} <b>==></b> ${cellString}</li>")
-						hasExecutedCells = true
-					}
-					else
-					{
-						//The non-executed cell value is displayed as a link. If clicked, the cell is executed.
-						cellValuesBuilder.append("""<li><a class="executeCell" id="${id}" title="${coordinate}" href="#">${coordinate} <b>==></b>  ${noExecuteCell}</a></li>""")
-						hasNonExecutedCells = true
-					}
-				}
-				else if (cellString.startsWith(HTTP) || cellString.startsWith(HTTPS) || cellString.startsWith(FILE))
-				{
-					//The executed cell value is displayed as a link. If clicked, the link opens in a new window.
-					cellValuesBuilder.append("""<li>${coordinate} <b>==></b>  <a href="#" onclick='window.open("${cellString}");return false;'>${cellString}</a></li>""")
-					hasExecutedCells = true
-				}
-				else
-				{
-					//The executed cell value is displayed as text.
-					cellValuesBuilder.append("<li>${coordinate} <b>==></b> ${cellString}</li>")
-					hasExecutedCells = true
-				}
-			}
-		}
+		cellInfo.each { VisualizerCellInfo visCellInfo ->
+		  visCellInfo.getCellValue(visInfo, this, cellValuesBuilder)
+	    }
 
 		if (hasNonExecutedCells)
 		{
@@ -363,7 +305,7 @@ class VisualizerRelInfo
 		node.executeCell = executeCell
 		node.executeCells = executeCell
 		node.showCellValues = showCellValues
-		node.cellValuesLoadedOk = cellValuesLoadedOk
+		node.cellValuesLoaded = cellValuesLoaded
 
 		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
 		long maxLevel = visInfo.maxLevel

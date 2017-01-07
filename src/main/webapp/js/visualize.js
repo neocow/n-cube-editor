@@ -214,7 +214,11 @@ var Visualizer = (function ($) {
     }
 
     function onNoteClick(e) {
-        var target, id, scopeParts, key, value, params, node, note;
+        missingScope(e);
+    }
+
+    function missingScope(e) {
+        var target, id, scopeParts, key, value;
         target = e.target;
         if (target.className.indexOf('missingScope') > -1) {
             id = target.title;
@@ -223,25 +227,6 @@ var Visualizer = (function ($) {
             value = scopeParts[1].trim();
             _scope[key] = value;
             scopeChange();
-        }
-        else if (target.className.indexOf('findNode') > -1) {
-            id = target.id;
-            params = {nodes: [id]};
-            _network.selectNodes([id]);
-            networkSelectNodeEvent(params);
-            _nce.clearNote();
-        }
-        else if (target.className.indexOf('executeCells') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.executeCells = true;
-            note = 'Loading ' + _visInfo.loadCellValuesLabel + '...'
-            loadCellValues(node, note);
-        }
-        else if (target.className.indexOf('executeCell') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.executeCell = target.title;
-            note = 'Loading cell value for coordinate ' + target.title + '...'
-            loadCellValues(node, note);
         }
     }
 
@@ -528,9 +513,7 @@ var Visualizer = (function ($) {
         json = result.data;
 
         if (STATUS_SUCCESS === json.status) {
-            if (null !== json.message) {
-                _noteIdList.push(_nce.showNote(json.message));
-            }
+            displayMessages(json.visInfo.messages);
             node = json.visInfo.nodes['@items'][0];
             loadDataForNode(node)
         }
@@ -544,12 +527,22 @@ var Visualizer = (function ($) {
         return node;
     }
 
+    function displayMessages(messages){
+        var j, jLen, items;
+        if (messages) {
+            items = messages['@items'];
+            for (j = 0, jLen = items.length; j < jLen; j++) {
+                _noteIdList.push(_nce.showNote(items[j]));
+            }
+        }
+    }
+
     function loadDataForNode(node){
         var dataSetNode;
         dataSetNode = _nodeDataSet.get(node.id);
         dataSetNode.details = node.details;
         dataSetNode.showCellValues = node.showCellValues;
-        dataSetNode.cellValuesLoadedOk = node.cellValuesLoadedOk;
+        dataSetNode.cellValuesLoaded = node.cellValuesLoaded;
         dataSetNode.executeCell = node.executeCell;
         dataSetNode.executeCells = node.executeCells;
         _nodeDataSet.update(dataSetNode);
@@ -615,9 +608,7 @@ var Visualizer = (function ($) {
         json = result.data;
 
         if (json.status === STATUS_SUCCESS) {
-            if (null !== json.message) {
-                _noteIdList.push(_nce.showNote(json.message));
-            }
+            displayMessages(json.visInfo.messages);
             loadData(json.visInfo, json.status);
             initNetwork();
             loadSelectedLevelListView();
@@ -631,7 +622,7 @@ var Visualizer = (function ($) {
             _visualizerNetwork.show();
         }
         else if (STATUS_MISSING_START_SCOPE === json.status) {
-            _noteIdList.push(_nce.showNote(json.message));
+            displayMessages(json.visInfo.messages);
             loadData(json.visInfo, json.status);
             saveAllToLocalStorage();
             loadScopeView();
@@ -1216,10 +1207,10 @@ var Visualizer = (function ($) {
         _nodeCubeLink[0].innerHTML = '';
         _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
-        if (false !== node.cellValuesLoadedOk) {
+        if (node.cellValuesLoaded) {
             _nodeCellValues[0].innerHTML = '';
             _nodeCellValues.append(createCellValuesLink(node));
-        }
+         }
 
         _nodeAddTypes[0].innerHTML = '';
         if (node.typesToAdd) {
@@ -1240,9 +1231,33 @@ var Visualizer = (function ($) {
         {
             _nodeDetails.click(function (e) {
                 e.preventDefault();
-                onNoteClick(e);
+                missingScope(e);
+                executeCell(e);
             });
             _nodeDetails.addClass(HAS_CLICK_EVENT)
+        }
+    }
+
+    function executeCell(e) {
+        var target, value, node, note;
+        target = e.target;
+        if (target.className.indexOf('executeCells') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeCells = true;
+            note = 'Loading ' + _visInfo.loadCellValuesLabel + '...'
+            loadCellValues(node, note);
+        }
+        else if (target.className.indexOf('noExecuteCell') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.noExecuteCell = target.title;
+            note = 'Loading cell value for coordinate ' + target.title + '...'
+            loadCellValues(node, note);
+        }
+        else if (target.className.indexOf('errorCell') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.noExecuteCell = target.title;
+            note = 'Loading cell value for coordinate ' + target.title + '...'
+            loadCellValues(node, note);
         }
     }
 
