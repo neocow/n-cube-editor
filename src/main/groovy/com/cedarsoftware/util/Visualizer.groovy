@@ -84,12 +84,7 @@ class Visualizer
 		node.cellValuesLoaded = relInfo.cellValuesLoaded
 		boolean showCellValues = relInfo.showCellValues
 		node.showCellValues = showCellValues
-		if (showCellValues)
-		{
-			relInfo.setExecuteTriggers(node)
-		}
 		visInfo.nodes = [node]
-
 		visInfo.convertToSingleMessage()
 		return [status: STATUS_SUCCESS, visInfo: visInfo]
 	}

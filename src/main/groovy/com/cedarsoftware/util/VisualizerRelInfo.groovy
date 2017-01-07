@@ -33,9 +33,8 @@ class VisualizerRelInfo
 	boolean cellValuesLoaded
 	boolean showCellValuesLink
 	boolean showCellValues
-	boolean executingCells
-	String executeCell
-	boolean executeCells
+
+	boolean executeAll
 
 	Set<VisualizerCellInfo> cellInfo
 
@@ -58,9 +57,6 @@ class VisualizerRelInfo
 		scope = node.availableScope as CaseInsensitiveMap
 		showCellValuesLink = node.showCellValuesLink as boolean
 		showCellValues = node.showCellValues as boolean
-		executeCell = node.executeCell as String
-		executeCells = node.executeCells as boolean
-		setExecutingFlags()
 		cellValuesLoaded = node.cellValuesLoaded as boolean
 		typesToAdd = node.typesToAdd as List
 	}
@@ -89,26 +85,6 @@ class VisualizerRelInfo
 			}
 		}
 		return true
-	}
-
-	private boolean setExecutingFlags()
-	{
-		executingCells = executeCells || executeCell
-	}
-
-	void setExecuteTriggers(Map node)
-	{
-		node.executeCells = executeCells
-		node.executeCell = executeCell
-	}
-
-	void resetExecuteTriggers()
-	{
-		if (executingCells)
-		{
-			executeCell = null
-			executeCells = false
-		}
 	}
 
 	Set<String> getRequiredScope()
@@ -158,18 +134,9 @@ class VisualizerRelInfo
 
 	private void getCellValues(VisualizerInfo visInfo, StringBuilder cellValuesBuilder, StringBuilder linkBuilder)
 	{
-		boolean hasNonExecutedCells = false
 		String id = String.valueOf(targetId)
-
 		cellInfo.each { VisualizerCellInfo visCellInfo ->
-		  visCellInfo.getCellValue(visInfo, this, cellValuesBuilder)
-	    }
-
-		if (hasNonExecutedCells)
-		{
-			linkBuilder.append(DOUBLE_BREAK)
-			linkBuilder.append("""${SPACE}<a class="executeCell" id="${id}" href="#">Execute all</a>""")
-			linkBuilder.append(BREAK)
+			visCellInfo.getCellValue(visInfo, this, cellValuesBuilder)
 		}
 	}
 
@@ -301,8 +268,6 @@ class VisualizerRelInfo
 		node.group = group
 		node.typesToAdd = visInfo.getTypesToAdd(group)
 
-		node.executeCell = executeCell
-		node.executeCells = executeCell
 		node.showCellValuesLink = showCellValuesLink
 		node.showCellValues = showCellValues
 		node.cellValuesLoaded = cellValuesLoaded

@@ -1240,27 +1240,23 @@ var Visualizer = (function ($) {
     }
 
     function executeCell(e) {
-        var target, value, node, note;
+        var target, node, note;
         target = e.target;
-        if (target.className.indexOf('executeCells') > -1) {
+        if (target.className.indexOf('executeall') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.executeCells = true;
-            note = 'Loading ' + _visInfo.loadCellValuesLabel + '...';
+            note = 'Executing ' + _visInfo.loadCellValuesLabel + '...';
             loadCellValues(node, note);
         }
-        else if (target.className.indexOf('noExecuteCell') > -1) {
+        //TODO: Show/hide of cell contents yet to be implemented.
+         else if (target.className.indexOf('executedCell') > -1 ||
+            target.className.indexOf('InvalidCoordinateException') > -1 ||
+            target.className.indexOf('CoordinateNotFoundException') > -1 ||
+            target.className.indexOf('Exception') > -1) {
             node = _nodeDataSet.get(target.id);
-            node.noExecuteCell = target.title;
-            note = 'Loading cell value for coordinate ' + target.title + '...';
+            note = 'Showing/hiding cell contents not yet implemented...';
             loadCellValues(node, note);
         }
-        else if (target.className.indexOf('errorCell') > -1) {
-            node = _nodeDataSet.get(target.id);
-            node.errorCell = target.title;
-            note = 'Loading cell value for coordinate ' + target.title + '...';
-            loadCellValues(node, note);
-        }
-    }
+     }
 
     function updateNetworkOptions()
     {
@@ -1307,9 +1303,6 @@ var Visualizer = (function ($) {
             e.preventDefault();
             node.showCellValues = !node.showCellValues;
             note = node.showCellValues ? 'Loading ' + _visInfo.loadCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadCellValuesLabel + '...';
-            if (node.showCellValues && _visInfo['@type'] === 'com.cedarsoftware.util.VisualizerInfo'){
-                _tempNote = 'Showing cell values is *** UNDER CONSTRUCTION ***<BR><BR>Improved exception handling for cell values and improved display of cell values, among other things, are on the way.';
-            }
             loadCellValues(node, note);
         });
         return cellValuesLink;

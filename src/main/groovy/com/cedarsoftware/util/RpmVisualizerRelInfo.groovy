@@ -416,7 +416,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 		sb.append(helper.handleInvalidCoordinateException(e, visInfo, this, MANDATORY_SCOPE_KEYS))
 		String msg = sb.toString()
-		resetExecuteTriggers()
 		notes << msg
 		visInfo.messages << msg
 		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE + effectiveNameByCubeName]] as Map

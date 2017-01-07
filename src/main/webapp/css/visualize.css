@@ -67,38 +67,52 @@ ul, li{
     padding: 0;
 }
 
-.cellValues li.cell
+.cellValues
 {
-    background-image: url('../img/greenokcircle.png');
-    width: 15px;
-    height: 15px;
-    border: none;
-    outline: none;
-    background-repeat: no-repeat;
-    background-position: 0 .5em;
+    list-style-position: inside;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
-.cellValues li.errorCell
+.cellValues li.executedCell
+{
+    background-image: url('../img/greenokcircle.png');
+    cursor:pointer;
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    padding: 3px 0 3px 20px;
+    margin: .4em 0;
+}
+
+.cellValues li.Exception
+{
+    background-image: url('../img/redexclamationmarkcircle.png');
+    cursor:pointer;
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    padding: 3px 0 3px 20px;
+    margin: .4em 0;
+}
+
+.cellValues li.InvalidCoordinateException, li.CoordinateNotFoundException
+{
+    background-image: url('../img/bluecirclequestionmark.png');
+    cursor:pointer;
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    padding: 3px 0 3px 20px;
+    margin: .4em 0;
+}
+
+.execute
 {
     background-image: url('../img/greenruntriangle.png');
     cursor:pointer;
-    width: 15px;
-    height: 15px;
-    border: none;
-    outline: none;
     background-repeat: no-repeat;
-    background-position: 0 .5em;
-}
-
-.cellValues li.noExecuteCell
-{
-    background-image: url('../img/redexclamationmarkcircle.png');
-    width: 15px;
-    height: 15px;
-    border: none;
-    outline: none;
-    background-repeat: no-repeat;
-    background-position: 0 .5em;
+    background-position: 0 50%;
+    padding: 3px 0 3px 20px;
+    margin: .4em 0;
 }
 
 h3{
