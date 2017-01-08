@@ -17,22 +17,23 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 class VisualizerInfo
 {
     ApplicationID appId
-	Map<String, Object> scope
-	List<Map<String, Object>> nodes = []
-	List<Map<String, Object>> edges = []
+    Map<String, Object> scope
+    List<Map<String, Object>> nodes = []
+    List<Map<String, Object>> edges = []
 
-	long maxLevel
-	long nodeCount
+    long maxLevel
+    long nodeCount
     long relInfoCount
     long defaultLevel
     String loadCellValuesLabel
 
-	Map<String,String> allGroups
+    Map<String,String> allGroups
     Set<String> allGroupsKeys
     String groupSuffix
-	Set<String> availableGroupsAllLevels
+    Set<String> availableGroupsAllLevels
+    Set<String> messages
 
-	Map<String, Set<Object>> availableScopeValues = [:]
+    Map<String, Set<Object>> availableScopeValues = [:]
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
 
@@ -48,7 +49,17 @@ class VisualizerInfo
     {
         appId = applicationID
         scope = options.scope as CaseInsensitiveMap
-        loadConfigurations(getCubeType())
+        loadConfigurations(cubeType)
+    }
+
+    protected void init(Map scope)
+    {
+        maxLevel = 1
+        nodeCount = 1
+        relInfoCount = 1
+        messages = [] as Set
+        availableGroupsAllLevels = [] as Set
+        this.scope = scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
     }
 
     protected String getCubeType()
@@ -116,7 +127,7 @@ class VisualizerInfo
     void loadTypesToAddMap(NCube configCube)
     {
         typesToAddMap = [:]
-        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): getCubeType()]) as Set
+        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): cubeType]) as Set
         allTypes.each{String type ->
             Map.Entry<String, String> entry = allGroups.find{ String key, String value ->
                 value == type
@@ -129,10 +140,10 @@ class VisualizerInfo
     {
         LOAD_CELL_VALUES_LABEL
     }
-    
+
     void loadAvailableScopeKeysAndValues(NCube configCube)
     {
-         availableScopeValues = new CaseInsensitiveMap<>()
+        availableScopeValues = new CaseInsensitiveMap<>()
     }
 
     Set<Object> loadAvailableScopeValues(String cubeName, String key)
@@ -155,5 +166,10 @@ class VisualizerInfo
             }
         }
         return values
+    }
+
+    void convertToSingleMessage()
+    {
+        messages = messages ? [messages.join(DOUBLE_BREAK)] as Set : null
     }
 }
