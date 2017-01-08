@@ -34,9 +34,7 @@ class VisualizerRelInfo
 	boolean showCellValuesLink
 	boolean showCellValues
 
-	boolean executeAll
-
-	Set<VisualizerCellInfo> cellInfo
+	List<VisualizerCellInfo> cellInfo
 
 	List<String> typesToAdd
 
@@ -63,7 +61,7 @@ class VisualizerRelInfo
 
 	boolean loadCellValues(VisualizerInfo visInfo)
 	{
-		cellInfo = [] as Set
+		cellInfo = []
 		cellValuesLoaded = true
 		if (showCellValues)
 		{
@@ -82,6 +80,9 @@ class VisualizerRelInfo
 				}
 				visCellInfo.noExecuteCell = noExecuteCell
 				cellInfo << visCellInfo
+			}
+			cellInfo.sort { VisualizerCellInfo cellInfo ->
+				cellInfo.coordinate.toString()
 			}
 		}
 		return true
@@ -111,6 +112,7 @@ class VisualizerRelInfo
 		getDetailsMap(sb, 'Available scope', scope)
 		getDetailsSet(sb, 'Required scope keys', visInfo.requiredScopeKeys[targetCubeName])
 		getDetailsSet(sb, 'Optional scope keys', visInfo.optionalScopeKeys[targetCubeName])
+		getDetailsSet(sb, 'Axes', targetCube.getAxisNames())
 
 		//Cell values
 		if (cellValuesLoaded && showCellValues)
