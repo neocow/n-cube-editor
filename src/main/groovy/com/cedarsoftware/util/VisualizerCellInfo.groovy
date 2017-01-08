@@ -69,7 +69,6 @@ class VisualizerCellInfo
 		String listItemClassName = "${'executedCell'}"
 		String linkClassNames = "${listItemClassName} ${coordinateClassName}"
 		sb.append("""<li class="${listItemClassName}" title="Executed cell"><a href="#" class="${linkClassNames}" id="${nodeId}">${coordinateString}</a></li>""")
-		sb.append("""<div class="cellDetail">""")
 		sb.append("""<pre class="${coordinateClassName}">""")
 		sb.append("<b>Non-executed value:</b>")
 		sb.append(DOUBLE_BREAK)
@@ -86,7 +85,6 @@ class VisualizerCellInfo
 			sb.append("${cellString}")
 		}
 		sb.append("</pre>")
-		sb.append("</div>")
 		return sb.toString()
 	}
 
@@ -128,7 +126,6 @@ class VisualizerCellInfo
 		String coordinateClassName = "coord_${id}"
 		String linkClassNames = "${listItemClassName}, ${coordinateClassName}"
 		sb.append("""<li class="${listItemClassName}" title="${title}"><a href="#" class="${linkClassNames}" id="${nodeId}">${coordinateString}</a></li>""")
-		sb.append("""<div class="cellDetail">""")
 		sb.append("""<pre class="${coordinateClassName}">""")
 		sb.append("<b>Non-executed value:</b>")
 		sb.append(DOUBLE_BREAK)
@@ -138,7 +135,6 @@ class VisualizerCellInfo
 		sb.append(DOUBLE_BREAK)
 		sb.append("${mb.toString()}>")
 		sb.append("</pre>")
-		sb.append("</div>")
 		return sb.toString()
 	}
 }

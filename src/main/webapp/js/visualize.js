@@ -1240,24 +1240,20 @@ var Visualizer = (function ($) {
     }
 
     function executeCell(e) {
-        var target, coordinateId, pre;
+        var target, coordinateId;
         target = e.target;
         if (target.className.indexOf('expandAll') > -1) {
-            $('.cellDetail').show();
-            $('.cellDetail pre[class^="coord"]').show()
+            $('pre[class^="coord_"]').show();
         }
         else if (target.className.indexOf('collapseAll') > -1) {
-            $('.cellDetail').hide();
-            $('.cellDetail pre[class^="coord"]').hide()
+            $('pre[class^="coord_"]').hide();
         }
         else if (target.className.indexOf('executedCell') > -1 ||
             target.className.indexOf('InvalidCoordinateException') > -1 ||
             target.className.indexOf('CoordinateNotFoundException') > -1 ||
             target.className.indexOf('Exception') > -1) {
             coordinateId = target.className.split(' ')[1];
-            pre = $('pre.' + coordinateId);
-            pre.toggle();
-            pre.parent().toggle();
+            $('pre.' + coordinateId).toggle();
         }
      }
 
