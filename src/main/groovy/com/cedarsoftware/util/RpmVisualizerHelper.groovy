@@ -12,11 +12,10 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /**
- * The methods in this class are used by the Visualizer.
+ * Provides helper methods to load fields and traits for an rpm class.
  * The methods are are copied from Dynamis unless otherwise is indicated. Some methods are slightly altered.
  * Do find on 'COPIED' to find code copied from Dynamis.
  * Do find on 'ORIGINAL' to find code not copied from Dynamis.
- *
  */
 
 @CompileStatic
