@@ -24,6 +24,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		super(appId, node)
 	}
 
+	@Override
 	Set<String> getRequiredScope()
 	{
 		Set<String> requiredScope = super.requiredScope
@@ -42,7 +43,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 		if (false == cellValuesLoadedOk)
 		{
-			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${VisualizerConstants.DOUBLE_BREAK}")
+			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
 			notesLabel = "<b>Reason: </b>"
 		}
 
@@ -53,7 +54,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			notes.each { String note ->
 				sb.append("${note} ")
 			}
-			sb.append("${VisualizerConstants.DOUBLE_BREAK}")
+			sb.append("${DOUBLE_BREAK}")
 		}
 
 		//Scope
@@ -112,7 +113,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			if (traitValue != null)
 			{
 				String traitString = traitValue.toString()
-				if (traitString.startsWith(VisualizerConstants.HTTP) || traitString.startsWith(VisualizerConstants.HTTPS) || traitString.startsWith(VisualizerConstants.FILE))
+				if (traitString.startsWith(HTTP) || traitString.startsWith(HTTPS) || traitString.startsWith(FILE))
 				{
 					sb.append("""<li>${traitName}: <a href="#" onclick='window.open("${traitString}");return false;'>${traitString}</a></li>""")
 				}
@@ -129,7 +130,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		sb.append("<b>Class traits</b>")
 		addTraits(sb, CLASS_TRAITS)
-		sb.append("${VisualizerConstants.BREAK}")
+		sb.append("${BREAK}")
 	}
 
 	@Override
@@ -137,7 +138,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		Iterable<String> splits = Splitter.on('.').split(cubeName)
 		String group = splits[2].toUpperCase()
-		return visInfo.allGroupsKeys.contains(group) ? group : VisualizerConstants.UNSPECIFIED
+		return visInfo.allGroupsKeys.contains(group) ? group : UNSPECIFIED
 	}
 
 	@Override
