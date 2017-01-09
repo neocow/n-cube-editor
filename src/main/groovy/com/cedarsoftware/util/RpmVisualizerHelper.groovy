@@ -20,7 +20,7 @@ import java.util.regex.Pattern
  */
 
 @CompileStatic
-class RpmVisualizerHelper
+class RpmVisualizerHelper extends VisualizerHelper
 {
 
 	/**

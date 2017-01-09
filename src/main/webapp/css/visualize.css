@@ -61,10 +61,63 @@ div.col-width-xs {
     user-select: initial;
 }
 
+pre {
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -pre-wrap;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;
+}
+
 ul, li{
     list-style-position: inside;
     margin: 0;
     padding: 0;
+}
+
+.cellValues
+{
+    list-style-position: inside;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cellValues li.executedCell
+{
+    background-image: url('../img/greenokcircle.png');
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    padding: 3px 0 3px 20px;
+    margin: .4em 0;
+}
+
+.cellValues li.Exception
+{
+    background-image: url('../img/redexclamationmarkcircle.png');
+     background-repeat: no-repeat;
+    background-position: 0 50%;
+    padding: 3px 0 3px 20px;
+    margin: .4em 0;
+}
+
+.cellValues li.InvalidCoordinateException, li.CoordinateNotFoundException
+{
+    background-image: url('../img/bluecirclequestionmark.png');
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    padding: 3px 0 3px 20px;
+    margin: .4em 0;
+}
+
+.execute
+{
+    background-image: url('../img/greenruntriangle.png');
+    cursor:pointer;
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    padding: 3px 0 3px 20px;
+    margin: .4em 0;
 }
 
 h3{
