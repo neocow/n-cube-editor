@@ -113,6 +113,9 @@ h3{
     background-color:rgb(235, 235, 228);
 }
 
+.executeCell, .executeCells{
+    color:#4B0082;
+}
 
 
 
