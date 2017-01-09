@@ -39,7 +39,7 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
-	protected RpmVisualizerInfo getVisualizerInfo(Map options)
+	protected VisualizerInfo getVisualizerInfo(Map options)
 	{
 		RpmVisualizerInfo visInfo
 		Object optionsVisInfo = options.visInfo
@@ -191,7 +191,7 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
-	protected RpmVisualizerRelInfo getVisualizerRelInfo()
+	protected VisualizerRelInfo getVisualizerRelInfo()
 	{
 		return new RpmVisualizerRelInfo()
 	}
