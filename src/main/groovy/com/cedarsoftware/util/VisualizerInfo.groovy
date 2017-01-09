@@ -10,7 +10,7 @@ import groovy.transform.CompileStatic
 import static com.cedarsoftware.util.VisualizerConstants.*
 
 /**
- * Provides information to visualize n-cubes.
+ * Holds information related to the visualization of cubes and their relationships.
  */
 
 @CompileStatic

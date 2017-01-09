@@ -9,7 +9,7 @@ import groovy.transform.CompileStatic
 import static com.cedarsoftware.util.VisualizerConstants.*
 
 /**
- * Provides information to visualize n-cubes.
+ * Provides the information used to visualize n-cubes.
  */
 
 @CompileStatic
@@ -21,17 +21,15 @@ class Visualizer
 	protected Joiner.MapJoiner mapJoiner = Joiner.on(", ").withKeyValueSeparator(": ")
 
 	/**
-	 * Processes an n-cube and all its referenced n-cubes and provides information to
-	 * visualize the cubes and their relationships.
+	 * Provides the information used to visualize n-cubes.
 	 *
 	 * @param applicationID
 	 * @param options - a map containing:
 	 *           String startCubeName, name of the starting cube
 	 *           Map scope, the context for which the visualizer is loaded
-	 *           VisualizerInfo visInfo, information about the visualization
-	 * @return a map containing:
-	 *           String status, status of the visualization
-	 *           VisualizerInfo visInfo, information about the visualization
+	 *           VisualizerInfo, information about the visualization
+	 * @return a map containing status and visualizer information,
+	 *           including graph nodes and edges
 	 */
 	Map<String, Object> buildGraph(ApplicationID applicationID, Map options)
 	{
@@ -61,12 +59,11 @@ class Visualizer
 	 * Loads all cell values for a cube given the scope provided.
 	 *
 	 * @param applicationID
-	 * @param options - a map containing:
+	 * @param options (map containing:
 	 *            Map node, representing a cube and its scope
-	 *            VisualizerInfo visInfo, information about the visualization
-	 * @return a map containing:
-	 *           String status, status of the visualization
-	 *           VisualizerInfo visInfo, information about the visualization
+	 *            VisualizerInfo, information about the visualization
+	 * @return a map containing status, messages and visualizer information,
+	 *            including the updated graph node
 	 */
 	Map getCellValues(ApplicationID applicationID, Map options)
 	{
@@ -95,7 +92,7 @@ class Visualizer
 	protected VisualizerInfo getVisualizerInfo(Map options)
 	{
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
-		if (!visInfo || visInfo.class.name != this.class.name)
+		if (!visInfo || visInfo.class.name != VisualizerInfo.class.name)
 		{
 			visInfo = new VisualizerInfo(appId, options)
 		}
@@ -170,11 +167,14 @@ class Visualizer
 				nextRelInfo.sourceScope = new CaseInsensitiveMap(relInfo.targetScope)
 				nextRelInfo.sourceId = relInfo.targetId
 				nextRelInfo.sourceFieldName = mapJoiner.join(coordinates)
+
 				nextRelInfo.targetScope = new CaseInsensitiveMap(coordinates)
 				nextRelInfo.scope = new CaseInsensitiveMap(relInfo.scope)
 				nextRelInfo.scope.putAll(coordinates)
+
 				nextRelInfo.addRequiredAndOptionalScopeKeys(visInfo)
 				nextRelInfo.showCellValuesLink = true
+
 				stack.push(nextRelInfo)
 			}
 			catch (Exception e)
@@ -202,4 +202,14 @@ class Visualizer
 	{
 		return false
 	}
+
+	protected static String getMissingMinimumScopeMessage(Map<String, Object> scope, String messageScopeValues, String messageSuffixType, String messageSuffix )
+	{
+		"""\
+The scope for the following scope keys was added since it was required: \
+${DOUBLE_BREAK}${INDENT}${scope.keySet().join(COMMA_SPACE)}\
+${messageSuffixType} ${messageSuffix} \
+${BREAK}${messageScopeValues}"""
+	}
+
 }
