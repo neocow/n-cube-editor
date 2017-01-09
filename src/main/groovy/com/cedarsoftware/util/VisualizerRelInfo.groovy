@@ -96,6 +96,7 @@ class VisualizerRelInfo
 				String cellString = cell == null ? 'null' : cell.toString()
 				targetCellValues[currentCoordinate] = [(cellString): noExecuteCell]
 			}
+			targetCellValues.sort()
 			cellValuesLoadedOk = true
 		}
 	}
@@ -294,12 +295,12 @@ class VisualizerRelInfo
 
 	String getNextTargetCubeName(String targetFieldName)
 	{
-		return null
+		return null  //TODO
 	}
 
 	String getSourceMessage()
 	{
-		return ''
+		return ''  //TODO
 	}
 
 /**
