@@ -10,7 +10,7 @@ import groovy.transform.CompileStatic
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
 
 /**
- * Provides information to visualize rpm classes.
+ * Holds information related to the visualization of rpm classes and their relationships.
  */
 
 @CompileStatic

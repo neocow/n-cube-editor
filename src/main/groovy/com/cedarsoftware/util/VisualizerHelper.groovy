@@ -6,10 +6,6 @@ import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.VisualizerConstants.*
 
-/**
- * Provides helper methods to handle exceptions occurring during the execution
- * of n-cube cells for the purpose of producing a visualization.
- */
 
 @CompileStatic
 class VisualizerHelper
@@ -27,6 +23,7 @@ class VisualizerHelper
 			return handleException(e as Exception, targetMsg)
 		}
 	}
+
 
 	static String handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set mandatoryScopeKeys)
 	{
@@ -50,16 +47,6 @@ class VisualizerHelper
 	{
 		Throwable t = getDeepestException(e)
 		return getExceptionMessage(t, e, targetMsg)
-	}
-
-
-	static protected Throwable getDeepestException(Throwable e)
-	{
-		while (e.cause != null)
-		{
-			e = e.cause
-		}
-		return e
 	}
 
 	static String getAvailableScopeValuesMessage(VisualizerInfo visInfo, String cubeName, String key)
@@ -88,6 +75,15 @@ class VisualizerHelper
 		return message.toString()
 	}
 
+	static protected Throwable getDeepestException(Throwable e)
+	{
+		while (e.cause != null)
+		{
+			e = e.cause
+		}
+		return e
+	}
+
 	private static String getCoordinateNotFoundMessage(VisualizerInfo visInfo, String key, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
@@ -101,15 +97,6 @@ class VisualizerHelper
 		return requiredKeys.findAll { String key ->
 			!mandatoryScopeKeys.contains(key) && (scope == null || !scope.containsKey(key))
 		}
-	}
-
-	protected static String getMissingMinimumScopeMessage(Map<String, Object> scope, String messageScopeValues, String messageSuffixType, String messageSuffix )
-	{
-		"""\
-The scope for the following scope keys was added since it was required: \
-${DOUBLE_BREAK}${INDENT}${scope.keySet().join(COMMA_SPACE)}\
-${messageSuffixType} ${messageSuffix} \
-${BREAK}${messageScopeValues}"""
 	}
 
 	static String getExceptionMessage(Throwable t, Throwable e, String targetMsg)

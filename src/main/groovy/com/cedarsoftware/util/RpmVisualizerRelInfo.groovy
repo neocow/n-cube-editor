@@ -10,8 +10,7 @@ import static com.cedarsoftware.util.RpmVisualizerConstants.*
 import groovy.transform.CompileStatic
 
 /**
- * Provides information to visualize a source rpm class, a target rpm class
- * and their relationship.
+ * Holds information about a source cube and target cube for purposes of creating a visualization of the cubes and their relationship.
  */
 
 @CompileStatic
@@ -219,9 +218,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	Map<String, Object> createEdge(int edgeCount)
+	Map<String, Object> createEdge(int edgeId)
 	{
-		Map<String, Object> edge = super.createEdge(edgeCount)
+		Map<String, Object> edge = super.createEdge(edgeId)
 		Map<String, Map<String, Object>> sourceTraits = sourceTraits
 
 		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceTraits[sourceFieldName] as Map
