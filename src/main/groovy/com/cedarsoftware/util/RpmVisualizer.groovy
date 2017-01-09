@@ -8,7 +8,8 @@ import groovy.transform.CompileStatic
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
 
 /**
- * Provides the information used to visualize rpm class cubes.
+ * Processes an rpm class and all its referenced rpm classes and provides information to
+ * visualize the classes and their relationships.
  */
 
 // TODO: This code needs to be moved out of NCE and pulled-in via Grapes.
@@ -20,14 +21,17 @@ class RpmVisualizer extends Visualizer
 	protected String defaultScopeDate
 
 	/**
-	 * Loads all cell values available for a given cube.
+	 * Loads all cell values available for a given rpm class.
 	 *
 	 * @param applicationID
-	 * @param options (map containing:
-	 *            Map node, representing a class,
-	 *            VisualizerInfo, information about the visualization
-	 * @return node
+	 * @param options - a map containing:
+	 *            Map node, representing a class and its scope
+	 *            VisualizerInfo visInfo, information about the visualization
+	 * @return a map containing:
+	 *           String status, status of the visualization
+	 *           VisualizerInfo visInfo, information about the visualization
 	 */
+
 	@Override
 	Map getCellValues(ApplicationID applicationID, Map options)
 	{
@@ -75,10 +79,10 @@ class RpmVisualizer extends Visualizer
 
 	private void processClassCube(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo)
 	{
+		boolean cellValuesLoaded
 		String targetCubeName = relInfo.targetCube.name
 
-		boolean cellValuesLoaded = canLoadTargetAsRpmClass(relInfo)
-		if (cellValuesLoaded)
+		if (canLoadTraitsForTarget(relInfo))
 		{
 			cellValuesLoaded = relInfo.loadCellValues(visInfo)
 		}
@@ -101,7 +105,6 @@ class RpmVisualizer extends Visualizer
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
-
 					if (!helper.isPrimitive(targetFieldRpmType))
 					{
 						String nextTargetCubeName = ""
@@ -172,7 +175,6 @@ class RpmVisualizer extends Visualizer
 		}
 
 		visInfo.nodes << relInfo.createNode(visInfo, group)
-
 	}
 
 	private RpmVisualizerRelInfo addToStack(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)
@@ -201,11 +203,11 @@ class RpmVisualizer extends Visualizer
 		return new RpmVisualizerRelInfo()
 	}
 
-	private boolean canLoadTargetAsRpmClass(RpmVisualizerRelInfo relInfo)
+	private boolean canLoadTraitsForTarget(RpmVisualizerRelInfo relInfo)
 	{
 		//When the source cube points directly to the target cube (source cube and target cube are both rpm.class),
-		//check if the source field name matches up with the scoped name of the target. If not, the target cube cannot be
-		//loaded as an rpm.class.
+		//check if the source field name matches up with the scoped name of the target. If not, traits cannot
+		//be loaded for the target in the visualization.
 		NCube sourceCube = relInfo.sourceCube
 		NCube targetCube = relInfo.targetCube
 
@@ -218,7 +220,7 @@ class RpmVisualizer extends Visualizer
 			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
 			{
 				relInfo.targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + relInfo.sourceFieldName]] as Map
-				String msg = getLoadTargetAsRpmClassMessage(relInfo, type)
+				String msg = getLoadTraitsForTargetMessage(relInfo, type)
 				relInfo.notes << msg
 				relInfo.cellValuesLoaded = false
 				relInfo.showCellValuesLink = false
@@ -229,13 +231,13 @@ class RpmVisualizer extends Visualizer
 	}
 
 	/**
-	 * Sets the basic scope required to load a target class based on scoped source class, source field name, target class name, and current scope.
+	 * Sets the basic scope required to load a target class based on scoped source class,
+	 * source field name, target class name, and current scope.
 	 * Retains all other scope.
 	 * If the source class is not a scoped class, returns the scope unchanged.
 	 *
 	 * @param targetCube String target cube
-	 * @param targetTraitsMaps Map fields and traits of the target class
-	 * @param sourceTraitsMap Map fields and traits of the source class
+	 * @param sourceFieldRpmType String source field type
 	 * @param sourceFieldName String source field name
 	 * @param scope Map<String, Object> scope
 	 *
@@ -324,7 +326,7 @@ class RpmVisualizer extends Visualizer
 				hasMissingScope = true
 				Map<String, Object> defaultScope = getDefaultScope(type)
 				visInfo.scope = defaultScope
-				String msg = getMissingMinimumScopeMessage(defaultScope, messageScopeValues, messageSuffixTypeScopeKey, messageSuffix)
+				String msg = helper.getMissingMinimumScopeMessage(defaultScope, messageScopeValues, messageSuffixTypeScopeKey, messageSuffix)
 				messages << msg
 			}
 		}
@@ -347,8 +349,7 @@ class RpmVisualizer extends Visualizer
 		return (cubeName - RPM_CLASS_DOT)
 	}
 
-
-	private static String getLoadTargetAsRpmClassMessage(RpmVisualizerRelInfo relInfo, String type) {
+	private static String getLoadTraitsForTargetMessage(RpmVisualizerRelInfo relInfo, String type) {
 
 		String sourceCubeDisplayName = relInfo.getCubeDisplayName(relInfo.sourceCube.name)
 		String targetCubeDisplayName = relInfo.getCubeDisplayName(relInfo.targetCube.name)

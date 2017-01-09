@@ -9,7 +9,8 @@ import groovy.transform.CompileStatic
 import static com.cedarsoftware.util.VisualizerConstants.*
 
 /**
- * Holds information about a source cube and target cube for purposes of creating a visualization of the cubes and their relationship.
+ * Provides information to visualize a source cube, a target cube
+ * and their relationship.
  */
 
 @CompileStatic
@@ -72,7 +73,6 @@ class VisualizerRelInfo
 				try
 				{
 					visCellInfo.cell = targetCube.getCell(coordinate)
-
 				}
 				catch (Exception e)
 				{
@@ -112,7 +112,7 @@ class VisualizerRelInfo
 		getDetailsMap(sb, 'Available scope', scope)
 		getDetailsSet(sb, 'Required scope keys', visInfo.requiredScopeKeys[targetCubeName])
 		getDetailsSet(sb, 'Optional scope keys', visInfo.optionalScopeKeys[targetCubeName])
-		getDetailsSet(sb, 'Axes', targetCube.getAxisNames())
+		getDetailsSet(sb, 'Axes', targetCube.axisNames)
 
 		//Cell values
 		if (cellValuesLoaded && showCellValues)
@@ -218,10 +218,10 @@ class VisualizerRelInfo
 		return ''
 	}
 
-/**
- *  If the required and optional scope keys have not already been loaded for this cube,
- *  load them.
- */
+	/**
+	 *  If the required and optional scope keys have not already been loaded for this cube,
+	 *  load them.
+	 */
 	protected void addRequiredAndOptionalScopeKeys(VisualizerInfo visInfo)
 	{
 		String cubeName = targetCube.name
@@ -232,19 +232,18 @@ class VisualizerRelInfo
 		}
 	}
 
-	Map<String, Object> createEdge(int edgeId)
+	Map<String, Object> createEdge(int edgeCount)
 	{
 		String sourceFieldName = sourceFieldName
 		Map<String, Object> edge = [:]
-		edge.id = String.valueOf(edgeId + 1)
+		edge.id = String.valueOf(edgeCount + 1)
 		edge.from = String.valueOf(sourceId)
 		edge.to = String.valueOf(targetId)
 		edge.fromName = sourceEffectiveName
 		edge.toName = targetEffectiveName
 		edge.fromFieldName = sourceFieldName
 		edge.level = String.valueOf(targetLevel)
-		edge.title = sourceFieldName  //TODO
-
+		edge.title = sourceFieldName
 		return edge
 	}
 
@@ -262,29 +261,24 @@ class VisualizerRelInfo
 		node.sourceCubeName = sourceCubeName
 		node.scope = targetScope
 		node.availableScope = scope
-		node.fromFieldName = sourceFieldName == null ? null : sourceFieldName
+		node.fromFieldName = sourceFieldName
 		node.sourceDescription = sourceCubeName ? sourceDescription : null
 		String detailsTitle1 = cubeDetailsTitle1
-
 		node.label = nodeLabel
 		node.detailsTitle1 = detailsTitle1
 		node.detailsTitle2 = cubeDetailsTitle2
 		node.title = getCubeDisplayName(targetCubeName)
-
 		node.details = getDetails(visInfo)
 		group = group ?: getGroupName(visInfo)
 		node.group = group
 		node.typesToAdd = visInfo.getTypesToAdd(group)
-
 		node.showCellValuesLink = showCellValuesLink
 		node.showCellValues = showCellValues
 		node.cellValuesLoaded = cellValuesLoaded
-
 		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
 		long maxLevel = visInfo.maxLevel
 		visInfo.maxLevel = maxLevel < targetLevel ? targetLevel : maxLevel
 		visInfo.nodeCount += 1
-
 		return node
 	}
 
