@@ -214,11 +214,7 @@ var Visualizer = (function ($) {
     }
 
     function onNoteClick(e) {
-        missingScope(e);
-    }
-
-    function missingScope(e) {
-        var target, id, scopeParts, key, value;
+        var target, id, scopeParts, key, value, params, node, note;
         target = e.target;
         if (target.className.indexOf('missingScope') > -1) {
             id = target.title;
@@ -227,6 +223,25 @@ var Visualizer = (function ($) {
             value = scopeParts[1].trim();
             _scope[key] = value;
             scopeChange();
+        }
+        else if (target.className.indexOf('findNode') > -1) {
+            id = target.id;
+            params = {nodes: [id]};
+            _network.selectNodes([id]);
+            networkSelectNodeEvent(params);
+            _nce.clearNote();
+        }
+        else if (target.className.indexOf('executeCells') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeCells = true;
+            note = 'Loading ' + _visInfo.loadCellValuesLabel + '...'
+            loadCellValues(node, note);
+        }
+        else if (target.className.indexOf('executeCell') > -1) {
+            node = _nodeDataSet.get(target.id);
+            node.executeCell = target.title;
+            note = 'Loading cell value for coordinate ' + target.title + '...'
+            loadCellValues(node, note);
         }
     }
 
@@ -394,7 +409,7 @@ var Visualizer = (function ($) {
                     col4Input[0].checked = defaultValue;
                 }
                 else {
-                    readOnly = FUNCTION === typeof value;
+                    readOnly = FUNCTION === typeof value ? true: false;
                     readOnlyClass = readOnly ? ' readOnly' : '';
                     functionTitle = "Not currently supporting update of network options that are functions.";
                     col2Span = $('<span/>');
@@ -513,7 +528,9 @@ var Visualizer = (function ($) {
         json = result.data;
 
         if (STATUS_SUCCESS === json.status) {
-            displayMessages(json.visInfo.messages);
+            if (null !== json.message) {
+                _noteIdList.push(_nce.showNote(json.message));
+            }
             node = json.visInfo.nodes['@items'][0];
             loadDataForNode(node)
         }
@@ -527,23 +544,12 @@ var Visualizer = (function ($) {
         return node;
     }
 
-    function displayMessages(messages){
-        var j, jLen, items;
-        if (messages) {
-            items = messages['@items'];
-            for (j = 0, jLen = items.length; j < jLen; j++) {
-                _noteIdList.push(_nce.showNote(items[j]));
-            }
-        }
-    }
-
     function loadDataForNode(node){
         var dataSetNode;
         dataSetNode = _nodeDataSet.get(node.id);
         dataSetNode.details = node.details;
-        dataSetNode.showCellValuesLink = node.showCellValuesLink;
         dataSetNode.showCellValues = node.showCellValues;
-        dataSetNode.cellValuesLoaded = node.cellValuesLoaded;
+        dataSetNode.cellValuesLoadedOk = node.cellValuesLoadedOk;
         dataSetNode.executeCell = node.executeCell;
         dataSetNode.executeCells = node.executeCells;
         _nodeDataSet.update(dataSetNode);
@@ -609,7 +615,9 @@ var Visualizer = (function ($) {
         json = result.data;
 
         if (json.status === STATUS_SUCCESS) {
-            displayMessages(json.visInfo.messages);
+            if (null !== json.message) {
+                _noteIdList.push(_nce.showNote(json.message));
+            }
             loadData(json.visInfo, json.status);
             initNetwork();
             loadSelectedLevelListView();
@@ -623,7 +631,7 @@ var Visualizer = (function ($) {
             _visualizerNetwork.show();
         }
         else if (STATUS_MISSING_START_SCOPE === json.status) {
-            displayMessages(json.visInfo.messages);
+            _noteIdList.push(_nce.showNote(json.message));
             loadData(json.visInfo, json.status);
             saveAllToLocalStorage();
             loadScopeView();
@@ -736,12 +744,12 @@ var Visualizer = (function ($) {
     }
 
     function getScopeString(){
-        var scopeLen, key, i, len, scope, scopeString, keys;
+        var scopeLen, key, i, len, scope;
         scope = $.extend(true, {}, _scope);
         delete scope['@type'];
         delete scope['@id'];
-        scopeString = '';
-        keys = Object.keys(scope);
+        var scopeString = '';
+        var keys = Object.keys(scope);
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             scopeString += key + ': ' + scope[key] + ', ';
@@ -994,7 +1002,7 @@ var Visualizer = (function ($) {
                 if (ARRAY_LIST === type){
                     valueOfValue = value['@items'].valueOf();
                     formatNetworkOverrides(valueOfValue);
-                    overrides[key] = valueOfValue;
+                    overrides[key] = valueOfValue
                     delete value['@items'];
                     delete value['@type'];
                 }
@@ -1073,7 +1081,7 @@ var Visualizer = (function ($) {
                 networkSelectNodeEvent(params);
             });
 
-            _network.on('deselectNode', function() {
+            _network.on('deselectNode', function(params) {
                 clearVisLayoutEast();
             });
 
@@ -1208,10 +1216,10 @@ var Visualizer = (function ($) {
         _nodeCubeLink[0].innerHTML = '';
         _nodeCubeLink.append(createCubeLink(cubeName, appId));
 
-        if (node.showCellValuesLink) {
+        if (false !== node.cellValuesLoadedOk) {
             _nodeCellValues[0].innerHTML = '';
             _nodeCellValues.append(createCellValuesLink(node));
-         }
+        }
 
         _nodeAddTypes[0].innerHTML = '';
         if (node.typesToAdd) {
@@ -1232,30 +1240,11 @@ var Visualizer = (function ($) {
         {
             _nodeDetails.click(function (e) {
                 e.preventDefault();
-                missingScope(e);
-                executeCell(e);
+                onNoteClick(e);
             });
             _nodeDetails.addClass(HAS_CLICK_EVENT)
         }
     }
-
-    function executeCell(e) {
-        var target, coordinateId;
-        target = e.target;
-        if (target.className.indexOf('expandAll') > -1) {
-            $('pre[class^="coord_"]').show();
-        }
-        else if (target.className.indexOf('collapseAll') > -1) {
-            $('pre[class^="coord_"]').hide();
-        }
-        else if (target.className.indexOf('executedCell') > -1 ||
-            target.className.indexOf('InvalidCoordinateException') > -1 ||
-            target.className.indexOf('CoordinateNotFoundException') > -1 ||
-            target.className.indexOf('Exception') > -1) {
-            coordinateId = target.className.split(' ')[1];
-            $('pre.' + coordinateId).toggle();
-        }
-     }
 
     function updateNetworkOptions()
     {
@@ -1302,6 +1291,9 @@ var Visualizer = (function ($) {
             e.preventDefault();
             node.showCellValues = !node.showCellValues;
             note = node.showCellValues ? 'Loading ' + _visInfo.loadCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadCellValuesLabel + '...';
+            if (node.showCellValues && _visInfo['@type'] === 'com.cedarsoftware.util.VisualizerInfo'){
+                _tempNote = 'Showing cell values is *** UNDER CONSTRUCTION ***<BR><BR>Improved exception handling for cell values and improved display of cell values, among other things, are on the way.';
+            }
             loadCellValues(node, note);
         });
         return cellValuesLink;

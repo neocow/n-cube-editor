@@ -3,6 +3,8 @@ package com.cedarsoftware.util
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
+import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
@@ -49,15 +51,9 @@ class RpmVisualizer extends Visualizer
 		{
 			visInfo = new RpmVisualizerInfo(appId, options)
 		}
-		visInfo.init(options.scope as Map)
-		return visInfo
-	}
 
-	@Override
-	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
-	{
-		super.loadFirstVisualizerRelInfo(visInfo, relInfo, startCubeName)
-		relInfo.showCellValuesLink = false
+		visInfo.scope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
+		return visInfo
 	}
 
 	@Override
@@ -77,10 +73,10 @@ class RpmVisualizer extends Visualizer
 	{
 		String targetCubeName = relInfo.targetCube.name
 
-		boolean cellValuesLoaded = canLoadTargetAsRpmClass(relInfo)
-		if (cellValuesLoaded)
+		boolean cellValuesLoadedOk = canLoadTargetAsRpmClass(relInfo)
+		if (cellValuesLoadedOk)
 		{
-			cellValuesLoaded = relInfo.loadCellValues(visInfo)
+			cellValuesLoadedOk = loadCellValues(visInfo, relInfo)
 		}
 
 		if (relInfo.sourceCube)
@@ -95,9 +91,9 @@ class RpmVisualizer extends Visualizer
 
 		visInfo.nodes << relInfo.createNode(visInfo)
 
-		if (cellValuesLoaded)
+		if (cellValuesLoadedOk)
 		{
-			relInfo.targetTraits.each { String targetFieldName, Map targetTraits ->
+			relInfo.targetCellValues.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
@@ -136,11 +132,11 @@ class RpmVisualizer extends Visualizer
 			return
 		}
 
-		boolean cellValuesLoaded = relInfo.loadCellValues(visInfo)
+		boolean cellValuesLoadedOk = loadCellValues(visInfo, relInfo)
 
-		if (cellValuesLoaded)
+		if (cellValuesLoadedOk)
 		{
-			relInfo.targetTraits.each { String targetFieldName, Map targetTraits ->
+			relInfo.targetCellValues.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					try
@@ -175,18 +171,17 @@ class RpmVisualizer extends Visualizer
 
 	}
 
-	private RpmVisualizerRelInfo addToStack(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)
+	private RpmVisualizerRelInfo addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)
 	{
 		RpmVisualizerRelInfo nextRelInfo = new RpmVisualizerRelInfo()
-		super.addToStack(visInfo, relInfo, nextRelInfo, nextTargetCubeName)
+		super.addToStack(visInfo, relInfo, nextRelInfo, nextTargetCubeName) as RpmVisualizerRelInfo
 		NCube nextTargetCube = nextRelInfo.targetCube
 		try
 		{
 			nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
 			nextRelInfo.sourceFieldName = targetFieldName
 			nextRelInfo.sourceFieldRpmType = rpmType
-			nextRelInfo.sourceTraits = relInfo.targetTraits
-			nextRelInfo.showCellValuesLink = false
+			nextRelInfo.sourceCellValues = (relInfo as RpmVisualizerRelInfo).targetCellValues
 		}
 		catch (Exception e)
 		{
@@ -217,11 +212,10 @@ class RpmVisualizer extends Visualizer
 			String sourceFieldName = relInfo.sourceFieldName
 			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
 			{
-				relInfo.targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + relInfo.sourceFieldName]] as Map
+				relInfo.targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + relInfo.sourceFieldName]] as Map
 				String msg = getLoadTargetAsRpmClassMessage(relInfo, type)
 				relInfo.notes << msg
-				relInfo.cellValuesLoaded = false
-				relInfo.showCellValuesLink = false
+				relInfo.cellValuesLoadedOk = false
 				return false
 			}
 		}
@@ -277,18 +271,18 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
-	protected boolean isValidStartCube(VisualizerInfo visInfo, String cubeName)
+	protected boolean isValidStartCube(String cubeName)
 	{
 		if (!cubeName.startsWith(RPM_CLASS_DOT))
 		{
-			visInfo.messages << "Starting cube for visualization must begin with 'rpm.class', n-cube ${cubeName} does not.".toString()
+			messages << "Starting cube for visualization must begin with 'rpm.class', n-cube ${cubeName} does not.".toString()
 			return false
 		}
 
 		NCube cube = NCubeManager.getCube(appId, cubeName)
 		if (!cube.getAxis(AXIS_FIELD) || !cube.getAxis(AXIS_TRAIT) )
 		{
-			visInfo.messages << "Cube ${cubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString()
+			messages << "Cube ${cubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString()
 			return false
 		}
 		return true
@@ -300,7 +294,6 @@ class RpmVisualizer extends Visualizer
 		RpmVisualizerInfo rpmVisInfo = (RpmVisualizerInfo) visInfo
 		defaultScopeEffectiveVersion = appId.version.replace('.', '-')
 		defaultScopeDate = DATE_TIME_FORMAT.format(new Date())
-		Set<String> messages = visInfo.messages
 
 		boolean hasMissingScope = false
 		Map<String, Object> scope = rpmVisInfo.scope
@@ -310,7 +303,7 @@ class RpmVisualizer extends Visualizer
 		{
 			String type = getTypeFromCubeName(startCubeName)
 			String messageSuffixTypeScopeKey = "${DOUBLE_BREAK}Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
-			String messageScopeValues = helper.getAvailableScopeValuesMessage(rpmVisInfo, startCubeName, type)
+			String messageScopeValues = getAvailableScopeValuesMessage(rpmVisInfo, startCubeName, type)
 			String messageSuffix = 'The other default scope values may also be changed as desired.'
 			if (scope)
 			{
@@ -342,11 +335,81 @@ class RpmVisualizer extends Visualizer
 		return hasMissingScope
 	}
 
+	protected Set getMandatoryScopeKeys()
+	{
+		return MANDATORY_SCOPE_KEYS
+	}
+
+	@Override
+	protected String handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
+	{
+		String reason = super.handleCoordinateNotFoundException(e, visInfo, relInfo)
+		(relInfo as RpmVisualizerRelInfo).targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): reason + relInfo.effectiveNameByCubeName]] as Map
+		return reason
+	}
+
+	@Override
+	protected String handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set mandatoryScopeKeys)
+	{
+		String reason = super.handleInvalidCoordinateException(e, visInfo, relInfo, mandatoryScopeKeys)
+		(relInfo as RpmVisualizerRelInfo).targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): reason + relInfo.effectiveNameByCubeName]] as Map
+		return reason
+	}
+
+	@Override
+	protected String handleException(Throwable e, VisualizerRelInfo relInfo)
+	{
+		String reason = super.handleException(e, relInfo)
+		(relInfo as RpmVisualizerRelInfo).targetCellValues = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + reason]] as Map
+		return reason
+	}
+
 	private static String getTypeFromCubeName(String cubeName)
 	{
 		return (cubeName - RPM_CLASS_DOT)
 	}
 
+	@Override
+	protected String getCoordinateNotFoundMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String key, Object value, String effectiveName, String cubeName)
+	{
+		RpmVisualizerInfo rpmVisInfo = visInfo as RpmVisualizerInfo
+		RpmVisualizerRelInfo rpmRelInfo = relInfo as RpmVisualizerRelInfo
+		StringBuilder message = new StringBuilder()
+		String messageScopeValues = getAvailableScopeValuesMessage(rpmVisInfo, cubeName, key)
+		if (cubeName.startsWith(RPM_CLASS_DOT) || cubeName.startsWith(RPM_ENUM_DOT))
+		{
+			String cubeDisplayName = rpmRelInfo.getCubeDisplayName(cubeName)
+			message.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in ${cubeDisplayName}${rpmRelInfo.sourceMessage} for ${effectiveName}.")
+		}
+		else
+		{
+			message.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in cube ${cubeName} for ${effectiveName}.")
+		}
+		message.append("${DOUBLE_BREAK} Please supply a different value for ${key}.${BREAK}${messageScopeValues}")
+	}
+
+	@Override
+	protected String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set<String> missingScope, String effectiveName, String cubeName)
+	{
+		RpmVisualizerInfo rpmVisInfo = visInfo as RpmVisualizerInfo
+		RpmVisualizerRelInfo rpmRelInfo = relInfo as RpmVisualizerRelInfo
+		StringBuilder message = new StringBuilder()
+
+		if (cubeName.startsWith(RPM_CLASS_DOT) || cubeName.startsWith(RPM_ENUM_DOT))
+		{
+			String cubeDisplayName = rpmRelInfo.getCubeDisplayName(cubeName)
+			message.append("Additional scope is required to load ${effectiveName} of type ${cubeDisplayName}${rpmRelInfo.sourceMessage}.")
+		}
+		else
+		{
+			message.append("Additional scope is required to load cube ${cubeName} for ${effectiveName}${rpmRelInfo.sourceMessage}.")
+		}
+		message.append("${DOUBLE_BREAK} Please add scope value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.${BREAK}")
+		missingScope.each{ String key ->
+			message.append(getAvailableScopeValuesMessage(rpmVisInfo, cubeName, key))
+		}
+		return message.toString()
+	}
 
 	private static String getLoadTargetAsRpmClassMessage(RpmVisualizerRelInfo relInfo, String type) {
 
