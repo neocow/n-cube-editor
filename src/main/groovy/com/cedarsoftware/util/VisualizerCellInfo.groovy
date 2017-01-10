@@ -68,8 +68,9 @@ class VisualizerCellInfo
 		String coordinateClassName = "coord_${id}"
 		String listItemClassName = "${'executedCell'}"
 		String linkClassNames = "${listItemClassName} ${coordinateClassName}"
+		String preClassNames = "${coordinateClassName} wordwrap"
 		sb.append("""<li class="${listItemClassName}" title="Executed cell"><a href="#" class="${linkClassNames}" id="${nodeId}">${coordinateString}</a></li>""")
-		sb.append("""<pre class="${coordinateClassName}">""")
+		sb.append("""<pre class="${preClassNames}">""")
 		sb.append("<b>Non-executed value:</b>")
 		sb.append(DOUBLE_BREAK)
 		sb.append("${noExecuteValue}")
@@ -125,8 +126,9 @@ class VisualizerCellInfo
 
 		String coordinateClassName = "coord_${id}"
 		String linkClassNames = "${listItemClassName}, ${coordinateClassName}"
+		String preClassNames = "${coordinateClassName} wordwrap"
 		sb.append("""<li class="${listItemClassName}" title="${title}"><a href="#" class="${linkClassNames}" id="${nodeId}">${coordinateString}</a></li>""")
-		sb.append("""<pre class="${coordinateClassName}">""")
+		sb.append("""<pre class="${preClassNames}">""")
 		sb.append("<b>Non-executed value:</b>")
 		sb.append(DOUBLE_BREAK)
 		sb.append("${noExecuteValue}")

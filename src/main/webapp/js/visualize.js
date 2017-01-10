@@ -214,20 +214,32 @@ var Visualizer = (function ($) {
     }
 
     function onNoteClick(e) {
-        missingScope(e);
+        var target = e.target;
+        if (target.className.indexOf('missingScope') > -1) {
+            missingScope(target);
+        }
+        else if (target.className.indexOf('findNode') > -1) {
+            findNode(target);
+        }
     }
 
-    function missingScope(e) {
-        var target, id, scopeParts, key, value;
-        target = e.target;
-        if (target.className.indexOf('missingScope') > -1) {
-            id = target.title;
-            scopeParts = id.split(':');
-            key = scopeParts[0];
-            value = scopeParts[1].trim();
-            _scope[key] = value;
-            scopeChange();
-        }
+    function missingScope(target) {
+        var id, scopeParts, key, value;
+        id = target.title;
+        scopeParts = id.split(':');
+        key = scopeParts[0];
+        value = scopeParts[1].trim();
+        _scope[key] = value;
+        scopeChange();
+    }
+
+    function findNode(target) {
+        var id, params;
+        id = target.id;
+        params = {nodes: [id]};
+        _network.selectNodes([id]);
+        networkSelectNodeEvent(params);
+        _nce.clearNote();
     }
 
     function addNetworkOptionsListeners() {
@@ -1228,20 +1240,25 @@ var Visualizer = (function ($) {
 
     function addNodeDetailsListeners()
     {
+        var target;
         if (!_nodeDetails.hasClass(HAS_CLICK_EVENT))
         {
             _nodeDetails.click(function (e) {
                 e.preventDefault();
-                missingScope(e);
-                executeCell(e);
+                target = e.target;
+                if (target.className.indexOf('missingScope') > -1) {
+                    missingScope(target);
+                }
+                else{
+                    executeCell(target);
+                }
             });
             _nodeDetails.addClass(HAS_CLICK_EVENT)
         }
     }
 
-    function executeCell(e) {
-        var target, coordinateId;
-        target = e.target;
+    function executeCell(target) {
+        var coordinateId;
         if (target.className.indexOf('expandAll') > -1) {
             $('pre[class^="coord_"]').show();
         }

@@ -61,7 +61,7 @@ div.col-width-xs {
     user-select: initial;
 }
 
-pre {
+.wordwrap{
     white-space: pre-wrap;
     white-space: -moz-pre-wrap;
     white-space: -pre-wrap;
