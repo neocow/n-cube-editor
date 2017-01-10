@@ -1741,20 +1741,36 @@ var NCE = (function ($) {
         var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE];
         _batchUpdateAxisReferencesCubeName.empty();
         _batchUpdateAxisReferencesAxisName.empty();
-        populateSelect(buildAppState(), _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
+        if(_batchUpdateAxisReferencesApp.val() == "") {
+            _batchUpdateAxisReferencesVersion.empty();
+        }
+        else {
+            populateSelect(buildAppState(), _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
+        }
     }
 
     function batchUpdateAxisReferencesVersionChanged() {
         var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), '*', null, getDefaultSearchOptions()];
         _batchUpdateAxisReferencesAxisName.empty();
-        populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
+        if(_batchUpdateAxisReferencesVersion.val() == "") {
+            _batchUpdateAxisReferencesCubeName.empty();
+        }
+        else {
+            populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
+        }
     }
 
     function batchUpdateAxisReferencesCubeNameChanged() {
         var params, axisOrMethod;
-        params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
-        axisOrMethod = isBatchUpdateAxisReferencesDestinationToggled() ? POPULATE_SELECT_FROM_CUBE.AXIS : POPULATE_SELECT_FROM_CUBE.METHOD;
-        populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, axisOrMethod);
+        if(_batchUpdateAxisReferencesCubeName.val() == "") {
+            _batchUpdateAxisReferencesAxisName.empty();
+        }
+        else {
+            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
+            axisOrMethod = isBatchUpdateAxisReferencesDestinationToggled() ? POPULATE_SELECT_FROM_CUBE.AXIS : POPULATE_SELECT_FROM_CUBE.METHOD;
+            populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, axisOrMethod);
+        }
+
     }
 
     function batchUpdateAxisReferencesOpen() {
