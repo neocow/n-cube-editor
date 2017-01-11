@@ -66,16 +66,16 @@ class VisualizerCellInfo
 		String cellString = HtmlFormatter.getCellValueAsString(cell)
 		StringBuilder sb = new StringBuilder()
 		String coordinateClassName = "coord_${id}"
-		String listItemClassName = "${'executedCell'}"
+		String listItemClassName = DETAILS_CLASS_EXECUTED_CELL
 		String linkClassNames = "${listItemClassName} ${coordinateClassName}"
-		String preClassNames = "${coordinateClassName} wordwrap"
-		sb.append("""<li class="${listItemClassName}" title="Executed cell"><a href="#" class="${linkClassNames}" id="${nodeId}">${coordinateString}</a></li>""")
+		String preClassNames = "${coordinateClassName} ${DETAILS_CLASS_WORD_WRAP}"
+		sb.append("""<li class="${listItemClassName}" title="${DETAILS_TITLE_EXECUTED_CELL}"><a href="#" class="${linkClassNames}" id="${nodeId}">${coordinateString}</a></li>""")
 		sb.append("""<pre class="${preClassNames}">""")
-		sb.append("<b>Non-executed value:</b>")
+		sb.append("<b>${DETAILS_LABEL_NON_EXECUTED_VALUE}</b>")
 		sb.append(DOUBLE_BREAK)
 		sb.append("${noExecuteValue}")
 		sb.append(DOUBLE_BREAK)
-		sb.append("<b>Executed value:</b>")
+		sb.append("<b>${DETAILS_LABEL_EXECUTED_VALUE}</b>")
 		sb.append(DOUBLE_BREAK)
 		if (cell && cellString.startsWith(HTTP) || cellString.startsWith(HTTPS) || cellString.startsWith(FILE))
 		{
@@ -100,14 +100,14 @@ class VisualizerCellInfo
 
 		if (t instanceof InvalidCoordinateException)
 		{
-			title = 'The cell was executed with a missing or invalid coordinate.'
+			title = DETAILS_TITLE_MISSING_OR_INVALID_COORDINATE
 			listItemClassName = t.class.simpleName
 			mb.append("Additional scope is required to load coordinate ${coordinateString}.")
 			mb.append(helper.handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, relInfo, [] as Set).toString())
 		}
 		else if (t instanceof CoordinateNotFoundException)
 		{
-			title = 'The cell was executed with a missing or invalid coordinate.'
+			title = DETAILS_TITLE_MISSING_OR_INVALID_COORDINATE
 			listItemClassName = t.class.simpleName
 			CoordinateNotFoundException exc = t as CoordinateNotFoundException
 			String key = exc.axisName
@@ -118,22 +118,22 @@ class VisualizerCellInfo
 		}
 		else
 		{
-			title = 'An error occurred during the execution of the cell.'
-			listItemClassName = 'Exception'
+			title = DETAILS_TITLE_ERROR_DURING_EXECUTION
+			listItemClassName = DETAILS_CLASS_EXCEPTION
 			String targetMsg = "coordinate ${coordinateString}"
 			mb.append(helper.handleException(t, targetMsg))
 		}
 
 		String coordinateClassName = "coord_${id}"
 		String linkClassNames = "${listItemClassName}, ${coordinateClassName}"
-		String preClassNames = "${coordinateClassName} wordwrap"
+		String preClassNames = "${coordinateClassName} ${DETAILS_CLASS_WORD_WRAP}"
 		sb.append("""<li class="${listItemClassName}" title="${title}"><a href="#" class="${linkClassNames}" id="${nodeId}">${coordinateString}</a></li>""")
 		sb.append("""<pre class="${preClassNames}">""")
-		sb.append("<b>Non-executed value:</b>")
+		sb.append("<b>${DETAILS_LABEL_NON_EXECUTED_VALUE}</b>")
 		sb.append(DOUBLE_BREAK)
 		sb.append("${noExecuteValue}")
 		sb.append(DOUBLE_BREAK)
-		sb.append("<b>Exception:</b>")
+		sb.append("<b>${DETAILS_LABEL_EXCEPTION}</b>")
 		sb.append(DOUBLE_BREAK)
 		sb.append("${mb.toString()}>")
 		sb.append("</pre>")
