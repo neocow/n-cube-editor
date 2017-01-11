@@ -79,7 +79,8 @@ var NCE = (function ($) {
     var _batchUpdateAxisReferencesVersion = $('#batchUpdateAxisReferencesVersion');
     var _batchUpdateAxisReferencesCubeName = $('#batchUpdateAxisReferencesCubeName');
     var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
-    var _batchUpdateAxisReferencesSectionHeader = $('#batchUpdateAxisReferencesSectionHeader');
+    var _batchUpdateAxisReferencesCurrAxisHeader = $('#batchUpdateAxisReferencesCurrAxisHeader');
+    var _batchUpdateAxisReferencesNewAxisHeader = $('#batchUpdateAxisReferencesNewAxisHeader');
     var _batchUpdateAxisReferencesAxisMethodNameColumnHeader = $('#batchUpdateAxisReferencesAxisMethodNameColumnHeader');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
@@ -1818,7 +1819,8 @@ var NCE = (function ($) {
         var i, len, isDest, refAxData, html, app, version, cube, axis;
         findBatchUpdateAxisReferencesRows().remove();
         isDest = isBatchUpdateAxisReferencesDestinationToggled();
-        _batchUpdateAxisReferencesSectionHeader[0].innerHTML = isDest ? 'Destination Axis' : 'Transform Axis';
+        _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = isDest ? 'Current Destination Axis' : 'Current Transform Axis';
+        _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = isDest ? 'New Destination Axis' : 'New Transform Axis';
         _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = isDest ? 'Axis Name' : 'Method Name';
         html = '';
 
