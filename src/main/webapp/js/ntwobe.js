@@ -4541,8 +4541,8 @@ var NCubeEditor2 = (function ($) {
             _updateAxisSortOrder.prop('disabled', true);
             metaProps = axis.metaProps;
             _refAxisGroupUpdate.show();
+            _isRefAxisUpdate[0].checked = true;
             if (metaProps.transformApp) {
-                _hasRefFilterUpdate.prop('disabled', true);
                 _refFilterGroupUpdate.show();
                 _hasRefFilterUpdate[0].checked = true;
             } else {
