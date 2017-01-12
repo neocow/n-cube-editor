@@ -581,6 +581,10 @@ span.selected-count {
     text-overflow: ellipsis;
 }
 
+.batchUpdateAxisReferencesNewAxisSelect td {
+    padding-bottom: 25px;
+}
+
 #batchUpdateAxisReferencesTable select {
     max-width: 225px;
     min-width: 100px;

@@ -4349,13 +4349,13 @@ var NCubeEditor2 = (function ($) {
             _refAxisVersion.empty();
             _refAxisCube.empty();
             _refAxisAxis.empty();
-            populateSelect(nce, _refAxisVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refAxisStatus.val()], null, true, true);
+            populateSelect(nce, _refAxisVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refAxisStatus.val()], null, true);
         });
         _refFilterApp.on('change', function() {
             _refFilterVersion.empty();
             _refFilterCube.empty();
             _refFilterMethod.empty();
-            populateSelect(nce, _refFilterVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refFilterStatus.val()], null, true, true);
+            populateSelect(nce, _refFilterVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refFilterStatus.val()], null, true);
         });
 
         _refAxisVersion.on('change', function() {
@@ -4538,11 +4538,13 @@ var NCubeEditor2 = (function ($) {
         }
 
         if (axis.isRef) {
+            _isRefAxisUpdate.prop('disabled', true);
             _updateAxisSortOrder.prop('disabled', true);
             metaProps = axis.metaProps;
             _refAxisGroupUpdate.show();
             _isRefAxisUpdate[0].checked = true;
             if (metaProps.transformApp) {
+                _hasRefFilterUpdate.prop('disabled', true);
                 _refFilterGroupUpdate.show();
                 _hasRefFilterUpdate[0].checked = true;
             } else {

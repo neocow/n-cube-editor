@@ -79,7 +79,8 @@ var NCE = (function ($) {
     var _batchUpdateAxisReferencesVersion = $('#batchUpdateAxisReferencesVersion');
     var _batchUpdateAxisReferencesCubeName = $('#batchUpdateAxisReferencesCubeName');
     var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
-    var _batchUpdateAxisReferencesSectionHeader = $('#batchUpdateAxisReferencesSectionHeader');
+    var _batchUpdateAxisReferencesCurrAxisHeader = $('#batchUpdateAxisReferencesCurrAxisHeader');
+    var _batchUpdateAxisReferencesNewAxisHeader = $('#batchUpdateAxisReferencesNewAxisHeader');
     var _batchUpdateAxisReferencesAxisMethodNameColumnHeader = $('#batchUpdateAxisReferencesAxisMethodNameColumnHeader');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
@@ -1741,20 +1742,36 @@ var NCE = (function ($) {
         var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE];
         _batchUpdateAxisReferencesCubeName.empty();
         _batchUpdateAxisReferencesAxisName.empty();
-        populateSelect(buildAppState(), _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
+        if(_batchUpdateAxisReferencesApp.val() == "") {
+            _batchUpdateAxisReferencesVersion.empty();
+        }
+        else {
+            populateSelect(buildAppState(), _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
+        }
     }
 
     function batchUpdateAxisReferencesVersionChanged() {
         var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), '*', null, getDefaultSearchOptions()];
         _batchUpdateAxisReferencesAxisName.empty();
-        populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
+        if(_batchUpdateAxisReferencesVersion.val() == "") {
+            _batchUpdateAxisReferencesCubeName.empty();
+        }
+        else {
+            populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
+        }
     }
 
     function batchUpdateAxisReferencesCubeNameChanged() {
         var params, axisOrMethod;
-        params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
-        axisOrMethod = isBatchUpdateAxisReferencesDestinationToggled() ? POPULATE_SELECT_FROM_CUBE.AXIS : POPULATE_SELECT_FROM_CUBE.METHOD;
-        populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, axisOrMethod);
+        if(_batchUpdateAxisReferencesCubeName.val() == "") {
+            _batchUpdateAxisReferencesAxisName.empty();
+        }
+        else {
+            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
+            axisOrMethod = isBatchUpdateAxisReferencesDestinationToggled() ? POPULATE_SELECT_FROM_CUBE.AXIS : POPULATE_SELECT_FROM_CUBE.METHOD;
+            populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, axisOrMethod);
+        }
+
     }
 
     function batchUpdateAxisReferencesOpen() {
@@ -1802,7 +1819,8 @@ var NCE = (function ($) {
         var i, len, isDest, refAxData, html, app, version, cube, axis;
         findBatchUpdateAxisReferencesRows().remove();
         isDest = isBatchUpdateAxisReferencesDestinationToggled();
-        _batchUpdateAxisReferencesSectionHeader[0].innerHTML = isDest ? 'Destination Axis' : 'Transform Axis';
+        _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = isDest ? 'Current Destination Axis' : 'Current Transform Axis';
+        _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = isDest ? 'New Destination Axis' : 'New Transform Axis';
         _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = isDest ? 'Axis Name' : 'Method Name';
         html = '';
 
