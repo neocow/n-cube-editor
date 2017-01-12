@@ -4501,7 +4501,7 @@ var NCubeEditor2 = (function ($) {
         var result, axis, isRule, isNearest, metaProps;
         var appId = nce.getSelectedTabAppId();
         var modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
-        _updateAxisModal.find('input').attr('disabled', !modifiable);
+        _updateAxisModal.find('input').not('.always-disabled').attr('disabled', !modifiable);
         if (modifiable) {
             $('#updateAxisOk').show();
         } else {
@@ -4538,11 +4538,9 @@ var NCubeEditor2 = (function ($) {
         }
 
         if (axis.isRef) {
-            _isRefAxisUpdate.prop('disabled', true);
             _updateAxisSortOrder.prop('disabled', true);
             metaProps = axis.metaProps;
             _refAxisGroupUpdate.show();
-            _isRefAxisUpdate[0].checked = true;
             if (metaProps.transformApp) {
                 _hasRefFilterUpdate.prop('disabled', true);
                 _refFilterGroupUpdate.show();
