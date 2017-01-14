@@ -7,7 +7,6 @@ import com.cedarsoftware.ncube.AxisRef
 import com.cedarsoftware.ncube.AxisType
 import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.CellInfo
-import com.cedarsoftware.ncube.ChangeType
 import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.CommandCell
 import com.cedarsoftware.ncube.Delta
@@ -43,7 +42,6 @@ import com.cedarsoftware.util.SystemUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.Visualizer
-import com.cedarsoftware.util.VisualizerConstants
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble
@@ -1512,62 +1510,62 @@ class NCubeController extends BaseController
         nCubeService.mergeDeltas(appId, cubeName, deltaList)
     }
 
-    List<Delta> getDeltaDescription(NCube leftCube, NCube rightCube)
+    List<Delta> getDeltaDescription(NCube newCube, NCube oldCube)
     {
-        nCubeService.checkPermissions(leftCube.applicationID, leftCube.name, Action.READ)
-        nCubeService.checkPermissions(rightCube.applicationID, rightCube.name, Action.READ)
-        return DeltaProcessor.getDeltaDescription(rightCube, leftCube)
+        nCubeService.checkPermissions(newCube.applicationID, newCube.name, Action.READ)
+        nCubeService.checkPermissions(oldCube.applicationID, oldCube.name, Action.READ)
+        return DeltaProcessor.getDeltaDescription(newCube, oldCube)
     }
 
-    List<Delta> fetchJsonRevDiffs(long cubeId1, long cubeId2)
+    List<Delta> fetchJsonRevDiffs(long newCubeId, long oldCubeId)
     {
-        NCube leftCube = nCubeService.loadCubeById(cubeId1)
-        NCube rightCube = nCubeService.loadCubeById(cubeId2)
-        addTenant(leftCube.applicationID)
-        addTenant(rightCube.applicationID)
-        return getDeltaDescription(leftCube, rightCube)
+        NCube newCube = nCubeService.loadCubeById(newCubeId)
+        NCube oldCube = nCubeService.loadCubeById(oldCubeId)
+        addTenant(newCube.applicationID)
+        addTenant(oldCube.applicationID)
+        return getDeltaDescription(newCube, oldCube)
     }
 
-    List<Delta> fetchJsonBranchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
+    List<Delta> fetchJsonBranchDiffs(NCubeInfoDto newInfoDto, NCubeInfoDto oldInfoDto)
     {
-        ApplicationID leftAppId = new ApplicationID(tenant, leftInfoDto.app, leftInfoDto.version, leftInfoDto.status, leftInfoDto.branch)
-        ApplicationID rightAppId = new ApplicationID(tenant, rightInfoDto.app, rightInfoDto.version, rightInfoDto.status, rightInfoDto.branch)
-        NCube leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
-        NCube rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
-        return getDeltaDescription(leftCube, rightCube)
+        ApplicationID newAppId = new ApplicationID(tenant, newInfoDto.app, newInfoDto.version, newInfoDto.status, newInfoDto.branch)
+        ApplicationID oldAppId = new ApplicationID(tenant, oldInfoDto.app, oldInfoDto.version, oldInfoDto.status, oldInfoDto.branch)
+        NCube newCube = nCubeService.loadCube(newAppId, newInfoDto.name)
+        NCube oldCube = nCubeService.loadCube(oldAppId, oldInfoDto.name)
+        return getDeltaDescription(newCube, oldCube)
     }
 
-    private static Map<String, String> fetchHtmlDiffs(NCube leftCube, NCube rightCube)
+    private static Map<String, String> fetchHtmlDiffs(NCube newCube, NCube oldCube)
     {
         Map<String, String> ret = [leftHtml: '', rightHtml: '']
         try
         {
-            ret.leftHtml = toHtmlWithColumnHints(leftCube)
-            ret.rightHtml = toHtmlWithColumnHints(rightCube)
+            ret.rightHtml = toHtmlWithColumnHints(newCube)
+            ret.leftHtml = toHtmlWithColumnHints(oldCube)
         }
         catch (Exception ignored) { }
 
         return ret
     }
 
-    Map<String, String> fetchHtmlRevDiffs(long cubeId1, long cubeId2)
+    Map<String, String> fetchHtmlRevDiffs(long newCubeId, long oldCubeId)
     {
-        NCube leftCube = nCubeService.loadCubeById(cubeId1)
-        addTenant(leftCube.applicationID)
+        NCube newCube = nCubeService.loadCubeById(newCubeId)
+        addTenant(newCube.applicationID)
 
-        NCube rightCube = nCubeService.loadCubeById(cubeId2)
-        addTenant(rightCube.applicationID)
+        NCube oldCube = nCubeService.loadCubeById(oldCubeId)
+        addTenant(oldCube.applicationID)
 
-        return fetchHtmlDiffs(leftCube, rightCube)
+        return fetchHtmlDiffs(newCube, oldCube)
     }
 
-    Map<String, String> fetchHtmlBranchDiffs(NCubeInfoDto leftInfoDto, NCubeInfoDto rightInfoDto)
+    Map<String, String> fetchHtmlBranchDiffs(NCubeInfoDto newInfoDto, NCubeInfoDto oldInfoDto)
     {
-        ApplicationID leftAppId = new ApplicationID(tenant, leftInfoDto.app, leftInfoDto.version, leftInfoDto.status, leftInfoDto.branch)
-        ApplicationID rightAppId = new ApplicationID(tenant, rightInfoDto.app, rightInfoDto.version, rightInfoDto.status, rightInfoDto.branch)
-        NCube leftCube = nCubeService.loadCube(leftAppId, leftInfoDto.name)
-        NCube rightCube = nCubeService.loadCube(rightAppId, rightInfoDto.name)
-        return fetchHtmlDiffs(leftCube, rightCube)
+        ApplicationID newAppId = new ApplicationID(tenant, newInfoDto.app, newInfoDto.version, newInfoDto.status, newInfoDto.branch)
+        ApplicationID oldAppId = new ApplicationID(tenant, oldInfoDto.app, oldInfoDto.version, oldInfoDto.status, oldInfoDto.branch)
+        NCube newCube = nCubeService.loadCube(newAppId, newInfoDto.name)
+        NCube oldCube = nCubeService.loadCube(oldAppId, oldInfoDto.name)
+        return fetchHtmlDiffs(newCube, oldCube)
     }
 
     Object[] getReferenceAxes(ApplicationID appId)
