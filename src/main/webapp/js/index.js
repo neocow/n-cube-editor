@@ -820,18 +820,18 @@ var NCE = (function ($) {
     }
 
     function addTabDropdownBranchSubDropdown(li, cubeInfo) {
+        var appId = { app: cubeInfo[CUBE_INFO.APP],
+            version: cubeInfo[CUBE_INFO.VERSION],
+            status: cubeInfo[CUBE_INFO.STATUS],
+            branch: cubeInfo[CUBE_INFO.BRANCH]
+        };
         li.find('li.li-compare-cube').append(
-            createBranchesUl({
-                app: cubeInfo[CUBE_INFO.APP],
-                version: cubeInfo[CUBE_INFO.VERSION],
-                status: cubeInfo[CUBE_INFO.STATUS],
-                branch: cubeInfo[CUBE_INFO.BRANCH]
-            }, function(branchName) {
+            createBranchesUl(appId, function(branchName) {
                 var infoDto, leftInfoDto;
                 infoDto = getInfoDto();
                 leftInfoDto = $.extend(true, {}, infoDto);
                 leftInfoDto.branch = branchName;
-                diffCubes(leftInfoDto, infoDto, infoDto.name);
+                diffCubes(leftInfoDto, infoDto, infoDto.name, appId);
             })
         );
     }
@@ -1722,7 +1722,7 @@ var NCE = (function ($) {
 
         if (leftDto && rightDto) {
             title = [leftApp, leftVersion, leftBranch, leftDto.name].join('-') + ' vs ' + [rightApp, rightVersion, rightBranch, rightDto.name].join('-');
-            diffCubes(leftDto, rightDto, title);
+            diffCubes(rightDto, leftDto, title, { app: leftDto.app, version: leftDto.version, status: leftDto.status, branch: leftDto.branch});
         } else {
             showNote('Unable to load cubes for compare!', 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
         }
@@ -2768,7 +2768,7 @@ var NCE = (function ($) {
             checkbox = $(checkboxes[i]);
             obj.cubeIds.push(checkbox.data('cube-id'));
             obj.revIds.push(checkbox.data('rev-id'));
-            obj.versions.push(checkbox.data('version'));
+            obj.versions.push(checkbox.data('version'));           // This is only available on HEAD rev history
         }
         return obj;
     }
@@ -2801,9 +2801,10 @@ var NCE = (function ($) {
             title: title,
             appId: getSelectedTabAppId(),
             cubeName: _selectedCubeName,
-            canEdit: revs.canEdit
+            canEdit: false  // revs.canEdit (ignored for now until we figure out how to handle updating the
+            // right side (newer revision) from an older (left side) revision (this is opposite of all other merges)
         };
-        diffCubeRevs(cubeIds[loIdx], cubeIds[hiIdx], diffOptions);
+        diffCubeRevs(cubeIds[hiIdx], cubeIds[loIdx], diffOptions);
     }
 
     function promoteRevision() {
@@ -3591,7 +3592,7 @@ var NCE = (function ($) {
         branchChanges.sort(sortBranchChanges);
 
         _branchCompareUpdateModal.prop({branchName: branchName, branchChanges: branchChanges});
-        buildUlForCompare(_branchCompareUpdateList, branchName, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true});
+        buildUlForCompare(_branchCompareUpdateList, branchName, branchChanges, {inputClass:'updateCheck', compare:true, html:true, json:true, action:'update'});
 
         _branchCompareUpdateModal.modal();
     }
@@ -3608,6 +3609,7 @@ var NCE = (function ($) {
 
     function buildUlForCompare(ul, branchName, branchChanges, options) {
         var inputClass = options.inputClass;
+        var action = options.action;
         ul.empty();
         ul.append(buildHtmlListForCompare(branchChanges, options));
         ul.find('a.compare').on('click', function() {
@@ -3617,7 +3619,21 @@ var NCE = (function ($) {
             var infoDto = $.extend(true, {}, branchChanges[idx]);
             var leftInfoDto = $.extend(true, {}, infoDto);
             leftInfoDto.branch = branchName;
-            diffCubes(leftInfoDto, infoDto, infoDto.name);
+            if ('commit' === action) {
+                diffCubes(infoDto, leftInfoDto, infoDto.name, {
+                    app: leftInfoDto.app,
+                    version: leftInfoDto.version,
+                    status: leftInfoDto.status,
+                    branch: leftInfoDto.branch
+                });  // commit
+            } else {
+                diffCubes(leftInfoDto, infoDto, infoDto.name, {
+                    app: infoDto.app,
+                    version: infoDto.version,
+                    status: infoDto.status,
+                    branch: infoDto.branch
+                });  // rollback or update
+            }
         });
         ul.find('a.anc-html').on('click', function () {
             onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), false);
@@ -3833,15 +3849,17 @@ var NCE = (function ($) {
     }
 
     function commitBranch(state) {
-        var errMsg, title, result, branchChanges;
+        var errMsg, title, result, branchChanges, action;
         clearNote();
         if (state) {
+            action = 'commit';
             errMsg = 'commit to';
             title = 'Commit changes';
             _commitModal.find('.accept-mine, .accept-theirs').show();
             _commitOk.show();
             _rollbackOk.hide();
         } else {
+            action = 'rollback';
             errMsg = 'rollback in';
             title = 'Rollback changes';
             _commitModal.find('.accept-mine, .accept-theirs').hide();
@@ -3866,7 +3884,7 @@ var NCE = (function ($) {
         branchChanges.sort(sortBranchChanges);
 
         _commitModal.prop('branchChanges', branchChanges);
-        buildUlForCompare(_commitRollbackList, head, branchChanges, {inputClass:'commitCheck', compare:true});
+        buildUlForCompare(_commitRollbackList, head, branchChanges, {inputClass:'commitCheck', compare:true, action: action});
         _commitModal.modal('show');
     }
 
@@ -4160,22 +4178,22 @@ var NCE = (function ($) {
 
     // ============================================== Cube Comparison ==================================================
     
-    function diffCubes(leftInfo, rightInfo, title) {
+    function diffCubes(newInfo, oldInfo, title, appId) {
         clearNote();
-        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [leftInfo, rightInfo], {callback:descriptiveDiffCallback});
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [newInfo, oldInfo], {callback:descriptiveDiffCallback});
         setupDiff({
-            leftName: leftInfo.branch,
-            rightName: rightInfo.branch,
+            leftName: oldInfo.branch,
+            rightName: newInfo.branch,
             title: title,
-            appId: appIdFrom(rightInfo.app, rightInfo.version, rightInfo.status, rightInfo.branch),
-            cubeName: rightInfo.name,
-            canEdit: rightInfo.branch !== head
+            appId: appIdFrom(appId.app, appId.version, appId.status, appId.branch),
+            cubeName: oldInfo.name,
+            canEdit: appId.branch !== head
         });
     }
 
-    function diffCubeRevs(id1, id2, diffOptions) {
+    function diffCubeRevs(newId, oldId, diffOptions) {
         clearNote();
-        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [id1, id2], {callback:descriptiveDiffCallback});
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [newId, oldId], {callback:descriptiveDiffCallback});
         setupDiff(diffOptions);
     }
 
@@ -4187,7 +4205,6 @@ var NCE = (function ($) {
         _diffHtmlResult = 'Loading...';
         _diffLeftName = diffOptions.leftName;
         _diffRightName = diffOptions.rightName;
-        _diffAppId = null;
         _diffAppId = diffOptions.appId;
         _diffCubeName = diffOptions.cubeName;
         if (diffOptions.canEdit) {
