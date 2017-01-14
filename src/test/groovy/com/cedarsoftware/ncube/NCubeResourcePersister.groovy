@@ -1,11 +1,16 @@
 package com.cedarsoftware.ncube
 
 import groovy.transform.CompileStatic
+import org.springframework.core.io.Resource
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
+import org.springframework.core.io.support.ResourcePatternResolver
 
 
 @CompileStatic
-class TestingNCubePersister implements NCubePersister
+class NCubeResourcePersister implements NCubePersister
 {
+    static final String CLASS_PATH_PREFIX = 'classpath*:**/'
+    static final String JSON_FILE_SUFFIX = '.json'
 
    @Override
     int copyBranchWithHistory(ApplicationID srcAppId, ApplicationID targetAppId) {
@@ -129,9 +134,34 @@ class TestingNCubePersister implements NCubePersister
     {
         NCubeManager.validateAppId(appId)
         NCube.validateCubeName(name)
-        Map<String, Object> ncubes = NCubeManager.getCacheForApp(appId)
-        NCube cube = ncubes[name.toLowerCase()] as NCube
+        Map<String, Object> cubes = NCubeManager.getCacheForApp(appId)
+        NCube cube =  cubes[name.toLowerCase()] as NCube
+        if (!cube)
+        {
+            cube = loadCubeFromResources(appId, name)
+        }
         return cube
+    }
+
+    static NCube loadCubeFromResources(ApplicationID appId, String name)
+    {
+        ClassLoader cl = NCubeResourcePersister.getClassLoader()
+        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(cl)
+        Resource[] resources = resolver.getResources("${CLASS_PATH_PREFIX}${name}${JSON_FILE_SUFFIX}")
+        Map<String, Object> cubes = loadCubes(appId, resources)
+        return cubes[name] as NCube
+    }
+
+    private static Map<String, Object> loadCubes(ApplicationID appId, Resource[] resources)
+    {
+        Map<String, Object> cubes = [:]
+        resources.each { Resource resource ->
+            NCube cube = NCube.createCubeFromStream(resource.inputStream)
+            cube.applicationID = appId
+            NCubeManager.addCube(appId, cube)
+            cubes[resource.filename - JSON_FILE_SUFFIX] = cube
+        }
+        return cubes
     }
 
     @Override

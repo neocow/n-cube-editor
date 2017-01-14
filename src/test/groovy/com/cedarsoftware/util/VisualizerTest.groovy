@@ -2,8 +2,8 @@ package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.NCubeResourcePersister
 import com.cedarsoftware.ncube.ReleaseStatus
-import com.cedarsoftware.ncube.TestingHelper
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import groovy.transform.CompileStatic
@@ -14,16 +14,12 @@ import org.junit.Test
 class VisualizerTest{
 
     Visualizer visualizer
-
-    public static final String JSON_FILE_PREFIX_VISUALIZER = 'visualizer/'
-    public static final String JSON_FILE_PREFIX_CONFIG = 'config/'
     ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'VISUALIZER.TEST', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
 
     @Before
     void beforeTest(){
         visualizer = new Visualizer()
-        NCubeManager.NCubePersister = TestingHelper.NCubePersister
-        loadCubesFromResource()
+        NCubeManager.NCubePersister = new NCubeResourcePersister()
     }
 
     @Test
@@ -1043,34 +1039,6 @@ class VisualizerTest{
         assert !nodeDetails.contains(VisualizerConstants.DETAILS_LABEL_REASON)
         assert !nodeDetails.contains(VisualizerConstants.DETAILS_LABEL_NOTE)
     }
-
-    private void loadCubesFromResource()
-    {
-
-            Set testCubes = ['CubeWithRefs',
-             'CubeWithNoDefaultsAndNoValues',
-             'CubeHasTwoRefsToSameCube',
-             'CubeHasRefToNotExistsCube',
-             'CubeHasRefsToTwoCubesInSameCell',
-             'CubeHasCircularRef1',
-             'CubeHasCircularRef2',
-             'CubeWithSingleValue',
-             'CubeWithDefaultsAndNoValues',
-             'CubeWithNoDefaultsAndNoValues',
-             'CubeWithExecutedCellAndThreeTypesExceptionCells',
-             'CubeWithExecutedCell',
-             'CubeWithCoordinateNotFoundCell',
-             'CubeWithInvalidCoordinateCell',
-             'CubeWithCoordinateNotFoundCellDueToTwoNotFoundValues',
-             'CubeWithInvalidCoordinateCellDueToTwoInvalidKeys',
-             'CubeWithExceptionCell',
-             'RuleCubeWithAllDefaultsAndOnlyDefaultValues'] as Set
-            TestingHelper.loadCubesFromResource(appId, JSON_FILE_PREFIX_VISUALIZER, testCubes)
-
-            Set configCubes = ['VisualizerConfig', 'VisualizerConfig.NetworkOverrides'] as Set
-            TestingHelper.loadCubesFromResource(appId, JSON_FILE_PREFIX_CONFIG, configCubes)
-    }
-
 
     class OtherVisualizerInfo extends VisualizerInfo {}
 
