@@ -11,8 +11,14 @@ class NCubeResourcePersister implements NCubePersister
 {
     static final String CLASS_PATH_PREFIX = 'classpath*:**/'
     static final String JSON_FILE_SUFFIX = '.json'
+    static String pathPrefix
 
-   @Override
+    NCubeResourcePersister(String pathPrefix = CLASS_PATH_PREFIX)
+    {
+        this.pathPrefix = pathPrefix
+    }
+
+    @Override
     int copyBranchWithHistory(ApplicationID srcAppId, ApplicationID targetAppId) {
         return 0
     }
@@ -147,7 +153,7 @@ class NCubeResourcePersister implements NCubePersister
     {
         ClassLoader cl = NCubeResourcePersister.getClassLoader()
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(cl)
-        Resource[] resources = resolver.getResources("${CLASS_PATH_PREFIX}${name}${JSON_FILE_SUFFIX}")
+        Resource[] resources = resolver.getResources("${pathPrefix}${name}${JSON_FILE_SUFFIX}")
         Map<String, Object> cubes = loadCubes(appId, resources)
         return cubes[name] as NCube
     }
