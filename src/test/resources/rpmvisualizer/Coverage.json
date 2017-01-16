@@ -1,0 +1,52 @@
+{
+  "ncube": "Coverage",
+  "axes": [
+    {
+      "id": 1,
+      "name": "coverage",
+      "hasDefault": false,
+      "type": "DISCRETE",
+      "valueType": "STRING",
+      "preferredOrder": 0,
+      "fireAll": true,
+      "columns": [
+        {
+          "id": 1000000000036,
+          "type": "string",
+          "value": "AdmiraltyCoverage"
+        },
+        {
+          "id": 1000000000050,
+          "type": "string",
+          "value": "ClassCodeCoverage"
+        },
+        {
+          "id": 1000000000007,
+          "type": "string",
+          "value": "FELACoverage"
+        },
+        {
+          "id": 1000000000057,
+          "type": "string",
+          "value": "IncreasedLimitCoverage"
+        },
+        {
+          "id": 1000000000060,
+          "type": "string",
+          "value": "TransportCoverage"
+        },
+        {
+          "id": 1000000000041,
+          "type": "string",
+          "value": "WorkCompStateCoverage"
+        },
+        {
+          "id": 1000000000031,
+          "type": "string",
+          "value": "WorkersCompAssessmentCoverage"
+        }
+      ]
+    }
+  ],
+  "cells": []
+}
