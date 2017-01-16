@@ -179,7 +179,7 @@ var NCE = (function ($) {
         try {
             _openCubes = JSON.parse(_openCubes);
             if (Object.prototype.toString.call(_openCubes) !== '[object Array]'
-                || (_openCubes.length > 0 && typeof _openCubes[0] !== OBJECT)) {
+                || (_openCubes.length && typeof _openCubes[0] !== OBJECT)) {
                 _openCubes = [];
             } else if (!_openCubes[0].hasOwnProperty('cubeKey')) {
                 _openCubes = [];
@@ -412,7 +412,7 @@ var NCE = (function ($) {
         _openCubes.splice(getOpenCubeIndex(cubeInfo), 1);
         saveOpenCubeList();
 
-        if (_openCubes.length > 0) {
+        if (_openCubes.length) {
             newCubeInfo = getCubeInfo(_openCubes[0].cubeKey);
             makeCubeInfoActive(newCubeInfo);
         } else {
@@ -519,7 +519,7 @@ var NCE = (function ($) {
         var tab, idx, listCubeName, id;
         deselectTab();
         tab = findTabByCubeInfo(cubeInfo);
-        if (tab.length < 1) {
+        if (!tab.length) {
             idx = getOpenCubeIndex(cubeInfo);
             if (idx > -1) {
                 _openCubes.unshift(_openCubes.splice(idx, 1)[0]);
@@ -540,8 +540,7 @@ var NCE = (function ($) {
         updateTabStatus(cubeInfo);
         localStorage[ACTIVE_TAB_VIEW_TYPE] = getActiveTabViewType();
         tab.find('a.' + CLASS_ACTIVE_VIEW).removeClass(CLASS_ACTIVE_VIEW);
-        tab.find('a').filter(function()
-        {
+        tab.find('a').filter(function() {
             return $(this)[0].textContent.trim() === getActiveTabViewType().replace(PAGE_ID,'');
         }).addClass(CLASS_ACTIVE_VIEW);
 
@@ -820,11 +819,7 @@ var NCE = (function ($) {
     }
 
     function addTabDropdownBranchSubDropdown(li, cubeInfo) {
-        var appId = { app: cubeInfo[CUBE_INFO.APP],
-            version: cubeInfo[CUBE_INFO.VERSION],
-            status: cubeInfo[CUBE_INFO.STATUS],
-            branch: cubeInfo[CUBE_INFO.BRANCH]
-        };
+        var appId = appIdFrom(cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH]);
         li.find('li.li-compare-cube').append(
             createBranchesUl(appId, function(branchName) {
                 var infoDto, leftInfoDto;
@@ -1016,7 +1011,7 @@ var NCE = (function ($) {
         _openTabList.children().remove();
         _tabOverflow.hide();
         len = _openCubes.length;
-        if (len > 0) {
+        if (len) {
             maxTabs = calcMaxTabs();
             cubeInfo = curCubeInfo || _selectedCubeInfo;
             idx = getOpenCubeIndex(cubeInfo);
@@ -3609,7 +3604,6 @@ var NCE = (function ($) {
 
     function buildUlForCompare(ul, branchName, branchChanges, options) {
         var inputClass = options.inputClass;
-        var action = options.action;
         ul.empty();
         ul.append(buildHtmlListForCompare(branchChanges, options));
         ul.find('a.compare').on('click', function() {
@@ -3619,20 +3613,10 @@ var NCE = (function ($) {
             var infoDto = $.extend(true, {}, branchChanges[idx]);
             var leftInfoDto = $.extend(true, {}, infoDto);
             leftInfoDto.branch = branchName;
-            if ('commit' === action) {
-                diffCubes(infoDto, leftInfoDto, infoDto.name, {
-                    app: leftInfoDto.app,
-                    version: leftInfoDto.version,
-                    status: leftInfoDto.status,
-                    branch: leftInfoDto.branch
-                });  // commit
-            } else {
-                diffCubes(leftInfoDto, infoDto, infoDto.name, {
-                    app: infoDto.app,
-                    version: infoDto.version,
-                    status: infoDto.status,
-                    branch: infoDto.branch
-                });  // rollback or update
+            if ('commit' === options.action) {
+                diffCubes(infoDto, leftInfoDto, infoDto.name, appIdFrom(leftInfoDto.app, leftInfoDto.version, leftInfoDto.status, leftInfoDto.branch));
+            } else { // rollback or update
+                diffCubes(leftInfoDto, infoDto, infoDto.name, appIdFrom(infoDto.app, infoDto.version, infoDto.status, infoDto.branch));
             }
         });
         ul.find('a.anc-html').on('click', function () {
@@ -3866,6 +3850,7 @@ var NCE = (function ($) {
             _commitOk.hide();
             _rollbackOk.show();
         }
+        _commitRollbackList.data('is-commit', state);
 
         if (isHeadSelected()) {
             showNote('You cannot ' + errMsg + ' HEAD.');
@@ -4167,7 +4152,7 @@ var NCE = (function ($) {
             if (ul.is(_branchCompareUpdateList)) {
                 compareUpdateBranch(branchName, true)
             } else if (ul.is(_commitRollbackList)) {
-                commitBranch(true);
+                commitBranch(_commitRollbackList.data('is-commit'));
             }
         } else {
             showNote(options.errorMsg + ':<hr class="hr-small"/>' + result.data);
@@ -4227,7 +4212,7 @@ var NCE = (function ($) {
                 _didMergeChange = false;
                 loadCube();
                 if (_commitModal.hasClass('in')) {
-                    commitBranch(true);
+                    commitBranch(_commitRollbackList.data('is-commit'));
                 } else if (_branchCompareUpdateModal.hasClass('in')) {
                     compareUpdateBranch(_branchCompareUpdateModal.prop('branchName'), true);
                 }
