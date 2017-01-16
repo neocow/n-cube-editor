@@ -117,7 +117,7 @@
         2000000000016
       ],
       "type":"string",
-      "value":"ClassCodeCoverage"
+      "value":"CCoverage"
     },
     {
       "id":[
@@ -229,7 +229,7 @@
         2000000000016
       ],
       "type":"string",
-      "value":"IncreasedLimitCoverage"
+      "value":"ICoverage"
     },
     {
       "id":[
@@ -301,7 +301,7 @@
         2000000000016
       ],
       "type":"string",
-      "value":"TransportCoverage"
+      "value":"TCoverage"
     },
     {
       "id":[
@@ -309,7 +309,7 @@
         2000000000007
       ],
       "type":"string",
-      "value":"TransportCoverage"
+      "value":"TCoverage"
     },
     {
       "id":[
@@ -381,7 +381,7 @@
         2000000000016
       ],
       "type":"string",
-      "value":"GeneralLiabilityCoverage"
+      "value":"GProductCoverage"
     },
     {
       "id":[
@@ -389,7 +389,7 @@
         2000000000007
       ],
       "type":"string",
-      "value":"GeneralLiabilityCoverage"
+      "value":"GProductCoverage"
     },
     {
       "id":[
@@ -525,7 +525,7 @@
         2000000000007
       ],
       "type":"string",
-      "value":"WorkCompStateCoverage"
+      "value":"WCoverage"
     },
     {
       "id":[
@@ -685,7 +685,7 @@
         2000000000007
       ],
       "type":"string",
-      "value":"AdmiraltyCoverage"
+      "value":"ACoverage"
     },
     {
       "id":[
@@ -693,7 +693,7 @@
         2000000000016
       ],
       "type":"string",
-      "value":"AdmiraltyCoverage"
+      "value":"ACoverage"
     },
     {
       "id":[
@@ -749,7 +749,7 @@
         2000000000007
       ],
       "type":"string",
-      "value":"ClassCodeCoverage"
+      "value":"CCoverage"
     },
     {
       "id":[
@@ -1021,7 +1021,7 @@
         2000000000007
       ],
       "type":"string",
-      "value":"IncreasedLimitCoverage"
+      "value":"ICoverage"
     },
     {
       "id":[
@@ -1053,7 +1053,7 @@
         2000000000016
       ],
       "type":"string",
-      "value":"WorkersCompAssessmentCoverage"
+      "value":"WWACoverage"
     },
     {
       "id":[
@@ -1061,7 +1061,7 @@
         2000000000007
       ],
       "type":"string",
-      "value":"WorkersCompAssessmentCoverage"
+      "value":"WWACoverage"
     },
     {
       "id":[
@@ -1301,7 +1301,7 @@
         2000000000016
       ],
       "type":"string",
-      "value":"FELACoverage"
+      "value":"FCoverage"
     },
     {
       "id":[
@@ -1309,7 +1309,7 @@
         2000000000007
       ],
       "type":"string",
-      "value":"FELACoverage"
+      "value":"FCoverage"
     },
     {
       "id":[
@@ -1317,7 +1317,7 @@
         2000000000016
       ],
       "type":"string",
-      "value":"WorkCompStateCoverage"
+      "value":"WCoverage"
     },
     {
       "id":[

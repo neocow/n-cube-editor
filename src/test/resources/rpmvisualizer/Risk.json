@@ -13,7 +13,7 @@
         {
           "id": 1001018651315,
           "type": "string",
-          "value": "GeneralLiabilityOps"
+          "value": "GProductOps"
         },
         {
           "id": 1000000000003,
@@ -28,7 +28,7 @@
         {
           "id": 1000000000002,
           "type": "string",
-          "value": "WCOps"
+          "value": "WProductOps"
         }
       ]
     }

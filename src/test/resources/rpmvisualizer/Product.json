@@ -13,17 +13,17 @@
         {
           "id": 1000859883503,
           "type": "string",
-          "value": "GeneralLiability"
+          "value": "GProduct"
         },
         {
           "id": 1000000000003,
           "type": "string",
-          "value": "UmbrellaProduct"
+          "value": "UProduct"
         },
         {
           "id": 1000000000001,
           "type": "string",
-          "value": "WorkersCompensationProduct"
+          "value": "WProduct"
         }
       ]
     }

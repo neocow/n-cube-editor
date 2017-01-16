@@ -13,37 +13,37 @@
         {
           "id": 1000000000036,
           "type": "string",
-          "value": "AdmiraltyCoverage"
+          "value": "ACoverage"
         },
         {
           "id": 1000000000050,
           "type": "string",
-          "value": "ClassCodeCoverage"
+          "value": "CCoverage"
         },
         {
           "id": 1000000000007,
           "type": "string",
-          "value": "FELACoverage"
+          "value": "FCoverage"
         },
         {
           "id": 1000000000057,
           "type": "string",
-          "value": "IncreasedLimitCoverage"
+          "value": "ICoverage"
         },
         {
           "id": 1000000000060,
           "type": "string",
-          "value": "TransportCoverage"
+          "value": "TCoverage"
         },
         {
           "id": 1000000000041,
           "type": "string",
-          "value": "WorkCompStateCoverage"
+          "value": "WCoverage"
         },
         {
           "id": 1000000000031,
           "type": "string",
-          "value": "WorkersCompAssessmentCoverage"
+          "value": "WWACoverage"
         }
       ]
     }

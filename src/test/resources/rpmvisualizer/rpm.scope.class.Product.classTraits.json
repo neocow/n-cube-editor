@@ -59,7 +59,7 @@
         2000000000012
       ],
       "type":"string",
-      "value":"WorkersCompensationProduct"
+      "value":"WProduct"
     },
     {
       "id":[
@@ -75,7 +75,7 @@
         2000000000006
       ],
       "type":"string",
-      "value":"WorkersCompensationProduct"
+      "value":"WProduct"
     },
     {
       "id":[
@@ -99,7 +99,7 @@
         2000000000012
       ],
       "type":"string",
-      "value":"UmbrellaProduct"
+      "value":"UProduct"
     },
     {
       "id":[
@@ -107,7 +107,7 @@
         2000000000006
       ],
       "type":"string",
-      "value":"UmbrellaProduct"
+      "value":"UProduct"
     }
   ]
 }

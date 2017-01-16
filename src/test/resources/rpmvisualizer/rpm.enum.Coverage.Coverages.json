@@ -2445,7 +2445,7 @@
         2000000000057
       ],
       "type":"string",
-      "value":"IncreasedLimitCoverage"
+      "value":"ICoverage"
     },
     {
       "id":[
@@ -2933,7 +2933,7 @@
         2000000000060
       ],
       "type":"string",
-      "value":"TransportCoverage"
+      "value":"TCoverage"
     },
     {
       "id":[
@@ -3869,7 +3869,7 @@
         2000000000050
       ],
       "type":"string",
-      "value":"ClassCodeCoverage"
+      "value":"CCoverage"
     },
     {
       "id":[
