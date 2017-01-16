@@ -521,7 +521,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testGetCellValues_single_classNode_hideCellValues()
+    void testGetCellValues_classNode_hideCellValues()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      product          : 'WProduct',
@@ -1075,7 +1075,7 @@ class RpmVisualizerTest
         assert null == node.detailsTitle2
         assert 'ValidRpmClass' == node.label
         assert  null == node.typesToAdd
-        assert 'UNSPECIFIED' == node.group
+        assert UNSPECIFIED == node.group
         assert null == node.fromFieldName
         assert '1' ==  node.level
         assert scope == node.scope
@@ -1092,13 +1092,13 @@ class RpmVisualizerTest
     {
         NCube cube = new NCube(cubeName)
         cube.applicationID = appId
-        String axisName = 'field'
+        String axisName = AXIS_FIELD
         cube.addAxis(new Axis(axisName, AxisType.DISCRETE, AxisValueType.STRING, false, Axis.SORTED, 1))
-        cube.addColumn(axisName, 'CLASS_TRAITS')
-        axisName = 'trait'
+        cube.addColumn(axisName, CLASS_TRAITS)
+        axisName = AXIS_TRAIT
         cube.addAxis(new Axis(axisName, AxisType.DISCRETE, AxisValueType.STRING, false, Axis.SORTED, 2))
-        cube.addColumn(axisName, 'r:exists')
-        cube.addColumn(axisName, 'r:rpmType')
+        cube.addColumn(axisName, R_EXISTS)
+        cube.addColumn(axisName, R_RPM_TYPE)
         NCubeManager.addCube(cube.applicationID, cube)
         return cube
     }
