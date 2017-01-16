@@ -1257,6 +1257,16 @@ var TestEditor = (function ($)
         load();
     };
 
+    // Let parent (main frame) know that the child window has loaded.
+    // The loading of all of the Javascript (deeply) is continuous on the main thread.
+    // Therefore, the setTimeout(, 1) ensures that the main window (parent frame)
+    // is called after all Javascript has been loaded.
+    if (window.parent.frameLoaded) {
+        setTimeout(function () {
+            window.parent.frameLoaded(document);
+        }, 1);
+    }
+
     return {
         init: init,
         load: load,
@@ -1276,4 +1286,9 @@ var cubeSelected = function cubeSelected()
     TestEditor.handleCubeSelected();
 };
 
-var onNoteClick = function onNoteClick(e, element){};
+function onNoteClick(e, element){};
+
+function closeChildMenu() {
+    $('.open').removeClass('open');
+    $('div.dropdown-backdrop').hide();
+}

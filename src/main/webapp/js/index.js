@@ -897,28 +897,35 @@ var NCE = (function ($) {
         }
     }
 
-    function onNoteClick(e)
-    {
-        var pageId, frame, cw;
-        e.preventDefault();
+    function getActiveContentWindow() {
+        var pageId, frame;
         pageId = getActiveTabViewType();
-        if (pageId)
-        {
-            try
-            {
+        if (pageId) {
+            try {
                 frame = document.getElementById('iframe_' + pageId);
-                if (frame)
-                {
-                    cw = frame.contentWindow;
-                    if (cw.onNoteClick !== undefined) {
-                        cw.onNoteClick(e);
-                        cw.focus();
-                    }
+                if (frame) {
+                    return frame.contentWindow;
                 }
-            } catch (e)
-            {
+            } catch (e) {
                 console.log(e);
             }
+        }
+    }
+
+    function closeChildMenu() {
+        var cw = getActiveContentWindow();
+        if (cw.closeChildMenu !== undefined) {
+            cw.closeChildMenu();
+        }
+    }
+
+    function onNoteClick(e) {
+        var cw;
+        e.preventDefault();
+        cw = getActiveContentWindow();
+        if (cw.onNoteClick !== undefined) {
+            cw.onNoteClick(e);
+            cw.focus();
         }
     }
     
@@ -1261,6 +1268,11 @@ var NCE = (function ($) {
             isPageFrozen: isPageFrozen
         };
     }
+    
+    function closeParentMenu() {
+        $('.open').removeClass('open').tooltip('hide');
+        $('div.dropdown-backdrop').hide();
+    }
 
     function freezePage(shouldFreeze) {
         function createOverlayForDiv(div) {
@@ -1478,6 +1490,10 @@ var NCE = (function ($) {
         // Set up back button support (base a page on a app, version, status, branch, and cube name)
         $(window).on('popstate', function(e) {
             onWindowPopstate(e);
+        });
+        
+        $(document).on('click', function() {
+            closeChildMenu();
         });
 
         $('#newCubeMenu').click(function () {
@@ -4453,12 +4469,10 @@ var NCE = (function ($) {
         return _noteId;
     }
 
-    function addNoteListeners()
-    {
+    function addNoteListeners() {
         _noteWrapper = $.gritter.noticeWrapper();
-        if (!_noteWrapper.hasClass(HAS_CLICK_EVENT))
-        {
-            _noteWrapper.click(function (e) {
+        if (!_noteWrapper.hasClass(HAS_CLICK_EVENT)) {
+            _noteWrapper.on('click', function (e) {
                 e.preventDefault();
                 onNoteClick(e);
             });
@@ -4481,7 +4495,7 @@ var NCE = (function ($) {
             if (id === _noteId){
                 _noteId = null;
             }
-        };
+        }
     }
     
     function isHeadSelected() {
@@ -4551,13 +4565,19 @@ var NCE = (function ($) {
     // API
     return {
         getSelectedStatus: getSelectedStatus,
-        buildTabs: buildTabs
+        buildTabs: buildTabs,
+        closeParentMenu: closeParentMenu
     }
 
 })(jQuery);
 
-function frameLoaded() {
+function frameLoaded(doc) {
     NCE.buildTabs();
+    if (doc) {
+        $(doc).on('click', function() {
+            NCE.closeParentMenu();
+        });
+    }
     $('.fadeMe2').fadeOut(800, function() {
         $('.fadeMe2').remove();
     });
