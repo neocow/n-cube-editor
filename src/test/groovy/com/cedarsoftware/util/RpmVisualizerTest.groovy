@@ -716,11 +716,12 @@ class RpmVisualizerTest
     @Test
     void testBuildGraph_missingRequiredScopeWithNoPreLoadedAvailableScopeValues()
     {
+        String axisName = 'dummyAxis'
+
         try
         {
             //Change cube to have a required axis that won't be on the input as the class is loaded
             NCube cube = NCubeManager.getCube(appId, 'rpm.class.Coverage')
-            String axisName = 'dummyAxis'
             cube.addAxis(new Axis(axisName, AxisType.DISCRETE, AxisValueType.STRING, false, Axis.SORTED, 3))
             cube.addColumn(axisName, 'dummy1')
             cube.addColumn(axisName, 'dummy2')
@@ -769,12 +770,14 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
 
             //Reset cube
-            NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+            cube = NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+            assert false == cube.axisNames.contains(axisName)
         }
         catch (Exception e)
         {
             //Reset cube
-            NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+            NCube cube = NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+            assert false == cube.axisNames.contains(axisName)
             throw new Exception(e)
         }
 
@@ -845,11 +848,13 @@ class RpmVisualizerTest
 
             //Reset cube
             cube.removeMetaProperty('requiredScopeKeys')
+            assert null == cube.metaProperties.requiredScopeKeys
         }
         catch (Exception e)
         {
             //Reset cube
             cube.removeMetaProperty('requiredScopeKeys')
+            assert null == cube.metaProperties.requiredScopeKeys
             throw new Exception(e)
         }
     }
@@ -1084,12 +1089,13 @@ class RpmVisualizerTest
     @Test
     void testBuildGraph_exceptionInTrait()
     {
+        NCube cube = NCubeManager.getCube(appId, 'rpm.scope.class.Coverage.traits')
+        Map coordinate = [(AXIS_FIELD): 'Exposure', (AXIS_TRAIT): R_EXISTS, coverage: 'FCoverage'] as Map
+
         try
         {
             //Change r:exists trait for FCoverage to throw an exception
-            NCube cube = NCubeManager.getCube(appId, 'rpm.scope.class.Coverage.traits')
             String expression = 'int a = 5; int b = 0; return a / b'
-            Map coordinate = [(AXIS_FIELD): 'Exposure', (AXIS_TRAIT): R_EXISTS, coverage: 'FCoverage'] as Map
             cube.setCell(new GroovyExpression(expression, null, false), coordinate)
 
             Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
@@ -1131,12 +1137,14 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
 
             //Reset cube
-            NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+            cube.setCell(new GroovyExpression('true', null, false), coordinate)
+            assert true == cube.getCell(coordinate)
         }
         catch (Exception e)
         {
             //Reset cube
-            NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+            cube.setCell(new GroovyExpression('true', null, false), coordinate)
+            assert true == cube.getCell(coordinate)
             throw new Exception(e)
         }
     }
