@@ -695,7 +695,7 @@ var NCE = (function ($) {
         }
 
         html += '<li><a href="#" class="anc-go-to-context">Go to Context</a></li>'
-              + '<li><a href="#" class="anc-global-comparator">Global Comparator...</a></li>'
+              + '<li><a href="#" class="anc-global-comparator">Compare Two Cubes...</a></li>'
               + '<div class="divider"/>'
               + '<li><a href="#" class="anc-close-cube">Close</a></li>'
               + '<li><a href="#" class="anc-close-all">Close All</a></li>'
@@ -832,7 +832,13 @@ var NCE = (function ($) {
     }
 
     function openGlobalComparator(cubeInfo) {
-        var appId;
+        var appId, nce, appOpt, verOpt, branchOpt, cubeOpt;
+        appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
+        appOpt = [];
+        verOpt = [_selectedApp];
+        branchOpt = [appId];
+        cubeOpt = [appId, '*', null, getDefaultSearchOptions()];
+        nce = buildAppState();
         _globalComparatorLeftApp.empty();
         _globalComparatorRightApp.empty();
         _globalComparatorLeftVersion.empty();
@@ -841,25 +847,36 @@ var NCE = (function ($) {
         _globalComparatorRightBranch.empty();
         _globalComparatorLeftCube.empty();
         _globalComparatorRightCube.empty();
-        _globalComparatorRightApp.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorRightVersion.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorRightBranch.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorRightCube.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorLeftApp.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorLeftVersion.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorLeftBranch.prop('disabled', cubeInfo !== undefined);
+        _globalComparatorLeftCube.prop('disabled', cubeInfo !== undefined);
         
         if (cubeInfo) {
-            _globalComparatorRightApp.append('<option>' + cubeInfo[CUBE_INFO.APP] + '</option>');
-            _globalComparatorRightVersion.append('<option>' + cubeInfo[CUBE_INFO.VERSION] + '-' + cubeInfo[CUBE_INFO.STATUS] + '</option>');
-            _globalComparatorRightBranch.append('<option>' + cubeInfo[CUBE_INFO.BRANCH] + '</option>');
-            _globalComparatorRightCube.append('<option>' + cubeInfo[CUBE_INFO.NAME] + '</option>');
+            _globalComparatorLeftApp.append('<option>' + cubeInfo[CUBE_INFO.APP] + '</option>');
+            _globalComparatorLeftVersion.append('<option>' + cubeInfo[CUBE_INFO.VERSION] + '-' + cubeInfo[CUBE_INFO.STATUS] + '</option>');
+            _globalComparatorLeftBranch.append('<option>' + cubeInfo[CUBE_INFO.BRANCH] + '</option>');
+            _globalComparatorLeftCube.append('<option>' + cubeInfo[CUBE_INFO.NAME] + '</option>');
+            populateSelect(nce, _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, appOpt, _selectedApp);
+            populateSelect(nce, _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, verOpt, _selectedVersion + '-' + _selectedStatus, true);
+            populateSelect(nce, _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, branchOpt, _selectedBranch, true);
+            populateSelect(nce, _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, cubeOpt, _selectedCubeName, true);
         } else {
             appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
-            populateSelect(buildAppState(), _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, [], _selectedApp);
-            populateSelect(buildAppState(), _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, [_selectedApp], _selectedVersion + '-' + _selectedStatus, true);
-            populateSelect(buildAppState(), _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, [appId], _selectedBranch, true);
-            populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appId, '*', null, getDefaultSearchOptions()], _selectedCubeName, true);
+            appOpt = [];
+            verOpt = [_selectedApp];
+            branchOpt = [appId];
+            cubeOpt = [appId, '*', null, getDefaultSearchOptions()];
+            populateSelect(nce, _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, appOpt, _selectedApp);
+            populateSelect(nce, _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, verOpt, _selectedVersion + '-' + _selectedStatus, true);
+            populateSelect(nce, _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, branchOpt, _selectedBranch, true);
+            populateSelect(nce, _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, cubeOpt, _selectedCubeName, true);
+            populateSelect(nce, _globalComparatorLeftApp, CONTROLLER_METHOD.GET_APP_NAMES, appOpt, _selectedApp);
+            populateSelect(nce, _globalComparatorLeftVersion, CONTROLLER_METHOD.GET_VERSIONS, verOpt, _selectedVersion + '-' + _selectedStatus, true);
+            populateSelect(nce, _globalComparatorLeftBranch, CONTROLLER_METHOD.GET_BRANCHES, branchOpt, _selectedBranch, true);
+            populateSelect(nce, _globalComparatorLeftCube, CONTROLLER_METHOD.SEARCH, cubeOpt, _selectedCubeName, true);
         }
-        populateSelect(buildAppState(), _globalComparatorLeftApp, CONTROLLER_METHOD.GET_APP_NAMES, []);
-        
+
         _globalComparatorModal.modal();
     }
 
@@ -1734,39 +1751,40 @@ var NCE = (function ($) {
     }
 
     function batchUpdateAxisReferencesAppChanged() {
-        var params = [_batchUpdateAxisReferencesApp.val(), STATUS.RELEASE];
+        var params, appVal;
+        appVal = _batchUpdateAxisReferencesApp.val();
         _batchUpdateAxisReferencesCubeName.empty();
         _batchUpdateAxisReferencesAxisName.empty();
-        if(_batchUpdateAxisReferencesApp.val() == "") {
+        if (appVal === '') {
             _batchUpdateAxisReferencesVersion.empty();
-        }
-        else {
+        } else {
+            params = [appVal, STATUS.RELEASE];
             populateSelect(buildAppState(), _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
         }
     }
 
     function batchUpdateAxisReferencesVersionChanged() {
-        var params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), '*', null, getDefaultSearchOptions()];
+        var params, verVal;
+        verVal = _batchUpdateAxisReferencesVersion.val();
         _batchUpdateAxisReferencesAxisName.empty();
-        if(_batchUpdateAxisReferencesVersion.val() == "") {
+        if (verVal === '') {
             _batchUpdateAxisReferencesCubeName.empty();
-        }
-        else {
+        } else {
+            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), verVal, STATUS.RELEASE, head), '*', null, getDefaultSearchOptions()];
             populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
         }
     }
 
     function batchUpdateAxisReferencesCubeNameChanged() {
-        var params, axisOrMethod;
-        if(_batchUpdateAxisReferencesCubeName.val() == "") {
+        var params, axisOrMethod, cubeName;
+        cubeName = _batchUpdateAxisReferencesCubeName.val();
+        if (cubeName === '') {
             _batchUpdateAxisReferencesAxisName.empty();
-        }
-        else {
-            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), _batchUpdateAxisReferencesCubeName.val(), {mode:'json'}];
+        } else {
+            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), cubeName, {mode:'json'}];
             axisOrMethod = isBatchUpdateAxisReferencesDestinationToggled() ? POPULATE_SELECT_FROM_CUBE.AXIS : POPULATE_SELECT_FROM_CUBE.METHOD;
             populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, axisOrMethod);
         }
-
     }
 
     function batchUpdateAxisReferencesOpen() {
