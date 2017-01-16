@@ -1936,6 +1936,7 @@ var NCE = (function ($) {
             }
         }
         selectNone();
+        buildTabs();
     }
 
     function checkPermissions(appId, resource, action) {
