@@ -4,6 +4,7 @@ import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.AxisType
 import com.cedarsoftware.ncube.AxisValueType
+import com.cedarsoftware.ncube.GroovyExpression
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.NCubeResourcePersister
@@ -99,6 +100,9 @@ class RpmVisualizerTest
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
 
         Map node = nodes.find {Map node -> "${UNABLE_TO_LOAD}Location".toString() == node.label}
+        assert false == node.showCellValuesLink
+        assert false == node.showCellValues
+        assert false == node.cellValuesLoaded
         String nodeDetails = node.details as String
         assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
         assert nodeDetails.contains(DETAILS_LABEL_REASON)
@@ -635,6 +639,9 @@ class RpmVisualizerTest
         assert 'Product' == node.detailsTitle1
         assert 'xxxxxxxx' == node.detailsTitle2
         assert "${SCOPE_VALUE_NOT_FOUND}xxxxxxxx".toString() == node.label
+        assert false == node.showCellValuesLink
+        assert false == node.showCellValues
+        assert false == node.cellValuesLoaded
         String nodeDetails = node.details as String
         checkInvalidScopeMessage(nodeDetails)
         assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
@@ -679,6 +686,9 @@ class RpmVisualizerTest
         assert 'Risk' == node.title
         assert 'Risk' == node.detailsTitle1
         assert 'ProductLocation' == node.detailsTitle2
+        assert false == node.showCellValuesLink
+        assert false == node.showCellValues
+        assert false == node.cellValuesLoaded
         String nodeDetails = node.details as String
         assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for ProductLocation")
         assert nodeDetails.contains(DETAILS_LABEL_REASON)
@@ -716,7 +726,6 @@ class RpmVisualizerTest
             cube.addColumn(axisName, 'dummy2')
             cube.addColumn(axisName, 'dummy3')
 
-
             Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                          product:'WProduct',
                          policyControlDate:'2017-01-01',
@@ -743,6 +752,9 @@ class RpmVisualizerTest
             assert 'Coverage' == node.title
             assert 'Coverage' == node.detailsTitle1
             assert 'FCoverage' == node.detailsTitle2
+            assert false == node.showCellValuesLink
+            assert false == node.showCellValues
+            assert false == node.cellValuesLoaded
             String nodeDetails = node.details as String
             assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for FCoverage")
             assert nodeDetails.contains(DETAILS_LABEL_REASON)
@@ -755,6 +767,9 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
+
+            //Reset cube
+            NCubeManager.loadCube(appId, 'rpm.class.Coverage')
         }
         catch (Exception e)
         {
@@ -762,8 +777,7 @@ class RpmVisualizerTest
             NCubeManager.loadCube(appId, 'rpm.class.Coverage')
             throw new Exception(e)
         }
-        //Reset cube
-        NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+
     }
 
     private static void checkMissingRequiredScopeMessage(String message)
@@ -778,21 +792,22 @@ class RpmVisualizerTest
     @Test
     void testBuildGraph_missingDeclaredRequiredScope()
     {
-        //Change cube to have declared required scope
         NCube cube = NCubeManager.getCube(appId, 'rpm.class.Coverage')
-        cube.setMetaProperty('requiredScopeKeys', ['dummyRequiredScopeKey'])
-
-        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     product          : 'WProduct',
-                     policyControlDate: '2017-01-01',
-                     quoteDate        : '2017-01-01',
-                     risk             : 'WProductOps']
-
-        String startCubeName = 'rpm.class.Risk'
-        Map options = [startCubeName: startCubeName, scope: scope]
-
         try
         {
+            //Change cube to have declared required scope
+            cube.setMetaProperty('requiredScopeKeys', ['dummyRequiredScopeKey'])
+
+            Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                         product          : 'WProduct',
+                         policyControlDate: '2017-01-01',
+                         quoteDate        : '2017-01-01',
+                         risk             : 'WProductOps']
+
+            String startCubeName = 'rpm.class.Risk'
+            Map options = [startCubeName: startCubeName, scope: scope]
+
+
             Map graphInfo = visualizer.buildGraph(appId, options)
             assert STATUS_SUCCESS == graphInfo.status
             Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
@@ -812,6 +827,9 @@ class RpmVisualizerTest
             assert 'Coverage' == node.title
             assert 'Coverage' == node.detailsTitle1
             assert 'WWACoverage' == node.detailsTitle2
+            assert false == node.showCellValuesLink
+            assert false == node.showCellValues
+            assert false == node.cellValuesLoaded
             String nodeDetails = node.details as String
             assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for WWACoverage")
             assert nodeDetails.contains("${DETAILS_LABEL_REASON}")
@@ -824,6 +842,9 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
+
+            //Reset cube
+            cube.removeMetaProperty('requiredScopeKeys')
         }
         catch (Exception e)
         {
@@ -831,8 +852,6 @@ class RpmVisualizerTest
             cube.removeMetaProperty('requiredScopeKeys')
             throw new Exception(e)
         }
-        //Reset cube
-        cube.removeMetaProperty('requiredScopeKeys')
     }
 
     @Test
@@ -1060,6 +1079,76 @@ class RpmVisualizerTest
 
         Map node = rpmVisInfo.nodes.find { Map node ->'FCoverage' == node.label}
         assert 'COVERAGE' == node.group
+    }
+
+    @Test
+    void testBuildGraph_exceptionInTrait()
+    {
+        try
+        {
+            //Change r:exists trait for FCoverage to throw an exception
+            NCube cube = NCubeManager.getCube(appId, 'rpm.scope.class.Coverage.traits')
+            String expression = 'int a = 5; int b = 0; return a / b'
+            Map coordinate = [(AXIS_FIELD): 'Exposure', (AXIS_TRAIT): R_EXISTS, coverage: 'FCoverage'] as Map
+            cube.setCell(new GroovyExpression(expression, null, false), coordinate)
+
+            Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                         product          : 'WProduct',
+                         policyControlDate: '2017-01-01',
+                         quoteDate        : '2017-01-01']
+
+            String startCubeName = 'rpm.class.Product'
+            Map options = [startCubeName: startCubeName, scope: scope]
+
+            Map graphInfo = visualizer.buildGraph(appId, options)
+            assert STATUS_SUCCESS == graphInfo.status
+            Set<String> messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+            assert 1 == messages.size()
+            List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+            checkExceptionMessage(messages.first())
+
+            Map node = nodes.find {Map node -> 'FCoverage' == node.detailsTitle2}
+            assert 'Coverage' == node.title
+            assert 'Coverage' == node.detailsTitle1
+            //TODO: label should say FCoverage, but says 'java:70)]'
+            //assert 'FCoverage' == node.label
+            assert false == node.showCellValuesLink
+            assert false == node.showCellValues
+            assert false == node.cellValuesLoaded
+            String nodeDetails = node.details as String
+            assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for FCoverage")
+            assert nodeDetails.contains(DETAILS_LABEL_REASON)
+            checkExceptionMessage(nodeDetails)
+            assert false == node.showCellValuesLink
+            assert false == node.showCellValues
+            assert false == node.cellValuesLoaded
+            assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
+            assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)
+            assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
+            assert nodeDetails.contains(DETAILS_LABEL_FIELDS)
+            assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
+            assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
+            assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
+
+            //Reset cube
+            NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+        }
+        catch (Exception e)
+        {
+            //Reset cube
+            NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+            throw new Exception(e)
+        }
+    }
+
+    private static void checkExceptionMessage(String message)
+    {
+        //TODO: Message should say "while loading traits for FCoverage"
+        assert message.contains("An exception was thrown while loading  for FCoverage")
+        assert message.contains(DETAILS_LABEL_MESSAGE)
+        assert message.contains(DETAILS_LABEL_ROOT_CAUSE)
+        assert message.contains('java.lang.ArithmeticException: Division by zero')
+        assert message.contains(DETAILS_LABEL_STACK_TRACE)
     }
 
     private  static checkValidRpmClass( String startCubeName, Map scope,  Map graphInfo)
