@@ -58,21 +58,6 @@
           "value": "defaultLevel"
         },
         {
-          "id": 1000947844705,
-          "type": "string",
-          "value": "defaultOptionalScopeKeys"
-        },
-        {
-          "id": 1000831101323,
-          "type": "string",
-          "value": "derivedScopeKeys"
-        },
-        {
-          "id": 1000054577899,
-          "type": "string",
-          "value": "derivedSourceScopeKeys"
-        },
-        {
           "id": 1000017855263,
           "type": "string",
           "value": "groupSuffix"
@@ -155,38 +140,11 @@
     },
     {
       "id": [
-        1000054577899,
-        2001950513622
-      ],
-      "type": "exp",
-      "cache": true,
-      "value": "//These are not currently used, but may be later so leaving in for now.\n['sourceRisk', 'sourceCoverage', 'sourceContainer', 'sourceDeductible', 'sourceLimit', 'sourceRate', 'sourceRatefactor', 'sourcePremium', 'sourceParty', 'sourcePlace', 'sourceRole', 'sourceRoleplayer'] as Set"
-    },
-    {
-      "id": [
         1000269251582,
         2001950513622
       ],
       "type": "long",
       "value": 3
-    },
-    {
-      "id": [
-        1000947844705,
-        2001950513622
-      ],
-      "type": "exp",
-      "cache": true,
-      "value": "//These are not currently used, but may be later so leaving in for now.\n['action', 'businessDivisionCode', 'context', 'date', 'edition', '_effectiveVersion', 'env', 'formId', 'LocationState', 'screen', 'state', 'transaction', 'transactionsubtype', 'username', 'view'] as Set"
-    },
-    {
-      "id": [
-        1000831101323,
-        2001950513622
-      ],
-      "type": "exp",
-      "cache": true,
-      "value": "['product', 'risk', 'coverage', 'container', 'deductible', 'limit', 'rate', 'ratefactor', 'premium', 'party', 'place', 'role', 'roleplayer'] as Set"
     }
   ]
 }

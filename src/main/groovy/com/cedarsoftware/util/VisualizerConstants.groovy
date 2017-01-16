@@ -18,6 +18,11 @@ class VisualizerConstants
 	public static final String MISSING_SCOPE = 'Missing scope for '
 	public static final String UNABLE_TO_LOAD = 'Unable to load '
 	public static final String SCOPE_VALUE_NOT_FOUND = 'Scope value not found for '
+	public static final String ADDITIONAL_SCOPE_REQUIRED_TO_LOAD = 'Additional scope is required to load '
+	public static final String ADD_SCOPE_VALUES_FOR_KEYS = 'Please add scope value(s) for the following scope key(s): '
+	public static final String SCOPE_VALUES_AVAILABLE_FOR = 'The following values are available for '
+	public static final String SUPPLY_DIFFERENT_VALUE_FOR = 'Please supply a different value for '
+	public static final String SCOPE_ADDED_SINCE_REQUIRED = 'The scope for the following scope keys was added since required: '
 	public static final String DEFAULT_SCOPE_VALUE = 'XXXX'
 
 	public static final String UNSPECIFIED = 'UNSPECIFIED'

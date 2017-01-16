@@ -131,7 +131,7 @@ class RpmVisualizer extends Visualizer
 
 		if (!targetCubeName.startsWith(RPM_ENUM))
 		{
-			throw new IllegalStateException("Cube is not an rpm.enum cube: ${targetCubeName}.")
+			throw new IllegalStateException("${CUBE_IS_NOT_RPM_ENUM}${targetCubeName}.")
 		}
 
 		if (relInfo.sourceCube && (!sourceFieldRpmType || helper.isPrimitive(sourceFieldRpmType)))
@@ -306,14 +306,14 @@ class RpmVisualizer extends Visualizer
 
 		boolean hasMissingScope = false
 		Map<String, Object> scope = rpmVisInfo.scope
-		String messageSuffixScopeKey = "Its default value may be changed as desired."
+		String messageSuffixScopeKey = DEFAULT_VALUE_MAY_BE_CHANGED
 
 		if (NCubeManager.getCube(appId, startCubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			String type = getTypeFromCubeName(startCubeName)
 			String messageSuffixTypeScopeKey = "${DOUBLE_BREAK}Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
 			String messageScopeValues = helper.getAvailableScopeValuesMessage(rpmVisInfo, startCubeName, type)
-			String messageSuffix = 'The other default scope values may also be changed as desired.'
+			String messageSuffix = OTHER_DEFAULT_VALUE_MAY_BE_CHANGED
 			if (scope)
 			{
 				hasMissingScope = rpmVisInfo.addMissingMinimumScope(type, DEFAULT_SCOPE_VALUE, "${messageSuffixTypeScopeKey}${messageScopeValues}", messages) ?: hasMissingScope

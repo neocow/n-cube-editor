@@ -44,12 +44,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		String effectiveName = effectiveNameByCubeName
 		StringBuilder sb = new StringBuilder()
-		String notesLabel = "<b>Note: </b>"
+		String notesLabel = "<b>${DETAILS_LABEL_NOTE}</b>"
 
 		if (!cellValuesLoaded)
 		{
-			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
-			notesLabel = "<b>Reason: </b>"
+			sb.append("<b>*** ${UNABLE_TO_LOAD}fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
+			notesLabel = "<b>${DETAILS_LABEL_REASON}</b>"
 		}
 
 		//Notes
@@ -65,10 +65,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		//Scope
 		if (cellValuesLoaded)
 		{
-			String title = showCellValues ? 'Utilized scope' : 'Utilized scope to load class without all traits'
+			String title = showCellValues ? DETAILS_LABEL_UTILIZED_SCOPE : DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS
 			getDetailsMap(sb, title, targetScope)
 		}
-		getDetailsMap(sb, 'Available scope', scope)
+		getDetailsMap(sb, DETAILS_LABEL_AVAILABLE_SCOPE, scope)
 
 		//Fields
 		if (cellValuesLoaded)
@@ -86,11 +86,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		if (showCellValues)
 		{
-			sb.append("<b>Fields and traits</b>")
+			sb.append("<b>${DETAILS_LABEL_FIELDS_AND_TRAITS}</b>")
 		}
 		else
 		{
-			sb.append("<b>Fields</b>")
+			sb.append("<b>${DETAILS_LABEL_FIELDS}</b>")
 		}
 		sb.append("<pre><ul>")
 		targetTraits.each { String fieldName, v ->
@@ -133,7 +133,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void addClassTraits(StringBuilder sb)
 	{
-		sb.append("<b>Class traits</b>")
+		sb.append("<b>${DETAILS_LABEL_CLASS_TRAITS}</b>")
 		addTraits(sb, CLASS_TRAITS)
 		sb.append("${BREAK}")
 	}
@@ -225,8 +225,8 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		Map<String, Map<String, Object>> sourceTraits = sourceTraits
 
 		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceTraits[sourceFieldName] as Map
-		String vMin = sourceFieldTraitMap[V_MIN] as String ?: '0'
-		String vMax = sourceFieldTraitMap[V_MAX] as String ?: '999999'
+		String vMin = sourceFieldTraitMap[V_MIN] as String ?: V_MIN_CARDINALITY
+		String vMax = sourceFieldTraitMap[V_MAX] as String ?: V_MAX_CARDINALITY
 
 		if (targetCube.name.startsWith(RPM_ENUM_DOT))
 		{
@@ -409,11 +409,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		if (cubeName.startsWith(RPM_CLASS_DOT) || cubeName.startsWith(RPM_ENUM_DOT))
 		{
 			String cubeDisplayName = getCubeDisplayName(cubeName)
-			sb.append("Additional scope is required to load ${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
 		}
 		else
 		{
-			sb.append("Additional scope is required to load ${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
 		}
 		sb.append(helper.handleInvalidCoordinateException(e, visInfo, this, MANDATORY_SCOPE_KEYS))
 		String msg = sb.toString()

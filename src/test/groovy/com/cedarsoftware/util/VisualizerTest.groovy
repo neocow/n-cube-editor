@@ -145,8 +145,32 @@ class VisualizerTest{
         assert '2' == edge.level
         assert !edge.label
         assert  'CubeDAxis1: CubeDAxis1Col3' == edge.title
+    }
 
-        //TODO: Add in check for 3 occurrences of CubeWithNoDefaultsAndNoValues and their edges
+    @Test
+    void testBuildGraph_checkStructure()
+    {
+        Map scope = null
+        String startCubeName = 'CubeWithRefs'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        VisualizerInfo visInfo = graphInfo.visInfo as VisualizerInfo
+        assert null == visInfo.messages
+        assert !(graphInfo.visInfo as VisualizerInfo).messages
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as VisualizerInfo).nodes as List
+        List<Map<String, Object>> edges = (graphInfo.visInfo as VisualizerInfo).edges as List
+        assert nodes.size() == 5
+        assert edges.size() == 4
+
+        assert nodes.find { Map node -> 'CubeWithRefs' == node.label}
+        assert nodes.find { Map node -> 'CubeHasTwoRefsToSameCube' == node.label}
+        assert 3 == nodes.findAll { Map node -> 'CubeWithNoDefaultsAndNoValues' == node.label}.size()
+
+        assert edges.find { Map edge -> 'CubeWithRefs' == edge.fromName && 'CubeHasTwoRefsToSameCube' == edge.toName}
+        assert edges.find { Map edge -> 'CubeWithRefs' == edge.fromName && 'CubeWithNoDefaultsAndNoValues' == edge.toName}
+        assert 2 == edges.findAll { Map edge -> 'CubeHasTwoRefsToSameCube' == edge.fromName && 'CubeWithNoDefaultsAndNoValues' == edge.toName}.size()
     }
 
     @Test
@@ -726,15 +750,15 @@ class VisualizerTest{
         assert nodeDetails.contains("@CubeWithSingleValue[bogusAxisName:'CubeKAxis1Col1', CubeKAxis2: 'CubeKAxis2Col3']")
         assert nodeDetails.contains(DETAILS_LABEL_EXCEPTION)
 
-        assert nodeDetails.contains("Additional scope is required to load coordinate")
-        assert nodeDetails.contains("Please add scope value(s) for the following scope key(s): CubeKAxis1, CubeKAxis2.")
-        assert nodeDetails.contains("The following values are available for CubeKAxis1:")
+        assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}coordinate")
+        assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_KEYS}CubeKAxis1, CubeKAxis2.")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1:")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col3")
 
         //TODO: CubeKAxis2 should not get flagged as invalid
-        assert nodeDetails.contains("The following values are available for CubeKAxis2:")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2:")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col1")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col2")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col3")
@@ -801,15 +825,15 @@ class VisualizerTest{
         assert nodeDetails.contains("@CubeWithSingleValue[bogusAxisName:'CubeKAxis1Col1', dummyAxisName: 'CubeKAxis2Col3']")
         assert nodeDetails.contains(DETAILS_LABEL_EXCEPTION)
 
-        assert nodeDetails.contains("Additional scope is required to load coordinate")
-        assert nodeDetails.contains("Please add scope value(s) for the following scope key(s): CubeKAxis1, CubeKAxis2.")
-        assert nodeDetails.contains("The following values are available for CubeKAxis1:")
+        assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}coordinate")
+        assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_KEYS}CubeKAxis1, CubeKAxis2.")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1:")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col3")
 
-        assert nodeDetails.contains("The following values are available for CubeKAxis2:")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2:")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col1")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col2")
@@ -877,13 +901,13 @@ class VisualizerTest{
         assert nodeDetails.contains("@CubeWithSingleValue[CubeKAxis1:'bogusScopeValue', CubeKAxis2: 'CubeKAxis2Col3']")
         assert nodeDetails.contains(DETAILS_LABEL_EXCEPTION)
         assert nodeDetails.contains("The scope value bogusScopeValue for scope key CubeKAxis1 cannot be found on axis CubeKAxis1 for coordinate")
-        assert nodeDetails.contains("Please supply a different value for CubeKAxis1.")
-        assert nodeDetails.contains("The following values are available for CubeKAxis1:")
+        assert nodeDetails.contains("${SUPPLY_DIFFERENT_VALUE_FOR}CubeKAxis1.")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1:")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col3")
-        assert !nodeDetails.contains("The following values are available for CubeKAxis2:")
+        assert !nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2:")
 
         assert !nodeDetails.contains(DETAILS_LABEL_MESSAGE)
         assert !nodeDetails.contains(DETAILS_LABEL_ROOT_CAUSE)
@@ -948,15 +972,15 @@ class VisualizerTest{
         assert nodeDetails.contains("@CubeWithSingleValue[CubeKAxis1:'bogusScopeValue', CubeKAxis2: 'dummyScopeValue']")
         assert nodeDetails.contains(DETAILS_LABEL_EXCEPTION)
         assert nodeDetails.contains("The scope value bogusScopeValue for scope key CubeKAxis1 cannot be found on axis CubeKAxis1 for coordinate")
-        assert nodeDetails.contains("Please supply a different value for CubeKAxis1.")
-        assert nodeDetails.contains("The following values are available for CubeKAxis1:")
+        assert nodeDetails.contains("${SUPPLY_DIFFERENT_VALUE_FOR}CubeKAxis1.")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1:")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col3")
 
         //TODO: Should have values for CubeKAxis2
-        assert !nodeDetails.contains("The following values are available for CubeKAxis2:")
+        assert !nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2:")
 
         assert !nodeDetails.contains(DETAILS_LABEL_MESSAGE)
         assert !nodeDetails.contains(DETAILS_LABEL_ROOT_CAUSE)
