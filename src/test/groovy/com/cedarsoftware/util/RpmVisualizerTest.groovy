@@ -1034,6 +1034,34 @@ class RpmVisualizerTest
         checkValidRpmClass( startCubeName, scope, graphInfo)
     }
 
+    @Test
+    void testBuildGraph_invokedWithParentVisualizerInfoClass()
+    {
+        Map startScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                          product          : 'WProduct',
+                          policyControlDate: '2017-01-01',
+                          quoteDate        : '2017-01-01',
+                          coverage         : 'FCoverage',
+                          risk             : 'WProductOps']
+
+        String startCubeName = 'rpm.class.Coverage'
+        VisualizerInfo notRpmVisInfo = new VisualizerInfo()
+        notRpmVisInfo.groupSuffix = 'shouldGetReset'
+
+        Map options = [startCubeName: startCubeName, scope: startScope, visInfo: notRpmVisInfo]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        RpmVisualizerInfo rpmVisInfo = graphInfo.visInfo as RpmVisualizerInfo
+        assert null == rpmVisInfo.messages
+
+        assert 'RpmVisualizerInfo' == rpmVisInfo.class.simpleName
+        assert '_ENUM' ==  rpmVisInfo.groupSuffix
+
+        Map node = rpmVisInfo.nodes.find { Map node ->'FCoverage' == node.label}
+        assert 'COVERAGE' == node.group
+    }
+
     private  static checkValidRpmClass( String startCubeName, Map scope,  Map graphInfo)
     {
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
