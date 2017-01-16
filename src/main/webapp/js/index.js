@@ -3075,7 +3075,6 @@ var NCE = (function ($) {
         clearInterval(updateProgressUi);
         setTimeout(updateProgressUi, 0);
         isReleasePending = false;
-        _releaseCubesOk.show();
     }
 
     function releaseCubesOk() {
