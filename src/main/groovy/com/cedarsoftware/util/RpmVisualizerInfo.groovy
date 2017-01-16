@@ -45,7 +45,7 @@ class RpmVisualizerInfo extends VisualizerInfo
         typesToAddMap = [:]
         String json = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + TYPES_TO_ADD_CUBE_NAME + JSON_FILE_SUFFIX)
         NCube typesToAddCube = NCube.fromSimpleJson(json)
-        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): getCubeType()]) as Set
+        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): cubeType]) as Set
 
         allTypes.each { String sourceType ->
             Map<String, Boolean> map = typesToAddCube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): [] as Set]) as Map
@@ -66,10 +66,10 @@ class RpmVisualizerInfo extends VisualizerInfo
     void loadAvailableScopeKeysAndValues(NCube configCube)
     {
         Map<String, Set<Object>> valuesByKey = new CaseInsensitiveMap<>()
-        Set<String> derivedScopeKeys = configCube.getCell([(CONFIG_ITEM): CONFIG_DERIVED_SCOPE_KEYS, (CUBE_TYPE): CUBE_TYPE_RPM]) as Set
+        Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): cubeType]) as Set
 
         //Values for Risk, SourceRisk, Coverage, SourceCoverage, etc.
-        derivedScopeKeys.each { String key ->
+        allTypes.each { String key ->
             String cubeName = RPM_SCOPE_CLASS_DOT + key + DOT_TRAITS
             Set<Object> values = getColumnValues(appId, cubeName, key)
             valuesByKey[key] = values
