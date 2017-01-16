@@ -2814,8 +2814,9 @@ var NCE = (function ($) {
             title: title,
             appId: getSelectedTabAppId(),
             cubeName: _selectedCubeName,
-            canEdit: false  // revs.canEdit (ignored for now until we figure out how to handle updating the
+            canEdit: false,  // revs.canEdit, (ignored for now until we figure out how to handle updating the
             // right side (newer revision) from an older (left side) revision (this is opposite of all other merges)
+            cantEditReason: 'Unable to merge into non-current revision.'
         };
         diffCubeRevs(cubeIds[hiIdx], cubeIds[loIdx], diffOptions);
     }
@@ -4190,7 +4191,8 @@ var NCE = (function ($) {
             title: title,
             appId: appIdFrom(appId.app, appId.version, appId.status, appId.branch),
             cubeName: oldInfo.name,
-            canEdit: appId.branch !== head
+            canEdit: appId.branch !== head,
+            cantEditReason: 'Unable to merge into HEAD cube.'
         });
     }
 
@@ -4200,7 +4202,7 @@ var NCE = (function ($) {
         setupDiff(diffOptions);
     }
 
-    // options: leftName, rightName, title, appId, cubeName, canEdit
+    // options: leftName, rightName, title, appId, cubeName, canEdit, cantEditReason
     function setupDiff(diffOptions) {
         _diffOutput.empty();
         $('#diffTitle')[0].innerHTML = diffOptions.title;
@@ -4215,7 +4217,7 @@ var NCE = (function ($) {
             _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them left to right. Click a row to see more information about the change.';
         } else {
             _diffModal.find('.select-all, .select-none, .btn-primary').hide();
-            _diffInstructions[0].innerHTML = 'View individual changes between two cubes.';
+            _diffInstructions[0].innerHTML = diffOptions.cantEditReason || 'View individual changes between two cubes.';
         }
         diffDescriptive(diffOptions.canEdit);
         diffShow(true);
