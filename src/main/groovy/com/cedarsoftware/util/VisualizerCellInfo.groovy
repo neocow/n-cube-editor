@@ -102,7 +102,7 @@ class VisualizerCellInfo
 		{
 			title = DETAILS_TITLE_MISSING_OR_INVALID_COORDINATE
 			listItemClassName = t.class.simpleName
-			mb.append("Additional scope is required to load coordinate ${coordinateString}.")
+			mb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}coordinate ${coordinateString}.")
 			mb.append(helper.handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, relInfo, [] as Set).toString())
 		}
 		else if (t instanceof CoordinateNotFoundException)

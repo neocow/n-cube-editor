@@ -25,6 +25,7 @@ class NCubeResourcePersister implements NCubePersister
 
     @Override
     NCube loadCubeById(long id) {
+        //TODO: Implement using PathMatchingResourcePatternResolver
         return null
     }
 
@@ -140,12 +141,7 @@ class NCubeResourcePersister implements NCubePersister
     {
         NCubeManager.validateAppId(appId)
         NCube.validateCubeName(name)
-        Map<String, Object> cubes = NCubeManager.getCacheForApp(appId)
-        NCube cube =  cubes[name.toLowerCase()] as NCube
-        if (!cube)
-        {
-            cube = loadCubeFromResources(appId, name)
-        }
+        NCube cube = loadCubeFromResources(appId, name)
         return cube
     }
 
@@ -173,32 +169,39 @@ class NCubeResourcePersister implements NCubePersister
     @Override
     List<NCubeInfoDto> search(ApplicationID applicationID, String s, String searchValue, Map options)
     {
+        //TODO: Implement using PathMatchingResourcePatternResolver
        return []
     }
 
     @Override
     NCube loadCubeBySha1(ApplicationID applicationID, String s, String s1) {
+        //TODO: Implement using PathMatchingResourcePatternResolver
         return null
     }
 
     @Override
     List<String> getAppNames(String tenant) {
+        //TODO: Implement using PathMatchingResourcePatternResolver
         return new ArrayList<String>()
     }
 
     @Override
     Map<String, List<String>>  getVersions(String tenant, String app) {
-        return new HashMap<String, List<String>> ()
+        //TODO: Implement using PathMatchingResourcePatternResolver
+        Map versions = [SNAPSHOT: [ApplicationID.DEFAULT_VERSION], RELEASE: [ApplicationID.DEFAULT_VERSION]]
+        return versions
     }
 
     @Override
     List<NCubeInfoDto> getRevisions(ApplicationID appId, String cubeName, boolean ignoreVersion)
     {
+        //TODO: Implement using PathMatchingResourcePatternResolver
         return new ArrayList<NCubeInfoDto>()
     }
 
     @Override
     Set<String> getBranches(ApplicationID appId) {
+        //TODO: Implement using PathMatchingResourcePatternResolver
         return null
     }
 

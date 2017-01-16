@@ -157,7 +157,7 @@ class VisualizerInfo
     {
         NCube cube = NCubeManager.getCube(applicationID, cubeName)
         Set values = new LinkedHashSet()
-        Axis axis = cube.getAxis(axisName)
+        Axis axis = cube?.getAxis(axisName)
         if (axis)
         {
             for (Column column : axis.columnsWithoutDefault)

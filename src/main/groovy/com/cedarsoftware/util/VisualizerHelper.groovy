@@ -67,7 +67,7 @@ class VisualizerHelper
 		Set<Object> scopeValues = visInfo.availableScopeValues[key] ?: visInfo.loadAvailableScopeValues(cubeName, key)
 		if (scopeValues) {
 			StringBuilder sb = new StringBuilder()
-			sb.append("${BREAK}The following values are available for ${key}:${DOUBLE_BREAK}<pre><ul>")
+			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key}:${DOUBLE_BREAK}<pre><ul>")
 			scopeValues.each{
 				String value = it.toString()
 				sb.append("""<li><a class="missingScope" title="${key}: ${value}" href="#">${value}</a></li>""")
@@ -81,7 +81,7 @@ class VisualizerHelper
 	private static String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, Set<String> missingScope, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
-		message.append("${DOUBLE_BREAK} Please add scope value(s) for the following scope key(s): ${missingScope.join(COMMA_SPACE)}.${BREAK}")
+		message.append("${DOUBLE_BREAK} ${ADD_SCOPE_VALUES_FOR_KEYS}${missingScope.join(COMMA_SPACE)}.${BREAK}")
 		missingScope.each{ String key ->
 			message.append(getAvailableScopeValuesMessage(visInfo, cubeName, key))
 		}
@@ -92,7 +92,7 @@ class VisualizerHelper
 	{
 		StringBuilder message = new StringBuilder()
 		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, key)
-		message.append("${DOUBLE_BREAK} Please supply a different value for ${key}.${BREAK}${messageScopeValues}")
+		message.append("${DOUBLE_BREAK} ${SUPPLY_DIFFERENT_VALUE_FOR}${key}.${BREAK}${messageScopeValues}")
 		return message.toString()
 	}
 
@@ -106,7 +106,7 @@ class VisualizerHelper
 	protected static String getMissingMinimumScopeMessage(Map<String, Object> scope, String messageScopeValues, String messageSuffixType, String messageSuffix )
 	{
 		"""\
-The scope for the following scope keys was added since it was required: \
+${SCOPE_ADDED_SINCE_REQUIRED} \
 ${DOUBLE_BREAK}${INDENT}${scope.keySet().join(COMMA_SPACE)}\
 ${messageSuffixType} ${messageSuffix} \
 ${BREAK}${messageScopeValues}"""
