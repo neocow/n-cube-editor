@@ -1400,7 +1400,7 @@ var Visualizer = (function ($) {
     // is called after all Javascript has been loaded.
     if (window.parent.frameLoaded) {
         setTimeout(function () {
-            window.parent.frameLoaded();
+            window.parent.frameLoaded(document);
         }, 1);
     }
 

@@ -1561,7 +1561,7 @@ var NCubeEditor = (function ($)
     // is called after all Javascript has been loaded.
     if (window.parent.frameLoaded) {
         setTimeout(function () {
-            window.parent.frameLoaded();
+            window.parent.frameLoaded(document);
         }, 1);
     }
 
@@ -1585,4 +1585,9 @@ var cubeSelected = function cubeSelected()
     NCubeEditor.handleCubeSelected();
 };
 
-var onNoteClick = function onNoteClick(e, element){};
+function onNoteClick(e, element){};
+
+function closeChildMenu() {
+    $('.open').removeClass('open');
+    $('div.dropdown-backdrop').hide();
+}
