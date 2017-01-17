@@ -215,7 +215,7 @@ var CHANGETYPE = {
     RESTORED: {CODE: 'R', DISPLAY_ORDER: 1, CSS_CLASS: 'cube-restored', LABEL: 'Restored Cubes'},
     UPDATED: {CODE: 'U', DISPLAY_ORDER: 2, CSS_CLASS: 'cube-modified', LABEL: 'Updated Cubes'},
     DELETED: {CODE: 'D', DISPLAY_ORDER: 3, CSS_CLASS: 'cube-deleted', LABEL: 'Deleted Cubes'},
-    FASTFORWARD: {CODE: 'F', DISPLAY_ORDER: 4, CSS_CLASS: 'cube-fastforward', LABEL: 'No Change - Updated HEAD SHA-1'},
+    FASTFORWARD: {CODE: 'F', DISPLAY_ORDER: 4, CSS_CLASS: 'cube-fastforward', LABEL: 'No Change - Fast Forward'},
     CONFLICT: {CODE: 'X', DISPLAY_ORDER: 5, CSS_CLASS: 'cube-conflict', LABEL: 'Cubes in Conflict'}
 };
 
