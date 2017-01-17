@@ -583,4 +583,9 @@ class NCubeService
             throw new IllegalArgumentException(s, e)
         }
     }
+
+    void updateAxisMetaProperties(ApplicationID appId, String cubeName, String axisName, Map<String, Object> newMetaProperties)
+    {
+        NCubeManager.updateAxisMetaProperties(appId, cubeName, axisName, newMetaProperties)
+    }
 }

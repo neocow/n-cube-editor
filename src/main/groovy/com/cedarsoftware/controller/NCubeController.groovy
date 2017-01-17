@@ -291,14 +291,7 @@ class NCubeController extends BaseController
     Boolean updateAxisMetaProperties(ApplicationID appId, String cubeName, String axisName, Map<String, Object> newMetaProperties)
     {
         appId = addTenant(appId)
-        String resourceName = cubeName + '/' + axisName
-        nCubeService.assertPermissions(appId, resourceName, Action.UPDATE)
-        NCube ncube = nCubeService.loadCube(appId, cubeName)
-        Axis axis = ncube.getAxis(axisName)
-        axis.clearMetaProperties()
-        axis.addMetaProperties(newMetaProperties)
-        ncube.clearSha1()
-        nCubeService.updateNCube(ncube)
+        nCubeService.updateAxisMetaProperties(appId, cubeName, axisName, newMetaProperties)
         return true
     }
 
