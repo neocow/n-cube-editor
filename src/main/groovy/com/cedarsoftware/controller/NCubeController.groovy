@@ -1383,6 +1383,11 @@ class NCubeController extends BaseController
         appId = addTenant(appId)
         nCubeService.deleteBranch(appId)
         removeBranchFromCache(appId)
+        ApplicationID bootAppId = appId.asVersion('0.0.0')
+        if (!nCubeService.search(bootAppId, '*', null, null).size())
+        {
+            removeBranchFromCache(bootAppId)
+        }
     }
 
     Integer acceptTheirs(ApplicationID appId, Object[] cubeNames, String sourceBranch)
