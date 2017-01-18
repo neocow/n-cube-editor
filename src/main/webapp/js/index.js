@@ -763,7 +763,7 @@ var NCE = (function ($) {
         }
 
         html += '<div class="divider"/>'
-              + '<li class="dropdown-submenu li-compare-cube"><a href="#" class="anc-compare" tabindex="-1">Compare</a></li>'
+              + '<li class="dropdown-submenu li-compare-cube"><a href="#" class="anc-compare" tabindex="-1">Pull from...</a></li>'
               + '<li><a href="#" class="anc-revision-history" data-ignoreversion="' + (cubeInfo[CUBE_INFO.BRANCH] === head) + '">Revision History...</a></li>'
               + '<li><a href="#" class="anc-show-outbound-references">Show Outbound References</a></li>'
               + '<li><a href="#" class="anc-show-required-scope">Show Required Scope</a></li>'
@@ -4299,7 +4299,7 @@ var NCE = (function ($) {
             appId: appIdFrom(appId.app, appId.version, appId.status, appId.branch),
             cubeName: oldInfo.name,
             canEdit: appId.branch !== head,
-            cantEditReason: 'Unable to merge into HEAD cube.'
+            cantEditReason: 'Unable to merge into HEAD cube. Please use Commit Branch...'
         });
     }
 
@@ -4321,7 +4321,7 @@ var NCE = (function ($) {
         _diffCubeName = diffOptions.cubeName;
         if (diffOptions.canEdit) {
             _diffModal.find('.select-all, .select-none, .btn-primary').show();
-            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them left to right. Click a row to see more information about the change.';
+            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them right to left. Click a row to see more information about the change.';
         } else {
             _diffModal.find('.select-all, .select-none, .btn-primary').hide();
             _diffInstructions[0].innerHTML = diffOptions.cantEditReason || 'View individual changes between two cubes.';
