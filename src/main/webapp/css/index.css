@@ -192,8 +192,8 @@ div#west div.panel-body {
     overflow: auto;
 }
 
-#ncube-list-div div.panel-body {
-    height:calc(100% - 195px);
+#south .nav-list {
+    padding: 5px;
 }
 
 #ncube-list-div input, #ncube-list-div button {
@@ -652,4 +652,16 @@ a.section-all:hover, a.section-none:hover {
     text-decoration: none;
     color: #999;
     margin-left: 10px;
+}
+
+.menu-header {
+    background-color: #2474b8;
+    border-color: #1f639c;
+    padding: 4px 10px;
+    color: white;
+    height: 24px;
+}
+
+.float-right {
+    float: right;
 }

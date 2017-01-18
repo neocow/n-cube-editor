@@ -39,7 +39,8 @@ var NCE = (function ($) {
     var _selectedCubeInfo = localStorage[SELECTED_CUBE_INFO];
     var _defaultTab = null;
     var _appTitle = $('#appTitle');
-    var _cubeListDiv = $('#ncube-list-div').find('.panel-body');
+    var _cubeListDivParent = $('#ncube-list-div');
+    var _cubeListDiv = _cubeListDivParent.find('.panel-body');
     var _searchNames = $('#cube-search');
     var _cubeSearchOptionsDiv = $('#cube-search-options');
     var _cubeSearchOptionsBtn = $('#cube-search-options-btn');
@@ -49,6 +50,7 @@ var NCE = (function ($) {
     var _cubeSearchTagsExclude = $('#cube-search-tags-exclude');
     var _cubeCount = $('#ncubeCount');
     var _listOfCubes= $('#ncube-list');
+    var _listOfModifiedCubes = $('#ncube-mod-list');
     var _mainTabPanel = $('#ncubeTabContent');
     var _openTabsPanel = $('#ncube-tabs');
     var _openTabList = _openTabsPanel.find('ul');
@@ -219,6 +221,7 @@ var NCE = (function ($) {
     }
 
     function setupMainSplitter() {
+        var westLayout;
         $('body').layout({
             name: "BodyLayout"
             //	reference only - these options are NOT required because 'true' is the default
@@ -239,7 +242,7 @@ var NCE = (function ($) {
             , west__minSize: MAIN_SPLITTER_DEFAULTS.WEST_MIN_SIZE
             //	enable showOverflow on west-pane so CSS popups will overlap north pane
             , west__showOverflowOnHover: true
-            , center__triggerEventsOnLoad: true
+            , center__triggerEventsOnLoad: false
             , center__maskContents: true
             //	enable state management
             , stateManagement__enabled: false // automatic cookie load & save enabled by default
@@ -250,6 +253,81 @@ var NCE = (function ($) {
                 },PROGRESS_DELAY);
             }
         });
+
+        westLayout = $('#west').layout({
+            name: 'westLayout'
+            //	reference only - these options are NOT required because 'true' is the default
+            , closable: true	// pane can open & close
+            , resizable: true	// when open, pane can be resized
+            , slidable: false	// when closed, pane can 'slide' open over other panes - closes on mouse-out
+            , livePaneResizing: true
+            , togglerLength_open: MAIN_SPLITTER_DEFAULTS.TOGGLER_SIZE_WITH_HEADER
+            , togglerLength_closed: MAIN_SPLITTER_DEFAULTS.TOGGLER_SIZE_WITH_HEADER
+            , togglerAlign_open: 'right'
+            , togglerAlign_closed: 'right'
+            , stateManagement__enabled: false // automatic cookie load & save enabled by default
+            , showDebugMessages: false // log and/or display messages from debugging & testing code
+            , animatePaneSizing: false
+            , fxName_open: "none"
+            , fxName_close: "none"	// NO animation when closing west-pane
+            , south__size: getModCubesOpen() || MAIN_SPLITTER_DEFAULTS.SOUTH_DEFAULT_SIZE
+            , south__minSize: MAIN_SPLITTER_DEFAULTS.SOUTH_MIN_SIZE
+            , south__maxSize: MAIN_SPLITTER_DEFAULTS.SOUTH_MAX_SIZE
+            , initClosed: !getModCubesOpen()
+            , spacing_open: MAIN_SPLITTER_DEFAULTS.TOGGLER_SIZE_WITH_HEADER
+            , spacing_closed: MAIN_SPLITTER_DEFAULTS.TOGGLER_SIZE_WITH_HEADER
+            , triggerEventsOnLoad: true
+            , center__showOverflowOnHover: true
+            , onresize_end: function() {
+                southPanelResize();
+            }
+            , onclose_end: function() {
+                delay(function() {
+                    southPanelResize();
+                    saveModCubesOpen(0);
+                }, 1);
+                $('#south-toggler')
+                    .removeClass('glyphicon-collapse-down')
+                    .addClass('glyphicon-collapse-up');
+            }
+            , onopen_end: function() {
+                delay(southPanelResize, 1);
+                $('#south-toggler')
+                    .removeClass('glyphicon-collapse-up')
+                    .addClass('glyphicon-collapse-down');
+            }
+        });
+        $('.ui-layout-toggler-south')
+            .css({
+                'font-size': 'small',
+                'padding': '2px',
+                'background-color': '#2474b8',
+                'border': 'none'
+            })
+            .append('<span id="south-toggler" class="glyphicon glyphicon-collapse-up"></span>');
+        $('.ui-layout-resizer-south')
+            .css({
+                'font-size':'small',
+                'padding': '2px 0 0 10px',
+                'background-color': '#2474b8',
+                'color': 'white'
+            })
+            .prepend('Modified Cubes');
+    }
+    
+    function southPanelResize() {
+        var totalHeight = $('#west').outerHeight();
+        var south = $('#south');
+        var bottomWindowHeight = $('.ui-layout-resizer-south').outerHeight();
+        var panelOffset = _cubeListDivParent.offset().top;
+        var adjustHeight;
+        if (south[0].offsetParent !== null) {
+            bottomWindowHeight += south.outerHeight();
+        }
+        adjustHeight = totalHeight - bottomWindowHeight - panelOffset;
+        _cubeListDivParent.height(adjustHeight);
+        _cubeListDiv.height(adjustHeight - 32);
+        saveModCubesOpen(south.height());
     }
     
     function saveOpenCubeList() {
@@ -327,6 +405,14 @@ var NCE = (function ($) {
             _selectedBranch = branch;
         }
         localStorage[SELECTED_BRANCH] = _selectedBranch;
+    }
+
+    function saveModCubesOpen(size) {
+        localStorage[MOD_CUBES_WINDOW] = size || 0;
+    }
+
+    function getModCubesOpen() {
+        return localStorage[MOD_CUBES_WINDOW];
     }
 
     function saveOpenCubeInfoValue(property, value) {
@@ -1436,8 +1522,11 @@ var NCE = (function ($) {
     }
 
     function setCubeListLoading() {
+        var loadingHtml = '<a>Loading n-cubes...</a>';
         _listOfCubes.empty();
-        _listOfCubes.append('<a>Loading n-cubes...</a>');
+        _listOfCubes.append(loadingHtml);
+        _listOfModifiedCubes.empty();
+        _listOfModifiedCubes.append(loadingHtml);
     }
 
     // Clear versions (add single 'Loading versions...' entry)
@@ -2277,6 +2366,7 @@ var NCE = (function ($) {
         var isNotHead = !isHeadSelected();
         var listItemHtml = '';
         _listOfCubes.empty();
+        _listOfModifiedCubes.empty();
 
         cubeKeys = Object.keys(cubes);
         for (cubeIdx = 0, cubeLen = cubeKeys.length; cubeIdx < cubeLen; cubeIdx++) {
@@ -2285,7 +2375,9 @@ var NCE = (function ($) {
         }
 
         _listOfCubes.append(listItemHtml);
-        _listOfCubes.find('a').on('click', function() {
+        _listOfModifiedCubes.append(_listOfCubes.find('li').has('a.cube-added, a.cube-modified').clone());
+        _listOfModifiedCubes.find('a.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
+        $('#ncube-list, #ncube-mod-list').find('a').on('click', function() {
             selectCubeByName($(this).data('itemname'));
         });
 
@@ -2391,7 +2483,6 @@ var NCE = (function ($) {
             return;
         }
         result = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [getAppId(), '*', null, getDefaultSearchOptions()]);
-        first = null;
         if (result.status) {
             dtos = result.data;
             for (i = 0, len = dtos.length; i < len; i++) {
