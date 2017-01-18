@@ -99,7 +99,8 @@
 </header>
 
 <div id="west" class="ui-layout-west noselect">
-    <ul id="appIdMenu" class="nav navbar-nav">
+    <div class="ui-layout-center" style="padding:0">
+        <ul id="appIdMenu" class="nav navbar-nav">
         <li class="dropdown">
             <a id="AppMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">
                 <button class="btn-sm btn-primary">&nbsp;<b class="caret"></b></button>
@@ -134,7 +135,7 @@
             </ul>
         </li>
     </ul>
-    <div id="ncube-list-div" class="panel" style="height:100%">
+        <div id="ncube-list-div" class="panel">
         <div class="panel-heading">
             <div class="btn-group">
                 <a href="#" class="btn-sm btn-primary dropdown-toggle" aria-haspopup="true" data-toggle="dropdown"
@@ -173,6 +174,11 @@
                 <a>Loading n-cubes...</a>
             </ul>
         </div>
+    </div>
+    </div>
+    <div id="south" class="ui-layout-south" style="padding:0">
+        <ul id="ncube-mod-list" class="nav nav-list">
+        </ul>
     </div>
 </div>
 

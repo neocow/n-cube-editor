@@ -606,6 +606,7 @@ class NCubeController extends BaseController
 
         addToAppCache(appId.tenant, appId.app)
         addToVersionsCache(appId)
+        addToVersionsCache(appId.asVersion('0.0.0'))
 
         NCube ncube = new NCube(cubeName)
         Axis cols = new Axis("Column", AxisType.DISCRETE, AxisValueType.STRING, false, Axis.DISPLAY, 1)
