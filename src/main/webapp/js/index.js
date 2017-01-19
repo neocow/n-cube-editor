@@ -205,6 +205,7 @@ var NCE = (function ($) {
             addModalFilters();
             modalsDraggable(true);
             cubeSearchInit();
+            setupWestSplitter();
             loop();
         } catch (e) {
             console.log(e);
@@ -221,7 +222,6 @@ var NCE = (function ($) {
     }
 
     function setupMainSplitter() {
-        var westLayout;
         $('body').layout({
             name: "BodyLayout"
             //	reference only - these options are NOT required because 'true' is the default
@@ -253,8 +253,15 @@ var NCE = (function ($) {
                 },PROGRESS_DELAY);
             }
         });
+    }
+    
+    function setupWestSplitter() {
+        var toggleClass, modCubesOpen;
+        modCubesOpen = getModCubesOpen();
+        modCubesOpen = modCubesOpen ? parseInt(modCubesOpen) : 0;
+        toggleClass = modCubesOpen ? 'glyphicon-collapse-down' : 'glyphicon-collapse-up'
 
-        westLayout = $('#west').layout({
+        $('#west').layout({
             name: 'westLayout'
             //	reference only - these options are NOT required because 'true' is the default
             , closable: true	// pane can open & close
@@ -270,10 +277,10 @@ var NCE = (function ($) {
             , animatePaneSizing: false
             , fxName_open: "none"
             , fxName_close: "none"	// NO animation when closing west-pane
-            , south__size: getModCubesOpen() || MAIN_SPLITTER_DEFAULTS.SOUTH_DEFAULT_SIZE
+            , south__size: modCubesOpen || MAIN_SPLITTER_DEFAULTS.SOUTH_DEFAULT_SIZE
             , south__minSize: MAIN_SPLITTER_DEFAULTS.SOUTH_MIN_SIZE
             , south__maxSize: MAIN_SPLITTER_DEFAULTS.SOUTH_MAX_SIZE
-            , initClosed: !getModCubesOpen()
+            , south__initClosed: !modCubesOpen
             , spacing_open: MAIN_SPLITTER_DEFAULTS.TOGGLER_SIZE_WITH_HEADER
             , spacing_closed: MAIN_SPLITTER_DEFAULTS.TOGGLER_SIZE_WITH_HEADER
             , triggerEventsOnLoad: true
@@ -282,19 +289,10 @@ var NCE = (function ($) {
                 southPanelResize();
             }
             , onclose_end: function() {
-                delay(function() {
-                    southPanelResize();
-                    saveModCubesOpen(0);
-                }, 1);
-                $('#south-toggler')
-                    .removeClass('glyphicon-collapse-down')
-                    .addClass('glyphicon-collapse-up');
+                southPanelToggle(false);
             }
             , onopen_end: function() {
-                delay(southPanelResize, 1);
-                $('#south-toggler')
-                    .removeClass('glyphicon-collapse-up')
-                    .addClass('glyphicon-collapse-down');
+                southPanelToggle(true);
             }
         });
         $('.ui-layout-toggler-south')
@@ -304,7 +302,7 @@ var NCE = (function ($) {
                 'background-color': '#2474b8',
                 'border': 'none'
             })
-            .append('<span id="south-toggler" class="glyphicon glyphicon-collapse-up"></span>');
+            .append('<span id="south-toggler" class="glyphicon ' + toggleClass + '"></span>');
         $('.ui-layout-resizer-south')
             .css({
                 'font-size':'small',
@@ -314,20 +312,32 @@ var NCE = (function ($) {
             })
             .prepend('Modified Cubes');
     }
+
+    function southPanelToggle(open) {
+        var addClass, removeClass;
+        if (open) {
+            addClass = 'glyphicon-collapse-down';
+            removeClass = 'glyphicon-collapse-up';
+        } else {
+            addClass = 'glyphicon-collapse-up';
+            removeClass = 'glyphicon-collapse-down';
+        }
+        $('#south-toggler').removeClass(removeClass).addClass(addClass);
+        delay(southPanelResize, 1);
+    }
     
     function southPanelResize() {
         var totalHeight = $('#west').outerHeight();
         var south = $('#south');
-        var bottomWindowHeight = $('.ui-layout-resizer-south').outerHeight();
+        var southHeight = south[0].offsetParent ? south.outerHeight() : 0;
+        var bottomWindowHeight = $('.ui-layout-resizer-south').outerHeight() + southHeight;
         var panelOffset = _cubeListDivParent.offset().top;
-        var adjustHeight;
-        if (south[0].offsetParent !== null) {
-            bottomWindowHeight += south.outerHeight();
-        }
-        adjustHeight = totalHeight - bottomWindowHeight - panelOffset;
+        var adjustHeight = totalHeight - bottomWindowHeight - panelOffset;
+        var cubeNameFilterHeight = 32;
+        var searchOptsHeight = getCubeSearchOptionsShown() ? _cubeSearchOptionsDiv.height() : 0;
         _cubeListDivParent.height(adjustHeight);
-        _cubeListDiv.height(adjustHeight - 32);
-        saveModCubesOpen(south.height());
+        _cubeListDiv.height(adjustHeight - cubeNameFilterHeight - searchOptsHeight);
+        saveModCubesOpen(southHeight);
     }
     
     function saveOpenCubeList() {
