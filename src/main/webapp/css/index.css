@@ -149,6 +149,7 @@ body {
 
 #cube-search-options {
     display: none;
+    height: 90px;
 }
 
 #ncubeTabContent {
@@ -652,16 +653,4 @@ a.section-all:hover, a.section-none:hover {
     text-decoration: none;
     color: #999;
     margin-left: 10px;
-}
-
-.menu-header {
-    background-color: #2474b8;
-    border-color: #1f639c;
-    padding: 4px 10px;
-    color: white;
-    height: 24px;
-}
-
-.float-right {
-    float: right;
 }
