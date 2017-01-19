@@ -256,10 +256,8 @@ var NCE = (function ($) {
     }
     
     function setupWestSplitter() {
-        var toggleClass, modCubesOpen;
-        modCubesOpen = getModCubesOpen();
-        modCubesOpen = modCubesOpen ? parseInt(modCubesOpen) : 0;
-        toggleClass = modCubesOpen ? 'glyphicon-collapse-down' : 'glyphicon-collapse-up'
+        var modCubesOpen = parseInt(getModCubesOpen() || 0);
+        var toggleClass = modCubesOpen ? 'glyphicon-collapse-down' : 'glyphicon-collapse-up';
 
         $('#west').layout({
             name: 'westLayout'
