@@ -1359,8 +1359,17 @@ var NCE = (function ($) {
             saveShouldLoadAllForSearch: saveShouldLoadAllForSearch,
             checkPermissions: checkPermissions,
             freezePage: freezePage,
-            isPageFrozen: isPageFrozen
+            isPageFrozen: isPageFrozen,
+            updateCubeLeftHandChangedStatus: updateCubeLeftHandChangedStatus
         };
+    }
+
+    function updateCubeLeftHandChangedStatus(cubeName, changeType) {
+        _listOfCubes.find('li a')
+            .filter(function () { return this.innerHTML === cubeName; })
+            .removeClass('cube-added cube-modified')
+            .addClass(changeType.CSS_CLASS);
+        buildModifiedCubesList();
     }
     
     function closeParentMenu() {
@@ -2374,7 +2383,7 @@ var NCE = (function ($) {
         var isNotHead = !isHeadSelected();
         var listItemHtml = '';
         _listOfCubes.empty();
-        _listOfModifiedCubes.empty();
+
 
         cubeKeys = Object.keys(cubes);
         for (cubeIdx = 0, cubeLen = cubeKeys.length; cubeIdx < cubeLen; cubeIdx++) {
@@ -2383,9 +2392,8 @@ var NCE = (function ($) {
         }
 
         _listOfCubes.append(listItemHtml);
-        _listOfModifiedCubes.append(_listOfCubes.find('li').has('a.cube-added, a.cube-modified').clone());
-        _listOfModifiedCubes.find('a.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
-        $('#ncube-list, #ncube-mod-list').find('a').on('click', function() {
+        buildModifiedCubesList();
+        _listOfCubes.find('a').on('click', function() {
             selectCubeByName($(this).data('itemname'));
         });
 
@@ -2396,6 +2404,13 @@ var NCE = (function ($) {
             }
         }
         _cubeCount[0].textContent = cubeIdx;
+    }
+
+    function buildModifiedCubesList() {
+        _listOfModifiedCubes.empty();
+        _listOfModifiedCubes.append(_listOfCubes.find('li').has('a.cube-added, a.cube-modified').clone());
+        _listOfModifiedCubes.find('a').on('click', function() { selectCubeByName($(this).data('itemname')); });
+        _listOfModifiedCubes.find('a.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
     }
 
     function buildCubeListItem(loName, infoDto, filter, isNotHead) {

@@ -372,6 +372,10 @@ var NCubeEditor2 = (function ($) {
         cubeMapRegex = null;
         cubeMapRegex = new RegExp(s, 'gi');
     }
+    
+    function markCubeModified() {
+        nce.updateCubeLeftHandChangedStatus(cubeName, CHANGETYPE.UPDATED);
+    }
 
     function showHtmlError(text) {
         _ncubeContent.hide();
@@ -2679,6 +2683,7 @@ var NCubeEditor2 = (function ($) {
                 $('div.dropdown-backdrop').hide();
                 result = nce.call(CONTROLLER + CONTROLLER_METHOD.BREAK_AXIS_REFERENCE, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axis.name]);
                 if (result.status) {
+                    markCubeModified();
                     closeAxisMenu();
                     reload();
                 } else {
@@ -3045,6 +3050,7 @@ var NCubeEditor2 = (function ($) {
         if (!result.status) {
             nce.showNote("Unable to update metaproperties for " + metaProperties.objectType + " '" + metaPropertyOptions.objectName + "':<hr class=\"hr-small\"/>" + result.data);
         }
+        markCubeModified();
     }
 
     function openMetaPropertiesBuilder(metaPropertyOptions) {
@@ -3403,6 +3409,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         if (result.status) {
+            markCubeModified();
             reload(true);
         } else {
             nce.clearNote();
@@ -3551,6 +3558,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         delete data.cells[_tableCellId];
+        markCubeModified();
         editCellClose();
     }
 
@@ -3585,6 +3593,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         data.cells[_tableCellId] = {value:cellInfo.value};
+        markCubeModified();
         editCellClose();
         reload();
     }
@@ -3984,6 +3993,7 @@ var NCubeEditor2 = (function ($) {
             storeHiddenColumns();
         }
         deleteSavedColumnWidths();
+        markCubeModified();
         editColCancel();
         reload();
     }
@@ -4476,6 +4486,7 @@ var NCubeEditor2 = (function ($) {
             }
             deleteSavedColumnWidths();
             clearFilters();
+            markCubeModified();
             nce.loadCube();
         } else {
             nce.showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
@@ -4519,6 +4530,7 @@ var NCubeEditor2 = (function ($) {
             }
             clearFilters();
             deleteSavedColumnWidths();
+            markCubeModified();
             nce.loadCube();
         } else {
             nce.showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
@@ -4656,6 +4668,7 @@ var NCubeEditor2 = (function ($) {
                     storeAxisOrder();
                 }
             }
+            markCubeModified();
             nce.loadCube();
         } else {
             nce.showNote("Unable to update axis '" + _axisName + "':<hr class=\"hr-small\"/>" + result.data);
