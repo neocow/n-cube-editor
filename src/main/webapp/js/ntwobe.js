@@ -1241,6 +1241,10 @@ var NCubeEditor2 = (function ($) {
         if (hasCustomAxisOrder()) {
             return JSON.parse(localStorage[getStorageKey(nce, AXIS_ORDER)]);
         }
+        return getAxisOrderMetaProp();
+    }
+
+    function getAxisOrderMetaProp() {
         if (data.hasOwnProperty(METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER)) {
             return JSON.parse(data[METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER]);
         }
@@ -2572,28 +2576,48 @@ var NCubeEditor2 = (function ($) {
     }
 
     function callUpdateMetaPropertiesForDefaultCubeView(shouldClear) {
-        var metaPropertyOptions, metaProperties;
+        var updatedMetaProps = {};
+        if (shouldClear) {
+            updatedMetaProps[METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER] = '';
+            updatedMetaProps[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES] = '';
+            updatedMetaProps[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS] = '';
+        } else {
+            if (hasCustomAxisOrder()) {
+                updatedMetaProps[METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER] = JSON.stringify(getCustomAxisOrder());
+            }
+            if (hasGhostAxes()) {
+                updatedMetaProps[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES] = JSON.stringify(_ghostAxes);
+            }
+            if (hasHiddenColumns()) {
+                updatedMetaProps[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS] = JSON.stringify(_hiddenColumns);
+            }
+        }
+        callUpdateCubeMetaProperties(updatedMetaProps, shouldClear);
+    }
+
+    function callUpdateCubeMetaProperties(updatedMetaProps, shouldClear) {
+        var metaPropertyOptions, metaProperties, propKeys, i, len, propKey;
         metaPropertyOptions = {
             objectType: METAPROPERTIES.OBJECT_TYPES.CUBE,
             objectName: cubeName
         };
         metaProperties = getMetaProperties(metaPropertyOptions);
-        if (shouldClear) {
-            delete metaProperties[METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER];
-            delete metaProperties[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES];
-            delete metaProperties[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS];
-        } else {
-            if (hasCustomAxisOrder()) {
-                metaProperties[METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER] = JSON.stringify(getCustomAxisOrder());
-            }
-            if (hasGhostAxes()) {
-                metaProperties[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_AXES] = JSON.stringify(_ghostAxes);
-            }
-            if (hasHiddenColumns()) {
-                metaProperties[METAPROPERTIES.DEFAULT_VIEW.HIDDEN_COLUMNS] = JSON.stringify(_hiddenColumns);
+        propKeys = Object.keys(updatedMetaProps);
+        for (i = 0, len = propKeys.length; i < len; i++) {
+            propKey = propKeys[i];
+            if (shouldClear) {
+                delete metaProperties[propKey];
+            } else {
+                metaProperties[propKey] = updatedMetaProps[propKey];
             }
         }
         updateMetaProperties(metaPropertyOptions, metaProperties);
+    }
+
+    function updateCubeMetaProperty(metaPropKey, metaPropValue) {
+        var updatedMetaProps = {};
+        updatedMetaProps[metaPropKey] = JSON.stringify(metaPropValue);
+        callUpdateCubeMetaProperties(updatedMetaProps);
     }
 
     function filterOutBlankRows() {
@@ -4415,7 +4439,7 @@ var NCubeEditor2 = (function ($) {
 
     function addAxisOk() {
         var axisName, appId, modifiable, params, refAppId, refCubeName, refAxisName,
-            filterAppId, filterCubeName, filterMethodName, axisType, axisValueType, result;
+            filterAppId, filterCubeName, filterMethodName, axisType, axisValueType, result, axisOrderMetaProp;
         addAxisClose();
         axisName = _addAxisName.val();
         appId = nce.getSelectedTabAppId();
@@ -4444,6 +4468,11 @@ var NCubeEditor2 = (function ($) {
             if (hasCustomAxisOrder()) {
                 axes.splice(colOffset, 0, {name:axisName});
                 storeAxisOrder();
+            }
+            axisOrderMetaProp = getAxisOrderMetaProp();
+            if (axisOrderMetaProp) {
+                axisOrderMetaProp.unshift(axisName);
+                updateCubeMetaProperty(METAPROPERTIES.DEFAULT_VIEW.AXIS_ORDER, axisOrderMetaProp);
             }
             deleteSavedColumnWidths();
             clearFilters();
