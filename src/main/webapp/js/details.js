@@ -72,6 +72,7 @@ var DetailEditor = (function ($)
                     _urlDropdown.toggle(false);
                     _valueDropdown.toggle(true);
                     nce.showNote('Default cell cleared.', 'Note', 2000);
+                    nce.updateCubeLeftHandChangedStatus(cubeName, CHANGETYPE.UPDATED);
                 }
                 else
                 {
@@ -97,6 +98,7 @@ var DetailEditor = (function ($)
                 if (result.status === true)
                 {
                     nce.showNote('Default cell updated successfully.', 'Note', 2000);
+                    nce.updateCubeLeftHandChangedStatus(cubeName, CHANGETYPE.UPDATED);
                 }
                 else
                 {
