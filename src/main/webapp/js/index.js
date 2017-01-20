@@ -240,6 +240,7 @@ var NCE = (function ($) {
             , west__resizeable: true
             , west__size: MAIN_SPLITTER_DEFAULTS.WEST_SIZE
             , west__minSize: MAIN_SPLITTER_DEFAULTS.WEST_MIN_SIZE
+            , west__maxSize: MAIN_SPLITTER_DEFAULTS.WEST_MAX_SIZE
             //	enable showOverflow on west-pane so CSS popups will overlap north pane
             , west__showOverflowOnHover: true
             , center__triggerEventsOnLoad: false
