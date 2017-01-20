@@ -158,8 +158,6 @@ class Visualizer
 		NCube nextTargetCube = NCubeManager.getCube(appId, nextTargetCubeName)
 		if (nextTargetCube)
 		{
-			try
-			{
 				nextRelInfo.appId = appId
 				long nextTargetLevel = relInfo.targetLevel + 1
 				nextRelInfo.targetLevel = nextTargetLevel
@@ -176,11 +174,6 @@ class Visualizer
 				nextRelInfo.addRequiredAndOptionalScopeKeys(visInfo)
 				nextRelInfo.showCellValuesLink = true
 				stack.push(nextRelInfo)
-			}
-			catch (Exception e)
-			{
-				throw new IllegalStateException("Error processing ${relInfo.sourceFieldName} in cube ${nextTargetCubeName}.", e)
-			}
 		}
 		else
 		{

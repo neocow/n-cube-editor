@@ -172,7 +172,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return classTraitsTraitMap ? classTraitsTraitMap[R_SCOPED_NAME] : null
 	}
 
-	@Override
 	String getNextTargetCubeName(String targetFieldName)
 	{
 		if (sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
@@ -183,7 +182,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return RPM_CLASS_DOT + targetFieldName
 	}
 
-	@Override
 	String getSourceMessage()
 	{
 		if (sourceTraits)
@@ -261,7 +259,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		getDotSuffix(targetEffectiveName)
 	}
 
-	@Override
 	String getEffectiveNameByCubeName()
 	{
 		String scopeKey = getDotSuffix(targetCube.name)
@@ -380,20 +377,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo)
 	{
-		String targetCubeName = targetCube.name
 		StringBuilder mb = new StringBuilder()
 		String key = e.axisName
 		Object value = e.value ?: 'null'
 		String targetMsg = ''
-		if (targetCubeName.startsWith(RPM_CLASS_DOT) || targetCubeName.startsWith(RPM_ENUM_DOT))
-		{
-			String cubeDisplayName = getCubeDisplayName(e.cubeName)
-			mb.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in ${cubeDisplayName}${sourceMessage} for ${effectiveNameByCubeName}.")
-		}
-		else
-		{
-			mb.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in ${e.cubeName} for ${effectiveNameByCubeName}.".toString())
-		}
+		String cubeDisplayName = getCubeDisplayName(e.cubeName)
+		mb.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in ${cubeDisplayName}${sourceMessage} for ${effectiveNameByCubeName}.")
 		mb.append(helper.handleCoordinateNotFoundException(e, visInfo, targetMsg))
 		String msg = mb.toString()
 		notes << msg

@@ -127,41 +127,21 @@ class RpmVisualizer extends Visualizer
 	{
 		String group = UNSPECIFIED_ENUM
 		String targetCubeName = relInfo.targetCube.name
-		String sourceFieldRpmType = relInfo.sourceFieldRpmType
-
-		if (!targetCubeName.startsWith(RPM_ENUM))
-		{
-			throw new IllegalStateException("${CUBE_IS_NOT_RPM_ENUM}${targetCubeName}.")
-		}
-
-		if (relInfo.sourceCube && (!sourceFieldRpmType || helper.isPrimitive(sourceFieldRpmType)))
-		{
-			return
-		}
 
 		boolean cellValuesLoaded = relInfo.loadCellValues(visInfo)
-
 		if (cellValuesLoaded)
 		{
 			relInfo.targetTraits.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
-					try
+					String nextTargetCubeName = relInfo.getNextTargetCubeName(targetFieldName)
+					if (nextTargetCubeName)
 					{
-						String nextTargetCubeName = relInfo.getNextTargetCubeName(targetFieldName)
-
-						if (nextTargetCubeName)
+						RpmVisualizerRelInfo nextRelInfo = addToStack(visInfo, relInfo, nextTargetCubeName, relInfo.sourceFieldRpmType, targetFieldName)
+						if (nextRelInfo && group == UNSPECIFIED_ENUM)
 						{
-							RpmVisualizerRelInfo nextRelInfo = addToStack(visInfo, relInfo, nextTargetCubeName, relInfo.sourceFieldRpmType, targetFieldName)
-							if (nextRelInfo && group == UNSPECIFIED_ENUM)
-							{
-								group = relInfo.getGroupName(visInfo, nextTargetCubeName) + visInfo.groupSuffix
-							}
+							group = relInfo.getGroupName(visInfo, nextTargetCubeName) + visInfo.groupSuffix
 						}
-					}
-					catch (Exception e)
-					{
-						throw new IllegalStateException("Error processing the cube for enum field ${targetFieldName} in enum ${targetCubeName}.", e)
 					}
 				}
 			}
@@ -182,18 +162,11 @@ class RpmVisualizer extends Visualizer
 		RpmVisualizerRelInfo nextRelInfo = new RpmVisualizerRelInfo()
 		super.addToStack(visInfo, relInfo, nextRelInfo, nextTargetCubeName)
 		NCube nextTargetCube = nextRelInfo.targetCube
-		try
-		{
-			nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
-			nextRelInfo.sourceFieldName = targetFieldName
-			nextRelInfo.sourceFieldRpmType = rpmType
-			nextRelInfo.sourceTraits = relInfo.targetTraits
-			nextRelInfo.showCellValuesLink = false
-		}
-		catch (Exception e)
-		{
-			throw new IllegalStateException("Error processing the class for field ${relInfo.sourceFieldName} in class ${nextTargetCube.name}.", e)
-		}
+		nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
+		nextRelInfo.sourceFieldName = targetFieldName
+		nextRelInfo.sourceFieldRpmType = rpmType
+		nextRelInfo.sourceTraits = relInfo.targetTraits
+		nextRelInfo.showCellValuesLink = false
 		return nextRelInfo
 	}
 
