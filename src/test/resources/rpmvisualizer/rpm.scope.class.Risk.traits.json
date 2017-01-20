@@ -92,8 +92,8 @@
         2000963145542,
         3000000000002
       ],
-      "type":"exp",
-      "value":"@rpm.scope.class.Risk.traits.Risks[:]"
+      "type":"boolean",
+      "value":true
     },
     {
       "id":[

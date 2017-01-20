@@ -72,14 +72,6 @@
     {
       "id":[
         1000000000002,
-        2000000000004
-      ],
-      "type":"exp",
-      "value":"@rpm.scope.enum.Product.Risks.traits[:]"
-    },
-    {
-      "id":[
-        1000000000002,
         2000000000002
       ],
       "type":"exp",
@@ -87,75 +79,11 @@
     },
     {
       "id":[
-        1000000000015,
-        2000000000012
-      ],
-      "type":"string",
-      "value":"1"
-    },
-    {
-      "id":[
-        1000000000015,
-        2000000000009
-      ],
-      "type":"string",
-      "value":"1"
-    },
-    {
-      "id":[
-        1000000000016,
-        2000000000012
-      ],
-      "type":"string",
-      "value":"1"
-    },
-    {
-      "id":[
-        1000000000002,
-        2000000000012
-      ],
-      "type":"exp",
-      "value":"@rpm.scope.enum.Product.Risks.traits[:]"
-    },
-    {
-      "id":[
-        1000000000016,
-        2000000000009
-      ],
-      "type":"string",
-      "value":"1"
-    },
-    {
-      "id":[
         1000000000007,
         2000000000002
       ],
       "type":"string",
-      "value":"WProductOps"
-    },
-    {
-      "id":[
-        1000000000007,
-        2000000000012
-      ],
-      "type":"string",
-      "value":"AutoOps"
-    },
-    {
-      "id":[
-        1000000000007,
-        2000000000009
-      ],
-      "type":"string",
-      "value":"IMOps2"
-    },
-    {
-      "id":[
-        1000000000016,
-        2000000000004
-      ],
-      "type":"string",
-      "value":"1"
+      "value":"WCOps"
     },
     {
       "id":[
@@ -164,14 +92,6 @@
       ],
       "type":"string",
       "value":"1"
-    },
-    {
-      "id":[
-        1000000000002,
-        2000000000009
-      ],
-      "type":"exp",
-      "value":"@rpm.scope.enum.Product.Risks.traits[:]"
     },
     {
       "id":[
@@ -180,22 +100,6 @@
       ],
       "type":"string",
       "value":"true"
-    },
-    {
-      "id":[
-        1000000000015,
-        2000000000004
-      ],
-      "type":"string",
-      "value":"1"
-    },
-    {
-      "id":[
-        1000000000007,
-        2000000000004
-      ],
-      "type":"string",
-      "value":"InsuredOps"
     }
   ]
 }

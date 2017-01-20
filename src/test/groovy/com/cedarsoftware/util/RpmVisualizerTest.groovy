@@ -925,7 +925,7 @@ class RpmVisualizerTest
             Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
             assert 1 == messages.size()
             String message = messages.first()
-            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WWACoverage of type Coverage.")
+            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WACoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}CCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage of type Coverage.")
@@ -1003,24 +1003,24 @@ class RpmVisualizerTest
             List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
 
             String message = messages.first()
-            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WWACoverage of type Coverage.")
+            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WACoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}CCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}ACoverage of type Coverage.")
             assert message.contains("${ADD_SCOPE_VALUES_FOR_KEYS}dummyRequiredScopeKey.")
 
-            Map node = nodes.find {Map node ->  "${MISSING_SCOPE}WWACoverage".toString() == node.label}
+            Map node = nodes.find {Map node ->  "${MISSING_SCOPE}WACoverage".toString() == node.label}
             assert 'Coverage' == node.title
             assert 'Coverage' == node.detailsTitle1
-            assert 'WWACoverage' == node.detailsTitle2
+            assert 'WACoverage' == node.detailsTitle2
             assert false == node.showCellValuesLink
             assert false == node.showCellValues
             assert false == node.cellValuesLoaded
             String nodeDetails = node.details as String
-            assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for WWACoverage")
+            assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for WACoverage")
             assert nodeDetails.contains("${DETAILS_LABEL_REASON}")
-            assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WWACoverage of type Coverage.")
+            assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WACoverage of type Coverage.")
             assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_KEYS}dummyRequiredScopeKey.")
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)

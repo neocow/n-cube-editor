@@ -67,6 +67,16 @@
           "id":2000000000025,
           "type":"string",
           "value":"v:enum"
+        },
+        {
+          "id":2000000000026,
+          "type":"string",
+          "value":"v:max"
+        },
+        {
+          "id":2000000000014,
+          "type":"string",
+          "value":"r:defaultValue"
         }
       ]
     }
