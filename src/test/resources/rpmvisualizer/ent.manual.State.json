@@ -291,10 +291,26 @@
     {
       "id":[
         1000000000011,
+        2000000000047
+      ],
+      "type":"string",
+      "value":"Washington"
+    },
+    {
+      "id":[
+        1000000000011,
         2000000000034
       ],
       "type":"string",
       "value":"New York"
+    },
+    {
+      "id":[
+        1000000000011,
+        2000000000027
+      ],
+      "type":"string",
+      "value":"North Carolina"
     },
     {
       "id":[
@@ -327,14 +343,6 @@
       ],
       "type":"string",
       "value":"Oklahoma"
-    },
-    {
-      "id":[
-        1000000000011,
-        2000000000046
-      ],
-      "type":"string",
-      "value":"Vermont"
     },
     {
       "id":[
@@ -403,6 +411,14 @@
     {
       "id":[
         1000000000011,
+        2000000000015
+      ],
+      "type":"string",
+      "value":"Indiana"
+    },
+    {
+      "id":[
+        1000000000011,
         2000000000044
       ],
       "type":"string",
@@ -419,18 +435,10 @@
     {
       "id":[
         1000000000011,
-        2000000000029
+        2000000000043
       ],
       "type":"string",
-      "value":"Nebraska"
-    },
-    {
-      "id":[
-        1000000000011,
-        2000000000039
-      ],
-      "type":"string",
-      "value":"Rhode Island"
+      "value":"Texas"
     },
     {
       "id":[
@@ -467,14 +475,6 @@
     {
       "id":[
         1000000000011,
-        2000000000032
-      ],
-      "type":"string",
-      "value":"New Mexico"
-    },
-    {
-      "id":[
-        1000000000011,
         2000000000023
       ],
       "type":"string",
@@ -507,10 +507,10 @@
     {
       "id":[
         1000000000011,
-        2000000000047
+        2000000000039
       ],
       "type":"string",
-      "value":"Washington"
+      "value":"Rhode Island"
     },
     {
       "id":[
@@ -539,10 +539,10 @@
     {
       "id":[
         1000000000011,
-        2000000000027
+        2000000000046
       ],
       "type":"string",
-      "value":"North Carolina"
+      "value":"Vermont"
     },
     {
       "id":[
@@ -579,10 +579,10 @@
     {
       "id":[
         1000000000011,
-        2000000000015
+        2000000000029
       ],
       "type":"string",
-      "value":"Indiana"
+      "value":"Nebraska"
     },
     {
       "id":[
@@ -659,10 +659,10 @@
     {
       "id":[
         1000000000011,
-        2000000000043
+        2000000000032
       ],
       "type":"string",
-      "value":"Texas"
+      "value":"New Mexico"
     },
     {
       "id":[

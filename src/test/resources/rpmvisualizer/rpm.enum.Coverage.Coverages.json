@@ -73,14 +73,6 @@
   "cells":[
     {
       "id":[
-        1001202502865,
-        2000000000041
-      ],
-      "type":"exp",
-      "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"
-    },
-    {
-      "id":[
         1000000000002,
         2000000000060
       ],
@@ -113,6 +105,14 @@
     },
     {
       "id":[
+        1000000000015,
+        2000000000060
+      ],
+      "type":"string",
+      "value":"0"
+    },
+    {
+      "id":[
         1001334116976,
         2000000000050
       ],
@@ -142,6 +142,14 @@
       ],
       "type":"exp",
       "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"
+    },
+    {
+      "id":[
+        1000000000007,
+        2000000000060
+      ],
+      "type":"string",
+      "value":"TCoverage"
     },
     {
       "id":[
@@ -195,14 +203,6 @@
       "id":[
         1001334116976,
         2000000000060
-      ],
-      "type":"exp",
-      "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"
-    },
-    {
-      "id":[
-        1001334116976,
-        2000000000057
       ],
       "type":"exp",
       "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"
@@ -265,11 +265,11 @@
     },
     {
       "id":[
-        1000000000015,
-        2000000000060
+        1001334116976,
+        2000000000057
       ],
-      "type":"string",
-      "value":"0"
+      "type":"exp",
+      "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"
     },
     {
       "id":[
@@ -281,11 +281,11 @@
     },
     {
       "id":[
-        1000000000007,
-        2000000000060
+        1001202502865,
+        2000000000041
       ],
-      "type":"string",
-      "value":"TCoverage"
+      "type":"exp",
+      "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"
     },
     {
       "id":[
