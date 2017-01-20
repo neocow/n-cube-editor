@@ -331,7 +331,7 @@ var NCE = (function ($) {
         var bottomWindowHeight = $('.ui-layout-resizer-south').outerHeight() + southHeight;
         var panelOffset = _cubeListDivParent.offset().top;
         var adjustHeight = totalHeight - bottomWindowHeight - panelOffset;
-        var cubeNameFilterHeight = 35;
+        var cubeNameFilterHeight = 37;
         var searchOptsHeight = getCubeSearchOptionsShown() ? _cubeSearchOptionsDiv.height() : 0;
         _cubeListDivParent.height(adjustHeight);
         _cubeListDiv.height(adjustHeight - cubeNameFilterHeight - searchOptsHeight);
