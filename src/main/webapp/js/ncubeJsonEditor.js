@@ -66,7 +66,9 @@ var NCubeJsonEditor = (function ($) {
             clearDirtyStatus();
             updateDirtyStatus();
             result = nce.call(CONTROLLER + CONTROLLER_METHOD.SAVE_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _editor.getText()]);
-            if (!result.status) {
+            if (result.status) {
+                nce.updateCubeLeftHandChangedStatus(cubeName, CHANGETYPE.UPDATED);
+            } else {
                 nce.showNote('Error saving JSON n-cube:<hr class="hr-small"/>' + result.data);
             }
         });

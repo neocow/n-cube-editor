@@ -256,10 +256,8 @@ var NCE = (function ($) {
     }
     
     function setupWestSplitter() {
-        var toggleClass, modCubesOpen;
-        modCubesOpen = getModCubesOpen();
-        modCubesOpen = modCubesOpen ? parseInt(modCubesOpen) : 0;
-        toggleClass = modCubesOpen ? 'glyphicon-collapse-down' : 'glyphicon-collapse-up'
+        var modCubesOpen = parseInt(getModCubesOpen() || 0);
+        var toggleClass = modCubesOpen ? 'glyphicon-collapse-down' : 'glyphicon-collapse-up';
 
         $('#west').layout({
             name: 'westLayout'
@@ -333,7 +331,7 @@ var NCE = (function ($) {
         var bottomWindowHeight = $('.ui-layout-resizer-south').outerHeight() + southHeight;
         var panelOffset = _cubeListDivParent.offset().top;
         var adjustHeight = totalHeight - bottomWindowHeight - panelOffset;
-        var cubeNameFilterHeight = 32;
+        var cubeNameFilterHeight = 35;
         var searchOptsHeight = getCubeSearchOptionsShown() ? _cubeSearchOptionsDiv.height() : 0;
         _cubeListDivParent.height(adjustHeight);
         _cubeListDiv.height(adjustHeight - cubeNameFilterHeight - searchOptsHeight);
@@ -1361,8 +1359,17 @@ var NCE = (function ($) {
             saveShouldLoadAllForSearch: saveShouldLoadAllForSearch,
             checkPermissions: checkPermissions,
             freezePage: freezePage,
-            isPageFrozen: isPageFrozen
+            isPageFrozen: isPageFrozen,
+            updateCubeLeftHandChangedStatus: updateCubeLeftHandChangedStatus
         };
+    }
+
+    function updateCubeLeftHandChangedStatus(cubeName, changeType) {
+        _listOfCubes.find('li a')
+            .filter(function () { return this.innerHTML === cubeName; })
+            .removeClass('cube-added cube-modified')
+            .addClass(changeType.CSS_CLASS);
+        buildModifiedCubesList();
     }
     
     function closeParentMenu() {
@@ -2376,7 +2383,7 @@ var NCE = (function ($) {
         var isNotHead = !isHeadSelected();
         var listItemHtml = '';
         _listOfCubes.empty();
-        _listOfModifiedCubes.empty();
+
 
         cubeKeys = Object.keys(cubes);
         for (cubeIdx = 0, cubeLen = cubeKeys.length; cubeIdx < cubeLen; cubeIdx++) {
@@ -2385,9 +2392,8 @@ var NCE = (function ($) {
         }
 
         _listOfCubes.append(listItemHtml);
-        _listOfModifiedCubes.append(_listOfCubes.find('li').has('a.cube-added, a.cube-modified').clone());
-        _listOfModifiedCubes.find('a.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
-        $('#ncube-list, #ncube-mod-list').find('a').on('click', function() {
+        buildModifiedCubesList();
+        _listOfCubes.find('a').on('click', function() {
             selectCubeByName($(this).data('itemname'));
         });
 
@@ -2398,6 +2404,13 @@ var NCE = (function ($) {
             }
         }
         _cubeCount[0].textContent = cubeIdx;
+    }
+
+    function buildModifiedCubesList() {
+        _listOfModifiedCubes.empty();
+        _listOfModifiedCubes.append(_listOfCubes.find('li').has('a.cube-added, a.cube-modified').clone());
+        _listOfModifiedCubes.find('a').on('click', function() { selectCubeByName($(this).data('itemname')); });
+        _listOfModifiedCubes.find('a.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
     }
 
     function buildCubeListItem(loName, infoDto, filter, isNotHead) {
