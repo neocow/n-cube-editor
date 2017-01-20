@@ -1,6 +1,7 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
+import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.NCubeResourcePersister
 import com.cedarsoftware.ncube.ReleaseStatus
@@ -11,6 +12,7 @@ import org.junit.Before
 import org.junit.Test
 
 import static com.cedarsoftware.util.VisualizerConstants.*
+import static org.junit.Assert.fail
 
 @CompileStatic
 class VisualizerTest{
@@ -458,6 +460,77 @@ class VisualizerTest{
         assert nodeDetails.contains("value from CubeWithSingleValue in coordinate [CubeKAxis1:'CubeKAxis1Col1 ', CubeKAxis2: 'CubeKAxis2Col3']")
     }
 
+
+    @Test
+    void testGetCellValues_showCellValues_executedCells_withURLs()
+    {
+        String httpsURL = 'https://mail.google.com'
+        String fileURL = 'file:///C:/Users/bheekin/Desktop/honey%20badger%20thumbs%20up.jpg'
+        String httpURL = 'http://www.google.com'
+
+        Map scope = null
+        Map nodeScope = null
+        String cubeName = 'CubeWithExecutedCellsWithURLs'
+
+        Map oldNode = [
+                id: '1',
+                cubeName: cubeName,
+                title: cubeName,
+                level: '1',
+                label: cubeName,
+                scope: nodeScope,
+                showCellValuesLink: true,
+                showCellValues: true,
+                cellValuesLoaded: false,
+                availableScope: scope,
+        ]
+
+        VisualizerInfo visInfo = new VisualizerInfo()
+        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
+        visInfo.groupSuffix = ''
+        visInfo.scope = new CaseInsensitiveMap()
+        visInfo.appId = appId
+        visInfo.availableGroupsAllLevels = [] as Set
+
+        Map options = [node: oldNode, visInfo: visInfo]
+
+        Map graphInfo = visualizer.getCellValues(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        assert null == visInfo.messages
+        List<Map<String, Object>> nodes = visInfo.nodes as List
+        List<Map<String, Object>> edges = visInfo.edges as List
+        assert nodes.size() == 1
+        assert edges.size() == 0
+
+        Map node = nodes.first()
+        assert cubeName == node.title
+        assert true == node.showCellValuesLink
+        assert true == node.showCellValues
+        assert true == node.cellValuesLoaded
+
+        String nodeDetails = node.details as String
+        checkDetailsTopSection(nodeDetails)
+        checkDetailsExpandCollapseSection(nodeDetails)
+
+        assert nodeDetails.contains(DETAILS_LABEL_CELL_VALUES)
+        assert nodeDetails.contains('class="' + DETAILS_CLASS_CELL_VALUES)
+        assert nodeDetails.contains(DETAILS_TITLE_EXECUTED_CELL)
+        assert nodeDetails.contains('class="' + DETAILS_CLASS_EXECUTED_CELL)
+        assert nodeDetails.contains('CubeMAxis1: CubeMAxis1Col2, CubeMAxis2: CubeMAxis2Col1')
+        assert nodeDetails.contains('CubeMAxis1: CubeMAxis1Col3, CubeMAxis2: CubeMAxis2Col1')
+        assert nodeDetails.contains('CubeMAxis1: CubeMAxis1Col4, CubeMAxis2: CubeMAxis2Col1')
+        assert nodeDetails.contains('class="coord_0 ' + DETAILS_CLASS_WORD_WRAP)
+        assert nodeDetails.contains('class="coord_1 ' + DETAILS_CLASS_WORD_WRAP)
+        assert nodeDetails.contains('class="coord_2 ' + DETAILS_CLASS_WORD_WRAP)
+        assert nodeDetails.contains(DETAILS_LABEL_NON_EXECUTED_VALUE)
+        assert nodeDetails.contains(httpsURL)
+        assert nodeDetails.contains(fileURL)
+        assert nodeDetails.contains(httpURL)
+        assert nodeDetails.contains(DETAILS_LABEL_EXECUTED_VALUE)
+        assert nodeDetails.contains("""<a href="#" onclick='window.open("${httpsURL}");return false;'>${httpsURL}</a>""")
+        assert nodeDetails.contains("""<a href="#" onclick='window.open("${fileURL}");return false;'>${fileURL}</a>""")
+        assert nodeDetails.contains("""<a href="#" onclick='window.open("${httpURL}");return false;'>${httpURL}</a>""")
+    }
     @Test
     void testGetCellValues_showCellValues_noDefaultsNoCellValues()
     {
@@ -842,6 +915,61 @@ class VisualizerTest{
         assert !nodeDetails.contains(DETAILS_LABEL_MESSAGE)
         assert !nodeDetails.contains(DETAILS_LABEL_ROOT_CAUSE)
         assert !nodeDetails.contains(DETAILS_LABEL_STACK_TRACE)
+    }
+
+    @Test
+    void testHandleCoordinateNotFoundException_withNoCubeNameOrAxisName()
+    {
+        //Neither cube name nor axis name
+        CoordinateNotFoundException e = new CoordinateNotFoundException('CoordinateNotFoundException', null, null, null, null)
+        VisualizerInfo visInfo = new VisualizerInfo()
+        String targetMsg = 'dummy1'
+        String message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, targetMsg)
+        checkExceptionMessage(message, targetMsg)
+
+        //No cube name
+        targetMsg = 'dummy2'
+        e = new CoordinateNotFoundException('CoordinateNotFoundException', null, null, 'dummyAxis', null)
+        message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, targetMsg)
+        checkExceptionMessage(message, targetMsg)
+
+        //No axis name
+        targetMsg = 'dummy3'
+        e = new CoordinateNotFoundException('CoordinateNotFoundException', 'dummyCube', null, null, null)
+        message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, targetMsg)
+        checkExceptionMessage(message, targetMsg)
+    }
+
+    @Test
+    void testHandleInvalidCoordinateException_withNoMissingScope()
+    {
+        Map visInfoScope = [dummyVisInfoKey: 'dummyValue'] as CaseInsensitiveMap
+        Map relInfoScope = [dummyRelInfoKey: 'dummyValue'] as CaseInsensitiveMap
+        NCube cube = new NCube('dummyCube')
+        InvalidCoordinateException e = new InvalidCoordinateException('InvalidCoordinateException', null, null, relInfoScope.keySet())
+        VisualizerInfo visInfo = new VisualizerInfo()
+        visInfo.scope = new CaseInsensitiveMap(visInfoScope)
+        VisualizerRelInfo relInfo = new VisualizerRelInfo()
+        relInfo.targetCube = cube
+        relInfo.scope = new CaseInsensitiveMap(relInfoScope)
+        try
+        {
+            VisualizerHelper.handleInvalidCoordinateException(e, visInfo, relInfo, [] as Set)
+            fail('Expected IllegalStateException to be thrown.')
+        }
+        catch (IllegalStateException exc)
+        {
+            assert "InvalidCoordinateException thrown, but no missing scope keys found for ${cube.name} and scope ${visInfoScope.toString()}." == exc.message
+        }
+    }
+
+    private static void checkExceptionMessage(String message, String targetMsg)
+    {
+        assert message.contains("An exception was thrown while loading ${targetMsg}")
+        assert message.contains(DETAILS_LABEL_MESSAGE)
+        assert message.contains(DETAILS_LABEL_ROOT_CAUSE)
+        assert message.contains('CoordinateNotFoundException')
+        assert message.contains(DETAILS_LABEL_STACK_TRACE)
     }
 
     @Test

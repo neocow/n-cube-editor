@@ -98,16 +98,6 @@ class VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		String targetCubeName = targetCube.name
 
-		//Notes
-		if (notes)
-		{
-			sb.append("<b>${DETAILS_LABEL_NOTE}</b>")
-			notes.each { String note ->
-				sb.append("${note} ")
-			}
-			sb.append("${DOUBLE_BREAK}")
-		}
-
 		getDetailsMap(sb, DETAILS_LABEL_SCOPE, targetScope)
 		getDetailsMap(sb, DETAILS_LABEL_AVAILABLE_SCOPE, scope)
 		getDetailsSet(sb, DETAILS_LABEL_REQUIRED_SCOPE_KEYS, visInfo.requiredScopeKeys[targetCubeName])
@@ -216,16 +206,6 @@ class VisualizerRelInfo
 		return targetCube.name
 	}
 
-	String getNextTargetCubeName(String targetFieldName)
-	{
-		return null
-	}
-
-	String getSourceMessage()
-	{
-		return ''
-	}
-
 	/**
 	 *  If the required and optional scope keys have not already been loaded for this cube,
 	 *  load them.
@@ -293,11 +273,6 @@ class VisualizerRelInfo
 	protected String getNodeLabel()
 	{
 		targetEffectiveName
-	}
-
-	String getEffectiveNameByCubeName()
-	{
-		return targetCube.name
 	}
 
 	String getCubeDisplayName(String cubeName)

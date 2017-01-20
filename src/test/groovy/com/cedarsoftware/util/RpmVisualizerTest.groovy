@@ -82,6 +82,49 @@ class RpmVisualizerTest
     }
 
     @Test
+    void testBuildGraph_withVisualizerInfoAsArgument()
+    {
+        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                     product          : 'WProduct',
+                     policyControlDate: '2017-01-01',
+                     quoteDate        : '2017-01-01',
+                     coverage         : 'FCoverage',
+                     risk             : 'WProductOps']
+
+        //Execute buildGraph with no visInfo as argument first
+        String startCubeName = 'rpm.class.Coverage'
+        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(scope)]
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        assert !(graphInfo.visInfo as RpmVisualizerInfo).messages
+        RpmVisualizerInfo firstVisInfo = graphInfo.visInfo as RpmVisualizerInfo
+
+        //Execute buildGraph a second time with visInfo as an argument
+        Map dummyAvailableScopeValues = [dummyKey: ['d1', 'd2'] as Set]
+        firstVisInfo.availableScopeValues = new HashMap(dummyAvailableScopeValues)
+        firstVisInfo.nodes = []
+        firstVisInfo.edges = []
+        options = [startCubeName: startCubeName, visInfo: firstVisInfo, scope: new CaseInsensitiveMap(scope)]
+        visualizer = new RpmVisualizer()
+        graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        assert !(graphInfo.visInfo as RpmVisualizerInfo).messages
+        RpmVisualizerInfo secondVisInfo = graphInfo.visInfo as RpmVisualizerInfo
+
+        //Check visInfo
+        assert 5 == secondVisInfo.nodes.size()
+        assert 4 == secondVisInfo.edges.size()
+        assert 4l == secondVisInfo.maxLevel
+        assert 6l == secondVisInfo.nodeCount
+        assert 5l == secondVisInfo.relInfoCount
+        assert 3l == secondVisInfo.defaultLevel
+        assert '_ENUM' == secondVisInfo.groupSuffix
+        assert scope == secondVisInfo.scope
+        assert '[d1, d2]' == secondVisInfo.availableScopeValues.dummyKey.toString()
+    }
+
+
+    @Test
     void testBuildGraph_canLoadTargetAsRpmClass()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
@@ -416,7 +459,7 @@ class RpmVisualizerTest
                           product          : 'WProduct',
                           policyControlDate: '2017-01-01',
                           quoteDate        : '2017-01-01',
-                          sourceCoverage   : 'FELACodeCoverage',
+                          sourceCoverage   : 'FCoverage',
                           coverage         : 'CCoverage',
                           sourceFieldName  : 'Coverages',
                           risk             : 'WProductOps']
@@ -463,10 +506,82 @@ class RpmVisualizerTest
         assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
         assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)
         assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
-        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS_AND_TRAITS}</b><pre><ul><li><b>Exposure</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: 0</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre><li><b>Location</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:rpmType: Risk</li><li>v:max: 1</li><li>v:min: 0</li></ul></pre><li><b>StatCode</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: None</li><li>r:exists: true</li><li>r:extends: DataElementInventory[StatCode]</li><li>r:rpmType: string</li></ul></pre></ul></pre>")
+        assert nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
+        assert nodeDetails.contains("Exposure</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre><li><b>")
+        assert nodeDetails.contains("Location</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:rpmType: Risk</li><li>v:max: 1</li><li>v:min: 0</li></ul></pre><li><b>")
+        assert nodeDetails.contains("StatCode</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: 1133</li><li>r:exists: true</li><li>r:extends: DataElementInventory[StatCode]</li><li>r:rpmType: string</li></ul></pre></ul></pre>")
         assert !nodeDetails.contains(DETAILS_LABEL_REASON)
         assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
         assert nodeDetails.contains("${DETAILS_LABEL_CLASS_TRAITS}</b><pre><ul><li>r:exists: true</li><li>r:name: CCoverage</li><li>r:scopedName: CCoverage</li></ul></pre><br><b>")
+    }
+
+    @Test
+    void testGetCellValues_classNode_showCellValues_withURLs()
+    {
+        String httpsURL = 'https://mail.google.com'
+        String fileURL = 'file:///C:/Users/bheekin/Desktop/honey%20badger%20thumbs%20up.jpg'
+        String httpURL = 'http://www.google.com'
+        String fileLink = """<a href="#" onclick='window.open("${fileURL}");return false;'>${fileURL}</a>"""
+        String httpsLink = """<a href="#" onclick='window.open("${httpsURL}");return false;'>${httpsURL}</a>"""
+        String httpLink = """<a href="#" onclick='window.open("${httpURL}");return false;'>${httpURL}</a>"""
+
+        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                     product          : 'WProduct',
+                     policyControlDate: '2017-01-01',
+                     quoteDate        : '2017-01-01',
+                     coverage         : 'ACoverage',
+                     sourceFieldName  : 'Coverages',
+                     risk             : 'WProductOps']
+
+        Map nodeScope = new CaseInsensitiveMap(scope)
+        nodeScope.remove('sourceFieldName')
+
+        Map oldNode = [
+                id: '4',
+                cubeName: 'rpm.class.Coverage',
+                fromFieldName: 'ACoverage',
+                title: 'rpm.class.Coverage',
+                level: '3',
+                label: 'ACoverage',
+                scope: nodeScope,
+                showCellValues: true,
+                showCellValuesLink: true,
+                cellValuesLoaded: false,
+                availableScope: scope,
+                typesToAdd: [],
+        ]
+
+        RpmVisualizerInfo visInfo = new RpmVisualizerInfo()
+        visInfo.allGroupsKeys = ['PRODUCT', 'FORM', 'RISK', 'COVERAGE', 'CONTAINER', 'DEDUCTIBLE', 'LIMIT', 'RATE', 'RATEFACTOR', 'PREMIUM', 'PARTY', 'PLACE', 'ROLE', 'ROLEPLAYER', 'UNSPECIFIED'] as Set
+        visInfo.groupSuffix = '_ENUM'
+        visInfo.availableGroupsAllLevels = [] as Set
+
+        Map options = [node: oldNode, visInfo: visInfo]
+
+        Map graphInfo = visualizer.getCellValues(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        assert !(graphInfo.visInfo as RpmVisualizerInfo).messages
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+        List<Map<String, Object>> edges = (graphInfo.visInfo as RpmVisualizerInfo).edges as List
+
+        assert nodes.size() == 1
+        assert edges.size() == 0
+
+        Map node = nodes.find { Map node -> 'ACoverage' == node.label}
+        assert true == node.showCellValuesLink
+        assert true == node.showCellValues
+        assert true == node.cellValuesLoaded
+        String nodeDetails = node.details as String
+        assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
+        assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)
+        assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
+        assert nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
+        assert nodeDetails.contains("Exposure</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: ${fileLink}</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre>")
+        assert nodeDetails.contains("Location</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: ${httpLink}</li><li>r:exists: true</li><li>r:rpmType: Risk</li><li>v:max: 1</li><li>v:min: 0</li></ul></pre><li><b>")
+        assert nodeDetails.contains("StatCode</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: ${httpsLink}</li><li>r:exists: true</li><li>r:extends: DataElementInventory[StatCode]</li><li>r:rpmType: string</li></ul></pre></ul></pre>")
+        assert !nodeDetails.contains(DETAILS_LABEL_REASON)
+        assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
+        assert nodeDetails.contains("${DETAILS_LABEL_CLASS_TRAITS}</b><pre><ul><li>r:exists: true</li><li>r:name: ACoverage</li><li>r:scopedName: ACoverage</li></ul></pre><br><b>")
     }
 
     @Test
@@ -531,7 +646,7 @@ class RpmVisualizerTest
                      product          : 'WProduct',
                      policyControlDate: '2017-01-01',
                      quoteDate        : '2017-01-01',
-                     sourceCoverage   : 'FELACodeCoverage',
+                     sourceCoverage   : 'FCoverage',
                      coverage         : 'CCoverage',
                      sourceFieldName  : 'Coverages',
                      risk             : 'WProductOps']
@@ -702,6 +817,75 @@ class RpmVisualizerTest
         assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
     }
 
+    @Test
+    void testBuildGraph_missingRequiredScope_nonEPM()
+    {
+
+        NCube cube = NCubeManager.getCube(appId, 'rpm.class.party.ProfitCenter')
+        try
+        {
+            //Change cube to have declared required scope
+            cube.setMetaProperty('requiredScopeKeys', ['dummyRequiredScopeKey'])
+            Map scope = null
+            String startCubeName = 'rpm.class.partyrole.LossPrevention'
+            Map options = [startCubeName: startCubeName, scope: scope]
+
+            Map graphInfo = visualizer.buildGraph(appId, options)
+            assert STATUS_SUCCESS == graphInfo.status
+            Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+            assert 1 == messages.size()
+            checkAdditionalScopeIsRequiredNonEPMMessage(messages.first() as String)
+            List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+            List<Map<String, Object>> edges = (graphInfo.visInfo as RpmVisualizerInfo).edges as List
+
+            assert nodes.size() == 4
+            assert edges.size() == 3
+
+            //TODO: node.label should contain "${MISSING_SCOPE}rpm.class.party.ProfitCenter", not detailsTitle2
+            //Map node = nodes.find { Map node -> "${MISSING_SCOPE}rpm.class.party.ProfitCenter".toString() == node.label}
+            Map node = nodes.find { Map node -> "${MISSING_SCOPE}rpm.class.party.ProfitCenter".toString() == node.detailsTitle2}
+            assert 'party.ProfitCenter' == node.title
+            assert 'party.ProfitCenter' == node.detailsTitle1
+            //TODO: node.detailsTitle2 should be null
+            //assert null == node.detailsTitle2
+            assert "${MISSING_SCOPE}rpm.class.party.ProfitCenter".toString() == node.detailsTitle2
+            assert false == node.showCellValuesLink
+            assert false == node.showCellValues
+            assert false == node.cellValuesLoaded
+            String nodeDetails = node.details as String
+            //TODO: nodeDetails should contain  "*** ${UNABLE_TO_LOAD}fields and traits for party.ProfitCenter")
+            //assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for party.ProfitCenter")
+            assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for Missing scope for rpm.class.party.ProfitCenter")
+            assert nodeDetails.contains(DETAILS_LABEL_REASON)
+            checkAdditionalScopeIsRequiredNonEPMMessage(nodeDetails)
+            assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
+            assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)
+            assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
+            assert !nodeDetails.contains(DETAILS_LABEL_FIELDS)
+            assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
+            assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
+            assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
+
+            //Reset cube
+            cube.removeMetaProperty('requiredScopeKeys')
+            assert null == cube.metaProperties.requiredScopeKeys
+        }
+        catch (Exception e)
+        {
+            //Reset cube
+            cube.removeMetaProperty('requiredScopeKeys')
+            assert null == cube.metaProperties.requiredScopeKeys
+            throw new Exception(e)
+        }
+    }
+
+    private static void checkAdditionalScopeIsRequiredNonEPMMessage(String message)
+    {
+        assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}rpm.class.party.ProfitCenter of type party.ProfitCenter.")
+        assert message.contains("${ADD_SCOPE_VALUES_FOR_KEYS}dummyRequiredScopeKey.")
+    }
+
+
     private static void checkAdditionalScopeIsRequiredMessage(String message)
     {
         assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}rpm.scope.class.Risk.traits.Coverages for ProductLocation.")
@@ -860,7 +1044,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_missingMinimumTypeScope()
+    void testBuildGraph_missingMinimumTypeScopeKeyAndValue()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      policyControlDate:'2017-01-01',
@@ -881,6 +1065,31 @@ class RpmVisualizerTest
 
         checkMissingMinimumTypeScopeMessage(messages.first())
     }
+
+    @Test
+    void testBuildGraph_missingMinimumTypeScopeValue()
+    {
+        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                     product: null,
+                     policyControlDate:'2017-01-01',
+                     quoteDate:'2017-01-01']
+
+        String startCubeName = 'rpm.class.Product'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_MISSING_START_SCOPE == graphInfo.status
+        Set<String> messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+        assert 1 == messages.size()
+
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+        List<Map<String, Object>> edges = (graphInfo.visInfo as RpmVisualizerInfo).edges as List
+        assert 0 == nodes.size()
+        assert 0 == edges.size()
+
+        checkMissingMinimumTypeScopeMessage(messages.first())
+    }
+
 
     private static void checkMissingMinimumTypeScopeMessage(String message)
     {
@@ -1118,9 +1327,6 @@ class RpmVisualizerTest
             assert 'Coverage' == node.detailsTitle1
             //TODO: label should say FCoverage, but says 'java:70)]'
             //assert 'FCoverage' == node.label
-            assert false == node.showCellValuesLink
-            assert false == node.showCellValues
-            assert false == node.cellValuesLoaded
             String nodeDetails = node.details as String
             assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for FCoverage")
             assert nodeDetails.contains(DETAILS_LABEL_REASON)
