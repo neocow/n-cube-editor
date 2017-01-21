@@ -29,6 +29,11 @@
           "value":"Exposure"
         },
         {
+          "id":1000000000072,
+          "type":"string",
+          "value":"ExposureBasisType"
+        },
+        {
           "id":1000000000131,
           "type":"string",
           "value":"PrintWaiverIndicator"
