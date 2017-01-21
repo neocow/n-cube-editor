@@ -39,7 +39,6 @@ final class RpmVisualizerConstants extends VisualizerConstants
 	public static final String SOURCE_SCOPE_KEY_PREFIX = 'source'
 	public static final String SYSTEM_SCOPE_KEY_PREFIX = "_"
 	public static final String EFFECTIVE_VERSION_SCOPE_KEY = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion"
-	public static final String ENT_APP = 'ENT.APP'
 	public static final String BUSINESS_DIVISION_CUBE_NAME = 'ent.manual.BusinessDivision'
 	public static final String STATE_CUBE_NAME = 'ent.manual.State'
 	public static final Set<String> MANDATORY_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
@@ -60,7 +59,6 @@ final class RpmVisualizerConstants extends VisualizerConstants
 	public static final String DETAILS_LABEL_FIELDS_AND_TRAITS = 'Fields and traits'
 	public static final String DETAILS_LABEL_CLASS_TRAITS = 'Class traits'
 
-	public static final String CUBE_IS_NOT_RPM_ENUM = 'Cube is not an rpm.enum cube: '
 	public static final String DEFAULT_VALUE_MAY_BE_CHANGED = 'Its default value may be changed as desired.'
 	public static final String OTHER_DEFAULT_VALUE_MAY_BE_CHANGED = 'The other default scope values may also be changed as desired.'
 

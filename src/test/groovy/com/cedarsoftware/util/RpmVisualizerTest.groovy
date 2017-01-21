@@ -20,7 +20,7 @@ class RpmVisualizerTest
 {
     static final String PATH_PREFIX = 'rpmvisualizer/**/'
     RpmVisualizer visualizer
-    ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'VISUALIZER.TEST', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
+    ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'test.visualizer', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
 
     @Before
     void beforeTest(){
@@ -63,6 +63,9 @@ class RpmVisualizerTest
         //Spot check availableScopeValues
         assert allGroups.size() * 2 == visInfo.availableScopeValues.size()
         assert ['GProductOps', 'ProductLocation', 'StateOps', 'WProductOps'] as Set == visInfo.availableScopeValues['sourceRisk']
+        assert ['AAADIV', 'BBBDIV', 'CCCDIV'] as Set == visInfo.availableScopeValues[BUSINESS_DIVISION_CODE]
+        assert visInfo.availableScopeValues[STATE].containsAll('OH', 'KY')
+        assert visInfo.availableScopeValues[LOCATION_STATE].containsAll('OH', 'KY')
 
         assert ['rpm.class.Coverage': [] as Set,
                 'rpm.enum.Coverage.Coverages': [] as Set,
