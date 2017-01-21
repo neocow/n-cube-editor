@@ -19,7 +19,7 @@ class VisualizerTest{
 
     static final String PATH_PREFIX = 'visualizer/**/'
     Visualizer visualizer
-    ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'VISUALIZER.TEST', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
+    ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'test.visualizer', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
 
     @Before
     void beforeTest(){

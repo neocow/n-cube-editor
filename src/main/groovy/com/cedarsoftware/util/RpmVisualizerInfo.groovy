@@ -79,12 +79,16 @@ class RpmVisualizerInfo extends VisualizerInfo
         //Values for effective version
         valuesByKey[EFFECTIVE_VERSION] = getAllVersions(appId.tenant, appId.app) as Set<Object>
 
-        //Values from ENT.APP
-        String latest = NCubeManager.getLatestVersion(ApplicationID.DEFAULT_TENANT, ENT_APP, ReleaseStatus.RELEASE.name())
-        ApplicationID entAppAppId = new ApplicationID(ApplicationID.DEFAULT_TENANT, ENT_APP, latest, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD)
+        //Values from reference data //TODO: Specify via Visualizer configs which ref data to get instead of hard coding ent.manual.State and ent.manual.BusinessDivision.
+        String refDataAppNameJson = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_REF_DATA_APP_NAME_CUBE_NAME + JSON_FILE_SUFFIX)
+        NCube refDataAppNameCube = NCube.fromSimpleJson(refDataAppNameJson)
+        refDataAppNameCube.applicationID = appId
+        String refDataAppName = refDataAppNameCube.getCell([(CONFIG_ITEM): CONFIG_REF_DATA_APP_NAME, (CUBE_TYPE): cubeType, (CONFIG_APP_NAME): appId.app]) as String
+        String latest = NCubeManager.getLatestVersion(ApplicationID.DEFAULT_TENANT, refDataAppName, ReleaseStatus.RELEASE.name())
+        ApplicationID refDataAppId = new ApplicationID(ApplicationID.DEFAULT_TENANT, refDataAppName, latest, ReleaseStatus.RELEASE.name(), ApplicationID.HEAD)
 
-        valuesByKey[BUSINESS_DIVISION_CODE] = getColumnValues(entAppAppId, BUSINESS_DIVISION_CUBE_NAME, BUSINESS_DIVISION_CODE)
-        Set<Object> stateValues = getColumnValues(entAppAppId, STATE_CUBE_NAME, STATE)
+        valuesByKey[BUSINESS_DIVISION_CODE] = getColumnValues(refDataAppId, BUSINESS_DIVISION_CUBE_NAME, BUSINESS_DIVISION_CODE)
+        Set<Object> stateValues = getColumnValues(refDataAppId, STATE_CUBE_NAME, STATE)
         valuesByKey[STATE] = stateValues
         valuesByKey[LOCATION_STATE] = stateValues
 

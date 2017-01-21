@@ -42,6 +42,7 @@ class VisualizerConstants
 	public static final String JSON_FILE_SUFFIX = '.json'
 	public static final String VISUALIZER_CONFIG_CUBE_NAME = 'VisualizerConfig'
 	public static final String VISUALIZER_CONFIG_NETWORK_OVERRIDES_CUBE_NAME = 'VisualizerConfig.NetworkOverrides'
+	public static final String VISUALIZER_CONFIG_REF_DATA_APP_NAME_CUBE_NAME = 'VisualizerConfig.RefDataAppName'
 	public static final String CONFIG_ITEM = 'configItem'
 	public static final String CONFIG_NETWORK_OVERRIDES_BASIC = 'networkOverridesBasic'
 	public static final String CONFIG_NETWORK_OVERRIDES_FULL = 'networkOverridesFull'
@@ -50,6 +51,8 @@ class VisualizerConstants
 	public static final String CONFIG_ALL_GROUPS = 'allGroups'
 	public static final String CONFIG_ALL_TYPES = 'allTypes'
 	public static final String CONFIG_GROUP_SUFFIX = 'groupSuffix'
+	public static final String CONFIG_APP_NAME = 'appName'
+	public static final String CONFIG_REF_DATA_APP_NAME = 'refDataAppName'
 	public static final String CUBE_TYPE = 'cubeType'
 	public static final String CUBE_TYPE_DEFAULT = null
 
