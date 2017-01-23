@@ -4457,8 +4457,9 @@ var NCE = (function ($) {
     }
     
     function onDeltaClick(e, li) {
-        var isAlreadyOpen, sm, opcodes, delta, leftJson, rightJson;
-        if (!$(e.target).hasClass('mergeCheck')) {
+        var isAlreadyOpen, sm, opcodes, delta, leftJson, rightJson, clickTarget;
+        clickTarget = $(e.target);
+        if (!clickTarget.hasClass('mergeCheck') && !clickTarget.closest('.diff').length) {
             e.preventDefault();
             e.stopImmediatePropagation();
             li = $(li);
