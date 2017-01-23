@@ -431,9 +431,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         setUpColumnWidths(true);
-        if (hot) {
-            render();
-        } else {
+        if (!hot) {
             hot = new Handsontable(_hotContainer[0], getHotSettings());
         }
         if (!shouldLoadAllCells()) {
@@ -1955,7 +1953,7 @@ var NCubeEditor2 = (function ($) {
             c = col;
         } else {
             r = saved.row;
-            c = saved.c;
+            c = saved.col;
         }
         nce.saveViewPosition({row:r, col:c, left:wth.scrollLeft(), top:wth.scrollTop()});
         wth = null;
@@ -4735,6 +4733,7 @@ var NCubeEditor2 = (function ($) {
         wth = $('.wtHolder')[0];
         wth.scrollLeft = left || 0;
         wth.scrollTop = top || 0;
+        hot.render();
     }
 
     function handleCubeSelected() {
