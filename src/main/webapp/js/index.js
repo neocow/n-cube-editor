@@ -780,7 +780,7 @@ var NCE = (function ($) {
         }
 
         html += '<div class="divider"/>'
-              + '<li class="dropdown-submenu li-compare-cube"><a href="#" class="anc-compare" tabindex="-1">Pull from...</a></li>'
+              + '<li class="dropdown-submenu li-compare-cube"><a href="#" class="anc-compare" tabindex="-1">Compare...</a></li>'
               + '<li><a href="#" class="anc-revision-history" data-ignoreversion="' + (cubeInfo[CUBE_INFO.BRANCH] === head) + '">Revision History...</a></li>'
               + '<li><a href="#" class="anc-show-outbound-references">Show Outbound References</a></li>'
               + '<li><a href="#" class="anc-show-required-scope">Show Required Scope</a></li>'
@@ -1866,7 +1866,7 @@ var NCE = (function ($) {
 
         if (leftDto && rightDto) {
             title = [leftApp, leftVersion, leftBranch, leftDto.name].join('-') + ' vs ' + [rightApp, rightVersion, rightBranch, rightDto.name].join('-');
-            diffCubes(rightDto, leftDto, title, { app: leftDto.app, version: leftDto.version, status: leftDto.status, branch: leftDto.branch});
+            diffCubes(rightDto, leftDto, title, appIdFrom(leftDto.app, leftDto.version, leftDto.status, leftDto.branch));
         } else {
             showNote('Unable to load cubes for compare!', 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
         }
@@ -2814,9 +2814,8 @@ var NCE = (function ($) {
     }
 
     function revisionHistory(ignoreVersion) {
-        var appId, result, dtos, dto, i, len, html, text, date, prevVer, curVer;
+        var appId = getSelectedTabAppId();
         clearNote();
-        appId = getSelectedTabAppId();
         _revisionHistoryList.empty();
         _revisionHistoryLabel[0].textContent = 'Revision History for ' + _selectedCubeName;
         showNote('Loading...');
@@ -2913,8 +2912,7 @@ var NCE = (function ($) {
         obj = {
             cubeIds: [],
             revIds: [],
-            versions: [],
-            canEdit: _revisionHistoryList.find('.commitCheck').first().is(':checked')
+            versions: []
         };
         checkboxes = _revisionHistoryList.find('.commitCheck:checked');
         for (i = 0, len = checkboxes.length; i < len; i++) {
@@ -2955,8 +2953,7 @@ var NCE = (function ($) {
             title: title,
             appId: getSelectedTabAppId(),
             cubeName: _selectedCubeName,
-            canEdit: false,  // revs.canEdit, (ignored for now until we figure out how to handle updating the
-            // right side (newer revision) from an older (left side) revision (this is opposite of all other merges)
+            canEdit: false,
             cantEditReason: 'Unable to merge into non-current revision.'
         };
         diffCubeRevs(cubeIds[hiIdx], cubeIds[loIdx], diffOptions);
@@ -4331,42 +4328,42 @@ var NCE = (function ($) {
     
     function addTextToLeftRightNames(compareLeft, compareRight, leftRightName) {
         if (compareLeft !== compareRight) {
-            if (leftRightName.left.length) {
-                leftRightName.left += '-';
-                leftRightName.right += '-';
+            if (leftRightName.receiver.length) {
+                leftRightName.receiver += '-';
+                leftRightName.transmitter += '-';
             }
-            leftRightName.left += compareLeft;
-            leftRightName.right += compareRight;
+            leftRightName.receiver += compareLeft;
+            leftRightName.transmitter += compareRight;
         }
     }
     
-    function diffCubes(newInfo, oldInfo, title, appId) {
-        var leftRightName = { left: '', right: '' };
+    function diffCubes(receiverDto, transmitterDto, title, appId) {
+        var leftRightName = { receiver: '', transmitter: '' };
         clearNote();
-        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [newInfo, oldInfo], {callback:descriptiveDiffCallback});
-        if (oldInfo.branch === newInfo.branch) {
-            addTextToLeftRightNames(oldInfo.app, newInfo.app, leftRightName);
-            addTextToLeftRightNames(oldInfo.version, newInfo.version, leftRightName);
-            addTextToLeftRightNames(oldInfo.status, newInfo.status, leftRightName);
-            addTextToLeftRightNames(oldInfo.name, newInfo.name, leftRightName);
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [receiverDto, transmitterDto], {callback:descriptiveDiffCallback});
+        if (transmitterDto.branch === receiverDto.branch) {
+            addTextToLeftRightNames(transmitterDto.app, receiverDto.app, leftRightName);
+            addTextToLeftRightNames(transmitterDto.version, receiverDto.version, leftRightName);
+            addTextToLeftRightNames(transmitterDto.status, receiverDto.status, leftRightName);
+            addTextToLeftRightNames(transmitterDto.name, receiverDto.name, leftRightName);
         } else {
-            leftRightName.left = oldInfo.branch;
-            leftRightName.right = newInfo.branch;
+            leftRightName.receiver = transmitterDto.branch;
+            leftRightName.transmitter = receiverDto.branch;
         }
         setupDiff({
-            leftName: leftRightName.left,
-            rightName: leftRightName.right,
+            leftName: leftRightName.receiver,
+            rightName: leftRightName.transmitter,
             title: title,
-            appId: appIdFrom(appId.app, appId.version, appId.status, appId.branch),
-            cubeName: oldInfo.name,
+            appId: appId,
+            cubeName: transmitterDto.name,
             canEdit: appId.branch !== head,
             cantEditReason: 'Unable to merge into HEAD cube. Please use Commit Branch...'
         });
     }
 
-    function diffCubeRevs(newId, oldId, diffOptions) {
+    function diffCubeRevs(receiverId, transmitterId, diffOptions) {
         clearNote();
-        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [newId, oldId], {callback:descriptiveDiffCallback});
+        callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [receiverId, transmitterId], {callback:descriptiveDiffCallback});
         setupDiff(diffOptions);
     }
 
@@ -4403,6 +4400,8 @@ var NCE = (function ($) {
                     commitBranch(_commitRollbackList.data('is-commit'));
                 } else if (_branchCompareUpdateModal.hasClass('in')) {
                     compareUpdateBranch(_branchCompareUpdateModal.prop('branchName'), true);
+                } else if (_revisionHistoryModal.hasClass('in')) {
+                    revisionHistory(false);
                 }
             }
         }
@@ -4423,9 +4422,13 @@ var NCE = (function ($) {
             _didMergeChange = true;
             _diffOutput.empty();
             _diffLastResult = null;
-            _diffLastResult = 'Loading...';
-            executeSavedCall();
-            diffDescriptive(true);
+            if (typeof _savedCall.args[0] === OBJECT) {
+                _diffLastResult = 'Loading...';
+                executeSavedCall();
+                diffDescriptive(true);
+            } else {
+                diffShow(false);
+            }
         } else {
             showNote('Unable to merge deltas:<hr class="hr-small"/>' + result.data);
         }
@@ -4454,7 +4457,9 @@ var NCE = (function ($) {
         }
 
         // handle delta set
-        html = '<ul class="list-group">';
+        html = '<div>' + _diffLeftName + ' <span class="glyphicon glyphicon-arrow-left"></span> ' + _diffRightName;
+        html += ' <button id="diff-switch" class="btn btn-primary btn-sm">Reverse Cube Diff Direction</button></div>';
+        html += '<ul class="list-group">';
         for (i = 0, len = deltas.length; i < len; i++) {
             delta = null;
             delta = deltas[i];
@@ -4475,6 +4480,33 @@ var NCE = (function ($) {
         _diffOutput.find('li').on('click', function(e) {
             onDeltaClick(e, this);
         });
+        _diffOutput.find('#diff-switch').on('click', function() {
+            onDiffSwitchClick();
+        });
+    }
+
+    function onDiffSwitchClick() {
+        var args, oldReceiverDto, oldTransmitterDto, appId, title, diffOptions, canEdit;
+        args = _savedCall.args;
+        oldReceiverDto = args[0];
+        oldTransmitterDto = args[1];
+        title = $('#diffTitle')[0].innerHTML;
+        if (typeof oldReceiverDto === OBJECT) {
+            appId = appIdFrom(oldReceiverDto.app, oldReceiverDto.version, oldReceiverDto.status, oldReceiverDto.branch);
+            diffCubes(oldTransmitterDto, oldReceiverDto, title, appId);
+        } else {
+            canEdit = _revisionHistoryList.find('.commitCheck').first().is('[data-cube-id="' + oldReceiverDto + '"]');
+            diffOptions = {
+                leftName: _diffRightName,
+                rightName: _diffLeftName,
+                title: title,
+                appId: getSelectedTabAppId(),
+                cubeName: _selectedCubeName,
+                canEdit: canEdit,
+                cantEditReason: 'Unable to merge into non-current revision.'
+            };
+            diffCubeRevs(oldTransmitterDto, oldReceiverDto, diffOptions);
+        }
     }
     
     function onDeltaClick(e, li) {
