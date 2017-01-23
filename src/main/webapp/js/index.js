@@ -4329,12 +4329,33 @@ var NCE = (function ($) {
 
     // ============================================== Cube Comparison ==================================================
     
+    function addTextToLeftRightNames(compareLeft, compareRight, leftRightName) {
+        if (compareLeft !== compareRight) {
+            if (leftRightName.left.length) {
+                leftRightName.left += '-';
+                leftRightName.right += '-';
+            }
+            leftRightName.left += compareLeft;
+            leftRightName.right += compareRight;
+        }
+    }
+    
     function diffCubes(newInfo, oldInfo, title, appId) {
+        var leftRightName = { left: '', right: '' };
         clearNote();
         callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [newInfo, oldInfo], {callback:descriptiveDiffCallback});
+        if (oldInfo.branch === newInfo.branch) {
+            addTextToLeftRightNames(oldInfo.app, newInfo.app, leftRightName);
+            addTextToLeftRightNames(oldInfo.version, newInfo.version, leftRightName);
+            addTextToLeftRightNames(oldInfo.status, newInfo.status, leftRightName);
+            addTextToLeftRightNames(oldInfo.name, newInfo.name, leftRightName);
+        } else {
+            leftRightName.left = oldInfo.branch;
+            leftRightName.right = newInfo.branch;
+        }
         setupDiff({
-            leftName: oldInfo.branch,
-            rightName: newInfo.branch,
+            leftName: leftRightName.left,
+            rightName: leftRightName.right,
             title: title,
             appId: appIdFrom(appId.app, appId.version, appId.status, appId.branch),
             cubeName: oldInfo.name,
