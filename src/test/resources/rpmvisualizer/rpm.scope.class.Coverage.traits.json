@@ -103,8 +103,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1155"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -166,8 +166,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1177"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -202,8 +202,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1133"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -211,8 +211,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"https://mail.google.com"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -256,8 +256,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1166"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -276,6 +276,15 @@
       ],
       "type":"boolean",
       "value":true
+    },
+    {
+      "id":[
+        1000000000007,
+        2000000000080,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -328,8 +337,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1144"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[

@@ -14,6 +14,35 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerHelper
 {
+
+	static String handleDefaultKeysUsed(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Map<String, Set<String>> defaultKeysUsed)
+	{
+		StringBuilder sb = new StringBuilder()
+		defaultKeysUsed.each { String cubeName, Set<String> keys ->
+			keys.each { String key ->
+				sb.append(getDefaultKeysUsedMessage(visInfo, relInfo, cubeName, key))
+			}
+		}
+		return sb.toString()
+	}
+
+	static String getDefaultKeysUsedMessage(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String cubeName, String key)
+	{
+		Set<Object> scopeValues = visInfo.availableScopeValues[key] ?: visInfo.loadAvailableScopeValues(cubeName, key)
+		if (scopeValues) {
+			StringBuilder sb = new StringBuilder()
+			String cubeDisplayName = relInfo.getCubeDisplayName(cubeName)
+			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}optional scope key ${key} on ${cubeDisplayName}:${DOUBLE_BREAK}<pre><ul>")
+			scopeValues.each{
+				String value = it.toString()
+				sb.append("""<li><a class="missingScope" title="${key}: ${value}" href="#">${value}</a></li>""")
+			}
+			sb.append("</ul></pre>")
+			return sb.toString()
+		}
+		return ''
+	}
+
 	static String handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, String targetMsg )
 	{
 		String cubeName = e.cubeName

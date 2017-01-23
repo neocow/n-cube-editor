@@ -18,6 +18,7 @@ class VisualizerConstants
 	public static final String MISSING_SCOPE = 'Missing scope for '
 	public static final String UNABLE_TO_LOAD = 'Unable to load '
 	public static final String SCOPE_VALUE_NOT_FOUND = 'Scope value not found for '
+	public static final String NOT_ALL_OPTIONAL_KEYS_PROVIDED = 'Since not all optional scope keys were provided, one or more default values were used to load '
 	public static final String ADDITIONAL_SCOPE_REQUIRED_TO_LOAD = 'Additional scope is required to load '
 	public static final String ADD_SCOPE_VALUES_FOR_KEYS = 'Please add scope value(s) for the following scope key(s): '
 	public static final String SCOPE_VALUES_AVAILABLE_FOR = 'The following values are available for '
@@ -59,8 +60,8 @@ class VisualizerConstants
 	public static final String LOAD_CELL_VALUES_LABEL = 'cell values'
 	public static final String NONE = 'none'
 
-	public static final String DETAILS_LABEL_NOTE = 'Note:'
-	public static final String DETAILS_LABEL_REASON = 'Reason:'
+	public static final String DETAILS_LABEL_NOTE = 'Note: '
+	public static final String DETAILS_LABEL_REASON = 'Reason: '
 	public static final String DETAILS_LABEL_SCOPE = 'Scope'
 	public static final String DETAILS_LABEL_AVAILABLE_SCOPE = 'Available scope'
 	public static final String DETAILS_LABEL_REQUIRED_SCOPE_KEYS = 'Required scope keys'

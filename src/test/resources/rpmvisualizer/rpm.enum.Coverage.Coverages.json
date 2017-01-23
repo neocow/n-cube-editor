@@ -241,14 +241,6 @@
     },
     {
       "id":[
-        1001202502865,
-        2001889605156
-      ],
-      "type":"exp",
-      "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"
-    },
-    {
-      "id":[
         1000000000014,
         2000000000057
       ],
@@ -283,14 +275,6 @@
       "id":[
         1001202502865,
         2000000000041
-      ],
-      "type":"exp",
-      "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"
-    },
-    {
-      "id":[
-        1001334116976,
-        2001889605156
       ],
       "type":"exp",
       "value":"@rpm.scope.enum.Coverage.Coverages.traits[:]"

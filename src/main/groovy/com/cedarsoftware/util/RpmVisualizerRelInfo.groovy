@@ -351,6 +351,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			removeNotExistsFields()
 			addRequiredAndOptionalScopeKeys(visInfo)
 			retainUsedScope(visInfo, output)
+			handleDefaultKeysUsed(visInfo, output)
 			cellValuesLoaded = true
 			showCellValuesLink = true
 		}
@@ -375,6 +376,35 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return true
 	}
 
+	private void handleDefaultKeysUsed(VisualizerInfo visInfo, Map output)
+	{
+		Map<String, Set<String>> defaultKeysUsed = output.defaultKeysUsed as Map
+		if (defaultKeysUsed)
+		{
+			String cubeName = targetCube.name
+			String effectiveNameByCubeName = effectiveNameByCubeName
+			StringBuilder sb = new StringBuilder()
+			if (cubeName.startsWith(RPM_CLASS_DOT))
+			{
+				String cubeDisplayName = getCubeDisplayName(cubeName)
+				sb.append("${NOT_ALL_OPTIONAL_KEYS_PROVIDED}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+			}
+			else if (cubeName.startsWith(RPM_ENUM_DOT))
+			{
+				sb.append("${NOT_ALL_OPTIONAL_KEYS_PROVIDED}${cubeDetailsTitle1}.")
+			}
+			else
+			{
+				sb.append("${NOT_ALL_OPTIONAL_KEYS_PROVIDED}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+			}
+			sb.append("${BREAK}")
+			sb.append(helper.handleDefaultKeysUsed(visInfo, this, defaultKeysUsed))
+			String msg = sb.toString()
+			notes << msg
+			visInfo.messages << msg
+		}
+	}
+
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo)
 	{
 		StringBuilder mb = new StringBuilder()
@@ -395,10 +425,14 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		String cubeName = e.cubeName
 		String effectiveNameByCubeName = effectiveNameByCubeName
 		StringBuilder sb = new StringBuilder()
-		if (cubeName.startsWith(RPM_CLASS_DOT) || cubeName.startsWith(RPM_ENUM_DOT))
+		if (cubeName.startsWith(RPM_CLASS_DOT))
 		{
 			String cubeDisplayName = getCubeDisplayName(cubeName)
 			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+		}
+		else if (cubeName.startsWith(RPM_ENUM_DOT))
+		{
+			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${cubeDetailsTitle1}.")
 		}
 		else
 		{

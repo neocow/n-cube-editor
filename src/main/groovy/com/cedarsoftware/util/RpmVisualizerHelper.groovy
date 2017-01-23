@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import groovy.transform.CompileStatic
 
@@ -49,6 +50,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 	private static final String EXISTS_TRAIT_CONTAINS_NULL_VALUE = " may not contain a value of null. If there is a value, it must be true or false. ";
 	private static ApplicationID appId
 	private static boolean loadAllTraits
+	private Map<String, Set<String>> defaultKeysUsed = [:]
 
 	/**
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
@@ -114,6 +116,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 					}
 				}
 				isOriginalClass = false;
+				output.defaultKeysUsed = defaultKeysUsed
 			}
 			catch (Exception e)
 			{
@@ -178,6 +181,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			if (traitNames.contains(R_EXTENDS)) {
 				coord.put(TRAIT_AXIS, R_EXTENDS);
 				Object extendsValue = classCube.getCell(coord, new HashMap(), NOT_DEFINED);
+				addDefaultKeysUsed(classCube, output)
 				if (extendsValue!=null && hasValue(extendsValue))
 				{
 					if (!fieldTraits.containsKey(R_EXTENDS)) {
@@ -200,7 +204,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * applies the master definition specified in r:extends to the current field traits
 	 */
-	private static void processMasterDefinition(String className, String fieldName, String masterDefinition,
+	private void processMasterDefinition(String className, String fieldName, String masterDefinition,
 										 String cubeType, String axisName, Map<String, Object> scope, Map<String, Object> traits, Map<String, Object> output)
 	{
 		String classType = cubeType==RPM_CLASS ? "RpmClass" : "RpmEnum";
@@ -261,7 +265,9 @@ class RpmVisualizerHelper extends VisualizerHelper
 			// check for extended definitions
 			if (traitNames.contains(R_EXTENDS)) {
 				coord.put(TRAIT_AXIS, R_EXTENDS);
-				String extension = (String) masterCube.getCell(coord, new HashMap(), NOT_DEFINED);
+				Map masterCubeOutput = new CaseInsensitiveMap()
+				String extension = (String) masterCube.getCell(coord, masterCubeOutput, NOT_DEFINED);
+				addDefaultKeysUsed(masterCube, masterCubeOutput)
 				if (hasValue(extension) && !StringUtilities.isEmpty(extension)) {
 					defsToProcess.add(extension);
 				}
@@ -370,17 +376,34 @@ class RpmVisualizerHelper extends VisualizerHelper
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Load trait values for a given field into the fieldTraits map, ignoring traits already loaded
 	 */
-	private static void loadTraitsForField(NCube classCube, List<String> traitNames, Map<String, Object> fieldTraits, Map<String, Object> coord) {
+	private void loadTraitsForField(NCube classCube, List<String> traitNames, Map<String, Object> fieldTraits, Map<String, Object> coord) {
 		for (String traitName : traitNames) {
 			if (fieldTraits.containsKey(traitName) || R_EXTENDS.equals(traitName)) {
 				continue;
 			}
 
 			coord.put(TRAIT_AXIS,traitName);
-			Object val = classCube.getCell(coord, new HashMap(), NOT_DEFINED);
+			Map output = new CaseInsensitiveMap()
+			Object val = classCube.getCell(coord, output, NOT_DEFINED);
+			addDefaultKeysUsed(classCube, output)
 			if (hasValue(val)) {
 				fieldTraits.put(traitName, val);
 			}
+		}
+	}
+
+	private void addDefaultKeysUsed(NCube cube, Map output)
+	{
+		RuleInfo ruleInfo = cube.getRuleInfo(output)
+		Map<String, Set<String>> keysUsed = ruleInfo.getDefaultKeysUsed()
+		keysUsed.each{String cubeName, Set<String> keys ->
+			Set<String> allKeysForCube = defaultKeysUsed[cubeName]
+			if (!allKeysForCube)
+			{
+				allKeysForCube = new CaseInsensitiveSet()
+			}
+			allKeysForCube.addAll(keys)
+			defaultKeysUsed[cubeName] = allKeysForCube
 		}
 	}
 
@@ -487,7 +510,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Bulk loads value of r:exists for all fields defined
 	 */
-	private static void populateExistsTrait(String className, String axisName, Map<String, Object> scope, Map<String, Map<String, Object>> fieldAndTraits, NCube classCube, Map output) {
+	private void populateExistsTrait(String className, String axisName, Map<String, Object> scope, Map<String, Map<String, Object>> fieldAndTraits, NCube classCube, Map output) {
 		Axis traitAxis = classCube.getAxis(TRAIT_AXIS);
 		if (traitAxis==null || traitAxis.findColumn(R_EXISTS)==null) {
 			return;
@@ -502,7 +525,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			if (!fieldTraits.containsKey(R_EXISTS)) {
 				coord.put(axisName,fieldName);
 				Boolean exists = getExistsValue(fieldName, className, classCube.getCell(coord,output,NOT_DEFINED));
-
+				addDefaultKeysUsed(classCube, output)
 				if (exists!=null) {
 					fieldTraits.put(R_EXISTS, exists);
 				}
