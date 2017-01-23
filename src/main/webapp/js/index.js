@@ -2876,10 +2876,10 @@ var NCE = (function ($) {
 
             _revisionHistoryList.append(html);
             _revisionHistoryList.find('a.anc-html').on('click', function () {
-                onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), false);
+                onRevisionViewClick($(this), false);
             });
             _revisionHistoryList.find('a.anc-json').on('click', function () {
-                onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
+                onRevisionViewClick($(this), true);
             });
             clearNote();
             _revisionHistoryModal.modal();
@@ -2888,13 +2888,13 @@ var NCE = (function ($) {
         }
     }
 
-    function onRevisionViewClick(id, name, rev, isJson) {
+    function onRevisionViewClick(el, isJson) {
         var title, oldWindow, result, suffix, format;
         suffix = isJson ? '.json' : '.html';
         format = isJson ? JSON_MODE.PRETTY : JSON_MODE.HTML;
-        title = name + '.rev.' + rev;
+        title = el.data('cube-name') + '.rev.' + el.data('rev-id');
         oldWindow = window.open('', title + suffix);
-        result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), id, format], {noResolveRefs:true});
+        result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), el.data('cube-id'), format], {noResolveRefs:true});
         if (result.status) {
             oldWindow.document.removeChild(oldWindow.document.documentElement);
             if (isJson) {
@@ -3779,10 +3779,10 @@ var NCE = (function ($) {
             }
         });
         ul.find('a.anc-html').on('click', function () {
-            onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), false);
+            onRevisionViewClick($(this), false);
         });
         ul.find('a.anc-json').on('click', function () {
-            onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
+            onRevisionViewClick($(this), true);
         });
         ul.find('li.changeTypeHeader').find('a').on('click', function() {
             var cssClass, el, li, state;
