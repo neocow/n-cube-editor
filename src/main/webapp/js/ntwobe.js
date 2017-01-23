@@ -431,9 +431,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         setUpColumnWidths(true);
-        if (hot) {
-            render();
-        } else {
+        if (!hot) {
             hot = new Handsontable(_hotContainer[0], getHotSettings());
         }
         if (!shouldLoadAllCells()) {
@@ -1955,7 +1953,7 @@ var NCubeEditor2 = (function ($) {
             c = col;
         } else {
             r = saved.row;
-            c = saved.c;
+            c = saved.col;
         }
         nce.saveViewPosition({row:r, col:c, left:wth.scrollLeft(), top:wth.scrollTop()});
         wth = null;
@@ -2646,14 +2644,29 @@ var NCubeEditor2 = (function ($) {
         }
         filterSave();
     }
-
+    
+    function checkCubeUpdatePermissions(axisName) {
+        var canUpdate, resource, appId;
+        appId = nce.getSelectedTabAppId();
+        resource = cubeName;
+        if (axisName !== undefined) {
+            resource += '/' + axisName;
+        }
+        canUpdate = nce.checkPermissions(appId, resource, PERMISSION_ACTION.UPDATE);
+        if (canUpdate && !nce.checkPermissions(appId, resource, PERMISSION_ACTION.COMMIT) && !nce.hasBeenWarnedAboutUpdatingIfUnableToCommitCube()) {
+            nce.showNote('You must have someone with the correct permissions commit changes to this cube.', 'Warning!');
+            nce.hasBeenWarnedAboutUpdatingIfUnableToCommitCube(true);
+        }
+        return canUpdate;
+    }
+    
     function editAxisMetadata(axis) {
         var axisName = axis.name;
         var metaPropertyOptions = {
             objectType: METAPROPERTIES.OBJECT_TYPES.AXIS,
             objectName: axisName,
             axis: axis,
-            readonly: !nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE)
+            readonly: !checkCubeUpdatePermissions(axisName)
         };
         openMetaPropertiesBuilder(metaPropertyOptions);
     }
@@ -2984,7 +2997,7 @@ var NCubeEditor2 = (function ($) {
             objectName: columnName,
             axis: axis,
             column: column,
-            readonly: !nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/' + axis.name, PERMISSION_ACTION.UPDATE)
+            readonly: !checkCubeUpdatePermissions(axis.name)
         };
         openMetaPropertiesBuilder(metaPropertyOptions);
     };
@@ -2997,7 +3010,7 @@ var NCubeEditor2 = (function ($) {
         metaPropertyOptions = {
             objectType: METAPROPERTIES.OBJECT_TYPES.CUBE,
             objectName: cubeName,
-            readonly: !nce.checkPermissions(nce.getSelectedTabAppId(), cubeName, PERMISSION_ACTION.UPDATE)
+            readonly: !checkCubeUpdatePermissions()
         };
         openMetaPropertiesBuilder(metaPropertyOptions);
     };
@@ -3472,7 +3485,7 @@ var NCubeEditor2 = (function ($) {
     function editCell() {
         var cellInfo, value, dataType, isUrl, isCached, isDefault, cellValue, selectedCell, columnDefault;
         var appId = nce.getSelectedTabAppId();
-        var modifiable = nce.checkPermissions(appId, cubeName, PERMISSION_ACTION.UPDATE);
+        var modifiable = checkCubeUpdatePermissions();
 
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE, [appId, cubeName, _cellId]);
         if (!result.status) {
@@ -3571,8 +3584,7 @@ var NCubeEditor2 = (function ($) {
     function editCellOK() {
         var cellInfo, result, isUrl;
         var appId = nce.getSelectedTabAppId();
-        var modifiable = nce.checkPermissions(appId, cubeName, PERMISSION_ACTION.UPDATE);
-        if (!modifiable) {
+        if (!checkCubeUpdatePermissions()) {
             editCellClose();
             return;
         }
@@ -3803,8 +3815,7 @@ var NCubeEditor2 = (function ($) {
     function editColumns(axisName) {
         var result, axis;
         var appId = nce.getSelectedTabAppId();
-        var modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
-        if (!modifiable) {
+        if (!checkCubeUpdatePermissions(axisName)) {
             nce.showNote('Columns cannot be edited.');
             return false;
         }
@@ -4418,8 +4429,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function addAxis() {
-        var modifiable = nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/*', PERMISSION_ACTION.UPDATE);
-        if (!modifiable) {
+        if (!checkCubeUpdatePermissions('*')) {
             nce.showNote('Axis cannot be added.');
             return;
         }
@@ -4448,13 +4458,12 @@ var NCubeEditor2 = (function ($) {
     }
 
     function addAxisOk() {
-        var axisName, appId, modifiable, params, refAppId, refCubeName, refAxisName,
+        var axisName, appId, params, refAppId, refCubeName, refAxisName,
             filterAppId, filterCubeName, filterMethodName, axisType, axisValueType, result, axisOrderMetaProp;
         addAxisClose();
         axisName = _addAxisName.val();
         appId = nce.getSelectedTabAppId();
-        modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
-        if (!modifiable) {
+        if (!checkCubeUpdatePermissions(axisName)) {
             nce.showNote('Cannot add axis ' + axisName);
             return;
         }
@@ -4494,8 +4503,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function deleteAxis(axisName) {
-        var modifiable = nce.checkPermissions(nce.getSelectedTabAppId(), cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
-        if (!modifiable) {
+        if (!checkCubeUpdatePermissions(axisName)) {
             nce.showNote('Axis cannot be deleted.');
             return;
         }
@@ -4541,7 +4549,7 @@ var NCubeEditor2 = (function ($) {
     function updateAxis(axisName) {
         var result, axis, isRule, isNearest, metaProps;
         var appId = nce.getSelectedTabAppId();
-        var modifiable = nce.checkPermissions(appId, cubeName + '/' + axisName, PERMISSION_ACTION.UPDATE);
+        var modifiable = checkCubeUpdatePermissions(axisName);
         _updateAxisModal.find('input').not('.always-disabled').attr('disabled', !modifiable);
         if (modifiable) {
             $('#updateAxisOk').show();
@@ -4725,6 +4733,7 @@ var NCubeEditor2 = (function ($) {
         wth = $('.wtHolder')[0];
         wth.scrollLeft = left || 0;
         wth.scrollTop = top || 0;
+        hot.render();
     }
 
     function handleCubeSelected() {

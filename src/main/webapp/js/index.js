@@ -490,6 +490,14 @@ var NCE = (function ($) {
         saveOpenCubeInfoValue(SAVED_INFO.SEARCH_QUERY, query);
     }
 
+    function hasBeenWarnedAboutUpdatingIfUnableToCommitCube(hasBeenWarned) {
+        if (hasBeenWarned) {
+            saveOpenCubeInfoValue(SAVED_INFO.HAS_BEEN_WARNED_ABOUT_UPDATING_IF_UNABLE_TO_COMMIT_CUBE, 1);
+        } else {
+            return getOpenCubeInfoValue(SAVED_INFO.HAS_BEEN_WARNED_ABOUT_UPDATING_IF_UNABLE_TO_COMMIT_CUBE);
+        }
+    }
+
     function getCubeInfoKey(cubeInfo) {
         return cubeInfo.join(TAB_SEPARATOR);
     }
@@ -1361,7 +1369,8 @@ var NCE = (function ($) {
             checkPermissions: checkPermissions,
             freezePage: freezePage,
             isPageFrozen: isPageFrozen,
-            updateCubeLeftHandChangedStatus: updateCubeLeftHandChangedStatus
+            updateCubeLeftHandChangedStatus: updateCubeLeftHandChangedStatus,
+            hasBeenWarnedAboutUpdatingIfUnableToCommitCube: hasBeenWarnedAboutUpdatingIfUnableToCommitCube
         };
     }
 
@@ -2867,10 +2876,10 @@ var NCE = (function ($) {
 
             _revisionHistoryList.append(html);
             _revisionHistoryList.find('a.anc-html').on('click', function () {
-                onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), false);
+                onRevisionViewClick($(this), false);
             });
             _revisionHistoryList.find('a.anc-json').on('click', function () {
-                onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
+                onRevisionViewClick($(this), true);
             });
             clearNote();
             _revisionHistoryModal.modal();
@@ -2879,13 +2888,13 @@ var NCE = (function ($) {
         }
     }
 
-    function onRevisionViewClick(id, name, rev, isJson) {
+    function onRevisionViewClick(el, isJson) {
         var title, oldWindow, result, suffix, format;
         suffix = isJson ? '.json' : '.html';
         format = isJson ? JSON_MODE.PRETTY : JSON_MODE.HTML;
-        title = name + '.rev.' + rev;
+        title = el.data('cube-name') + '.rev.' + el.data('rev-id');
         oldWindow = window.open('', title + suffix);
-        result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), id, format], {noResolveRefs:true});
+        result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), el.data('cube-id'), format], {noResolveRefs:true});
         if (result.status) {
             oldWindow.document.removeChild(oldWindow.document.documentElement);
             if (isJson) {
@@ -3770,40 +3779,47 @@ var NCE = (function ($) {
             }
         });
         ul.find('a.anc-html').on('click', function () {
-            onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), false);
+            onRevisionViewClick($(this), false);
         });
         ul.find('a.anc-json').on('click', function () {
-            onRevisionViewClick($(this).data('cube-id'), $(this).data('cube-name'), $(this).data('rev-id'), true);
+            onRevisionViewClick($(this), true);
         });
         ul.find('li.changeTypeHeader').find('a').on('click', function() {
-            var cssClass, el, li, state;
-            el = $(this);
-            li = el.parent();
-            cssClass = li.data('changetype');
-            state = el.hasClass(CLASS_SECTION_ALL);
-            li.parent().find('label.' + cssClass).find('input[type="checkbox"]').prop('checked', state);
+            selectAllNoneChangeTypeHeaderClick($(this));
         });
         ul.find('li.changeTypeHeader').find('span.glyphicon, b').on('click', function() {
-            var cssClass, el, li, lis, i, len, show;
-            el = $(this);
-            li = el.parent();
-            cssClass = li.data('changetype');
-            lis = li.parent().find('label.' + cssClass).closest('li');
-            show = el.hasClass('glyphicon-plus');
-            if (show) {
-                el.removeClass('glyphicon-plus').addClass('glyphicon-minus');
-            } else {
-                el.removeClass('glyphicon-minus').addClass('glyphicon-plus');
-            }
-            for (i = 0, len = lis.length; i < len; i++) {
-                if (show) {
-                    $(lis[i]).show();
-                } else {
-                    $(lis[i]).hide();
-                }
-            }
+            expandCollapseChangeTypeClick($(this));
         });
         addCountsToChangeTypeHeaders(ul);
+    }
+    
+    function selectAllNoneChangeTypeHeaderClick(el) {
+        var state = el.hasClass(CLASS_SECTION_ALL);
+        getChangeTypeListItems(el).find('input[type="checkbox"]').prop('checked', state);
+    }
+    
+    function expandCollapseChangeTypeClick(el) {
+        var lis, i, len, show, prefix, plus, minus, span;
+        prefix = 'glyphicon-';
+        plus = 'plus';
+        minus = 'minus';
+        lis = getChangeTypeListItems(el).closest('li');
+        span = el.parent().find('span.glyphicon');
+        show = span.hasClass(prefix + plus);
+        span.removeClass(prefix + (show ? plus : minus)).addClass(prefix + (show ? minus : plus));
+        for (i = 0, len = lis.length; i < len; i++) {
+            if (show) {
+                $(lis[i]).show();
+            } else {
+                $(lis[i]).hide();
+            }
+        }
+    }
+    
+    function getChangeTypeListItems(el) {
+        var li = el.parent();
+        var cssClass = li.data('changetype');
+        return li.parent().find('label.' + cssClass);
     }
 
     function addCountsToChangeTypeHeaders(ul) {
@@ -4313,12 +4329,33 @@ var NCE = (function ($) {
 
     // ============================================== Cube Comparison ==================================================
     
+    function addTextToLeftRightNames(compareLeft, compareRight, leftRightName) {
+        if (compareLeft !== compareRight) {
+            if (leftRightName.left.length) {
+                leftRightName.left += '-';
+                leftRightName.right += '-';
+            }
+            leftRightName.left += compareLeft;
+            leftRightName.right += compareRight;
+        }
+    }
+    
     function diffCubes(newInfo, oldInfo, title, appId) {
+        var leftRightName = { left: '', right: '' };
         clearNote();
         callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [newInfo, oldInfo], {callback:descriptiveDiffCallback});
+        if (oldInfo.branch === newInfo.branch) {
+            addTextToLeftRightNames(oldInfo.app, newInfo.app, leftRightName);
+            addTextToLeftRightNames(oldInfo.version, newInfo.version, leftRightName);
+            addTextToLeftRightNames(oldInfo.status, newInfo.status, leftRightName);
+            addTextToLeftRightNames(oldInfo.name, newInfo.name, leftRightName);
+        } else {
+            leftRightName.left = oldInfo.branch;
+            leftRightName.right = newInfo.branch;
+        }
         setupDiff({
-            leftName: oldInfo.branch,
-            rightName: newInfo.branch,
+            leftName: leftRightName.left,
+            rightName: leftRightName.right,
             title: title,
             appId: appIdFrom(appId.app, appId.version, appId.status, appId.branch),
             cubeName: oldInfo.name,
@@ -4441,8 +4478,9 @@ var NCE = (function ($) {
     }
     
     function onDeltaClick(e, li) {
-        var isAlreadyOpen, sm, opcodes, delta, leftJson, rightJson;
-        if (!$(e.target).hasClass('mergeCheck')) {
+        var isAlreadyOpen, sm, opcodes, delta, leftJson, rightJson, clickTarget;
+        clickTarget = $(e.target);
+        if (!clickTarget.hasClass('mergeCheck') && !clickTarget.closest('.diff').length) {
             e.preventDefault();
             e.stopImmediatePropagation();
             li = $(li);
