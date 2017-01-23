@@ -140,7 +140,8 @@ var SAVED_INFO = {
     NUMBER_OF_FROZEN_COLUMNS: 'numFrozenCols',
     SEARCH_QUERY: 'searchQuery',
     SHOULD_LOAD_ALL_FOR_SEARCH: 'shouldLoadAllForSearch',
-    VIEW_POSITION: 'position'
+    VIEW_POSITION: 'position',
+    HAS_BEEN_WARNED_ABOUT_UPDATING_IF_UNABLE_TO_COMMIT_CUBE: 'hasBeenWarnedAboutUpdatingIfUnableToCommitCube'
 };
 
 var STATUS = {
