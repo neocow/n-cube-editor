@@ -490,6 +490,14 @@ var NCE = (function ($) {
         saveOpenCubeInfoValue(SAVED_INFO.SEARCH_QUERY, query);
     }
 
+    function hasBeenWarnedAboutUpdatingIfUnableToCommitCube(hasBeenWarned) {
+        if (hasBeenWarned) {
+            saveOpenCubeInfoValue(SAVED_INFO.HAS_BEEN_WARNED_ABOUT_UPDATING_IF_UNABLE_TO_COMMIT_CUBE, 1);
+        } else {
+            return getOpenCubeInfoValue(SAVED_INFO.HAS_BEEN_WARNED_ABOUT_UPDATING_IF_UNABLE_TO_COMMIT_CUBE);
+        }
+    }
+
     function getCubeInfoKey(cubeInfo) {
         return cubeInfo.join(TAB_SEPARATOR);
     }
@@ -1361,7 +1369,8 @@ var NCE = (function ($) {
             checkPermissions: checkPermissions,
             freezePage: freezePage,
             isPageFrozen: isPageFrozen,
-            updateCubeLeftHandChangedStatus: updateCubeLeftHandChangedStatus
+            updateCubeLeftHandChangedStatus: updateCubeLeftHandChangedStatus,
+            hasBeenWarnedAboutUpdatingIfUnableToCommitCube: hasBeenWarnedAboutUpdatingIfUnableToCommitCube
         };
     }
 
