@@ -90,7 +90,10 @@ class VisualizerInfo
             missingScope = true
         }
 
-
+        if (missingScope)
+        {
+            messages << "Scope is required for ${key}. ${messageSuffix}".toString()
+        }
         return missingScope
     }
 

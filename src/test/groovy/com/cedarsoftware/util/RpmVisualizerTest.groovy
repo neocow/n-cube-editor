@@ -449,7 +449,7 @@ class RpmVisualizerTest
         nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
         assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
-        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>Exposure</li><li>Location</li><li>StatCode</li></ul></pre>")
+        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>Exposure</li><li>Location</li><li>StatCode</li><li>field1</li><li>field2</li><li>field3</li><li>field4</li></ul></pre>")
         assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
         assert !nodeDetails.contains(DETAILS_LABEL_REASON)
         assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
@@ -515,9 +515,13 @@ class RpmVisualizerTest
         assert nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
         assert nodeDetails.contains("Exposure</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre><li><b>")
         assert nodeDetails.contains("Location</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:rpmType: Risk</li><li>v:max: 1</li><li>v:min: 0</li></ul></pre><li><b>")
-        assert nodeDetails.contains("StatCode</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: 1133</li><li>r:exists: true</li><li>r:extends: DataElementInventory[StatCode]</li><li>r:rpmType: string</li></ul></pre></ul></pre>")
+        assert nodeDetails.contains("StatCode</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: 1133</li><li>r:exists: true</li><li>r:extends: DataElementInventory[StatCode]</li><li>r:rpmType: string</li></ul></pre>")
+        assert nodeDetails.contains("field1</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: 1133</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre><li><b>")
+        assert nodeDetails.contains("field2</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: 1133</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre><li><b>")
+        assert nodeDetails.contains("field3</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: DEI default for field3</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre><li><b>")
+        assert nodeDetails.contains("field4</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: 1133</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre></ul></pre>")
         assert !nodeDetails.contains(DETAILS_LABEL_REASON)
-        assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
+        assert nodeDetails.contains(DETAILS_LABEL_NOTE)
         assert nodeDetails.contains("${DETAILS_LABEL_CLASS_TRAITS}</b><pre><ul><li>r:exists: true</li><li>r:name: CCoverage</li><li>r:scopedName: CCoverage</li></ul></pre><br><b>")
     }
 
@@ -796,7 +800,7 @@ class RpmVisualizerTest
         assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
         assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
         assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
-        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>Exposure</li><li>Location</li><li>StatCode</li></ul></pre>")
+        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>Exposure</li><li>Location</li><li>StatCode</li><li>field1</li><li>field2</li><li>field3</li><li>field4</li></ul></pre>")
         assert !nodeDetails.contains(DETAILS_LABEL_REASON)
         assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
         assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)

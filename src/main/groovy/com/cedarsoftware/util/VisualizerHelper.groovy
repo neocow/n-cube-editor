@@ -122,6 +122,7 @@ class VisualizerHelper
 		StringBuilder message = new StringBuilder()
 		message.append("${DOUBLE_BREAK} ${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}${missingScope.join(COMMA_SPACE)}.${BREAK}")
 		missingScope.each{ String key ->
+			message.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key}:${DOUBLE_BREAK}<pre><ul>")
 			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, key)
 			message.append(getScopeValuesMessage(key, requiredScopeValues))
 		}
