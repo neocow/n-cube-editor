@@ -61,6 +61,6 @@ final class RpmVisualizerConstants extends VisualizerConstants
 
 	public static final String DEFAULT_VALUE_MAY_BE_CHANGED = 'Its default value may be changed as desired.'
 	public static final String OTHER_DEFAULT_VALUE_MAY_BE_CHANGED = 'The other default scope values may also be changed as desired.'
-
-
+	public static final String VALID_VALUES_FOR_FIELD_SENTENCE_CASE = 'Valid values for field '
+	public static final String VALID_VALUES_FOR_FIELD_LOWER_CASE = 'valid values for field '
 }

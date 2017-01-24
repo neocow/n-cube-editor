@@ -1,9 +1,9 @@
 {
-  "ncube":"rpm.scope.class.Coverage.traits.StatCode",
+  "ncube":"rpm.scope.class.Coverage.traits.field4",
   "defaultCellValueType":"string",
   "defaultCellValue":"#NOT_DEFINED",
   "cube_tags":"EPM",
-  "default_view_axis_order":"[\"coverage\",\"businessdivisioncode\",\"trait\"]",
+  "default_view_axis_order":"[\"type\",\"program\",\"coverage\",\"businessdivisioncode\",\"trait\"]",
   "axes":[
     {
       "id":1,
@@ -59,6 +59,42 @@
           "value":"BBBDIV"
         }
       ]
+    },
+    {
+      "id":5,
+      "name":"program",
+      "hasDefault":true,
+      "type":"DISCRETE",
+      "valueType":"STRING",
+      "preferredOrder":1,
+      "fireAll":true,
+      "columns":[]
+    },
+    {
+      "id":6,
+      "name":"type",
+      "hasDefault":true,
+      "type":"DISCRETE",
+      "valueType":"STRING",
+      "preferredOrder":1,
+      "fireAll":true,
+      "columns":[
+        {
+          "id":6000579666525,
+          "type":"string",
+          "value":"type1"
+        },
+        {
+          "id":6000824458495,
+          "type":"string",
+          "value":"type2"
+        },
+        {
+          "id":6000096838602,
+          "type":"string",
+          "value":"type3"
+        }
+      ]
     }
   ],
   "cells":[
@@ -82,10 +118,10 @@
       "id":[
         1000000000036,
         3000000000035,
-        4000305648501
+        4001637854956
       ],
       "type":"string",
-      "value":"https://mail.google.com"
+      "value":"2222"
     },
     {
       "id":[
@@ -114,21 +150,21 @@
     },
     {
       "id":[
-        1000000000036,
-        3000000000035,
-        4001637854956
-      ],
-      "type":"string",
-      "value":"2222"
-    },
-    {
-      "id":[
         1000000000041,
         3000000000035,
         4000305648501
       ],
       "type":"string",
       "value":"1198"
+    },
+    {
+      "id":[
+        1000000000036,
+        3000000000035,
+        4000305648501
+      ],
+      "type":"string",
+      "value":"https://mail.google.com"
     },
     {
       "id":[

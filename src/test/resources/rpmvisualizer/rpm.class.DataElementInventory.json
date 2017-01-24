@@ -47,6 +47,26 @@
           "id":1000000000153,
           "type":"string",
           "value":"StatCode"
+        },
+        {
+          "id":1001011708077,
+          "type":"string",
+          "value":"field1"
+        },
+        {
+          "id":1001264673870,
+          "type":"string",
+          "value":"field2"
+        },
+        {
+          "id":1001588863150,
+          "type":"string",
+          "value":"field3"
+        },
+        {
+          "id":1001794294683,
+          "type":"string",
+          "value":"field4"
         }
       ]
     },
@@ -75,11 +95,51 @@
   "cells":[
     {
       "id":[
+        1001264673870,
+        2000000000011
+      ],
+      "type":"string",
+      "value":"string"
+    },
+    {
+      "id":[
+        1000000000072,
+        2000000000011
+      ],
+      "type":"string",
+      "value":"string"
+    },
+    {
+      "id":[
+        1001588863150,
+        2000000000011
+      ],
+      "type":"string",
+      "value":"string"
+    },
+    {
+      "id":[
+        1001794294683,
+        2000000000011
+      ],
+      "type":"string",
+      "value":"string"
+    },
+    {
+      "id":[
         1000000000215,
         2000000000011
       ],
       "type":"string",
       "value":"string"
+    },
+    {
+      "id":[
+        1001264673870,
+        2000000000058
+      ],
+      "type":"string",
+      "value":"DEI default for field2"
     },
     {
       "id":[
@@ -99,11 +159,43 @@
     },
     {
       "id":[
+        1001588863150,
+        2000000000058
+      ],
+      "type":"string",
+      "value":"DEI default for field3"
+    },
+    {
+      "id":[
+        1001794294683,
+        2000000000058
+      ],
+      "type":"string",
+      "value":"DEI default for field4"
+    },
+    {
+      "id":[
+        1001011708077,
+        2000000000011
+      ],
+      "type":"string",
+      "value":"string"
+    },
+    {
+      "id":[
         1000000000495,
         2000000000011
       ],
       "type":"string",
       "value":"string"
+    },
+    {
+      "id":[
+        1001011708077,
+        2000000000058
+      ],
+      "type":"string",
+      "value":"DEI default for field1"
     },
     {
       "id":[

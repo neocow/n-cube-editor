@@ -33,7 +33,8 @@ class VisualizerInfo
     Set<String> availableGroupsAllLevels
     Set<String> messages
 
-    Map<String, Set<Object>> availableScopeValues = [:]
+    Map<String, Set<Map<String, Set<Object>>>> optionalScopeValues = [:]
+    Map<String, Set<Map<String, Set<Object>>>> requiredScopeValues = [:]
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
 
@@ -89,10 +90,7 @@ class VisualizerInfo
             missingScope = true
         }
 
-        if (missingScope)
-        {
-            messages << "Scope is required for ${key}. ${messageSuffix}".toString()
-        }
+
         return missingScope
     }
 
@@ -114,7 +112,7 @@ class VisualizerInfo
         String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
         this.groupSuffix = groupSuffix ?: ''
         loadTypesToAddMap(configCube)
-        loadAvailableScopeKeysAndValues(configCube)
+       // loadAvailableScopeKeysAndValues(configCube)
         loadCellValuesLabel = getLoadCellValuesLabel()
         return configCube
     }
@@ -141,16 +139,46 @@ class VisualizerInfo
         LOAD_CELL_VALUES_LABEL
     }
 
-    void loadAvailableScopeKeysAndValues(NCube configCube)
+    Set<Object> getOptionalScopeValues( String cubeName, String key)
     {
-        availableScopeValues = new CaseInsensitiveMap<>()
+        return getScopeValues(optionalScopeValues, cubeName, key)
     }
 
-    Set<Object> loadAvailableScopeValues(String cubeName, String key)
+    Set<Object> getRequiredScopeValues(String cubeName, String key)
     {
-        Set<Object> values = getColumnValues(appId, cubeName, key)
-        availableScopeValues[key] = values
-        return values
+        return getScopeValues(requiredScopeValues, cubeName, key)
+    }
+
+    Set<Object> getScopeValues( Map<String, Set<Map<String, Set<Object>>>> scopeValues, String cubeName, String key)
+    {
+        //The key to the map scopeValues is a scope key. The scopeValues map contains a set of cube maps.
+        //Each cube map has a single entry where the key is the cube name and the value is a set of scope values available on
+        //the cube for the scope key in question.
+        Set<Map<String, Set<Object>>> valuesByCubeNames = scopeValues[key]
+        Map<String, Set<Object>> cubeMap = [:]
+        if (valuesByCubeNames)
+        {
+            cubeMap = valuesByCubeNames.find { Map<String, Set<Object>> cubeValues ->
+                cubeValues[cubeName]
+            }
+        }
+        else
+        {
+            valuesByCubeNames = []
+        }
+
+        if (cubeMap)
+        {
+            return cubeMap.values() as Set<Object>
+        }
+        else
+        {
+            Set<Object> values =  getColumnValues(appId, cubeName, key)
+            cubeMap = [(cubeName): values]
+            valuesByCubeNames << cubeMap
+            scopeValues[key] = valuesByCubeNames
+            return values
+        }
     }
 
     protected static Set<Object> getColumnValues(ApplicationID applicationID, String cubeName, String axisName)

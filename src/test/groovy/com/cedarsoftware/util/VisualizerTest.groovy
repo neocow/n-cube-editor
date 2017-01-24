@@ -46,10 +46,9 @@ class VisualizerTest{
         assert 6l == visInfo.nodeCount
         assert 5l == visInfo.relInfoCount
         assert 999999l == visInfo.defaultLevel
-        assert [:] == visInfo.availableScopeValues
+        assert [:] == visInfo.optionalScopeValues  //TODO
         assert '' == visInfo.groupSuffix
         assert ['NCUBE'] as Set == visInfo.availableGroupsAllLevels
-        assert [:] as CaseInsensitiveMap == visInfo.availableScopeValues
 
         Map allGroups = [NCUBE: 'n-cube', RULE_NCUBE: 'rule cube', UNSPECIFIED: 'Unspecified']
         assert allGroups == visInfo.allGroups
@@ -824,7 +823,7 @@ class VisualizerTest{
         assert nodeDetails.contains(DETAILS_LABEL_EXCEPTION)
 
         assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}coordinate")
-        assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_KEYS}CubeKAxis1, CubeKAxis2.")
+        assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}CubeKAxis1, CubeKAxis2.")
         assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1:")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
@@ -899,7 +898,7 @@ class VisualizerTest{
         assert nodeDetails.contains(DETAILS_LABEL_EXCEPTION)
 
         assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}coordinate")
-        assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_KEYS}CubeKAxis1, CubeKAxis2.")
+        assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}CubeKAxis1, CubeKAxis2.")
         assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1:")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")

@@ -62,7 +62,7 @@ class RpmVisualizerInfo extends VisualizerInfo
         LOAD_CELL_VALUES_LABEL
     }
 
-    @Override
+  /*  @Override
     void loadAvailableScopeKeysAndValues(NCube configCube)
     {
         Map<String, Set<Object>> valuesByKey = new CaseInsensitiveMap<>()
@@ -92,15 +92,15 @@ class RpmVisualizerInfo extends VisualizerInfo
         valuesByKey[STATE] = stateValues
         valuesByKey[LOCATION_STATE] = stateValues
 
-        availableScopeValues = valuesByKey
-    }
+        optionalScopeValues = valuesByKey
+    }*/
 
-    private static Set<String> getAllVersions(String tenant, String app)
+   /* private static Set<String> getAllVersions(String tenant, String app)
     {
         Map<String, List<String>> versionsMap = NCubeManager.getVersions(tenant, app)
         Set<String> versions = new TreeSet<>(new VersionComparator())
         versions.addAll(versionsMap[ReleaseStatus.RELEASE.name()])
         versions.addAll(versionsMap[ReleaseStatus.SNAPSHOT.name()])
         return versions
-    }
+    }*/
 }
