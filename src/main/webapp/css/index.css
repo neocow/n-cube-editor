@@ -197,7 +197,7 @@ div#west div.panel-body {
     padding: 5px;
 }
 
-#ncube-list-div input, #ncube-list-div button {
+#ncube-list-div input, #ncube-list-div button, #ncube-list-div .panel-heading {
     border-radius: 0;
 }
 
