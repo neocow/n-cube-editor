@@ -1269,11 +1269,16 @@ var NCubeEditor2 = (function ($) {
         _axisIdsInOrder = [];
         order = getCustomAxisOrder();
         if (order) {
-            for (i = 0, len = order.length; i < len; i++) {
+            for (i = order.length - 1; 0 <= i; i--) {
                 axis = cubeAxes[order[i]];
-                getColumnLength(axis);
-                axes.push(axis);
-                _axisIdsInOrder.push(axis.id);
+                if (axis) {
+                    getColumnLength(axis);
+                    axes.unshift(axis);
+                    _axisIdsInOrder.unshift(axis.id);
+                } else {
+                    order.splice(i, 1);
+                    storeAxisOrder(order);
+                }
             }
         } else {
             determineAxisOrder(cubeAxes);
