@@ -44,7 +44,6 @@ class VisualizerConstants
 	public static final String JSON_FILE_SUFFIX = '.json'
 	public static final String VISUALIZER_CONFIG_CUBE_NAME = 'VisualizerConfig'
 	public static final String VISUALIZER_CONFIG_NETWORK_OVERRIDES_CUBE_NAME = 'VisualizerConfig.NetworkOverrides'
-	public static final String VISUALIZER_CONFIG_REF_DATA_APP_NAME_CUBE_NAME = 'VisualizerConfig.RefDataAppName'
 	public static final String CONFIG_ITEM = 'configItem'
 	public static final String CONFIG_NETWORK_OVERRIDES_BASIC = 'networkOverridesBasic'
 	public static final String CONFIG_NETWORK_OVERRIDES_FULL = 'networkOverridesFull'

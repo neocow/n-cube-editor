@@ -46,7 +46,7 @@ class VisualizerTest{
         assert 6l == visInfo.nodeCount
         assert 5l == visInfo.relInfoCount
         assert 999999l == visInfo.defaultLevel
-        assert [:] == visInfo.optionalScopeValues  //TODO
+        assert [:] == visInfo.optionalScopeValues
         assert '' == visInfo.groupSuffix
         assert ['NCUBE'] as Set == visInfo.availableGroupsAllLevels
 

@@ -382,8 +382,8 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		{
 			if (!sourceCube)
 			{
-				//For the starting class of the graph (top node) keep all optional scope keys. For all other
-				//classes, remove any optional scope keys that are "derived" scope keys, i.e. keys that the
+				//For the starting class of the graph (top node) keep all unbound axis keys. For all other
+				//classes, remove any keys that are "derived" scope keys, i.e. keys that the
 				//the visualizer adds to the scope as it processes through the graph (keys like product,
 				//risk, coverage, sourceRisk, sourceCoverage, etc.).
 				Set<String> removeKeys = []

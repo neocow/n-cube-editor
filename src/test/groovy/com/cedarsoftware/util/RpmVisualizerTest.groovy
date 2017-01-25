@@ -60,13 +60,8 @@ class RpmVisualizerTest
         assert allGroups.keySet() == visInfo.allGroupsKeys
         assert ['COVERAGE', 'RISK'] as Set == visInfo.availableGroupsAllLevels
 
-        //Spot check availableScopeValues
-        //TODO: add new asserts here
-       /* assert allGroups.size() * 2 == visInfo.availableScopeValues.size()
-        assert ['GProductOps', 'ProductLocation', 'StateOps', 'WProductOps'] as Set == visInfo.availableScopeValues['sourceRisk']
-        assert ['AAADIV', 'BBBDIV', 'CCCDIV'] as Set == visInfo.availableScopeValues[BUSINESS_DIVISION_CODE]
-        assert visInfo.availableScopeValues[STATE].containsAll('OH', 'KY')
-        assert visInfo.availableScopeValues[LOCATION_STATE].containsAll('OH', 'KY')*/
+        //Spot check optionalScopeValues and requiredScopeValues
+        //TODO: add asserts here for optionalScopeValues and requiredScopeValues
 
         assert ['rpm.class.Coverage': [] as Set,
                 'rpm.enum.Coverage.Coverages': [] as Set,
@@ -567,8 +562,7 @@ class RpmVisualizerTest
         Map graphInfo = visualizer.getCellValues(appId, options)
         assert STATUS_SUCCESS == graphInfo.status
         Set<String> messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
-        //assert 1 == messages.size() //TODO: add later
-        //checkDefaultScopeKeysMessage_CCoverage(messages.first())
+        assert null == messages
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
         List<Map<String, Object>> edges = (graphInfo.visInfo as RpmVisualizerInfo).edges as List
 
@@ -618,7 +612,6 @@ class RpmVisualizerTest
         assert message.contains('typeA')
         assert message.contains('typeB')
     }
-
 
     @Test
     void testGetCellValues_classNode_showCellValues_withURLs()
@@ -1246,8 +1239,7 @@ class RpmVisualizerTest
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_SUCCESS == graphInfo.status
         Set<String> messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
-       // assert 1 == messages.size() TODO: Add this back in
-       // checkDefaultScopeKeysMessage(messages.first())
+        assert null == messages
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
 
         Map node = nodes.find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on WProduct".toString() == node1.title}

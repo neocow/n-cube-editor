@@ -115,7 +115,6 @@ class VisualizerInfo
         String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
         this.groupSuffix = groupSuffix ?: ''
         loadTypesToAddMap(configCube)
-       // loadAvailableScopeKeysAndValues(configCube)
         loadCellValuesLabel = getLoadCellValuesLabel()
         return configCube
     }

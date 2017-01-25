@@ -31,7 +31,6 @@ class RpmVisualizerHelper extends VisualizerHelper
 	public static final String ENUM_NAME_AXIS = "name";
 	public static final String RPM_CLASS = "rpm.class";
 	public static final String RPM_ENUM = "rpm.enum";
-	public static final String RPM_CLASS_DOT = 'rpm.class.'
 	public static final String R_EXTENDS = 'r:extends'
 	public static final String R_EXISTS = 'r:exists'
 	public static final String R_RPM_TYPE = 'r:rpmType'
