@@ -172,7 +172,7 @@ class VisualizerInfo
 
         if (cubeMap)
         {
-            return cubeMap.values() as Set<Object>
+            return cubeMap[cubeName] as Set<Object>
         }
         else
         {

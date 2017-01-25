@@ -602,16 +602,16 @@ class RpmVisualizerTest
         assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}CCoverage of type Coverage.")
         assert message.contains("${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}businessDivisionCode, program, type")
 
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}businessDivisionCode on rpm.scope.class.Coverage.traits.StatCode, rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field4:")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}businessDivisionCode (on rpm.scope.class.Coverage.traits.StatCode, rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field4):")
         assert message.contains('AAADIV')
         assert message.contains('BBBDIV')
 
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}program on rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field4:")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}program (on rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field4):")
         assert message.contains('program1')
         assert message.contains('program2')
         assert message.contains('program3')
 
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}type on rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field3CovC, rpm.scope.class.Coverage.traits.field4:")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}type (on rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field3CovC, rpm.scope.class.Coverage.traits.field4):")
         assert message.contains('type1')
         assert message.contains('type2')
         assert message.contains('type3')
@@ -880,7 +880,6 @@ class RpmVisualizerTest
     {
         assert message.contains('The scope value xxxxxxxx for scope key product cannot be found on axis product in rpm.scope.class.Product.traits for xxxxxxxx.')
         assert message.contains("${SUPPLY_DIFFERENT_VALUE_FOR}product.")
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}product:")
         assert message.contains('GProduct')
         assert message.contains('UProduct')
         assert message.contains('WProduct')
@@ -1270,7 +1269,7 @@ class RpmVisualizerTest
     {
         assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on WProduct.")
         assert message.contains("${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}state")
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}state on rpm.scope.enum.Product.Risks.traits:")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}state (on rpm.scope.enum.Product.Risks.traits):")
         assert message.contains('none')
     }
 

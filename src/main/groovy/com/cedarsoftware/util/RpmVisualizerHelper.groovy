@@ -50,7 +50,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 	private static final String EXISTS_TRAIT_CONTAINS_NULL_VALUE = " may not contain a value of null. If there is a value, it must be true or false. ";
 	private static ApplicationID appId
 	private static boolean loadAllTraits
-	private Map<String, Set<String>> defaultKeys = [:]
+	private Map<String, Set<String>> unboundAxes = [:]
 
 	/**
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
@@ -116,7 +116,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 					}
 				}
 				isOriginalClass = false;
-				output.defaultKeys = defaultKeys
+				output.unboundAxes = unboundAxes
 			}
 			catch (Exception e)
 			{
@@ -181,7 +181,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			if (traitNames.contains(R_EXTENDS)) {
 				coord.put(TRAIT_AXIS, R_EXTENDS);
 				Object extendsValue = classCube.getCell(coord, new HashMap(), NOT_DEFINED);
-				addDefaultKeys(classCube, output)
+				addUnboundAxes(classCube, output)
 				if (extendsValue!=null && hasValue(extendsValue))
 				{
 					if (!fieldTraits.containsKey(R_EXTENDS)) {
@@ -267,7 +267,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 				coord.put(TRAIT_AXIS, R_EXTENDS);
 				Map masterCubeOutput = new CaseInsensitiveMap()
 				String extension = (String) masterCube.getCell(coord, masterCubeOutput, NOT_DEFINED);
-				addDefaultKeys(masterCube, masterCubeOutput)
+				addUnboundAxes(masterCube, masterCubeOutput)
 				if (hasValue(extension) && !StringUtilities.isEmpty(extension)) {
 					defsToProcess.add(extension);
 				}
@@ -385,26 +385,26 @@ class RpmVisualizerHelper extends VisualizerHelper
 			coord.put(TRAIT_AXIS,traitName);
 			Map output = new CaseInsensitiveMap()
 			Object val = classCube.getCell(coord, output, NOT_DEFINED);
-			addDefaultKeys(classCube, output)
+			addUnboundAxes(classCube, output)
 			if (hasValue(val)) {
 				fieldTraits.put(traitName, val);
 			}
 		}
 	}
 
-	private void addDefaultKeys(NCube cube, Map output)
+	private void addUnboundAxes(NCube cube, Map output)
 	{
 		RuleInfo ruleInfo = cube.getRuleInfo(output)
-		Map<String, Set<String>> defaultKeysByCubeName = ruleInfo.getDefaultKeysUsed()
-		defaultKeysByCubeName.each{String cubeName, Set<String> keys ->
-			keys.each { String key ->
-				Set<String> allCubesWithThisDefaultKey = defaultKeys[key]
-				if (!allCubesWithThisDefaultKey)
+		Map<String, Map<String, Set<Object>>> unBoundColumns = ruleInfo.getUnboundAxesMap()
+		unBoundColumns.each{String cubeName, Map<String, Set<Object>> unBoundColumnsForCube ->
+			unBoundColumnsForCube.each { String axisName, Set<Object> values ->
+				Set<String> allCubesWithUnboundColumn = unboundAxes[axisName]
+				if (!allCubesWithUnboundColumn)
 				{
-					allCubesWithThisDefaultKey = new CaseInsensitiveSet()
+					allCubesWithUnboundColumn = new CaseInsensitiveSet()
 				}
-				allCubesWithThisDefaultKey << cubeName
-				defaultKeys[key] = allCubesWithThisDefaultKey
+				allCubesWithUnboundColumn << cubeName
+				unboundAxes[axisName] = allCubesWithUnboundColumn
 			}
 		}
 	}
@@ -527,7 +527,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			if (!fieldTraits.containsKey(R_EXISTS)) {
 				coord.put(axisName,fieldName);
 				Boolean exists = getExistsValue(fieldName, className, classCube.getCell(coord,output,NOT_DEFINED));
-				addDefaultKeys(classCube, output)
+				addUnboundAxes(classCube, output)
 				if (exists!=null) {
 					fieldTraits.put(R_EXISTS, exists);
 				}

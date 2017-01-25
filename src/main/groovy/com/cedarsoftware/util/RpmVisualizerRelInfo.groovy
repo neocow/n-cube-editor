@@ -351,7 +351,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			removeNotExistsFields()
 			addRequiredAndOptionalScopeKeys(visInfo)
 			retainUsedScope(visInfo, output)
-			handleDefaultKeys(visInfo, output.defaultKeys as Map)
+			handleUnboundAxes(visInfo, output.unboundAxes as Map)
 			cellValuesLoaded = true
 			showCellValuesLink = true
 		}
@@ -376,39 +376,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return true
 	}
 
-	/*
-	private void handleDefaultKeysUsed(VisualizerInfo visInfo, Map<String, Set<String>> defaultKeys)
+	private void handleUnboundAxes(VisualizerInfo visInfo, Map<String, Set<String>> unboundAxes)
 	{
-		if (defaultKeys)
-		{
-			String cubeName = targetCube.name
-			String effectiveNameByCubeName = effectiveNameByCubeName
-			StringBuilder sb = new StringBuilder()
-			if (cubeName.startsWith(RPM_CLASS_DOT))
-			{
-				String cubeDisplayName = getCubeDisplayName(cubeName)
-				sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
-			}
-			else if (cubeName.startsWith(RPM_ENUM_DOT))
-			{
-				sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeDetailsTitle1}.")
-			}
-			else
-			{
-				sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
-			}
-			sb.append("${BREAK}")
-			sb.append(helper.handleDefaultKeys(visInfo, this, defaultKeys))
-			String msg = sb.toString()
-			notes << msg
-			visInfo.messages << msg
-		}
-	}
-	 */
-
-	private void handleDefaultKeys(VisualizerInfo visInfo, Map<String, Set<String>> defaultKeys)
-	{
-		if (defaultKeys)
+		if (unboundAxes)
 		{
 			if (!sourceCube)
 			{
@@ -417,10 +387,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				//the visualizer adds to the scope as it processes through the graph (keys like product,
 				//risk, coverage, sourceRisk, sourceCoverage, etc.).
 				Set<String> removeKeys = []
-				Set keys = defaultKeys.keySet()
+				Set keys = unboundAxes.keySet()
 				keys.each{String key ->
-					String strippedDefaultKey = key.replaceFirst('source', '')
-					if (visInfo.allGroupsKeys.contains(strippedDefaultKey))
+					String strippedKey = key.replaceFirst('source', '')
+					if (visInfo.allGroupsKeys.contains(strippedKey))
 					{
 						removeKeys << key
 					}
@@ -446,7 +416,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
 			}
 			sb.append("${BREAK}")
-			sb.append(helper.handleDefaultKeys(visInfo, this, defaultKeys))
+			sb.append(helper.handleUnboundAxes(visInfo, this, unboundAxes))
 			notes << sb.toString()
 		}
 	}
