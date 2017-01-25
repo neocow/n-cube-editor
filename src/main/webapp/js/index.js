@@ -4377,6 +4377,7 @@ var NCE = (function ($) {
         _diffRightName = diffOptions.rightName;
         _diffAppId = diffOptions.appId;
         _diffCubeName = diffOptions.cubeName;
+        diffOptions.canEdit = diffOptions.canEdit && checkPermissions(diffOptions.appId, _diffCubeName, PERMISSION_ACTION.UPDATE);
         if (diffOptions.canEdit) {
             _diffModal.find('.select-all, .select-none, .btn-primary').show();
             _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them right to left. Click a row to see more information about the change.';
