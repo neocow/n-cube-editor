@@ -879,6 +879,100 @@ class RpmVisualizerTest
     }
 
     @Test
+    void testBuildGraph_withDerivedDefaultScopeKeyNotProvided_notTopNode()
+    {
+        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                     policyControlDate: '2017-01-01',
+                     quoteDate        : '2017-01-01',
+                     risk             : 'WProductOps']
+
+        String startCubeName = 'rpm.class.Risk'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+        assert null == messages
+
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+        Map node = nodes.find {Map node ->  'StateOps' == node.detailsTitle2}
+        assert 'Risk' == node.title
+        assert 'Risk' == node.detailsTitle1
+        assert 'StateOps' == node.detailsTitle2
+        assert true == node.showCellValuesLink
+        assert false == node.showCellValues
+        assert true == node.cellValuesLoaded
+        String nodeDetails = node.details as String
+        assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
+        assert !nodeDetails.contains(DETAILS_LABEL_REASON)
+    }
+
+    @Test
+    void testBuildGraph_withDerivedDefaultScopeKeyNotProvided_topNode()
+    {
+        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                     policyControlDate: '2017-01-01',
+                     quoteDate        : '2017-01-01',
+                     sourceRisk       : 'WProductOps',
+                     risk             : 'StateOps']
+
+        String startCubeName = 'rpm.class.Risk'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+        assert null == messages
+
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+        Map node = nodes.find {Map node ->  'StateOps' == node.detailsTitle2}
+        assert 'Risk' == node.title
+        assert 'Risk' == node.detailsTitle1
+        assert 'StateOps' == node.detailsTitle2
+        assert true == node.showCellValuesLink
+        assert false == node.showCellValues
+        assert true == node.cellValuesLoaded
+        String nodeDetails = node.details as String
+        assert nodeDetails.contains(DETAILS_LABEL_NOTE)
+        assert nodeDetails.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}StateOps of type Risk.")
+        assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}product")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}product (on rpm.scope.class.Risk.traits.Coverages):")
+        assert nodeDetails.contains('WProduct')
+        assert nodeDetails.contains('UProduct')
+        assert nodeDetails.contains('GProduct')
+    }
+
+    @Test
+    void testBuildGraph_withDerivedDefaultScopeKeyProvided_notTopNode()
+    {
+        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                     policyControlDate: '2017-01-01',
+                     quoteDate        : '2017-01-01',
+                     product          : 'WProduct',
+                     risk             : 'WProductOps']
+
+        String startCubeName = 'rpm.class.Risk'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+        assert null == messages
+
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+        Map node = nodes.find {Map node ->  'StateOps' == node.detailsTitle2}
+        assert 'Risk' == node.title
+        assert 'Risk' == node.detailsTitle1
+        assert 'StateOps' == node.detailsTitle2
+        assert true == node.showCellValuesLink
+        assert false == node.showCellValues
+        assert true == node.cellValuesLoaded
+        String nodeDetails = node.details as String
+        assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
+        assert !nodeDetails.contains(DETAILS_LABEL_REASON)
+    }
+
+    @Test
     void testBuildGraph_missingRequiredScope()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
@@ -1024,9 +1118,6 @@ class RpmVisualizerTest
             Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
             assert 1 == messages.size()
             String message = messages.first()
-            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WACoverage of type Coverage.")
-            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WCoverage of type Coverage.")
-            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}CCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}ACoverage of type Coverage.")
             checkMissingRequiredScopeMessage(message)
@@ -1102,24 +1193,21 @@ class RpmVisualizerTest
             List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
 
             String message = messages.first()
-            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WACoverage of type Coverage.")
-            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WCoverage of type Coverage.")
-            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}CCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}ACoverage of type Coverage.")
             assert message.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}dummyRequiredScopeKey.")
 
-            Map node = nodes.find {Map node ->  "${MISSING_SCOPE}WACoverage".toString() == node.label}
+            Map node = nodes.find {Map node ->  "${MISSING_SCOPE}FCoverage".toString() == node.label}
             assert 'Coverage' == node.title
             assert 'Coverage' == node.detailsTitle1
-            assert 'WACoverage' == node.detailsTitle2
+            assert 'FCoverage' == node.detailsTitle2
             assert false == node.showCellValuesLink
             assert false == node.showCellValues
             assert false == node.cellValuesLoaded
             String nodeDetails = node.details as String
-            assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for WACoverage")
-            assert nodeDetails.contains("${DETAILS_LABEL_REASON}")
-            assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}WACoverage of type Coverage.")
+            assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for FCoverage")
+            assert nodeDetails.contains(DETAILS_LABEL_REASON)
+            assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage of type Coverage.")
             assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}dummyRequiredScopeKey.")
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)

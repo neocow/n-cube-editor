@@ -380,44 +380,46 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		if (unboundAxes)
 		{
-			if (!sourceCube)
+			if (sourceCube)
 			{
 				//For the starting class of the graph (top node) keep all unbound axis keys. For all other
 				//classes, remove any keys that are "derived" scope keys, i.e. keys that the
 				//the visualizer adds to the scope as it processes through the graph (keys like product,
-				//risk, coverage, sourceRisk, sourceCoverage, etc.).
-				Set<String> removeKeys = []
-				Set keys = unboundAxes.keySet()
-				keys.each{String key ->
+				//risk, coverage, sourceProduct, sourceRisk, sourceCoverage, etc.).
+				Set<String> removeKeys = [] as CaseInsensitiveSet
+				unboundAxes.keySet().each{String key ->
 					String strippedKey = key.replaceFirst('source', '')
 					if (visInfo.allGroupsKeys.contains(strippedKey))
 					{
 						removeKeys << key
 					}
 				}
-				keys.removeAll(removeKeys)
+				unboundAxes.keySet().removeAll(removeKeys)
 			}
 
-			String cubeName = targetCube.name
-			String effectiveNameByCubeName = effectiveNameByCubeName
-			StringBuilder sb = new StringBuilder()
-			if (cubeName.startsWith(RPM_CLASS_DOT))
+			if (unboundAxes)
 			{
-				String cubeDisplayName = getCubeDisplayName(cubeName)
-				sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+				String cubeName = targetCube.name
+				String effectiveNameByCubeName = effectiveNameByCubeName
+				StringBuilder sb = new StringBuilder()
+				if (cubeName.startsWith(RPM_CLASS_DOT))
+				{
+					String cubeDisplayName = getCubeDisplayName(cubeName)
+					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+				}
+				else if (cubeName.startsWith(RPM_ENUM_DOT))
+				{
+					String cubeTitle = cubeDetailsTitle1.replace(VALID_VALUES_FOR_FIELD_SENTENCE_CASE, VALID_VALUES_FOR_FIELD_LOWER_CASE)
+					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeTitle}.")
+				}
+				else
+				{
+					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+				}
+				sb.append("${BREAK}")
+				sb.append(helper.handleUnboundAxes(visInfo, this, unboundAxes))
+				notes << sb.toString()
 			}
-			else if (cubeName.startsWith(RPM_ENUM_DOT))
-			{
-				String cubeTitle = cubeDetailsTitle1.replace(VALID_VALUES_FOR_FIELD_SENTENCE_CASE, VALID_VALUES_FOR_FIELD_LOWER_CASE)
-				sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeTitle}.")
-			}
-			else
-			{
-				sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
-			}
-			sb.append("${BREAK}")
-			sb.append(helper.handleUnboundAxes(visInfo, this, unboundAxes))
-			notes << sb.toString()
 		}
 	}
 

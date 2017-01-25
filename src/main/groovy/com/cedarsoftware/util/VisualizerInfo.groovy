@@ -111,7 +111,7 @@ class VisualizerInfo
         networkOverridesTopNode = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_TOP_NODE, (CUBE_TYPE): cubeType]) as Map
         defaultLevel = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_LEVEL, (CUBE_TYPE): cubeType]) as long
         allGroups = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_GROUPS, (CUBE_TYPE): cubeType]) as Map
-        allGroupsKeys = new LinkedHashSet(allGroups.keySet())
+        allGroupsKeys = new CaseInsensitiveSet(allGroups.keySet())
         String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
         this.groupSuffix = groupSuffix ?: ''
         loadTypesToAddMap(configCube)
