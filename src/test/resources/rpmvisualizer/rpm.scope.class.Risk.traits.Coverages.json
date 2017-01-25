@@ -59,6 +59,26 @@
       "transformCubeName":null,
       "transformMethodName":null,
       "columns":[]
+    },
+    {
+      "id":6,
+      "name":"product",
+      "hasDefault":true,
+      "isRef":true,
+      "referenceTenant":"NONE",
+      "referenceApp":"test.visualizer",
+      "referenceVersion":"1.0.0",
+      "referenceStatus":"RELEASE",
+      "referenceBranch":"HEAD",
+      "referenceCubeName":"Product",
+      "referenceAxisName":"product",
+      "transformApp":null,
+      "transformVersion":null,
+      "transformStatus":null,
+      "transformBranch":null,
+      "transformCubeName":null,
+      "transformMethodName":null,
+      "columns":[]
     }
   ],
   "cells":[

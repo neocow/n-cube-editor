@@ -33,14 +33,9 @@ final class RpmVisualizerConstants extends VisualizerConstants
 	public static final String EFFECTIVE_VERSION = '_effectiveVersion'
 	public static final String POLICY_CONTROL_DATE = 'policyControlDate'
 	public static final String QUOTE_DATE = 'quoteDate'
-	public static final String BUSINESS_DIVISION_CODE = 'businessDivisionCode'
-	public static final String STATE = 'state'
-	public static final String LOCATION_STATE = 'locationState'
 	public static final String SOURCE_SCOPE_KEY_PREFIX = 'source'
 	public static final String SYSTEM_SCOPE_KEY_PREFIX = "_"
 	public static final String EFFECTIVE_VERSION_SCOPE_KEY = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion"
-	public static final String BUSINESS_DIVISION_CUBE_NAME = 'ent.manual.BusinessDivision'
-	public static final String STATE_CUBE_NAME = 'ent.manual.State'
 	public static final Set<String> MANDATORY_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
 
 	public static final String CUBE_TYPE_RPM = 'rpm'
@@ -61,6 +56,6 @@ final class RpmVisualizerConstants extends VisualizerConstants
 
 	public static final String DEFAULT_VALUE_MAY_BE_CHANGED = 'Its default value may be changed as desired.'
 	public static final String OTHER_DEFAULT_VALUE_MAY_BE_CHANGED = 'The other default scope values may also be changed as desired.'
-
-
+	public static final String VALID_VALUES_FOR_FIELD_SENTENCE_CASE = 'Valid values for field '
+	public static final String VALID_VALUES_FOR_FIELD_LOWER_CASE = 'valid values for field '
 }

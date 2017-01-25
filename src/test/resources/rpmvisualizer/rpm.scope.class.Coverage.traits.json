@@ -51,6 +51,26 @@
           "id":2000000000080,
           "type":"string",
           "value":"StatCode"
+        },
+        {
+          "id":2001090080241,
+          "type":"string",
+          "value":"field1"
+        },
+        {
+          "id":2000456156598,
+          "type":"string",
+          "value":"field2"
+        },
+        {
+          "id":2001905067340,
+          "type":"string",
+          "value":"field3"
+        },
+        {
+          "id":2000633261759,
+          "type":"string",
+          "value":"field4"
         }
       ]
     },
@@ -103,8 +123,26 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1155"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
+    },
+    {
+      "id":[
+        1000000000057,
+        2001905067340,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.field3CovI[:]"
+    },
+    {
+      "id":[
+        1000000000057,
+        2000456156598,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
     },
     {
       "id":[
@@ -114,6 +152,15 @@
       ],
       "type":"boolean",
       "value":true
+    },
+    {
+      "id":[
+        1000000000050,
+        2001905067340,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.field3CovC[:]"
     },
     {
       "id":[
@@ -144,6 +191,24 @@
     },
     {
       "id":[
+        1000000000050,
+        2000456156598,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
+        1000000000057,
+        2001090080241,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.field1And2[:]"
+    },
+    {
+      "id":[
         1000000000007,
         2000000000003,
         3000000000014
@@ -166,8 +231,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1177"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -189,8 +254,35 @@
     },
     {
       "id":[
+        1000000000057,
+        2000633261759,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.field4[:]"
+    },
+    {
+      "id":[
         1000000000031,
         2000000000039,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
+        1000000000050,
+        2001090080241,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.field1And2[:]"
+    },
+    {
+      "id":[
+        1000000000057,
+        2001905067340,
         3000000000002
       ],
       "type":"boolean",
@@ -202,8 +294,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1133"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -211,8 +303,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"https://mail.google.com"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -234,6 +326,15 @@
     },
     {
       "id":[
+        1000000000050,
+        2001905067340,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
         1000000000060,
         2000000000039,
         3000000000002
@@ -252,12 +353,30 @@
     },
     {
       "id":[
+        1000000000057,
+        2000456156598,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.field1And2[:]"
+    },
+    {
+      "id":[
+        1000000000007,
+        2000000000039,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
         1000000000031,
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1166"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -271,11 +390,38 @@
     {
       "id":[
         1000000000057,
+        2001090080241,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
+        1000000000050,
+        2000633261759,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
+        1000000000057,
         2000000000080,
         3000000000002
       ],
       "type":"boolean",
       "value":true
+    },
+    {
+      "id":[
+        1000000000007,
+        2000000000080,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[
@@ -288,12 +434,12 @@
     },
     {
       "id":[
-        1000000000007,
-        2000000000039,
-        3000000000002
+        1000000000050,
+        2000456156598,
+        3000000000035
       ],
-      "type":"boolean",
-      "value":true
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.field1And2[:]"
     },
     {
       "id":[
@@ -306,12 +452,39 @@
     },
     {
       "id":[
+        1000000000057,
+        2000633261759,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
+        1000000000050,
+        2000633261759,
+        3000000000035
+      ],
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.field4[:]"
+    },
+    {
+      "id":[
         1000000000036,
         2000000000003,
         3000000000014
       ],
       "type":"string",
       "value":"Coverage.Coverages"
+    },
+    {
+      "id":[
+        1000000000050,
+        2001090080241,
+        3000000000002
+      ],
+      "type":"boolean",
+      "value":true
     },
     {
       "id":[
@@ -328,8 +501,8 @@
         2000000000080,
         3000000000035
       ],
-      "type":"string",
-      "value":"1144"
+      "type":"exp",
+      "value":"@rpm.scope.class.Coverage.traits.StatCode[:]"
     },
     {
       "id":[

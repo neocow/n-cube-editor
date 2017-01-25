@@ -74,6 +74,16 @@
       "transformCubeName":null,
       "transformMethodName":null,
       "columns":[]
+    },
+    {
+      "id":5,
+      "name":"state",
+      "hasDefault":true,
+      "type":"DISCRETE",
+      "valueType":"STRING",
+      "preferredOrder":1,
+      "fireAll":true,
+      "columns":[]
     }
   ],
   "cells":[

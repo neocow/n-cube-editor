@@ -14,6 +14,24 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerHelper
 {
+	static String handleUnboundAxes(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Map<String, Set<String>> unboundAxes)
+	{
+		StringBuilder sb = new StringBuilder()
+		sb.append("${BREAK} ${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}${unboundAxes.keySet().join(COMMA_SPACE)}.${BREAK}")
+		unboundAxes.each { String key, Set<String> cubeNames ->
+			Set<Object> allOptionalScopeValues = []
+			Set<String> cubeDisplayNames = []
+			cubeNames.each { String cubeName ->
+				Set<Object> optionalScopeValues = visInfo.getOptionalScopeValues(cubeName, key)
+				allOptionalScopeValues.addAll(optionalScopeValues)
+				cubeDisplayNames << relInfo.getCubeDisplayName(cubeName)
+			}
+			String cubeDisplayNamesString = cubeDisplayNames.join(COMMA_SPACE)
+			sb.append(getUnboundAxesMessage(allOptionalScopeValues, cubeDisplayNamesString, key))
+		}
+		return sb.toString()
+	}
+
 	static String handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, String targetMsg )
 	{
 		String cubeName = e.cubeName
@@ -52,7 +70,6 @@ class VisualizerHelper
 		return getExceptionMessage(t, e, targetMsg)
 	}
 
-
 	static protected Throwable getDeepestException(Throwable e)
 	{
 		while (e.cause != null)
@@ -62,28 +79,53 @@ class VisualizerHelper
 		return e
 	}
 
-	static String getAvailableScopeValuesMessage(VisualizerInfo visInfo, String cubeName, String key)
+	static String getUnboundAxesMessage(Set<Object> optionalScopeValues, String cubeNames, String key)
 	{
-		Set<Object> scopeValues = visInfo.availableScopeValues[key] ?: visInfo.loadAvailableScopeValues(cubeName, key)
-		if (scopeValues) {
-			StringBuilder sb = new StringBuilder()
-			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key}:${DOUBLE_BREAK}<pre><ul>")
+		StringBuilder sb = new StringBuilder()
+		sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key} (on ${cubeNames}):${DOUBLE_BREAK}<pre><ul>")
+		if (optionalScopeValues)
+		{
+			optionalScopeValues.each{
+				String value = it.toString()
+				sb.append("""<li><a class="missingScope" title="${key}: ${value}" href="#">${value}</a></li>""")
+			}
+		}
+		else
+		{
+			sb.append(NONE)
+		}
+		sb.append("</ul></pre>")
+		return sb.toString()
+		return ''
+	}
+
+	static String getScopeValuesMessage(String key, Set<Object> scopeValues)
+	{
+		StringBuilder sb = new StringBuilder()
+		sb.append("${DOUBLE_BREAK}<pre><ul>")
+		if (scopeValues)
+		{
 			scopeValues.each{
 				String value = it.toString()
 				sb.append("""<li><a class="missingScope" title="${key}: ${value}" href="#">${value}</a></li>""")
 			}
-			sb.append("</ul></pre>")
-			return sb.toString()
 		}
-		return ''
+		else
+		{
+			sb.append(NONE)
+		}
+		sb.append("</ul></pre>")
+		return sb.toString()
 	}
 
 	private static String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, Set<String> missingScope, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
-		message.append("${DOUBLE_BREAK} ${ADD_SCOPE_VALUES_FOR_KEYS}${missingScope.join(COMMA_SPACE)}.${BREAK}")
+		message.append("${DOUBLE_BREAK} ${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}${missingScope.join(COMMA_SPACE)}.${BREAK}")
 		missingScope.each{ String key ->
-			message.append(getAvailableScopeValuesMessage(visInfo, cubeName, key))
+			message.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key}:")
+			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, key)
+			message.append(getScopeValuesMessage(key, requiredScopeValues))
 		}
 		return message.toString()
 	}
@@ -91,8 +133,9 @@ class VisualizerHelper
 	private static String getCoordinateNotFoundMessage(VisualizerInfo visInfo, String key, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
-		String messageScopeValues = getAvailableScopeValuesMessage(visInfo, cubeName, key)
-		message.append("${DOUBLE_BREAK} ${SUPPLY_DIFFERENT_VALUE_FOR}${key}.${BREAK}${messageScopeValues}")
+		message.append("${DOUBLE_BREAK} ${SUPPLY_DIFFERENT_VALUE_FOR}${key}.")
+		Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, key)
+		message.append(getScopeValuesMessage(key, requiredScopeValues))
 		return message.toString()
 	}
 

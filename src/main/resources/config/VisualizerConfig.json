@@ -91,12 +91,6 @@
             "value":"@VisualizerConfig.NetworkOverrides[:]"
           },
           "value":"networkOverridesTopNode"
-        },
-        {
-          "id":1001734009541,
-          "type":"string",
-          "default_value":"@VisualizerConfig.RefDataAppName[:]",
-          "value":"refDataAppName"
         }
       ]
     }

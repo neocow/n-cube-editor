@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import groovy.transform.CompileStatic
 
@@ -30,7 +31,6 @@ class RpmVisualizerHelper extends VisualizerHelper
 	public static final String ENUM_NAME_AXIS = "name";
 	public static final String RPM_CLASS = "rpm.class";
 	public static final String RPM_ENUM = "rpm.enum";
-	public static final String RPM_CLASS_DOT = 'rpm.class.'
 	public static final String R_EXTENDS = 'r:extends'
 	public static final String R_EXISTS = 'r:exists'
 	public static final String R_RPM_TYPE = 'r:rpmType'
@@ -49,6 +49,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 	private static final String EXISTS_TRAIT_CONTAINS_NULL_VALUE = " may not contain a value of null. If there is a value, it must be true or false. ";
 	private static ApplicationID appId
 	private static boolean loadAllTraits
+	private Map<String, Set<String>> unboundAxes = [:]
 
 	/**
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
@@ -114,6 +115,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 					}
 				}
 				isOriginalClass = false;
+				output.unboundAxes = unboundAxes
 			}
 			catch (Exception e)
 			{
@@ -178,6 +180,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			if (traitNames.contains(R_EXTENDS)) {
 				coord.put(TRAIT_AXIS, R_EXTENDS);
 				Object extendsValue = classCube.getCell(coord, new HashMap(), NOT_DEFINED);
+				addUnboundAxes(classCube, output)
 				if (extendsValue!=null && hasValue(extendsValue))
 				{
 					if (!fieldTraits.containsKey(R_EXTENDS)) {
@@ -200,7 +203,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * applies the master definition specified in r:extends to the current field traits
 	 */
-	private static void processMasterDefinition(String className, String fieldName, String masterDefinition,
+	private void processMasterDefinition(String className, String fieldName, String masterDefinition,
 										 String cubeType, String axisName, Map<String, Object> scope, Map<String, Object> traits, Map<String, Object> output)
 	{
 		String classType = cubeType==RPM_CLASS ? "RpmClass" : "RpmEnum";
@@ -261,7 +264,9 @@ class RpmVisualizerHelper extends VisualizerHelper
 			// check for extended definitions
 			if (traitNames.contains(R_EXTENDS)) {
 				coord.put(TRAIT_AXIS, R_EXTENDS);
-				String extension = (String) masterCube.getCell(coord, new HashMap(), NOT_DEFINED);
+				Map masterCubeOutput = new CaseInsensitiveMap()
+				String extension = (String) masterCube.getCell(coord, masterCubeOutput, NOT_DEFINED);
+				addUnboundAxes(masterCube, masterCubeOutput)
 				if (hasValue(extension) && !StringUtilities.isEmpty(extension)) {
 					defsToProcess.add(extension);
 				}
@@ -370,16 +375,35 @@ class RpmVisualizerHelper extends VisualizerHelper
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Load trait values for a given field into the fieldTraits map, ignoring traits already loaded
 	 */
-	private static void loadTraitsForField(NCube classCube, List<String> traitNames, Map<String, Object> fieldTraits, Map<String, Object> coord) {
+	private void loadTraitsForField(NCube classCube, List<String> traitNames, Map<String, Object> fieldTraits, Map<String, Object> coord) {
 		for (String traitName : traitNames) {
 			if (fieldTraits.containsKey(traitName) || R_EXTENDS.equals(traitName)) {
 				continue;
 			}
 
 			coord.put(TRAIT_AXIS,traitName);
-			Object val = classCube.getCell(coord, new HashMap(), NOT_DEFINED);
+			Map output = new CaseInsensitiveMap()
+			Object val = classCube.getCell(coord, output, NOT_DEFINED);
+			addUnboundAxes(classCube, output)
 			if (hasValue(val)) {
 				fieldTraits.put(traitName, val);
+			}
+		}
+	}
+
+	private void addUnboundAxes(NCube cube, Map output)
+	{
+		RuleInfo ruleInfo = cube.getRuleInfo(output)
+		Map<String, Map<String, Set<Object>>> unBoundColumns = ruleInfo.getUnboundAxesMap()
+		unBoundColumns.each{String cubeName, Map<String, Set<Object>> unBoundColumnsForCube ->
+			unBoundColumnsForCube.each { String axisName, Set<Object> values ->
+				Set<String> allCubesWithUnboundColumn = unboundAxes[axisName]
+				if (!allCubesWithUnboundColumn)
+				{
+					allCubesWithUnboundColumn = new CaseInsensitiveSet()
+				}
+				allCubesWithUnboundColumn << cubeName
+				unboundAxes[axisName] = allCubesWithUnboundColumn
 			}
 		}
 	}
@@ -487,7 +511,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Bulk loads value of r:exists for all fields defined
 	 */
-	private static void populateExistsTrait(String className, String axisName, Map<String, Object> scope, Map<String, Map<String, Object>> fieldAndTraits, NCube classCube, Map output) {
+	private void populateExistsTrait(String className, String axisName, Map<String, Object> scope, Map<String, Map<String, Object>> fieldAndTraits, NCube classCube, Map output) {
 		Axis traitAxis = classCube.getAxis(TRAIT_AXIS);
 		if (traitAxis==null || traitAxis.findColumn(R_EXISTS)==null) {
 			return;
@@ -502,7 +526,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			if (!fieldTraits.containsKey(R_EXISTS)) {
 				coord.put(axisName,fieldName);
 				Boolean exists = getExistsValue(fieldName, className, classCube.getCell(coord,output,NOT_DEFINED));
-
+				addUnboundAxes(classCube, output)
 				if (exists!=null) {
 					fieldTraits.put(R_EXISTS, exists);
 				}

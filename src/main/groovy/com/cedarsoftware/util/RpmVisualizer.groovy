@@ -285,7 +285,10 @@ class RpmVisualizer extends Visualizer
 		{
 			String type = getTypeFromCubeName(startCubeName)
 			String messageSuffixTypeScopeKey = "${DOUBLE_BREAK}Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
-			String messageScopeValues = helper.getAvailableScopeValuesMessage(rpmVisInfo, startCubeName, type)
+			String scopeCubeName = startCubeName.replace(RPM_CLASS_DOT, RPM_SCOPE_CLASS_DOT) + DOT_TRAITS
+			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(scopeCubeName, type)
+			String messageScopeValues = "${DOUBLE_BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${type}:"
+			messageScopeValues += helper.getScopeValuesMessage(type, requiredScopeValues)
 			String messageSuffix = OTHER_DEFAULT_VALUE_MAY_BE_CHANGED
 			if (scope)
 			{

@@ -319,7 +319,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		else if (targetCubeName.startsWith(RPM_ENUM_DOT))
 		{
 			String sourceName =  sourceTraits ? getDotSuffix(sourceEffectiveName) : getCubeDisplayName(sourceCube.name)
-			detailsTitle = "Valid values for field ${sourceFieldName} on ${sourceName}".toString()
+			detailsTitle = "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}${sourceFieldName} on ${sourceName}".toString()
 		}
 		return detailsTitle
 	}
@@ -351,6 +351,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			removeNotExistsFields()
 			addRequiredAndOptionalScopeKeys(visInfo)
 			retainUsedScope(visInfo, output)
+			handleUnboundAxes(visInfo, output.unboundAxes as Map)
 			cellValuesLoaded = true
 			showCellValuesLink = true
 		}
@@ -375,6 +376,53 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return true
 	}
 
+	private void handleUnboundAxes(VisualizerInfo visInfo, Map<String, Set<String>> unboundAxes)
+	{
+		if (unboundAxes)
+		{
+			if (sourceCube)
+			{
+				//For the starting class of the graph (top node) keep all unbound axis keys. For all other
+				//classes, remove any keys that are "derived" scope keys, i.e. keys that the
+				//the visualizer adds to the scope as it processes through the graph (keys like product,
+				//risk, coverage, sourceProduct, sourceRisk, sourceCoverage, etc.).
+				Set<String> removeKeys = [] as CaseInsensitiveSet
+				unboundAxes.keySet().each{String key ->
+					String strippedKey = key.replaceFirst('source', '')
+					if (visInfo.allGroupsKeys.contains(strippedKey))
+					{
+						removeKeys << key
+					}
+				}
+				unboundAxes.keySet().removeAll(removeKeys)
+			}
+
+			if (unboundAxes)
+			{
+				String cubeName = targetCube.name
+				String effectiveNameByCubeName = effectiveNameByCubeName
+				StringBuilder sb = new StringBuilder()
+				if (cubeName.startsWith(RPM_CLASS_DOT))
+				{
+					String cubeDisplayName = getCubeDisplayName(cubeName)
+					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+				}
+				else if (cubeName.startsWith(RPM_ENUM_DOT))
+				{
+					String cubeTitle = cubeDetailsTitle1.replace(VALID_VALUES_FOR_FIELD_SENTENCE_CASE, VALID_VALUES_FOR_FIELD_LOWER_CASE)
+					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeTitle}.")
+				}
+				else
+				{
+					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+				}
+				sb.append("${BREAK}")
+				sb.append(helper.handleUnboundAxes(visInfo, this, unboundAxes))
+				notes << sb.toString()
+			}
+		}
+	}
+
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo)
 	{
 		StringBuilder mb = new StringBuilder()
@@ -395,10 +443,14 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		String cubeName = e.cubeName
 		String effectiveNameByCubeName = effectiveNameByCubeName
 		StringBuilder sb = new StringBuilder()
-		if (cubeName.startsWith(RPM_CLASS_DOT) || cubeName.startsWith(RPM_ENUM_DOT))
+		if (cubeName.startsWith(RPM_CLASS_DOT))
 		{
 			String cubeDisplayName = getCubeDisplayName(cubeName)
 			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+		}
+		else if (cubeName.startsWith(RPM_ENUM_DOT))
+		{
+			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${cubeDetailsTitle1}.")
 		}
 		else
 		{
