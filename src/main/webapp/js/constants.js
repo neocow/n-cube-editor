@@ -252,8 +252,6 @@ var CONTROLLER_METHOD = {
     DELETE_BRANCH: 'deleteBranch',
     DELETE_CUBES: 'deleteCubes',
     DUPLICATE_CUBE: 'duplicateCube',
-    FETCH_HTML_BRANCH_DIFFS: 'fetchHtmlBranchDiffs',
-    FETCH_HTML_REV_DIFFS: 'fetchHtmlRevDiffs',
     FETCH_JSON_BRANCH_DIFFS: 'fetchJsonBranchDiffs',
     FETCH_JSON_REV_DIFFS: 'fetchJsonRevDiffs',
     GET_APP_LOCKED_BY: 'getAppLockedBy',

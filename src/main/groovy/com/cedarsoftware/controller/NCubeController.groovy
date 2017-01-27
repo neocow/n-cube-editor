@@ -1005,6 +1005,17 @@ class NCubeController extends BaseController
         return true
     }
 
+    Map getCell(ApplicationID appId, String cubeName, Map coordinate, defaultValue = null)
+    {
+        appId = addTenant(appId)
+        NCube ncube = nCubeService.getCube(appId, cubeName) // Will check READ.
+        Map output = [:]
+        // TODO: Check EXECUTE permission
+        // NCubeManager.assertPermissions(appId, cubeName, Action.EXECUTE)
+        ncube.getCell(coordinate, output, defaultValue)
+        return output
+    }
+
     Object getCellNoExecute(ApplicationID appId, String cubeName, Object[] ids)
     {
         appId = addTenant(appId)
@@ -1450,7 +1461,8 @@ class NCubeController extends BaseController
         {   // Do not remove try-catch handler in favor of advice handler
             appId = addTenant(appId)
             NCube menuCube = nCubeService.getCube(appId.asVersion('0.0.0'), 'sys.menu')
-            if (menuCube == null) {
+            if (menuCube == null)
+            {
                 menuCube = nCubeService.getCube(appId.asVersion('0.0.0').asHead(), 'sys.menu')
             }
             return menuCube.getCell([:])
@@ -1532,39 +1544,6 @@ class NCubeController extends BaseController
         NCube newCube = nCubeService.loadCube(newAppId, newInfoDto.name)
         NCube oldCube = nCubeService.loadCube(oldAppId, oldInfoDto.name)
         return getDeltaDescription(newCube, oldCube)
-    }
-
-    private static Map<String, String> fetchHtmlDiffs(NCube newCube, NCube oldCube)
-    {
-        Map<String, String> ret = [leftHtml: '', rightHtml: '']
-        try
-        {
-            ret.rightHtml = toHtmlWithColumnHints(newCube)
-            ret.leftHtml = toHtmlWithColumnHints(oldCube)
-        }
-        catch (Exception ignored) { }
-
-        return ret
-    }
-
-    Map<String, String> fetchHtmlRevDiffs(long newCubeId, long oldCubeId)
-    {
-        NCube newCube = nCubeService.loadCubeById(newCubeId)
-        addTenant(newCube.applicationID)
-
-        NCube oldCube = nCubeService.loadCubeById(oldCubeId)
-        addTenant(oldCube.applicationID)
-
-        return fetchHtmlDiffs(newCube, oldCube)
-    }
-
-    Map<String, String> fetchHtmlBranchDiffs(NCubeInfoDto newInfoDto, NCubeInfoDto oldInfoDto)
-    {
-        ApplicationID newAppId = new ApplicationID(tenant, newInfoDto.app, newInfoDto.version, newInfoDto.status, newInfoDto.branch)
-        ApplicationID oldAppId = new ApplicationID(tenant, oldInfoDto.app, oldInfoDto.version, oldInfoDto.status, oldInfoDto.branch)
-        NCube newCube = nCubeService.loadCube(newAppId, newInfoDto.name)
-        NCube oldCube = nCubeService.loadCube(oldAppId, oldInfoDto.name)
-        return fetchHtmlDiffs(newCube, oldCube)
     }
 
     Object[] getReferenceAxes(ApplicationID appId)
