@@ -397,11 +397,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 		Map<String, Map<String, Set<Object>>> unBoundColumns = ruleInfo.getUnboundAxesMap()
 		unBoundColumns.each{String cubeName, Map<String, Set<Object>> unBoundColumnsForCube ->
 			unBoundColumnsForCube.each { String axisName, Set<Object> values ->
-				Set<String> allCubesWithUnboundColumn = unboundAxes[axisName]
-				if (!allCubesWithUnboundColumn)
-				{
-					allCubesWithUnboundColumn = new CaseInsensitiveSet()
-				}
+				Set<String> allCubesWithUnboundColumn = unboundAxes[axisName] as Set ?: new CaseInsensitiveSet()
 				allCubesWithUnboundColumn << cubeName
 				unboundAxes[axisName] = allCubesWithUnboundColumn
 			}

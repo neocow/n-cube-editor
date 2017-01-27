@@ -27,7 +27,8 @@ class VisualizerHelper
 				cubeDisplayNames << relInfo.getCubeDisplayName(cubeName)
 			}
 			String cubeDisplayNamesString = cubeDisplayNames.join(COMMA_SPACE)
-			sb.append(getUnboundAxesMessage(allOptionalScopeValues, cubeDisplayNamesString, key))
+			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key} (on ${cubeDisplayNamesString}):")
+			sb.append(getScopeValuesMessage(key, allOptionalScopeValues))
 		}
 		return sb.toString()
 	}
@@ -77,26 +78,6 @@ class VisualizerHelper
 			e = e.cause
 		}
 		return e
-	}
-
-	static String getUnboundAxesMessage(Set<Object> optionalScopeValues, String cubeNames, String key)
-	{
-		StringBuilder sb = new StringBuilder()
-		sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key} (on ${cubeNames}):${DOUBLE_BREAK}<pre><ul>")
-		if (optionalScopeValues)
-		{
-			optionalScopeValues.each{
-				String value = it.toString()
-				sb.append("""<li><a class="missingScope" title="${key}: ${value}" href="#">${value}</a></li>""")
-			}
-		}
-		else
-		{
-			sb.append(NONE)
-		}
-		sb.append("</ul></pre>")
-		return sb.toString()
-		return ''
 	}
 
 	static String getScopeValuesMessage(String key, Set<Object> scopeValues)

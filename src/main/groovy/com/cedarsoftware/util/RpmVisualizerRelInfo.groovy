@@ -401,20 +401,20 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			{
 				String cubeName = targetCube.name
 				String effectiveNameByCubeName = effectiveNameByCubeName
-				StringBuilder sb = new StringBuilder()
+				StringBuilder sb = new StringBuilder(OPTIONAL_SCOPE_AVAILABLE_TO_LOAD)
 				if (cubeName.startsWith(RPM_CLASS_DOT))
 				{
 					String cubeDisplayName = getCubeDisplayName(cubeName)
-					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+					sb.append("${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
 				}
 				else if (cubeName.startsWith(RPM_ENUM_DOT))
 				{
 					String cubeTitle = cubeDetailsTitle1.replace(VALID_VALUES_FOR_FIELD_SENTENCE_CASE, VALID_VALUES_FOR_FIELD_LOWER_CASE)
-					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeTitle}.")
+					sb.append("${cubeTitle}.")
 				}
 				else
 				{
-					sb.append("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+					sb.append("${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
 				}
 				sb.append("${BREAK}")
 				sb.append(helper.handleUnboundAxes(visInfo, this, unboundAxes))
@@ -442,19 +442,19 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		String cubeName = e.cubeName
 		String effectiveNameByCubeName = effectiveNameByCubeName
-		StringBuilder sb = new StringBuilder()
+		StringBuilder sb = new StringBuilder(ADDITIONAL_SCOPE_REQUIRED_TO_LOAD)
 		if (cubeName.startsWith(RPM_CLASS_DOT))
 		{
 			String cubeDisplayName = getCubeDisplayName(cubeName)
-			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+			sb.append("${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
 		}
 		else if (cubeName.startsWith(RPM_ENUM_DOT))
 		{
-			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${cubeDetailsTitle1}.")
+			sb.append("${cubeDetailsTitle1}.")
 		}
 		else
 		{
-			sb.append("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+			sb.append("${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
 		}
 		sb.append(helper.handleInvalidCoordinateException(e, visInfo, this, MANDATORY_SCOPE_KEYS))
 		String msg = sb.toString()
