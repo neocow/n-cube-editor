@@ -162,11 +162,14 @@ class RpmVisualizer extends Visualizer
 		RpmVisualizerRelInfo nextRelInfo = new RpmVisualizerRelInfo()
 		super.addToStack(visInfo, relInfo, nextRelInfo, nextTargetCubeName)
 		NCube nextTargetCube = nextRelInfo.targetCube
-		nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
-		nextRelInfo.sourceFieldName = targetFieldName
-		nextRelInfo.sourceFieldRpmType = rpmType
-		nextRelInfo.sourceTraits = relInfo.targetTraits
-		nextRelInfo.showCellValuesLink = false
+		if (nextTargetCube)
+		{
+			nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
+			nextRelInfo.sourceFieldName = targetFieldName
+			nextRelInfo.sourceFieldRpmType = rpmType
+			nextRelInfo.sourceTraits = relInfo.targetTraits
+			nextRelInfo.showCellValuesLink = false
+		}
 		return nextRelInfo
 	}
 
