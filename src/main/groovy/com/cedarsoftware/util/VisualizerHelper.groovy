@@ -18,17 +18,17 @@ class VisualizerHelper
 	{
 		StringBuilder sb = new StringBuilder()
 		sb.append("${BREAK} ${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}${unboundAxes.keySet().join(COMMA_SPACE)}.${BREAK}")
-		unboundAxes.each { String key, Set<String> cubeNames ->
+		unboundAxes.each { String scopeKey, Set<String> cubeNames ->
 			Set<Object> allOptionalScopeValues = []
 			Set<String> cubeDisplayNames = []
 			cubeNames.each { String cubeName ->
-				Set<Object> optionalScopeValues = visInfo.getOptionalScopeValues(cubeName, key)
+				Set<Object> optionalScopeValues = visInfo.getOptionalScopeValues(cubeName, scopeKey)
 				allOptionalScopeValues.addAll(optionalScopeValues)
 				cubeDisplayNames << relInfo.getCubeDisplayName(cubeName)
 			}
 			String cubeDisplayNamesString = cubeDisplayNames.join(COMMA_SPACE)
-			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key} (on ${cubeDisplayNamesString}):")
-			sb.append(getScopeValuesMessage(key, allOptionalScopeValues))
+			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${scopeKey} (on ${cubeDisplayNamesString}):")
+			sb.append(getScopeValuesMessage(scopeKey, allOptionalScopeValues))
 		}
 		return sb.toString()
 	}
@@ -53,8 +53,8 @@ class VisualizerHelper
 		if (missingScope)
 		{
 			Map<String, Object> expandedScope = new CaseInsensitiveMap<>(visInfo.scope)
-			missingScope.each { String key ->
-				expandedScope[key] = DEFAULT_SCOPE_VALUE
+			missingScope.each { String scopeKey ->
+				expandedScope[scopeKey] = DEFAULT_SCOPE_VALUE
 			}
 			visInfo.scope = expandedScope
 			return getInvalidCoordinateExceptionMessage(visInfo, missingScope, e.cubeName)
@@ -80,7 +80,8 @@ class VisualizerHelper
 		return e
 	}
 
-	static String getScopeValuesMessage(String key, Set<Object> scopeValues)
+
+	static String getScopeValuesMessage(String scopeKey, Set<Object> scopeValues)
 	{
 		StringBuilder sb = new StringBuilder()
 		sb.append("${DOUBLE_BREAK}<pre><ul>")
@@ -88,7 +89,7 @@ class VisualizerHelper
 		{
 			scopeValues.each{
 				String value = it.toString()
-				sb.append("""<li><a class="missingScope" title="${key}: ${value}" href="#">${value}</a></li>""")
+				sb.append("""<li><a class="missingScope" title="${scopeKey}: ${value}" href="#">${value}</a></li>""")
 			}
 		}
 		else
@@ -103,27 +104,27 @@ class VisualizerHelper
 	{
 		StringBuilder message = new StringBuilder()
 		message.append("${DOUBLE_BREAK} ${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}${missingScope.join(COMMA_SPACE)}.${BREAK}")
-		missingScope.each{ String key ->
-			message.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${key}:")
-			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, key)
-			message.append(getScopeValuesMessage(key, requiredScopeValues))
+		missingScope.each{ String scopeKey ->
+			message.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${scopeKey}:")
+			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, scopeKey)
+			message.append(getScopeValuesMessage(scopeKey, requiredScopeValues))
 		}
 		return message.toString()
 	}
 
-	private static String getCoordinateNotFoundMessage(VisualizerInfo visInfo, String key, String cubeName)
+	private static String getCoordinateNotFoundMessage(VisualizerInfo visInfo, String scopeKey, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
-		message.append("${DOUBLE_BREAK} ${SUPPLY_DIFFERENT_VALUE_FOR}${key}.")
-		Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, key)
-		message.append(getScopeValuesMessage(key, requiredScopeValues))
+		message.append("${DOUBLE_BREAK} ${SUPPLY_DIFFERENT_VALUE_FOR}${scopeKey}.")
+		Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, scopeKey)
+		message.append(getScopeValuesMessage(scopeKey, requiredScopeValues))
 		return message.toString()
 	}
 
 	private static Set<String> findMissingScope(Map<String, Object> scope, Set<String> requiredKeys, Set mandatoryScopeKeys)
 	{
-		return requiredKeys.findAll { String key ->
-			!mandatoryScopeKeys.contains(key) && (scope == null || !scope.containsKey(key))
+		return requiredKeys.findAll { String scopeKey ->
+			!mandatoryScopeKeys.contains(scopeKey) && (scope == null || !scope.containsKey(scopeKey))
 		}
 	}
 

@@ -51,10 +51,10 @@ class VisualizerCellInfo
 
 	private String getCoordinateString()
 	{
-		coordinate.each {String axisName, Object value ->
+		coordinate.each {String scopeKey, Object value ->
 			if (!value)
 			{
-				coordinate[axisName] = 'null'
+				coordinate[scopeKey] = 'null'
 			}
 		}
 		return mapJoiner.join(coordinate)
@@ -110,10 +110,10 @@ class VisualizerCellInfo
 			title = DETAILS_TITLE_MISSING_OR_INVALID_COORDINATE
 			listItemClassName = t.class.simpleName
 			CoordinateNotFoundException exc = t as CoordinateNotFoundException
-			String axisName = exc.axisName
+			String scopeKey = exc.axisName
 			Object value = exc.value ?: 'null'
 			String targetMsg = "coordinate ${coordinateString}"
-			mb.append("The scope value ${value} for scope key ${axisName} cannot be found on axis ${axisName} for ${targetMsg}.")
+			mb.append("The scope value ${value} for scope key ${scopeKey} cannot be found on axis ${scopeKey} for ${targetMsg}.")
 			mb.append(helper.handleCoordinateNotFoundException(t as CoordinateNotFoundException, visInfo, targetMsg))
 		}
 		else

@@ -494,9 +494,9 @@ class RpmVisualizerHelper extends VisualizerHelper
 		{
 			Set<String> missingScope = new CaseInsensitiveSet<String>(requiredScope);
 			Set scopeKeySet = scope.keySet()
-			for (String key : scopeKeySet)
+			for (String scopeKey : scopeKeySet)
 			{
-				missingScope.remove(key);
+				missingScope.remove(scopeKey);
 			}
 			String cubeName = "${cubeType}.${className}"
 			throw new InvalidCoordinateException("Not enough scope was provided to create class/enum/rel: ${className}, missing scope keys: ${missingScope}", cubeName, scopeKeySet, requiredScope)

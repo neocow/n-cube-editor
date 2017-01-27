@@ -387,11 +387,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				//the visualizer adds to the scope as it processes through the graph (keys like product,
 				//risk, coverage, sourceProduct, sourceRisk, sourceCoverage, etc.).
 				Set<String> removeKeys = [] as CaseInsensitiveSet
-				unboundAxes.keySet().each{String key ->
-					String strippedKey = key.replaceFirst('source', '')
+				unboundAxes.keySet().each{String scopeKey ->
+					String strippedKey = scopeKey.replaceFirst('source', '')
 					if (visInfo.allGroupsKeys.contains(strippedKey))
 					{
-						removeKeys << key
+						removeKeys << scopeKey
 					}
 				}
 				unboundAxes.keySet().removeAll(removeKeys)
@@ -426,11 +426,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo)
 	{
 		StringBuilder mb = new StringBuilder()
-		String key = e.axisName
+		String scopeKey = e.axisName
 		Object value = e.value ?: 'null'
 		String targetMsg = ''
 		String cubeDisplayName = getCubeDisplayName(e.cubeName)
-		mb.append("The scope value ${value} for scope key ${key} cannot be found on axis ${key} in ${cubeDisplayName}${sourceMessage} for ${effectiveNameByCubeName}.")
+		mb.append("The scope value ${value} for scope key ${scopeKey} cannot be found on axis ${scopeKey} in ${cubeDisplayName}${sourceMessage} for ${effectiveNameByCubeName}.")
 		mb.append(helper.handleCoordinateNotFoundException(e, visInfo, targetMsg))
 		String msg = mb.toString()
 		notes << msg
