@@ -60,6 +60,8 @@ import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.regex.Pattern
 
+import static com.cedarsoftware.ncube.NCubeConstants.*
+
 /**
  * NCubeController API.
  *
@@ -194,7 +196,7 @@ class NCubeController extends BaseController
         clearVersionCache(appId.app)
     }
 
-    Object[] search(ApplicationID appId, String cubeNamePattern = null, String content = null, Map options = [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true])
+    Object[] search(ApplicationID appId, String cubeNamePattern = null, String content = null, Map options = [(SEARCH_ACTIVE_RECORDS_ONLY):true])
     {
         appId = addTenant(appId)
         List<NCubeInfoDto> cubeInfos = nCubeService.search(appId, cubeNamePattern, content, options)
@@ -209,7 +211,7 @@ class NCubeController extends BaseController
         return cubeInfos as Object[]
     }
 
-    Integer getSearchCount(ApplicationID appId, String cubeNamePattern = null, String content = null, Map options = [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true])
+    Integer getSearchCount(ApplicationID appId, String cubeNamePattern = null, String content = null, Map options = [(SEARCH_ACTIVE_RECORDS_ONLY):true])
     {
         return search(appId, cubeNamePattern, content, options).length
     }
@@ -1327,8 +1329,8 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         Map options = [:]
-        options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
-        options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
+        options[(SEARCH_EXACT_MATCH_NAME)] = true
+        options[(SEARCH_ACTIVE_RECORDS_ONLY)] = true
         List<NCubeInfoDto> list = nCubeService.search(appId, cubeName, null, options)
         try
         {

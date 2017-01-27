@@ -21,6 +21,8 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.stereotype.Service
 
+import static com.cedarsoftware.ncube.NCubeConstants.*
+
 /**
  * RESTful Ajax/JSON API for editor application
  *
@@ -138,7 +140,7 @@ class NCubeService
 
     void createCube(ApplicationID appId, NCube ncube)
     {
-        Map options = [(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY):true, (NCubeManager.SEARCH_EXACT_MATCH_NAME):true]
+        Map options = [(SEARCH_ACTIVE_RECORDS_ONLY):true, (SEARCH_EXACT_MATCH_NAME):true]
         List<NCubeInfoDto> list = NCubeManager.search(appId, ncube.name, null, options)
         if (!list.empty)
         {
@@ -524,8 +526,8 @@ class NCubeService
     boolean isCubeUpToDate(ApplicationID appId, String cubeName)
     {
         Map options = [:]
-        options[(NCubeManager.SEARCH_ACTIVE_RECORDS_ONLY)] = true
-        options[(NCubeManager.SEARCH_EXACT_MATCH_NAME)] = true
+        options[(SEARCH_ACTIVE_RECORDS_ONLY)] = true
+        options[(SEARCH_EXACT_MATCH_NAME)] = true
 
         List<NCubeInfoDto> list = NCubeManager.search(appId, cubeName, null, options)
         if (list.size() != 1)
