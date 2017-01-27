@@ -1058,17 +1058,11 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
-
-            //Reset cube
-            cube.removeMetaProperty('requiredScopeKeys')
-            assert null == cube.metaProperties.requiredScopeKeys
         }
-        catch (Exception e)
+        finally
         {
             //Reset cube
             cube.removeMetaProperty('requiredScopeKeys')
-            assert null == cube.metaProperties.requiredScopeKeys
-            throw new Exception(e)
         }
     }
 
@@ -1091,6 +1085,33 @@ class RpmVisualizerTest
     }
 
     @Test
+    void testBuildGraph_cubeNotFound()
+    {
+        NCube cube = NCubeManager.getCube(appId, 'rpm.enum.partyrole.BasePartyRole.Parties')
+        try
+        {
+            //Change enum to have reference to non-existing cube
+            cube.addColumn((AXIS_NAME), 'party.NoCubeExists')
+            cube.setCell(true,[name:'party.NoCubeExists', trait: R_EXISTS])
+            Map scope = null
+            String startCubeName = 'rpm.class.partyrole.LossPrevention'
+            Map options = [startCubeName: startCubeName, scope: scope]
+
+            Map graphInfo = visualizer.buildGraph(appId, options)
+            assert STATUS_SUCCESS == graphInfo.status
+            Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+            assert 1 == messages.size()
+            assert 'No cube exists with name of rpm.class.party.NoCubeExists. Cube not included in the visualization.' == messages.first()
+        }
+        finally
+        {
+            //Reset cube
+            cube.deleteColumn((AXIS_NAME), 'party.NoCubeExists')
+            assert !cube.findColumn(AXIS_NAME, 'party.NoCubeExists')
+        }
+    }
+
+    @Test
     void testBuildGraph_missingRequiredScopeWithNoPreLoadedAvailableScopeValues()
     {
         String axisName = 'dummyAxis'
@@ -1105,10 +1126,10 @@ class RpmVisualizerTest
             cube.addColumn(axisName, 'dummy3')
 
             Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                         product:'WProduct',
-                         policyControlDate:'2017-01-01',
-                         quoteDate:'2017-01-01',
-                         risk: 'WProductOps']
+                         product          : 'WProduct',
+                         policyControlDate: '2017-01-01',
+                         quoteDate        : '2017-01-01',
+                         risk             : 'WProductOps']
 
             String startCubeName = 'rpm.class.Risk'
             Map options = [startCubeName: startCubeName, scope: scope]
@@ -1142,19 +1163,12 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
-
-            //Reset cube
-            cube = NCubeManager.loadCube(appId, 'rpm.class.Coverage')
-            assert false == cube.axisNames.contains(axisName)
         }
-        catch (Exception e)
+        finally
         {
             //Reset cube
             NCube cube = NCubeManager.loadCube(appId, 'rpm.class.Coverage')
-            assert false == cube.axisNames.contains(axisName)
-            throw new Exception(e)
         }
-
     }
 
     private static void checkMissingRequiredScopeMessage(String message)
@@ -1216,17 +1230,11 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
-
-            //Reset cube
-            cube.removeMetaProperty('requiredScopeKeys')
-            assert null == cube.metaProperties.requiredScopeKeys
         }
-        catch (Exception e)
+        finally
         {
             //Reset cube
             cube.removeMetaProperty('requiredScopeKeys')
-            assert null == cube.metaProperties.requiredScopeKeys
-            throw new Exception(e)
         }
     }
 
@@ -1568,17 +1576,11 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
-
-            //Reset cube
-            cube.setCell(new GroovyExpression('true', null, false), coordinate)
-            assert true == cube.getCell(coordinate)
         }
-        catch (Exception e)
+        finally
         {
             //Reset cube
             cube.setCell(new GroovyExpression('true', null, false), coordinate)
-            assert true == cube.getCell(coordinate)
-            throw new Exception(e)
         }
     }
 
