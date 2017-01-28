@@ -351,7 +351,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			removeNotExistsFields()
 			addRequiredAndOptionalScopeKeys(visInfo)
 			retainUsedScope(visInfo, output)
-			handleUnboundAxes(visInfo, output.unboundAxes as Map)
+			handleUnboundAxes(visInfo, output._rule as RuleInfo)
 			cellValuesLoaded = true
 			showCellValuesLink = true
 		}
@@ -376,51 +376,84 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return true
 	}
 
-	private void handleUnboundAxes(VisualizerInfo visInfo, Map<String, Set<String>> unboundAxes)
+	private void handleUnboundAxes(VisualizerInfo visInfo, RuleInfo ruleInfo)
 	{
-		if (unboundAxes)
+		Map<String, Map> unboundAxesMap = createUnboundAxesMap(visInfo, ruleInfo)
+		if (unboundAxesMap)
 		{
-			if (sourceCube)
+			String cubeName = targetCube.name
+			String effectiveNameByCubeName = effectiveNameByCubeName
+			StringBuilder sb = new StringBuilder(OPTIONAL_SCOPE_AVAILABLE_TO_LOAD)
+			if (cubeName.startsWith(RPM_CLASS_DOT))
 			{
-				//For the starting class of the graph (top node) keep all unbound axis keys. For all other
-				//classes, remove any keys that are "derived" scope keys, i.e. keys that the
-				//the visualizer adds to the scope as it processes through the graph (keys like product,
-				//risk, coverage, sourceProduct, sourceRisk, sourceCoverage, etc.).
-				Set<String> removeKeys = [] as CaseInsensitiveSet
-				unboundAxes.keySet().each{String scopeKey ->
-					String strippedKey = scopeKey.replaceFirst('source', '')
-					if (visInfo.allGroupsKeys.contains(strippedKey))
-					{
-						removeKeys << scopeKey
-					}
+				String cubeDisplayName = getCubeDisplayName(cubeName)
+				sb.append("${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+			}
+			else if (cubeName.startsWith(RPM_ENUM_DOT))
+			{
+				String cubeTitle = cubeDetailsTitle1.replace(VALID_VALUES_FOR_FIELD_SENTENCE_CASE, VALID_VALUES_FOR_FIELD_LOWER_CASE)
+				sb.append("${cubeTitle}.")
+			}
+			else
+			{
+				sb.append("${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+			}
+			sb.append("${BREAK}")
+			sb.append(helper.handleUnboundAxes(unboundAxesMap))
+			notes << sb.toString()
+		}
+	}
+
+	private Map<String, Map> createUnboundAxesMap(VisualizerInfo visInfo, RuleInfo ruleInfo)
+	{
+		List unboundAxesList = ruleInfo.getUnboundAxesList()
+		if (unboundAxesList)
+		{
+			//Gather entries in unboundAxesList into a map containing two maps:
+			//one with cube names by scope key, one with scope values by scope key.
+			boolean hasScopeKeysToInclude
+			Map<String, Set<String>> cubesWithUnboundAxis = [:]
+			Map<String, Set<Object>> columnValuesForUnboundAxis = [:]
+
+			unboundAxesList.each { MapEntry unboundAxis ->
+				String cubeName = unboundAxis.key as String
+				MapEntry axisEntry = unboundAxis.value as MapEntry
+				String axisName = axisEntry.key as String
+				if (includeScopeKey(visInfo, axisName))
+				{
+					Set<String> cubeNames = cubesWithUnboundAxis[axisName] ?: [] as Set
+					cubeNames << cubeName
+					cubesWithUnboundAxis[axisName] = cubeNames
+					Set<Object> columnValues = columnValuesForUnboundAxis[axisName] ?: [] as Set
+					columnValues.addAll(visInfo.getOptionalScopeValues(cubeName, axisName))
+					columnValuesForUnboundAxis[axisName] = columnValues
+					hasScopeKeysToInclude = true
 				}
-				unboundAxes.keySet().removeAll(removeKeys)
 			}
 
-			if (unboundAxes)
+			if (hasScopeKeysToInclude)
 			{
-				String cubeName = targetCube.name
-				String effectiveNameByCubeName = effectiveNameByCubeName
-				StringBuilder sb = new StringBuilder(OPTIONAL_SCOPE_AVAILABLE_TO_LOAD)
-				if (cubeName.startsWith(RPM_CLASS_DOT))
-				{
-					String cubeDisplayName = getCubeDisplayName(cubeName)
-					sb.append("${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
-				}
-				else if (cubeName.startsWith(RPM_ENUM_DOT))
-				{
-					String cubeTitle = cubeDetailsTitle1.replace(VALID_VALUES_FOR_FIELD_SENTENCE_CASE, VALID_VALUES_FOR_FIELD_LOWER_CASE)
-					sb.append("${cubeTitle}.")
-				}
-				else
-				{
-					sb.append("${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
-				}
-				sb.append("${BREAK}")
-				sb.append(helper.handleUnboundAxes(visInfo, this, unboundAxes))
-				notes << sb.toString()
+				return [cubes: cubesWithUnboundAxis, scopeValues: columnValuesForUnboundAxis] as Map
 			}
 		}
+		return [:]
+	}
+
+	private boolean includeScopeKey(VisualizerInfo visInfo, String scopeKey)
+	{
+		//For the starting class of the graph (top node) keep all unbound axis keys. For all other
+		//classes (which all have a sourceCube), remove any keys that are "derived" scope keys,
+		//i.e. keys that the visualizer adds to the scope as it processes through the graph
+		//(keys like product, risk, coverage, sourceProduct, sourceRisk, sourceCoverage, etc.).
+		if (sourceCube)
+		{
+			String strippedKey = scopeKey.replaceFirst('source', '')
+			if (visInfo.allGroupsKeys.contains(strippedKey))
+			{
+				return false
+			}
+		}
+		return true
 	}
 
 	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo)

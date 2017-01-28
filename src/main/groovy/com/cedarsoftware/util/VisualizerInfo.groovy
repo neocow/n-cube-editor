@@ -33,8 +33,8 @@ class VisualizerInfo
     Set<String> availableGroupsAllLevels
     Set<String> messages
 
-    Map<String, Set<Map<String, Set<Object>>>> optionalScopeValues = [:]
-    Map<String, Set<Map<String, Set<Object>>>> requiredScopeValues = [:]
+    Map<String, Map<String, Set<Object>>> optionalScopeValues = [:]
+    Map<String, Map<String, Set<Object>>> requiredScopeValues = [:]
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
 
@@ -151,36 +151,14 @@ class VisualizerInfo
         return getScopeValues(requiredScopeValues, cubeName, scopeKey)
     }
 
-    Set<Object> getScopeValues( Map<String, Set<Map<String, Set<Object>>>> scopeValues, String cubeName, String scopeKey)
+    Set<Object> getScopeValues( Map<String, Map<String, Set<Object>>> scopeValues, String cubeName, String scopeKey)
     {
-        //The key to the map scopeValues is a scope key. The scopeValues map contains a set of cube maps.
-        //Each cube map has a single entry where the key is the cube name and the value is a set of scope values available on
-        //the cube for the scope key in question.
-        Set<Map<String, Set<Object>>> valuesByCubeNames = scopeValues[scopeKey]
-        Map<String, Set<Object>> cubeMap = [:]
-        if (valuesByCubeNames)
-        {
-            cubeMap = valuesByCubeNames.find { Map<String, Set<Object>> cubeValues ->
-                cubeValues[cubeName]
-            }
-        }
-        else
-        {
-            valuesByCubeNames = []
-        }
-
-        if (cubeMap)
-        {
-            return cubeMap[cubeName] as Set<Object>
-        }
-        else
-        {
-            Set<Object> values =  getColumnValues(appId, cubeName, scopeKey)
-            cubeMap = [(cubeName): values]
-            valuesByCubeNames << cubeMap
-            scopeValues[scopeKey] = valuesByCubeNames
-            return values
-        }
+        //The key to the map scopeValues is a scope key. The map contains a map of scope values by cube name.
+        Map<String, Set<Object>> scopeValuesForScopeKey = scopeValues[scopeKey] as Map ?: [:]
+        Set<Object> scopeValuesForCubeAndScopeKey = scopeValuesForScopeKey[cubeName] ?: getColumnValues(appId, cubeName, scopeKey)
+        scopeValuesForScopeKey[cubeName] = scopeValuesForCubeAndScopeKey
+        scopeValues[scopeKey] = scopeValuesForScopeKey
+        return scopeValuesForCubeAndScopeKey
     }
 
     protected static Set<Object> getColumnValues(ApplicationID applicationID, String cubeName, String axisName)

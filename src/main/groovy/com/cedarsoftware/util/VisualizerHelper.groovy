@@ -14,21 +14,17 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerHelper
 {
-	static String handleUnboundAxes(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Map<String, Set<String>> unboundAxes)
+	static String handleUnboundAxes(Map<String, Map> unboundAxesMap)
 	{
+		Map<String, Set<String>> cubesWithUnboundAxis = unboundAxesMap.cubes
+		Map<String, Set<Object>> columnValuesForUnboundAxis = unboundAxesMap.scopeValues
 		StringBuilder sb = new StringBuilder()
-		sb.append("${BREAK} ${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}${unboundAxes.keySet().join(COMMA_SPACE)}.${BREAK}")
-		unboundAxes.each { String scopeKey, Set<String> cubeNames ->
-			Set<Object> allOptionalScopeValues = []
-			Set<String> cubeDisplayNames = []
-			cubeNames.each { String cubeName ->
-				Set<Object> optionalScopeValues = visInfo.getOptionalScopeValues(cubeName, scopeKey)
-				allOptionalScopeValues.addAll(optionalScopeValues)
-				cubeDisplayNames << relInfo.getCubeDisplayName(cubeName)
-			}
-			String cubeDisplayNamesString = cubeDisplayNames.join(COMMA_SPACE)
-			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${scopeKey} (on ${cubeDisplayNamesString}):")
-			sb.append(getScopeValuesMessage(scopeKey, allOptionalScopeValues))
+		String scopeKeysString = "${cubesWithUnboundAxis.keySet().join(COMMA_SPACE)}.${BREAK}"
+		sb.append("${BREAK} ${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}${scopeKeysString}")
+		cubesWithUnboundAxis.each{ String axisName, Set<String> cubeNames ->
+			String cubeNamesString = cubeNames.join(COMMA_SPACE)
+			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${axisName} (on ${cubeNamesString}):")
+			sb.append(getScopeValuesMessage(axisName, columnValuesForUnboundAxis[axisName]))
 		}
 		return sb.toString()
 	}
