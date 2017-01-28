@@ -115,7 +115,6 @@ class RpmVisualizerHelper extends VisualizerHelper
 					}
 				}
 				isOriginalClass = false;
-				output.unboundAxes = unboundAxes
 			}
 			catch (Exception e)
 			{
@@ -166,7 +165,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			// gather traits for current field that haven't already been populated
 			Map<String, Object> coord = new HashMap<>(scope);
 			coord.put(axisName,fieldName);
-			loadTraitsForField(classCube, traitNames, fieldTraits, coord);
+			loadTraitsForField(classCube, traitNames, fieldTraits, coord, output);
 
 			// eliminate scoped fields
 			if (!isFieldValidSince(fieldTraits,(String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY))) {
@@ -179,8 +178,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			// check extends value
 			if (traitNames.contains(R_EXTENDS)) {
 				coord.put(TRAIT_AXIS, R_EXTENDS);
-				Object extendsValue = classCube.getCell(coord, new HashMap(), NOT_DEFINED);
-				addUnboundAxes(classCube, output)
+				Object extendsValue = classCube.getCell(coord, output, NOT_DEFINED);
 				if (extendsValue!=null && hasValue(extendsValue))
 				{
 					if (!fieldTraits.containsKey(R_EXTENDS)) {
@@ -254,7 +252,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			Map<String,Object> coord = new CaseInsensitiveMap<>(scope);
 			coord.put(axisName,masterField);
 			List<String> traitNames = getTraitNamesForCube(masterCube, (String) scope.get(EFFECTIVE_VERSION_SCOPE_KEY));
-			loadTraitsForField(masterCube, traitNames, traits, coord);
+			loadTraitsForField(masterCube, traitNames, traits, coord, output);
 
 			if (traits.containsKey(R_EXISTS) && traits.get(R_EXISTS) ==  null){
 				throw new IllegalArgumentException(String.format(exceptionFormat, R_EXISTS + EXISTS_TRAIT_CONTAINS_NULL_VALUE, fieldName,
@@ -264,9 +262,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			// check for extended definitions
 			if (traitNames.contains(R_EXTENDS)) {
 				coord.put(TRAIT_AXIS, R_EXTENDS);
-				Map masterCubeOutput = new CaseInsensitiveMap()
-				String extension = (String) masterCube.getCell(coord, masterCubeOutput, NOT_DEFINED);
-				addUnboundAxes(masterCube, masterCubeOutput)
+				String extension = (String) masterCube.getCell(coord, output, NOT_DEFINED);
 				if (hasValue(extension) && !StringUtilities.isEmpty(extension)) {
 					defsToProcess.add(extension);
 				}
@@ -375,35 +371,16 @@ class RpmVisualizerHelper extends VisualizerHelper
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
 	 * Load trait values for a given field into the fieldTraits map, ignoring traits already loaded
 	 */
-	private void loadTraitsForField(NCube classCube, List<String> traitNames, Map<String, Object> fieldTraits, Map<String, Object> coord) {
+	private void loadTraitsForField(NCube classCube, List<String> traitNames, Map<String, Object> fieldTraits, Map<String, Object> coord, Map<String, Object> output) {
 		for (String traitName : traitNames) {
 			if (fieldTraits.containsKey(traitName) || R_EXTENDS.equals(traitName)) {
 				continue;
 			}
 
 			coord.put(TRAIT_AXIS,traitName);
-			Map output = new CaseInsensitiveMap()
 			Object val = classCube.getCell(coord, output, NOT_DEFINED);
-			addUnboundAxes(classCube, output)
 			if (hasValue(val)) {
 				fieldTraits.put(traitName, val);
-			}
-		}
-	}
-
-	private void addUnboundAxes(NCube cube, Map output)
-	{
-		RuleInfo ruleInfo = cube.getRuleInfo(output)
-		Map<String, Map<String, Set<Object>>> unBoundColumns = ruleInfo.getUnboundAxesMap()
-		unBoundColumns.each{String cubeName, Map<String, Set<Object>> unBoundColumnsForCube ->
-			unBoundColumnsForCube.each { String axisName, Set<Object> values ->
-				Set<String> allCubesWithUnboundColumn = unboundAxes[axisName]
-				if (!allCubesWithUnboundColumn)
-				{
-					allCubesWithUnboundColumn = new CaseInsensitiveSet()
-				}
-				allCubesWithUnboundColumn << cubeName
-				unboundAxes[axisName] = allCubesWithUnboundColumn
 			}
 		}
 	}
@@ -498,9 +475,9 @@ class RpmVisualizerHelper extends VisualizerHelper
 		{
 			Set<String> missingScope = new CaseInsensitiveSet<String>(requiredScope);
 			Set scopeKeySet = scope.keySet()
-			for (String key : scopeKeySet)
+			for (String scopeKey : scopeKeySet)
 			{
-				missingScope.remove(key);
+				missingScope.remove(scopeKey);
 			}
 			String cubeName = "${cubeType}.${className}"
 			throw new InvalidCoordinateException("Not enough scope was provided to create class/enum/rel: ${className}, missing scope keys: ${missingScope}", cubeName, scopeKeySet, requiredScope)
@@ -525,8 +502,7 @@ class RpmVisualizerHelper extends VisualizerHelper
 			Map<String, Object> fieldTraits = fieldAndTraits.get(fieldName);
 			if (!fieldTraits.containsKey(R_EXISTS)) {
 				coord.put(axisName,fieldName);
-				Boolean exists = getExistsValue(fieldName, className, classCube.getCell(coord,output,NOT_DEFINED));
-				addUnboundAxes(classCube, output)
+				Boolean exists = getExistsValue(fieldName, className, classCube.getCell(coord, output, NOT_DEFINED));
 				if (exists!=null) {
 					fieldTraits.put(R_EXISTS, exists);
 				}

@@ -68,7 +68,8 @@ class VisualizerRelInfo
 		{
 			Map<LongHashSet, Object> cellMap = targetCube.cellMap
 			cellMap.each { LongHashSet ids, Object noExecuteCell ->
-				Map<String, Object> coordinate = targetCube.getCoordinateFromIds(ids)
+				Map<String, Object> coordinate = scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
+				coordinate.putAll(targetCube.getCoordinateFromIds(ids))
 				VisualizerCellInfo visCellInfo = new VisualizerCellInfo(String.valueOf(targetId), coordinate)
 				try
 				{

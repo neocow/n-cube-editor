@@ -352,13 +352,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -420,13 +414,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -484,13 +472,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -530,6 +512,7 @@ class VisualizerTest{
         assert nodeDetails.contains("""<a href="#" onclick='window.open("${fileURL}");return false;'>${fileURL}</a>""")
         assert nodeDetails.contains("""<a href="#" onclick='window.open("${httpURL}");return false;'>${httpURL}</a>""")
     }
+
     @Test
     void testGetCellValues_showCellValues_noDefaultsNoCellValues()
     {
@@ -550,13 +533,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -587,6 +564,56 @@ class VisualizerTest{
     }
 
     @Test
+    void testGetCellValues_showCellValues_notTopNode_requiredScope()
+    {
+        Map availableScope = [Axis1Primary: 'Axis1Col2',
+                              Axis2Primary: 'Axis2Col2']
+        Map nodeScope = new CaseInsensitiveMap(availableScope)
+        String cubeName = 'CubeWithDefaultColumn'
+
+        Map oldNode = [
+                id: '1',
+                cubeName: cubeName,
+                title: cubeName,
+                level: '1',
+                label: cubeName,
+                scope: nodeScope,
+                showCellValuesLink: true,
+                showCellValues: true,
+                cellValuesLoaded: false,
+                availableScope: availableScope,
+        ]
+
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        Map options = [node: oldNode, visInfo: visInfo]
+
+        Map graphInfo = visualizer.getCellValues(appId, options)
+        assert STATUS_SUCCESS == graphInfo.status
+        assert null == visInfo.messages
+        List<Map<String, Object>> nodes = visInfo.nodes as List
+        List<Map<String, Object>> edges = visInfo.edges as List
+        assert nodes.size() == 1
+        assert edges.size() == 0
+
+        Map node = nodes.first()
+        assert cubeName == node.title
+        assert true == node.showCellValuesLink
+        assert true == node.showCellValues
+        assert true == node.cellValuesLoaded
+     }
+
+     private VisualizerInfo getVisInfoForShowCellValues()
+    {
+        VisualizerInfo visInfo = new VisualizerInfo()
+        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
+        visInfo.groupSuffix = ''
+        visInfo.scope = new CaseInsensitiveMap()
+        visInfo.appId = appId
+        visInfo.availableGroupsAllLevels = [] as Set
+        return visInfo
+    }
+
+    @Test
     void testGetCellValues_showCellValues_withDefaultsNoCellValues()
     {
         Map scope = null
@@ -606,13 +633,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -663,13 +684,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -720,13 +735,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -784,13 +793,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -860,13 +863,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -991,13 +988,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -1061,13 +1052,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.scope = new CaseInsensitiveMap()
-        visInfo.appId = appId
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -1133,11 +1118,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = new VisualizerInfo()
-        visInfo.allGroupsKeys = ['NCUBE', 'RULE_NCUBE', 'UNSPECIFIED'] as Set
-        visInfo.groupSuffix = ''
-        visInfo.availableGroupsAllLevels = [] as Set
-
+        VisualizerInfo visInfo = getVisInfoForShowCellValues()
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)

@@ -522,7 +522,7 @@ class RpmVisualizerTest
 
 
     @Test
-    void testGetCellValues_classNode_showCellValues_withDefaultScopeKeysNotProvided()
+    void testGetCellValues_classNode_showCellValues_withUnboundAxes()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      product          : 'WProduct',
@@ -575,7 +575,7 @@ class RpmVisualizerTest
         assert true == node.cellValuesLoaded
         String nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_NOTE)
-        checkDefaultScopeKeysMessage_CCoverage(nodeDetails)
+        checkUnboundAxesMessage_CCoverage(nodeDetails)
         assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
         assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)
         assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
@@ -591,7 +591,7 @@ class RpmVisualizerTest
         assert nodeDetails.contains("${DETAILS_LABEL_CLASS_TRAITS}</b><pre><ul><li>r:exists: true</li><li>r:name: CCoverage</li><li>r:scopedName: CCoverage</li></ul></pre><br><b>")
     }
 
-    private static void checkDefaultScopeKeysMessage_CCoverage(String message)
+    private static void checkUnboundAxesMessage_CCoverage(String message)
     {
         assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}CCoverage of type Coverage.")
         assert message.contains("${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}businessDivisionCode, program, type")
@@ -879,7 +879,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_withDerivedDefaultScopeKeyNotProvided_notTopNode()
+    void testBuildGraph_withUnboundAxes_withDerivedScopeKey_notTopNode()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      policyControlDate: '2017-01-01',
@@ -908,7 +908,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_withDerivedDefaultScopeKeyNotProvided_topNode()
+    void testBuildGraph_withUnboundAxes_withDerivedScopeKey_topNode()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      policyControlDate: '2017-01-01',
@@ -943,7 +943,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_withDerivedDefaultScopeKeyProvided_notTopNode()
+    void testBuildGraph_withoutUnboundAxes_withDerivedScopeKey_notTopNode()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      policyControlDate: '2017-01-01',
@@ -1322,7 +1322,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph__withDefaultScopeKeysNotProvided()
+    void testBuildGraph_withUnboundAxes()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      product:'WProduct',
@@ -1344,7 +1344,7 @@ class RpmVisualizerTest
         assert true == node.cellValuesLoaded
         String nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_NOTE)
-        checkDefaultScopeKeysMessage(nodeDetails)
+        checkUnboundAxesMessage(nodeDetails)
         assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
         assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>WProductOps</li></ul></pre>")
@@ -1353,7 +1353,7 @@ class RpmVisualizerTest
         assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
     }
 
-    private static void checkDefaultScopeKeysMessage(String message)
+    private static void checkUnboundAxesMessage(String message)
     {
         assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on WProduct.")
         assert message.contains("${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}state")

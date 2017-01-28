@@ -30,7 +30,6 @@ class VisualizerConstants
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
 	public static final String NCUBE = 'NCUBE'
 	public static final String RULE_NCUBE = 'RULE_NCUBE'
-
 	public static final String STATUS_MISSING_START_SCOPE = 'missingStartScope'
 	public static final String STATUS_SUCCESS = 'success'
 	public static final String STATUS_INVALID_START_CUBE = 'invalidStartCube'
