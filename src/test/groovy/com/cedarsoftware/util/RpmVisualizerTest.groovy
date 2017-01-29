@@ -1250,15 +1250,16 @@ class RpmVisualizerTest
 
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_MISSING_START_SCOPE == graphInfo.status
-        Set<String> messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+        RpmVisualizerInfo visInfo = graphInfo.visInfo as RpmVisualizerInfo
+        Set<String> messages = visInfo.messages
         assert 1 == messages.size()
 
-        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
-        List<Map<String, Object>> edges = (graphInfo.visInfo as RpmVisualizerInfo).edges as List
+        List<Map<String, Object>> nodes = visInfo.nodes as List
+        List<Map<String, Object>> edges = visInfo.edges as List
         assert 0 == nodes.size()
         assert 0 == edges.size()
 
-        checkMissingMinimumTypeScopeMessage(messages.first())
+        checkMissingMinimumTypeScopeMessage(visInfo, messages.first())
     }
 
     @Test
@@ -1274,19 +1275,19 @@ class RpmVisualizerTest
 
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_MISSING_START_SCOPE == graphInfo.status
-        Set<String> messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+        RpmVisualizerInfo visInfo = graphInfo.visInfo as RpmVisualizerInfo
+        Set<String> messages = visInfo.messages
         assert 1 == messages.size()
 
-        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
-        List<Map<String, Object>> edges = (graphInfo.visInfo as RpmVisualizerInfo).edges as List
+        List<Map<String, Object>> nodes = visInfo.nodes as List
+        List<Map<String, Object>> edges = visInfo.edges as List
         assert 0 == nodes.size()
         assert 0 == edges.size()
 
-        checkMissingMinimumTypeScopeMessage(messages.first())
+        checkMissingMinimumTypeScopeMessage(visInfo, messages.first())
     }
 
-
-    private static void checkMissingMinimumTypeScopeMessage(String message)
+    private static void checkMissingMinimumTypeScopeMessage(RpmVisualizerInfo visInfo, String message)
     {
         assert message.contains('Scope is required for Product.')
         assert message.contains('Please replace XXXX for Product with an actual scope value.')
@@ -1294,6 +1295,7 @@ class RpmVisualizerTest
         assert message.contains('GProduct')
         assert message.contains('UProduct')
         assert message.contains('WProduct')
+        assert 'XXXX' == visInfo.scope.Product as String
     }
 
     @Test
@@ -1307,11 +1309,12 @@ class RpmVisualizerTest
 
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_MISSING_START_SCOPE == graphInfo.status
-        Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+        RpmVisualizerInfo visInfo = graphInfo.visInfo as RpmVisualizerInfo
+        Set messages = visInfo.messages
         assert 1 == messages.size()
 
-        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
-        List<Map<String, Object>> edges = (graphInfo.visInfo as RpmVisualizerInfo).edges as List
+        List<Map<String, Object>> nodes = visInfo.nodes as List
+        List<Map<String, Object>> edges = visInfo.edges as List
         assert 0 == nodes.size()
         assert 0 == edges.size()
 
@@ -1319,7 +1322,95 @@ class RpmVisualizerTest
         assert message.contains('Scope is required for policyControlDate.')
         assert message.contains('Scope is required for quoteDate.')
         assert message.contains(DEFAULT_VALUE_MAY_BE_CHANGED)
+        assert DATE_TIME_FORMAT.format(new Date()) == visInfo.scope.policyControlDate
+        assert DATE_TIME_FORMAT.format(new Date()) == visInfo.scope.quoteDate
     }
+
+
+    @Test
+    void testBuildGraph_missingMinimumEffectiveVersionScope()
+    {
+        Map scope = [product: 'WProduct',
+                     policyControlDate:'2017-01-01',
+                     quoteDate:'2017-01-01']
+
+        String startCubeName = 'rpm.class.Product'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        assert STATUS_MISSING_START_SCOPE == graphInfo.status
+        RpmVisualizerInfo visInfo = graphInfo.visInfo as RpmVisualizerInfo
+        Set messages = visInfo.messages
+        assert 1 == messages.size()
+
+        List<Map<String, Object>> nodes = visInfo.nodes as List
+        List<Map<String, Object>> edges = visInfo.edges as List
+        assert 0 == nodes.size()
+        assert 0 == edges.size()
+
+        String message = messages.first()
+        assert message.contains('Scope is required for _effectiveVersion.')
+        assert message.contains(DEFAULT_VALUE_MAY_BE_CHANGED)
+        assert appId.version == visInfo.scope._effectiveVersion
+    }
+
+    @Test
+    void testBuildGraph_effectiveVersionApplied_beforeFieldAddAndObsolete()
+    {
+        Map scope = [product: 'WProduct',
+                     policyControlDate:'2017-01-01',
+                     quoteDate:'2017-01-01',
+                     _effectiveVersion: '1.0.0']
+
+        String startCubeName = 'rpm.class.Product'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+
+        Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
+        String nodeDetails = node.details as String
+        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>CurrentCommission</li><li>CurrentExposure</li><li>Risks</li><li>fieldObsolete101</li></ul></pre>")
+    }
+
+    @Test
+    void testBuildGraph_effectiveVersionApplied_beforeFieldAddAfterFieldObsolete()
+    {
+        Map scope = [product: 'WProduct',
+                     policyControlDate:'2017-01-01',
+                     quoteDate:'2017-01-01',
+                     _effectiveVersion: '1.0.1']
+
+        String startCubeName = 'rpm.class.Product'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+
+        Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
+        String nodeDetails = node.details as String
+        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>CurrentCommission</li><li>CurrentExposure</li><li>Risks</li></ul></pre>")
+    }
+
+    @Test
+    void testBuildGraph_effectiveVersionApplied_afterFieldAddAndObsolete()
+    {
+        Map scope = [product: 'WProduct',
+                     policyControlDate:'2017-01-01',
+                     quoteDate:'2017-01-01',
+                     _effectiveVersion: '1.0.2']
+
+        String startCubeName = 'rpm.class.Product'
+        Map options = [startCubeName: startCubeName, scope: scope]
+
+        Map graphInfo = visualizer.buildGraph(appId, options)
+        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
+
+        Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
+        String nodeDetails = node.details as String
+        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>CurrentCommission</li><li>CurrentExposure</li><li>Risks</li><li>fieldAdded102</li></ul></pre>")
+    }
+
 
     @Test
     void testBuildGraph_withUnboundAxes()
@@ -1362,7 +1453,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_unchangedMinimumTypeScope()
+    void testBuildGraph_missingMinimumTypeScopeUnChanged()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      product:'XXXX',
@@ -1374,14 +1465,16 @@ class RpmVisualizerTest
 
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_MISSING_START_SCOPE == graphInfo.status
-        Set<String> messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
+        RpmVisualizerInfo visInfo = graphInfo.visInfo as RpmVisualizerInfo
+        Set<String> messages = visInfo.messages
         assert 1 == messages.size()
-        checkMissingMinimumTypeScopeMessage(messages.first())
 
-        List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
-        List<Map<String, Object>> edges = (graphInfo.visInfo as RpmVisualizerInfo).edges as List
+        List<Map<String, Object>> nodes = visInfo.nodes as List
+        List<Map<String, Object>> edges = visInfo.edges as List
         assert 0 == nodes.size()
         assert 0 == edges.size()
+
+        checkMissingMinimumTypeScopeMessage(visInfo, messages.first())
     }
 
     @Test

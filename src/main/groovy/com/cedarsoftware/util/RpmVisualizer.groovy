@@ -276,7 +276,7 @@ class RpmVisualizer extends Visualizer
 	protected boolean hasMissingMinimumScope(VisualizerInfo visInfo, String startCubeName)
 	{
 		RpmVisualizerInfo rpmVisInfo = (RpmVisualizerInfo) visInfo
-		defaultScopeEffectiveVersion = appId.version.replace('.', '-')
+		defaultScopeEffectiveVersion = appId.version
 		defaultScopeDate = DATE_TIME_FORMAT.format(new Date())
 		Set<String> messages = visInfo.messages
 
