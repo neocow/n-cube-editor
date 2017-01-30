@@ -2063,7 +2063,7 @@ var NCE = (function ($) {
     function checkPermissions(appId, resource, action) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.CHECK_PERMISSIONS, [appId, resource, action]);
         if (result.status) {
-            return ensureModifiable() && result.data;
+            return ensureModifiable(null, appId) && result.data;
         }
         showNote('Unable to check permissions:<hr class="hr-small"/>' + result.data);
         return false;
@@ -3449,8 +3449,8 @@ var NCE = (function ($) {
         buildTabs(true);
     }
 
-    function ensureModifiable(operation) {
-        var appId = getSelectedTabAppId() || getAppId();
+    function ensureModifiable(operation, overrideAppId) {
+        var appId = overrideAppId || getSelectedTabAppId() || getAppId();
         clearNote();
         if (!operation) {
             operation = '';
