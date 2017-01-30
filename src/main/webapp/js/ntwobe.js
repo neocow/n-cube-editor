@@ -3215,7 +3215,7 @@ var NCubeEditor2 = (function ($) {
         cells.splice(cells.length - 1, 1);
 
         if (isCut) {
-            result = nce.call("ncubeController.copyCells", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, true]);
+            result = nce.call(CONTROLLER + CONTROLLER_METHOD.COPY_CELLS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, true]);
             if (!result.status) {
                 nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
                 return;
@@ -3373,7 +3373,7 @@ var NCubeEditor2 = (function ($) {
                 clipboard = clipboard2;
             }
             // Paste cells from database
-            result = nce.call("ncubeController.pasteCellsNce", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), clipboard]);
+            result = nce.call(CONTROLLER + CONTROLLER_METHOD.PASTE_CELLS_NCE, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), clipboard]);
         } else {
             // Normal clipboard data, from Excel, for example
             lines = parseExcelClipboard(content);
@@ -3485,6 +3485,76 @@ var NCubeEditor2 = (function ($) {
                 this.selectionEnd = start + 1;
             }
         });
+
+        _editCellModal.on('keydown', function(e) {
+            var dir;
+            if (!$(e.target).is('textArea, select')) {
+                switch (e.keyCode) {
+                    case KEY_CODES.ARROW_LEFT:
+                    case KEY_CODES.A:
+                        dir = KEY_CODES.ARROW_LEFT;
+                        break;
+                    case KEY_CODES.ARROW_RIGHT:
+                    case KEY_CODES.D:
+                        dir = KEY_CODES.ARROW_RIGHT;
+                        break;
+                    case KEY_CODES.ARROW_UP:
+                    case KEY_CODES.W:
+                        dir = KEY_CODES.ARROW_UP;
+                        break;
+                    case KEY_CODES.ARROW_DOWN:
+                    case KEY_CODES.S:
+                        dir = KEY_CODES.ARROW_DOWN;
+                        break;
+                }
+                moveCellEditor(dir);
+            }
+        });
+
+        $('#editCellLeft').on('click', function() {
+            moveCellEditor(KEY_CODES.ARROW_LEFT);
+        });
+        $('#editCellRight').on('click', function() {
+            moveCellEditor(KEY_CODES.ARROW_RIGHT);
+        });
+        $('#editCellUp').on('click', function() {
+            moveCellEditor(KEY_CODES.ARROW_UP);
+        });
+        $('#editCellDown').on('click', function() {
+            moveCellEditor(KEY_CODES.ARROW_DOWN);
+        });
+    }
+    
+    function moveCellEditor(direction) {
+        var selectedCellRange, col, row;
+        if (direction) {
+            selectedCellRange = getSelectedCellRange();
+            col = selectedCellRange.startCol;
+            row = selectedCellRange.startRow;
+            switch (direction) {
+                case KEY_CODES.ARROW_LEFT:
+                    col--;
+                    break;
+                case KEY_CODES.ARROW_RIGHT:
+                    col++;
+                    break;
+                case KEY_CODES.ARROW_UP:
+                    row--;
+                    break;
+                case KEY_CODES.ARROW_DOWN:
+                    row++;
+                    break;
+            }
+            openCellEditorAt(row, col);
+        }
+    }
+    
+    function openCellEditorAt(row, col) {
+        if (row > 1 && row < numRows && col > (colOffset ? colOffset - 1 : 0) && col < numColumns) {
+            destroyEditor();
+            hot.selectCell(row, col);
+            hot.getActiveEditor().beginEditing();
+        }
     }
 
     function editCell() {

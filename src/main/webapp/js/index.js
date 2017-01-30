@@ -1410,7 +1410,9 @@ var NCE = (function ($) {
         }
 
         if (shouldFreeze) {
-            overlayDivsInit();
+            if (!isPageFrozen()) {
+                overlayDivsInit();
+            }
         } else {
             $('div.backdrop-overlay').remove();
         }
