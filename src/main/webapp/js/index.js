@@ -361,7 +361,7 @@ var NCE = (function ($) {
             _openCubes.unshift(newOpenCube);
         }
         saveOpenCubeList();
-        buildTabs(cubeInfo);
+        buildTabs(true, cubeInfo);
     }
 
     function getOpenCubeIndex(cubeInfo) {
@@ -511,8 +511,10 @@ var NCE = (function ($) {
     }
 
     function removeTab(cubeInfo) {
-        var newCubeInfo;
-        _openCubes.splice(getOpenCubeIndex(cubeInfo), 1);
+        var newCubeInfo, removeTabIdx, currentTabIdx;
+        removeTabIdx = getOpenCubeIndex(cubeInfo);
+        currentTabIdx = getOpenCubeIndex(_selectedCubeInfo);
+        _openCubes.splice(removeTabIdx, 1);
         saveOpenCubeList();
 
         if (_openCubes.length) {
@@ -524,7 +526,7 @@ var NCE = (function ($) {
             switchTabPane(null);
         }
 
-        buildTabs();
+        buildTabs(removeTabIdx === currentTabIdx);
     }
 
     function removeAllTabs() {
@@ -668,8 +670,9 @@ var NCE = (function ($) {
     }
 
     function addTab(cubeInfo, status) {
-        var imgSrc, x, xLen, opt, html;
-        deselectTab();
+        var imgSrc, x, xLen, opt, html, activeClass, cubeInfoKey;
+        cubeInfoKey = getCubeInfoKey(cubeInfo);
+        activeClass = cubeInfoKey === getCubeInfoKey(_selectedCubeInfo) ? ' active' : '';
         for (x = 0, xLen = _menuOptions.length; x < xLen; x++) {
             opt = _menuOptions[x];
             if (opt.pageId === cubeInfo[CUBE_INFO.TAB_VIEW]) {
@@ -678,7 +681,7 @@ var NCE = (function ($) {
             }
         }
 
-        html = '<li class="active dropdown" draggable="true" id="' + getCubeInfoKey(cubeInfo).replace(/\./g,'_') + '">';
+        html = '<li class="dropdown' + activeClass + '" draggable="true" id="' + cubeInfoKey.replace(/\./g,'_') + '">';
         html += '<a href="#" draggable="false" class="dropdown-toggle ncube-tab-top-level ';
         html += status + '" data-toggle="dropdown">';
         html += getTabImage(imgSrc);
@@ -1132,10 +1135,11 @@ var NCE = (function ($) {
         return Math.floor(availableWidth / TAB_WIDTH);
     }
 
-    function buildTabs(curCubeInfo) {
+    function buildTabs(shouldLoadCube, curCubeInfo) {
         var len, maxTabs, cubeInfo, i, openCube, idx, temp;
         _openTabList.children().remove();
         _tabOverflow.hide();
+        _tabDragIndicator.hide();
         len = _openCubes.length;
         if (len) {
             maxTabs = calcMaxTabs();
@@ -1155,7 +1159,9 @@ var NCE = (function ($) {
                 _tabOverflow.show();
                 buildTabOverflow(maxTabs, len);
             }
-            selectTab(cubeInfo);
+            if (shouldLoadCube) {
+                selectTab(cubeInfo);
+            }
         } else {
             switchTabPane(null);
         }
@@ -2051,7 +2057,7 @@ var NCE = (function ($) {
             }
         }
         selectNone();
-        buildTabs();
+        buildTabs(true);
     }
 
     function checkPermissions(appId, resource, action) {
@@ -2706,7 +2712,7 @@ var NCE = (function ($) {
                 }
             }
             saveOpenCubeList();
-            buildTabs();
+            buildTabs(true);
             runSearch();
         } else {
             showNote("Unable to delete cubes: " + '<hr class="hr-small"/>' + result.data);
@@ -2741,7 +2747,7 @@ var NCE = (function ($) {
             }
 
             saveOpenCubeList();
-            buildTabs();
+            buildTabs(true);
         } else {
             showNote("Unable to delete cubes: " + '<hr class="hr-small"/>' + result.data);
         }
@@ -3008,7 +3014,7 @@ var NCE = (function ($) {
             }
             saveOpenCubeList();
             saveSelectedCubeName(newName);
-            buildTabs(newCubeInfo);
+            buildTabs(true, newCubeInfo);
             loadCube();
             if (appIdsEqual(getSelectedTabAppId(), getAppId())) {
                 loadNCubes();
@@ -3424,7 +3430,7 @@ var NCE = (function ($) {
         if (doesCubeInfoMatchOldAppId(cubeInfoPart, _selectedCubeInfo)) {
             _selectedCubeInfo[cubeInfoPart] = newValue;
         }
-        buildTabs();
+         buildTabs(true);
     }
 
     function removeCubeInfoInOpenCubeList(cubeInfoPart) {
@@ -3440,7 +3446,7 @@ var NCE = (function ($) {
         if (doesCubeInfoMatchOldAppId(cubeInfoPart, _selectedCubeInfo)) {
             saveSelectedCubeInfo(_openCubes.length ? getCubeInfo(_openCubes[0].cubeKey) : []);
         }
-        buildTabs();
+        buildTabs(true);
     }
 
     function ensureModifiable(operation) {
@@ -4118,7 +4124,7 @@ var NCE = (function ($) {
             note = 'Successfully rolled back ' + changes.length + ' cube(s).<hr class="hr-small"/>';
             note += getUpdateNote(getAppId(), changes, 'Rolled back cubes', 'cornflowerblue', true);
             saveOpenCubeList();
-            buildTabs();
+            buildTabs(true);
             showNote(note);
         }, PROGRESS_DELAY);
     }
@@ -4757,7 +4763,9 @@ var NCE = (function ($) {
 })(jQuery);
 
 function frameLoaded(doc) {
-    NCE.buildTabs();
+    delay(function() {
+        NCE.buildTabs(true);
+    }, 500);
     if (doc) {
         $(doc).on('click', function() {
             NCE.closeParentMenu();
