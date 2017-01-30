@@ -21,7 +21,7 @@ class VisualizerHelper
 		String scopeKeysString = "${axisNames.join(COMMA_SPACE)}.${BREAK}"
 		sb.append(BREAK)
 		String message = axisNames.size() > 1 ? 'Scope values may be supplied for: ' : 'A scope value may be supplied for '
-		sb.append("${message}${scopeKeysString}.")
+		sb.append("${message}${scopeKeysString}")
 		axisNames.each{ String axisName ->
 			sb.append(getScopeValuesMessage(axisName, unboundAxesMap[axisName], axisName))
 		}

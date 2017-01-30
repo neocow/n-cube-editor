@@ -19,6 +19,7 @@ class Visualizer
 	protected Set<String> visited = []
 	protected Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
 	protected Joiner.MapJoiner mapJoiner = Joiner.on(", ").withKeyValueSeparator(": ")
+	VisualizerHelper helper
 
 	/**
 	 * Processes an n-cube and all its referenced n-cubes and provides information to
@@ -78,6 +79,7 @@ class Visualizer
 	protected static Map getCellValues(VisualizerRelInfo relInfo, Map options)
 	{
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
+		visInfo.columnValuesForAllUnboundAxesInGraph = new CaseInsensitiveMap()
 		visInfo.messages = new LinkedHashSet()
 		Map node = options.node as Map
 
@@ -112,6 +114,20 @@ class Visualizer
 		while (!stack.empty)
 		{
 			processCube(visInfo, stack.pop())
+		}
+
+		handleUnboundAxes(visInfo)
+	}
+
+	protected void handleUnboundAxes(VisualizerInfo visInfo)
+	{
+		Map<String, Set<Object>> unboundAxesMap = visInfo.columnValuesForAllUnboundAxesInGraph
+		if (unboundAxesMap)
+		{
+			StringBuilder sb = new StringBuilder('Since not all optional scope was provided or found, one or more defaults were used to load the graph.')
+			sb.append("${BREAK}")
+			sb.append(getVisualizerHelper().handleUnboundAxes(unboundAxesMap))
+			visInfo.messages << sb.toString()
 		}
 	}
 
@@ -184,6 +200,11 @@ class Visualizer
 	protected VisualizerRelInfo getVisualizerRelInfo()
 	{
 		return new VisualizerRelInfo()
+	}
+
+	protected VisualizerHelper getVisualizerHelper()
+	{
+		helper =  new VisualizerHelper()
 	}
 
 	protected boolean isValidStartCube(VisualizerInfo visInfo, String cubeName)
