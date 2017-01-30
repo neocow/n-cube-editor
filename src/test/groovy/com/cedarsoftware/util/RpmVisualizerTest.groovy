@@ -14,11 +14,21 @@ import org.junit.Before
 import org.junit.Test
 
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
+import static com.cedarsoftware.util.VisualizerTestConstants.*
 
 @CompileStatic
 class RpmVisualizerTest
 {
     static final String PATH_PREFIX = 'rpmvisualizer/**/'
+    static final String SCOPE_VALUES_AVAILABLE_FOR = 'Values available for '
+    static final String DETAILS_LABEL_UTILIZED_SCOPE = 'Utilized scope'
+    static final String DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS = 'Utilized scope to load class without all traits'
+    static final String DETAILS_LABEL_FIELDS = 'Fields'
+    static final String DETAILS_LABEL_FIELDS_AND_TRAITS = 'Fields and traits'
+    static final String DETAILS_LABEL_CLASS_TRAITS = 'Class traits'
+    static final String VALID_VALUES_FOR_FIELD_SENTENCE_CASE = 'Valid values for field '
+    static final String VALID_VALUES_FOR_FIELD_LOWER_CASE = 'valid values for field '
+
     RpmVisualizer visualizer
     ApplicationID appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'test.visualizer', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
 
@@ -596,16 +606,16 @@ class RpmVisualizerTest
         assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}CCoverage of type Coverage.")
         assert message.contains("${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}businessDivisionCode, program, type")
 
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}businessDivisionCode (on rpm.scope.class.Coverage.traits.StatCode, rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field4):")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}businessDivisionCode")
         assert message.contains('AAADIV')
         assert message.contains('BBBDIV')
 
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}program (on rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field4):")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}program")
         assert message.contains('program1')
         assert message.contains('program2')
         assert message.contains('program3')
 
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}type (on rpm.scope.class.Coverage.traits.field1And2, rpm.scope.class.Coverage.traits.field3CovC, rpm.scope.class.Coverage.traits.field4):")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}type")
         assert message.contains('type1')
         assert message.contains('type2')
         assert message.contains('type3')
@@ -817,11 +827,10 @@ class RpmVisualizerTest
         assert 0 == edges.size()
 
         String message = messages.first()
-        assert message.contains(SCOPE_ADDED_SINCE_REQUIRED)
-        assert message.contains('Product, policyControlDate, quoteDate, _effectiveVersion')
-        assert message.contains('Please replace XXXX for Product with an actual scope value.')
-        assert message.contains(OTHER_DEFAULT_VALUE_MAY_BE_CHANGED)
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}Product:")
+        assert message.contains(SCOPE_VALUES_ADDED_FOR_REQUIRED_KEYS)
+        assert message.contains('policyControlDate, quoteDate, _effectiveVersion')
+        assert message.contains("${ADD_SCOPE_VALUE_FOR_REQUIRED_KEY}Product.")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}Product")
         assert message.contains('GProduct')
         assert message.contains('UProduct')
         assert message.contains('WProduct')
@@ -872,7 +881,7 @@ class RpmVisualizerTest
     private static void checkInvalidScopeMessage(String message)
     {
         assert message.contains('The scope value xxxxxxxx for scope key product cannot be found on axis product in rpm.scope.class.Product.traits for xxxxxxxx.')
-        assert message.contains("${SUPPLY_DIFFERENT_VALUE_FOR}product.")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}product")
         assert message.contains('GProduct')
         assert message.contains('UProduct')
         assert message.contains('WProduct')
@@ -935,8 +944,8 @@ class RpmVisualizerTest
         String nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_NOTE)
         assert nodeDetails.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}StateOps of type Risk.")
-        assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}product")
-        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}product (on rpm.scope.class.Risk.traits.Coverages):")
+        assert nodeDetails.contains("${ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY}product")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}product")
         assert nodeDetails.contains('WProduct')
         assert nodeDetails.contains('UProduct')
         assert nodeDetails.contains('GProduct')
@@ -1069,15 +1078,15 @@ class RpmVisualizerTest
     private static void checkAdditionalScopeIsRequiredNonEPMMessage(String message)
     {
         assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}rpm.class.party.ProfitCenter of type party.ProfitCenter.")
-        assert message.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}dummyRequiredScopeKey.")
+        assert message.contains("${ADD_SCOPE_VALUE_FOR_REQUIRED_KEY}dummyRequiredScopeKey.")
     }
 
 
     private static void checkAdditionalScopeIsRequiredMessage(String message)
     {
         assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}rpm.scope.class.Risk.traits.Coverages for ProductLocation.")
-        assert message.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}sourceRisk.")
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}sourceRisk:")
+        assert message.contains("${ADD_SCOPE_VALUE_FOR_REQUIRED_KEY}sourceRisk.")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}sourceRisk")
         assert message.contains('GProductOps')
         assert message.contains('ProductLocation')
         assert message.contains('StateOps')
@@ -1167,14 +1176,14 @@ class RpmVisualizerTest
         finally
         {
             //Reset cube
-            NCube cube = NCubeManager.loadCube(appId, 'rpm.class.Coverage')
+            NCubeManager.loadCube(appId, 'rpm.class.Coverage')
         }
     }
 
     private static void checkMissingRequiredScopeMessage(String message)
     {
-        assert message.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}dummyAxis")
-        assert message.contains(SCOPE_VALUES_AVAILABLE_FOR)
+        assert message.contains("${ADD_SCOPE_VALUE_FOR_REQUIRED_KEY}dummyAxis")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}dummyAxis")
         assert message.contains('dummy1')
         assert message.contains('dummy2')
         assert message.contains('dummy3')
@@ -1209,7 +1218,7 @@ class RpmVisualizerTest
             String message = messages.first()
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage of type Coverage.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}ACoverage of type Coverage.")
-            assert message.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}dummyRequiredScopeKey.")
+            assert message.contains("${ADD_SCOPE_VALUE_FOR_REQUIRED_KEY}dummyRequiredScopeKey.")
 
             Map node = nodes.find {Map node ->  "${MISSING_SCOPE}FCoverage".toString() == node.label}
             assert 'Coverage' == node.title
@@ -1222,7 +1231,7 @@ class RpmVisualizerTest
             assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for FCoverage")
             assert nodeDetails.contains(DETAILS_LABEL_REASON)
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage of type Coverage.")
-            assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}dummyRequiredScopeKey.")
+            assert nodeDetails.contains("${ADD_SCOPE_VALUE_FOR_REQUIRED_KEY}dummyRequiredScopeKey.")
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)
             assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
@@ -1289,13 +1298,11 @@ class RpmVisualizerTest
 
     private static void checkMissingMinimumTypeScopeMessage(RpmVisualizerInfo visInfo, String message)
     {
-        assert message.contains('Scope is required for Product.')
-        assert message.contains('Please replace XXXX for Product with an actual scope value.')
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}Product:")
+        assert message.contains('A scope value must be supplied for Product.')
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}Product")
         assert message.contains('GProduct')
         assert message.contains('UProduct')
         assert message.contains('WProduct')
-        assert 'XXXX' == visInfo.scope.Product as String
     }
 
     @Test
@@ -1319,9 +1326,8 @@ class RpmVisualizerTest
         assert 0 == edges.size()
 
         String message = messages.first()
-        assert message.contains('Scope is required for policyControlDate.')
-        assert message.contains('Scope is required for quoteDate.')
-        assert message.contains(DEFAULT_VALUE_MAY_BE_CHANGED)
+        assert message.contains('Scope for policyControlDate was added since required. The scope value may be changed as desired.')
+        assert message.contains('Scope for quoteDate was added since required. The scope value may be changed as desired.')
         assert DATE_TIME_FORMAT.format(new Date()) == visInfo.scope.policyControlDate
         assert DATE_TIME_FORMAT.format(new Date()) == visInfo.scope.quoteDate
     }
@@ -1349,8 +1355,7 @@ class RpmVisualizerTest
         assert 0 == edges.size()
 
         String message = messages.first()
-        assert message.contains('Scope is required for _effectiveVersion.')
-        assert message.contains(DEFAULT_VALUE_MAY_BE_CHANGED)
+        assert message.contains('Scope for _effectiveVersion was added since required. The scope value may be changed as desired.')
         assert appId.version == visInfo.scope._effectiveVersion
     }
 
@@ -1447,8 +1452,8 @@ class RpmVisualizerTest
     private static void checkUnboundAxesMessage(String message)
     {
         assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on WProduct.")
-        assert message.contains("${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}state")
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}state (on rpm.scope.enum.Product.Risks.traits):")
+        assert message.contains("${ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY}state")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}state")
         assert message.contains('none')
     }
 
@@ -1456,7 +1461,6 @@ class RpmVisualizerTest
     void testBuildGraph_missingMinimumTypeScopeUnChanged()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     product:'XXXX',
                      policyControlDate:'2017-01-01',
                      quoteDate:'2017-01-01']
 

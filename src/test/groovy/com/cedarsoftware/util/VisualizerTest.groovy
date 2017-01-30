@@ -12,6 +12,7 @@ import org.junit.Before
 import org.junit.Test
 
 import static com.cedarsoftware.util.VisualizerConstants.*
+import static com.cedarsoftware.util.VisualizerTestConstants.*
 import static org.junit.Assert.fail
 
 @CompileStatic
@@ -352,7 +353,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -414,7 +415,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -472,7 +473,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -533,7 +534,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -584,7 +585,7 @@ class VisualizerTest{
                 availableScope: availableScope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -633,7 +634,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -684,7 +685,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -735,7 +736,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -793,7 +794,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -827,13 +828,13 @@ class VisualizerTest{
 
         assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}coordinate")
         assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}CubeKAxis1, CubeKAxis2.")
-        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1:")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col3")
 
         //TODO: CubeKAxis2 should not get flagged as invalid
-        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2:")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col1")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col2")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col3")
@@ -863,7 +864,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -896,13 +897,13 @@ class VisualizerTest{
 
         assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}coordinate")
         assert nodeDetails.contains("${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}CubeKAxis1, CubeKAxis2.")
-        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1:")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col3")
 
-        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2:")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col1")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col2")
@@ -955,7 +956,7 @@ class VisualizerTest{
         }
         catch (IllegalStateException exc)
         {
-            assert "InvalidCoordinateException thrown, but no missing scope keys found for ${cube.name} and scope ${visInfoScope.toString()}." == exc.message
+            assert "InvalidCoordinateException thrown, but no missing scope keys found for ${cube.name} and scope ${visInfoScope.toString()}.".toString() == exc.message
         }
     }
 
@@ -988,7 +989,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -1019,12 +1020,12 @@ class VisualizerTest{
         assert nodeDetails.contains("@CubeWithSingleValue[CubeKAxis1:'bogusScopeValue', CubeKAxis2: 'CubeKAxis2Col3']")
         assert nodeDetails.contains(DETAILS_LABEL_EXCEPTION)
         assert nodeDetails.contains("The scope value bogusScopeValue for scope key CubeKAxis1 cannot be found on axis CubeKAxis1 for coordinate")
-        assert nodeDetails.contains("${SUPPLY_DIFFERENT_VALUE_FOR}CubeKAxis1.")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col3")
-        assert !nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2:")
+        assert !nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2")
 
         assert !nodeDetails.contains(DETAILS_LABEL_MESSAGE)
         assert !nodeDetails.contains(DETAILS_LABEL_ROOT_CAUSE)
@@ -1052,7 +1053,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)
@@ -1083,15 +1084,14 @@ class VisualizerTest{
         assert nodeDetails.contains("@CubeWithSingleValue[CubeKAxis1:'bogusScopeValue', CubeKAxis2: 'dummyScopeValue']")
         assert nodeDetails.contains(DETAILS_LABEL_EXCEPTION)
         assert nodeDetails.contains("The scope value bogusScopeValue for scope key CubeKAxis1 cannot be found on axis CubeKAxis1 for coordinate")
-        assert nodeDetails.contains("${SUPPLY_DIFFERENT_VALUE_FOR}CubeKAxis1.")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis1")
         assert nodeDetails.contains(DETAILS_CLASS_MISSING_SCOPE)
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col1")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col2")
         assert nodeDetails.contains("CubeKAxis1: CubeKAxis1Col3")
 
         //TODO: Should have values for CubeKAxis2
-        assert !nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2:")
-
+        assert !nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}CubeKAxis2")
         assert !nodeDetails.contains(DETAILS_LABEL_MESSAGE)
         assert !nodeDetails.contains(DETAILS_LABEL_ROOT_CAUSE)
         assert !nodeDetails.contains(DETAILS_LABEL_STACK_TRACE)
@@ -1118,7 +1118,7 @@ class VisualizerTest{
                 availableScope: scope,
         ]
 
-        VisualizerInfo visInfo = getVisInfoForShowCellValues()
+        VisualizerInfo visInfo = visInfoForShowCellValues
         Map options = [node: oldNode, visInfo: visInfo]
 
         Map graphInfo = visualizer.getCellValues(appId, options)

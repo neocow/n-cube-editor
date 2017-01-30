@@ -269,4 +269,4 @@ var cubeSelected = function cubeSelected()
     DetailEditor.handleCubeSelected();
 };
 
-var onNoteClick = function onNoteClick(e, element){};
+var onNoteEvent = function onNoteEvent(e, element){};

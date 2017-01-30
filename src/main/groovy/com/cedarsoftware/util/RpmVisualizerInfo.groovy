@@ -46,7 +46,7 @@ class RpmVisualizerInfo extends VisualizerInfo
         Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): cubeType]) as Set
 
         allTypes.each { String sourceType ->
-            Map<String, Boolean> map = typesToAddCube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): [] as Set]) as Map
+            Map<String, Boolean> map = typesToAddCube.getMap([(SOURCE_TYPE): sourceType, (TARGET_TYPE): new LinkedHashSet()]) as Map
             List<String> typesToAdd = map.findAll { String type, Boolean available ->
                 available
             }.keySet() as List
@@ -57,6 +57,6 @@ class RpmVisualizerInfo extends VisualizerInfo
     @Override
     protected String getLoadCellValuesLabel()
     {
-        LOAD_CELL_VALUES_LABEL
+        'traits'
     }
 }

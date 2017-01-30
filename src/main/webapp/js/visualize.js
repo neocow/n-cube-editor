@@ -29,6 +29,7 @@ var Visualizer = (function ($) {
     var _loadedCubeName = null;
     var _loadedAppId = null;
     var _loadedVisInfoType = null;
+    var _okToLoadFromServer = true;
     var _nodes = [];
     var _edges = [];
     var _scope = null;
@@ -55,9 +56,6 @@ var Visualizer = (function ($) {
     var _findNode = null;
     var STATUS_SUCCESS = 'success';
     var STATUS_MISSING_START_SCOPE = 'missingStartScope';
-    var _scopeLastKeyTime = Date.now();
-    var _scopeKeyPressed = false;
-    var SCOPE_KEY_DELAY = 3000;
     var UNSPECIFIED = 'UNSPECIFIED';
     var _noteIdList = [];
     var COMPLETE = 'complete';
@@ -128,12 +126,6 @@ var Visualizer = (function ($) {
             _findNode = $('#findNode');
             _networkOptionsSection = $('#networkOptionsSection');
 
-            $(window).on('resize', function() {
-                if (_network) {
-                   _network.setSize('100%', getVisNetworkHeight());
-                }
-            });
-
              $('#selectedLevel-list').on('change', function () {
                 _selectedLevel = Number($('#selectedLevel-list').val());
                 saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
@@ -142,7 +134,7 @@ var Visualizer = (function ($) {
 
             $('#hierarchical').on('change', function () {
                 //Hierarchical mode is disabled due to what appears to be a bug in vis.js or because the
-                //visualizer.js code is missing something. Tis problem started when convering to use
+                //visualizer.js code is missing something. Tis problem started when converting to use
                 //visjs DataSets for network data.
                 //The problem is that when visjs creates the network.body nodes from the network.body.data
                 //nodes, it doesn't set the level on the network.body nodes. This causes an exception
@@ -157,16 +149,9 @@ var Visualizer = (function ($) {
             });
 
             _scopeInput.on('change', function () {
-                _scopeKeyPressed = false;
                 _scope = buildScopeFromText(_scopeInput.val());
                 scopeChange();
             });
-            
-            _scopeInput.on('input', function () {
-                _scopeKeyPressed = true;
-                _scopeLastKeyTime = Date.now();
-            });
-
 
             _findNode.on('change', function () {
                 var nodeLabel, nodeLabelLowerCase, nodes, nodeId, params, note, k, kLen, node, linkText, sourceDescription;
@@ -209,11 +194,15 @@ var Visualizer = (function ($) {
             addSelectAllNoneGroupsListeners();
             addNetworkOptionsListeners();
 
-            scopeKeyDelayLoop();
+            $(window).on('resize', function() {
+                 if (_network) {
+                    _network.setSize('100%', getVisNetworkHeight());
+                }
+            });
         }
     }
 
-    function onNoteClick(e) {
+    function onNoteEvent(e) {
         var target = e.target;
         if (target.className.indexOf('missingScope') > -1) {
             missingScope(target);
@@ -225,12 +214,14 @@ var Visualizer = (function ($) {
 
     function missingScope(target) {
         var id, scopeParts, key, value;
-        id = target.title;
-        scopeParts = id.split(':');
-        key = scopeParts[0];
-        value = scopeParts[1].trim();
-        _scope[key] = value;
-        scopeChange();
+        id = target.selectedOptions[0].title;
+        if (id) {
+            scopeParts = id.split(':');
+            key = scopeParts[0];
+            value = scopeParts[1].trim();
+            _scope[key] = value;
+            scopeChange();
+        }
     }
 
     function findNode(target) {
@@ -454,18 +445,6 @@ var Visualizer = (function ($) {
         }
     }
 
-    function scopeKeyDelayLoop() {
-        var now;
-        setInterval(function() {
-            now = Date.now();
-            if (now - _scopeLastKeyTime > SCOPE_KEY_DELAY && _scopeKeyPressed) {
-                _scopeKeyPressed = false;
-                _scope = buildScopeFromText(_scopeInput.val());
-                scopeChange();
-            }
-       }, SCOPE_KEY_DELAY);
-    }
-    
     function scopeChange()
     {
         saveToLocalStorage(_scope, SCOPE_MAP);
@@ -568,12 +547,17 @@ var Visualizer = (function ($) {
     }
 
     function load() {
-        _dataLoadStart = performance.now();
-        $("#dataLoadStatus").val('loading');
-        $("#dataLoadDuration").val(DOT_DOT_DOT);
-        _nce.clearNotes(_noteIdList);
-        setTimeout(function () {loadFromServer();}, PROGRESS_DELAY);
-        _noteIdList.push(_nce.showNote('Loading data...'));
+        if (_okToLoadFromServer) {
+            _okToLoadFromServer = false;
+            _dataLoadStart = performance.now();
+            $("#dataLoadStatus").val('loading');
+            $("#dataLoadDuration").val(DOT_DOT_DOT);
+            _nce.clearNotes(_noteIdList);
+            setTimeout(function () {
+                loadFromServer();
+            }, PROGRESS_DELAY);
+            _noteIdList.push(_nce.showNote('Loading data...'));
+        }
     }
 
     function loadFromServer() {
@@ -584,6 +568,7 @@ var Visualizer = (function ($) {
         if (!_nce.getSelectedCubeName()) {
              _visualizerContent.hide();
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + 'No cube selected.');
+            _okToLoadFromServer = true;
             return;
         }
 
@@ -615,6 +600,7 @@ var Visualizer = (function ($) {
         if (!result.status) {
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
              _visualizerContent.hide();
+            _okToLoadFromServer = true;
             return;
         }
 
@@ -651,10 +637,10 @@ var Visualizer = (function ($) {
                 message = message + TWO_LINE_BREAKS + json.stackTrace
             }
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + message);
-            return;
         }
         $("#dataLoadStatus").val(COMPLETE);
         $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
+        _okToLoadFromServer = true;
     }
 
      function appIdMatch(appIdA, appIdB)
@@ -1089,6 +1075,10 @@ var Visualizer = (function ($) {
                 clearVisLayoutEast();
             });
 
+            _network.on('dragStart', function () {
+                networkChangeEvent()
+            });
+
             _network.on('startStabilizing', function () {
                 networkStartStabilizingEvent();
              });
@@ -1241,19 +1231,22 @@ var Visualizer = (function ($) {
     function addNodeDetailsListeners()
     {
         var target;
-        if (!_nodeDetails.hasClass(HAS_CLICK_EVENT))
+        if (!_nodeDetails.hasClass(HAS_EVENT))
         {
-            _nodeDetails.click(function (e) {
-                e.preventDefault();
+            _nodeDetails.change(function (e) {
                 target = e.target;
                 if (target.className.indexOf('missingScope') > -1) {
                     missingScope(target);
                 }
-                else{
+            });
+            _nodeDetails.click(function (e) {
+                e.preventDefault();
+                target = e.target;
+                if (target.className.indexOf('missingScope') === -1) {
                     executeCell(target);
                 }
             });
-            _nodeDetails.addClass(HAS_CLICK_EVENT)
+            _nodeDetails.addClass(HAS_EVENT)
         }
     }
 
@@ -1408,7 +1401,7 @@ var Visualizer = (function ($) {
         init: init,
         handleCubeSelected: handleCubeSelected,
         load: load,
-        onNoteClick: onNoteClick
+        onNoteEvent: onNoteEvent
     };
 
 })(jQuery);
@@ -1422,6 +1415,6 @@ function cubeSelected() {
     Visualizer.handleCubeSelected();
 }
 
-function onNoteClick(e, element) {
-    Visualizer.onNoteClick(e, element);
+function onNoteEvent(e, element) {
+    Visualizer.onNoteEvent(e, element);
 }

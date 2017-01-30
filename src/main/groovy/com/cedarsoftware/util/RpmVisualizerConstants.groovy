@@ -39,23 +39,8 @@ final class RpmVisualizerConstants extends VisualizerConstants
 	public static final Set<String> MANDATORY_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
 
 	public static final String CUBE_TYPE_RPM = 'rpm'
-
 	public static final String TYPES_TO_ADD_CUBE_NAME = 'VisualizerTypesToAdd'
 	public static final String SOURCE_TYPE = 'sourceType'
 	public static final String TARGET_TYPE = 'targetType'
-
 	public static final String UNSPECIFIED_ENUM = 'UNSPECIFIED_ENUM'
-
-	public static final String LOAD_CELL_VALUES_LABEL = 'traits'
-
-	public static final String DETAILS_LABEL_UTILIZED_SCOPE = 'Utilized scope'
-	public static final String DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS = 'Utilized scope to load class without all traits'
-	public static final String DETAILS_LABEL_FIELDS = 'Fields'
-	public static final String DETAILS_LABEL_FIELDS_AND_TRAITS = 'Fields and traits'
-	public static final String DETAILS_LABEL_CLASS_TRAITS = 'Class traits'
-
-	public static final String DEFAULT_VALUE_MAY_BE_CHANGED = 'Its default value may be changed as desired.'
-	public static final String OTHER_DEFAULT_VALUE_MAY_BE_CHANGED = 'The other default scope values may also be changed as desired.'
-	public static final String VALID_VALUES_FOR_FIELD_SENTENCE_CASE = 'Valid values for field '
-	public static final String VALID_VALUES_FOR_FIELD_LOWER_CASE = 'valid values for field '
 }

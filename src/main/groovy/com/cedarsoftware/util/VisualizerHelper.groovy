@@ -14,17 +14,16 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerHelper
 {
-	static String handleUnboundAxes(Map<String, Map> unboundAxesMap)
+	static String handleUnboundAxes(Map<String, Set<Object>> unboundAxesMap)
 	{
-		Map<String, Set<String>> cubesWithUnboundAxis = unboundAxesMap.cubes
-		Map<String, Set<Object>> columnValuesForUnboundAxis = unboundAxesMap.scopeValues
 		StringBuilder sb = new StringBuilder()
-		String scopeKeysString = "${cubesWithUnboundAxis.keySet().join(COMMA_SPACE)}.${BREAK}"
-		sb.append("${BREAK} ${ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS}${scopeKeysString}")
-		cubesWithUnboundAxis.each{ String axisName, Set<String> cubeNames ->
-			String cubeNamesString = cubeNames.join(COMMA_SPACE)
-			sb.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${axisName} (on ${cubeNamesString}):")
-			sb.append(getScopeValuesMessage(axisName, columnValuesForUnboundAxis[axisName]))
+		Set axisNames = unboundAxesMap.keySet()
+		String scopeKeysString = "${axisNames.join(COMMA_SPACE)}.${BREAK}"
+		sb.append(BREAK)
+		String message = axisNames.size() > 1 ? 'Scope values may be supplied for: ' : 'A scope value may be supplied for '
+		sb.append("${message}${scopeKeysString}.")
+		axisNames.each{ String axisName ->
+			sb.append(getScopeValuesMessage(axisName, unboundAxesMap[axisName], axisName))
 		}
 		return sb.toString()
 	}
@@ -48,11 +47,6 @@ class VisualizerHelper
 		Set<String> missingScope = findMissingScope(relInfo.scope, e.requiredKeys, mandatoryScopeKeys)
 		if (missingScope)
 		{
-			Map<String, Object> expandedScope = new CaseInsensitiveMap<>(visInfo.scope)
-			missingScope.each { String scopeKey ->
-				expandedScope[scopeKey] = DEFAULT_SCOPE_VALUE
-			}
-			visInfo.scope = expandedScope
 			return getInvalidCoordinateExceptionMessage(visInfo, missingScope, e.cubeName)
 		}
 		else
@@ -76,34 +70,37 @@ class VisualizerHelper
 		return e
 	}
 
-
-	static String getScopeValuesMessage(String scopeKey, Set<Object> scopeValues)
+	static String getScopeValuesMessage(String scopeKey, Set<Object> scopeValues, String availableFor)
 	{
 		StringBuilder sb = new StringBuilder()
-		sb.append("${DOUBLE_BREAK}<pre><ul>")
+		sb.append("""${BREAK}<div class="input-group input-group-sm">""")
+		sb.append("""<select class="${DETAILS_CLASS_FORM_CONTROL} ${DETAILS_CLASS_MISSING_SCOPE}">""")
+		sb.append("<option>Values available for ${availableFor}</option>")
 		if (scopeValues)
 		{
 			scopeValues.each{
 				String value = it.toString()
-				sb.append("""<li><a class="missingScope" title="${scopeKey}: ${value}" href="#">${value}</a></li>""")
+				sb.append("""<option title="${scopeKey}: ${value}">${value}</option>""")
 			}
 		}
 		else
 		{
-			sb.append(NONE)
+			sb.append("""<option title="${scopeKey}: none">none</option>""")
 		}
-		sb.append("</ul></pre>")
+		sb.append("</select>")
+		sb.append("""</div>""")
 		return sb.toString()
 	}
 
 	private static String getInvalidCoordinateExceptionMessage(VisualizerInfo visInfo, Set<String> missingScope, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
-		message.append("${DOUBLE_BREAK} ${ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS}${missingScope.join(COMMA_SPACE)}.${BREAK}")
+
+		String msg = missingScope.size() > 1 ? 'Scope values must be supplied for: ' : 'A scope value must be supplied for '
+		message.append("${msg}${missingScope.join(COMMA_SPACE)}.${BREAK}")
 		missingScope.each{ String scopeKey ->
-			message.append("${BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${scopeKey}:")
 			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, scopeKey)
-			message.append(getScopeValuesMessage(scopeKey, requiredScopeValues))
+			message.append(getScopeValuesMessage(scopeKey, requiredScopeValues, scopeKey))
 		}
 		return message.toString()
 	}
@@ -111,9 +108,8 @@ class VisualizerHelper
 	private static String getCoordinateNotFoundMessage(VisualizerInfo visInfo, String scopeKey, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
-		message.append("${DOUBLE_BREAK} ${SUPPLY_DIFFERENT_VALUE_FOR}${scopeKey}.")
 		Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, scopeKey)
-		message.append(getScopeValuesMessage(scopeKey, requiredScopeValues))
+		message.append(BREAK + getScopeValuesMessage(scopeKey, requiredScopeValues, scopeKey))
 		return message.toString()
 	}
 
@@ -124,13 +120,13 @@ class VisualizerHelper
 		}
 	}
 
-	protected static String getMissingMinimumScopeMessage(Map<String, Object> scope, String messageScopeValues, String messageSuffixType, String messageSuffix )
+	protected static String getMissingMinimumScopeMessage(Map<String, Object> scope, String messageScopeValues, String messageSuffixType)
 	{
 		"""\
-${SCOPE_ADDED_SINCE_REQUIRED} \
+The scope for the following scope keys was added since required. The default scope values may be changed as desired. \
 ${DOUBLE_BREAK}${INDENT}${scope.keySet().join(COMMA_SPACE)}\
-${messageSuffixType} ${messageSuffix} \
-${BREAK}${messageScopeValues}"""
+${messageSuffixType} \
+${messageScopeValues}"""
 	}
 
 	static String getExceptionMessage(Throwable t, Throwable e, String targetMsg)

@@ -195,7 +195,7 @@ class RpmVisualizer extends Visualizer
 			String sourceFieldName = relInfo.sourceFieldName
 			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
 			{
-				relInfo.targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + relInfo.sourceFieldName]] as Map
+				relInfo.targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): "Unable to load ${relInfo.sourceFieldName}"]] as Map
 				String msg = getLoadTraitsForTargetMessage(relInfo, type)
 				relInfo.notes << msg
 				relInfo.cellValuesLoaded = false
@@ -246,7 +246,6 @@ class RpmVisualizer extends Visualizer
 		Map<String, Object> scope = new CaseInsensitiveMap<>()
 		if (type)
 		{
-			scope[type] = DEFAULT_SCOPE_VALUE
 			scope[POLICY_CONTROL_DATE] = defaultScopeDate
 			scope[QUOTE_DATE] = defaultScopeDate
 		}
@@ -282,37 +281,34 @@ class RpmVisualizer extends Visualizer
 
 		boolean hasMissingScope = false
 		Map<String, Object> scope = rpmVisInfo.scope
-		String messageSuffixScopeKey = DEFAULT_VALUE_MAY_BE_CHANGED
 
 		if (NCubeManager.getCube(appId, startCubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			String type = getTypeFromCubeName(startCubeName)
-			String messageSuffixTypeScopeKey = "${DOUBLE_BREAK}Please replace ${DEFAULT_SCOPE_VALUE} for ${type} with an actual scope value."
+			String messageSuffixTypeScopeKey = "A scope value must be supplied for ${type}."
 			String scopeCubeName = startCubeName.replace(RPM_CLASS_DOT, RPM_SCOPE_CLASS_DOT) + DOT_TRAITS
 			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(scopeCubeName, type)
-			String messageScopeValues = "${DOUBLE_BREAK}${SCOPE_VALUES_AVAILABLE_FOR}${type}:"
-			messageScopeValues += helper.getScopeValuesMessage(type, requiredScopeValues)
-			String messageSuffix = OTHER_DEFAULT_VALUE_MAY_BE_CHANGED
+			String messageScopeValues = BREAK + helper.getScopeValuesMessage(type, requiredScopeValues, type)
 			if (scope)
 			{
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(type, DEFAULT_SCOPE_VALUE, "${messageSuffixTypeScopeKey}${messageScopeValues}", messages) ?: hasMissingScope
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(POLICY_CONTROL_DATE, defaultScopeDate, messageSuffixScopeKey, messages) ?: hasMissingScope
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(QUOTE_DATE, defaultScopeDate, messageSuffixScopeKey, messages) ?: hasMissingScope
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffixScopeKey, messages) ?: hasMissingScope
+				hasMissingScope = rpmVisInfo.addMissingMinimumScope(type, null, "${messageSuffixTypeScopeKey}${messageScopeValues}", messages) ?: hasMissingScope
+				hasMissingScope = rpmVisInfo.addMissingMinimumScope(POLICY_CONTROL_DATE, defaultScopeDate, null, messages) ?: hasMissingScope
+				hasMissingScope = rpmVisInfo.addMissingMinimumScope(QUOTE_DATE, defaultScopeDate, null, messages) ?: hasMissingScope
+				hasMissingScope = rpmVisInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, null, messages) ?: hasMissingScope
 			}
 			else
 			{
 				hasMissingScope = true
 				Map<String, Object> defaultScope = getDefaultScope(type)
 				visInfo.scope = defaultScope
-				String msg = helper.getMissingMinimumScopeMessage(defaultScope, messageScopeValues, messageSuffixTypeScopeKey, messageSuffix)
+				String msg = helper.getMissingMinimumScopeMessage(defaultScope, messageScopeValues, DOUBLE_BREAK + messageSuffixTypeScopeKey)
 				messages << msg
 			}
 		}
 		else{
 			if (scope)
 			{
-				hasMissingScope = visInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, messageSuffixScopeKey, messages) ?: hasMissingScope
+				hasMissingScope = visInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, null, messages) ?: hasMissingScope
 			}
 			else
 			{

@@ -1585,7 +1585,7 @@ var cubeSelected = function cubeSelected()
     NCubeEditor.handleCubeSelected();
 };
 
-function onNoteClick(e, element){};
+function onNoteEvent(e, element){};
 
 function closeChildMenu() {
     $('.open').removeClass('open');

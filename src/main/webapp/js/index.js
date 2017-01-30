@@ -1022,12 +1022,11 @@ var NCE = (function ($) {
         }
     }
 
-    function onNoteClick(e) {
+    function onNoteEvent(e) {
         var cw;
-        e.preventDefault();
         cw = getActiveContentWindow();
-        if (cw.onNoteClick !== undefined) {
-            cw.onNoteClick(e);
+        if (cw.onNoteEvent !== undefined) {
+            cw.onNoteEvent(e);
             cw.focus();
         }
     }
@@ -4657,12 +4656,12 @@ var NCE = (function ($) {
 
     function addNoteListeners() {
         _noteWrapper = $.gritter.noticeWrapper();
-        if (!_noteWrapper.hasClass(HAS_CLICK_EVENT)) {
-            _noteWrapper.on('click', function (e) {
+        if (!_noteWrapper.hasClass(HAS_EVENT)) {
+            _noteWrapper.on('change click', function (e) {
                 e.preventDefault();
-                onNoteClick(e);
+                onNoteEvent(e);
             });
-            _noteWrapper.addClass(HAS_CLICK_EVENT)
+            _noteWrapper.addClass(HAS_EVENT)
         }
      }
 
