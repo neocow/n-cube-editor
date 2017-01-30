@@ -44,12 +44,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		String effectiveName = effectiveNameByCubeName
 		StringBuilder sb = new StringBuilder()
-		String notesLabel = "<b>${DETAILS_LABEL_NOTE}</b>"
+		String notesLabel = "<b>Note: </b>"
 
 		if (!cellValuesLoaded)
 		{
-			sb.append("<b>*** ${UNABLE_TO_LOAD}fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
-			notesLabel = "<b>${DETAILS_LABEL_REASON}</b>"
+			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
+			notesLabel = "<b>Reason: </b>"
 		}
 
 		//Notes
@@ -65,10 +65,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		//Scope
 		if (cellValuesLoaded)
 		{
-			String title = showCellValues ? DETAILS_LABEL_UTILIZED_SCOPE : DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS
+			String title = showCellValues ? 'Utilized scope' : 'Utilized scope to load class without all traits'
 			getDetailsMap(sb, title, targetScope)
 		}
-		getDetailsMap(sb, DETAILS_LABEL_AVAILABLE_SCOPE, scope)
+		getDetailsMap(sb, 'Available scope', scope)
 
 		//Fields
 		if (cellValuesLoaded)
@@ -86,11 +86,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		if (showCellValues)
 		{
-			sb.append("<b>${DETAILS_LABEL_FIELDS_AND_TRAITS}</b>")
+			sb.append("<b>Fields and traits</b>")
 		}
 		else
 		{
-			sb.append("<b>${DETAILS_LABEL_FIELDS}</b>")
+			sb.append("<b>Fields</b>")
 		}
 		sb.append("<pre><ul>")
 		targetTraits.each { String fieldName, v ->
@@ -133,7 +133,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void addClassTraits(StringBuilder sb)
 	{
-		sb.append("<b>${DETAILS_LABEL_CLASS_TRAITS}</b>")
+		sb.append("<b>Class traits</b>")
 		addTraits(sb, CLASS_TRAITS)
 		sb.append("${BREAK}")
 	}
@@ -319,7 +319,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		else if (targetCubeName.startsWith(RPM_ENUM_DOT))
 		{
 			String sourceName =  sourceTraits ? getDotSuffix(sourceEffectiveName) : getCubeDisplayName(sourceCube.name)
-			detailsTitle = "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}${sourceFieldName} on ${sourceName}".toString()
+			detailsTitle = "Valid values for field ${sourceFieldName} on ${sourceName}".toString()
 		}
 		return detailsTitle
 	}
@@ -351,7 +351,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			removeNotExistsFields()
 			addRequiredAndOptionalScopeKeys(visInfo)
 			retainUsedScope(visInfo, output)
-			handleUnboundAxes(visInfo, output._rule as RuleInfo)
+			handleUnboundAxes(visInfo, targetCube.getRuleInfo(output))
 			cellValuesLoaded = true
 			showCellValuesLink = true
 		}
@@ -378,12 +378,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void handleUnboundAxes(VisualizerInfo visInfo, RuleInfo ruleInfo)
 	{
-		Map<String, Map> unboundAxesMap = createUnboundAxesMap(visInfo, ruleInfo)
+		Map<String, Set<Object>> unboundAxesMap = createUnboundAxesMap(visInfo, ruleInfo)
 		if (unboundAxesMap)
 		{
 			String cubeName = targetCube.name
 			String effectiveNameByCubeName = effectiveNameByCubeName
-			StringBuilder sb = new StringBuilder(OPTIONAL_SCOPE_AVAILABLE_TO_LOAD)
+			StringBuilder sb = new StringBuilder('Since not all optional scope was provided or found, one or more defaults were used to load ')
 			if (cubeName.startsWith(RPM_CLASS_DOT))
 			{
 				String cubeDisplayName = getCubeDisplayName(cubeName)
@@ -391,7 +391,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			}
 			else if (cubeName.startsWith(RPM_ENUM_DOT))
 			{
-				String cubeTitle = cubeDetailsTitle1.replace(VALID_VALUES_FOR_FIELD_SENTENCE_CASE, VALID_VALUES_FOR_FIELD_LOWER_CASE)
+				String cubeTitle = cubeDetailsTitle1.replace('Valid', 'valid')
 				sb.append("${cubeTitle}.")
 			}
 			else
@@ -404,16 +404,14 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 	}
 
-	private Map<String, Map> createUnboundAxesMap(VisualizerInfo visInfo, RuleInfo ruleInfo)
+	private Map<String, Set<Object>> createUnboundAxesMap(VisualizerInfo visInfo, RuleInfo ruleInfo)
 	{
 		List unboundAxesList = ruleInfo.getUnboundAxesList()
 		if (unboundAxesList)
 		{
-			//Gather entries in unboundAxesList into a map containing two maps:
-			//one with cube names by scope key, one with scope values by scope key.
+			//Gather entries in unboundAxesList into a map containing scope values by scope key.
 			boolean hasScopeKeysToInclude
-			Map<String, Set<String>> cubesWithUnboundAxis = [:]
-			Map<String, Set<Object>> columnValuesForUnboundAxis = [:]
+			Map<String, Set<Object>> columnValuesForUnboundAxis = new CaseInsensitiveMap()
 
 			unboundAxesList.each { MapEntry unboundAxis ->
 				String cubeName = unboundAxis.key as String
@@ -421,10 +419,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				String axisName = axisEntry.key as String
 				if (includeScopeKey(visInfo, axisName))
 				{
-					Set<String> cubeNames = cubesWithUnboundAxis[axisName] ?: [] as Set
-					cubeNames << cubeName
-					cubesWithUnboundAxis[axisName] = cubeNames
-					Set<Object> columnValues = columnValuesForUnboundAxis[axisName] ?: [] as Set
+					Set<Object> columnValues = columnValuesForUnboundAxis[axisName] ?: new LinkedHashSet()
 					columnValues.addAll(visInfo.getOptionalScopeValues(cubeName, axisName))
 					columnValuesForUnboundAxis[axisName] = columnValues
 					hasScopeKeysToInclude = true
@@ -433,10 +428,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 			if (hasScopeKeysToInclude)
 			{
-				return [cubes: cubesWithUnboundAxis, scopeValues: columnValuesForUnboundAxis] as Map
+				return columnValuesForUnboundAxis
 			}
 		}
-		return [:]
+		return new CaseInsensitiveMap()
 	}
 
 	private boolean includeScopeKey(VisualizerInfo visInfo, String scopeKey)
@@ -462,38 +457,36 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		String scopeKey = e.axisName
 		Object value = e.value ?: 'null'
 		String targetMsg = ''
-		String cubeDisplayName = getCubeDisplayName(e.cubeName)
-		mb.append("The scope value ${value} for scope key ${scopeKey} cannot be found on axis ${scopeKey} in ${cubeDisplayName}${sourceMessage} for ${effectiveNameByCubeName}.")
+		mb.append("The scope value ${value} for scope key ${scopeKey} cannot be found on axis ${scopeKey} in ${getCubeDisplayName(e.cubeName)}${sourceMessage} for ${effectiveNameByCubeName}.")
 		mb.append(helper.handleCoordinateNotFoundException(e, visInfo, targetMsg))
 		String msg = mb.toString()
 		notes << msg
 		visInfo.messages << msg
-		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): SCOPE_VALUE_NOT_FOUND + effectiveNameByCubeName]] as Map
+		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): "Scope value not found for ${effectiveNameByCubeName}"]] as Map
 	}
 
 	private void handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo)
 	{
 		String cubeName = e.cubeName
 		String effectiveNameByCubeName = effectiveNameByCubeName
-		StringBuilder sb = new StringBuilder(ADDITIONAL_SCOPE_REQUIRED_TO_LOAD)
+		StringBuilder sb = new StringBuilder('Additional scope is required to load ')
 		if (cubeName.startsWith(RPM_CLASS_DOT))
 		{
-			String cubeDisplayName = getCubeDisplayName(cubeName)
-			sb.append("${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+			sb.append("${effectiveNameByCubeName} of type ${getCubeDisplayName(cubeName)}${sourceMessage}. ")
 		}
 		else if (cubeName.startsWith(RPM_ENUM_DOT))
 		{
-			sb.append("${cubeDetailsTitle1}.")
+			sb.append("${cubeDetailsTitle1}. ")
 		}
 		else
 		{
-			sb.append("${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+			sb.append("${cubeName} for ${effectiveNameByCubeName}${sourceMessage}. ")
 		}
 		sb.append(helper.handleInvalidCoordinateException(e, visInfo, this, MANDATORY_SCOPE_KEYS))
 		String msg = sb.toString()
 		notes << msg
 		visInfo.messages << msg
-		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): MISSING_SCOPE + effectiveNameByCubeName]] as Map
+		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): 'Missing scope for ' + effectiveNameByCubeName]] as Map
 	}
 
 	private void handleException(Throwable e, VisualizerInfo visInfo)
@@ -502,6 +495,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		String reason = helper.handleException(e, targetMsg)
 		notes << reason
 		visInfo.messages << reason
-		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): UNABLE_TO_LOAD + reason]] as Map
+		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): "Unable to load ${reason}"]] as Map
 	}
 }

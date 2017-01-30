@@ -1286,7 +1286,7 @@ var cubeSelected = function cubeSelected()
     TestEditor.handleCubeSelected();
 };
 
-function onNoteClick(e, element){};
+function onNoteEvent(e, element){};
 
 function closeChildMenu() {
     $('.open').removeClass('open');

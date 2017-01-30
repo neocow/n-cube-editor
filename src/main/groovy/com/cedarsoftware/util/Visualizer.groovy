@@ -78,7 +78,7 @@ class Visualizer
 	protected static Map getCellValues(VisualizerRelInfo relInfo, Map options)
 	{
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
-		visInfo.messages = [] as Set
+		visInfo.messages = new LinkedHashSet()
 		Map node = options.node as Map
 
 		relInfo.loadCellValues(visInfo)

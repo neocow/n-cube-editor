@@ -202,7 +202,7 @@ var Visualizer = (function ($) {
         }
     }
 
-    function onNoteClick(e) {
+    function onNoteEvent(e) {
         var target = e.target;
         if (target.className.indexOf('missingScope') > -1) {
             missingScope(target);
@@ -214,12 +214,14 @@ var Visualizer = (function ($) {
 
     function missingScope(target) {
         var id, scopeParts, key, value;
-        id = target.title;
-        scopeParts = id.split(':');
-        key = scopeParts[0];
-        value = scopeParts[1].trim();
-        _scope[key] = value;
-        scopeChange();
+        id = target.selectedOptions[0].title;
+        if (id) {
+            scopeParts = id.split(':');
+            key = scopeParts[0];
+            value = scopeParts[1].trim();
+            _scope[key] = value;
+            scopeChange();
+        }
     }
 
     function findNode(target) {
@@ -1229,19 +1231,22 @@ var Visualizer = (function ($) {
     function addNodeDetailsListeners()
     {
         var target;
-        if (!_nodeDetails.hasClass(HAS_CLICK_EVENT))
+        if (!_nodeDetails.hasClass(HAS_EVENT))
         {
-            _nodeDetails.click(function (e) {
-                e.preventDefault();
+            _nodeDetails.change(function (e) {
                 target = e.target;
                 if (target.className.indexOf('missingScope') > -1) {
                     missingScope(target);
                 }
-                else{
+            });
+            _nodeDetails.click(function (e) {
+                e.preventDefault();
+                target = e.target;
+                if (target.className.indexOf('missingScope') === -1) {
                     executeCell(target);
                 }
             });
-            _nodeDetails.addClass(HAS_CLICK_EVENT)
+            _nodeDetails.addClass(HAS_EVENT)
         }
     }
 
@@ -1396,7 +1401,7 @@ var Visualizer = (function ($) {
         init: init,
         handleCubeSelected: handleCubeSelected,
         load: load,
-        onNoteClick: onNoteClick
+        onNoteEvent: onNoteEvent
     };
 
 })(jQuery);
@@ -1410,6 +1415,6 @@ function cubeSelected() {
     Visualizer.handleCubeSelected();
 }
 
-function onNoteClick(e, element) {
-    Visualizer.onNoteClick(e, element);
+function onNoteEvent(e, element) {
+    Visualizer.onNoteEvent(e, element);
 }

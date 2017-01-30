@@ -33,8 +33,8 @@ class VisualizerInfo
     Set<String> availableGroupsAllLevels
     Set<String> messages
 
-    Map<String, Map<String, Set<Object>>> optionalScopeValues = [:]
-    Map<String, Map<String, Set<Object>>> requiredScopeValues = [:]
+    Map<String, Map<String, Set<Object>>> optionalScopeValues = new CaseInsensitiveMap()
+    Map<String, Map<String, Set<Object>>> requiredScopeValues = new CaseInsensitiveMap()
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
 
@@ -58,8 +58,8 @@ class VisualizerInfo
         maxLevel = 1
         nodeCount = 1
         relInfoCount = 1
-        messages = [] as Set
-        availableGroupsAllLevels = [] as Set
+        messages = new LinkedHashSet()
+        availableGroupsAllLevels = new LinkedHashSet()
         this.scope = scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
     }
 
@@ -68,7 +68,7 @@ class VisualizerInfo
         return CUBE_TYPE_DEFAULT
     }
 
-    boolean addMissingMinimumScope(String scopeKey, String value, String messageSuffix, Set<String> messages)
+    boolean addMissingMinimumScope(String scopeKey, String value, String message, Set<String> messages)
     {
         Map<String, Object> scope = scope
         boolean missingScope
@@ -76,23 +76,22 @@ class VisualizerInfo
         {
             if (!scope[scopeKey])
             {
-                scope[scopeKey] = value
-                missingScope = true
-            }
-            else if (DEFAULT_SCOPE_VALUE == scope[scopeKey])
-            {
                 missingScope = true
             }
         }
         else
         {
-            scope[scopeKey] = value
             missingScope = true
         }
 
         if (missingScope)
         {
-            messages << "Scope is required for ${scopeKey}. ${messageSuffix}".toString()
+            message = message ?: "Scope for ${scopeKey} was added since required. The scope value may be changed as desired."
+            messages << message
+            if (value)
+            {
+                scope[scopeKey] = value
+            }
         }
         return missingScope
     }
@@ -138,7 +137,7 @@ class VisualizerInfo
 
     protected String getLoadCellValuesLabel()
     {
-        LOAD_CELL_VALUES_LABEL
+        'cell values'
     }
 
     Set<Object> getOptionalScopeValues( String cubeName, String scopeKey)
@@ -154,7 +153,7 @@ class VisualizerInfo
     Set<Object> getScopeValues( Map<String, Map<String, Set<Object>>> scopeValues, String cubeName, String scopeKey)
     {
         //The key to the map scopeValues is a scope key. The map contains a map of scope values by cube name.
-        Map<String, Set<Object>> scopeValuesForScopeKey = scopeValues[scopeKey] as Map ?: [:]
+        Map<String, Set<Object>> scopeValuesForScopeKey = scopeValues[scopeKey] as Map ?: new CaseInsensitiveMap()
         Set<Object> scopeValuesForCubeAndScopeKey = scopeValuesForScopeKey[cubeName] ?: getColumnValues(appId, cubeName, scopeKey)
         scopeValuesForScopeKey[cubeName] = scopeValuesForCubeAndScopeKey
         scopeValues[scopeKey] = scopeValuesForScopeKey

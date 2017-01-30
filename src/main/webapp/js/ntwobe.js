@@ -4775,7 +4775,7 @@ function cubeSelected() {
     NCubeEditor2.handleCubeSelected();
 }
 
-function onNoteClick(e, element){};
+function onNoteEvent(e, element){};
 
 function closeChildMenu() {
     $('.open').removeClass('open');

@@ -99,11 +99,11 @@ class VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		String targetCubeName = targetCube.name
 
-		getDetailsMap(sb, DETAILS_LABEL_SCOPE, targetScope)
-		getDetailsMap(sb, DETAILS_LABEL_AVAILABLE_SCOPE, scope)
-		getDetailsSet(sb, DETAILS_LABEL_REQUIRED_SCOPE_KEYS, visInfo.requiredScopeKeys[targetCubeName])
-		getDetailsSet(sb, DETAILS_LABEL_OPTIONAL_SCOPE_KEYS, visInfo.optionalScopeKeys[targetCubeName])
-		getDetailsSet(sb, DETAILS_LABEL_AXES, targetCube.axisNames)
+		getDetailsMap(sb, 'Scope', targetScope)
+		getDetailsMap(sb, 'Available scope', scope)
+		getDetailsSet(sb, 'Required scope keys', visInfo.requiredScopeKeys[targetCubeName])
+		getDetailsSet(sb, 'Optional scope keys', visInfo.optionalScopeKeys[targetCubeName])
+		getDetailsSet(sb, 'Axes', targetCube.axisNames)
 
 		//Cell values
 		if (cellValuesLoaded && showCellValues)
@@ -117,7 +117,7 @@ class VisualizerRelInfo
 	{
 		StringBuilder cellValuesBuilder = new StringBuilder()
 		StringBuilder linkBuilder = new StringBuilder()
-		sb.append("<b>${DETAILS_LABEL_CELL_VALUES}</b>")
+		sb.append("<b>Cell values</b>")
 		getCellValues(visInfo, cellValuesBuilder, linkBuilder )
 		sb.append(linkBuilder.toString())
 		sb.append("""<pre><ul class="${DETAILS_CLASS_CELL_VALUES}">""")
@@ -136,14 +136,14 @@ class VisualizerRelInfo
 			}
 
 			linkBuilder.append(DOUBLE_BREAK)
-			linkBuilder.append("""<a href="#" title="${DETAILS_TITLE_EXPAND_ALL}" class="${DETAILS_CLASS_EXPAND_ALL}"">${DETAILS_LABEL_EXPAND_ALL}</a>""")
+			linkBuilder.append("""<a href="#" title="Expand all cell details" class="${DETAILS_CLASS_EXPAND_ALL}"">Expand all</a>""")
 			linkBuilder.append("${SPACE}${SPACE}")
-			linkBuilder.append("""<a href="#" title="${DETAILS_TITLE_COLLAPSE_ALL}" class="${DETAILS_CLASS_COLLAPSE_ALL}"">${DETAILS_LABEL_COLLAPSE_ALL}</a>""")
+			linkBuilder.append("""<a href="#" title="Collapse all cell details" class="${DETAILS_CLASS_COLLAPSE_ALL}"">Collapse all</a>""")
 			linkBuilder.append(BREAK)
 		}
 		else
 		{
-			cellValuesBuilder.append(NONE)
+			cellValuesBuilder.append('none')
 		}
 	}
 
@@ -159,7 +159,7 @@ class VisualizerRelInfo
 		}
 		else
 		{
-			sb.append("<li>${NONE}</li>")
+			sb.append("<li>none</li>")
 		}
 		sb.append("</ul></pre>${BREAK}")
 	}
@@ -176,7 +176,7 @@ class VisualizerRelInfo
 		}
 		else
 		{
-			sb.append("<li>${NONE}</li>")
+			sb.append("<li>none</li>")
 		}
 		sb.append("</ul></pre>${BREAK}")
 	}

@@ -15,18 +15,6 @@ class VisualizerConstants
 	public static final String COMMA_SPACE = ', '
 	public static final String DOUBLE_BREAK = "${BREAK}${BREAK}"
 
-	public static final String MISSING_SCOPE = 'Missing scope for '
-	public static final String UNABLE_TO_LOAD = 'Unable to load '
-	public static final String SCOPE_VALUE_NOT_FOUND = 'Scope value not found for '
-	public static final String OPTIONAL_SCOPE_AVAILABLE_TO_LOAD = 'Since not all optional scope was provided or found, one or more defaults were used to load '
-	public static final String ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS = 'Scope value(s) may be supplied for these optional scope key(s): '
-	public static final String ADDITIONAL_SCOPE_REQUIRED_TO_LOAD = 'Additional scope is required to load '
-	public static final String ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS = 'Scope value(s) must be supplied for these required scope key(s): '
-	public static final String SCOPE_VALUES_AVAILABLE_FOR = 'The following values are available for '
-	public static final String SUPPLY_DIFFERENT_VALUE_FOR = 'Please supply a different value for '
-	public static final String SCOPE_ADDED_SINCE_REQUIRED = 'The scope for the following scope keys was added since required: '
-	public static final String DEFAULT_SCOPE_VALUE = 'XXXX'
-
 	public static final String UNSPECIFIED = 'UNSPECIFIED'
 	public static final String NCUBE = 'NCUBE'
 	public static final String RULE_NCUBE = 'RULE_NCUBE'
@@ -51,37 +39,8 @@ class VisualizerConstants
 	public static final String CONFIG_ALL_GROUPS = 'allGroups'
 	public static final String CONFIG_ALL_TYPES = 'allTypes'
 	public static final String CONFIG_GROUP_SUFFIX = 'groupSuffix'
-	public static final String CONFIG_APP_NAME = 'appName'
-	public static final String CONFIG_REF_DATA_APP_NAME = 'refDataAppName'
 	public static final String CUBE_TYPE = 'cubeType'
 	public static final String CUBE_TYPE_DEFAULT = null
-
-	public static final String LOAD_CELL_VALUES_LABEL = 'cell values'
-	public static final String NONE = 'none'
-
-	public static final String DETAILS_LABEL_NOTE = 'Note: '
-	public static final String DETAILS_LABEL_REASON = 'Reason: '
-	public static final String DETAILS_LABEL_SCOPE = 'Scope'
-	public static final String DETAILS_LABEL_AVAILABLE_SCOPE = 'Available scope'
-	public static final String DETAILS_LABEL_REQUIRED_SCOPE_KEYS = 'Required scope keys'
-	public static final String DETAILS_LABEL_OPTIONAL_SCOPE_KEYS = 'Optional scope keys'
-	public static final String DETAILS_LABEL_AXES = 'Axes'
-	public static final String DETAILS_LABEL_CELL_VALUES = 'Cell values'
-	public static final String DETAILS_LABEL_EXPAND_ALL = 'Expand all'
-	public static final String DETAILS_LABEL_COLLAPSE_ALL = 'Collapse all'
-	public static final String DETAILS_LABEL_NON_EXECUTED_VALUE = 'Non-executed value:'
-	public static final String DETAILS_LABEL_EXECUTED_VALUE = 'Executed value:'
-	public static final String DETAILS_LABEL_EXCEPTION = 'Exception:'
-
-	public static final String DETAILS_LABEL_MESSAGE = 'Message:'
-	public static final String DETAILS_LABEL_ROOT_CAUSE = 'Root cause:'
-	public static final String DETAILS_LABEL_STACK_TRACE = 'Stack trace:'
-
-	public static final String DETAILS_TITLE_EXPAND_ALL = 'Expand all cell details'
-	public static final String DETAILS_TITLE_COLLAPSE_ALL = 'Collapse all cell details'
-	public static final String DETAILS_TITLE_EXECUTED_CELL = 'Executed cell'
-	public static final String DETAILS_TITLE_MISSING_OR_INVALID_COORDINATE = 'The cell was executed with a missing or invalid coordinate.'
-	public static final String DETAILS_TITLE_ERROR_DURING_EXECUTION = 'An error occurred during the execution of the cell.'
 
 	public static final String DETAILS_CLASS_CELL_VALUES = 'cellValues'
 	public static final String DETAILS_CLASS_WORD_WRAP = 'wordwrap'
@@ -90,5 +49,5 @@ class VisualizerConstants
 	public static final String DETAILS_CLASS_EXPAND_ALL = 'expandAll'
 	public static final String DETAILS_CLASS_COLLAPSE_ALL = 'collapseAll'
 	public static final String DETAILS_CLASS_EXECUTED_CELL = 'executedCell'
-
+	public static final String DETAILS_CLASS_FORM_CONTROL = 'form-control'
 }
