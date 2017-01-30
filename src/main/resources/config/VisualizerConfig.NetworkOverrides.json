@@ -70,6 +70,31 @@
     },
     {
       "id":[
+        1001036023421
+      ],
+      "type":"exp",
+      "cache":true,
+      "value":"[\n                        shapeProperties:\n                            [\n                                useBorderWithImage: true,\n                                borderDashes: [5, 2]\n                            ],\n                        value: 40,\n                        scaling: [\n                            min: 40,\n                            max: 40,\n                            label: [\n                                enabled: true,\n                                min: 12,\n                                max: 12\n                            ]\n                        ],\n                        borderWidth: 3,\n                        size: 40,\n                        color: '#759BEC'\n                    ]"
+    },
+    {
+      "id":[
+        1001036023421,
+        2001950513622
+      ],
+      "type":"exp",
+      "cache":true,
+      "value":"[\n                        shapeProperties: [\n                            borderDashes: [5, 2]\n                        ],\n                        value: 40,\n                        scaling: [\n                            min: 40,\n                            max: 40,\n                            label: [\n                                enabled: true,\n                                min: 40,\n                                max: 40\n                            ]\n                        ],\n                        borderWidth: 3,\n                        size: 40\n                    ];"
+    },
+    {
+      "id":[
+        1001110976360
+      ],
+      "type":"exp",
+      "cache":true,
+      "value":"[ nodes:\n\t\t\t\t\t\t  [\n\t\t\t\t\t\t\t\t  shadow:\n\t\t\t\t\t\t\t\t\t\t  [\n\t\t\t\t\t\t\t\t\t\t\t\t  enabled: true\n\t\t\t\t\t\t\t\t\t\t  ]\n\t\t\t\t\t\t  ],\n\t\t\t\t  edges:\n\t\t\t\t\t\t  [ arrowStrikethrough:  true,\n\t\t\t\t\t\t\tarrows:\n\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\tto:\n\t\t\t\t\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tenabled: true ]\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\tshadow:\n\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\tenabled: true ]\n\t\t\t\t\t\t  ]\n\t\t\t\t]"
+    },
+    {
+      "id":[
         1001504517186
       ],
       "type":"exp",
@@ -83,32 +108,7 @@
       ],
       "type":"exp",
       "cache":true,
-      "value":"[ nodes:\n\t\t\t\t\t\t  [\n\t\t\t\t\t\t\t\t  shadow:\n\t\t\t\t\t\t\t\t\t\t  [\n\t\t\t\t\t\t\t\t\t\t\t\t  enabled: true\n\t\t\t\t\t\t\t\t\t\t  ]\n\t\t\t\t\t\t  ],\n\t\t\t\t  edges:\n\t\t\t\t\t\t  [ arrowStrikethrough:  true,\n\t\t\t\t\t\t\tarrows:\n\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\tto:\n\t\t\t\t\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tenabled: true ]\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\tshadow:\n\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\tenabled: true ]\n\t\t\t\t\t\t  ]\n\t\t\t\t]"
-    },
-    {
-      "id":[
-        1001036023421,
-        2001950513622
-      ],
-      "type":"exp",
-      "cache":true,
-      "value":"[\n                        shapeProperties: [\n                            borderDashes: [5, 2]\n                        ],\n                        value: 40,\n                        scaling: [\n                            min: 40,\n                            max: 40,\n                            label: [\n                                enabled: true,\n                                min: 40,\n                                max: 40\n                            ]\n                        ],\n                        borderWidth: 3,\n                        size: 40\n                    ];"
-    },
-    {
-      "id":[
-        1001036023421
-      ],
-      "type":"exp",
-      "cache":true,
-      "value":"[\n                        shapeProperties:\n                            [\n                                useBorderWithImage: true,\n                                borderDashes: [5, 2]\n                            ],\n                        value: 40,\n                        scaling: [\n                            min: 40,\n                            max: 40,\n                            label: [\n                                enabled: true,\n                                min: 12,\n                                max: 12\n                            ]\n                        ],\n                        borderWidth: 3,\n                        size: 40,\n                        color: '#759BEC'\n                    ]"
-    },
-    {
-      "id":[
-        1001110976360
-      ],
-      "type":"exp",
-      "cache":true,
-      "value":"[ nodes:\n\t\t\t\t\t\t  [\n\t\t\t\t\t\t\t\t  shadow:\n\t\t\t\t\t\t\t\t\t\t  [\n\t\t\t\t\t\t\t\t\t\t\t\t  enabled: true\n\t\t\t\t\t\t\t\t\t\t  ]\n\t\t\t\t\t\t  ],\n\t\t\t\t  edges:\n\t\t\t\t\t\t  [ arrowStrikethrough:  true,\n\t\t\t\t\t\t\tarrows:\n\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\tto:\n\t\t\t\t\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tenabled: true ]\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\tshadow:\n\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\tenabled: true ]\n\t\t\t\t\t\t  ]\n\t\t\t\t]"
+      "value":"[ nodes:\n\t\t\t\t\t\t  [\n\t\t\t\t\t\t\t\t  shadow:\n\t\t\t\t\t\t\t\t\t\t  [\n\t\t\t\t\t\t\t\t\t\t\t\t  enabled: false\n\t\t\t\t\t\t\t\t\t\t  ]\n\t\t\t\t\t\t  ],\n\t\t\t\t  edges:\n\t\t\t\t\t\t  [ arrowStrikethrough:  true,\n\t\t\t\t\t\t\tarrows:\n\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\tto:\n\t\t\t\t\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tenabled: true ]\n\t\t\t\t\t\t\t\t\t],\n\t\t\t\t\t\t\tshadow:\n\t\t\t\t\t\t\t\t\t[\n\t\t\t\t\t\t\t\t\t\t\tenabled: false]\n\t\t\t\t\t\t  ]\n\t\t\t\t]"
     }
   ]
 }

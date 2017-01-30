@@ -931,7 +931,14 @@ class RpmVisualizerTest
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_SUCCESS == graphInfo.status
         Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
-        assert null == messages
+        assert 1 == messages.size()
+        String message = messages.first()
+        assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}the graph.")
+        assert message.contains("${ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY}product")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}product")
+        assert message.contains('WProduct')
+        assert message.contains('UProduct')
+        assert message.contains('GProduct')
 
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
         Map node = nodes.find {Map node ->  'StateOps' == node.detailsTitle2}
@@ -1431,7 +1438,12 @@ class RpmVisualizerTest
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_SUCCESS == graphInfo.status
         Set<String> messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
-        assert null == messages
+        assert 1 == messages.size()
+        String message = messages.first()
+        assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}the graph.")
+        assert message.contains("${ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY}state")
+        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}state")
+        assert message.contains('none')
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
 
         Map node = nodes.find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on WProduct".toString() == node1.title}
@@ -1440,21 +1452,16 @@ class RpmVisualizerTest
         assert true == node.cellValuesLoaded
         String nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_NOTE)
-        checkUnboundAxesMessage(nodeDetails)
+        assert nodeDetails.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on WProduct.")
+        assert nodeDetails.contains("${ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY}state")
+        assert nodeDetails.contains("${SCOPE_VALUES_AVAILABLE_FOR}state")
+        assert nodeDetails.contains('none')
         assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
         assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>WProductOps</li></ul></pre>")
         assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
         assert !nodeDetails.contains(DETAILS_LABEL_REASON)
         assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
-    }
-
-    private static void checkUnboundAxesMessage(String message)
-    {
-        assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on WProduct.")
-        assert message.contains("${ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY}state")
-        assert message.contains("${SCOPE_VALUES_AVAILABLE_FOR}state")
-        assert message.contains('none')
     }
 
     @Test

@@ -16,7 +16,7 @@ import static com.cedarsoftware.util.RpmVisualizerConstants.*
 @CompileStatic
 class RpmVisualizer extends Visualizer
 {
-	protected RpmVisualizerHelper helper = new RpmVisualizerHelper()
+	protected RpmVisualizerHelper helper
 	protected String defaultScopeEffectiveVersion
 	protected String defaultScopeDate
 
@@ -105,7 +105,7 @@ class RpmVisualizer extends Visualizer
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
-					if (!helper.isPrimitive(targetFieldRpmType))
+					if (!getVisualizerHelper().isPrimitive(targetFieldRpmType))
 					{
 						String nextTargetCubeName = ""
 						if (targetTraits.containsKey(V_ENUM))
@@ -272,8 +272,15 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
+	protected RpmVisualizerHelper getVisualizerHelper()
+	{
+		helper =  new RpmVisualizerHelper()
+	}
+
+	@Override
 	protected boolean hasMissingMinimumScope(VisualizerInfo visInfo, String startCubeName)
 	{
+		RpmVisualizerHelper helper = getVisualizerHelper()
 		RpmVisualizerInfo rpmVisInfo = (RpmVisualizerInfo) visInfo
 		defaultScopeEffectiveVersion = appId.version
 		defaultScopeDate = DATE_TIME_FORMAT.format(new Date())

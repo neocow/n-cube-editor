@@ -37,6 +37,7 @@ class VisualizerInfo
     Map<String, Map<String, Set<Object>>> requiredScopeValues = new CaseInsensitiveMap()
     Map<String, Set<String>> requiredScopeKeys = [:]
     Map<String, Set<String>> optionalScopeKeys = [:]
+    Map<String, Set<Object>> columnValuesForAllUnboundAxesInGraph
 
     Map<String, Object> networkOverridesBasic
     Map<String, Object> networkOverridesFull
@@ -61,6 +62,7 @@ class VisualizerInfo
         messages = new LinkedHashSet()
         availableGroupsAllLevels = new LinkedHashSet()
         this.scope = scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
+        columnValuesForAllUnboundAxesInGraph  = new CaseInsensitiveMap()
     }
 
     protected String getCubeType()

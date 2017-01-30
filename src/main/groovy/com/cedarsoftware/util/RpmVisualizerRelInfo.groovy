@@ -419,9 +419,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				String axisName = axisEntry.key as String
 				if (includeScopeKey(visInfo, axisName))
 				{
-					Set<Object> columnValues = columnValuesForUnboundAxis[axisName] ?: new LinkedHashSet()
-					columnValues.addAll(visInfo.getOptionalScopeValues(cubeName, axisName))
-					columnValuesForUnboundAxis[axisName] = columnValues
+					Set<Object> values = visInfo.getOptionalScopeValues(cubeName, axisName)
+					addColumnValues(values, axisName, columnValuesForUnboundAxis)
+					addColumnValues(values, axisName, visInfo.columnValuesForAllUnboundAxesInGraph)
 					hasScopeKeysToInclude = true
 				}
 			}
@@ -432,6 +432,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			}
 		}
 		return new CaseInsensitiveMap()
+	}
+
+	private addColumnValues(Set<Object> values, String axisName, Map<String, Set<Object>> columnValuesForUnboundAxis)
+	{
+		Set<Object> columnValues = columnValuesForUnboundAxis[axisName] ?: new LinkedHashSet()
+		columnValues.addAll(values)
+		columnValuesForUnboundAxis[axisName] = columnValues
 	}
 
 	private boolean includeScopeKey(VisualizerInfo visInfo, String scopeKey)
