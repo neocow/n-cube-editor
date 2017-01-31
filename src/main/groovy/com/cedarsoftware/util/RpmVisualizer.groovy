@@ -195,7 +195,8 @@ class RpmVisualizer extends Visualizer
 			String sourceFieldName = relInfo.sourceFieldName
 			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
 			{
-				relInfo.targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): "Unable to load ${relInfo.sourceFieldName}"]] as Map
+				relInfo.nodeLabelPrefix = 'Unable to load '
+				relInfo.targetTraits = new CaseInsensitiveMap()
 				String msg = getLoadTraitsForTargetMessage(relInfo, type)
 				relInfo.notes << msg
 				relInfo.cellValuesLoaded = false
@@ -292,13 +293,12 @@ class RpmVisualizer extends Visualizer
 		if (NCubeManager.getCube(appId, startCubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			String type = getTypeFromCubeName(startCubeName)
-			String messageSuffixTypeScopeKey = "A scope value must be supplied for ${type}."
 			String scopeCubeName = startCubeName.replace(RPM_CLASS_DOT, RPM_SCOPE_CLASS_DOT) + DOT_TRAITS
 			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(scopeCubeName, type)
-			String messageScopeValues = BREAK + helper.getScopeValuesMessage(type, requiredScopeValues, type)
+			String messageScopeValues = BREAK + helper.getScopeValueMessage(type, requiredScopeValues)
 			if (scope)
 			{
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(type, null, "${messageSuffixTypeScopeKey}${messageScopeValues}", messages) ?: hasMissingScope
+				hasMissingScope = rpmVisInfo.addMissingMinimumScope(type, null, messageScopeValues, messages) ?: hasMissingScope
 				hasMissingScope = rpmVisInfo.addMissingMinimumScope(POLICY_CONTROL_DATE, defaultScopeDate, null, messages) ?: hasMissingScope
 				hasMissingScope = rpmVisInfo.addMissingMinimumScope(QUOTE_DATE, defaultScopeDate, null, messages) ?: hasMissingScope
 				hasMissingScope = rpmVisInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, null, messages) ?: hasMissingScope
@@ -308,7 +308,7 @@ class RpmVisualizer extends Visualizer
 				hasMissingScope = true
 				Map<String, Object> defaultScope = getDefaultScope(type)
 				visInfo.scope = defaultScope
-				String msg = helper.getMissingMinimumScopeMessage(defaultScope, messageScopeValues, DOUBLE_BREAK + messageSuffixTypeScopeKey)
+				String msg = helper.getMissingMinimumScopeMessage(defaultScope, messageScopeValues)
 				messages << msg
 			}
 		}
