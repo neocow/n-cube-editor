@@ -25,6 +25,7 @@ class VisualizerRelInfo
 	NCube targetCube
 	Map<String, Object> targetScope
 	long targetLevel
+	String nodeLabelPrefix = ''
 
 	long sourceId
 	NCube sourceCube
@@ -91,7 +92,7 @@ class VisualizerRelInfo
 
 	Set<String> getRequiredScope()
 	{
-		return targetCube.getRequiredScope(targetScope, [:] as Map)
+		return targetCube.getRequiredScope(scope, [:] as Map)
 	}
 
 	String getDetails(VisualizerInfo visInfo)
@@ -197,16 +198,6 @@ class VisualizerRelInfo
 		return indexOfDot == -1 ? value : value.substring(0, value.indexOf('.'))
 	}
 
-	String getSourceEffectiveName()
-	{
-		return sourceCube.name
-	}
-
-	String getTargetEffectiveName()
-	{
-		return targetCube.name
-	}
-
 	/**
 	 *  If the required and optional scope keys have not already been loaded for this cube,
 	 *  load them.
@@ -228,8 +219,8 @@ class VisualizerRelInfo
 		edge.id = String.valueOf(edgeCount + 1)
 		edge.from = String.valueOf(sourceId)
 		edge.to = String.valueOf(targetId)
-		edge.fromName = sourceEffectiveName
-		edge.toName = targetEffectiveName
+		edge.fromName = getLabel(sourceCube.name)
+		edge.toName = getLabel(targetCube.name)
 		edge.fromFieldName = sourceFieldName
 		edge.level = String.valueOf(targetLevel)
 		edge.title = sourceFieldName
@@ -252,9 +243,8 @@ class VisualizerRelInfo
 		node.availableScope = scope
 		node.fromFieldName = sourceFieldName
 		node.sourceDescription = sourceCubeName ? sourceDescription : null
-		String detailsTitle1 = cubeDetailsTitle1
-		node.label = nodeLabel
-		node.detailsTitle1 = detailsTitle1
+		node.label = nodeLabelPrefix + getLabel(targetCubeName)
+		node.detailsTitle1 = cubeDetailsTitle1
 		node.detailsTitle2 = cubeDetailsTitle2
 		node.title = getCubeDisplayName(targetCubeName)
 		node.details = getDetails(visInfo)
@@ -271,9 +261,9 @@ class VisualizerRelInfo
 		return node
 	}
 
-	protected String getNodeLabel()
+	protected String getLabel(String cubeName)
 	{
-		targetEffectiveName
+		cubeName
 	}
 
 	String getCubeDisplayName(String cubeName)

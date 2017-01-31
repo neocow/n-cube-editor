@@ -1216,7 +1216,7 @@ var Visualizer = (function ($) {
          }
 
         _nodeAddTypes[0].innerHTML = '';
-        if (node.typesToAdd) {
+        if (node.typesToAdd && node.showCellValuesLink) {
             typesToAdd = node.typesToAdd['@items'];
             if (typeof typesToAdd === OBJECT && typesToAdd.length > 0) {
                 createAddTypesDropdown(typesToAdd, node.label);

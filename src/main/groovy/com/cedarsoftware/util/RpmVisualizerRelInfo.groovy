@@ -42,13 +42,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	@Override
 	String getDetails(VisualizerInfo visInfo)
 	{
-		String effectiveName = effectiveNameByCubeName
 		StringBuilder sb = new StringBuilder()
 		String notesLabel = "<b>Note: </b>"
 
 		if (!cellValuesLoaded)
 		{
-			sb.append("<b>*** Unable to load fields and traits for ${effectiveName}</b>${DOUBLE_BREAK}")
+			sb.append("<b>*** Unable to load fields and traits for ${getLabel(targetCube.name)}</b>${DOUBLE_BREAK}")
 			notesLabel = "<b>Reason: </b>"
 		}
 
@@ -146,20 +145,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return visInfo.allGroupsKeys.contains(group) ? group : UNSPECIFIED
 	}
 
-	@Override
-	String getSourceEffectiveName()
-	{
-		String scopedName = sourceScopedName
-		return scopedName == null ? sourceCube.name : scopedName
-	}
-
-	@Override
-	String getTargetEffectiveName()
-	{
-		String scopedName = targetScopedName
-		return scopedName == null ? targetCube.name : scopedName
-	}
-
 	String getSourceScopedName()
 	{
 		Map<String, Object> classTraitsTraitMap = sourceTraits[CLASS_TRAITS] as Map
@@ -186,7 +171,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		if (sourceTraits)
 		{
-			return sourceScopedName ? ", the target of ${sourceScopedName} on ${getCubeDisplayName(sourceCube.name)}" : ""
+			return sourceScopedName ? ", the target of ${sourceScopedName} on ${getCubeDisplayName(sourceCube.name)}" : ", the target of ${getCubeDisplayName(sourceCube.name)}"
 		}
 		return ''
 	}
@@ -254,15 +239,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	protected String getNodeLabel()
+	protected String getLabel(String cubeName)
 	{
-		getDotSuffix(targetEffectiveName)
-	}
-
-	String getEffectiveNameByCubeName()
-	{
-		String scopeKey = getDotSuffix(targetCube.name)
-		return scope[scopeKey] ?: targetEffectiveName
+		String scopeKey = getDotSuffix(cubeName)
+		return scope[scopeKey] ?: getCubeDisplayName(cubeName)
 	}
 
 	@Override
@@ -288,7 +268,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		String sourceCubeName = sourceCube.name
 		if (sourceCubeName.startsWith(RPM_CLASS_DOT))
 		{
-			description = getDotSuffix(sourceEffectiveName)
+			description = getDotSuffix(getLabel(sourceCubeName))
 		}
 		else if (sourceCubeName.startsWith(RPM_ENUM_DOT))
 		{
@@ -318,8 +298,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 		else if (targetCubeName.startsWith(RPM_ENUM_DOT))
 		{
-			String sourceName =  sourceTraits ? getDotSuffix(sourceEffectiveName) : getCubeDisplayName(sourceCube.name)
-			detailsTitle = "Valid values for field ${sourceFieldName} on ${sourceName}".toString()
+			detailsTitle = "Valid values for field ${sourceFieldName} on ${getLabel(sourceCube.name)}".toString()
 		}
 		return detailsTitle
 	}
@@ -327,9 +306,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	@Override
 	String getCubeDetailsTitle2()
 	{
-		if (targetCube.name.startsWith(RPM_CLASS_DOT) && targetScopedName)
+		String cubeName = targetCube.name
+		if (cubeName.startsWith(RPM_CLASS_DOT) && targetScopedName)
 		{
-			return effectiveNameByCubeName
+			return getLabel(cubeName)
 		}
 		return null
 	}
@@ -382,12 +362,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		if (unboundAxesMap)
 		{
 			String cubeName = targetCube.name
-			String effectiveNameByCubeName = effectiveNameByCubeName
+			String nodeLabel = getLabel(cubeName)
 			StringBuilder sb = new StringBuilder('Since not all optional scope was provided or found, one or more defaults were used to load ')
 			if (cubeName.startsWith(RPM_CLASS_DOT))
 			{
 				String cubeDisplayName = getCubeDisplayName(cubeName)
-				sb.append("${effectiveNameByCubeName} of type ${cubeDisplayName}${sourceMessage}.")
+				sb.append("${nodeLabel} of type ${cubeDisplayName}${sourceMessage}.")
 			}
 			else if (cubeName.startsWith(RPM_ENUM_DOT))
 			{
@@ -396,7 +376,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			}
 			else
 			{
-				sb.append("${cubeName} for ${effectiveNameByCubeName}${sourceMessage}.")
+				sb.append("${cubeName} for ${nodeLabel}${sourceMessage}.")
 			}
 			sb.append("${BREAK}")
 			sb.append(helper.handleUnboundAxes(unboundAxesMap))
@@ -434,7 +414,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return new CaseInsensitiveMap()
 	}
 
-	private addColumnValues(Set<Object> values, String axisName, Map<String, Set<Object>> columnValuesForUnboundAxis)
+	private static addColumnValues(Set<Object> values, String axisName, Map<String, Set<Object>> columnValuesForUnboundAxis)
 	{
 		Set<Object> columnValues = columnValuesForUnboundAxis[axisName] ?: new LinkedHashSet()
 		columnValues.addAll(values)
@@ -464,22 +444,23 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		String scopeKey = e.axisName
 		Object value = e.value ?: 'null'
 		String targetMsg = ''
-		mb.append("The scope value ${value} for scope key ${scopeKey} cannot be found on axis ${scopeKey} in ${getCubeDisplayName(e.cubeName)}${sourceMessage} for ${effectiveNameByCubeName}.")
+		mb.append("The scope value ${value} for scope key ${scopeKey} cannot be found on axis ${scopeKey} in ${getCubeDisplayName(e.cubeName)} for ${getLabel(targetCube.name)}${sourceMessage}.")
 		mb.append(helper.handleCoordinateNotFoundException(e, visInfo, targetMsg))
 		String msg = mb.toString()
 		notes << msg
 		visInfo.messages << msg
-		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): "Scope value not found for ${effectiveNameByCubeName}"]] as Map
+		nodeLabelPrefix = 'Scope value not found for '
+		targetTraits = new CaseInsensitiveMap()
 	}
 
 	private void handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo)
 	{
 		String cubeName = e.cubeName
-		String effectiveNameByCubeName = effectiveNameByCubeName
+		String nodeLabel = getLabel(targetCube.name)
 		StringBuilder sb = new StringBuilder('Additional scope is required to load ')
 		if (cubeName.startsWith(RPM_CLASS_DOT))
 		{
-			sb.append("${effectiveNameByCubeName} of type ${getCubeDisplayName(cubeName)}${sourceMessage}. ")
+			sb.append("${nodeLabel}${sourceMessage}. ")
 		}
 		else if (cubeName.startsWith(RPM_ENUM_DOT))
 		{
@@ -487,21 +468,23 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 		else
 		{
-			sb.append("${cubeName} for ${effectiveNameByCubeName}${sourceMessage}. ")
+			sb.append("${cubeName} for ${nodeLabel}${sourceMessage}. ")
 		}
 		sb.append(helper.handleInvalidCoordinateException(e, visInfo, this, MANDATORY_SCOPE_KEYS))
 		String msg = sb.toString()
 		notes << msg
 		visInfo.messages << msg
-		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): 'Missing scope for ' + effectiveNameByCubeName]] as Map
+		nodeLabelPrefix = 'Additional scope required for '
+		targetTraits = new CaseInsensitiveMap()
 	}
 
 	private void handleException(Throwable e, VisualizerInfo visInfo)
 	{
-		String targetMsg = " for ${effectiveNameByCubeName}${sourceMessage}"
+		String targetMsg = "${getLabel(targetCube.name)}${sourceMessage}"
 		String reason = helper.handleException(e, targetMsg)
 		notes << reason
 		visInfo.messages << reason
-		targetTraits = [(CLASS_TRAITS): [(R_SCOPED_NAME): "Unable to load ${reason}"]] as Map
+		nodeLabelPrefix = "Unable to load "
+		targetTraits = new CaseInsensitiveMap()
 	}
 }

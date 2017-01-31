@@ -9,18 +9,15 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class VisualizerTestConstants
 {
-	public static final String MISSING_SCOPE = 'Missing scope for '
+	public static final String ADDITIONAL_SCOPE_REQUIRED_FOR = 'Additional scope required for '
 	public static final String UNABLE_TO_LOAD = 'Unable to load '
 	public static final String SCOPE_VALUE_NOT_FOUND = 'Scope value not found for '
 	public static final String OPTIONAL_SCOPE_AVAILABLE_TO_LOAD = 'Since not all optional scope was provided or found, one or more defaults were used to load '
 	public static final String ADDITIONAL_SCOPE_REQUIRED_TO_LOAD = 'Additional scope is required to load '
 	public static final String SCOPE_VALUES_ADDED_FOR_REQUIRED_KEYS = 'The scope for the following scope keys was added since required. The default scope values may be changed as desired.'
-	public static final String ADD_SCOPE_VALUES_FOR_REQUIRED_KEYS = 'Scope values must be supplied for: '
 	public static final String ADD_SCOPE_VALUE_FOR_REQUIRED_KEY = 'A scope value must be supplied for '
-	public static final String ADD_SCOPE_VALUES_FOR_OPTIONAL_KEYS = 'Scope values may be supplied for: '
-	public static final String ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY = 'A scope value may be supplied for '
+	public static final String ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY = 'A different scope value may be supplied for '
 	public static final String NONE = 'none'
-	public static final String SCOPE_VALUES_AVAILABLE_FOR = 'Values available for '
 	public static final String DETAILS_LABEL_NOTE = 'Note: '
 	public static final String DETAILS_LABEL_REASON = 'Reason: '
 	public static final String DETAILS_LABEL_SCOPE = 'Scope'
