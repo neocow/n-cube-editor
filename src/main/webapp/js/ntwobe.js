@@ -199,9 +199,6 @@ var NCubeEditor2 = (function ($) {
             addModalFilters();
             modalsDraggable(true);
 
-            _editCellRadioURL.on('change', onEditCellRadioUrlChange);
-            _urlDropdown.on('change', enabledDisableCheckBoxes);
-            _valueDropdown.on('change', enabledDisableCheckBoxes);
             $('#addAxisCancel').on('click', addAxisClose);
             $('#addAxisOk').on('click', addAxisOk);
             $('#deleteAxisCancel').on('click', deleteAxisClose);
@@ -214,7 +211,6 @@ var NCubeEditor2 = (function ($) {
             $('#searchOptionsOk').on('click', function() {
                 searchOptionsOk();
             });
-            _editCellModal.on('shown.bs.modal', onEditCellModalShown);
 
             $(document).on('keydown', onWindowKeyDown);
 
@@ -3496,6 +3492,21 @@ var NCubeEditor2 = (function ($) {
                 this.selectionStart = start + 1;
                 this.selectionEnd = start + 1;
             }
+        }).on('change', function() {
+            _isCellDirty = true;
+        });
+        
+        _editCellRadioURL.on('change', onEditCellRadioUrlChange);
+        _editCellCache.on('change', function() {
+            _isCellDirty = true;
+        });
+        _urlDropdown.on('change', function() {
+            enabledDisableCheckBoxes();
+            _isCellDirty = true;
+        });
+        _valueDropdown.on('change', function() {
+            enabledDisableCheckBoxes();
+            _isCellDirty = true;
         });
 
         _editCellModal.on('keydown', function(e) {
@@ -3521,11 +3532,7 @@ var NCubeEditor2 = (function ($) {
                 }
                 moveCellEditor(dir);
             }
-        });
-
-        _editCellValue.on('change', function() {
-            _isCellDirty = true;
-        });
+        }).on('shown.bs.modal', onEditCellModalShown);
 
         $('#editCellLeft').on('click', function() {
             moveCellEditor(KEY_CODES.ARROW_LEFT);
@@ -3690,13 +3697,13 @@ var NCubeEditor2 = (function ($) {
             return;
         }
 
-        isUrl = _editCellRadioURL.find('input').is(':checked');
+        isUrl = _editCellRadioURL.find('input')[0].checked;
         cellInfo = {
             '@type': GROOVY_CLASS.CELL_INFO,
             isUrl: isUrl,
             value: _editCellValue.val(),
             dataType: isUrl ? _urlDropdown.val() : _valueDropdown.val(),
-            isCached: _editCellCache.find('input').prop('checked')
+            isCached: _editCellCache.find('input')[0].checked
         };
 
         result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_CELL, [appId, cubeName, _cellId, cellInfo]);
@@ -3718,13 +3725,14 @@ var NCubeEditor2 = (function ($) {
     }
 
     function onEditCellRadioUrlChange() {
-        var isUrl = _editCellRadioURL.find('input').is(':checked');
+        var isUrl = _editCellRadioURL.find('input')[0].checked;
         _urlDropdown.toggle(isUrl);
         _valueDropdown.toggle(!isUrl);
+        _isCellDirty = true;
     }
 
     function enabledDisableCheckBoxes() {
-        var isUrl = _editCellRadioURL.find('input').is(':checked');
+        var isUrl = _editCellRadioURL.find('input')[0].checked;
         var selDataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
         var urlEnabled = URL_ENABLED_LIST.indexOf(selDataType) > -1;
         var cacheEnabled = CACHE_ENABLED_LIST.indexOf(selDataType) > -1;
@@ -4760,9 +4768,9 @@ var NCubeEditor2 = (function ($) {
         var axisName, hasDefault, sortOrder, fireAll, result, oldName, newName, order;
         _updateAxisModal.modal('hide');
         axisName = $('#updateAxisName').val();
-        hasDefault = $('#updateAxisDefaultCol').prop('checked');
-        sortOrder = _updateAxisSortOrder.prop('checked');
-        fireAll = $('#updateAxisFireAll').prop('checked');
+        hasDefault = $('#updateAxisDefaultCol')[0].checked;
+        sortOrder = _updateAxisSortOrder[0].checked;
+        fireAll = $('#updateAxisFireAll')[0].checked;
         result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_AXIS, [nce.getSelectedTabAppId(), cubeName, _axisName, axisName, hasDefault, sortOrder, fireAll]);
         if (result.status) {
             oldName = _axisName.toLowerCase();

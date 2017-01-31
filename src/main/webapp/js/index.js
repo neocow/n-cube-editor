@@ -1964,7 +1964,7 @@ var NCE = (function ($) {
     }
 
     function isBatchUpdateAxisReferencesDestinationToggled() {
-        return _batchUpdateAxisReferencesToggle.prop('checked');
+        return _batchUpdateAxisReferencesToggle[0].checked;
     }
 
     function buildBatchUpdateAxisReferencesTable() {
@@ -4049,7 +4049,7 @@ var NCE = (function ($) {
         var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
         for (i = 0, len = input.length; i < len; i++) {
-            if ($(input[i]).is(':checked')) {
+            if (input[i].checked) {
                 changes.push(branchChanges[i]);
             }
         }
@@ -4094,7 +4094,7 @@ var NCE = (function ($) {
         var input = _commitRollbackList.find('.commitCheck');
         var changes = [];
         $.each(input, function (index, label) {
-            if ($(this).is(':checked')) {
+            if (this.checked) {
                 changes.push(branchChanges[index]);
             }
         });
@@ -4223,7 +4223,7 @@ var NCE = (function ($) {
         var result;
         var origAppId = getAppId();
         var copyAppId = appIdFrom($('#copyBranchAppName').val(), $('#copyBranchVersion').val(), STATUS.SNAPSHOT, $('#copyBranchName').val());
-        var shouldCopyWithHistory = _copyBranchWithHistory.is(':checked');
+        var shouldCopyWithHistory = _copyBranchWithHistory[0].checked;
         
         result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, shouldCopyWithHistory]);
         if (!result.status) {
@@ -4423,7 +4423,7 @@ var NCE = (function ($) {
         allDeltas = _diffLastResult['@items'];
         els = _diffOutput.find('.mergeCheck');
         for (i = 0, len = els.length; i < len; i++) {
-            if ($(els[i]).is(':checked')) {
+            if (els[i].checked) {
                 checkedDeltas.push(allDeltas[i]);
             }
         }
