@@ -108,6 +108,8 @@ var NCubeEditor2 = (function ($) {
     var _searchOptionsLabel = null;
     var _searchOptionsModal = null;
     var _searchOptionsLoadAllData = null;
+    var _permCache = null;
+    var _isCellDirty = null;
 
     function init(info) {
         if (!nce) {
@@ -412,6 +414,7 @@ var NCubeEditor2 = (function ($) {
     function load(keepTable) {
         var result, mode;
         resetCoordinateBar();
+        _permCache = {};
         if (hot && !keepTable) {
             killHotEditor();
         }
@@ -2650,14 +2653,21 @@ var NCubeEditor2 = (function ($) {
         filterSave();
     }
     
-    function checkCubeUpdatePermissions(axisName) {
-        var canUpdate, resource, appId;
+    function checkCubeUpdatePermissions(axisName, cacheable) {
+        var canUpdate, resource, appId, cacheId;
+        cacheId = axisName === undefined || axisName === null ? '*cube' : axisName;
+        if (_permCache.hasOwnProperty(cacheId)) {
+            return _permCache[cacheId];
+        }
         appId = nce.getSelectedTabAppId();
         resource = cubeName;
         if (axisName !== undefined) {
             resource += '/' + axisName;
         }
         canUpdate = nce.checkPermissions(appId, resource, PERMISSION_ACTION.UPDATE);
+        if (cacheable) {
+            _permCache[cacheId] = canUpdate;
+        }
         if (canUpdate && !nce.checkPermissions(appId, resource, PERMISSION_ACTION.COMMIT) && !nce.hasBeenWarnedAboutUpdatingIfUnableToCommitCube()) {
             nce.showNote('You must have someone with the correct permissions commit changes to this cube.', 'Warning!');
             nce.hasBeenWarnedAboutUpdatingIfUnableToCommitCube(true);
@@ -3468,7 +3478,9 @@ var NCubeEditor2 = (function ($) {
     function addEditCellListeners() {
         _editCellClear.on('click', editCellClear);
         _editCellCancel.on('click', editCellClose);
-        $('#editCellOk').on('click', editCellOK);
+        $('#editCellOk').on('click', function() {
+            editCellOK();
+        });
         _editCellValue.on('keydown', function(e) {
             var start, end, oldVal;
             if (e.keyCode === KEY_CODES.TAB) {
@@ -3511,6 +3523,10 @@ var NCubeEditor2 = (function ($) {
             }
         });
 
+        _editCellValue.on('change', function() {
+            _isCellDirty = true;
+        });
+
         $('#editCellLeft').on('click', function() {
             moveCellEditor(KEY_CODES.ARROW_LEFT);
         });
@@ -3550,6 +3566,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function openCellEditorAt(row, col) {
+        editCellOK(true);
         if (row > 1 && row < numRows && col > (colOffset ? colOffset - 1 : 0) && col < numColumns) {
             destroyEditor();
             hot.selectCell(row, col);
@@ -3558,11 +3575,11 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editCell() {
-        var cellInfo, value, dataType, isUrl, isCached, isDefault, cellValue, selectedCell, columnDefault;
+        var cellInfo, value, dataType, isUrl, isCached, isDefault, cellValue, selectedCell, columnDefault, result;
         var appId = nce.getSelectedTabAppId();
-        var modifiable = checkCubeUpdatePermissions();
-
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE, [appId, cubeName, _cellId]);
+        var modifiable = checkCubeUpdatePermissions(null, true);
+        
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE, [appId, cubeName, _cellId]);
         if (!result.status) {
             nce.showNote('Unable to fetch the cell contents: ' + result.data);
             return;
@@ -3596,6 +3613,7 @@ var NCubeEditor2 = (function ($) {
         // Set the cell value (String)
         cellValue = value !== null && value !== undefined ? value : '';
         _editCellValue.val(cellValue);
+        _isCellDirty = false;
         if (dataType === null || !dataType) {
             dataType = 'string';
         }
@@ -3656,11 +3674,19 @@ var NCubeEditor2 = (function ($) {
         destroyEditor();
     }
 
-    function editCellOK() {
-        var cellInfo, result, isUrl;
-        var appId = nce.getSelectedTabAppId();
-        if (!checkCubeUpdatePermissions()) {
-            editCellClose();
+    function editCellOK(keepModalOpen) {
+        var cellInfo, result, isUrl, appId;
+        if (!_isCellDirty) {
+            if (!keepModalOpen) {
+                editCellClose();
+            }
+            return;
+        }
+        appId = nce.getSelectedTabAppId();
+        if (!checkCubeUpdatePermissions(null, true)) {
+            if (!keepModalOpen) {
+                editCellClose();
+            }
             return;
         }
 
@@ -3681,7 +3707,9 @@ var NCubeEditor2 = (function ($) {
 
         data.cells[_tableCellId] = {value:cellInfo.value};
         markCubeModified();
-        editCellClose();
+        if (!keepModalOpen) {
+            editCellClose();
+        }
         reload();
     }
 
