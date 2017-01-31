@@ -112,6 +112,7 @@ var NCE = (function ($) {
     var _createSnapshotLabel = $('#createSnapshotLabel');
     var _createSnapshotVersion = $('#createSnapshotVersion');
     var _copyBranchLabel = $('#copyBranchLabel');
+    var _copyBranchWithHistory = $('#copy-branch-with-history');
     var _dupeCubeAppName = $('#dupeCubeAppName');
     var _dupeCubeVersion = $('#dupeCubeVersion');
     var _dupeCubeName = $('#dupeCubeName');
@@ -4208,6 +4209,7 @@ var NCE = (function ($) {
         $('#copyBranchStatus').val(STATUS.SNAPSHOT);
         $('#copyBranchVersion').val(_selectedVersion);
         $('#copyBranchName').val('');
+        _copyBranchWithHistory.prop('checked', false);
         buildDropDown('#copyBranchAppList', '#copyBranchAppName', loadAppNames(), function (app) {
             buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion', app);
         });
@@ -4221,8 +4223,9 @@ var NCE = (function ($) {
         var result;
         var origAppId = getAppId();
         var copyAppId = appIdFrom($('#copyBranchAppName').val(), $('#copyBranchVersion').val(), STATUS.SNAPSHOT, $('#copyBranchName').val());
+        var shouldCopyWithHistory = _copyBranchWithHistory.is(':checked');
         
-        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, true]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, shouldCopyWithHistory]);
         if (!result.status) {
             showNote('Unable to copy branch:<hr class="hr-small"/>' + result.data);
             return;
