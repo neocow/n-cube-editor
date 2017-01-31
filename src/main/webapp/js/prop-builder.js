@@ -306,7 +306,7 @@ var PropertyBuilder = (function ($) {
 
             switch (columns[key].type) {
                 case COLUMN_TYPES.CHECKBOX:
-                    dataVal = inputElement.prop('checked');
+                    dataVal = inputElement[0].checked;
                     break;
                 case COLUMN_TYPES.READONLY:
                     dataVal = inputElement[0].innerHTML;

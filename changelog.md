@@ -1,4 +1,8 @@
 ### Revision History
+* 0.8.0-SNAPSHOT
+  * Enhancement: Option of thin copy of branch. This only copies branch tip with an underlying layer of HEAD matching branch tip SHA1.
+  * Enhancement: Quick change between edit cells using arrow keys, WSAD, or arrow buttons on edit cell modal.
+  * Bug fix: Current view unnecessarily reloading data.
 * 0.6.0-SNAPSHOT
   * Massive improvement in version control support
 * 0.5.0-SNAPSHOT
