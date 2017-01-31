@@ -92,7 +92,7 @@ class VisualizerRelInfo
 
 	Set<String> getRequiredScope()
 	{
-		return targetCube.getRequiredScope(scope, [:] as Map)
+		return targetCube.getRequiredScope(scope, new CaseInsensitiveMap())
 	}
 
 	String getDetails(VisualizerInfo visInfo)
