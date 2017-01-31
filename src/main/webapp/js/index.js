@@ -1027,7 +1027,6 @@ var NCE = (function ($) {
         cw = getActiveContentWindow();
         if (cw.onNoteEvent !== undefined) {
             cw.onNoteEvent(e);
-            cw.focus();
         }
     }
     
