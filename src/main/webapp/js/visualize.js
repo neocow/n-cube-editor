@@ -598,7 +598,7 @@ var Visualizer = (function ($) {
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
         _nce.clearNotes(_noteIdList);
         if (!result.status) {
-            _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + result.data);
+            _nce.showNote(result.data);
              _visualizerContent.hide();
             _okToLoadFromServer = true;
             return;
