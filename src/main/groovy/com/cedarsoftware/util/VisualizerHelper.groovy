@@ -128,8 +128,8 @@ class VisualizerHelper
 		else
 		{
 			sb.append("""<div id="${scopeKey}" class="input-group input-group-sm">""")
-			sb.append("A scope value must be entered manually for ${scopeKey} since there are no values to choose from:")
-			sb.append("""<input class="${DETAILS_CLASS_MISSING_SCOPE_INPUT}" title="${scopeKey}" style="color: #black;" type="text" placeholder="Enter value..." >""")
+			sb.append("A scope value must be entered manually for ${scopeKey} since there are no values to choose from: ")
+			sb.append("""<input class="${DETAILS_CLASS_MISSING_SCOPE_INPUT}" title="${scopeKey}" style="color: black;" type="text" placeholder="Enter value..." >""")
 		}
 		sb.append('</div>')
 		return sb.toString()

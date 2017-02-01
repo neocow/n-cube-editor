@@ -1063,8 +1063,8 @@ class RpmVisualizerTest
     private static void checkAdditionalScopeIsRequiredNonEPMMessage(String message)
     {
         assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}party.ProfitCenter, the target of partyrole.BasePartyRole.Parties.")
-        assert message.contains('Enter a value for dummyRequiredScopeKey manually since there are none to choose from.')
-        assert !message.contains('<option>Default</option>')
+        assert message.contains('A scope value must be entered manually for dummyRequiredScopeKey since there are no values to choose from: ')
+        assert message.contains("""<input class="missingScopeInput" title="dummyRequiredScopeKey" style="color: black;" type="text" placeholder="Enter value..." ></div>""")
     }
 
 
@@ -1193,7 +1193,6 @@ class RpmVisualizerTest
             String startCubeName = 'rpm.class.Risk'
             Map options = [startCubeName: startCubeName, scope: scope]
 
-
             Map graphInfo = visualizer.buildGraph(appId, options)
             assert STATUS_SUCCESS == graphInfo.status
             Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
@@ -1204,8 +1203,8 @@ class RpmVisualizerTest
             String message = messages.first()
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage, the target of Risk.Coverages.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}ACoverage, the target of Risk.Coverages.")
-            assert message.contains('Enter a value for dummyRequiredScopeKey manually since there are none to choose from.')
-            assert !message.contains('<option>Default</option>')
+            assert message.contains('A scope value must be entered manually for dummyRequiredScopeKey since there are no values to choose from: ')
+            assert message.contains("""<input class="missingScopeInput" title="dummyRequiredScopeKey" style="color: black;" type="text" placeholder="Enter value..." ></div>""")
 
             Map node = nodes.find {Map node ->  "${ADDITIONAL_SCOPE_REQUIRED_FOR}FCoverage".toString() == node.label}
             assert 'Coverage' == node.title
@@ -1218,8 +1217,8 @@ class RpmVisualizerTest
             assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for FCoverage")
             assert nodeDetails.contains(DETAILS_LABEL_REASON)
             assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage, the target of Risk.Coverages.")
-            assert nodeDetails.contains('Enter a value for dummyRequiredScopeKey manually since there are none to choose from.')
-            assert !nodeDetails.contains('<option>Default</option>')
+            assert nodeDetails.contains('A scope value must be entered manually for dummyRequiredScopeKey since there are no values to choose from: ')
+            assert nodeDetails.contains("""<input class="missingScopeInput" title="dummyRequiredScopeKey" style="color: black;" type="text" placeholder="Enter value..." ></div>""")
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)
             assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)

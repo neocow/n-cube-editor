@@ -1250,7 +1250,7 @@ var Visualizer = (function ($) {
                     missingScopeSelect(target);
                 }
                 else if (target.className.indexOf('missingScopeInput') > -1) {
-                    executeCell(target);
+                    missingScopeInput(target);
                 }
             });
             _nodeDetails.click(function (e) {
