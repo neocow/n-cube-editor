@@ -264,11 +264,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	@Override
 	String getSourceDescription()
 	{
-		String description
 		String sourceCubeName = sourceCube.name
 		if (sourceCubeName.startsWith(RPM_CLASS_DOT))
 		{
-			description = getDotSuffix(getLabel(sourceCubeName))
+			return getDotSuffix(getLabel(sourceCubeName))
 		}
 		else if (sourceCubeName.startsWith(RPM_ENUM_DOT))
 		{
@@ -278,29 +277,28 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				String scopeKeyForSourceOfSource = getDotPrefix(sourceDisplayName)
 				String nameOfSourceOfSource = sourceScope[scopeKeyForSourceOfSource]
 				String fieldNameSourceOfSource = sourceScope[SOURCE_FIELD_NAME]
-				description = "field ${fieldNameSourceOfSource} on ${nameOfSourceOfSource}".toString()
+				return "field ${fieldNameSourceOfSource} on ${nameOfSourceOfSource}".toString()
 			}
 			else{
-				description = getCubeDisplayName(sourceCubeName)
+				return getCubeDisplayName(sourceCubeName)
 			}
 		}
-		return description
+		return null
 	}
 
 	@Override
 	String getCubeDetailsTitle1()
 	{
-		String detailsTitle
 		String targetCubeName = targetCube.name
 		if (targetCubeName.startsWith(RPM_CLASS_DOT))
 		{
-			detailsTitle = getCubeDisplayName(targetCubeName)
+			return getCubeDisplayName(targetCubeName)
 		}
 		else if (targetCubeName.startsWith(RPM_ENUM_DOT))
 		{
-			detailsTitle = "Valid values for field ${sourceFieldName} on ${getLabel(sourceCube.name)}".toString()
+			return "Valid values for field ${sourceFieldName} on ${getLabel(sourceCube.name)}".toString()
 		}
-		return detailsTitle
+		return null
 	}
 
 	@Override
@@ -358,8 +356,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void handleUnboundAxes(VisualizerInfo visInfo, RuleInfo ruleInfo)
 	{
-		Map<String, Set<Object>> unboundAxesMap = createUnboundAxesMap(visInfo, ruleInfo)
-		if (unboundAxesMap)
+		if (createUnboundAxesMaps(visInfo, ruleInfo))
 		{
 			String cubeName = targetCube.name
 			String nodeLabel = getLabel(cubeName)
@@ -379,46 +376,47 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				sb.append("${cubeName} for ${nodeLabel}${sourceMessage}.")
 			}
 			sb.append("${BREAK}")
-			sb.append(helper.handleUnboundAxes(unboundAxesMap))
+			sb.append(helper.handleUnboundAxes(scopeInfo))
 			notes << sb.toString()
 		}
 	}
 
-	private Map<String, Set<Object>> createUnboundAxesMap(VisualizerInfo visInfo, RuleInfo ruleInfo)
+	private boolean createUnboundAxesMaps(VisualizerInfo visInfo, RuleInfo ruleInfo)
 	{
 		List unboundAxesList = ruleInfo.getUnboundAxesList()
 		if (unboundAxesList)
 		{
-			//Gather entries in unboundAxesList into a map containing scope values by scope key.
-			boolean hasScopeKeysToInclude
-			Map<String, Set<Object>> columnValuesForUnboundAxis = new CaseInsensitiveMap()
-
+			//Gather entries in unboundAxesList into maps keyed by unbound axis name.
 			unboundAxesList.each { MapEntry unboundAxis ->
 				String cubeName = unboundAxis.key as String
 				MapEntry axisEntry = unboundAxis.value as MapEntry
 				String axisName = axisEntry.key as String
+				Object unBoundValue = axisEntry.value
 				if (includeScopeKey(visInfo, axisName))
 				{
 					Set<Object> values = visInfo.getOptionalScopeValues(cubeName, axisName)
-					addColumnValues(values, axisName, columnValuesForUnboundAxis)
-					addColumnValues(values, axisName, visInfo.columnValuesForAllUnboundAxesInGraph)
-					hasScopeKeysToInclude = true
+					addValuesForUnboundAxis(values, axisName, scopeInfo.columnValuesForUnboundAxes)
+					addValuesForUnboundAxis(values, axisName, visInfo.scopeInfo.columnValuesForUnboundAxes)
+
+					addValuesForUnboundAxis([unBoundValue], axisName, scopeInfo.unboundValuesForUnboundAxes)
+					addValuesForUnboundAxis([unBoundValue], axisName, visInfo.scopeInfo.unboundValuesForUnboundAxes)
+
+					addValuesForUnboundAxis([cubeName], axisName, scopeInfo.cubeNamesForUnboundAxes)
+					addValuesForUnboundAxis([cubeName], axisName, visInfo.scopeInfo.cubeNamesForUnboundAxes)
+
+					scopeInfo.axisNames << axisName
+					visInfo.scopeInfo.axisNames << axisName
 				}
 			}
-
-			if (hasScopeKeysToInclude)
-			{
-				return columnValuesForUnboundAxis
-			}
 		}
-		return new CaseInsensitiveMap()
+		return scopeInfo.axisNames
 	}
 
-	private static addColumnValues(Set<Object> values, String axisName, Map<String, Set<Object>> columnValuesForUnboundAxis)
+	private static addValuesForUnboundAxis(Collection valuesToAdd, String axisName, Map<String, Set> valuesMap)
 	{
-		Set<Object> columnValues = columnValuesForUnboundAxis[axisName] ?: new LinkedHashSet()
-		columnValues.addAll(values)
-		columnValuesForUnboundAxis[axisName] = columnValues
+		Set values = valuesMap[axisName] ?: new LinkedHashSet()
+		values.addAll(valuesToAdd)
+		valuesMap[axisName] = values
 	}
 
 	private boolean includeScopeKey(VisualizerInfo visInfo, String scopeKey)
@@ -445,7 +443,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		Object value = e.value ?: 'null'
 		String targetMsg = ''
 		mb.append("The scope value ${value} for scope key ${scopeKey} cannot be found on axis ${scopeKey} in ${getCubeDisplayName(e.cubeName)} for ${getLabel(targetCube.name)}${sourceMessage}.")
-		mb.append(helper.handleCoordinateNotFoundException(e, visInfo, targetMsg))
+		mb.append(BREAK + helper.handleCoordinateNotFoundException(e, visInfo, targetMsg))
 		String msg = mb.toString()
 		notes << msg
 		visInfo.messages << msg
@@ -470,7 +468,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		{
 			sb.append("${cubeName} for ${nodeLabel}${sourceMessage}. ")
 		}
-		sb.append(helper.handleInvalidCoordinateException(e, visInfo, this, MANDATORY_SCOPE_KEYS))
+		sb.append(BREAK + helper.handleInvalidCoordinateException(e, visInfo, this, MANDATORY_SCOPE_KEYS))
 		String msg = sb.toString()
 		notes << msg
 		visInfo.messages << msg

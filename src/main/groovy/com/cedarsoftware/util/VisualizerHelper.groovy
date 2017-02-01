@@ -14,12 +14,11 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerHelper
 {
-	static String handleUnboundAxes(Map<String, Set<Object>> unboundAxesMap)
+	static String handleUnboundAxes(VisualizerScopeInfo scopeInfo)
 	{
 		StringBuilder sb = new StringBuilder()
-		Set axisNames = unboundAxesMap.keySet()
-		axisNames.each{ String axisName ->
-			sb.append(BREAK + getScopeValueMessage(axisName, unboundAxesMap[axisName], true))
+		scopeInfo.axisNames.each{ String axisName ->
+			sb.append(BREAK + getOptionalScopeValueMessage(axisName, scopeInfo))
 		}
 		return sb.toString()
 	}
@@ -30,7 +29,7 @@ class VisualizerHelper
 		String axisName = e.axisName
 		if (cubeName && axisName)
 		{
-			return getScopeValuesMessage(visInfo, [axisName] as Set, cubeName)
+			return getRequiredScopeValuesMessage(visInfo, [axisName] as Set, cubeName)
 		}
 		else
 		{
@@ -43,7 +42,7 @@ class VisualizerHelper
 		Set<String> missingScope = findMissingScope(relInfo.scope, e.requiredKeys, mandatoryScopeKeys)
 		if (missingScope)
 		{
-			return getScopeValuesMessage(visInfo, missingScope, e.cubeName)
+			return getRequiredScopeValuesMessage(visInfo, missingScope, e.cubeName)
 		}
 		else
 		{
@@ -66,53 +65,73 @@ class VisualizerHelper
 		return e
 	}
 
-	private static String getScopeValuesMessage(VisualizerInfo visInfo, Set<String> missingScope, String cubeName)
+	private static String getRequiredScopeValuesMessage(VisualizerInfo visInfo, Set<String> missingScope, String cubeName)
 	{
 		StringBuilder message = new StringBuilder()
 		missingScope.each{ String scopeKey ->
 			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(cubeName, scopeKey)
-			message.append(BREAK + getScopeValueMessage(scopeKey, requiredScopeValues))
+			message.append(BREAK + getRequiredScopeValueMessage(scopeKey, requiredScopeValues))
 		}
 		return message.toString()
 	}
 
-	static String getScopeValueMessage(String scopeKey, Set<Object> scopeValues, boolean isUnboundAxis = false)
+	static String getOptionalScopeValueMessage(String scopeKey, VisualizerScopeInfo scopeInfo)
+	{
+		Set<Object> scopeValues = scopeInfo.columnValuesForUnboundAxes[scopeKey]
+		Set<Object> unboundValues = scopeInfo.unboundValuesForUnboundAxes[scopeKey]
+		unboundValues.remove(null)
+		String defaultValueSuffix = unboundValues ? " (${unboundValues.join(COMMA_SPACE)} provided, but not found)" : ' (no value provided)'
+		String cubeNames = scopeInfo.cubeNamesForUnboundAxes[scopeKey].join(COMMA_SPACE)
+		String title = "The default for ${scopeKey} was utilized on ${cubeNames}"
+
+		StringBuilder sb = new StringBuilder()
+		sb.append("""<div id="${scopeKey}" title="${title}" class="input-group input-group-sm">""")
+		String selectTag = """<select class="${DETAILS_CLASS_FORM_CONTROL} ${DETAILS_CLASS_MISSING_SCOPE_SELECT}">"""
+		if (scopeValues)
+		{
+			sb.append("A different scope value may be supplied for ${scopeKey}:${BREAK}")
+			sb.append(selectTag)
+			sb.append("<option>Default${defaultValueSuffix}</option>")
+
+			scopeValues.each {
+				String value = it.toString()
+				sb.append("""<option title="${scopeKey}: ${value}">${value}</option>""")
+			}
+		}
+		else
+		{
+			sb.append("Default is the only option for ${scopeKey}:${BREAK}")
+			sb.append(selectTag)
+			sb.append("<option>Default${defaultValueSuffix}</option>")
+		}
+		sb.append('</select>')
+		sb.append('</div>')
+		return sb.toString()
+	}
+
+	static String getRequiredScopeValueMessage(String scopeKey, Set<Object> scopeValues)
 	{
 		StringBuilder sb = new StringBuilder()
 		if (scopeValues)
 		{
-			sb.append("""<div class="input-group input-group-sm">""")
-			String selectTag = """<select class="${DETAILS_CLASS_FORM_CONTROL} ${DETAILS_CLASS_MISSING_SCOPE}">"""
-			if (isUnboundAxis)
-			{
-				sb.append("A different scope value may be supplied for ${scopeKey}:")
-				sb.append(selectTag)
-				sb.append('<option>Default</option>')
-			}
-			else
-			{
-				sb.append("A scope value must be supplied for ${scopeKey}:")
-				sb.append(selectTag)
-				sb.append('<option>Select...</option>')
-			}
+			String selectTag = """<select class="${DETAILS_CLASS_FORM_CONTROL} ${DETAILS_CLASS_MISSING_SCOPE_SELECT}">"""
+			sb.append("A scope value must be supplied for ${scopeKey}:")
+			sb.append(selectTag)
+			sb.append('<option>Select...</option>')
 			scopeValues.each {
 				String value = it.toString()
 				sb.append("""<option title="${scopeKey}: ${value}">${value}</option>""")
 			}
 			sb.append('</select>')
-			sb.append('</div>')
+
 		}
 		else
 		{
-			if (isUnboundAxis)
-			{
-				sb.append("Default is the only option for ${scopeKey}.")
-			}
-			else
-			{
-				sb.append("Enter a value for ${scopeKey} manually since there are none to choose from.")
-			}
+			sb.append("""<div id="${scopeKey}" class="input-group input-group-sm">""")
+			sb.append("A scope value must be entered manually for ${scopeKey} since there are no values to choose from:")
+			sb.append("""<input class="${DETAILS_CLASS_MISSING_SCOPE_INPUT}" title="${scopeKey}" style="color: #black;" type="text" placeholder="Enter value..." >""")
 		}
+		sb.append('</div>')
 		return sb.toString()
 	}
 

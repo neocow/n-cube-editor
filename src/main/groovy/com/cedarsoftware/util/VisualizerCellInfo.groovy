@@ -103,7 +103,7 @@ class VisualizerCellInfo
 			title = 'The cell was executed with a missing or invalid coordinate.'
 			listItemClassName = t.class.simpleName
 			mb.append("Additional scope is required to load coordinate ${coordinateString}. ")
-			mb.append(helper.handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, relInfo, new LinkedHashSet()).toString())
+			mb.append(BREAK + helper.handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, relInfo, new LinkedHashSet()).toString())
 		}
 		else if (t instanceof CoordinateNotFoundException)
 		{
@@ -114,7 +114,7 @@ class VisualizerCellInfo
 			Object value = exc.value ?: 'null'
 			String targetMsg = "coordinate ${coordinateString}"
 			mb.append("The scope value ${value} for scope key ${scopeKey} cannot be found on axis ${scopeKey} for ${targetMsg}. ")
-			mb.append(helper.handleCoordinateNotFoundException(t as CoordinateNotFoundException, visInfo, targetMsg))
+			mb.append(BREAK + helper.handleCoordinateNotFoundException(t as CoordinateNotFoundException, visInfo, targetMsg))
 		}
 		else
 		{

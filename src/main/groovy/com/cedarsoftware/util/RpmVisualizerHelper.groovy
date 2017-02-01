@@ -49,7 +49,6 @@ class RpmVisualizerHelper extends VisualizerHelper
 	private static final String EXISTS_TRAIT_CONTAINS_NULL_VALUE = " may not contain a value of null. If there is a value, it must be true or false. ";
 	private static ApplicationID appId
 	private static boolean loadAllTraits
-	private Map<String, Set<String>> unboundAxes = [:]
 
 	/**
 	 * COPIED: From Dynamis 5.2.0  (except for slight modifications)
