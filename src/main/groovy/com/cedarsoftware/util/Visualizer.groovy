@@ -79,7 +79,7 @@ class Visualizer
 	protected static Map getCellValues(VisualizerRelInfo relInfo, Map options)
 	{
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
-		visInfo.columnValuesForAllUnboundAxesInGraph = new CaseInsensitiveMap()
+		visInfo.scopeInfo = new VisualizerScopeInfo()
 		visInfo.messages = new LinkedHashSet()
 		Map node = options.node as Map
 
@@ -121,12 +121,11 @@ class Visualizer
 
 	protected void handleUnboundAxes(VisualizerInfo visInfo)
 	{
-		Map<String, Set<Object>> unboundAxesMap = visInfo.columnValuesForAllUnboundAxesInGraph
-		if (unboundAxesMap)
+		if (visInfo.scopeInfo.axisNames)
 		{
 			StringBuilder sb = new StringBuilder('Since not all optional scope was provided or found, one or more defaults were used to load the graph.')
 			sb.append("${BREAK}")
-			sb.append(getVisualizerHelper().handleUnboundAxes(unboundAxesMap))
+			sb.append(getVisualizerHelper().handleUnboundAxes(visInfo.scopeInfo))
 			visInfo.messages << sb.toString()
 		}
 	}

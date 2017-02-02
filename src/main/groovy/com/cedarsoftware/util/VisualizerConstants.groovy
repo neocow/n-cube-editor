@@ -44,7 +44,8 @@ class VisualizerConstants
 
 	public static final String DETAILS_CLASS_CELL_VALUES = 'cellValues'
 	public static final String DETAILS_CLASS_WORD_WRAP = 'wordwrap'
-	public static final String DETAILS_CLASS_MISSING_SCOPE = 'missingScope'
+	public static final String DETAILS_CLASS_MISSING_SCOPE_SELECT = 'missingScopeSelect'
+	public static final String DETAILS_CLASS_MISSING_SCOPE_INPUT = 'missingScopeInput'
 	public static final String DETAILS_CLASS_EXCEPTION = 'Exception'
 	public static final String DETAILS_CLASS_EXPAND_ALL = 'expandAll'
 	public static final String DETAILS_CLASS_COLLAPSE_ALL = 'collapseAll'

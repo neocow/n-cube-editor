@@ -616,7 +616,7 @@ class RpmVisualizerTest
         assert message.contains('typeA')
         assert message.contains('typeB')
 
-        assert message.contains('<option>Default</option>')
+        assert message.contains('<option>Default (no value provided)</option>')
     }
 
     @Test
@@ -897,19 +897,15 @@ class RpmVisualizerTest
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_SUCCESS == graphInfo.status
         Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
-        assert null == messages
+        assert 1 == messages.size()
+        String message = messages.first()
+        assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}the graph.")
+        assert !message.contains('A different scope value may be supplied for product:')
 
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
         Map node = nodes.find {Map node ->  'StateOps' == node.detailsTitle2}
-        assert 'Risk' == node.title
-        assert 'Risk' == node.detailsTitle1
-        assert 'StateOps' == node.detailsTitle2
-        assert true == node.showCellValuesLink
-        assert false == node.showCellValues
-        assert true == node.cellValuesLoaded
         String nodeDetails = node.details as String
-        assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
-        assert !nodeDetails.contains(DETAILS_LABEL_REASON)
+        assert !nodeDetails.contains('A different scope value may be supplied for product:')
     }
 
     @Test
@@ -930,26 +926,21 @@ class RpmVisualizerTest
         assert 1 == messages.size()
         String message = messages.first()
         assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}the graph.")
-        assert message.contains("${ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY}product")
-        assert message.contains('<option>Default</option>')
+        assert message.contains('<div id="product" title="The default for product was utilized on rpm.scope.class.Risk.traits.Coverages" class="input-group input-group-sm">')
+        assert message.contains('A different scope value may be supplied for product:')
+        assert message.contains('<option>Default (no value provided)</option>')
         assert message.contains('WProduct')
         assert message.contains('UProduct')
         assert message.contains('GProduct')
 
-
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
         Map node = nodes.find {Map node ->  'StateOps' == node.detailsTitle2}
-        assert 'Risk' == node.title
-        assert 'Risk' == node.detailsTitle1
-        assert 'StateOps' == node.detailsTitle2
-        assert true == node.showCellValuesLink
-        assert false == node.showCellValues
-        assert true == node.cellValuesLoaded
         String nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_NOTE)
         assert nodeDetails.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}StateOps of type Risk.")
-        assert nodeDetails.contains("${ADD_SCOPE_VALUE_FOR_OPTIONAL_KEY}product")
-        assert message.contains('<option>Default</option>')
+        assert message.contains('<div id="product" title="The default for product was utilized on rpm.scope.class.Risk.traits.Coverages" class="input-group input-group-sm">')
+        assert message.contains('A different scope value may be supplied for product:')
+        assert message.contains('<option>Default (no value provided)</option>')
         assert nodeDetails.contains('WProduct')
         assert nodeDetails.contains('UProduct')
         assert nodeDetails.contains('GProduct')
@@ -970,19 +961,16 @@ class RpmVisualizerTest
         Map graphInfo = visualizer.buildGraph(appId, options)
         assert STATUS_SUCCESS == graphInfo.status
         Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
-        assert null == messages
+        assert 1 == messages.size()
+        String message = messages.first()
+        assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}the graph.")
+        assert message.contains("A different scope value may be supplied for businessDivisionCode:")
+        assert !message.contains('A different scope value may be supplied for product:')
 
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
         Map node = nodes.find {Map node ->  'StateOps' == node.detailsTitle2}
-        assert 'Risk' == node.title
-        assert 'Risk' == node.detailsTitle1
-        assert 'StateOps' == node.detailsTitle2
-        assert true == node.showCellValuesLink
-        assert false == node.showCellValues
-        assert true == node.cellValuesLoaded
         String nodeDetails = node.details as String
-        assert !nodeDetails.contains(DETAILS_LABEL_NOTE)
-        assert !nodeDetails.contains(DETAILS_LABEL_REASON)
+        assert !nodeDetails.contains('A different scope value may be supplied for product:')
     }
 
     @Test
@@ -1075,8 +1063,8 @@ class RpmVisualizerTest
     private static void checkAdditionalScopeIsRequiredNonEPMMessage(String message)
     {
         assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}party.ProfitCenter, the target of partyrole.BasePartyRole.Parties.")
-        assert message.contains('Enter a value for dummyRequiredScopeKey manually since there are none to choose from.')
-        assert !message.contains('<option>Default</option>')
+        assert message.contains('A scope value must be entered manually for dummyRequiredScopeKey since there are no values to choose from: ')
+        assert message.contains("""<input class="missingScopeInput" title="dummyRequiredScopeKey" style="color: black;" type="text" placeholder="Enter value..." ></div>""")
     }
 
 
@@ -1205,7 +1193,6 @@ class RpmVisualizerTest
             String startCubeName = 'rpm.class.Risk'
             Map options = [startCubeName: startCubeName, scope: scope]
 
-
             Map graphInfo = visualizer.buildGraph(appId, options)
             assert STATUS_SUCCESS == graphInfo.status
             Set messages = (graphInfo.visInfo as RpmVisualizerInfo).messages
@@ -1216,8 +1203,8 @@ class RpmVisualizerTest
             String message = messages.first()
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage, the target of Risk.Coverages.")
             assert message.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}ACoverage, the target of Risk.Coverages.")
-            assert message.contains('Enter a value for dummyRequiredScopeKey manually since there are none to choose from.')
-            assert !message.contains('<option>Default</option>')
+            assert message.contains('A scope value must be entered manually for dummyRequiredScopeKey since there are no values to choose from: ')
+            assert message.contains("""<input class="missingScopeInput" title="dummyRequiredScopeKey" style="color: black;" type="text" placeholder="Enter value..." ></div>""")
 
             Map node = nodes.find {Map node ->  "${ADDITIONAL_SCOPE_REQUIRED_FOR}FCoverage".toString() == node.label}
             assert 'Coverage' == node.title
@@ -1230,8 +1217,8 @@ class RpmVisualizerTest
             assert nodeDetails.contains("*** ${UNABLE_TO_LOAD}fields and traits for FCoverage")
             assert nodeDetails.contains(DETAILS_LABEL_REASON)
             assert nodeDetails.contains("${ADDITIONAL_SCOPE_REQUIRED_TO_LOAD}FCoverage, the target of Risk.Coverages.")
-            assert nodeDetails.contains('Enter a value for dummyRequiredScopeKey manually since there are none to choose from.')
-            assert !nodeDetails.contains('<option>Default</option>')
+            assert nodeDetails.contains('A scope value must be entered manually for dummyRequiredScopeKey since there are no values to choose from: ')
+            assert nodeDetails.contains("""<input class="missingScopeInput" title="dummyRequiredScopeKey" style="color: black;" type="text" placeholder="Enter value..." ></div>""")
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE)
             assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
@@ -1422,7 +1409,8 @@ class RpmVisualizerTest
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      product:'WProduct',
                      policyControlDate:'2017-01-01',
-                     quoteDate:'2017-01-01']
+                     quoteDate:'2017-01-01',
+                     businessDivisionCode: 'bogusDIV']
 
         String startCubeName = 'rpm.class.Product'
         Map options = [startCubeName: startCubeName, scope: scope]
@@ -1433,26 +1421,52 @@ class RpmVisualizerTest
         assert 1 == messages.size()
         String message = messages.first()
         assert message.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}the graph.")
-        assert message.contains("Default is the only option for state.")
-        assert !message.contains('<option>Default</option>')
+        checkStateOptionalScopeMessage(messages.first())
+        assert message.contains('<div id="businessDivisionCode" title="The default for businessDivisionCode was utilized on rpm.scope.enum.Risk.Risks.traits, rpm.scope.enum.Risk.Coverages.traits')
+        assert message.contains("A different scope value may be supplied for businessDivisionCode:")
+        assert message.contains('<option>Default (bogusDIV provided, but not found)</option>')
+        assert message.contains('<option title="businessDivisionCode: AAADIV">AAADIV</option>')
+        assert message.contains('<option title="businessDivisionCode: BBBDIV">BBBDIV</option>')
+        assert message.contains('<option title="businessDivisionCode: CCCDIV">CCCDIV</option>')
+
         List<Map<String, Object>> nodes = (graphInfo.visInfo as RpmVisualizerInfo).nodes as List
 
         Map node = nodes.find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on WProduct".toString() == node1.title}
-        assert true == node.showCellValuesLink
-        assert false == node.showCellValues
-        assert true == node.cellValuesLoaded
         String nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_NOTE)
         assert nodeDetails.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on WProduct.")
-        assert nodeDetails.contains("Default is the only option for state")
-        assert !nodeDetails.contains('<option>Default</option>')
-        assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_ALL_TRAITS)
-        assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
-        assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}</b><pre><ul><li>WProductOps</li></ul></pre>")
-        assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
-        assert !nodeDetails.contains(DETAILS_LABEL_REASON)
-        assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
+        checkStateOptionalScopeMessage(nodeDetails)
+
+        node = nodes.find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on WProductOps".toString() == node1.title}
+        nodeDetails = node.details as String
+        assert nodeDetails.contains(DETAILS_LABEL_NOTE)
+        assert nodeDetails.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on WProductOps.")
+        assert nodeDetails.contains('<div id="businessDivisionCode" title="The default for businessDivisionCode was utilized on rpm.scope.enum.Risk.Risks.traits')
+        assert nodeDetails.contains("A different scope value may be supplied for businessDivisionCode:")
+        assert nodeDetails.contains('<option>Default (bogusDIV provided, but not found)</option>')
+        assert nodeDetails.contains('<option title="businessDivisionCode: AAADIV">AAADIV</option>')
+        assert nodeDetails.contains('<option title="businessDivisionCode: BBBDIV">BBBDIV</option>')
+        assert !nodeDetails.contains('<option title="businessDivisionCode: CCCDIV">CCCDIV</option>')
+
+        node = nodes.find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on WProductOps".toString() == node1.title}
+        nodeDetails = node.details as String
+        assert nodeDetails.contains(DETAILS_LABEL_NOTE)
+        assert nodeDetails.contains("${OPTIONAL_SCOPE_AVAILABLE_TO_LOAD}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Coverages on WProductOps.")
+        assert nodeDetails.contains('<div id="businessDivisionCode" title="The default for businessDivisionCode was utilized on rpm.scope.enum.Risk.Coverages.traits')
+        assert nodeDetails.contains("A different scope value may be supplied for businessDivisionCode:")
+        assert nodeDetails.contains('<option>Default (bogusDIV provided, but not found)</option>')
+        assert nodeDetails.contains('<option title="businessDivisionCode: AAADIV">AAADIV</option>')
+        assert !nodeDetails.contains('<option title="businessDivisionCode: BBBDIV">BBBDIV</option>')
+        assert nodeDetails.contains('<option title="businessDivisionCode: CCCDIV">CCCDIV</option>')
     }
+
+    private static void checkStateOptionalScopeMessage(String message)
+    {
+        assert message.contains('<div id="state" title="The default for state was utilized on rpm.scope.enum.Product.Risks.traits')
+        assert message.contains("Default is the only option for state:")
+        assert message.contains('<option>Default (no value provided)</option>')
+    }
+
 
     @Test
     void testBuildGraph_missingMinimumTypeScopeUnChanged()

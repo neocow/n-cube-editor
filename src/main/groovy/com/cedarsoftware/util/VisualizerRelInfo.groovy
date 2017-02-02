@@ -37,6 +37,7 @@ class VisualizerRelInfo
 	boolean showCellValues
 
 	List<VisualizerCellInfo> cellInfo
+	VisualizerScopeInfo scopeInfo = new VisualizerScopeInfo()
 
 	List<String> typesToAdd
 

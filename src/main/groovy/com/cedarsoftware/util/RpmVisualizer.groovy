@@ -295,7 +295,7 @@ class RpmVisualizer extends Visualizer
 			String type = getTypeFromCubeName(startCubeName)
 			String scopeCubeName = startCubeName.replace(RPM_CLASS_DOT, RPM_SCOPE_CLASS_DOT) + DOT_TRAITS
 			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(scopeCubeName, type)
-			String messageScopeValues = BREAK + helper.getScopeValueMessage(type, requiredScopeValues)
+			String messageScopeValues = BREAK + helper.getRequiredScopeValueMessage(type, requiredScopeValues)
 			if (scope)
 			{
 				hasMissingScope = rpmVisInfo.addMissingMinimumScope(type, null, messageScopeValues, messages) ?: hasMissingScope

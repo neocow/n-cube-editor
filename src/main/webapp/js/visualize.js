@@ -204,15 +204,26 @@ var Visualizer = (function ($) {
 
     function onNoteEvent(e) {
         var target = e.target;
-        if (target.className.indexOf('missingScope') > -1) {
-            missingScope(target);
+        if (e.type === 'change' && target.className.indexOf('missingScopeSelect') > -1) {
+            missingScopeSelect(target);
         }
-        else if (target.className.indexOf('findNode') > -1) {
+        else if (e.type === 'change' && target.className.indexOf('missingScopeInput') > -1) {
+            missingScopeInput(target);
+        }
+        else if (e.type === 'click' && target.className.indexOf('findNode') > -1) {
             findNode(target);
         }
     }
 
-    function missingScope(target) {
+    function missingScopeInput(target) {
+        var key = target.title;
+        if (key) {
+            _scope[key] = target.value;
+            scopeChange();
+        }
+    }
+
+    function missingScopeSelect(target) {
         var id, scopeParts, key, value;
         id = target.selectedOptions[0].title;
         if (id) {
@@ -1235,8 +1246,11 @@ var Visualizer = (function ($) {
         {
             _nodeDetails.change(function (e) {
                 target = e.target;
-                if (target.className.indexOf('missingScope') > -1) {
-                    missingScope(target);
+                if (target.className.indexOf('missingScopeSelect') > -1) {
+                    missingScopeSelect(target);
+                }
+                else if (target.className.indexOf('missingScopeInput') > -1) {
+                    missingScopeInput(target);
                 }
             });
             _nodeDetails.click(function (e) {

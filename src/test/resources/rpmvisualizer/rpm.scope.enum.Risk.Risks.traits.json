@@ -2,6 +2,7 @@
   "ncube":"rpm.scope.enum.Risk.Risks.traits",
   "defaultCellValueType":"string",
   "defaultCellValue":"#NOT_DEFINED",
+  "default_view_axis_order":"[\"risk\",\"name\",\"sourcefieldname\",\"businessdivisioncode\",\"trait\"]",
   "axes":[
     {
       "id":1,
@@ -74,6 +75,27 @@
       "transformCubeName":null,
       "transformMethodName":null,
       "columns":[]
+    },
+    {
+      "id":5,
+      "name":"businessDivisionCode",
+      "hasDefault":true,
+      "type":"DISCRETE",
+      "valueType":"STRING",
+      "preferredOrder":1,
+      "fireAll":true,
+      "columns":[
+        {
+          "id":5000839689579,
+          "type":"string",
+          "value":"AAADIV"
+        },
+        {
+          "id":5001846123067,
+          "type":"string",
+          "value":"BBBDIV"
+        }
+      ]
     }
   ],
   "cells":[
@@ -82,7 +104,19 @@
         1000000000001,
         2000000000004,
         3000000000002,
-        4000000000003
+        4000000000003,
+        5000839689579
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
+        1000000000001,
+        2000000000004,
+        3000000000002,
+        4000000000001,
+        5001846123067
       ],
       "type":"boolean",
       "value":true
@@ -93,6 +127,16 @@
         2000000000004,
         3000000000002,
         4000000000001
+      ],
+      "type":"boolean",
+      "value":true
+    },
+    {
+      "id":[
+        1000000000001,
+        2000000000004,
+        3000000000002,
+        4000000000003
       ],
       "type":"boolean",
       "value":true
