@@ -3934,20 +3934,22 @@ var NCE = (function ($) {
 
             html += '<li class="list-group-item skinny-lr no-margins" data-changetype="' + displayType.CSS_CLASS + '">';
             html += '<div class="container-fluid">';
-
-            if (options.hasOwnProperty('compare')) {
-                html += '<label style="padding:0;margin:0 10px 0 0;">';
-                html += '<a href="#" class="compare"><kbd>Compare</kbd></a>';
-                html += '</label>';
-            }
+            
             if (options.hasOwnProperty('html')) {
-                html += '<label style="padding:0;margin:0 10px 0 0;">';
+                html += '<label class="html-label">';
                 html += '<a href="#" class="anc-html" data-cube-id="' + infoDto.id + '" data-rev-id="' + infoDto.revision + '" data-cube-name="' + infoDto.name + '"><kbd>HTML</kbd></a>';
                 html += '</label>';
             }
             if (options.hasOwnProperty('json')) {
-                html += '<label style="padding:0;margin:0 10px 0 0;">';
+                html += '<label class="json-label">';
                 html += '<a href="#" class="anc-json" data-cube-id="' + infoDto.id + '" data-rev-id="' + infoDto.revision + '" data-cube-name="' + infoDto.name + '"><kbd>JSON</kbd></a>';
+                html += '</label>';
+            }
+            if (options.hasOwnProperty('compare')) {
+                html += '<label class="compare-label">';
+                if ([CHANGETYPE.CREATED,CHANGETYPE.DELETED,CHANGETYPE.RESTORED].indexOf(displayType) === -1) {
+                    html += '<a href="#" class="compare"><kbd>Compare</kbd></a>';
+                }
                 html += '</label>';
             }
 
