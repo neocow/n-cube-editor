@@ -1036,7 +1036,6 @@ var NCE = (function ($) {
     
     function onViewTypeClick(e, anc, cubeInfo) {
         var ci2, cia2, tabIdx, isCtrlKey, li, img;
-        clearNote();
         li = anc.parent().parent().parent();
         setActiveTabViewType(anc.data('pageid'));
         ci2 = buildCubeInfo(cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH], cubeInfo[CUBE_INFO.NAME], getActiveTabViewType());
@@ -1851,10 +1850,10 @@ var NCE = (function ($) {
             if (rightResult.status && rightResult.data.length) {
                 rightDto = rightResult.data[0];
             } else {
-                showNote('Unable to load cube ' + rightCube, 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+                showNote('Unable to load cube ' + rightCube, 'Global Comparator Error', TWO_SECOND_TIMEOUT);
             }
         } else {
-            showNote('Right compare info not set!', 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+            showNote('Right compare info not set!', 'Global Comparator Error', TWO_SECOND_TIMEOUT);
             return;
         }
 
@@ -1864,10 +1863,10 @@ var NCE = (function ($) {
             if (leftResult.status && leftResult.data.length) {
                 leftDto = leftResult.data[0];
             } else {
-                showNote('Unable to load cube ' + leftCube, 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+                showNote('Unable to load cube ' + leftCube, 'Global Comparator Error', TWO_SECOND_TIMEOUT);
             }
         } else {
-            showNote('Left compare info not set!', 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+            showNote('Left compare info not set!', 'Global Comparator Error', TWO_SECOND_TIMEOUT);
             return;
         }
 
@@ -1875,7 +1874,7 @@ var NCE = (function ($) {
             title = [leftApp, leftVersion, leftBranch, leftDto.name].join('-') + ' vs ' + [rightApp, rightVersion, rightBranch, rightDto.name].join('-');
             diffCubes(rightDto, leftDto, title, appIdFrom(leftDto.app, leftDto.version, leftDto.status, leftDto.branch));
         } else {
-            showNote('Unable to load cubes for compare!', 'Global Comparator Error', TWO_SECOND_TIMEOUOT);
+            showNote('Unable to load cubes for compare!', 'Global Comparator Error', TWO_SECOND_TIMEOUT);
         }
     }
 
@@ -1937,7 +1936,6 @@ var NCE = (function ($) {
         showNote('Finding all reference axes, please wait...');
         setTimeout(function() {
             var result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCE_AXES, [getAppId()]);
-            clearNote();
             if (!result.status) {
                 showNote('Unable to load reference axes:<hr class="hr-small"/>' + result.data);
                 return;
@@ -2041,7 +2039,7 @@ var NCE = (function ($) {
             showNote('Unable to update reference axes:<hr class="hr-small"/>' + result.data);
             return;
         }
-        showNote(checkedLen + ' ' + (checkedLen === 1 ? 'axis' : 'axes') + ' updated', '', TWO_SECOND_TIMEOUOT);
+        showNote(checkedLen + ' ' + (checkedLen === 1 ? 'axis' : 'axes') + ' updated', '', TWO_SECOND_TIMEOUT);
         for (checkedIdx = 0; checkedIdx < checkedLen; checkedIdx++) {
             row = null;
             row = $(checked[checkedIdx]);
@@ -2546,7 +2544,6 @@ var NCE = (function ($) {
 
     function loadVersions() {
         var result, arr, versions;
-        clearNote();
         if (!_selectedApp) {
             showNote('Unable to load versions, no n-cube App selected.');
             return;
@@ -2584,7 +2581,6 @@ var NCE = (function ($) {
     function loadAppNames() {
         var result;
         var apps = [];
-        clearNote();
         result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_NAMES, [_selectedStatus, _selectedBranch]);
         if (result.status) {
             apps = null;
@@ -2605,7 +2601,6 @@ var NCE = (function ($) {
             return false;
         }
 
-        clearNote();
         $('#newCubeAppName').val(_selectedApp);
         $('#newCubeStatus').val('SNAPSHOT');
         $('#newCubeVersion').val(_selectedVersion);
@@ -2656,7 +2651,6 @@ var NCE = (function ($) {
 
     function deleteCube() {
         var cubeLinks, i, len, cubeName, html;
-        clearNote();
         if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
             showNote('Need to have an application, version, and status selected first.');
             return;
@@ -2764,7 +2758,6 @@ var NCE = (function ($) {
 
     function restoreCube() {
         var ul, result;
-        clearNote();
         if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
             showNote('Need to have an application, version, and status selected first.');
             return;
@@ -2822,7 +2815,6 @@ var NCE = (function ($) {
 
     function revisionHistory(ignoreVersion) {
         var appId = getSelectedTabAppId();
-        clearNote();
         _revisionHistoryList.empty();
         _revisionHistoryLabel[0].textContent = 'Revision History for ' + _selectedCubeName;
         showNote('Loading...');
@@ -2887,7 +2879,6 @@ var NCE = (function ($) {
             _revisionHistoryList.find('a.anc-json').on('click', function () {
                 onRevisionViewClick($(this), true);
             });
-            clearNote();
             _revisionHistoryModal.modal();
         } else {
             showNote('Error fetching revision history (' + appId.version + ', ' + appId.status + '):<hr class="hr-small"/>' + result.data);
@@ -2940,7 +2931,7 @@ var NCE = (function ($) {
         var versions = revs.versions;
 
         if (revIds.length !== 2) {
-            showNote('Must select exactly 2 for comparison', 'Note', TWO_SECOND_TIMEOUOT);
+            showNote('Must select exactly 2 for comparison', 'Note', TWO_SECOND_TIMEOUT);
             return;
         }
         
@@ -2977,7 +2968,7 @@ var NCE = (function ($) {
             note = 'Must select only 1 revision to promote.';
         }
         if (note) {
-            showNote(note, 'Note', TWO_SECOND_TIMEOUOT);
+            showNote(note, 'Note', TWO_SECOND_TIMEOUT);
             return;
         }
 
@@ -3028,7 +3019,6 @@ var NCE = (function ($) {
     }
 
     function dupeCube() {
-        clearNote();
         if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
             showNote('No n-cube selected. Nothing to duplicate.');
             return;
@@ -3089,7 +3079,6 @@ var NCE = (function ($) {
 
     function showRefsFromCube() {
         var result, cubeNames, i, len, html;
-        clearNote();
         _showRefsFromLabel[0].textContent = 'Outbound refs of: ' + _selectedCubeName;
         _refsFromCubeList.empty();
         _showRefsFromCubeModal.modal();
@@ -3112,7 +3101,6 @@ var NCE = (function ($) {
 
     function showReqScope() {
         var result, scopeKeys, i, len, html;
-        clearNote();
         _showReqScopeLabel[0].textContent = "Scope for '" + _selectedCubeName + "'";
         _reqScopeList.empty();
         _showReqScopeModal.modal();
@@ -3171,7 +3159,6 @@ var NCE = (function ($) {
 
     function releaseCubes() {
         if (!isReleasePending) {
-            clearNote();
             if (_selectedBranch !== head) {
                 showNote('HEAD branch must be selected to release a version.');
                 return;
@@ -3335,11 +3322,8 @@ var NCE = (function ($) {
 
     ///////////////////////////////////////////   END RELEASE PROCESS   ////////////////////////////////////////////////
 
-    function changeVersion()
-    {
-        clearNote();
-        if (!ensureModifiable('Version cannot be changed.'))
-        {
+    function changeVersion() {
+        if (!ensureModifiable('Version cannot be changed.')) {
             return;
         }
 
@@ -3365,7 +3349,6 @@ var NCE = (function ($) {
     }
 
     function createSnapshotFromRelease() {
-        clearNote();
         if (_selectedStatus !== STATUS.RELEASE) {
             showNote('Must select a released version to copy.');
             return;
@@ -3453,7 +3436,6 @@ var NCE = (function ($) {
 
     function ensureModifiable(operation, overrideAppId) {
         var appId = overrideAppId || getSelectedTabAppId() || getAppId();
-        clearNote();
         if (!operation) {
             operation = '';
         }
@@ -3616,9 +3598,11 @@ var NCE = (function ($) {
     }
 
     function showActiveBranch() {
-        var branchNames = getBranchNames();
-        if (branchNames.indexOf(_selectedBranch) === -1) {
+        if (getBranchNames().indexOf(_selectedBranch) > -1) {
+            addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
+        } else {
             saveSelectedBranch(head);
+            changeBranch(head);
         }
         _branchMenu[0].innerHTML = '<button class="btn-sm btn-primary">&nbsp;' + _selectedBranch + '&nbsp;<b class="caret"></b></button>';
     }
@@ -3640,7 +3624,6 @@ var NCE = (function ($) {
 
     function selectBranch() {
         var branchNames, listHtml, i, len, name;
-        clearNote();
         _newBranchName.val('');
         _branchNameWarning.hide();
         branchNames = getBranchNames();
@@ -3664,7 +3647,6 @@ var NCE = (function ($) {
         var appId;
         var branchName = _newBranchName.val();
         var validName = /^[a-zA-Z_][0-9a-zA-Z_.-]*$/i;
-        clearNote();
         if (!branchName || !validName.test(branchName) || head.toLowerCase() == branchName.toLowerCase()) {
             _branchNameWarning.show();
             return;
@@ -3679,9 +3661,8 @@ var NCE = (function ($) {
         }
 
         setTimeout(function() {
-            var result = call("ncubeController.createBranch", [appId]);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.CREATE_BRANCH, [appId]);
             if (!result.status) {
-                clearNote();
                 showNote('Unable to create branch:<hr class="hr-small"/>' + result.data);
                 return;
             }
@@ -3706,11 +3687,9 @@ var NCE = (function ($) {
             loadNCubes();
             runSearch();
             buildMenu();
-            clearNote();
             buildBranchQuickSelectMenu();
         }, PROGRESS_DELAY);
-        clearNote();
-        showNote('Changing branch to: ' + branchName, 'Please wait...');
+        showNote('Changing branch to: ' + branchName, 'Please wait...', ONE_SECOND_TIMEOUT);
     }
 
     function compareUpdateBranch(branchName, noNote) {
@@ -3743,7 +3722,7 @@ var NCE = (function ($) {
             if (noNote) {
                 _branchCompareUpdateModal.modal('hide');
             } else {
-                showNote('No changes detected.', '', TWO_SECOND_TIMEOUOT);
+                showNote('No changes detected.', '', TWO_SECOND_TIMEOUT);
             }
             return;
         }
@@ -3915,7 +3894,6 @@ var NCE = (function ($) {
             } else {
                 result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_BRANCH, [appId, cubeDtos]);
             }
-            clearNote();
             if (!result.status) {
                 showNote('Unable to update ' + (isFromTabMenu ? 'cube' : 'branch') + ':<hr class="hr-small"/>' + result.data);
                 return;
@@ -4004,7 +3982,6 @@ var NCE = (function ($) {
 
     function commitBranch(state) {
         var errMsg, title, result, branchChanges, action;
-        clearNote();
         if (state) {
             action = 'commit';
             errMsg = 'commit to';
@@ -4137,7 +4114,7 @@ var NCE = (function ($) {
             var appId, name, result;
             appId = getSelectedTabAppId();
             name = changedCube.name;
-            result = call("ncubeController.rollbackBranch", [appId, [name]]);
+            result = call(CONTROLLER + CONTROLLER_METHOD.ROLLBACK_BRANCH, [appId, [name]]);
             clearNote();
 
             if (!result.status) {
@@ -4204,7 +4181,6 @@ var NCE = (function ($) {
     }
 
     function copyBranch() {
-        clearNote();
         $('#copyBranchAppName').val(_selectedApp);
         $('#copyBranchStatus').val(STATUS.SNAPSHOT);
         $('#copyBranchVersion').val(_selectedVersion);
@@ -4258,7 +4234,6 @@ var NCE = (function ($) {
         var result;
         var appId = getAppId();
         $('#deleteBranchModal').modal('hide');
-        clearNote();
 
         result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_BRANCH, [appId]);
         if (result.status) {
@@ -4273,7 +4248,7 @@ var NCE = (function ($) {
     function getAllSelectedMineTheirs(ul) {
         var i, len, results, branchChanges, inputs;
         if (!ul.find('input:checked').length) {
-            showNote('No cubes selected!', 'Note', TWO_SECOND_TIMEOUOT);
+            showNote('No cubes selected!', 'Note', TWO_SECOND_TIMEOUT);
             return null;
         }
         branchChanges = ul.closest('.modal').prop('branchChanges');
@@ -4348,7 +4323,6 @@ var NCE = (function ($) {
     
     function diffCubes(receiverDto, transmitterDto, title, appId) {
         var leftRightName = { receiver: '', transmitter: '' };
-        clearNote();
         callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_BRANCH_DIFFS, [receiverDto, transmitterDto], {callback:descriptiveDiffCallback});
         if (transmitterDto.branch === receiverDto.branch) {
             addTextToLeftRightNames(transmitterDto.app, receiverDto.app, leftRightName);
@@ -4371,7 +4345,6 @@ var NCE = (function ($) {
     }
 
     function diffCubeRevs(receiverId, transmitterId, diffOptions) {
-        clearNote();
         callWithSave(CONTROLLER + CONTROLLER_METHOD.FETCH_JSON_REV_DIFFS, [receiverId, transmitterId], {callback:descriptiveDiffCallback});
         setupDiff(diffOptions);
     }
