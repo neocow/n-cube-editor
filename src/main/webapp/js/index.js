@@ -3982,6 +3982,7 @@ var NCE = (function ($) {
 
     function commitBranch(state) {
         var errMsg, title, result, branchChanges, action;
+        clearNote();
         if (state) {
             action = 'commit';
             errMsg = 'commit to';
