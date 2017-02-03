@@ -4650,12 +4650,12 @@ var NCE = (function ($) {
     function loop() {
         setInterval(function() {
             var now = Date.now();
-            if (now - _searchLastKeyTime > PROGRESS_DELAY && _searchKeyPressed) {
+            if (now - _searchLastKeyTime > ONE_SECOND_TIMEOUT && _searchKeyPressed) {
                 _searchKeyPressed = false;
                 saveCubeSearchOptions();
                 runSearch();
             }
-        }, PROGRESS_DELAY);
+        }, ONE_SECOND_TIMEOUT);
     }
 
     function createHeartBeatTransferObj() {
