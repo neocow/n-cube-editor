@@ -4066,7 +4066,7 @@ var NCE = (function ($) {
         branchChanges.sort(sortBranchChanges);
 
         _commitModal.prop('branchChanges', branchChanges);
-        buildUlForCompare(_commitRollbackList, head, branchChanges, {inputClass:'commitCheck', compare:true, action: action});
+        buildUlForCompare(_commitRollbackList, head, branchChanges, {inputClass:'commitCheck', compare:true, html:true, json:true, action: action});
         _commitModal.modal('show');
     }
 
