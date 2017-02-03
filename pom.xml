@@ -176,9 +176,6 @@
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
                 <version>${version.plugin.gmavenplus}</version>
-                <configuration>
-                    <targetBytecode>1.8</targetBytecode>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>
@@ -433,6 +430,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>20.0</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
