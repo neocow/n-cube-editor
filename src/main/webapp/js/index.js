@@ -33,8 +33,6 @@ var NCE = (function ($) {
     var _selectedVersion = localStorage[SELECTED_VERSION];
     var _selectedBranch;
     var _selectedStatus = localStorage[SELECTED_STATUS] || STATUS.SNAPSHOT;
-    var _noteId = null;
-    var _noteWrapper = null;
     var _activeTabViewType = localStorage[ACTIVE_TAB_VIEW_TYPE];
     var _selectedCubeInfo = localStorage[SELECTED_CUBE_INFO];
     var _defaultTab = null;
@@ -3522,7 +3520,6 @@ var NCE = (function ($) {
             showNote('Unable to fetch server statistics:<hr class="hr-small"/>' + result.data);
             return;
         }
-        clearNote();
         displayMap(result.data.serverStats, DISPLAY_MAP_TITLE.SERVER_STATS);
     }
 
@@ -3532,7 +3529,6 @@ var NCE = (function ($) {
             showNote('Unable to fetch HTTP headers:<hr class="hr-small"/>' + result.data);
             return;
         }
-        clearNote();
         displayMap(result.data, DISPLAY_MAP_TITLE.HTTP_HEADERS);
     }
 
@@ -3551,7 +3547,8 @@ var NCE = (function ($) {
 
         msg = '<dl class="dl-horizontal">' + msg;
         msg += '</dl>';
-        showNote(msg, title);
+        clearNotes({noteClass: 'sysmeta'});
+        showNote(msg, title, null, 'sysmeta');
     }
 
     // ======================================== Everything to do with Branching ========================================
@@ -3795,7 +3792,7 @@ var NCE = (function ($) {
         var inputClass = options.inputClass;
         ul.empty();
         ul.append(buildHtmlListForCompare(branchChanges, options));
-        ul.find('a.compare').on('click', function() {
+        ul.find('a.anc-compare').on('click', function() {
             var checkbox = $(this).parent().parent().find('.' + inputClass);
             var ul = $(this).parent().parent().parent().parent();
             var idx = ul.find('.' + inputClass).index(checkbox);
@@ -3963,7 +3960,7 @@ var NCE = (function ($) {
     }
 
     function buildHtmlListForCompare(branchChanges, options) {
-        var i, len, infoDto, prevChangeType, changeType, displayType;
+        var i, len, infoDto, prevChangeType, changeType, displayType, shouldCompare;
         var html = '';
         var inputClass = options.inputClass;
         for (i = 0, len = branchChanges.length; i < len; i++) {
@@ -3982,7 +3979,13 @@ var NCE = (function ($) {
 
             html += '<li class="list-group-item skinny-lr no-margins" data-changetype="' + displayType.CSS_CLASS + '">';
             html += '<div class="container-fluid">';
-            
+
+            if (options.hasOwnProperty('compare')) {
+                shouldCompare = [CHANGETYPE.CREATED,CHANGETYPE.DELETED,CHANGETYPE.RESTORED].indexOf(displayType) === -1;
+                html += '<label class="compare-label">';
+                html += shouldCompare ? '<a href="#" class="anc-compare"><kbd>Compare</kbd></a>' : '<kbd class="space-grey">Compare</kbd>';
+                html += '</label>';
+            }
             if (options.hasOwnProperty('html')) {
                 html += '<label class="html-label">';
                 html += '<a href="#" class="anc-html" data-cube-id="' + infoDto.id + '" data-rev-id="' + infoDto.revision + '" data-cube-name="' + infoDto.name + '"><kbd>HTML</kbd></a>';
@@ -3991,13 +3994,6 @@ var NCE = (function ($) {
             if (options.hasOwnProperty('json')) {
                 html += '<label class="json-label">';
                 html += '<a href="#" class="anc-json" data-cube-id="' + infoDto.id + '" data-rev-id="' + infoDto.revision + '" data-cube-name="' + infoDto.name + '"><kbd>JSON</kbd></a>';
-                html += '</label>';
-            }
-            if (options.hasOwnProperty('compare')) {
-                html += '<label class="compare-label">';
-                if ([CHANGETYPE.CREATED,CHANGETYPE.DELETED,CHANGETYPE.RESTORED].indexOf(displayType) === -1) {
-                    html += '<a href="#" class="compare"><kbd>Compare</kbd></a>';
-                }
                 html += '</label>';
             }
 
@@ -4067,7 +4063,7 @@ var NCE = (function ($) {
         branchChanges.sort(sortBranchChanges);
 
         _commitModal.prop('branchChanges', branchChanges);
-        buildUlForCompare(_commitRollbackList, head, branchChanges, {inputClass:'commitCheck', compare:true, action: action});
+        buildUlForCompare(_commitRollbackList, head, branchChanges, {inputClass:'commitCheck', compare:true, html:true, json:true, action: action});
         _commitModal.modal('show');
     }
 
@@ -4651,12 +4647,12 @@ var NCE = (function ($) {
     function loop() {
         setInterval(function() {
             var now = Date.now();
-            if (now - _searchLastKeyTime > PROGRESS_DELAY && _searchKeyPressed) {
+            if (now - _searchLastKeyTime > CUBE_SEARCH_TIMEOUT && _searchKeyPressed) {
                 _searchKeyPressed = false;
                 saveCubeSearchOptions();
                 runSearch();
             }
-        }, PROGRESS_DELAY);
+        }, CUBE_SEARCH_TIMEOUT);
     }
 
     function createHeartBeatTransferObj() {
@@ -4675,45 +4671,58 @@ var NCE = (function ($) {
         }, MINUTE_TIMEOUT);
     }
 
-    function showNote(msg, title, millis) {
-        _noteId = $.gritter.add({
+    function showNote(msg, title, millis, noteClass) {
+        var noteId = $.gritter.add({
             title: (title || 'Note'),
             text: msg,
             image: './img/cube-logo.png',
             sticky: !millis,
             append: false,
-            time: (millis || 0)
+            time: (millis || 0),
+            class_name: noteClass || 'none'
         });
-        addNoteListeners();
-        return _noteId;
+        addNoteListeners(noteId);
+        return noteId;
     }
 
-    function addNoteListeners() {
-        _noteWrapper = $.gritter.noticeWrapper();
-        if (!_noteWrapper.hasClass(HAS_EVENT)) {
-            _noteWrapper.on('change click', function (e) {
+    function addNoteListeners(noteId) {
+        var noteDiv = $('#gritter-item-' + noteId);
+        if (!noteDiv.hasClass(HAS_EVENT)) {
+            noteDiv.addClass(HAS_EVENT);
+            noteDiv.on('change click', function (e) {
                 e.preventDefault();
                 onNoteEvent(e);
             });
-            _noteWrapper.addClass(HAS_EVENT)
         }
      }
 
-    function clearNote() {
-        if (_noteId) {
-            $.gritter.remove(_noteId);
-            _noteId = null;
+    function clearNote(noteId) {
+        if (noteId) {
+            $.gritter.remove(noteId);
+        } else {
+            clearNotes({noteClass:'none'});
         }
     }
 
-    function clearNotes(idList){
-        var id;
-        while(idList.length) {
-            id = idList.pop();
-            $.gritter.remove(id);
-            if (id === _noteId){
-                _noteId = null;
+    // valid options:
+    // noteIds: clears notes based on gritter object id
+    // noteClass: based on class of notes
+    function clearNotes(options){
+        var i, len, notes, note, isById;
+        if (options) {
+            if (options.hasOwnProperty('noteIds')) {
+                notes = options.noteIds;
+                isById = true;
+            } else if (options.hasOwnProperty('noteClass')) {
+                notes = $('.gritter-item-wrapper.' + options.noteClass);
+                isById = false;
             }
+            for (i = 0, len = notes.length; i < len; i++) {
+                note = notes[i];
+                $.gritter.remove(isById ? note : $(note).data('gritterId'));
+            }
+        } else {
+            $.gritter.removeAll();
         }
     }
     

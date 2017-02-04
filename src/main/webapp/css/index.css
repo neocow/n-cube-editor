@@ -664,3 +664,7 @@ a.section-all:hover, a.section-none:hover {
 .json-label {
     width: 46px;
 }
+
+.space-grey {
+    color: #a5adb0;
+}
