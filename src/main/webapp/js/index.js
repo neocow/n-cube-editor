@@ -3547,7 +3547,7 @@ var NCE = (function ($) {
 
         msg = '<dl class="dl-horizontal">' + msg;
         msg += '</dl>';
-        clearNotes({noteClass: 'sysmeta'});
+        clearNotes('sysmeta');
         showNote(msg, title, null, 'sysmeta');
     }
 
@@ -4700,21 +4700,18 @@ var NCE = (function ($) {
         if (noteId) {
             $.gritter.remove(noteId);
         } else {
-            clearNotes({noteClass:'none'});
+            clearNotes('none');
         }
     }
-
-    // valid options:
-    // noteIds: clears notes based on gritter object id
-    // noteClass: based on class of notes
-    function clearNotes(options){
+    
+    function clearNotes(idOrClass){
         var i, len, notes, note, isById;
-        if (options) {
-            if (options.hasOwnProperty('noteIds')) {
-                notes = options.noteIds;
+        if (idOrClass) {
+            if (Object.prototype.toString.call(_openCubes) === '[object Array]') {
+                notes = idOrClass;
                 isById = true;
-            } else if (options.hasOwnProperty('noteClass')) {
-                notes = $('.gritter-item-wrapper.' + options.noteClass);
+            } else {
+                notes = $('.gritter-item-wrapper.' + idOrClass);
                 isById = false;
             }
             for (i = 0, len = notes.length; i < len; i++) {
