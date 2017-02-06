@@ -3481,8 +3481,8 @@ var NCE = (function ($) {
         if (!operation) {
             operation = '';
         }
-        if (!appId.app || !appId.version || !_selectedCubeName || !appId.status || !appId.branch) {
-            showNote(operation + ' No n-cube selected.');
+        if (!appId.app || !appId.version || !appId.status || !appId.branch) {
+            showNote(operation + ' No application information detected.');
             return false;
         }
         if (appId.status === "RELEASE") {

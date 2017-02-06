@@ -29,6 +29,7 @@
     word-wrap: break-word;
 }
 .gritter-drag {
+    display: none;
     position: absolute;
     top: 5px;
     right: 35px;
