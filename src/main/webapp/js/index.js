@@ -4707,7 +4707,7 @@ var NCE = (function ($) {
     function clearNotes(idOrClass){
         var i, len, notes, note, isById;
         if (idOrClass) {
-            if (Object.prototype.toString.call(_openCubes) === '[object Array]') {
+            if (Object.prototype.toString.call(idOrClass) === '[object Array]') {
                 notes = idOrClass;
                 isById = true;
             } else {
