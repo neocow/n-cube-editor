@@ -17,6 +17,10 @@
     <bean name="ncubeController" class="com.cedarsoftware.controller.NCubeController">
     </bean>
 
+    <bean name="nCubeService" class="com.cedarsoftware.service.ncube.NCubeService">
+        <constructor-arg ref="ncubeManager" />
+    </bean>
+
     <bean id="ncubeTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="ncubeDataSource" />
     </bean>
@@ -49,6 +53,10 @@
 
     <bean id="persister" class="com.cedarsoftware.ncube.NCubeJdbcPersisterAdapter">
         <constructor-arg ref="connectionProvider" />
+    </bean>
+
+    <bean id="ncubeManager" class="com.cedarsoftware.ncube.NCubeManagerImpl">
+        <constructor-arg ref="persister" />
     </bean>
 
     <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">

@@ -639,6 +639,11 @@ class NCubeController extends BaseController
         nCubeService.createCube(appId, ncube)
     }
 
+    void updateCube(NCube ncube)
+    {
+        nCubeService.updateNCube(ncube)
+    }
+
     /**
      * Delete an n-cube (SNAPSHOT only).
      * @return boolean true if successful, otherwise a String error message.

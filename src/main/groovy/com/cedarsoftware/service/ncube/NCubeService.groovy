@@ -8,6 +8,7 @@ import com.cedarsoftware.ncube.AxisType
 import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.Delta
 import com.cedarsoftware.ncube.NCube
+import com.cedarsoftware.ncube.NCubeEditorClient
 import com.cedarsoftware.ncube.NCubeInfoDto
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.ReferenceAxisLoader
@@ -46,6 +47,13 @@ import static com.cedarsoftware.ncube.NCubeConstants.*
 @Service
 class NCubeService
 {
+    private NCubeEditorClient manager
+
+    NCubeService(NCubeEditorClient manager)
+    {
+        this.manager = manager
+    }
+
     private static final Logger LOG = LogManager.getLogger(NCubeService.class)
 
     List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching, Map options)
@@ -147,7 +155,7 @@ class NCubeService
             throw new IllegalArgumentException(ncube.name + ' exists.')
         }
 
-        NCubeManager.updateCube(appId, ncube, true)
+        manager.updateCube(appId, ncube, true)
     }
 
     boolean deleteCubes(ApplicationID appId, Object[] cubeNames)
@@ -195,7 +203,7 @@ class NCubeService
         }
         Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), true, Axis.DISPLAY, maxId + 1)
         ncube.addAxis(axis)
-        NCubeManager.updateCube(appId, ncube, false)
+        manager.updateCube(appId, ncube, false)
     }
 
     void addAxis(ApplicationID appId, String cubeName, String axisName, ApplicationID refAppId, String refCubeName, String refAxisName, ApplicationID transformAppId, String transformCubeName, String transformMethodName)
@@ -240,7 +248,7 @@ class NCubeService
 
         Axis axis = new Axis(axisName, maxId + 1, true, refAxisLoader)
         nCube.addAxis(axis)
-        NCubeManager.updateCube(appId, nCube, false)
+        manager.updateCube(appId, nCube, false)
     }
 
     /**
@@ -260,7 +268,7 @@ class NCubeService
         }
 
         ncube.deleteAxis(axisName)
-        NCubeManager.updateCube(appId, ncube, false)
+        manager.updateCube(appId, ncube, false)
     }
 
     /**
@@ -305,7 +313,7 @@ class NCubeService
         }
 
         ncube.clearSha1();
-        NCubeManager.updateCube(appId, ncube, false)
+        manager.updateCube(appId, ncube, false)
     }
 
     /**
@@ -321,7 +329,7 @@ class NCubeService
 
         // Update default column setting (if changed)
         ncube.breakAxisReference(axisName);
-        NCubeManager.updateCube(appId, ncube, false)
+        manager.updateCube(appId, ncube, false)
     }
 
     /**
@@ -356,7 +364,7 @@ class NCubeService
         }
 
         ncube.updateColumn(id, value)
-        NCubeManager.updateCube(appId, ncube, false)
+        manager.updateCube(appId, ncube, false)
     }
 
     /**
@@ -366,7 +374,7 @@ class NCubeService
     void updateNCube(NCube ncube)
     {
         ApplicationID appId = ncube.applicationID
-        NCubeManager.updateCube(appId, ncube, false)
+        manager.updateCube(appId, ncube, false)
     }
 
     boolean renameCube(ApplicationID appId, String oldName, String newName)
@@ -406,7 +414,7 @@ class NCubeService
                 }
             }
 
-            NCubeManager.updateCube(appId, ncube, true)
+            manager.updateCube(appId, ncube, true)
         }
     }
 

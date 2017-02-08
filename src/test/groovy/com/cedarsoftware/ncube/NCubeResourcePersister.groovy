@@ -69,6 +69,11 @@ class NCubeResourcePersister implements NCubePersister
         return false
     }
 
+    boolean doCubesExist(ApplicationID appId, boolean ignoreStatus, String methodName)
+    {
+        return false
+    }
+
     @Override
     boolean deleteCubes(ApplicationID applicationID, Object[] objects, boolean b, String s1)
     {
