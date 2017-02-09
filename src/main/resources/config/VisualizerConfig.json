@@ -98,12 +98,11 @@
   "cells":[
     {
       "id":[
-        1000052809612,
+        1000017855263,
         2001950513622
       ],
-      "type":"exp",
-      "cache":true,
-      "value":"['Product', 'Risk', 'Coverage', 'Container', 'Deductible', 'Limit', 'Rate', 'Ratefactor', 'Premium', 'Party', 'Place', 'Role', 'Roleplayer'] as Set"
+      "type":"string",
+      "value":"_ENUM"
     },
     {
       "id":[
@@ -112,14 +111,6 @@
       "type":"exp",
       "cache":true,
       "value":"['n-cube', 'rule cube']"
-    },
-    {
-      "id":[
-        1000017855263,
-        2001950513622
-      ],
-      "type":"string",
-      "value":"_ENUM"
     },
     {
       "id":[
@@ -132,11 +123,12 @@
     },
     {
       "id":[
-        1001273450632
+        1000052809612,
+        2001950513622
       ],
       "type":"exp",
       "cache":true,
-      "value":"[NCUBE: 'n-cube', RULE_NCUBE: 'rule cube', UNSPECIFIED: 'Unspecified']"
+      "value":"['Product', 'Risk', 'Coverage', 'Container', 'Deductible', 'Limit', 'Rate', 'Ratefactor', 'Premium', 'Party', 'Place', 'Role', 'Roleplayer'] as Set"
     },
     {
       "id":[
@@ -145,6 +137,14 @@
       ],
       "type":"long",
       "value":3
+    },
+    {
+      "id":[
+        1001273450632
+      ],
+      "type":"exp",
+      "cache":true,
+      "value":"[NCUBE: 'n-cube', RULE_NCUBE: 'rule cube', UNSPECIFIED: 'Unspecified']"
     }
   ]
 }

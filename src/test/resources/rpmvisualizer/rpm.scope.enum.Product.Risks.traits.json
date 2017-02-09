@@ -42,17 +42,11 @@
       "isRef":true,
       "referenceTenant":"NONE",
       "referenceApp":"test.visualizer",
-      "referenceVersion":"1.0.0",
+      "referenceVersion":"1.0.4",
       "referenceStatus":"RELEASE",
       "referenceBranch":"HEAD",
       "referenceCubeName":"Risk",
       "referenceAxisName":"risk",
-      "transformApp":null,
-      "transformVersion":null,
-      "transformStatus":null,
-      "transformBranch":null,
-      "transformCubeName":null,
-      "transformMethodName":null,
       "columns":[]
     },
     {
@@ -62,27 +56,11 @@
       "isRef":true,
       "referenceTenant":"NONE",
       "referenceApp":"test.visualizer",
-      "referenceVersion":"1.0.0",
+      "referenceVersion":"1.0.4",
       "referenceStatus":"RELEASE",
       "referenceBranch":"HEAD",
       "referenceCubeName":"Product",
       "referenceAxisName":"product",
-      "transformApp":null,
-      "transformVersion":null,
-      "transformStatus":null,
-      "transformBranch":null,
-      "transformCubeName":null,
-      "transformMethodName":null,
-      "columns":[]
-    },
-    {
-      "id":5,
-      "name":"state",
-      "hasDefault":true,
-      "type":"DISCRETE",
-      "valueType":"STRING",
-      "preferredOrder":1,
-      "fireAll":true,
       "columns":[]
     }
   ],
@@ -91,11 +69,41 @@
       "id":[
         1000000000001,
         2000000000004,
+        3001427128926,
+        4001108369471
+      ],
+      "type":"exp",
+      "value":"true"
+    },
+    {
+      "id":[
+        1000000000001,
+        2000000000004,
         3000000000002,
         4000000000001
       ],
-      "type":"boolean",
-      "value":true
+      "type":"exp",
+      "value":"true"
+    },
+    {
+      "id":[
+        1000000000001,
+        2000000000004,
+        3001107612492,
+        4001108369471
+      ],
+      "type":"exp",
+      "value":"true"
+    },
+    {
+      "id":[
+        1000000000001,
+        2000000000004,
+        3001961257272,
+        4001778566436
+      ],
+      "type":"exp",
+      "value":"true"
     }
   ]
 }
