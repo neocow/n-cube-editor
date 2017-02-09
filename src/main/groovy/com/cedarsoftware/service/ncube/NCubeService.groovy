@@ -232,10 +232,10 @@ class NCubeService
         args[ReferenceAxisLoader.REF_AXIS_NAME] = refAxisName    // axis name of the referring axis (the variable that you had missing earlier)
         if (transformAppId?.app)
         {
-            args[ReferenceAxisLoader.TRANSFORM_APP] = transformAppId?.app // Notice no target tenant.  User MUST stay within TENENT boundary
-            args[ReferenceAxisLoader.TRANSFORM_VERSION] = transformAppId?.version
-            args[ReferenceAxisLoader.TRANSFORM_STATUS] = transformAppId?.status
-            args[ReferenceAxisLoader.TRANSFORM_BRANCH] = transformAppId?.branch
+            args[ReferenceAxisLoader.TRANSFORM_APP] = transformAppId.app // Notice no target tenant.  User MUST stay within TENENT boundary
+            args[ReferenceAxisLoader.TRANSFORM_VERSION] = transformAppId.version
+            args[ReferenceAxisLoader.TRANSFORM_STATUS] = transformAppId.status
+            args[ReferenceAxisLoader.TRANSFORM_BRANCH] = transformAppId.branch
             args[ReferenceAxisLoader.TRANSFORM_CUBE_NAME] = transformCubeName
             args[ReferenceAxisLoader.TRANSFORM_METHOD_NAME] = transformMethodName
         }
