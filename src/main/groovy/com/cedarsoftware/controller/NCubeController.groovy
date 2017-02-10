@@ -957,7 +957,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         String data = new NCubeTestWriter().format(tests)
-        nCubeService.updateTestData(appId, cubeName, data)
+        nCubeService.saveTests(appId, cubeName, data)
     }
 
     /**

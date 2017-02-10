@@ -5,6 +5,7 @@ import com.cedarsoftware.ncube.Axis
 import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.NCubeRuntime
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.VisualizerConstants.*
@@ -100,10 +101,10 @@ class VisualizerInfo
 
     NCube loadConfigurations(String cubeType)
     {
-        String configJson = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_CUBE_NAME + JSON_FILE_SUFFIX)
+        String configJson = NCubeRuntime.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_CUBE_NAME + JSON_FILE_SUFFIX)
         NCube configCube = NCube.fromSimpleJson(configJson)
         configCube.applicationID = appId
-        String networkConfigJson = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_NETWORK_OVERRIDES_CUBE_NAME + JSON_FILE_SUFFIX)
+        String networkConfigJson = NCubeRuntime.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_NETWORK_OVERRIDES_CUBE_NAME + JSON_FILE_SUFFIX)
         NCube networkConfigCube = NCube.fromSimpleJson(networkConfigJson)
         networkConfigCube.applicationID = appId
 

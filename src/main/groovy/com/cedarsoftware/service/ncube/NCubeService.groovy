@@ -61,39 +61,39 @@ class NCubeService
          return manager.search(appId, cubeNamePattern, contentMatching, options)
     }
 
-    void restoreCubes(ApplicationID appId, Object[] cubeNames)
+    Boolean restoreCubes(ApplicationID appId, Object[] cubeNames)
     {
-        NCubeManager.restoreCubes(appId, cubeNames)
+        return manager.restoreCubes(appId, cubeNames)
     }
 
     List<NCubeInfoDto> getRevisionHistory(ApplicationID appId, String cubeName, boolean ignoreVersion)
     {
-        return NCubeManager.getRevisionHistory(appId, cubeName, ignoreVersion)
+        return manager.getRevisionHistory(appId, cubeName, ignoreVersion)
     }
 
     List<String> getAppNames(String tenant)
     {
-        return NCubeManager.getAppNames(tenant)
+        return manager.getAppNames(tenant)
     }
 
     Map<String, List<String>> getVersions(String tenant, String app)
     {
-        return NCubeManager.getVersions(tenant, app)
+        return manager.getVersions(tenant, app)
     }
 
     void copyBranch(ApplicationID srcAppId, ApplicationID targetAppId, boolean copyWithHistory = false)
     {
-        NCubeManager.copyBranch(srcAppId, targetAppId, copyWithHistory)
+        manager.copyBranch(srcAppId, targetAppId, copyWithHistory)
     }
 
     Set<String> getBranches(ApplicationID appId)
     {
-        return NCubeManager.getBranches(appId)
+        return manager.getBranches(appId)
     }
 
     int getBranchCount(ApplicationID appId)
     {
-        return NCubeManager.getBranchCount(appId)
+        return manager.getBranchCount(appId)
     }
 
     List<NCubeInfoDto> getBranchChangesForHead(ApplicationID appId)
@@ -128,12 +128,12 @@ class NCubeService
 
     void deleteBranch(ApplicationID appId)
     {
-        NCubeManager.deleteBranch(appId);
+        manager.deleteBranch(appId);
     }
 
     NCube mergeDeltas(ApplicationID appId, String cubeName, List<Delta> deltas)
     {
-        NCubeManager.mergeDeltas(appId, cubeName, deltas)
+        manager.mergeDeltas(appId, cubeName, deltas)
     }
 
     int acceptTheirs(ApplicationID appId, Object[] cubeNames, String sourceBranch)
@@ -151,24 +151,24 @@ class NCubeService
         manager.createCube(ncube)
     }
 
-    boolean deleteCubes(ApplicationID appId, Object[] cubeNames)
+    Boolean deleteCubes(ApplicationID appId, Object[] cubeNames)
     {
-        return NCubeManager.deleteCubes(appId, cubeNames)
+        return manager.deleteCubes(appId, cubeNames)
     }
 
-    void duplicateCube(ApplicationID appId, ApplicationID destAppId, String cubeName, String newName)
+    Boolean duplicateCube(ApplicationID appId, ApplicationID destAppId, String cubeName, String newName)
     {
-        manager.duplicate(appId, destAppId, cubeName, newName)
+        return manager.duplicate(appId, destAppId, cubeName, newName)
     }
 
-    void releaseCubes(ApplicationID appId, String newSnapVer)
+    Integer releaseCubes(ApplicationID appId, String newSnapVer)
     {
-        NCubeManager.releaseCubes(appId, newSnapVer)
+        return manager.releaseCubes(appId, newSnapVer)
     }
 
     void changeVersionValue(ApplicationID appId, String newSnapVer)
     {
-        NCubeManager.changeVersionValue(appId, newSnapVer)
+        manager.changeVersionValue(appId, newSnapVer)
     }
 
     void addAxis(ApplicationID appId, String cubeName, String axisName, String type, String valueType)
@@ -369,9 +369,9 @@ class NCubeService
         manager.updateCube(ncube)
     }
 
-    boolean renameCube(ApplicationID appId, String oldName, String newName)
+    Boolean renameCube(ApplicationID appId, String oldName, String newName)
     {
-        return NCubeManager.renameCube(appId, oldName, newName)
+        return manager.renameCube(appId, oldName, newName)
     }
 
     /**
@@ -420,16 +420,16 @@ class NCubeService
      */
     String getTestData(ApplicationID appId, String cubeName)
     {
-        return NCubeManager.getTestData(appId, cubeName)
+        return manager.getTestData(appId, cubeName)
     }
 
     /**
      * In-place update of a cell.  'Value' is the final (converted) object type to be stored
      * in the indicated (by colIds) cell.
      */
-    boolean updateTestData(ApplicationID appId, String cubeName, String tests)
+    Boolean saveTests(ApplicationID appId, String cubeName, String tests)
     {
-        return NCubeManager.updateTestData(appId, cubeName, tests)
+        return manager.saveTests(appId, cubeName, tests)
     }
 
     NCube getCube(ApplicationID appId, String name, boolean quiet = false)
@@ -444,7 +444,7 @@ class NCubeService
 
     NCube loadCube(ApplicationID appId, String name)
     {
-        NCube cube = NCubeManager.loadCube(appId, name)
+        NCube cube = manager.getCube(appId, name)
         if (cube == null)
         {
             throw new IllegalArgumentException("Unable to load cube: " + name + " for app: " + appId)
@@ -464,7 +464,7 @@ class NCubeService
 
     void getReferencedCubeNames(ApplicationID appId, String cubeName, Set<String> references)
     {
-        NCubeManager.getReferencedCubeNames(appId, cubeName, references)
+        manager.getReferencedCubeNames(appId, cubeName, references)
     }
 
     URL resolveRelativeUrl(ApplicationID appId, String relativeUrl)
@@ -484,12 +484,12 @@ class NCubeService
 
     List<AxisRef> getReferenceAxes(ApplicationID appId)
     {
-        return NCubeManager.getReferenceAxes(appId)
+        return manager.getReferenceAxes(appId)
     }
 
     void updateReferenceAxes(List<AxisRef> axisRefs)
     {
-        NCubeManager.updateReferenceAxes(axisRefs);
+        manager.updateReferenceAxes(axisRefs);
     }
 
     boolean assertPermissions(ApplicationID appId, String resource, Action action)
@@ -519,12 +519,12 @@ class NCubeService
 
     int moveBranch(ApplicationID appId, String newSnapVer)
     {
-        NCubeManager.moveBranch(appId, newSnapVer)
+        manager.moveBranch(appId, newSnapVer)
     }
 
     int releaseVersion(ApplicationID appId, String newSnapVer)
     {
-        NCubeManager.releaseVersion(appId, newSnapVer)
+        manager.releaseVersion(appId, newSnapVer)
     }
 
     boolean isCubeUpToDate(ApplicationID appId, String cubeName)
@@ -592,6 +592,6 @@ class NCubeService
 
     void updateAxisMetaProperties(ApplicationID appId, String cubeName, String axisName, Map<String, Object> newMetaProperties)
     {
-        NCubeManager.updateAxisMetaProperties(appId, cubeName, axisName, newMetaProperties)
+        manager.updateAxisMetaProperties(appId, cubeName, axisName, newMetaProperties)
     }
 }

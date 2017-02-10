@@ -149,7 +149,7 @@ class NCubeResourcePersister implements NCubePersister
     @Override
     NCube loadCube(ApplicationID appId, String name)
     {
-        NCubeManager.validateAppId(appId)
+        ApplicationID.validateAppId(appId)
         NCube.validateCubeName(name)
         NCube cube = loadCubeFromResources(appId, name)
         return cube

@@ -2,7 +2,7 @@ package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.NCubeRuntime
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
@@ -41,7 +41,7 @@ class RpmVisualizerInfo extends VisualizerInfo
    void loadTypesToAddMap(NCube configCube)
     {
         typesToAddMap = [:]
-        String json = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + TYPES_TO_ADD_CUBE_NAME + JSON_FILE_SUFFIX)
+        String json = NCubeRuntime.getResourceAsString(JSON_FILE_PREFIX + TYPES_TO_ADD_CUBE_NAME + JSON_FILE_SUFFIX)
         NCube typesToAddCube = NCube.fromSimpleJson(json)
         Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): cubeType]) as Set
 
