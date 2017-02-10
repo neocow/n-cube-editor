@@ -58,7 +58,7 @@ class NCubeService
 
     List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching, Map options)
     {
-         return NCubeManager.search(appId, cubeNamePattern, contentMatching, options)
+         return manager.search(appId, cubeNamePattern, contentMatching, options)
     }
 
     void restoreCubes(ApplicationID appId, Object[] cubeNames)
@@ -158,7 +158,7 @@ class NCubeService
 
     void duplicateCube(ApplicationID appId, ApplicationID destAppId, String cubeName, String newName)
     {
-        NCubeManager.duplicate(appId, destAppId, cubeName, newName)
+        manager.duplicate(appId, destAppId, cubeName, newName)
     }
 
     void releaseCubes(ApplicationID appId, String newSnapVer)
@@ -178,7 +178,7 @@ class NCubeService
             throw new IllegalArgumentException("Axis name cannot be empty.")
         }
 
-        NCube ncube = NCubeManager.getCube(appId, cubeName)
+        NCube ncube = manager.getCube(appId, cubeName)
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + cubeName + "' not found for app: " + appId)
@@ -201,7 +201,7 @@ class NCubeService
 
     void addAxis(ApplicationID appId, String cubeName, String axisName, ApplicationID refAppId, String refCubeName, String refAxisName, ApplicationID transformAppId, String transformCubeName, String transformMethodName)
     {
-        NCube nCube = NCubeManager.getCube(appId, cubeName)
+        NCube nCube = manager.getCube(appId, cubeName)
         if (nCube == null)
         {
             throw new IllegalArgumentException("Could not add axis '" + axisName + "', NCube '" + cubeName + "' not found for app: " + appId)
@@ -249,7 +249,7 @@ class NCubeService
      */
     void deleteAxis(ApplicationID appId, String name, String axisName)
     {
-        NCube ncube = NCubeManager.getCube(appId, name)
+        NCube ncube = manager.getCube(appId, name)
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not delete axis '" + axisName + "', NCube '" + name + "' not found for app: " + appId)
@@ -269,7 +269,7 @@ class NCubeService
      */
     void updateAxis(ApplicationID appId, String name, String origAxisName, String axisName, boolean hasDefault, boolean isSorted, boolean fireAll)
     {
-        NCube ncube = NCubeManager.getCube(appId, name)
+        NCube ncube = manager.getCube(appId, name)
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update axis '" + origAxisName + "', NCube '" + name + "' not found for app: " + appId)
@@ -314,7 +314,7 @@ class NCubeService
      */
     void breakAxisReference(ApplicationID appId, String name, String axisName)
     {
-        NCube ncube = NCubeManager.getCube(appId, name)
+        NCube ncube = manager.getCube(appId, name)
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not break reference for '" + axisName + "', NCube '" + name + "' not found for app: " + appId)
@@ -334,7 +334,7 @@ class NCubeService
      */
     void updateColumnCell(ApplicationID appId, String cubeName, String colId, String value)
     {
-        NCube ncube = NCubeManager.getCube(appId, cubeName)
+        NCube ncube = manager.getCube(appId, cubeName)
         if (ncube == null)
         {
             throw new IllegalArgumentException("Could not update Column, cube: " + cubeName + " not found for app: " + appId)
@@ -454,7 +454,7 @@ class NCubeService
 
     NCube loadCubeById(long id)
     {
-        NCube cube = NCubeManager.loadCubeById(id)
+        NCube cube = manager.loadCubeById(id)
         if (cube == null)
         {
             throw new IllegalArgumentException('Unable to load cube by id: ' + id)
@@ -479,7 +479,7 @@ class NCubeService
 
     boolean isAdmin(ApplicationID appId)
     {
-        NCubeManager.isAdmin(appId)
+        manager.isAdmin(appId)
     }
 
     List<AxisRef> getReferenceAxes(ApplicationID appId)
@@ -499,22 +499,22 @@ class NCubeService
 
     boolean checkPermissions(ApplicationID appId, String resource, Action action)
     {
-        NCubeManager.checkPermissions(appId, resource, action)
+        manager.checkPermissions(appId, resource, action)
     }
 
     String getAppLockedBy(ApplicationID appId)
     {
-        NCubeManager.getAppLockedBy(appId)
+        manager.getAppLockedBy(appId)
     }
 
     void lockApp(ApplicationID appId)
     {
-        NCubeManager.lockApp(appId)
+        manager.lockApp(appId)
     }
 
     void unlockApp(ApplicationID appId)
     {
-        NCubeManager.unlockApp(appId)
+        manager.unlockApp(appId)
     }
 
     int moveBranch(ApplicationID appId, String newSnapVer)
@@ -533,14 +533,14 @@ class NCubeService
         options[(SEARCH_ACTIVE_RECORDS_ONLY)] = true
         options[(SEARCH_EXACT_MATCH_NAME)] = true
 
-        List<NCubeInfoDto> list = NCubeManager.search(appId, cubeName, null, options)
+        List<NCubeInfoDto> list = manager.search(appId, cubeName, null, options)
         if (list.size() != 1)
         {
             return false
         }
 
         NCubeInfoDto branchDto = list.first()     // only 1 because we used exact match
-        list = NCubeManager.search(appId.asHead(), cubeName, null, options)
+        list = manager.search(appId.asHead(), cubeName, null, options)
         if (list.size() == 0)
         {   // New n-cube - up-todate because it does not yet exist in HEAD - the branch n-cube is the Creator.
             return true
