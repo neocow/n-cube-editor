@@ -55,7 +55,12 @@ class NCubeResourcePersister implements NCubePersister
     }
 
     @Override
-    void updateCube(ApplicationID applicationID, NCube cube, String s) {
+    void updateCube(NCube cube, String s) {
+
+    }
+
+    void createCube(NCube cube, String username)
+    {
 
     }
 

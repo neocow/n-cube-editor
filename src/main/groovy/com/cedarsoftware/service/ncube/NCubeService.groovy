@@ -146,16 +146,9 @@ class NCubeService
         VersionControl.mergeAcceptMine(appId, cubeNames)
     }
 
-    void createCube(ApplicationID appId, NCube ncube)
+    void createCube(NCube ncube)
     {
-        Map options = [(SEARCH_ACTIVE_RECORDS_ONLY):true, (SEARCH_EXACT_MATCH_NAME):true]
-        List<NCubeInfoDto> list = NCubeManager.search(appId, ncube.name, null, options)
-        if (!list.empty)
-        {
-            throw new IllegalArgumentException(ncube.name + ' exists.')
-        }
-
-        manager.updateCube(appId, ncube, true)
+        manager.createCube(ncube)
     }
 
     boolean deleteCubes(ApplicationID appId, Object[] cubeNames)
@@ -203,7 +196,7 @@ class NCubeService
         }
         Axis axis = new Axis(axisName, AxisType.valueOf(type), AxisValueType.valueOf(valueType), true, Axis.DISPLAY, maxId + 1)
         ncube.addAxis(axis)
-        manager.updateCube(appId, ncube, false)
+        manager.updateCube(ncube)
     }
 
     void addAxis(ApplicationID appId, String cubeName, String axisName, ApplicationID refAppId, String refCubeName, String refAxisName, ApplicationID transformAppId, String transformCubeName, String transformMethodName)
@@ -248,7 +241,7 @@ class NCubeService
 
         Axis axis = new Axis(axisName, maxId + 1, true, refAxisLoader)
         nCube.addAxis(axis)
-        manager.updateCube(appId, nCube, false)
+        manager.updateCube(nCube)
     }
 
     /**
@@ -268,7 +261,7 @@ class NCubeService
         }
 
         ncube.deleteAxis(axisName)
-        manager.updateCube(appId, ncube, false)
+        manager.updateCube(ncube)
     }
 
     /**
@@ -313,7 +306,7 @@ class NCubeService
         }
 
         ncube.clearSha1();
-        manager.updateCube(appId, ncube, false)
+        manager.updateCube(ncube)
     }
 
     /**
@@ -329,7 +322,7 @@ class NCubeService
 
         // Update default column setting (if changed)
         ncube.breakAxisReference(axisName);
-        manager.updateCube(appId, ncube, false)
+        manager.updateCube(ncube)
     }
 
     /**
@@ -364,7 +357,7 @@ class NCubeService
         }
 
         ncube.updateColumn(id, value)
-        manager.updateCube(appId, ncube, false)
+        manager.updateCube(ncube)
     }
 
     /**
@@ -373,8 +366,7 @@ class NCubeService
      */
     void updateNCube(NCube ncube)
     {
-        ApplicationID appId = ncube.applicationID
-        manager.updateCube(appId, ncube, false)
+        manager.updateCube(ncube)
     }
 
     boolean renameCube(ApplicationID appId, String oldName, String newName)
@@ -386,19 +378,16 @@ class NCubeService
      * Update / Save a single n-cube -or- create / update a batch of n-cubes, represented as a JSON
      * array [] of n-cubes.
      */
-    void updateCube(ApplicationID appId, String name, String json)
+    void updateCube(ApplicationID appId, String json)
     {
         json = json.trim()
         List cubes
-        boolean checkName
         if (json.startsWith("["))
         {
-            checkName = false
             cubes = getCubes(json)
         }
         else
         {
-            checkName = true
             cubes = new ArrayList()
             cubes.add(NCube.fromSimpleJson(json))
         }
@@ -406,15 +395,22 @@ class NCubeService
         for (Object object : cubes)
         {
             NCube ncube = (NCube) object
-            if (checkName)
+            ncube.applicationID = appId
+            try
             {
-                if (!StringUtilities.equalsIgnoreCase(name, ncube.name))
+                manager.updateCube(ncube)
+            }
+            catch (Exception e)
+            {
+                try
                 {
-                    throw new IllegalArgumentException("The n-cube name cannot be different than selected n-cube.  Use Rename n-cube option from n-cube menu to rename the cube.")
+                    manager.createCube(ncube)
+                }
+                catch (Exception ex)
+                {
+                    throw new IllegalArgumentException("Unable to update or create cube: ${ncube.name}")
                 }
             }
-
-            manager.updateCube(appId, ncube, true)
         }
     }
 
@@ -438,7 +434,7 @@ class NCubeService
 
     NCube getCube(ApplicationID appId, String name, boolean quiet = false)
     {
-        NCube cube = NCubeManager.getCube(appId, name)
+        NCube cube = manager.getCube(appId, name)
         if (cube == null && !quiet)
         {
             throw new IllegalArgumentException("Unable to load cube: " + name + " for app: " + appId)

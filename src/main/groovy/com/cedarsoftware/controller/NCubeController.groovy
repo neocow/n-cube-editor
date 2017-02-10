@@ -252,6 +252,7 @@ class NCubeController extends BaseController
         return nCubeService.getCube(appId, cubeName, true)
     }
 
+    // TODO - create environment variable so this method only works on the runtime server
     // TODO: This needs to be externalized (loaded via Grapes)
     Map<String, Object> getVisualizerJson(ApplicationID appId, Map options)
     {
@@ -265,6 +266,7 @@ class NCubeController extends BaseController
         return vis.buildGraph(appId, options)
     }
 
+    // TODO - create environment variable so this method only works on the runtime server
     // TODO: This needs to be externalized (loaded via Grapes)
     Map getVisualizerCellValues(ApplicationID appId, Map options)
     {
@@ -601,17 +603,12 @@ class NCubeController extends BaseController
     }
 
     /**
-     * Create an n-cube (SNAPSHOT only).
+     * Create an n-cube (SNAPSHOT only) for non-Java clients.
      */
     void createCube(ApplicationID appId, String cubeName)
     {
-        appId = addTenant(appId)
-
-        addToAppCache(appId.tenant, appId.app)
-        addToVersionsCache(appId)
-        addToVersionsCache(appId.asVersion('0.0.0'))
-
         NCube ncube = new NCube(cubeName)
+        ncube.applicationID = appId
         Axis cols = new Axis("Column", AxisType.DISCRETE, AxisValueType.STRING, false, Axis.DISPLAY, 1)
         cols.addColumn("A")
         cols.addColumn("B")
@@ -636,7 +633,25 @@ class NCubeController extends BaseController
         rows.addColumn(10)
         ncube.addAxis(cols)
         ncube.addAxis(rows)
-        nCubeService.createCube(appId, ncube)
+        createCube(ncube)
+    }
+
+    /**
+     * Create an n-cube (SNAPSHOT only) for Java clients.
+     */
+    void createCube(NCube ncube)
+    {
+        ApplicationID appId = ncube.applicationID
+        if (!appId)
+        {
+            throw new IllegalArgumentException("New n-cube: ${ncube.name} must have an ApplicationID")
+        }
+        appId = addTenant(appId)
+        addToAppCache(appId.tenant, appId.app)
+        addToVersionsCache(appId)
+        addToVersionsCache(appId.asVersion('0.0.0'))
+
+        nCubeService.createCube(ncube)
     }
 
     void updateCube(NCube ncube)
@@ -841,15 +856,16 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         NCube ncube = nCubeService.loadCubeById(cubeId)
-        saveJson(appId, ncube.name, ncube.toFormattedJson())
+        saveJson(appId, ncube.toFormattedJson())
     }
 
-    void saveJson(ApplicationID appId, String cubeName, String json)
+    void saveJson(ApplicationID appId, String json)
     {
         appId = addTenant(appId)
-        nCubeService.updateCube(appId, cubeName, json)
+        nCubeService.updateCube(appId, json)
     }
 
+    // TODO - create environment variable so this method is only run on the runtime server
     Map runTest(ApplicationID appId, String cubeName, NCubeTest test)
     {
         try
@@ -862,7 +878,7 @@ class NCubeController extends BaseController
 
             appId = addTenant(appId)
             NCube ncube = nCubeService.getCube(appId, cubeName)
-            Map<String, Object> coord = test.getCoordWithValues()
+            Map<String, Object> coord = test.coordWithValues
             boolean success = true
             Map output = new LinkedHashMap()
             Map args = [input:coord, output:output, ncube:ncube]
@@ -1013,6 +1029,7 @@ class NCubeController extends BaseController
         return true
     }
 
+    // TODO - create environment variable so this method only works on the runtime server
     Map getCell(ApplicationID appId, String cubeName, Map coordinate, defaultValue = null)
     {
         appId = addTenant(appId)
