@@ -697,3 +697,8 @@ a.section-all:hover, a.section-none:hover {
 .space-grey {
     color: #a5adb0;
 }
+
+ul .checkbox-label {
+    display: inline-block;
+    margin: 0 0 0 20px;
+}
