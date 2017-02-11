@@ -98,16 +98,19 @@ class NCubeController extends BaseController
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appVersions = new ConcurrentHashMap<>()
     private static final ConcurrentMap<String, ConcurrentSkipListSet<String>> appBranches = new ConcurrentHashMap<>()
     private static final Map NO_CELL = [type:null, value:null]
+    private static final String HOSTED_ERROR = 'Method cannot be called when hosted:'
+    private final hosted
 
 //    public static void main(String[] args)
 //    {
 //        SpringApplication.run(NCubeController.class, args)
 //    }
 
-    NCubeController()
+    NCubeController(boolean hosted = false)
     {
         System.err = new ThreadAwarePrintStreamErr()
         System.out = new ThreadAwarePrintStream()
+        this.hosted = hosted
     }
 
     protected static String getUserForDatabase()
@@ -252,10 +255,13 @@ class NCubeController extends BaseController
         return nCubeService.getCube(appId, cubeName, true)
     }
 
-    // TODO - create environment variable so this method only works on the runtime server
     // TODO: This needs to be externalized (loaded via Grapes)
     Map<String, Object> getVisualizerJson(ApplicationID appId, Map options)
     {
+        if (hosted)
+        {
+            throw new IllegalStateException("${HOSTED_ERROR} getVisualizerJson")
+        }
         if (!SystemUtilities.getExternalVariable('NCE_VISUALIZER_ENABLED'))
         {
             throw new IllegalStateException("""The visualizer is currently available <a href="#" onclick="window.open('https://nce.dockerdev.td.afg/n-cube-editor/#');return false;">here</a>""")
@@ -266,10 +272,13 @@ class NCubeController extends BaseController
         return vis.buildGraph(appId, options)
     }
 
-    // TODO - create environment variable so this method only works on the runtime server
     // TODO: This needs to be externalized (loaded via Grapes)
     Map getVisualizerCellValues(ApplicationID appId, Map options)
     {
+        if (hosted)
+        {
+            throw new IllegalStateException("${HOSTED_ERROR} getVisualizerCellValues")
+        }
         String cubeName = options.startCubeName
         Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
         appId = addTenant(appId)
@@ -865,9 +874,12 @@ class NCubeController extends BaseController
         nCubeService.updateCube(appId, json)
     }
 
-    // TODO - create environment variable so this method is only run on the runtime server
     Map runTest(ApplicationID appId, String cubeName, NCubeTest test)
     {
+        if (hosted)
+        {
+            throw new IllegalStateException("${HOSTED_ERROR} runTest")
+        }
         try
         {   // Do not remove try-catch handler here - this API must handle it's own exceptions, instead
             // of allowing the Around Advice to handle them.
@@ -1029,9 +1041,12 @@ class NCubeController extends BaseController
         return true
     }
 
-    // TODO - create environment variable so this method only works on the runtime server
     Map getCell(ApplicationID appId, String cubeName, Map coordinate, defaultValue = null)
     {
+        if (hosted)
+        {
+            throw new IllegalStateException("${HOSTED_ERROR} getCell")
+        }
         appId = addTenant(appId)
         NCube ncube = nCubeService.getCube(appId, cubeName) // Will check READ.
         Map output = [:]
@@ -1247,6 +1262,10 @@ class NCubeController extends BaseController
 
     String resolveRelativeUrl(ApplicationID appId, String relativeUrl)
     {
+        if (hosted)
+        {
+            throw new IllegalStateException("${HOSTED_ERROR} resolveRelativeUrl")
+        }
         appId = addTenant(appId)
         URL absUrl = nCubeService.resolveRelativeUrl(appId, relativeUrl)
         if (absUrl == null)
