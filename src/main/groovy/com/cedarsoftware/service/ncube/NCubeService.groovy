@@ -10,7 +10,6 @@ import com.cedarsoftware.ncube.Delta
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeEditorClient
 import com.cedarsoftware.ncube.NCubeInfoDto
-import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.ReferenceAxisLoader
 import com.cedarsoftware.ncube.VersionControl
 import com.cedarsoftware.util.StringUtilities
@@ -305,7 +304,7 @@ class NCubeService
             axis.columnOrder = isSorted ? Axis.SORTED : Axis.DISPLAY
         }
 
-        ncube.clearSha1();
+        ncube.clearSha1()
         manager.updateCube(ncube)
     }
 
@@ -321,7 +320,7 @@ class NCubeService
         }
 
         // Update default column setting (if changed)
-        ncube.breakAxisReference(axisName);
+        ncube.breakAxisReference(axisName)
         manager.updateCube(ncube)
     }
 
@@ -469,12 +468,12 @@ class NCubeService
 
     URL resolveRelativeUrl(ApplicationID appId, String relativeUrl)
     {
-        return NCubeManager.getActualUrl(appId, relativeUrl, [:]);
+        return manager.getActualUrl(appId, relativeUrl, [:])
     }
 
     void clearCache(ApplicationID appId)
     {
-        NCubeManager.clearCache(appId)
+        manager.clearCache(appId)
     }
 
     boolean isAdmin(ApplicationID appId)
@@ -489,12 +488,12 @@ class NCubeService
 
     void updateReferenceAxes(List<AxisRef> axisRefs)
     {
-        manager.updateReferenceAxes(axisRefs);
+        manager.updateReferenceAxes(axisRefs)
     }
 
     boolean assertPermissions(ApplicationID appId, String resource, Action action)
     {
-        NCubeManager.assertPermissions(appId, resource, action ?: Action.READ)
+        manager.assertPermissions(appId, resource, action ?: Action.READ)
     }
 
     boolean checkPermissions(ApplicationID appId, String resource, Action action)
