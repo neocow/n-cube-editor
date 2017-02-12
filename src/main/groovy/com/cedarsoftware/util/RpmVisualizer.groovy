@@ -2,7 +2,7 @@ package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.NCubeRuntimeClient
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
@@ -19,6 +19,11 @@ class RpmVisualizer extends Visualizer
 	protected RpmVisualizerHelper helper
 	protected String defaultScopeEffectiveVersion
 	protected String defaultScopeDate
+
+	RpmVisualizer(NCubeRuntimeClient manager)
+	{
+		super(manager)
+	}
 
 	/**
 	 * Loads all cell values available for a given rpm class.
@@ -191,7 +196,7 @@ class RpmVisualizer extends Visualizer
 				targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			String type = relInfo.sourceFieldRpmType
-			NCube classTraitsCube = NCubeManager.getCube(appId, RPM_SCOPE_CLASS_DOT + type + DOT_CLASS_TRAITS)
+			NCube classTraitsCube = manager.getCube(appId, RPM_SCOPE_CLASS_DOT + type + DOT_CLASS_TRAITS)
 			String sourceFieldName = relInfo.sourceFieldName
 			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
 			{
@@ -263,7 +268,7 @@ class RpmVisualizer extends Visualizer
 			return false
 		}
 
-		NCube cube = NCubeManager.getCube(appId, cubeName)
+		NCube cube = manager.getCube(appId, cubeName)
 		if (!cube.getAxis(AXIS_FIELD) || !cube.getAxis(AXIS_TRAIT) )
 		{
 			visInfo.messages << "Cube ${cubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString()
@@ -290,7 +295,7 @@ class RpmVisualizer extends Visualizer
 		boolean hasMissingScope = false
 		Map<String, Object> scope = rpmVisInfo.scope
 
-		if (NCubeManager.getCube(appId, startCubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		if (manager.getCube(appId, startCubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
 			String type = getTypeFromCubeName(startCubeName)
 			String scopeCubeName = startCubeName.replace(RPM_CLASS_DOT, RPM_SCOPE_CLASS_DOT) + DOT_TRAITS

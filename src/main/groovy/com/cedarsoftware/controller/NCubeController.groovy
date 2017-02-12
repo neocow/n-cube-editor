@@ -121,10 +121,10 @@ class NCubeController extends BaseController
         while (e.hasMoreElements())
         {
             String headerName = (String) e.nextElement()
-            if ("smuser".equalsIgnoreCase(headerName))
+            if ('smuser'.equalsIgnoreCase(headerName))
             {
                 user = request.getHeader(headerName)
-                break;
+                break
             }
         }
 
@@ -133,8 +133,12 @@ class NCubeController extends BaseController
             user = System.getProperty("user.name")
         }
 
-        NCubeManager.userId = user
         return user
+    }
+
+    protected void setUser(String userId)
+    {
+        nCubeService.userId = userId
     }
 
     // ============================================= Begin API =========================================================
@@ -267,7 +271,7 @@ class NCubeController extends BaseController
             throw new IllegalStateException("""The visualizer is currently available <a href="#" onclick="window.open('https://nce.dockerdev.td.afg/n-cube-editor/#');return false;">here</a>""")
         }
         String cubeName = options.startCubeName
-        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
+        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer(nCubeService.manager) : new Visualizer(nCubeService.manager)
         appId = addTenant(appId)
         return vis.buildGraph(appId, options)
     }
@@ -280,7 +284,7 @@ class NCubeController extends BaseController
             throw new IllegalStateException("${HOSTED_ERROR} getVisualizerCellValues")
         }
         String cubeName = options.startCubeName
-        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
+        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer(nCubeService.manager) : new Visualizer(nCubeService.manager)
         appId = addTenant(appId)
         return vis.getCellValues(appId, options)
     }
@@ -1051,7 +1055,7 @@ class NCubeController extends BaseController
         NCube ncube = nCubeService.getCube(appId, cubeName) // Will check READ.
         Map output = [:]
         // TODO: Check EXECUTE permission
-        // NCubeManager.assertPermissions(appId, cubeName, Action.EXECUTE)
+//        nCubeService.assertPermissions(appId, cubeName, Action.EXECUTE)
         ncube.getCell(coordinate, output, defaultValue)
         return output
     }
@@ -1670,7 +1674,7 @@ class NCubeController extends BaseController
         putIfNotNull(serverStats, 'Peak Process CPU Load', processLoadPeak.get())
         putIfNotNull(serverStats, 'Peak System CPU Load', systemLoadPeak.get())
         putIfNotNull(serverStats, 'CPU Cores', getAttribute(mbs, 'java.lang:type=OperatingSystem', 'AvailableProcessors'))
-        double machMem = (long) getAttribute(mbs, 'java.lang:type=OperatingSystem', 'TotalPhysicalMemorySize')
+        Double machMem = (long) getAttribute(mbs, 'java.lang:type=OperatingSystem', 'TotalPhysicalMemorySize')
         long K = 1024L
         long MB = K * 1024L
         long GB = MB * 1024L
@@ -1682,9 +1686,9 @@ class NCubeController extends BaseController
 
         // JVM Memory
         Runtime rt = Runtime.runtime
-        double maxMem = rt.maxMemory() / MB
-        double freeMem = rt.freeMemory() / MB
-        double usedMem = maxMem - freeMem
+        Double maxMem = rt.maxMemory() / MB
+        Double freeMem = rt.freeMemory() / MB
+        Double usedMem = maxMem - freeMem
         putIfNotNull(serverStats, 'Heap size (-Xmx)', (maxMem.round(1)) + ' MB')
         putIfNotNull(serverStats, 'Used memory', (usedMem.round(1)) + ' MB')
         putIfNotNull(serverStats, 'Free memory', (freeMem.round(1)) + ' MB')

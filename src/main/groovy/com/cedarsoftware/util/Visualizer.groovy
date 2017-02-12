@@ -2,7 +2,7 @@ package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeManager
+import com.cedarsoftware.ncube.NCubeRuntimeClient
 import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
 
@@ -20,7 +20,13 @@ class Visualizer
 	protected Deque<VisualizerRelInfo> stack = new ArrayDeque<>()
 	protected Joiner.MapJoiner mapJoiner = Joiner.on(", ").withKeyValueSeparator(": ")
 	VisualizerHelper helper
+	protected NCubeRuntimeClient manager
 
+    Visualizer(NCubeRuntimeClient manager)
+    {
+        this.manager = manager
+    }
+    
 	/**
 	 * Processes an n-cube and all its referenced n-cubes and provides information to
 	 * visualize the cubes and their relationships.
@@ -133,7 +139,7 @@ class Visualizer
 	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
 	{
 		relInfo.appId = appId
-		relInfo.targetCube = NCubeManager.getCube(appId, startCubeName)
+		relInfo.targetCube = manager.getCube(appId, startCubeName)
 		relInfo.scope = new CaseInsensitiveMap(visInfo.scope)
 		relInfo.targetLevel = 1
 		relInfo.targetId = 1
@@ -170,7 +176,7 @@ class Visualizer
 
 	protected void addToStack(VisualizerInfo visInfo, VisualizerRelInfo relInfo, VisualizerRelInfo nextRelInfo, String nextTargetCubeName, Map coordinates = [:])
 	{
-		NCube nextTargetCube = NCubeManager.getCube(appId, nextTargetCubeName)
+		NCube nextTargetCube = manager.getCube(appId, nextTargetCubeName)
 		if (nextTargetCube)
 		{
 				nextRelInfo.appId = appId

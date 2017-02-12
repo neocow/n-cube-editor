@@ -55,6 +55,16 @@ class NCubeService
 
     private static final Logger LOG = LogManager.getLogger(NCubeService.class)
 
+    NCubeEditorClient getManager()
+    {
+        return manager
+    }
+
+    void setUserId(String user)
+    {
+        manager.userId = user
+    }
+
     List<NCubeInfoDto> search(ApplicationID appId, String cubeNamePattern, String contentMatching, Map options)
     {
          return manager.search(appId, cubeNamePattern, contentMatching, options)
@@ -321,41 +331,6 @@ class NCubeService
 
         // Update default column setting (if changed)
         ncube.breakAxisReference(axisName)
-        manager.updateCube(ncube)
-    }
-
-    /**
-     * Update the indicated column (by ID) with the passed in String value.  The String value
-     * is parsed into DISCRETE, RANGE, SET, NEAREST, or RULE, and to the proper axis value type
-     * for the axis.  This allows Strings like "[10, 25]" to be passed into a Range axis, for
-     * example, and it will be added as a Range(10, 25) and will go through all the proper
-     * "up promotion" before being set into the column.
-     */
-    void updateColumnCell(ApplicationID appId, String cubeName, String colId, String value)
-    {
-        NCube ncube = manager.getCube(appId, cubeName)
-        if (ncube == null)
-        {
-            throw new IllegalArgumentException("Could not update Column, cube: " + cubeName + " not found for app: " + appId)
-        }
-
-        long id
-        try
-        {
-            id = Long.parseLong(colId)
-        }
-        catch (NumberFormatException ignore)
-        {
-            throw new IllegalArgumentException("Column ID passed in (" + colId + ") is not a number, attempting to update column on NCube '" + cubeName + "'")
-        }
-
-        Axis axis = ncube.getAxisFromColumnId(id)
-        if (axis == null)
-        {
-            throw new IllegalArgumentException("Column ID passed in (" + colId + ") does not match any axis on NCube '" + cubeName + "'")
-        }
-
-        ncube.updateColumn(id, value)
         manager.updateCube(ncube)
     }
 

@@ -40,7 +40,7 @@ class NCubeControllerAdvice
         try
         {
             // Place user on ThreadLocal
-            controller.userForDatabase
+            controller.user = controller.userForDatabase
 
             // Execute method
             def ret = pjp.proceed()
