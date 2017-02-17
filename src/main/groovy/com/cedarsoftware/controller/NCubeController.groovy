@@ -1263,7 +1263,7 @@ class NCubeController extends BaseController
             clearVersionCache(appId.app)
             clearBranchCache(appId)
         }
-        else if (ApplicationID.HEAD != appId.branch)
+        else if (!appId.head)
         {
             nCubeService.clearCache(appId)
         }
