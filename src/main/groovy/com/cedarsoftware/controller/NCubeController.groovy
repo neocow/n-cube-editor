@@ -112,13 +112,13 @@ class NCubeController extends BaseController
 
     protected String getUserForDatabase()
     {
-        Map<String, String> headers = [:]
+        Map<String, String> headers = new CaseInsensitiveMap<String, String>()
         String[] headerList = ['smuser','fakeuser','appid']
         HttpServletRequest request = JsonCommandServlet.servletRequest.get()
         Enumeration e = request.headerNames
         while (e.hasMoreElements())
         {
-            String headerName = (e.nextElement() as String).toLowerCase()
+            String headerName = (e.nextElement() as String)
             if (headerList.contains(headerName))
             {
                 headers[headerName] = request.getHeader(headerName)
@@ -129,11 +129,11 @@ class NCubeController extends BaseController
             }
         }
 
-        String realId = headers.containsKey('smuser') && !StringUtilities.isEmpty(headers['smuser']) ? headers['smuser'] : System.getProperty('user.name')
+        String realId = headers.containsKey('smuser') && StringUtilities.hasContent(headers['smuser']) ? headers['smuser'] : System.getProperty('user.name')
         NCubeManager.userId = realId
 
-        if (headers.containsKey('fakeuser') && !StringUtilities.isEmpty(headers['fakeuser'])
-                && headers.containsKey('appid') && !StringUtilities.isEmpty(headers['appid']))
+        if (headers.containsKey('fakeuser') && StringUtilities.hasContent(headers['fakeuser'])
+                && headers.containsKey('appid') && StringUtilities.hasContent(headers['appid']))
         {
             String[] appIdParts = headers['appid'].split('~')
             if (appIdParts.length > 1)
