@@ -112,13 +112,13 @@ class NCubeController extends BaseController
 
     protected String getUserForDatabase()
     {
-        Map<String, String> headers = new CaseInsensitiveMap<String, String>()
+        Map<String, String> headers = [:]
         String[] headerList = ['smuser','fakeuser','appid']
         HttpServletRequest request = JsonCommandServlet.servletRequest.get()
         Enumeration e = request.headerNames
         while (e.hasMoreElements())
         {
-            String headerName = (e.nextElement() as String)
+            String headerName = (e.nextElement() as String).toLowerCase()
             if (headerList.contains(headerName))
             {
                 headers[headerName] = request.getHeader(headerName)
@@ -1468,7 +1468,7 @@ class NCubeController extends BaseController
     Map execute(ApplicationID appId, Map args, String command)
     {
         appId = addTenant(appId)
-        int dot = command.indexOf('.')
+        int dot = command.lastIndexOf('.')
         String controller = command.substring(0, dot)
         String method = command.substring(dot + 1i)
         Map coordinate = ['method' : method, 'service': nCubeService]
