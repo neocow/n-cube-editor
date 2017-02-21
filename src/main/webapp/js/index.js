@@ -2210,7 +2210,7 @@ var NCE = (function ($) {
                         parent.find('button, br').remove();
                     } else {
                         newNameInput = $('<input/>')
-                            .prop('type', 'text')
+                            .prop({type:'text', id:'impersonate-text'})
                             .addClass('form-control')
                             .click(function (ie) {
                                 ie.preventDefault();
@@ -2218,7 +2218,7 @@ var NCE = (function ($) {
                             })
                             .keyup(function (ie) {
                                 if (ie.keyCode === KEY_CODES.ENTER) {
-                                    impersonate(newNameInput.val());
+                                    onImpersonateSubmit();
                                 }
                             });
                         parent.append(newNameInput);
@@ -2227,7 +2227,7 @@ var NCE = (function ($) {
                         html += '<button class="btn btn-danger btn-xs">Cancel</button>';
                         anc.append(html);
                         anc.find('button.btn-menu-confirm').on('click', function () {
-                            impersonate(newNameInput.val());
+                            onImpersonateSubmit();
                         });
                         newNameInput[0].focus();
                     }
@@ -2236,9 +2236,15 @@ var NCE = (function ($) {
         } else {
             ul.find('.show-admin-only').remove();
             if (_impersonationApp) {
-                impersonate(null);                
+                impersonate(null);
             }
         }
+    }
+
+    function onImpersonateSubmit() {
+        var user = $('#impersonate-text').val();
+        closeTab(_serverMenu.parent());
+        delay(function() { impersonate(user); }, 1);
     }
 
     function impersonate(user) {
@@ -2246,6 +2252,7 @@ var NCE = (function ($) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.HEARTBEAT, [{}], { fakeuser: user || '', appid: getTextAppId(appId) });
         if (result.status) {
             _impersonationApp = user !== undefined && user !== null && user !== '' ? appId : null;
+            showNote('Impersonating user: ' + user, null, TWO_SECOND_TIMEOUT, NOTE_CLASS.SYS_META);
             handleAppPermissions();
         } else {
             showNote(result.data, 'Unable to impersonate...', null, NOTE_CLASS.SYS_META);
