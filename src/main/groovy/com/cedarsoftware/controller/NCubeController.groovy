@@ -1256,14 +1256,17 @@ class NCubeController extends BaseController
     void clearCache(ApplicationID appId)
     {
         appId = addTenant(appId)
-        if (!isAppAdmin(appId))
+        if (isAppAdmin(appId))
         {
-            return
+            nCubeService.clearCache(appId)
+            clearAppCache(appId.tenant)
+            clearVersionCache(appId.app)
+            clearBranchCache(appId)
         }
-        nCubeService.clearCache(appId)
-        clearAppCache(appId.tenant)
-        clearVersionCache(appId.app)
-        clearBranchCache(appId)
+        else if (ApplicationID.HEAD != appId.branch)
+        {
+            nCubeService.clearCache(appId)
+        }
     }
 
     void createBranch(ApplicationID appId)
