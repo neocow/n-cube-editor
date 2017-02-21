@@ -710,35 +710,30 @@ var NCE = (function ($) {
             title: cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - '),
             template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
         });
-        li.on('click auxclick', function(e) {
-            var target, isClose, isDropdown, self;
-            self = $(this);
-            if (e.which === KEY_CODES.MOUSE_MIDDLE) { // middle click should close tab
-                e.preventDefault();
-                self.tooltip('destroy');
-                removeTab(cubeInfo);
-            }
+        li.click(function(e) {
+            // only show dropdown when clicking the caret, not just the tab
+            var target, isClose, isDropdown, xthis;
             target = $(e.target);
             isClose = target.hasClass('glyphicon-remove');
             isDropdown = target.hasClass('click-space') || target.hasClass('big-caret');
+            xthis = $(this);
 
-            // only show dropdown when clicking the caret, not just the tab
             if (isClose) {
-                self.tooltip('destroy');
+                xthis.tooltip('destroy');
                 removeTab(cubeInfo);
             } else {
                 if (isDropdown) { // clicking caret for dropdown
-                    if (!self.find('ul').length) {
-                        addTabDropdownList(self, cubeInfo);
+                    if (!xthis.find('ul').length) {
+                        addTabDropdownList(xthis, cubeInfo);
                     }
-                    self.find('.ncube-tab-top-level')
+                    xthis.find('.ncube-tab-top-level')
                         .addClass('dropdown-toggle')
                         .attr('data-toggle', 'dropdown');
                     $(document).one('click', function() { // prevent tooltip and dropdown from remaining on screen
-                        closeTab(self);
+                        closeTab(xthis);
                     });
                 } else { // when clicking tab show tab, not dropdown
-                    self.find('.ncube-tab-top-level')
+                    xthis.find('.ncube-tab-top-level')
                         .removeClass('dropdown-toggle')
                         .attr('data-toggle', '')
                         .tab('show');
