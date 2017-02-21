@@ -337,10 +337,6 @@ var PERMISSION_ACTION = {
     UPDATE: 'update'
 };
 
-var NOTE_CLASS = {
-    SYS_META: 'sysmeta'
-};
-
 //noinspection MagicNumberJS
 var KEY_CODES = {
     MOUSE_LEFT: 1,
