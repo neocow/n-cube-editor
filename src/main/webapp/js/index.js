@@ -1215,7 +1215,7 @@ var NCE = (function ($) {
                                     removeTab(cubeInfo);
                                 } else {
                                     makeCubeInfoActive(cubeInfo);
-                                    buildTabs(true);
+                                    buildTabs(true, cubeInfo);
                                 }
                             })
                     )
@@ -1475,7 +1475,7 @@ var NCE = (function ($) {
                         selectTab(cubeInfo);
                     } else {
                         makeCubeInfoActive(cubeInfo);
-                        buildTabs(true);
+                        buildTabs();
                         return;
                     }
                     found = true;
