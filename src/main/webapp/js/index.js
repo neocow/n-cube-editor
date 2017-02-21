@@ -2163,10 +2163,9 @@ var NCE = (function ($) {
     }
     
     function enableDisableClearCache(isAppAdmin) {
-        if (isAppAdmin || head !== getAppId().branch) {
+        if (isAppAdmin) {
             _clearCache.parent().removeClass('disabled');
-        }
-        else {
+        } else {
             _clearCache.parent().addClass('disabled');
         }
     }
