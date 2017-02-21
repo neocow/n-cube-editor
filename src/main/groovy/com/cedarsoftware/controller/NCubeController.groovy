@@ -113,12 +113,12 @@ class NCubeController extends BaseController
     protected String getUserForDatabase()
     {
         Map<String, String> headers = new CaseInsensitiveMap<String, String>()
-        String[] headerList = ['smuser','fakeuser','appid']
+        Set<String> headerList = ['smuser','fakeuser','appid'] as CaseInsensitiveSet<String>
         HttpServletRequest request = JsonCommandServlet.servletRequest.get()
         Enumeration e = request.headerNames
         while (e.hasMoreElements())
         {
-            String headerName = (e.nextElement() as String).toLowerCase()
+            String headerName = (e.nextElement() as String)
             if (headerList.contains(headerName))
             {
                 headers[headerName] = request.getHeader(headerName)
