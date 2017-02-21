@@ -118,7 +118,7 @@ class NCubeController extends BaseController
         Enumeration e = request.headerNames
         while (e.hasMoreElements())
         {
-            String headerName = (e.nextElement() as String)
+            String headerName = (e.nextElement() as String).toLowerCase()
             if (headerList.contains(headerName))
             {
                 headers[headerName] = request.getHeader(headerName)
