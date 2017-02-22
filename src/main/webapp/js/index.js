@@ -1661,40 +1661,36 @@ var NCE = (function ($) {
     }
 
     function addSearchListeners() {
-        _searchNames.add(_cubeSearchContains)
+        _searchNames
+            .add(_cubeSearchContains)
             .add(_cubeSearchTagsInclude)
             .add(_cubeSearchTagsExclude)
             .on('input', function () {
-            _searchKeyPressed = true;
-            _searchLastKeyTime = Date.now();
-        });
+                _searchKeyPressed = true;
+                _searchLastKeyTime = Date.now();
+            });
 
-        _searchNames.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                clearSearch();
-            }
-        });
+        _searchNames
+            .on('keyup', function(e) {
+                if (e.keyCode === KEY_CODES.ESCAPE) {
+                    clearSearch();
+                } else {
+                    this.value = this.value.trim();
+                }
+            }).on('paste', function() {
+                delay(function() { 
+                    _searchNames[0].value = _searchNames[0].value.trim();
+                }, 1);
+            });
 
-        _cubeSearchContains.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
+        _cubeSearchContains.on('keyup', function(e) {
+            onSearchOptionsKeyup(e, this);
         });
-        _cubeSearchTagsInclude.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
+        _cubeSearchTagsInclude.on('keyup', function(e) {
+            onSearchOptionsKeyup(e, this);
         });
-        _cubeSearchTagsExclude.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
+        _cubeSearchTagsExclude.on('keyup', function(e) {
+            onSearchOptionsKeyup(e, this);
         });
 
         $('#cube-search-reset').on('click', function() {
@@ -1721,6 +1717,14 @@ var NCE = (function ($) {
             _cubeSearchOptionsDiv.toggle();
             saveCubeSearchOptionsShown(!isVisible);
         });
+    }
+    
+    function onSearchOptionsKeyup(event, el) {
+        if (event.keyCode === KEY_CODES.ESCAPE) {
+            el.value = '';
+            saveCubeSearchOptions();
+            runSearch();
+        }
     }
     
     function addSystemMenuListeners() {
