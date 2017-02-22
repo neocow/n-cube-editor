@@ -2939,7 +2939,7 @@ var NCE = (function ($) {
         var appId = getSelectedTabAppId();
         _revisionHistoryList.empty();
         _revisionHistoryLabel[0].textContent = 'Revision History for ' + _selectedCubeName;
-        showNote('Loading...');
+        showNote('Loading...', null, null, NOTE_CLASS.PROCESS_DURATION);
         call(CONTROLLER + CONTROLLER_METHOD.GET_REVISION_HISTORY, [appId, _selectedCubeName, ignoreVersion], {callback:function(result) {
             revisionHistoryCallback(appId, ignoreVersion, result);
         }});
@@ -2947,6 +2947,7 @@ var NCE = (function ($) {
     
     function revisionHistoryCallback(appId, ignoreVersion, result) {
         var dtos, dto, i, len, html, text, date, prevVer, curVer;
+        clearNotes(NOTE_CLASS.PROCESS_DURATION);
         if (result.status) {
             html = '';
             dtos = result.data;
@@ -3782,8 +3783,7 @@ var NCE = (function ($) {
 
         appId = getAppId();
         appId.branch = branchName;
-        if (!_selectedApp || !_selectedVersion || !_selectedStatus)
-        {
+        if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
             changeBranch(branchName);
             return;
         }
@@ -3791,13 +3791,14 @@ var NCE = (function ($) {
         setTimeout(function() {
             var result = call(CONTROLLER + CONTROLLER_METHOD.CREATE_BRANCH, [appId]);
             if (!result.status) {
+                clearNotes(NOTE_CLASS.PROCESS_DURATION);
                 showNote('Unable to create branch:<hr class="hr-small"/>' + result.data);
                 return;
             }
             changeBranch(branchName);
         }, PROGRESS_DELAY);
         _selectBranchModal.modal('hide');
-        showNote('Creating branch: ' + branchName, 'Creating...');
+        showNote('Creating branch: ' + branchName, 'Creating...', null, NOTE_CLASS.PROCESS_DURATION);
     }
 
     function changeBranch(branchName) {
@@ -3817,6 +3818,7 @@ var NCE = (function ($) {
             buildMenu();
             buildBranchQuickSelectMenu();
         }, PROGRESS_DELAY);
+        clearNotes(NOTE_CLASS.PROCESS_DURATION);
         showNote('Changing branch to: ' + branchName, 'Please wait...', ONE_SECOND_TIMEOUT);
     }
 
