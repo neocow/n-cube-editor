@@ -3832,7 +3832,7 @@ var NCE = (function ($) {
 
         if (branchName === head) {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
-            _branchCompareUpdateOk.show();
+            _branchCompareUpdateOk.removeAttr('disabled').show();
             acceptMineBtn.show();
         } else {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
@@ -3945,6 +3945,7 @@ var NCE = (function ($) {
         var branchChanges = _branchCompareUpdateModal.prop('branchChanges');
         var inputs = _branchCompareUpdateList.find('.updateCheck');
         var changes = [];
+        _branchCompareUpdateOk.attr('disabled', '');
         for (i = 0, len = inputs.length; i < len; i++) {
             if (inputs[i].checked) {
                 changes.push(branchChanges[i]);
