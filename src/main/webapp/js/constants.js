@@ -338,6 +338,7 @@ var PERMISSION_ACTION = {
 };
 
 var NOTE_CLASS = {
+    PROCESS_DURATION: 'process-duration',
     SYS_META: 'sysmeta'
 };
 

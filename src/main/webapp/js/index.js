@@ -1661,41 +1661,38 @@ var NCE = (function ($) {
     }
 
     function addSearchListeners() {
-        _searchNames.add(_cubeSearchContains)
+        _searchNames
+            .add(_cubeSearchContains)
             .add(_cubeSearchTagsInclude)
             .add(_cubeSearchTagsExclude)
             .on('input', function () {
-            _searchKeyPressed = true;
-            _searchLastKeyTime = Date.now();
-        });
+                _searchKeyPressed = true;
+                _searchLastKeyTime = Date.now();
+            });
 
-        _searchNames.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                clearSearch();
-            }
-        });
+        _searchNames
+            .on('keyup', function(e) {
+                if (e.keyCode === KEY_CODES.ESCAPE) {
+                    clearSearch();
+                } else {
+                    this.value = this.value.trim();
+                }
+            }).on('paste', function() {
+                delay(function() { 
+                    _searchNames[0].value = _searchNames[0].value.trim();
+                }, 1);
+            });
 
-        _cubeSearchContains.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
-        });
-        _cubeSearchTagsInclude.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
-        });
-        _cubeSearchTagsExclude.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
-        });
+        _cubeSearchContains
+            .add(_cubeSearchTagsInclude)
+            .add(_cubeSearchTagsExclude)
+            .on('keyup', function(e) {
+                if (e.keyCode === KEY_CODES.ESCAPE) {
+                    this.value = '';
+                    saveCubeSearchOptions();
+                    runSearch();
+                }
+            });
 
         $('#cube-search-reset').on('click', function() {
             clearSearch();
@@ -2210,7 +2207,7 @@ var NCE = (function ($) {
                         parent.find('button, br').remove();
                     } else {
                         newNameInput = $('<input/>')
-                            .prop('type', 'text')
+                            .prop({type:'text', id:'impersonate-text'})
                             .addClass('form-control')
                             .click(function (ie) {
                                 ie.preventDefault();
@@ -2218,7 +2215,7 @@ var NCE = (function ($) {
                             })
                             .keyup(function (ie) {
                                 if (ie.keyCode === KEY_CODES.ENTER) {
-                                    impersonate(newNameInput.val());
+                                    onImpersonateSubmit();
                                 }
                             });
                         parent.append(newNameInput);
@@ -2227,7 +2224,7 @@ var NCE = (function ($) {
                         html += '<button class="btn btn-danger btn-xs">Cancel</button>';
                         anc.append(html);
                         anc.find('button.btn-menu-confirm').on('click', function () {
-                            impersonate(newNameInput.val());
+                            onImpersonateSubmit();
                         });
                         newNameInput[0].focus();
                     }
@@ -2236,9 +2233,15 @@ var NCE = (function ($) {
         } else {
             ul.find('.show-admin-only').remove();
             if (_impersonationApp) {
-                impersonate(null);                
+                impersonate(null);
             }
         }
+    }
+
+    function onImpersonateSubmit() {
+        var user = $('#impersonate-text').val();
+        closeTab(_serverMenu.parent());
+        delay(function() { impersonate(user); }, 1);
     }
 
     function impersonate(user) {
@@ -2246,6 +2249,7 @@ var NCE = (function ($) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.HEARTBEAT, [{}], { fakeuser: user || '', appid: getTextAppId(appId) });
         if (result.status) {
             _impersonationApp = user !== undefined && user !== null && user !== '' ? appId : null;
+            showNote('Impersonating user: ' + user, null, TWO_SECOND_TIMEOUT, NOTE_CLASS.SYS_META);
             handleAppPermissions();
         } else {
             showNote(result.data, 'Unable to impersonate...', null, NOTE_CLASS.SYS_META);
@@ -2935,7 +2939,7 @@ var NCE = (function ($) {
         var appId = getSelectedTabAppId();
         _revisionHistoryList.empty();
         _revisionHistoryLabel[0].textContent = 'Revision History for ' + _selectedCubeName;
-        showNote('Loading...');
+        showNote('Loading...', null, null, NOTE_CLASS.PROCESS_DURATION);
         call(CONTROLLER + CONTROLLER_METHOD.GET_REVISION_HISTORY, [appId, _selectedCubeName, ignoreVersion], {callback:function(result) {
             revisionHistoryCallback(appId, ignoreVersion, result);
         }});
@@ -2943,6 +2947,7 @@ var NCE = (function ($) {
     
     function revisionHistoryCallback(appId, ignoreVersion, result) {
         var dtos, dto, i, len, html, text, date, prevVer, curVer;
+        clearNotes(NOTE_CLASS.PROCESS_DURATION);
         if (result.status) {
             html = '';
             dtos = result.data;
@@ -3778,8 +3783,7 @@ var NCE = (function ($) {
 
         appId = getAppId();
         appId.branch = branchName;
-        if (!_selectedApp || !_selectedVersion || !_selectedStatus)
-        {
+        if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
             changeBranch(branchName);
             return;
         }
@@ -3787,13 +3791,14 @@ var NCE = (function ($) {
         setTimeout(function() {
             var result = call(CONTROLLER + CONTROLLER_METHOD.CREATE_BRANCH, [appId]);
             if (!result.status) {
+                clearNotes(NOTE_CLASS.PROCESS_DURATION);
                 showNote('Unable to create branch:<hr class="hr-small"/>' + result.data);
                 return;
             }
             changeBranch(branchName);
         }, PROGRESS_DELAY);
         _selectBranchModal.modal('hide');
-        showNote('Creating branch: ' + branchName, 'Creating...');
+        showNote('Creating branch: ' + branchName, 'Creating...', null, NOTE_CLASS.PROCESS_DURATION);
     }
 
     function changeBranch(branchName) {
@@ -3813,6 +3818,7 @@ var NCE = (function ($) {
             buildMenu();
             buildBranchQuickSelectMenu();
         }, PROGRESS_DELAY);
+        clearNotes(NOTE_CLASS.PROCESS_DURATION);
         showNote('Changing branch to: ' + branchName, 'Please wait...', ONE_SECOND_TIMEOUT);
     }
 
@@ -3828,7 +3834,7 @@ var NCE = (function ($) {
 
         if (branchName === head) {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
-            _branchCompareUpdateOk.show();
+            _branchCompareUpdateOk.removeAttr('disabled').show();
             acceptMineBtn.show();
         } else {
             result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
@@ -3941,6 +3947,7 @@ var NCE = (function ($) {
         var branchChanges = _branchCompareUpdateModal.prop('branchChanges');
         var inputs = _branchCompareUpdateList.find('.updateCheck');
         var changes = [];
+        _branchCompareUpdateOk.attr('disabled', '');
         for (i = 0, len = inputs.length; i < len; i++) {
             if (inputs[i].checked) {
                 changes.push(branchChanges[i]);
