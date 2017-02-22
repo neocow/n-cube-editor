@@ -1683,15 +1683,16 @@ var NCE = (function ($) {
                 }, 1);
             });
 
-        _cubeSearchContains.on('keyup', function(e) {
-            onSearchOptionsKeyup(e, this);
-        });
-        _cubeSearchTagsInclude.on('keyup', function(e) {
-            onSearchOptionsKeyup(e, this);
-        });
-        _cubeSearchTagsExclude.on('keyup', function(e) {
-            onSearchOptionsKeyup(e, this);
-        });
+        _cubeSearchContains
+            .add(_cubeSearchTagsInclude)
+            .add(_cubeSearchTagsExclude)
+            .on('keyup', function(e) {
+                if (e.keyCode === KEY_CODES.ESCAPE) {
+                    this.value = '';
+                    saveCubeSearchOptions();
+                    runSearch();
+                }
+            });
 
         $('#cube-search-reset').on('click', function() {
             clearSearch();
@@ -1717,14 +1718,6 @@ var NCE = (function ($) {
             _cubeSearchOptionsDiv.toggle();
             saveCubeSearchOptionsShown(!isVisible);
         });
-    }
-    
-    function onSearchOptionsKeyup(event, el) {
-        if (event.keyCode === KEY_CODES.ESCAPE) {
-            el.value = '';
-            saveCubeSearchOptions();
-            runSearch();
-        }
     }
     
     function addSystemMenuListeners() {
