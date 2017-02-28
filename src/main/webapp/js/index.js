@@ -4245,11 +4245,11 @@ var NCE = (function ($) {
             title = 'Commit changes';
             _commitModal.find('.accept-mine, .accept-theirs').show();
             _commitLink.removeAttr('disabled').show();
-            if (checkIsAppAdmin()) {
+            // if (checkIsAppAdmin()) {
                 _commitOk.show();
-            } else {
-                _commitOk.hide();
-            }
+            // } else {
+            //     _commitOk.hide();
+            // }
             _rollbackOk.hide();
         } else {
             action = 'rollback';
