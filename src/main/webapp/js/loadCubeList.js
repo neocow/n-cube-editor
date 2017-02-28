@@ -29,7 +29,7 @@ onmessage = function(e) {
     optsString = JSON.stringify(opts);
 
     req.open("POST", getSearchUrl(), false);
-    req.send(encodeURIComponent('[' + appIdString + ',"' + nameFilter + '","' + searchOptions.contains + '",' + optsString + ']'));
+    req.send('[' + appIdString + ',"' + nameFilter + '","' + searchOptions.contains + '",' + optsString + ']');
 
     if (req.response) {
         searchResults = JSON.parse(req.response);
