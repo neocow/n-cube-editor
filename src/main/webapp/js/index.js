@@ -4664,7 +4664,7 @@ var NCE = (function ($) {
     
     function diffShow(shouldShow) {
         if (shouldShow) {
-            _diffModal.show(function() {
+            _diffModal.show(0, function() {
                 $(this).trigger('show');
             });
         } else {
