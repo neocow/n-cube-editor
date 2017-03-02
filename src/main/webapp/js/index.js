@@ -3846,7 +3846,7 @@ var NCE = (function ($) {
     function showActiveBranch() {
         if (getBranchNames().indexOf(_selectedBranch) > -1) {
             addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
-        } else if (_selectedBranch == head) {
+        } else if (_selectedBranch === head) {
             showNote('Unable to get branch list.', 'Error');
             return;
         } else {
