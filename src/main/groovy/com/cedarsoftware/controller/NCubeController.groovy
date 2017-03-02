@@ -1299,8 +1299,7 @@ class NCubeController extends BaseController
     {
         appId = addTenant(appId)
         Object[] branches = getBranchesFromCache(appId)
-        if (branches.length > 0)
-        {
+        if (branches.length > 0 && branches.find { it == ApplicationID.HEAD }) {
             return branches
         }
 
@@ -1379,7 +1378,7 @@ class NCubeController extends BaseController
         commitCube.setCell(user, [property:'requestUser'])
         commitCube.setCell(time.format('M/d/yyyy HH:mm:ss'), [property:'requestTime'])
 
-        nCubeService.updateCube(sysAppId, commitCube)
+        nCubeService.updateHeadCube(sysAppId, commitCube)
 
         return "/cmd/ncubeController/honorCommit/?json=[${newId}]".toString()
     }
@@ -1407,7 +1406,7 @@ class NCubeController extends BaseController
         commitsCube.setCell('processing', [property:'status'])
         commitsCube.setCell(user, [property:'commitUser'])
         commitsCube.setCell(new Date().format('M/d/yyyy HH:mm:ss'), [property:'commitTime'])
-        nCubeService.updateCube(sysAppId, commitsCube)
+        nCubeService.updateHeadCube(sysAppId, commitsCube)
         commitBranch(commitAppId, commitDtos)
         String message = null
         if (JsonCommandServlet.servletRequest.get().getAttribute(JsonCommandServlet.ATTRIBUTE_STATUS))
@@ -1419,7 +1418,7 @@ class NCubeController extends BaseController
             message = JsonCommandServlet.servletRequest.get().getAttribute(JsonCommandServlet.ATTRIBUTE_FAIL_MESSAGE)
             commitsCube.setCell('error: ' + message, [id:commitId, property:'status'])
         }
-        nCubeService.updateCube(sysAppId, commitsCube)
+        nCubeService.updateHeadCube(sysAppId, commitsCube)
         return message ? "Failure: ${message}" : 'Success!'
     }
 
