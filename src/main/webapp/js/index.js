@@ -802,10 +802,8 @@ var NCE = (function ($) {
               + '<div class="divider"/>';
 
         if (cubeInfo[CUBE_INFO.BRANCH] !== head) {
-            if (checkIsAppAdmin()) {
-                html += '<li><a href="#" class="anc-commit-cube">Commit...</a></li>';
-            }
-            html += '<li><a href="#" class="anc-rollback-cube">Rollback...</a></li>'
+            html += '<li><a href="#" class="anc-commit-cube">Commit...</a></li>'
+                  + '<li><a href="#" class="anc-rollback-cube">Rollback...</a></li>'
                   + '<li><a href="#" class="anc-update-cube">Update from HEAD</a></li>'
                   + '<div class="divider"/>'
                   + '<li><a href="#" class="anc-delete-cube">Delete...</a></li>'
@@ -4323,7 +4321,8 @@ var NCE = (function ($) {
             _commitLink.attr('disabled', '');
             url = document.URL;
             url = url.substring(0, url.lastIndexOf('/'));
-            showNote(url + result.data, 'Commit Link', null, NOTE_CLASS.FORCE_MANUAL_CLOSE);
+            url += '/cmd/ncubeController/honorCommit/?json=[' + result.data + ']';
+            showNote(url, 'Commit Link', null, NOTE_CLASS.FORCE_MANUAL_CLOSE);
         } else {
             showNote('Error generating link: ' + result.data, 'Error');
         }

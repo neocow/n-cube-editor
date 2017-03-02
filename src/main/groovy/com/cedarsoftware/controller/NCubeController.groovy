@@ -1379,11 +1379,10 @@ class NCubeController extends BaseController
         commitCube.setCell(time.format('M/d/yyyy HH:mm:ss'), [property:'requestTime'])
 
         nCubeService.updateHeadCube(sysAppId, commitCube)
-
-        return "/cmd/ncubeController/honorCommit/?json=[${newId}]".toString()
+        return newId
     }
 
-    Object honorCommit(long commitId)
+    Object honorCommit(String commitId)
     {
         // TODO - would like to use constants, but waiting until ncube client refactor complete
         ApplicationID sysAppId = new ApplicationID(tenant, 'sys.app', '0.0.0', ReleaseStatus.SNAPSHOT.toString(), ApplicationID.HEAD)
@@ -1397,29 +1396,34 @@ class NCubeController extends BaseController
         }
 
         ApplicationID commitAppId = commitsCube.getCell([property:'appId'])
-        List<String> commitNames = commitsCube.getCell([property:'cubeNames']) as List<String>
+        List<Map<String, String>> commitInfo = commitsCube.getCell([property:'cubeNames']) as List
         String user = NCubeManager.getUserId()
 
         Object[] allDtos = getBranchChangesForHead(commitAppId)
-        Object[] commitDtos = allDtos.findAll {Object dto -> commitNames.contains((dto as NCubeInfoDto).name)}
+        Object[] commitDtos = allDtos.findAll {
+            NCubeInfoDto dto = it as NCubeInfoDto
+            commitInfo.find { Map<String, String> info ->
+                info.name == dto.name && info.id == dto.id
+            }
+        }
 
         commitsCube.setCell('processing', [property:'status'])
         commitsCube.setCell(user, [property:'commitUser'])
         commitsCube.setCell(new Date().format('M/d/yyyy HH:mm:ss'), [property:'commitTime'])
         nCubeService.updateHeadCube(sysAppId, commitsCube)
-        commitBranch(commitAppId, commitDtos)
+
+        Object ret = commitBranchFromRequest(commitAppId, commitDtos)
+
         String message = null
-        if (JsonCommandServlet.servletRequest.get().getAttribute(JsonCommandServlet.ATTRIBUTE_STATUS))
-        {
-            commitsCube.setCell('closed complete', [id:commitId, property:'status'])
-        }
-        else
+        status = 'closed complete'
+        if (!JsonCommandServlet.servletRequest.get().getAttribute(JsonCommandServlet.ATTRIBUTE_STATUS))
         {
             message = JsonCommandServlet.servletRequest.get().getAttribute(JsonCommandServlet.ATTRIBUTE_FAIL_MESSAGE)
-            commitsCube.setCell('error: ' + message, [id:commitId, property:'status'])
+            status = 'error: ' + message
         }
+        commitsCube.setCell(status, [property:'status'])
         nCubeService.updateHeadCube(sysAppId, commitsCube)
-        return message ? "Failure: ${message}" : 'Success!'
+        return ret
     }
 
     Object[] getCommits()
@@ -1439,27 +1443,18 @@ class NCubeController extends BaseController
     Object commitCube(ApplicationID appId, String cubeName)
     {
         appId = addTenant(appId)
-        Map options = [:]
-        options[(SEARCH_EXACT_MATCH_NAME)] = true
-        options[(SEARCH_ACTIVE_RECORDS_ONLY)] = true
-        List<NCubeInfoDto> list = nCubeService.search(appId, cubeName, null, options)
-        try
-        {
-            return nCubeService.commitBranch(appId, list)
-        }
-        catch (BranchMergeException e)
-        {
-            markRequestFailed(e.message)
-            return e.errors
-        }
-        catch (Exception e)
-        {
-            fail(e)
-            return [:]
-        }
+        Object[] allChanges = getBranchChangesForHead(appId)
+        Object changedDto = allChanges.find { dto -> (dto as NCubeInfoDto).name == cubeName }
+        return commitBranch(appId, changedDto as Object[])
     }
 
     Object commitBranch(ApplicationID appId, Object[] infoDtos)
+    {
+        String commitId = generateCommitLink(appId, infoDtos)
+        return honorCommit(commitId)
+    }
+
+    Object commitBranchFromRequest(ApplicationID appId, Object[] infoDtos)
     {
         appId = addTenant(appId)
         try
