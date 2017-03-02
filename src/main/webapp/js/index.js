@@ -4321,7 +4321,7 @@ var NCE = (function ($) {
             _commitLink.attr('disabled', '');
             url = document.URL;
             url = url.substring(0, url.lastIndexOf('/'));
-            url += '/cmd/ncubeController/honorCommit/?json=[' + result.data + ']';
+            url += '/cmd/ncubeController/honorCommit/?json=["' + result.data + '"]';
             showNote(url, 'Commit Link', null, NOTE_CLASS.FORCE_MANUAL_CLOSE);
         } else {
             showNote('Error generating link: ' + result.data, 'Error');
