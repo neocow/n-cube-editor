@@ -4000,9 +4000,8 @@ var NCE = (function ($) {
         ul.append(buildHtmlListForCompare(branchChanges, options));
         ul.find('a.anc-compare').on('click', function() {
             var infoDto, leftInfoDto, diffOptions;
-            var checkbox = $(this).parent().parent().find('.' + inputClass);
-            var ul = $(this).parent().parent().parent().parent();
-            var idx = ul.find('.' + inputClass).index(checkbox);
+            var self = $(this);
+            var idx = self.closest('ul').find('.compare-label').index(self.parent())
             var change = branchChanges[idx];
             if (options.hasOwnProperty('action')) {
                 infoDto = $.extend(true, {}, change);
