@@ -3701,7 +3701,7 @@ var NCE = (function ($) {
             commit = commits[_viewCommitsList.find('tr').index(row) - 2];
             cubeNames = commit.cubeNames['@items'];
             html = '<tr><td colspan="' + (numCols - 5) + '"></td>'
-                 + '<td>Transaction ID</td><td>' + commit.txid + '</td>';
+                 + '<td><b>Transaction ID</b></td><td><b>' + commit.txid + '</b></td>';
             if (commit.status.indexOf('closed') === -1) {
                 html += '<td><a href="#" class="anc-honor">Honor</a></td>'
                       + '<td><a href="#" class="anc-cancel">Cancel</a></td>';
@@ -4042,13 +4042,12 @@ var NCE = (function ($) {
     }
 
     function buildUlForCompare(ul, branchName, branchChanges, options) {
-        var inputClass = options.inputClass;
         ul.empty();
         ul.append(buildHtmlListForCompare(branchChanges, options));
         ul.find('a.anc-compare').on('click', function() {
             var infoDto, leftInfoDto, diffOptions;
             var self = $(this);
-            var idx = self.closest('ul').find('.compare-label').index(self.parent())
+            var idx = self.closest('ul').find('.compare-label').index(self.parent());
             var change = branchChanges[idx];
             if (options.hasOwnProperty('action')) {
                 infoDto = $.extend(true, {}, change);
@@ -4117,7 +4116,7 @@ var NCE = (function ($) {
         for (i = 0, len = changeTypeHeaders.length; i < len; i++) {
             li = $(changeTypeHeaders[i]);
             cssClass = li.data('changetype');
-            count = li.parent().find('label.' + cssClass).find('input[type="checkbox"]').length;
+            count = li.parent().find('label.checkbox-label.' + cssClass).length;
             li.find('b').after('<span class="change-type-header-count">(' + count + ')</span>');
         }
     }
@@ -4225,6 +4224,7 @@ var NCE = (function ($) {
     function buildHtmlListForCompare(branchChanges, options) {
         var i, len, infoDto, prevChangeType, changeType, displayType, shouldCompare;
         var html = '';
+        var hasCheckbox = options.hasOwnProperty('inputClass');
         for (i = 0, len = branchChanges.length; i < len; i++) {
             infoDto = branchChanges[i];
             changeType = infoDto.changeType;
@@ -4233,10 +4233,12 @@ var NCE = (function ($) {
                 prevChangeType = changeType;
                 html += '<li class="list-group-item skinny-lr noselect changeTypeHeader" data-changetype="'
                     + displayType.CSS_CLASS + '"><span class="glyphicon glyphicon-minus"></span>'
-                    + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>'
-                    + '<a href="#" class="' + CLASS_SECTION_ALL + '">All</a>'
-                    + '<a href="#" class="' + CLASS_SECTION_NONE + '">None</a>'
-                    + '</li>';
+                    + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>';
+                if (hasCheckbox) {
+                    html += '<a href="#" class="' + CLASS_SECTION_ALL + '">All</a>'
+                          + '<a href="#" class="' + CLASS_SECTION_NONE + '">None</a>';
+                }
+                html += '</li>';
             }
 
             html += '<li class="list-group-item skinny-lr no-margins" data-changetype="' + displayType.CSS_CLASS + '">';
@@ -4256,7 +4258,7 @@ var NCE = (function ($) {
             }
 
             html += '<label class="checkbox checkbox-label ' + displayType.CSS_CLASS + '">';
-            if (options.hasOwnProperty('inputClass')) {
+            if (hasCheckbox) {
                 html += '<input class="' + options.inputClass + '" type="checkbox">';
             }
             html += infoDto.name;
