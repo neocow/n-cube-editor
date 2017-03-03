@@ -696,9 +696,10 @@ var Visualizer = (function ($) {
         showScopeNote();
     }
 
-    function showScopeNote(notePrefix){
-        var scopeImage, scopeMessage;
-        notePrefix = notePrefix ? '<b>' + notePrefix + '</b><br>' : '';
+    function showScopeNote(extraNote){
+        var notePrefix, scopeImage, scopeMessage;
+        extraNote = extraNote ? extraNote : NBSP;
+        notePrefix = '<div class="text-center"><b>' + extraNote + '</b></div>';
         scopeMessage = _scopeInfo.scopeMessage ? _scopeInfo.scopeMessage : '';
         if (_scopeNoteId) {
             _nce.updateNote(_scopeNoteId, 'scopeMessage', notePrefix + _scopeInfo.scopeMessage);
