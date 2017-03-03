@@ -36,6 +36,8 @@ var NCubeEditor2 = (function ($) {
     var _editCellClear = null;
     var _editCellRadioURL = null;
     var _editColumnModal = null;
+    var _editColInstTitle = null;
+    var _editColInstructions = null;
     var _valueDropdown = null;
     var _urlDropdown = null;
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
@@ -130,6 +132,8 @@ var NCubeEditor2 = (function ($) {
             _editCellClear = $('#editCellClear');
             _editCellRadioURL = $('#editCellRadioURL');
             _editColumnModal = $('#editColumnsModal');
+            _editColInstTitle = $('#editColInstTitle');
+            _editColInstructions = $('#editColInstructions');
             _valueDropdown = $('#datatypes-value');
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
@@ -4116,87 +4120,92 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editColumnInstructions(axis) {
-        var insTitle = $('#editColInstTitle');
-        var inst = $('#editColInstructions');
-        if ('DISCRETE' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Discrete Column';
-            inst[0].innerHTML = "<i>Discrete</i> column has a single value per column. Values are matched with '='. \
-            Strings are matched case-sensitively.  Look ups are indexed and run \
-            in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
-        <ul><li>Examples: \
-        <ul> \
-        <li>Enter string values as is, no quotes: <code>OH</code></li> \
-        <li>Valid number: <code>42</code></li> \
-        <li>Valid date: <code>2015/02/14</code> (or <code>14 Feb 2015</code>, <code>Feb 14, 2015</code>, <code>February 14th, 2015</code>, <code>2015-02-14</code>)</li> \
-        <li>Do not use mm/dd/yyyy or dd/mm/yyyy. \
-        </li></ul></li></ul>";
+        var insTitle, inst;
+        switch (axis.type.name) {
+            case 'DISCRETE':
+                insTitle = 'Instructions - Discrete Column';
+                inst = "<i>Discrete</i> column has a single value per column. Values are matched with '='. \
+                    Strings are matched case-sensitively.  Look ups are indexed and run \
+                    in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
+                    <ul><li>Examples: \
+                    <ul> \
+                    <li>Enter string values as is, no quotes: <code>OH</code></li> \
+                    <li>Valid number: <code>42</code></li> \
+                    <li>Valid date: <code>2015/02/14</code> (or <code>14 Feb 2015</code>, <code>Feb 14, 2015</code>, <code>February 14th, 2015</code>, <code>2015-02-14</code>)</li> \
+                    <li>Do not use mm/dd/yyyy or dd/mm/yyyy. \
+                    </li></ul></li></ul>";
+                break;
+            case 'RANGE':
+                insTitle = 'Instructions - Range Column';
+                inst = "A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
+                    <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Look ups are indexed \
+                    and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+                    <ul><li>Enter low value, high value. Treated [inclusive, exclusive).</li> \
+                    <li>Examples: \
+                    <ul> \
+                    <li><i>Number range</i>: <code>25, 75</code> (meaning x >= 25 AND x < 75)</li> \
+                    <li><i>Number range</i>: <code>[100, 1000]</code> (brackets optional)</li> \
+                    <li><i>Date range</i>: <code>2015/01/01, 2017-01-01</code> (date >= 2015-01-01 AND date < 2017-01-01) \
+                    </li></ul></li></ul>";
+                break;
+            case 'SET':
+                insTitle = 'Instructions - Set Column';
+                inst = "A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
+                    match with '=' and ranges match when value is within the range [inclusive, exclusive).  Overlapping\
+                    ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis.\
+                    Look ups are indexed and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+                    <ul><li>Examples: \
+                    <ul> \
+                    <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
+                    <li><i>Strings</i>: <code>\"TX\", \"OH\", \"GA\"</code></li> \
+                    <li><i>Dates</i>: <code>\"2016-01-01\"</code></li> \
+                    <li><i>Date range</i>: <code>[\"2010/01/01\", \"2012/12/31\"]</code></li> \
+                    <li><i>Date ranges</i>: <code>[\"2015-01-01\", \"2016-12-31\"], [\"2019/01/01\", \"2020/12/31\"]</code> \
+                    </li></ul></li></ul>";
+                break;
+            case 'NEAREST':
+                insTitle = 'Instructions - Nearest Column';
+                inst = "A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
+                    axis to the passed in value is matched.  Strings are compared similar to spell-check \
+                    (See <a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm). \
+                    Lat/Lon's column values are compared using earth curvature in distance calculation \
+                    (See <a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla). \
+                    Numbers compared using abs(column - value).  Look ups scan all columns and run in \
+                    <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
+                    <ul><li>Examples: \
+                    <ul> \
+                    <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> <code>alfa</code> will match column <code>Alpha</code>.  It has the closest 'edit' distance.</li> \
+                    <li>With columns <code>1, 10, 100, 1000</code>, <i>value</i> <code>400</code> will match column <code>100</code>. (Distance of 300 is smallest).</li> \
+                    <li>Dates are entered in the same formats in Discrete column instructions (many formats supported).</li> \
+                    <li>Do not use mm/dd/yyyy or dd/mm/yyyy for dates.</li></ul></li></ul>";
+                break;
+            case 'RULE':
+                insTitle = 'Instructions - Rule Column';
+                inst = "A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
+                    that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> \
+                    conditions will fire. (See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>). \
+                    The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, \
+                    if the name of a rule is bound to the rule axis, execution will start on the named rule.  A rule axis can \
+                    have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, \
+                    otherwise a CoordinateNotFound exception will be thrown.  Look ups scan all columns (except when fire once is indicated) \
+                    and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
+                    <ul><li>Notes: \
+                    <ul> \
+                    <li>Enter the [optional] rule name in the top line (no quotes).</li> \
+                    <li>Enter <i>condition</i> in <a href=\"http://groovy.codehaus.org/\" target=\"_blank\">Groovy</a> on the second line.</li> \
+                    <li>The <i>input</i> and <i>output</i> Maps and <i>ncube</i> are available in the condition and statements (cells).</li> \
+                    <li><i>Example condition</i>: <code>input.state == 'OH'</code></li> \
+                    </ul></li></ul>";
+                break;
+            default:
+                insTitle = 'Instructions';
+                inst = 'Unknown axis type';
+                break;
         }
-        else if ('RANGE' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Range Column';
-            inst[0].innerHTML = "A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
-            <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Look ups are indexed \
-            and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <ul><li>Enter low value, high value. Treated [inclusive, exclusive).</li> \
-        <li>Examples: \
-        <ul> \
-        <li><i>Number range</i>: <code>25, 75</code> (meaning x >= 25 AND x < 75)</li> \
-        <li><i>Number range</i>: <code>[100, 1000]</code> (brackets optional)</li> \
-        <li><i>Date range</i>: <code>2015/01/01, 2017-01-01</code> (date >= 2015-01-01 AND date < 2017-01-01) \
-        </li></ul></li></ul>";
-        }
-        else if ('SET' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Set Column';
-            inst[0].innerHTML = "A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
-            match with '=' and ranges match when value is within the range [inclusive, exclusive).  Overlapping\
-            ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis.\
-            Look ups are indexed and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <ul><li>Examples: \
-        <ul> \
-        <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
-        <li><i>Strings</i>: <code>\"TX\", \"OH\", \"GA\"</code></li> \
-        <li><i>Dates</i>: <code>\"2016-01-01\"</code></li> \
-        <li><i>Date range</i>: <code>[\"2010/01/01\", \"2012/12/31\"]</code></li> \
-        <li><i>Date ranges</i>: <code>[\"2015-01-01\", \"2016-12-31\"], [\"2019/01/01\", \"2020/12/31\"]</code> \
-        </li></ul></li></ul>";
-        }
-        else if ('NEAREST' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Nearest Column';
-            inst[0].innerHTML = "A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
-            axis to the passed in value is matched.  Strings are compared similar to spell-check \
-            (See <a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm). \
-            Lat/Lon's column values are compared using earth curvature in distance calculation \
-            (See <a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla). \
-            Numbers compared using abs(column - value).  Look ups scan all columns and run in \
-            <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
-        <ul><li>Examples: \
-        <ul> \
-        <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> <code>alfa</code> will match column <code>Alpha</code>.  It has the closest 'edit' distance.</li> \
-        <li>With columns <code>1, 10, 100, 1000</code>, <i>value</i> <code>400</code> will match column <code>100</code>. (Distance of 300 is smallest).</li> \
-        <li>Dates are entered in the same formats in Discrete column instructions (many formats supported).</li> \
-        <li>Do not use mm/dd/yyyy or dd/mm/yyyy for dates.</li></ul></li></ul>";
-        }
-        else if ('RULE' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Rule Column';
-            inst[0].innerHTML = "A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
-            that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> \
-            conditions will fire. (See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>). \
-            The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, \
-            if the name of a rule is bound to the rule axis, execution will start on the named rule.  A rule axis can \
-            have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, \
-            otherwise a CoordinateNotFound exception will be thrown.  Look ups scan all columns (except when fire once is indicated) \
-            and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
-        <ul><li>Notes: \
-        <ul> \
-        <li>Enter the [optional] rule name in the top line (no quotes).</li> \
-        <li>Enter <i>condition</i> in <a href=\"http://groovy.codehaus.org/\" target=\"_blank\">Groovy</a> on the second line.</li> \
-        <li>The <i>input</i> and <i>output</i> Maps and <i>ncube</i> are available in the condition and statements (cells).</li> \
-        <li><i>Example condition</i>: <code>input.state == 'OH'</code></li> \
-        </ul></li></ul>";
-        }
-        else {
-            insTitle[0].textContent = 'Instructions';
-            inst[0].innerHTML = 'Unknown axis type';
-        }
+
+        inst += '<br>CTRL+V pastes in list of columns<br>CTRL+C copies all or selected column text';
+        _editColInstTitle[0].textContent = insTitle;
+        _editColInstructions[0].innerHTML = inst;
     }
 
     function loadColumns(axis) {
