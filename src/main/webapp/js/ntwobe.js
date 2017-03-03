@@ -3640,6 +3640,7 @@ var NCubeEditor2 = (function ($) {
             _editCellModal.one('shown.bs.modal', function () {
                 if (_bufferText.trim() !== '') {
                     _editCellValue.val(isDefault ? _bufferText : (cellValue + _bufferText));
+                    _isCellDirty = true;
                 } else if (isDefault) {
                     _editCellValue.select();
                 }
