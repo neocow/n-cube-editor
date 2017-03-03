@@ -698,6 +698,11 @@ a.section-all:hover, a.section-none:hover {
     color: #a5adb0;
 }
 
+
+.highlight-lightgoldenrodyellow {
+    background-color: lightgoldenrodyellow;
+}
+
 ul .checkbox-label {
     display: inline-block;
     margin: 0 0 0 20px;

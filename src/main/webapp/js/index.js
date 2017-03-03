@@ -3694,9 +3694,12 @@ var NCE = (function ($) {
         var self = $(row);
         var allRows = _viewCommitsList.find('tr');
         var openRow = allRows.has('td[colspan]');
+        var highlightClass = 'highlight-lightgoldenrodyellow';
 
         openRow.remove();
+        allRows.removeClass(highlightClass);
         if (!openRow.length || allRows.index(openRow[0]) !== allRows.index(row) + 1) {
+            self.addClass(highlightClass);
             numCols = self.find('td').length;
             commit = commits[_viewCommitsList.find('tr').index(row) - 2];
             cubeNames = commit.cubeNames['@items'];
