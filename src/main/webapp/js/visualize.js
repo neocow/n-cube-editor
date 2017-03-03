@@ -536,7 +536,6 @@ var Visualizer = (function ($) {
         options =  {startCubeName: _selectedCubeName, visInfo: _visInfo, scopeInfo: _scopeInfo, scope: _nodeScope, node: node};
 
         result = _nce.call('ncubeController.getVisualizerCellValues', [_nce.getSelectedTabAppId(), options]);
-        _nce.clearNote();
         if (false === result.status) {
             _nce.showNote('Failed to load ' + _visInfo.loadCellValuesLabel + ': ' + TWO_LINE_BREAKS + result.data);
             return node;
@@ -637,7 +636,6 @@ var Visualizer = (function ($) {
         }
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
-        _nce.clearNote();
         if (!result.status) {
             _nce.showNote(result.data);
              _visualizerContent.hide();
@@ -700,13 +698,13 @@ var Visualizer = (function ($) {
         var notePrefix, scopeImage, scopeMessage;
         extraNote = extraNote ? extraNote : NBSP;
         notePrefix = '<div class="text-center"><b>' + extraNote + '</b></div>';
-        scopeMessage = _scopeInfo.scopeMessage ? _scopeInfo.scopeMessage : '';
+        scopeMessage = _scopeInfo && _scopeInfo.scopeMessage ? _scopeInfo.scopeMessage : '';
         if (_scopeNoteId) {
-            _nce.updateNote(_scopeNoteId, 'scopeMessage', notePrefix + _scopeInfo.scopeMessage);
+            _nce.updateNote(_scopeNoteId, 'scopeMessage', notePrefix + scopeMessage);
         }
         else{
             scopeImage = $.extend({title: _scopePromptTitle}, SCOPE_IMAGE);
-            _scopeNoteId = _nce.showNote(notePrefix + _scopeInfo.scopeMessage, ' ', null, STICKY_SCOPE_MESSAGE, scopeImage);
+            _scopeNoteId = _nce.showNote(notePrefix + scopeMessage, ' ', null, STICKY_SCOPE_MESSAGE, scopeImage);
         }
     }
 
