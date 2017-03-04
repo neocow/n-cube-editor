@@ -694,18 +694,18 @@ var Visualizer = (function ($) {
         showScopeNote();
     }
 
-    function showScopeNote(extraNote){
-        var notePrefix, scopeImage, scopeMessage;
-        extraNote = extraNote ? extraNote : NBSP;
-        notePrefix = '<div class="text-center"><b>' + extraNote + '</b></div>';
-        scopeMessage = _scopeInfo && _scopeInfo.scopeMessage ? _scopeInfo.scopeMessage : '';
-        if (_scopeNoteId) {
-            _nce.updateNote(_scopeNoteId, 'scopeMessage', notePrefix + scopeMessage);
+    function showScopeNote(extraMessage){
+        var scopeImage, scopeMessage, scopeMessagePart1, scopeMessagePart2;
+        scopeMessagePart1 = extraMessage ? extraMessage : NBSP;
+        scopeMessagePart2 = _scopeInfo && _scopeInfo.scopeMessage ? _scopeInfo.scopeMessage : '';
+        scopeMessage = '<b>' + scopeMessagePart1 + '</b><br>' + scopeMessagePart2;
+        if (scopeMessage && _scopeNoteId && _nce.updateNote(_scopeNoteId, 'scopeMessage', scopeMessage)){
+            return;
         }
-        else{
-            scopeImage = $.extend({title: _scopePromptTitle}, SCOPE_IMAGE);
-            _scopeNoteId = _nce.showNote(notePrefix + scopeMessage, ' ', null, STICKY_SCOPE_MESSAGE, scopeImage);
-        }
+        _nce.clearNotes(STICKY_SCOPE_MESSAGE);
+        scopeImage = $.extend({title: _scopePromptTitle}, SCOPE_IMAGE);
+        _scopeNoteId = _nce.showNote(scopeMessage, ' ', null, STICKY_SCOPE_MESSAGE, scopeImage);
+
     }
 
     function loadGroupsView() {
