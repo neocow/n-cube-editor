@@ -1968,11 +1968,7 @@ var NCE = (function ($) {
     }
 
     function enableDisableBatchUpdate() {
-        if (_selectedBranch === head || !checkAppPermission(PERMISSION_ACTION.UPDATE)) {
-            _batchUpdateAxisReferencesUpdate.hide();
-        } else {
-            _batchUpdateAxisReferencesUpdate.show();
-        }
+        _batchUpdateAxisReferencesUpdate.toggle(_selectedBranch !== head && checkAppPermission(PERMISSION_ACTION.UPDATE));
     }
 
     function findBatchUpdateAxisReferencesRows() {
@@ -1984,45 +1980,34 @@ var NCE = (function ($) {
     }
 
     function buildBatchUpdateAxisReferencesTable() {
-        var i, len, isDest, refAxData, html, app, version, cube, axis;
+        var i, len, isDest, refAxData, html, app, version, cube, axis, axisHeader, prefix, axisMethodText;
         findBatchUpdateAxisReferencesRows().remove();
         isDest = isBatchUpdateAxisReferencesDestinationToggled();
-        if (isDest) {
-            _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current Destination Axis';
-            _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New Destination Axis';
-            _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = 'Axis Name';
-            _batchUpdateAxisReferencesRemoveTransform.hide();
-        } else {
-            _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current Transform Axis';
-            _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New Transform Axis';
-            _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = 'Method Name';
-            _batchUpdateAxisReferencesRemoveTransform.show();
-        }
+        _batchUpdateAxisReferencesRemoveTransform.toggle(!isDest);
+        axisHeader = isDest ? 'Destination' : 'Transform';
+        prefix = isDest ? 'dest' : 'transform';
+        axisMethodText = isDest ? 'Axis' : 'Method';
+        _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current ' + axisHeader + ' Axis';
+        _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New ' + axisHeader + ' Axis';
+        _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = axisMethodText + ' Name';
 
         html = '';
         for (i = 0, len = _batchUpdateAxisReferencesData.length; i < len; i++) {
             refAxData = _batchUpdateAxisReferencesData[i];
-            if (isDest) {
-                app = refAxData.destApp;
-                version = refAxData.destVersion;
-                cube = refAxData.destCubeName;
-                axis = refAxData.destAxisName;
-            } else {
-                app = refAxData.transformApp;
-                version = refAxData.transformVersion;
-                cube = refAxData.transformCubeName;
-                axis = refAxData.transformMethodName;
-            }
+            app = refAxData[prefix + 'App'];
+            version = refAxData[prefix + 'Version'];
+            cube = refAxData[prefix + 'CubeName'];
+            axis = refAxData[prefix + axisMethodText + 'Name'];
 
-            html += '<tr class="batch-update-axis-references-entry">';
-            html += '<td><input type="checkbox" class="isSelected" /></td>';
-            html += '<td>' + refAxData.srcCubeName + '</td>';
-            html += '<td>' + refAxData.srcAxisName + '</td>';
-            html += '<td class="app">' + (app || '') + '</td>';
-            html += '<td class="version">' + (version || '') + '</td>';
-            html += '<td class="cubeName">' + (cube || '') + '</td>';
-            html += '<td class="axisName">' + (axis || '') + '</td>';
-            html += '</tr>';
+            html += '<tr class="batch-update-axis-references-entry">'
+                  + '<td><input type="checkbox" class="isSelected" /></td>'
+                  + '<td>' + refAxData.srcCubeName + '</td>'
+                  + '<td>' + refAxData.srcAxisName + '</td>'
+                  + '<td class="app">' + (app || '') + '</td>'
+                  + '<td class="version">' + (version || '') + '</td>'
+                  + '<td class="cubeName">' + (cube || '') + '</td>'
+                  + '<td class="axisName">' + (axis || '') + '</td>'
+                  + '</tr>';
         }
         _batchUpdateAxisReferencesTable.append(html);
     }
@@ -2165,19 +2150,15 @@ var NCE = (function ($) {
     }
 
     function enableDisableCommitBranch(canCommitOnApp) {
-        if (canCommitOnApp) {
-            _branchCommit.show();
-        } else {
-            _branchCommit.hide();
-        }
+        _branchCommit.toggle(canCommitOnApp);
     }
     
     function enableDisableClearCache(isAppAdmin) {
+        var el = _clearCache.parent();
         if (isAppAdmin || head !== getAppId().branch) {
-            _clearCache.parent().removeClass('disabled');
-        }
-        else {
-            _clearCache.parent().addClass('disabled');
+            el.removeClass('disabled');
+        } else {
+            el.addClass('disabled');
         }
     }
 
@@ -3604,26 +3585,27 @@ var NCE = (function ($) {
     }
     
     function viewCommitsFilter() {
-        var i, len, row, idx, tds, td, el, filterVal, s;
+        var i, len, el, filterVal;
         var selects = _viewCommitsList.find('select');
         var populatedSelects = selects.filter(function() { return this.value.length; });
-        var sLen = populatedSelects.length;
         _viewCommitsList.find('tr:gt(1)').show();
-        if (sLen) {
-            for (s = 0; s < sLen; s++) {
-                el = populatedSelects[s];
-                filterVal = el.value;
-                if (filterVal.length) {
-                    idx = selects.index(el) + 1;
-                    tds = _viewCommitsList.find('tr:gt(1):visible').find('td:nth-child(' + idx + ')');
-                    for (i = 0, len = tds.length; i < len; i++) {
-                        td = tds[i];
-                        row = $(td).parent();
-                        if (td.innerHTML.indexOf(filterVal) === -1) {
-                            row.hide();
-                        }
-                    }
-                }
+        for (i = 0, len = populatedSelects.length; i < len; i++) {
+            el = populatedSelects[i];
+            filterVal = el.value;
+            if (filterVal.length) {
+                viewCommitsHideIfMatching(filterVal, selects.index(el) + 1);
+            }
+        }
+    }
+
+    function viewCommitsHideIfMatching(filterVal, idx) {
+        var i, len, tds, td, row;
+        tds = _viewCommitsList.find('tr:gt(1):visible').find('td:nth-child(' + idx + ')');
+        for (i = 0, len = tds.length; i < len; i++) {
+            td = tds[i];
+            row = $(td).parent();
+            if (td.innerHTML.indexOf(filterVal) === -1) {
+                row.hide();
             }
         }
     }
@@ -3993,7 +3975,7 @@ var NCE = (function ($) {
     }
 
     function compareUpdateBranch(branchName, noNote) {
-        var result, branchChanges;
+        var result, branchChanges, branchHead, method, params;
         var appId = getAppId();
         var acceptMineBtn = _branchCompareUpdateModal.find('.accept-mine');
 
@@ -4002,15 +3984,18 @@ var NCE = (function ($) {
             return;
         }
 
-        if (branchName === head) {
-            result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
-            _branchCompareUpdateOk.removeAttr('disabled').show();
-            acceptMineBtn.show();
+        branchHead = branchName === head;
+        params = [appId];
+        _branchCompareUpdateOk.toggle(branchHead);
+        acceptMineBtn.toggle(branchHead);
+        if (branchHead) {
+            method = CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH;
+            _branchCompareUpdateOk.removeAttr('disabled');
         } else {
-            result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
-            _branchCompareUpdateOk.hide();
-            acceptMineBtn.hide();
+            method = CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH;
+            params.push(branchName);
         }
+        result = call(CONTROLLER + method, params);
         if (!result.status) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
             return;
@@ -4098,13 +4083,7 @@ var NCE = (function ($) {
         span = el.parent().find('span.glyphicon');
         show = span.hasClass(prefix + plus);
         span.removeClass(prefix + (show ? plus : minus)).addClass(prefix + (show ? minus : plus));
-        for (i = 0, len = lis.length; i < len; i++) {
-            if (show) {
-                $(lis[i]).show();
-            } else {
-                $(lis[i]).hide();
-            }
-        }
+        lis.toggle(show);
     }
     
     function getChangeTypeListItems(el) {
@@ -4312,22 +4291,15 @@ var NCE = (function ($) {
     function commitBranch(state) {
         var errMsg, title, result, branchChanges, action;
         clearNote();
-        if (state) {
-            action = 'commit';
-            errMsg = 'commit to';
-            title = 'Commit changes';
-            _commitModal.find('.accept-mine, .accept-theirs').show();
-            _commitLink.removeAttr('disabled').show();
-            _commitOk.show();
-            _rollbackOk.hide();
-        } else {
-            action = 'rollback';
-            errMsg = 'rollback in';
-            title = 'Rollback changes';
-            _commitModal.find('.accept-mine, .accept-theirs').add(_commitOk).add(_commitLink).hide();
-            _rollbackOk.show();
-        }
+        _commitModal.find('.accept-mine, .accept-theirs').add(_commitLink).add(_commitOk).toggle(state);
+        _rollbackOk.toggle(!state);
+        action = state ? 'commit' : 'rollback';
+        errMsg = state ? 'commit to' : 'rollback in';
+        title = (state ? 'Commit' : 'Rollback') + ' changes';
         _commitRollbackList.data('is-commit', state);
+        if (state) {
+            _commitLink.removeAttr('disabled');
+        }
 
         if (isHeadSelected()) {
             showNote('You cannot ' + errMsg + ' HEAD.');
@@ -4707,13 +4679,10 @@ var NCE = (function ($) {
         _diffAppId = diffOptions.appId;
         _diffCubeName = diffOptions.cubeName;
         diffOptions.canEdit = diffOptions.canEdit && checkPermissions(diffOptions.appId, _diffCubeName, PERMISSION_ACTION.UPDATE);
-        if (diffOptions.canEdit) {
-            _diffModal.find('.select-all, .select-none, .btn-primary').show();
-            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them right to left. Click a row to see more information about the change.';
-        } else {
-            _diffModal.find('.select-all, .select-none, .btn-primary').hide();
-            _diffInstructions[0].innerHTML = diffOptions.cantEditReason || 'View individual changes between two cubes.';
-        }
+        _diffModal.find('.select-all, .select-none, .btn-primary').toggle(diffOptions.canEdit);
+        _diffInstructions[0].innerHTML = diffOptions.canEdit
+            ? 'Reverse individual differences by merging them right to left. Click a row to see more information about the change.'
+            : (diffOptions.cantEditReason || 'View individual changes between two cubes.');
         diffDescriptive(diffOptions.canEdit);
         diffShow(true);
     }
