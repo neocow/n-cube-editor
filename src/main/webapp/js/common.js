@@ -338,8 +338,9 @@ function appIdFrom(app, version, status, branch) {
     };
 }
 
-function populateSelectFromMap(sel, map) {
+function populateSelectFromMap(sel, map, keepPrevVal) {
     var i, len, options, keys;
+    var prevVal = sel.val();
     sel.empty();
 
     options = '<option></option>';
@@ -349,6 +350,9 @@ function populateSelectFromMap(sel, map) {
     }
 
     sel.append(options);
+    if (keepPrevVal) {
+        sel.val(prevVal);
+    }
 }
 
 function populateSelect(nce, sel, method, params, defVal, forceRefresh, isInverted) {
