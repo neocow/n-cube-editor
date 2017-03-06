@@ -48,9 +48,7 @@ class Visualizer
 			return [status: STATUS_INVALID_START_CUBE, visInfo: visInfo, scopeInfo: scopeInfo]
 		}
 
-		scopeInfo.populateScopeDefaults(startCubeName)
 		getVisualization(visInfo, scopeInfo, startCubeName)
-		scopeInfo.createGraphScopePrompt()
 		visInfo.convertToSingleMessage()
 		return [status: STATUS_SUCCESS, visInfo: visInfo, scopeInfo: scopeInfo]
 	}
@@ -93,8 +91,6 @@ class Visualizer
 		node.scope = relInfo.targetScope
 		node.availableTargetScope = relInfo.availableTargetScope
 		visInfo.nodes = [node]
-		scopeInfo.topNodeName = relInfo.getLabel(options.startCubeName as String)
-		scopeInfo.createGraphScopePrompt()
 		visInfo.convertToSingleMessage()
 		return [status: STATUS_SUCCESS, visInfo: visInfo, scopeInfo: scopeInfo]
 	}
@@ -120,7 +116,7 @@ class Visualizer
 	private void getVisualization(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, String startCubeName)
 	{
 		VisualizerRelInfo relInfo = visualizerRelInfo
-		loadFirstVisualizerRelInfo(visInfo, scopeInfo, relInfo, startCubeName)
+		relInfo.initFirst(visInfo, scopeInfo, startCubeName)
 		stack.push(relInfo)
 
 		while (!stack.empty)
@@ -129,20 +125,8 @@ class Visualizer
 		}
 	}
 
-	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo, String startCubeName)
-	{
-		relInfo.targetCube = NCubeManager.getCube(appId, startCubeName)
-		relInfo.availableTargetScope = new CaseInsensitiveMap(scopeInfo.scope)
-		relInfo.targetLevel = 1
-		relInfo.targetId = 1
-		relInfo.addRequiredAndOptionalScopeKeys(visInfo)
-		relInfo.targetScope = new CaseInsensitiveMap()
-		relInfo.showCellValuesLink = true
-	}
-
 	protected void processCube(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo)
 	{
-		scopeInfo.initNode()
 		NCube targetCube = relInfo.targetCube
 		String targetCubeName = targetCube.name
 

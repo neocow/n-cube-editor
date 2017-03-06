@@ -16,8 +16,8 @@ import static com.cedarsoftware.util.VisualizerTestConstants.*
 
 @CompileStatic
 class VisualizerTest{
-
-    static final String PATH_PREFIX = 'visualizer/**/'
+/*
+    static final String PATH_PREFIX = 'visualizer*//**//*'
 
     Visualizer visualizer
     Map inputScope
@@ -53,12 +53,12 @@ class VisualizerTest{
 
         assert 5 == nodes.size()
         assert 4 == edges.size()
-        assert [:] as CaseInsensitiveMap == scopeInfo.scope
+        assert [:] as CaseInsensitiveMap == scopeInfo.nodeScope
         assert 3l == visInfo.maxLevel
         assert 6l == visInfo.nodeCount
         assert 5l == visInfo.relInfoCount
         assert 999999l == visInfo.defaultLevel
-        assert [:] == scopeInfo.optionalGraphScopeAvailableValues
+        assert [:] == scopeInfo.graphScopeInfo
         assert '' == visInfo.groupSuffix
         assert ['NCUBE'] as Set == visInfo.availableGroupsAllLevels
 
@@ -67,14 +67,14 @@ class VisualizerTest{
         assert allGroups.keySet() == visInfo.allGroupsKeys
 
         //TODO:
-       /* assert [CubeWithRefs: [] as Set,
+       *//* assert [CubeWithRefs: [] as Set,
                 CubeWithNoDefaultsAndNoValues: ['CubeJAxis1', 'CubeJAxis2'] as Set,
                 CubeHasTwoRefsToSameCube: [] as Set] == visInfo.requiredScopeKeys
 
         assert [CubeWithRefs: ['CubeDAxis1', 'CubeDAxis2'] as Set,
                 CubeWithNoDefaultsAndNoValues: [] as Set,
                 CubeHasTwoRefsToSameCube: ['CubeEAxis1', 'CubeEAxis2'] as Set] == visInfo.optionalScopeKeys
-*/
+*//*
         assert [('n-cube'): ['n-cube', 'rule cube'],
                 ('rule cube'): ['n-cube', 'rule cube']] == visInfo.typesToAddMap
 
@@ -323,7 +323,7 @@ class VisualizerTest{
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, true, true, true)
@@ -361,7 +361,7 @@ class VisualizerTest{
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true, true)
@@ -395,7 +395,7 @@ class VisualizerTest{
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true, true)
@@ -431,7 +431,7 @@ class VisualizerTest{
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true, true, false)
@@ -443,29 +443,29 @@ class VisualizerTest{
         assert !nodeDetails.contains(DETAILS_LABEL_EXECUTED_VALUE)
     }
 
-   /* @Test  TODO:
+   *//* @Test  TODO:
     void testGetCellValues_showCellValues_notTopNode_requiredScope()
     {
-        Map scope = [Axis1Primary: 'Axis1Col2',
+        Map nodeScope = [Axis1Primary: 'Axis1Col2',
                      Axis2Primary: 'Axis2Col2']
-        inputScope = new CaseInsensitiveMap(scope)
+        inputScope = new CaseInsensitiveMap(nodeScope)
 
         //Build graph
         String startCubeName = 'CubeWithDefaultColumn'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
         buildGraph(options)
         Map node = checkNode(startCubeName, startCubeName)
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, startCubeName, '', '', false, true)
-        assert scope == node.scope
-        assert scope == node.availableScope
+        assert nodeScope == node.nodeScope
+        assert nodeScope == node.availableScope
      }
-*/
+*//*
 
     @Test
     void testGetCellValues_showCellValues_withDefaultsNoCellValues()
@@ -478,7 +478,7 @@ class VisualizerTest{
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true, true, false)
@@ -502,7 +502,7 @@ class VisualizerTest{
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
 
@@ -529,7 +529,7 @@ class VisualizerTest{
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, true, true)
@@ -551,19 +551,19 @@ class VisualizerTest{
         assert nodeDetails.contains(DETAILS_LABEL_STACK_TRACE)
     }
 
-    /*TODO: Show cell values is temporarily disabled for n-cubes. Will add back in and fix these tests at that time
+    *//*TODO: Show cell values is temporarily disabled for n-cubes. Will add back in and fix these tests at that time
     @Test
     void testGetCellValues_showCellValues_coordinateNotFoundCell_dueToOneNotFoundValue()
     {
         //Build graph
         String startCubeName = 'CubeWithCoordinateNotFoundCell'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
         buildGraph(options)
         Map node = checkNode(startCubeName)
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true)
@@ -589,13 +589,13 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithCoordinateNotFoundCellDueToTwoNotFoundValues'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
         buildGraph(options)
         Map node = checkNode(startCubeName)
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true)
@@ -624,13 +624,13 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithInvalidCoordinateCell'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
         buildGraph(options)
         Map node = checkNode(startCubeName)
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true)
@@ -663,13 +663,13 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithInvalidCoordinateCellDueToTwoInvalidKeys'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
         buildGraph(options)
         Map node = checkNode(startCubeName)
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true)
@@ -696,7 +696,7 @@ class VisualizerTest{
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col3")
     }
 
-   */
+   *//*
 
     @Test
     void testHandleCoordinateNotFoundException_withNoCubeNameOrAxisName()
@@ -757,14 +757,14 @@ class VisualizerTest{
 
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         node = checkNode('CubeWithExecutedCell', false, true)
 
         //Simulate that the user clicks Hide Cell Values for the node
         node.showCellValues = false
-        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.scope]
+        options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
         getCellValues(options)
         assert nodes.size() == 1
         checkNode('CubeWithExecutedCell', false, false, true)
@@ -846,5 +846,5 @@ class VisualizerTest{
         return node
     }
 
-    class OtherVisualizerInfo extends VisualizerInfo {}
+    class OtherVisualizerInfo extends VisualizerInfo {}*/
 }

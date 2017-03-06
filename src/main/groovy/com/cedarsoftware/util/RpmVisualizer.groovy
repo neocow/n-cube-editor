@@ -69,16 +69,8 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
-	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo, String startCubeName)
-	{
-		super.loadFirstVisualizerRelInfo(visInfo, scopeInfo, relInfo, startCubeName)
-		relInfo.showCellValuesLink = false
-	}
-
-	@Override
 	protected void processCube(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo)
 	{
-		scopeInfo.initNode()
 		if (relInfo.targetCube.name.startsWith(RPM_CLASS))
 		{
 			processClassCube((RpmVisualizerInfo) visInfo, scopeInfo, (RpmVisualizerRelInfo) relInfo)
@@ -176,7 +168,7 @@ class RpmVisualizer extends Visualizer
 		NCube nextTargetCube = nextRelInfo.targetCube
 		if (nextTargetCube)
 		{
-			nextRelInfo.availableTargetScope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.availableTargetScope)
+			nextRelInfo.populateScopeRelativeToSource(rpmType, targetFieldName, relInfo.availableTargetScope)
 			nextRelInfo.sourceFieldName = targetFieldName
 			nextRelInfo.sourceFieldRpmType = rpmType
 			nextRelInfo.sourceTraits = relInfo.targetTraits
@@ -209,47 +201,13 @@ class RpmVisualizer extends Visualizer
 			{
 				relInfo.nodeLabelPrefix = 'Unable to load '
 				relInfo.targetTraits = new CaseInsensitiveMap()
-				relInfo.nodeScopeMessages << getLoadTraitsForTargetMessage(relInfo, type)
+				relInfo.nodeDetailsMessages << getLoadTraitsForTargetMessage(relInfo, type)
 				relInfo.cellValuesLoaded = false
 				relInfo.showCellValuesLink = false
 				return false
 			}
 		}
 		return true
-	}
-
-	/**
-	 * Sets the basic scope required to load a target class based on scoped source class,
-	 * source field name, target class name, and current scope.
-	 * Retains all other scope.
-	 *
-	 * @param targetCube String target cube
-	 * @param sourceFieldRpmType String source field type
-	 * @param sourceFieldName String source field name
-	 * @param scope Map<String, Object> scope
-	 *
-	 * @return Map new scope
-	 *
-	 */
-	private static Map<String, Object> getScopeRelativeToSource(NCube targetCube, String sourceFieldRpmType, String targetFieldName, Map scope)
-	{
-		Map<String, Object> newScope = new CaseInsensitiveMap<>(scope)
-
-		if (targetCube.name.startsWith(RPM_ENUM))
-		{
-			newScope[SOURCE_FIELD_NAME] = targetFieldName
-		}
-		else if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
-		{
-			String newScopeKey = sourceFieldRpmType
-			String oldValue = scope[newScopeKey]
-			if (oldValue)
-			{
-				newScope[SOURCE_SCOPE_KEY_PREFIX + sourceFieldRpmType] = oldValue
-			}
-			newScope[newScopeKey] = targetFieldName
-		}
-		return newScope
 	}
 
 	@Override

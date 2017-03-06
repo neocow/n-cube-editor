@@ -31,8 +31,11 @@ var Visualizer = (function ($) {
     var _nodes = [];
     var _edges = [];
     var _scopeInfo = null;
-    var _graphScope = null;
+    var _selectedNodeId = null;
+    var _topNodeScope = null;
     var _nodeScope = null;
+    var _scopeMessage = null;
+    var _nodeAvailableScope = null;
     var _showingCellValuesNode;
     var _keepCurrentScope = false;
     var _selectedGroups = null;
@@ -242,29 +245,31 @@ var Visualizer = (function ($) {
     }
 
     function scopeResetEvent() {
-        _graphScope = null;
-        saveToLocalStorage(_graphScope, SCOPE);
+        _topNodeScope = null;
+        saveToLocalStorage(_topNodeScope, SCOPE);
         load();
     }
 
     function scopeInputEvent(target) {
-        var key, value, loadCellValuesAction;
+        var key, value, loadCellValuesAction, topNode;
         key = target.id;
         value = target.value;
         value = value ? value.trim() : value;
         loadCellValuesAction = target.className.indexOf('loadCellValuesAction') > -1;
-        scopeChange(key, value, loadCellValuesAction);
+        topNode = target.className.indexOf('topNode') > -1;
+        scopeChange(key, value, topNode, loadCellValuesAction);
     }
 
     function scopeClickEvent(target) {
-        var id, scopeParts, key, value, loadCellValuesAction;
+        var id, scopeParts, key, value, loadCellValuesAction, topNode;
         id = target.id;
         if (id) {
             scopeParts = id.split(':');
             key = scopeParts[0];
             value = scopeParts[1].trim();
             loadCellValuesAction = target.className.indexOf('loadCellValuesAction') > -1;
-            scopeChange(key, value, loadCellValuesAction);
+            topNode = target.className.indexOf('topNode') > -1;
+            scopeChange(key, value, topNode, loadCellValuesAction);
         }
     }
 
@@ -498,15 +503,20 @@ var Visualizer = (function ($) {
         }
     }
 
-    function scopeChange(key, value, loadCellValuesAction)
+    function scopeChange(key, value, topNode, loadCellValuesAction)
     {
+        if (topNode){
+            setScopeValue(_topNodeScope, key, value);
+            saveToLocalStorage(_topNodeScope, SCOPE);
+        }
+
         if (loadCellValuesAction){
             setScopeValue(_nodeScope, key, value);
-            loadCellValues(_showingCellValuesNode)
+            loadCellValues()
         }
         else{
-            setScopeValue(_graphScope, key, value);
-            saveToLocalStorage(_graphScope, SCOPE);
+            setScopeValue(_nodeScope, key, value);
+            saveToLocalStorage(_nodeScope, SCOPE);
             load();
         }
     }
@@ -533,7 +543,7 @@ var Visualizer = (function ($) {
         node.details = null;
         _visInfo.nodes = {};
         _visInfo.edges = {};
-        options =  {startCubeName: _selectedCubeName, visInfo: _visInfo, scopeInfo: _scopeInfo, scope: _nodeScope, node: node};
+        options =  {startCubeName: _selectedCubeName, visInfo: _visInfo, scopeInfo: _scopeInfo, scope: _nodeAvailableScope, node: node};
 
         result = _nce.call('ncubeController.getVisualizerCellValues', [_nce.getSelectedTabAppId(), options]);
         if (false === result.status) {
@@ -582,15 +592,14 @@ var Visualizer = (function ($) {
 
         if (node.showCellValues){
             _showingCellValuesNode = node;
-            _nodeScope = node.availableScope;
+            _nodeAvailableScope = node.availableScope;
         }
         else{
             _showingCellValuesNode = null;
-            _nodeScope = null;
+            _nodeAvailableScope = null;
         }
 
         _scopeInfo = scopeInfo;
-        _graphScope = scopeInfo.scope;
         _visInfo = visInfo;
     }
 
@@ -612,6 +621,7 @@ var Visualizer = (function ($) {
         var options, result, json;
         clearVisLayoutWest();
         destroyNetwork();
+        _selectedNodeId = null;
 
         if (!_nce.getSelectedCubeName()) {
              _visualizerContent.hide();
@@ -629,10 +639,10 @@ var Visualizer = (function ($) {
         if (_visInfo) {
             _visInfo.nodes = {};
             _visInfo.edges = {};
-            options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scope: _graphScope};
+            options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scope: _topNodeScope};
         }
         else{
-            options =  {startCubeName: _selectedCubeName, scope: _graphScope};
+            options =  {startCubeName: _selectedCubeName, scope: _topNodeScope};
         }
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
@@ -649,8 +659,9 @@ var Visualizer = (function ($) {
             displayMessages(json.visInfo.messages);
             loadGraphData(json.visInfo, json.scopeInfo, json.status);
             initNetwork();
-            loadSelectedLevelListView();
+            getNodeScopeInfo(true);
             loadScopeView();
+            loadSelectedLevelListView();
             loadHierarchicalView();
             loadGroupsView();
             loadCountsView();
@@ -677,7 +688,7 @@ var Visualizer = (function ($) {
         _nodeAddTypes.innerHTML = '';
         _nodeDetails[0].innerHTML = '';
         _showingCellValuesNode = null;
-        _nodeScope = null;
+        _nodeAvailableScope = null;
         _layout.close('west');
     }
 
@@ -694,17 +705,30 @@ var Visualizer = (function ($) {
         showScopeNote();
     }
 
+    function getNodeScopeInfo(topNode)  {
+        var nodeId, node;
+        nodeId = _selectedNodeId ? _selectedNodeId : 1;
+        node = _nodeDataSet.get(nodeId);
+        if (node) {
+            _nodeScope = node.scope;
+            _scopeMessage = node.scopeMessage;
+        }
+        if (topNode){
+            _topNodeScope = node.scope;
+        }
+    }
+
     function showScopeNote(extraMessage){
-        var scopeImage, scopeMessage, scopeMessagePart1, scopeMessagePart2;
+        var scopeImage, scopeToastMessage, scopeMessagePart1, scopeMessagePart2;
         scopeMessagePart1 = extraMessage ? extraMessage : NBSP;
-        scopeMessagePart2 = _scopeInfo && _scopeInfo.scopeMessage ? _scopeInfo.scopeMessage : '';
-        scopeMessage = '<b>' + scopeMessagePart1 + '</b><br>' + scopeMessagePart2;
-        if (scopeMessage && _scopeNoteId && _nce.updateNote(_scopeNoteId, 'scopeMessage', scopeMessage)){
+        scopeMessagePart2 = _scopeMessage ? _scopeMessage : '';
+        scopeToastMessage = '<b>' + scopeMessagePart1 + '</b><br>' + scopeMessagePart2;
+        if (scopeToastMessage && _scopeNoteId && _nce.updateNote(_scopeNoteId, 'scopeMessage', scopeToastMessage)){
             return;
         }
         _nce.clearNotes(STICKY_SCOPE_MESSAGE);
         scopeImage = $.extend({title: _scopePromptTitle}, SCOPE_IMAGE);
-        _scopeNoteId = _nce.showNote(scopeMessage, ' ', null, STICKY_SCOPE_MESSAGE, scopeImage);
+        _scopeNoteId = _nce.showNote(scopeToastMessage, ' ', null, STICKY_SCOPE_MESSAGE, scopeImage);
 
     }
 
@@ -771,7 +795,7 @@ var Visualizer = (function ($) {
 
     function getScopeString(){
         var scopeLen, key, i, len, scope, scopeString, keys;
-        scope = $.extend(true, {}, _graphScope);
+        scope = $.extend(true, {}, _nodeScope);
         delete scope['@type'];
         delete scope['@id'];
         scopeString = '';
@@ -1010,7 +1034,6 @@ var Visualizer = (function ($) {
             }
         }
         _scopeInfo = scopeInfo;
-        _graphScope = scopeInfo.scope;
         _visInfo = visInfo;
         _loadedVisInfoType = _visInfo['@type'];
      }
@@ -1107,6 +1130,7 @@ var Visualizer = (function ($) {
             });
 
             _network.on('deselectNode', function() {
+                _selectedNodeId = null;
                 clearVisLayoutWest();
             });
 
@@ -1222,8 +1246,8 @@ var Visualizer = (function ($) {
     function networkSelectNodeEvent(params)
     {
         var nodeId, node, cubeName, appId, typesToAdd, title2;
-        nodeId = params.nodes[0];
-        node = _nodeDataSet.get(nodeId);
+        _selectedNodeId = params.nodes[0];
+        node = _nodeDataSet.get(_selectedNodeId);
 
         cubeName = node.cubeName;
         appId =_nce.getSelectedTabAppId();
@@ -1325,7 +1349,7 @@ var Visualizer = (function ($) {
         visualizerLink.click(function (e) {
             e.preventDefault();
             _keepCurrentScope = true;
-            _graphScope = node.scope;
+            _nodeScope = node.scope;
             _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
         });
         return visualizerLink;
@@ -1360,7 +1384,7 @@ var Visualizer = (function ($) {
             else{
                 node.showCellValues = !node.showCellValues;
                 _showingCellValuesNode = node;
-                _nodeScope = node.availableScope;
+                _nodeAvailableScope = node.availableScope;
                 loadCellValues();
             }
         });
@@ -1405,7 +1429,7 @@ var Visualizer = (function ($) {
             _keepCurrentScope = false;
         }
         else{
-            _graphScope = getFromLocalStorage(SCOPE, null);
+            _nodeScope = getFromLocalStorage(SCOPE, null);
         }
 
         _selectedGroups = getFromLocalStorage(SELECTED_GROUPS, null);
@@ -1426,7 +1450,7 @@ var Visualizer = (function ($) {
     }
 
     function saveAllToLocalStorage() {
-        saveToLocalStorage(_graphScope, SCOPE);
+        saveToLocalStorage(_topNodeScope, SCOPE);
         saveToLocalStorage(_selectedGroups, SELECTED_GROUPS);
         saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
         saveToLocalStorage(_hierarchical, HIERARCHICAL);

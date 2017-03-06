@@ -19,42 +19,48 @@ import static com.cedarsoftware.util.VisualizerConstants.DATE_TIME_FORMAT
 @CompileStatic
 class RpmVisualizerScopeInfo extends VisualizerScopeInfo
 {
+	Set<Object> effectiveVersionAvailableValues = new LinkedHashSet()
+
 	RpmVisualizerScopeInfo(){}
 
 	@Override
-	protected void populateScopeDefaults(String startCubeName)
+	protected void populateScopeDefaults(VisualizerRelInfo relInfo)
 	{
-		String scopeValue
-		if (NCubeManager.getCube(appId, startCubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
-		{
-			String defaultScopeDate = DATE_TIME_FORMAT.format(new Date())
-			scopeValue = inputScope[POLICY_CONTROL_DATE] ?: defaultScopeDate
-			addScopeDefault(POLICY_CONTROL_DATE, scopeValue)
-			scopeValue = inputScope[QUOTE_DATE] ?: defaultScopeDate
-			addScopeDefault(QUOTE_DATE, scopeValue)
-		}
+		String date = DATE_TIME_FORMAT.format(new Date())
+
+		String scopeValue = inputScope[POLICY_CONTROL_DATE] ?: date
+		addScopeDefault(POLICY_CONTROL_DATE, scopeValue, relInfo)
+
+		scopeValue = inputScope[QUOTE_DATE] ?: date
+		addScopeDefault(QUOTE_DATE, scopeValue, relInfo)
+
 		scopeValue = inputScope[EFFECTIVE_VERSION] ?: appId.version
-		addScopeDefault(EFFECTIVE_VERSION, scopeValue)
-		loadAvailableScopeValuesEffectiveVersion()
+		addScopeDefault(EFFECTIVE_VERSION, scopeValue, relInfo)
+		loadAvailableScopeValuesEffectiveVersion(relInfo)
 	}
 
-	private void addScopeDefault(String scopeKey, String defaultValue)
+	private void addScopeDefault(String scopeKey, String defaultValue, VisualizerRelInfo relInfo)
 	{
-		Object scopeValue = scope[scopeKey]
+		Object scopeValue = relInfo.availableTargetScope[scopeKey]
 		scopeValue =  scopeValue ?: defaultValue
-		addTopNodeGraphScope(null, scopeKey, true, null)
-		scope[scopeKey] = scopeValue
+		addNodeScope(relInfo.targetId, null, scopeKey, true, null)
+		relInfo.availableTargetScope[scopeKey] = scopeValue
 	}
 
-	private void loadAvailableScopeValuesEffectiveVersion()
+	private void loadAvailableScopeValuesEffectiveVersion(VisualizerRelInfo relInfo)
 	{
-		if (!topNodeGraphScopeAvailableValues[EFFECTIVE_VERSION])
+		Map<String, Set<Object>> nodeScopeAvailableValues = getNodeScopeInfo(relInfo.targetId).nodeScopeAvailableValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
+		if (!nodeScopeAvailableValues[EFFECTIVE_VERSION])
 		{
-			Map<String, List<String>> versionsMap = NCubeManager.getVersions(appId.tenant, appId.app)
-			Set<Object>  values = new TreeSet<>(new VersionComparator())
-			values.addAll(versionsMap[ReleaseStatus.RELEASE.name()])
-			values.addAll(versionsMap[ReleaseStatus.SNAPSHOT.name()])
-			topNodeGraphScopeAvailableValues[EFFECTIVE_VERSION] = new LinkedHashSet(values)
+			if (!effectiveVersionAvailableValues)
+			{
+				Map<String, List<String>> versionsMap = NCubeManager.getVersions(appId.tenant, appId.app)
+				Set<Object> values = new TreeSet<>(new VersionComparator())
+				values.addAll(versionsMap[ReleaseStatus.RELEASE.name()])
+				values.addAll(versionsMap[ReleaseStatus.SNAPSHOT.name()])
+				effectiveVersionAvailableValues = new LinkedHashSet(values)
+			}
+			nodeScopeAvailableValues[EFFECTIVE_VERSION] = effectiveVersionAvailableValues
 		}
 	}
 
@@ -64,10 +70,6 @@ class RpmVisualizerScopeInfo extends VisualizerScopeInfo
 		Object scopeValue = inputScope[scopeKey]
 		if (relInfo.availableTargetScope[scopeKey] != scopeValue)
 		{
-			if (!loadingCellValues)
-			{
-				scope[scopeKey] = scopeValue
-			}
 			relInfo.availableTargetScope[scopeKey] = scopeValue
 			return true
 		}

@@ -18,7 +18,8 @@ class VisualizerRelInfo
 {
 	protected ApplicationID appId
 
-	protected List<String> nodeScopeMessages = []
+	String scopeMessage
+	protected List<String> nodeDetailsMessages = []
 	protected Map<String, Object> availableTargetScope
 
 	protected long targetId
@@ -61,11 +62,24 @@ class VisualizerRelInfo
 		targetLevel = Long.valueOf(node.level as String)
 		targetScope = node.scope as CaseInsensitiveMap
 		availableTargetScope = node.availableScope as CaseInsensitiveMap
-		availableTargetScope.keySet().removeAll(scopeInfo.nodeAdditionalScopeAvailableValues.keySet())
+		Map<String, Set<Object>> nodeScopeAvailableValues = scopeInfo.getNodeScopeInfo(targetId).nodeScopeAvailableValues as Map
+		availableTargetScope.keySet().removeAll(nodeScopeAvailableValues.keySet())
 		showCellValuesLink = node.showCellValuesLink as boolean
 		showCellValues = node.showCellValues as boolean
 		cellValuesLoaded = node.cellValuesLoaded as boolean
 		typesToAdd = node.typesToAdd as List
+	}
+
+	protected void initFirst(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, String startCubeName)
+	{
+		targetCube = NCubeManager.getCube(appId, startCubeName)
+		availableTargetScope = new CaseInsensitiveMap(scopeInfo.inputScope)
+		scopeInfo.populateScopeDefaults(this)
+		targetScope = new CaseInsensitiveMap()
+		targetLevel = 1
+		targetId = 1
+		addRequiredAndOptionalScopeKeys(visInfo)
+		showCellValuesLink = true
 	}
 
 	protected boolean loadCellValues(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
@@ -169,7 +183,7 @@ class VisualizerRelInfo
 		sb.append("</ul></pre>${BREAK}")
 	}
 
-	private static void getDetailsSet(StringBuilder sb, String title, Set<String> set)
+	protected static void getDetailsSet(StringBuilder sb, String title, Collection<String> set)
 	{
 		sb.append("<b>${title}</b>")
 		sb.append("<pre><ul>")
@@ -245,6 +259,11 @@ class VisualizerRelInfo
 		node.sourceCubeName = sourceCubeName
 		node.scope = targetScope
 		node.availableScope = availableTargetScope
+		if (1l == targetId)
+		{
+			node.scopeMessage = scopeInfo.createNodeScopeMessage(this)
+		}
+
 		node.fromFieldName = sourceFieldName
 		node.sourceDescription = sourceCubeName ? sourceDescription : null
 
@@ -258,13 +277,8 @@ class VisualizerRelInfo
 		node.showCellValuesLink = showCellValuesLink
 		node.showCellValues = showCellValues
 		node.cellValuesLoaded = cellValuesLoaded
-
 		String label = getLabel(targetCubeName)
 		node.label = nodeLabelPrefix + label
-		if (visInfo.nodeCount == 1l)
-		{
-			scopeInfo.topNodeName = label
-		}
 
 		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
 		long maxLevel = visInfo.maxLevel
@@ -278,7 +292,7 @@ class VisualizerRelInfo
 		return true
 	}
 
-	protected String getLabel(String cubeName)
+	protected String getLabel(String cubeName = targetCube.name)
 	{
 		cubeName
 	}

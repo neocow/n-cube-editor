@@ -49,8 +49,10 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		StringBuilder sb = new StringBuilder()
 
-		//Node scope prompts
-		sb.append(scopeInfo.createNodeScopePrompts(this))
+		//Messages
+		nodeDetailsMessages.each { String message ->
+			sb.append("${message}")
+		}
 
 		//Scope
 		if (cellValuesLoaded)
@@ -368,7 +370,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			}
 			if (!scopeInfo.loadingCellValues)
 			{
-				nodeScopeMessages << "Defaults were used for some scope keys. Different values may be provided.${DOUBLE_BREAK}".toString()
+				nodeDetailsMessages << "Defaults were used for some scope keys. Different values may be provided.${DOUBLE_BREAK}".toString()
 			}
 		}
 	}
@@ -382,7 +384,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 		StringBuilder message = new StringBuilder("<b>Unable to load ${scopeInfo.loadTarget}. The value ${e.value} is not valid for ${e.axisName}.</b>${DOUBLE_BREAK}")
 		message.append(sb)
-		nodeScopeMessages << message.toString()
+		nodeDetailsMessages << message.toString()
 		nodeLabelPrefix = 'Required scope value not found for '
 		targetTraits = new CaseInsensitiveMap()
 	}
@@ -397,7 +399,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 		StringBuilder message = new StringBuilder("<b>Unable to load ${scopeInfo.loadTarget}. Additional scope is required.</b> ${DOUBLE_BREAK}")
 		message.append(sb)
-		nodeScopeMessages << message.toString()
+		nodeDetailsMessages << message.toString()
 		nodeLabelPrefix = 'Additional scope required for '
 		targetTraits = new CaseInsensitiveMap()
 	}
@@ -406,8 +408,41 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		StringBuilder sb = new StringBuilder("<b>Unable to load ${scopeInfo.loadTarget} due to an exception.</b>${DOUBLE_BREAK}")
 		sb.append(helper.handleException(e))
-		nodeScopeMessages << sb.toString()
+		nodeDetailsMessages << sb.toString()
 		nodeLabelPrefix = "Unable to load "
 		targetTraits = new CaseInsensitiveMap()
+	}
+
+	/**
+	 * Sets the basic nodeScope required to load a target class based on scoped source class,
+	 * source field name, target class name, and current nodeScope.
+	 * Retains all other nodeScope.
+	 *
+	 * @param targetCube String target cube
+	 * @param sourceFieldRpmType String source field type
+	 * @param sourceFieldName String source field name
+	 * @param scope Map<String, Object> nodeScope
+	 *
+	 * @return Map new nodeScope
+	 *
+	 */
+	protected void populateScopeRelativeToSource(String sourceFieldRpmType, String targetFieldName, Map scope)
+	{
+		Map<String, Object> newScope = new CaseInsensitiveMap<>(scope)
+
+		if (targetCube.name.startsWith(RPM_ENUM))
+		{
+			newScope[SOURCE_FIELD_NAME] = targetFieldName
+		}
+		else if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		{
+			String newScopeKey = sourceFieldRpmType
+			String oldValue = scope[newScopeKey]
+			if (oldValue)
+			{
+				newScope[SOURCE_SCOPE_KEY_PREFIX + sourceFieldRpmType] = oldValue
+			}
+			availableTargetScope[newScopeKey] = targetFieldName
+		}
 	}
 }
