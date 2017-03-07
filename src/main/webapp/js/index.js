@@ -1743,9 +1743,6 @@ var NCE = (function ($) {
         _viewCommitsList.find('select').on('change', function() {
             viewCommitsFilter();
         });
-        _clearCache.click(function() {
-            clearCache();
-        });
         $('#serverStats').click(function() {
             serverStats();
         });
@@ -2131,34 +2128,26 @@ var NCE = (function ($) {
     }
 
     function enableDisableReleaseMenu(canReleaseApp) {
-        _releaseCubesMenu.off('click');
-        _changeVersionMenu.off('click');
-        _createSnapshotMenu.off('click');
-
-        if (canReleaseApp) {
-            _releaseCubesMenu.on('click', releaseCubes);
-            _changeVersionMenu.on('click', changeVersion);
-            _createSnapshotMenu.on('click', createSnapshotFromRelease);
-            _releaseCubesMenu.parent().removeClass('disabled');
-            _changeVersionMenu.parent().removeClass('disabled');
-            _createSnapshotMenu.parent().removeClass('disabled');
-        } else {
-            _releaseCubesMenu.parent().addClass('disabled');
-            _changeVersionMenu.parent().addClass('disabled');
-            _createSnapshotMenu.parent().addClass('disabled');
-        }
+        enableDisableMenuButton(_releaseCubesMenu, canReleaseApp, releaseCubes);
+        enableDisableMenuButton(_changeVersionMenu, canReleaseApp, changeVersion);
+        enableDisableMenuButton(_createSnapshotMenu, canReleaseApp, createSnapshotFromRelease);
     }
 
     function enableDisableCommitBranch(canCommitOnApp) {
         _branchCommit.toggle(canCommitOnApp);
     }
-    
-    function enableDisableClearCache(isAppAdmin) {
-        var el = _clearCache.parent();
-        if (isAppAdmin || head !== getAppId().branch) {
-            el.removeClass('disabled');
+
+    function enableDisableMenuButton(el, enable, onClick) {
+        el.off('click');
+        if (enable) {
+            el.parent().removeClass('disabled');
+            el.on('click', function() { onClick(); });
         } else {
-            el.addClass('disabled');
+            el.parent().addClass('disabled');
+            el.on('click', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            });
         }
     }
 
@@ -2173,13 +2162,7 @@ var NCE = (function ($) {
             showNote('Unable to check lock for app \'' + _selectedApp + '\':<hr class="hr-small"/>' + result.data);
         }
 
-        _lockUnlockAppMenu.off('click');
-        if (isAppAdmin) {
-            _lockUnlockAppMenu.on('click', lockUnlockApp);
-            _lockUnlockAppMenu.parent().removeClass('disabled');
-        } else {
-            _lockUnlockAppMenu.parent().addClass('disabled');
-        }
+        enableDisableMenuButton(_lockUnlockAppMenu, isAppAdmin, lockUnlockApp);
     }
 
     function showHideImpersonation(isAdmin) {
@@ -2257,7 +2240,7 @@ var NCE = (function ($) {
         
         enableDisableReleaseMenu(canReleaseApp);
         enableDisableCommitBranch(canCommitOnApp);
-        enableDisableClearCache(isAppAdmin);
+        enableDisableMenuButton(_clearCache, isAppAdmin || head !== getAppId().branch, clearCache);
         enableDisableLockMenu(isAppAdmin);
         showHideImpersonation(isAppAdmin);
     }
