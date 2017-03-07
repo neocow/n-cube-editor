@@ -32,14 +32,9 @@ class VisualizerScopeInfo
 
 	VisualizerScopeInfo(){}
 
-	protected void init(ApplicationID applicationId, Map options, boolean loadCellValues = false){
+	protected void init(ApplicationID applicationId, Map options){
 		appId = applicationId
 		inputScope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
-		loadingCellValues = loadCellValues
-		if (!loadingCellValues)
-		{
-			graphScopeInfo = [:]
-		}
 	}
 
 	protected void populateScopeDefaults(VisualizerRelInfo relInfo) {}
@@ -103,7 +98,20 @@ class VisualizerScopeInfo
 		return values
 	}
 
-	protected String createNodeScopeMessage(VisualizerRelInfo relInfo)
+	protected String createNodeDetailsScopeMessage(VisualizerRelInfo relInfo)
+	{
+		Map nodeScopeInfo = getNodeScopeInfo(relInfo.targetId)
+		Map<String, Set<Object>> nodeScopeAvailableValues = nodeScopeInfo.nodeScopeAvailableValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
+		Map<String, Set<String>> nodeScopeCubeNames = nodeScopeInfo.nodeScopeCubeNames as CaseInsensitiveMap?: new CaseInsensitiveMap()
+
+		StringBuilder sb = new StringBuilder()
+		sb.append(getNodeDetailsMessages(relInfo.nodeDetailsMessages))
+		sb.append(getNodeScopeMessage(nodeScopeAvailableValues.sort(), nodeScopeCubeNames, relInfo))
+		sb.append("${BREAK}")
+		return sb.toString()
+	}
+
+	protected String createNodeScopeToastMessage(VisualizerRelInfo relInfo)
 	{
 		Map nodeScopeInfo = getNodeScopeInfo(relInfo.targetId)
 		Map<String, Set<Object>> nodeScopeAvailableValues = nodeScopeInfo.nodeScopeAvailableValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()

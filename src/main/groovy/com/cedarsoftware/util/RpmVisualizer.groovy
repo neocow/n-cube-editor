@@ -24,11 +24,12 @@ class RpmVisualizer extends Visualizer
 	 * @param options - a map containing:
 	 *            Map node, representing a class and its scope
 	 *            RpmVisualizerInfo visInfo, information about the visualization
+	 *            RpmVisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 *            Map scope, the scope used in the visualization
 	 * @return a map containing:
 	 *           String status, status of the visualization
 	 *           RpmVisualizerInfo visInfo, information about the visualization
-	 *           VisualizerScopeInfo scopeInfo, information about the scope used in the visualization
+	 *           RpmVisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 */
 
 	@Override
@@ -39,7 +40,7 @@ class RpmVisualizer extends Visualizer
 		visInfo.appId = applicationID
 		VisualizerScopeInfo scopeInfo = options.scopeInfo as RpmVisualizerScopeInfo
 		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId, options.node as Map, scopeInfo)
-		scopeInfo.init(applicationID, options, true)
+		scopeInfo.init(applicationID, options)
 		return getCellValues(visInfo, scopeInfo, relInfo, options)
 	}
 

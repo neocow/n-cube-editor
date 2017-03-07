@@ -49,18 +49,16 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		StringBuilder sb = new StringBuilder()
 
-		//Messages
-		nodeDetailsMessages.each { String message ->
-			sb.append("${message}")
-		}
+		//Scope messages
+		sb.append(scopeInfo.createNodeDetailsScopeMessage(this))
 
 		//Scope
 		if (cellValuesLoaded)
 		{
-			String title = showCellValues ? 'Utilized scope with traits' : 'Utilized scope with no traits'
+			String title = showCellValues ? 'Scope with traits' : 'Scope with no traits'
 			getDetailsMap(sb, title, targetScope)
 		}
-		getDetailsMap(sb, 'Available scope', availableTargetScope)
+		//getDetailsMap(sb, 'Available scope', availableTargetScope)
 
 		//Fields
 		if (cellValuesLoaded)
@@ -165,8 +163,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		Set keysUsed = ruleInfo.getInputKeysUsed()
 		scopeCollector.addAll(keysUsed)
 
-		targetScope = new CaseInsensitiveMap(availableTargetScope)
-		cullScope(targetScope.keySet(), scopeCollector)
+		Map<String, Object> scope = new CaseInsensitiveMap(availableTargetScope)
+		cullScope(scope.keySet(), scopeCollector)
+		targetScope.putAll(scope)
 	}
 
 	private void removeNotExistsFields()
@@ -319,11 +318,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	@Override
 	protected boolean loadCellValues(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
 	{
+		Map output = new CaseInsensitiveMap()
 		loadAgain = false
 		try
 		{
 			targetTraits = new CaseInsensitiveMap()
-			Map output = new CaseInsensitiveMap()
+
 			if (targetCube.name.startsWith(RPM_ENUM))
 			{
 				helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, availableTargetScope, targetTraits, showCellValues, output)
@@ -333,8 +333,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			}
 			handleUnboundScope(visInfo, scopeInfo, targetCube.getRuleInfo(output))
 			removeNotExistsFields()
-			addRequiredAndOptionalScopeKeys(visInfo)
-			retainUsedScope(visInfo, output)
 			cellValuesLoaded = true
 			showCellValuesLink = true
 		}
@@ -356,7 +354,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				handleException(t, scopeInfo)
 			}
 		}
-		return loadAgain ? loadCellValues(visInfo, scopeInfo) : true
+		addRequiredAndOptionalScopeKeys(visInfo)
+		retainUsedScope(visInfo, output)
+		if (loadAgain)
+		{
+			return loadCellValues(visInfo, scopeInfo)
+		}
+		return true
 	}
 
 	private void handleUnboundScope(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, RuleInfo ruleInfo)
@@ -428,7 +432,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	 */
 	protected void populateScopeRelativeToSource(String sourceFieldRpmType, String targetFieldName, Map scope)
 	{
-		availableTargetScope = new CaseInsensitiveMap<>(scope)
+		availableTargetScope = new CaseInsensitiveMap(scope)
 
 		if (targetCube.name.startsWith(RPM_ENUM))
 		{

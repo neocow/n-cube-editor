@@ -28,8 +28,8 @@ class Visualizer
 	 * @param applicationID
 	 * @param options - a map containing:
 	 *           String startCubeName, name of the starting cube
-	 *           Map scope, the context for which the visualizer is loaded
 	 *           VisualizerInfo visInfo, information about the visualization
+	 *           VisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 *           Map scope, the scope used in the visualization
 	 * @return a map containing:
 	 *           String status, status of the visualization
@@ -60,6 +60,7 @@ class Visualizer
 	 * @param options - a map containing:
 	 *            Map node, representing a cube and its scope
 	 *            VisualizerInfo visInfo, information about the visualization
+	 *            VisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 *            Map scope, the scope used in the visualization
 	 * @return a map containing:
 	 *           String status, status of the visualization
@@ -73,7 +74,7 @@ class Visualizer
 		visInfo.appId = applicationID
 		VisualizerScopeInfo scopeInfo = options.scopeInfo as VisualizerScopeInfo
 		VisualizerRelInfo relInfo = new VisualizerRelInfo(appId, options.node as Map, scopeInfo)
-		scopeInfo.init(applicationID, options, true)
+		scopeInfo.init(applicationID, options)
 		return getCellValues(visInfo, scopeInfo, relInfo, options)
 	}
 

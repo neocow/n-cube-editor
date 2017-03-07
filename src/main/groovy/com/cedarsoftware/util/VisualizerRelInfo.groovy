@@ -20,11 +20,11 @@ class VisualizerRelInfo
 
 	String scopeMessage
 	protected List<String> nodeDetailsMessages = []
-	protected Map<String, Object> availableTargetScope
+	protected Map<String, Object> availableTargetScope = new CaseInsensitiveMap()
 
 	protected long targetId
 	protected NCube targetCube
-	protected Map<String, Object> targetScope
+	protected Map<String, Object> targetScope = new CaseInsensitiveMap()
 	protected long targetLevel
 	protected String nodeLabelPrefix = ''
 
@@ -75,9 +75,7 @@ class VisualizerRelInfo
 		targetId = 1
 		targetLevel = 1
 		targetCube = NCubeManager.getCube(appId, startCubeName)
-		availableTargetScope = new CaseInsensitiveMap()
 		scopeInfo.populateScopeDefaults(this)
-		targetScope = new CaseInsensitiveMap()
 		addRequiredAndOptionalScopeKeys(visInfo)
 		showCellValuesLink = true
 	}
@@ -261,7 +259,7 @@ class VisualizerRelInfo
 		node.availableScope = availableTargetScope
 		if (1l == targetId)
 		{
-			node.scopeMessage = scopeInfo.createNodeScopeMessage(this)
+			node.scopeMessage = scopeInfo.createNodeScopeToastMessage(this)
 		}
 
 		node.fromFieldName = sourceFieldName

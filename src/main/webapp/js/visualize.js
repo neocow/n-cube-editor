@@ -636,9 +636,10 @@ var Visualizer = (function ($) {
         _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
 
         getAllFromLocalStorage();
-        if (_visInfo) {
+        if (_visInfo && _scopeInfo) {
             _visInfo.nodes = {};
             _visInfo.edges = {};
+            _scopeInfo.graphScopeInfo = {};
             options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scopeInfo: _scopeInfo, scope: _topNodeScope};
         }
         else{
