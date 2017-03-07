@@ -639,7 +639,7 @@ var Visualizer = (function ($) {
         if (_visInfo) {
             _visInfo.nodes = {};
             _visInfo.edges = {};
-            options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scope: _topNodeScope};
+            options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scopeInfo: _scopeInfo, scope: _topNodeScope};
         }
         else{
             options =  {startCubeName: _selectedCubeName, scope: _topNodeScope};

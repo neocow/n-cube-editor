@@ -44,14 +44,6 @@ class VisualizerScopeInfo
 
 	protected void populateScopeDefaults(VisualizerRelInfo relInfo) {}
 
-	protected void addScope(VisualizerRelInfo relInfo, String cubeName, String scopeKey, Map coordinate = null)
-	{
-		if (!relInfo.loadAgain)
-		{
-			addNodeScope(relInfo.targetId, cubeName, scopeKey, false, coordinate)
-		}
-	}
-
 	protected void addNodeScope(Long targetId, String cubeName, String scopeKey, boolean skipAvailableScopeValues = false, Map coordinate)
 	{
 		Map nodeScopeInfo = getNodeScopeInfo(targetId)
@@ -145,7 +137,7 @@ class VisualizerScopeInfo
 	private StringBuilder getNodeScopeMessage(Map<String, Set<Object>> availableValuesMap, Map<String, Set<String>> cubeNamesMap, VisualizerRelInfo relInfo)
 	{
 		String nodeName = relInfo.getLabel()
-		Map nodeScope = relInfo.targetScope
+		Map nodeAvailableScope = relInfo.availableTargetScope
 		StringBuilder sb = new StringBuilder()
 		if (availableValuesMap)
 		{
@@ -157,7 +149,7 @@ class VisualizerScopeInfo
 				String requiredOrOptional = availableValues.contains(null) ? 'optional' : 'required'
 				StringBuilder title = new StringBuilder("Scope key ${scopeKey} is ${requiredOrOptional} to load ${nodeName}")
 				title.append(addCubeNamesList('.\n\nFirst encountered on the following cubes, but may also be present on others:', cubeNames))
-				sb.append(getScopeMessage(scopeKey, availableValues, title, nodeScope[scopeKey], relInfo.targetId))
+				sb.append(getScopeMessage(scopeKey, availableValues, title, nodeAvailableScope[scopeKey], relInfo.targetId))
 			}
 		}
 		else{

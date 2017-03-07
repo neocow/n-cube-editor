@@ -72,12 +72,12 @@ class VisualizerRelInfo
 
 	protected void initFirst(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, String startCubeName)
 	{
+		targetId = 1
+		targetLevel = 1
 		targetCube = NCubeManager.getCube(appId, startCubeName)
-		availableTargetScope = new CaseInsensitiveMap(scopeInfo.inputScope)
+		availableTargetScope = new CaseInsensitiveMap()
 		scopeInfo.populateScopeDefaults(this)
 		targetScope = new CaseInsensitiveMap()
-		targetLevel = 1
-		targetId = 1
 		addRequiredAndOptionalScopeKeys(visInfo)
 		showCellValuesLink = true
 	}

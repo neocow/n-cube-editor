@@ -428,11 +428,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	 */
 	protected void populateScopeRelativeToSource(String sourceFieldRpmType, String targetFieldName, Map scope)
 	{
-		Map<String, Object> newScope = new CaseInsensitiveMap<>(scope)
+		availableTargetScope = new CaseInsensitiveMap<>(scope)
 
 		if (targetCube.name.startsWith(RPM_ENUM))
 		{
-			newScope[SOURCE_FIELD_NAME] = targetFieldName
+			availableTargetScope[SOURCE_FIELD_NAME] = targetFieldName
 		}
 		else if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
 		{
@@ -440,7 +440,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			String oldValue = scope[newScopeKey]
 			if (oldValue)
 			{
-				newScope[SOURCE_SCOPE_KEY_PREFIX + sourceFieldRpmType] = oldValue
+				availableTargetScope[SOURCE_SCOPE_KEY_PREFIX + sourceFieldRpmType] = oldValue
 			}
 			availableTargetScope[newScopeKey] = targetFieldName
 		}

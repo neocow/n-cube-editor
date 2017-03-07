@@ -61,9 +61,14 @@ class RpmVisualizer extends Visualizer
 		return visInfo
 	}
 
+
 	protected VisualizerScopeInfo getVisualizerScopeInfo(Map options)
 	{
-		RpmVisualizerScopeInfo scopeInfo = new RpmVisualizerScopeInfo()
+		RpmVisualizerScopeInfo scopeInfo = options.scopeInfo as RpmVisualizerScopeInfo
+		if (!scopeInfo || scopeInfo.appId.app != appId.app)
+		{
+			scopeInfo = new RpmVisualizerScopeInfo()
+		}
 		scopeInfo.init(appId, options)
 		return scopeInfo
 	}

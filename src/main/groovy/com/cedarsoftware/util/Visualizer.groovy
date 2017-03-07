@@ -108,7 +108,11 @@ class Visualizer
 
 	protected VisualizerScopeInfo getVisualizerScopeInfo(Map options)
 	{
-		VisualizerScopeInfo scopeInfo =  new VisualizerScopeInfo()
+		VisualizerScopeInfo scopeInfo = options.scopeInfo as VisualizerScopeInfo
+		if (!scopeInfo || scopeInfo.appId.app != appId.app)
+		{
+			scopeInfo = new VisualizerScopeInfo()
+		}
 		scopeInfo.init(appId, options)
 		return scopeInfo
 	}

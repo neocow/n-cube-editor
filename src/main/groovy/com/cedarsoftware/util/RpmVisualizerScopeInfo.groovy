@@ -37,31 +37,27 @@ class RpmVisualizerScopeInfo extends VisualizerScopeInfo
 		scopeValue = inputScope[EFFECTIVE_VERSION] ?: appId.version
 		addScopeDefault(EFFECTIVE_VERSION, scopeValue, relInfo)
 		loadAvailableScopeValuesEffectiveVersion(relInfo)
+
+		relInfo.availableTargetScope.putAll(scopeDefaults)
 	}
 
-	private void addScopeDefault(String scopeKey, String defaultValue, VisualizerRelInfo relInfo)
+	private void addScopeDefault(String scopeKey, Object value, VisualizerRelInfo relInfo)
 	{
-		Object scopeValue = relInfo.availableTargetScope[scopeKey]
-		scopeValue =  scopeValue ?: defaultValue
 		addNodeScope(relInfo.targetId, null, scopeKey, true, null)
-		relInfo.availableTargetScope[scopeKey] = scopeValue
+		scopeDefaults[scopeKey] = value
 	}
 
 	private void loadAvailableScopeValuesEffectiveVersion(VisualizerRelInfo relInfo)
 	{
-		Map<String, Set<Object>> nodeScopeAvailableValues = getNodeScopeInfo(relInfo.targetId).nodeScopeAvailableValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
-		if (!nodeScopeAvailableValues[EFFECTIVE_VERSION])
+		if (!effectiveVersionAvailableValues)
 		{
-			if (!effectiveVersionAvailableValues)
-			{
-				Map<String, List<String>> versionsMap = NCubeManager.getVersions(appId.tenant, appId.app)
-				Set<Object> values = new TreeSet<>(new VersionComparator())
-				values.addAll(versionsMap[ReleaseStatus.RELEASE.name()])
-				values.addAll(versionsMap[ReleaseStatus.SNAPSHOT.name()])
-				effectiveVersionAvailableValues = new LinkedHashSet(values)
-			}
-			nodeScopeAvailableValues[EFFECTIVE_VERSION] = effectiveVersionAvailableValues
+			Map<String, List<String>> versionsMap = NCubeManager.getVersions(appId.tenant, appId.app)
+			Set<Object> values = new TreeSet<>(new VersionComparator())
+			values.addAll(versionsMap[ReleaseStatus.RELEASE.name()])
+			values.addAll(versionsMap[ReleaseStatus.SNAPSHOT.name()])
+			effectiveVersionAvailableValues = new LinkedHashSet(values)
 		}
+		getNodeScopeInfo(relInfo.targetId).nodeScopeAvailableValues[EFFECTIVE_VERSION] = effectiveVersionAvailableValues
 	}
 
 	@Override
