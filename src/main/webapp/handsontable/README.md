@@ -1,4 +1,3 @@
-#### 0.30.1
 # Handsontable distributions
 
 ## Full distribution (recommended)

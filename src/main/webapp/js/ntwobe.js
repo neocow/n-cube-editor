@@ -2854,15 +2854,11 @@ var NCubeEditor2 = (function ($) {
     //====================================== coordinate bar functions ==================================================
 
     function resetCoordinateBar(displayText) {
+        var show = _coordBarText.hasScrollBar();
         _coordBarText[0].scrollLeft = 0;
         _coordBarText[0].innerHTML = displayText || '';
-        if (_coordBarText.hasScrollBar()) {
-            _coordBarLeftBtn.show();
-            _coordBarRightBtn.show();
-        } else {
-            _coordBarLeftBtn.hide();
-            _coordBarRightBtn.hide();
-        }
+        _coordBarLeftBtn.toggle(show);
+        _coordBarRightBtn.toggle(show);
     }
 
     function setCoordinateBarListeners() {
@@ -3633,10 +3629,9 @@ var NCubeEditor2 = (function ($) {
 
         enabledDisableCheckBoxes(); // reset for form
         _editCellModal.find('input,textarea,select').attr('disabled', !modifiable);
+        _editCellCancel.toggle(modifiable);
+        _editCellClear.toggle(modifiable);
         if (modifiable) {
-            _editCellCancel.show();
-            _editCellClear.show();
-
             _editCellModal.one('shown.bs.modal', function () {
                 if (_bufferText.trim() !== '') {
                     _editCellValue.val(isDefault ? _bufferText : (cellValue + _bufferText));
@@ -3645,9 +3640,6 @@ var NCubeEditor2 = (function ($) {
                     _editCellValue.select();
                 }
             });
-        } else {
-            _editCellCancel.hide();
-            _editCellClear.hide();
         }
         editCellAffectsCoordBar(true);
         _editCellModal.modal('show');
@@ -3948,13 +3940,7 @@ var NCubeEditor2 = (function ($) {
         editColumnInstructions(axis);
         sortColumns(axis);
         loadColumns(axis);
-        if (axis.preferredOrder === 1) {
-            $('#editColUp').show();
-            $('#editColDown').show();
-        } else {
-            $('#editColUp').hide();
-            $('#editColDown').hide();
-        }
+        $('#editColUp, #editColDown').toggle(axis.preferredOrder === 1);
         $('#editColumnsLabel')[0].innerHTML = 'Edit ' + axisName;
         addHotBeforeKeyDown();
         _editColumnModal.modal();
@@ -4667,11 +4653,7 @@ var NCubeEditor2 = (function ($) {
         var appId = nce.getSelectedTabAppId();
         var modifiable = checkCubeUpdatePermissions(axisName);
         _updateAxisModal.find('input').not('.always-disabled').attr('disabled', !modifiable);
-        if (modifiable) {
-            $('#updateAxisOk').show();
-        } else {
-            $('#updateAxisOk').hide();
-        }
+        $('#updateAxisOk').toggle(modifiable);
 
         result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [appId, cubeName, axisName]);
         if (result.status) {
@@ -4687,19 +4669,19 @@ var NCubeEditor2 = (function ($) {
         _updateAxisValueTypeName.val(axis.valueType.name);
         $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol !== null});
         if (isRule) {
-            hideAxisSortOption();
-            showAxisDefaultColumnOption(axis);
-            showAxisFireAllOption(axis);
+            showHideAxisSortOption();
+            showHideAxisDefaultColumnOption(axis);
+            showHideAxisFireAllOption(axis);
         }
         else if (isNearest) {
-            hideAxisSortOption();
-            hideAxisDefaultColumnOption();
-            hideAxisFireAllOption();
+            showHideAxisSortOption();
+            showHideAxisDefaultColumnOption();
+            showHideAxisFireAllOption();
         }
         else {
-            showAxisSortOption(axis);
-            showAxisDefaultColumnOption(axis);
-            hideAxisFireAllOption();
+            showHideAxisSortOption(axis);
+            showHideAxisDefaultColumnOption(axis);
+            showHideAxisFireAllOption();
         }
 
         if (axis.isRef) {
@@ -4707,12 +4689,9 @@ var NCubeEditor2 = (function ($) {
             metaProps = axis.metaProps;
             _refAxisGroupUpdate.show();
             _isRefAxisUpdate[0].checked = true;
-            if (metaProps.transformApp) {
-                _refFilterGroupUpdate.show();
-                _hasRefFilterUpdate[0].checked = true;
-            } else {
-                _refFilterGroupUpdate.hide();
-                _hasRefFilterUpdate[0].checked = false;
+            _hasRefFilterUpdate[0].checked = metaProps.transformApp;
+            _refFilterGroupUpdate.toggle(metaProps.transformApp);
+            if (!metaProps.transformApp) {
                 _refFilterGroupUpdate.find('input').val('');
             }
             _refAxisBranchUpdate.val(metaProps.referenceBranch);
@@ -4742,31 +4721,24 @@ var NCubeEditor2 = (function ($) {
         });
     }
 
-    function showAxisSortOption(axis) {
-        $('#updateAxisSortOrderRow').show();
-        _updateAxisSortOrder.prop({'checked': axis.preferredOrder === 0});
+    function showHideUpdateAxisOption(axis, rowEl, checkEl, val) {
+        var show = !!axis;
+        rowEl.toggle(show);
+        if (show) {
+            checkEl[0].checked = val;
+        }
     }
 
-    function hideAxisSortOption() {
-        $('#updateAxisSortOrderRow').hide();
+    function showHideAxisSortOption(axis) {
+        showHideUpdateAxisOption(axis, $('#updateAxisSortOrderRow'), _updateAxisSortOrder, !(axis || {}).preferredOrder);
     }
 
-    function showAxisDefaultColumnOption(axis) {
-        $('#updateAxisDefaultColRow').show();
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol !== null});
+    function showHideAxisDefaultColumnOption(axis) {
+        showHideUpdateAxisOption(axis, $('#updateAxisDefaultColRow'), $('#updateAxisDefaultCol'), (axis || {}).defaultCol !== null);
     }
 
-    function hideAxisDefaultColumnOption() {
-        $('#updateAxisDefaultColRow').hide();
-    }
-
-    function showAxisFireAllOption(axis) {
-        $('#updateAxisFireAllRow').show();
-        $('#updateAxisFireAll').prop({'checked': axis.fireAll === true});
-    }
-
-    function hideAxisFireAllOption() {
-        $('#updateAxisFireAllRow').hide();
+    function showHideAxisFireAllOption(axis) {
+        showHideUpdateAxisOption(axis, $('#updateAxisFireAllRow'), $('#updateAxisFireAll'), (axis || {}).fireAll);
     }
 
     function updateAxisOk() {
