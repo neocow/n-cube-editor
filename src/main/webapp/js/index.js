@@ -3952,6 +3952,7 @@ var NCE = (function ($) {
             runSearch();
             buildMenu();
             buildBranchQuickSelectMenu();
+            southPanelResize();
         }, PROGRESS_DELAY);
         clearNotes(NOTE_CLASS.PROCESS_DURATION);
         showNote('Changing branch to: ' + branchName, 'Please wait...', ONE_SECOND_TIMEOUT);
