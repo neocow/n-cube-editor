@@ -1743,6 +1743,9 @@ var NCE = (function ($) {
         _viewCommitsList.find('select').on('change', function() {
             viewCommitsFilter();
         });
+        _viewCommitsModal.on('shown.bs.modal', function() {
+            viewCommitsFilter();
+        });
         $('#serverStats').click(function() {
             serverStats();
         });
@@ -3576,12 +3579,12 @@ var NCE = (function ($) {
             el = populatedSelects[i];
             filterVal = el.value;
             if (filterVal.length) {
-                viewCommitsHideIfMatching(filterVal, selects.index(el) + 1);
+                viewCommitsHideIfNotMatching(filterVal, selects.index(el) + 1);
             }
         }
     }
 
-    function viewCommitsHideIfMatching(filterVal, idx) {
+    function viewCommitsHideIfNotMatching(filterVal, idx) {
         var i, len, tds, td, row;
         tds = _viewCommitsList.find('tr:gt(1):visible').find('td:nth-child(' + idx + ')');
         for (i = 0, len = tds.length; i < len; i++) {
@@ -3600,7 +3603,7 @@ var NCE = (function ($) {
             apps: {},
             versions: {},
             branches: {},
-            statuses: {},
+            statuses: { open:''},
             reqUsers: {},
             reqDates: {},
             comUsers: {},
@@ -3646,12 +3649,16 @@ var NCE = (function ($) {
         populateSelectFromMap(_viewCommitsApp, data.apps, isUpdate);
         populateSelectFromMap(_viewCommitsVersion, data.versions, isUpdate);
         populateSelectFromMap(_viewCommitsBranch, data.branches, isUpdate);
-        populateSelectFromMap(_viewCommitsStatus, data.statuses, isUpdate);
+        populateSelectFromMap(_viewCommitsStatus, data.statuses, isUpdate, 'open');
         populateSelectFromMap(_viewCommitsRequestUser, data.reqUsers, isUpdate);
         populateSelectFromMap(_viewCommitsRequestDate, data.reqDates, isUpdate);
         populateSelectFromMap(_viewCommitsCommitUser, data.comUsers, isUpdate);
         populateSelectFromMap(_viewCommitsCommitDate, data.comDates, isUpdate);
         populateSelectFromMap(_viewCommitsRepo, data.repos, isUpdate);
+
+        if (isUpdate) {
+            viewCommitsFilter();
+        }
     }
     
     function commitListClick(row, commits) {

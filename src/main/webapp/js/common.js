@@ -338,7 +338,7 @@ function appIdFrom(app, version, status, branch) {
     };
 }
 
-function populateSelectFromMap(sel, map, keepPrevVal) {
+function populateSelectFromMap(sel, map, keepPrevVal, defVal) {
     var i, len, options, keys;
     var prevVal = sel.val();
     sel.empty();
@@ -352,6 +352,8 @@ function populateSelectFromMap(sel, map, keepPrevVal) {
     sel.append(options);
     if (keepPrevVal) {
         sel.val(prevVal);
+    } else if (defVal !== undefined) {
+        sel.val(defVal);
     }
 }
 
