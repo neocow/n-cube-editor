@@ -18,7 +18,7 @@ class VisualizerHelper
 {
 	protected static void handleUnboundScope(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo, List<MapEntry> unboundAxesList)
 	{
-		if (unboundAxesList)
+		if (relInfo.targetId == visInfo.selectedNodeId && unboundAxesList)
 		{
 			unboundAxesList.each { MapEntry unboundAxis ->
 				String cubeName = unboundAxis.key as String
@@ -33,15 +33,18 @@ class VisualizerHelper
 		}
 	}
 
-	protected static StringBuilder handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo)
+	protected static StringBuilder handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo)
 	{
 		StringBuilder sb = new StringBuilder()
 		String cubeName = e.cubeName
 		String scopeKey = e.axisName
 		if (cubeName && scopeKey)
 		{
-			relInfo.loadAgain = scopeInfo.loadAgain(relInfo, scopeKey)
-			scopeInfo.addNodeScope(relInfo.targetId, cubeName, scopeKey, false, e.coordinate)
+			if (relInfo.targetId == visInfo.selectedNodeId)
+			{
+				relInfo.loadAgain = scopeInfo.loadAgain(relInfo, scopeKey)
+				scopeInfo.addNodeScope(relInfo.targetId, cubeName, scopeKey, false, e.coordinate)
+			}
 			return sb
 		}
 		else
@@ -51,15 +54,18 @@ class VisualizerHelper
 		}
 	}
 
-	protected static StringBuilder handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo, Set mandatoryScopeKeys)
+	protected static StringBuilder handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo, Set mandatoryScopeKeys)
 	{
 		StringBuilder sb = new StringBuilder()
 		Set<String> missingScopeKeys = findMissingScope(relInfo.availableTargetScope, e.requiredKeys, mandatoryScopeKeys)
 		if (missingScopeKeys)
 		{
-			missingScopeKeys.each { String scopeKey ->
-				relInfo.loadAgain = scopeInfo.loadAgain(relInfo, scopeKey) ?: relInfo.loadAgain
-				scopeInfo.addNodeScope(relInfo.targetId, e.cubeName, scopeKey, false, null)
+			if (relInfo.targetId == visInfo.selectedNodeId)
+			{
+				missingScopeKeys.each { String scopeKey ->
+					relInfo.loadAgain = scopeInfo.loadAgain(relInfo, scopeKey) ?: relInfo.loadAgain
+					scopeInfo.addNodeScope(relInfo.targetId, e.cubeName, scopeKey, false, null)
+				}
 			}
 			return sb
 		}

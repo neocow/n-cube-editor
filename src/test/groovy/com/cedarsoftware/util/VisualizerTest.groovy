@@ -112,7 +112,7 @@ class VisualizerTest{
         assert ['n-cube', 'rule cube'] == node.typesToAdd
         assert true == node.showCellValuesLink
         assert false == node.showCellValues
-        assert false == node.cellValuesLoaded
+        assert false == node.cubeLoaded
         String nodeDetails = node.details as String
         assert nodeDetails.contains("${DETAILS_LABEL_SCOPE}</b><pre><ul><li>none</li></ul></pre><br><b>")
         assert nodeDetails.contains("${DETAILS_LABEL_AVAILABLE_SCOPE}</b><pre><ul><li>none</li></ul></pre><br><b>")
@@ -137,7 +137,7 @@ class VisualizerTest{
         assert ['n-cube', 'rule cube'] == node.typesToAdd
         assert true == node.showCellValuesLink
         assert false == node.showCellValues
-        assert false == node.cellValuesLoaded
+        assert false == node.cubeLoaded
         nodeDetails = node.details as String
         assert nodeDetails.contains("${DETAILS_LABEL_SCOPE}</b><pre><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>")
         assert nodeDetails.contains("${DETAILS_LABEL_AVAILABLE_SCOPE}</b><pre><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>")
@@ -324,7 +324,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, true, true, true)
 
@@ -362,7 +362,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true, true)
 
@@ -396,7 +396,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true, true)
 
@@ -432,7 +432,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true, true, false)
 
@@ -459,7 +459,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, startCubeName, '', '', false, true)
         assert nodeScope == node.nodeScope
@@ -479,7 +479,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true, true, false)
 
@@ -503,7 +503,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
 
         //TODO: Should show default values
@@ -530,7 +530,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, true, true)
         String nodeDetails = node.details as String
@@ -564,7 +564,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true)
 
@@ -596,7 +596,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true)
 
@@ -631,7 +631,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true)
 
@@ -670,7 +670,7 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, nodeScope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode(startCubeName, false, true)
 
@@ -758,14 +758,14 @@ class VisualizerTest{
         //Simulate that the user clicks Show Cell Values for the node
         node.showCellValues = true
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNode('CubeWithExecutedCell', false, true)
 
         //Simulate that the user clicks Hide Cell Values for the node
         node.showCellValues = false
         options = [node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         checkNode('CubeWithExecutedCell', false, false, true)
     }
@@ -787,11 +787,11 @@ class VisualizerTest{
         edges = visInfo.edges as List
     }
 
-    private void getCellValues(Map options, boolean hasMessages = false)
+    private void loadNodeDetails(Map options, boolean hasMessages = false)
     {
         visInfo?.nodes = []
         visInfo?.edges = []
-        Map graphInfo = visualizer.getCellValues(appId, options)
+        Map graphInfo = visualizer.loadNodeDetails(appId, options)
         visInfo = graphInfo.visInfo as VisualizerInfo
         scopeInfo = graphInfo.scopeInfo as VisualizerScopeInfo
         messages = visInfo.messages
@@ -803,7 +803,7 @@ class VisualizerTest{
         edges = visInfo.edges as List
     }
 
-    private Map checkNode(String nodeName, boolean exceptionCell = false, boolean showCellValues = false, boolean cellValuesLoaded = false, boolean hasCellValues = true)
+    private Map checkNode(String nodeName, boolean exceptionCell = false, boolean showCellValues = false, boolean cubeLoaded = false, boolean hasCellValues = true)
     {
         Map node = nodes.find {Map node1 ->  nodeName == node1.title}
         assert nodeName == node.label
@@ -813,13 +813,13 @@ class VisualizerTest{
         if (showCellValues)
         {
             assert true == node.showCellValuesLink
-            assert true == node.cellValuesLoaded
+            assert true == node.cubeLoaded
             assert true == node.showCellValues
         }
         else
         {
             assert true == node.showCellValuesLink
-            assert cellValuesLoaded == node.cellValuesLoaded
+            assert cubeLoaded == node.cubeLoaded
             assert false == node.showCellValues
         }
 

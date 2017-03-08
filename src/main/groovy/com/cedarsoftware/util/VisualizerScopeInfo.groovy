@@ -32,9 +32,9 @@ class VisualizerScopeInfo
 
 	VisualizerScopeInfo(){}
 
-	protected void init(ApplicationID applicationId, Map options){
+	VisualizerScopeInfo(ApplicationID applicationId)
+	{
 		appId = applicationId
-		inputScope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
 	}
 
 	protected void populateScopeDefaults(VisualizerRelInfo relInfo) {}
@@ -107,11 +107,12 @@ class VisualizerScopeInfo
 		StringBuilder sb = new StringBuilder()
 		sb.append(getNodeDetailsMessages(relInfo.nodeDetailsMessages))
 		sb.append(getNodeScopeMessage(nodeScopeAvailableValues.sort(), nodeScopeCubeNames, relInfo))
-		sb.append("${BREAK}")
+		sb.append("""<a href="#" title="Reset scope to original defaults" class="scopeReset">Reset scope</a>""")
+		sb.append("${DOUBLE_BREAK}")
 		return sb.toString()
 	}
 
-	protected String createNodeScopeToastMessage(VisualizerRelInfo relInfo)
+	/*protected String createNodeScopeToastMessage(VisualizerRelInfo relInfo)
 	{
 		Map nodeScopeInfo = getNodeScopeInfo(relInfo.targetId)
 		Map<String, Set<Object>> nodeScopeAvailableValues = nodeScopeInfo.nodeScopeAvailableValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
@@ -128,11 +129,11 @@ class VisualizerScopeInfo
 		sb.append("""<a href="#" title="Reset scope to original defaults" class="scopeReset">Reset scope</a>""")
 		sb.append('</div>')
 		return sb.toString()
-	}
+	}*/
 
 	private static StringBuilder getNodeDetailsMessages(List<String> nodeDetailsMessages)
 	{
-		StringBuilder sb = new StringBuilder(BREAK)
+		StringBuilder sb = new StringBuilder()
 		if (nodeDetailsMessages)
 		{
 			nodeDetailsMessages.each { String message ->
@@ -150,7 +151,6 @@ class VisualizerScopeInfo
 		if (availableValuesMap)
 		{
 			availableValuesMap.keySet().each { String scopeKey ->
-				sb.append(BREAK)
 				Set<String> cubeNames = cubeNamesMap[scopeKey]
 				cubeNames.remove(null)
 				Set<Object> availableValues = availableValuesMap[scopeKey]
@@ -158,10 +158,12 @@ class VisualizerScopeInfo
 				StringBuilder title = new StringBuilder("Scope key ${scopeKey} is ${requiredOrOptional} to load ${nodeName}")
 				title.append(addCubeNamesList('.\n\nFirst encountered on the following cubes, but may also be present on others:', cubeNames))
 				sb.append(getScopeMessage(scopeKey, availableValues, title, nodeAvailableScope[scopeKey], relInfo.targetId))
+				sb.append(BREAK)
 			}
 		}
 		else{
 			sb.append("<b>No scope</b>")
+			sb.append(BREAK)
 		}
 		return sb
 	}

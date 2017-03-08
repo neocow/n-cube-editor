@@ -13,7 +13,8 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerInfo
 {
-    protected  ApplicationID appId
+    protected ApplicationID appId
+    protected Long selectedNodeId
     protected List<Map<String, Object>> nodes = []
     protected List<Map<String, Object>> edges = []
 
@@ -46,13 +47,18 @@ class VisualizerInfo
         loadConfigurations(cubeType)
     }
 
-    protected void init()
+    protected void init(Map options)
     {
-        maxLevel = 1
-        nodeCount = 1
-        relInfoCount = 1
         messages = new LinkedHashSet()
-        availableGroupsAllLevels = new LinkedHashSet()
+
+        Map node = options.node as Map
+        if (!node)
+        {
+            maxLevel = 1
+            nodeCount = 1
+            relInfoCount = 1
+            availableGroupsAllLevels = new LinkedHashSet()
+        }
     }
 
     protected String getCubeType()

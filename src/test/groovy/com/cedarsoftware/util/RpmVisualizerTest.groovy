@@ -325,7 +325,7 @@ class RpmVisualizerTest
         //Simulate that the user clicks Show Traits for the node. Optional nodeScope prompts display.
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNodeBasics('CCCoverage', 'Coverage', '', ADDITIONAL_SCOPE_USED_TO_LOAD_TRAITS, false, true)
         assert scope == node.scope
@@ -364,7 +364,7 @@ class RpmVisualizerTest
         //Simulate that the user clicks Show Traits for the node
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
 
         node = checkNodeBasics('CCCoverage', 'Coverage', '', ADDITIONAL_SCOPE_USED_TO_LOAD_TRAITS, false, true)
@@ -387,7 +387,7 @@ class RpmVisualizerTest
         inputScope.businessDivisionCode = 'AAADIV'
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         node = checkNodeBasics('CCCoverage', 'Coverage', '', ADDITIONAL_SCOPE_USED_TO_LOAD_TRAITS, false, true)
         assert nodes.size() == 1
         assert expectedNodeScope == node.scope
@@ -438,7 +438,7 @@ class RpmVisualizerTest
         //An optional nodeScope prompt for business division code shows.
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
 
         //Simulate that the user picks businessDivisionCode = AAADIV
         Map expectedNodeScope =  inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
@@ -447,7 +447,7 @@ class RpmVisualizerTest
         inputScope.businessDivisionCode = 'AAADIV'
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         node = checkNodeBasics('AdmCoverage', 'Coverage', '', '', false, true)
         assert nodes.size() == 1
         assert expectedNodeScope == node.scope
@@ -483,7 +483,7 @@ class RpmVisualizerTest
         //Simulate that the user clicks Show Traits for the node
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
 
         node = checkEnumNodeBasics("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage", '', false, true)
@@ -516,7 +516,7 @@ class RpmVisualizerTest
         //Required node nodeScope prompt now shows for points.
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNodeBasics('TCoverage', 'Coverage', '', ADDITIONAL_SCOPE_REQUIRED, true, true)
 
@@ -525,7 +525,7 @@ class RpmVisualizerTest
         inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
         inputScope.points = 'A'
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNodeBasics('TCoverage', 'Coverage', '', ADDITIONAL_SCOPE_USED_TO_LOAD_TRAITS, false, true)
         assert expectedNodeScope == node.scope
@@ -536,7 +536,7 @@ class RpmVisualizerTest
         //No nodeScope prompts show for the node and no traits show. Node nodeScope has been reset.
         node.showCellValues = false
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNodeBasics('TCoverage', 'Coverage')
         checkNoScopePrompt(node.details as String)
@@ -1413,7 +1413,7 @@ class RpmVisualizerTest
         //Required node nodeScope prompt now shows for points.
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
 
         //Check that graph nodeScope prompt does not contain the points nodeScope key
@@ -1435,7 +1435,7 @@ class RpmVisualizerTest
         inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
         inputScope.points = 'A'
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
 
         //Check that graph nodeScope prompt does not contain the points nodeScope key or the businessDivisionCode nodeScope key.
@@ -1460,7 +1460,7 @@ class RpmVisualizerTest
         inputScope.points = 'A'
         inputScope.businessDivisionCode = 'AAADIV'
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
 
         //Check that graph nodeScope prompt does not contain the points nodeScope key or the businessDivisionCode nodeScope key.
@@ -1502,7 +1502,7 @@ class RpmVisualizerTest
         //Required node nodeScope prompt now shows for points.
         node.showCellValues = true
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
 
         //Check that graph nodeScope prompt does not contain the points nodeScope key
@@ -1523,7 +1523,7 @@ class RpmVisualizerTest
         inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
         inputScope.points = 'bogus'
         options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
-        getCellValues(options)
+        loadNodeDetails(options)
         assert nodes.size() == 1
 
         //Check that graph nodeScope prompt does not contain the points nodeScope key.
@@ -1813,11 +1813,11 @@ class RpmVisualizerTest
         edges = visInfo.edges as List
     }
 
-    private void getCellValues(Map options, boolean hasMessages = false)
+    private void loadNodeDetails(Map options, boolean hasMessages = false)
     {
         visInfo?.nodes = []
         visInfo?.edges = []
-        Map graphInfo = visualizer.getCellValues(appId, options)
+        Map graphInfo = visualizer.loadNodeDetails(appId, options)
         visInfo = graphInfo.visInfo as RpmVisualizerInfo
         scopeInfo = graphInfo.scopeInfo as RpmVisualizerScopeInfo
         messages = visInfo.messages
@@ -2002,28 +2002,28 @@ class RpmVisualizerTest
         {
             assert nodeDetails.contains("${UNABLE_TO_LOAD}traits")
             assert false == node.showCellValuesLink
-            assert false == node.cellValuesLoaded
+            assert false == node.cubeLoaded
             assert true == node.showCellValues
         }
         else if (unableToLoad)
         {
             assert nodeDetails.contains("${UNABLE_TO_LOAD}")
             assert false == node.showCellValuesLink
-            assert false == node.cellValuesLoaded
+            assert false == node.cubeLoaded
             assert false == node.showCellValues
         }
         else if (showCellValues)
         {
             assert !nodeDetails.contains("${UNABLE_TO_LOAD}")
             assert true == node.showCellValuesLink
-            assert true == node.cellValuesLoaded
+            assert true == node.cubeLoaded
             assert true == node.showCellValues
         }
         else
         {
             assert !nodeDetails.contains("${UNABLE_TO_LOAD}")
             assert true == node.showCellValuesLink
-            assert true == node.cellValuesLoaded
+            assert true == node.cubeLoaded
             assert false == node.showCellValues
         }
 

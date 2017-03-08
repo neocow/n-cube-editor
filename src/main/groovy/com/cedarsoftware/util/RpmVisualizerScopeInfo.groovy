@@ -1,5 +1,6 @@
 package com.cedarsoftware.util
 
+import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.util.VersionComparator
@@ -22,6 +23,11 @@ class RpmVisualizerScopeInfo extends VisualizerScopeInfo
 	Set<Object> effectiveVersionAvailableValues = new LinkedHashSet()
 
 	RpmVisualizerScopeInfo(){}
+
+	RpmVisualizerScopeInfo(ApplicationID applicationId)
+	{
+		appId = applicationId
+	}
 
 	@Override
 	protected void populateScopeDefaults(VisualizerRelInfo relInfo)

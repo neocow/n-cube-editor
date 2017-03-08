@@ -29,11 +29,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		super(appId)
 	}
 
-	protected RpmVisualizerRelInfo(ApplicationID appId, Map node, VisualizerScopeInfo scopeInfo)
-	{
-		super(appId, node, scopeInfo)
-	}
-
 	@Override
 	protected Set<String> getRequiredScope()
 	{
@@ -45,7 +40,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	protected String getDetails(VisualizerScopeInfo scopeInfo)
+	protected String getDetails(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
 	{
 		StringBuilder sb = new StringBuilder()
 
@@ -53,15 +48,15 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		sb.append(scopeInfo.createNodeDetailsScopeMessage(this))
 
 		//Scope
-		if (cellValuesLoaded)
+		if (cubeLoaded)
 		{
-			String title = showCellValues ? 'Scope with traits' : 'Scope with no traits'
+			String title = showCellValues ? 'Utilized scope with traits' : 'Utilized scope with no traits'
 			getDetailsMap(sb, title, targetScope)
 		}
-		//getDetailsMap(sb, 'Available scope', availableTargetScope)
+		getDetailsMap(sb, 'Available scope', availableTargetScope)
 
 		//Fields
-		if (cellValuesLoaded)
+		if (cubeLoaded)
 		{
 			if (showCellValues)
 			{
@@ -310,54 +305,54 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	/**
 	 * Loads fields and traits on the class into the targetTraits map.
-	 * If an invalid, missing or unbound scope key is encountered, checks if the inputScope contains the key.
-	 * If yes, loads again using the key provided in inputScope. If no, posts a scope prompt.
+	 * If the current node is the selected node and an invalid, missing or unbound scope key is encountered,
+	 * checks if the inputScope contains the key. If yes, loads again using the key provided in inputScope.
 	 *
-	 * @return boolean cellValuesLoaded
+	 * @return boolean cubeLoaded
 	 */
-	@Override
-	protected boolean loadCellValues(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, Map output = new CaseInsensitiveMap())
+
+	protected boolean loadCube(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, Map output = new CaseInsensitiveMap())
 	{
 		loadAgain = false
 		try
 		{
 			targetTraits = new CaseInsensitiveMap()
-
 			if (targetCube.name.startsWith(RPM_ENUM))
 			{
 				helper.loadRpmClassFields(appId, RPM_ENUM, targetCube.name - RPM_ENUM_DOT, availableTargetScope, targetTraits, showCellValues, output)
-			} else
+			}
+			else
 			{
 				helper.loadRpmClassFields(appId, RPM_CLASS, targetCube.name - RPM_CLASS_DOT, availableTargetScope, targetTraits, showCellValues, output)
 			}
 			handleUnboundScope(visInfo, scopeInfo, targetCube.getRuleInfo(output))
 			removeNotExistsFields()
-			cellValuesLoaded = true
+			cubeLoaded = true
 			showCellValuesLink = true
 		}
 		catch (Exception e)
 		{
-			cellValuesLoaded = false
+			cubeLoaded = false
 			showCellValuesLink = false
 			Throwable t = helper.getDeepestException(e)
 			if (t instanceof InvalidCoordinateException)
 			{
-				handleInvalidCoordinateException(t as InvalidCoordinateException, scopeInfo)
+				handleInvalidCoordinateException(t as InvalidCoordinateException, visInfo, scopeInfo)
 			}
 			else if (t instanceof CoordinateNotFoundException)
 			{
-				handleCoordinateNotFoundException(t as CoordinateNotFoundException, scopeInfo)
+				handleCoordinateNotFoundException(t as CoordinateNotFoundException, visInfo, scopeInfo)
 			}
 			else
 			{
 				handleException(t, scopeInfo)
 			}
 		}
-		addRequiredAndOptionalScopeKeys(visInfo)
+		addRequiredScopeKeys(visInfo)
 		retainUsedScope(visInfo, output)
 		if (loadAgain)
 		{
-			return loadCellValues(visInfo, scopeInfo, output)
+			return loadCube(visInfo, scopeInfo, output)
 		}
 		return true
 	}
@@ -378,9 +373,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 	}
 
-	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerScopeInfo scopeInfo)
+	private void handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
 	{
-		StringBuilder sb = helper.handleCoordinateNotFoundException(e, scopeInfo, this)
+		StringBuilder sb = helper.handleCoordinateNotFoundException(e, visInfo, scopeInfo, this)
 		if (loadAgain)
 		{
 			return
@@ -392,9 +387,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		targetTraits = new CaseInsensitiveMap()
 	}
 
-	private void handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerScopeInfo scopeInfo)
+	private void handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
 	{
-		StringBuilder sb = helper.handleInvalidCoordinateException(e, scopeInfo, this, MANDATORY_SCOPE_KEYS)
+		StringBuilder sb = helper.handleInvalidCoordinateException(e, visInfo, scopeInfo, this, MANDATORY_SCOPE_KEYS)
 		if (loadAgain)
 		{
 			return

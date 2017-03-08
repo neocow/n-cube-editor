@@ -18,7 +18,7 @@ class RpmVisualizer extends Visualizer
 	private RpmVisualizerHelper helper
 
 	/**
-	 * Loads all cell values available for a given rpm class.
+	 * Loads details for a given rpm class.
 	 *
 	 * @param applicationID
 	 * @param options - a map containing:
@@ -33,15 +33,14 @@ class RpmVisualizer extends Visualizer
 	 */
 
 	@Override
-	Map getCellValues(ApplicationID applicationID, Map options)
+	Map loadNodeDetails(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
 		RpmVisualizerInfo visInfo = options.visInfo as RpmVisualizerInfo
 		visInfo.appId = applicationID
-		VisualizerScopeInfo scopeInfo = options.scopeInfo as RpmVisualizerScopeInfo
-		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId, options.node as Map, scopeInfo)
-		scopeInfo.init(applicationID, options)
-		return getCellValues(visInfo, scopeInfo, relInfo, options)
+		VisualizerScopeInfo scopeInfo = getVisualizerScopeInfo(options)
+		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo, scopeInfo)
+		return loadNodeDetails(visInfo, scopeInfo, relInfo, options)
 	}
 
 	@Override
@@ -58,20 +57,35 @@ class RpmVisualizer extends Visualizer
 		{
 			visInfo = new RpmVisualizerInfo(appId)
 		}
-		visInfo.init()
+		visInfo.init(options)
 		return visInfo
 	}
-
 
 	protected VisualizerScopeInfo getVisualizerScopeInfo(Map options)
 	{
 		RpmVisualizerScopeInfo scopeInfo = options.scopeInfo as RpmVisualizerScopeInfo
 		if (!scopeInfo || scopeInfo.appId.app != appId.app)
 		{
-			scopeInfo = new RpmVisualizerScopeInfo()
+			scopeInfo = new RpmVisualizerScopeInfo(appId)
 		}
-		scopeInfo.init(appId, options)
+		Map node = options.node as Map
+		if (node)
+		{
+			scopeInfo.inputScope = node.availableScope as CaseInsensitiveMap
+		}
+		else
+		{
+			scopeInfo.inputScope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
+		}
 		return scopeInfo
+	}
+
+	@Override
+	protected VisualizerRelInfo getVisualizerRelInfo(Map options, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
+	{
+		RpmVisualizerRelInfo relInfo =  new RpmVisualizerRelInfo(appId)
+		relInfo.init(options, visInfo, scopeInfo)
+		return relInfo
 	}
 
 	@Override
@@ -89,12 +103,12 @@ class RpmVisualizer extends Visualizer
 
 	private void processClassCube(RpmVisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, RpmVisualizerRelInfo relInfo)
 	{
-		boolean cellValuesLoaded
+		boolean cubeLoaded
 		String targetCubeName = relInfo.targetCube.name
 
 		if (canLoadTraitsForTarget(relInfo))
 		{
-			cellValuesLoaded = relInfo.loadCellValues(visInfo, scopeInfo)
+			cubeLoaded = relInfo.loadCube(visInfo, scopeInfo)
 		}
 
 		if (relInfo.sourceCube)
@@ -109,7 +123,7 @@ class RpmVisualizer extends Visualizer
 
 		visInfo.nodes << relInfo.createNode(visInfo, scopeInfo)
 
-		if (cellValuesLoaded)
+		if (cubeLoaded)
 		{
 			relInfo.targetTraits.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
@@ -138,8 +152,8 @@ class RpmVisualizer extends Visualizer
 		String group = UNSPECIFIED_ENUM
 		String targetCubeName = relInfo.targetCube.name
 
-		boolean cellValuesLoaded = relInfo.loadCellValues(visInfo, scopeInfo)
-		if (cellValuesLoaded)
+		boolean cubeLoaded = relInfo.loadCube(visInfo, scopeInfo)
+		if (cubeLoaded)
 		{
 			relInfo.targetTraits.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
@@ -183,12 +197,6 @@ class RpmVisualizer extends Visualizer
 		return nextRelInfo
 	}
 
-	@Override
-	protected VisualizerRelInfo getVisualizerRelInfo()
-	{
-		return new RpmVisualizerRelInfo(appId)
-	}
-
 	private boolean canLoadTraitsForTarget(RpmVisualizerRelInfo relInfo)
 	{
 		//When the source cube points directly to the target cube (source cube and target cube are both rpm.class),
@@ -208,7 +216,7 @@ class RpmVisualizer extends Visualizer
 				relInfo.nodeLabelPrefix = 'Unable to load '
 				relInfo.targetTraits = new CaseInsensitiveMap()
 				relInfo.nodeDetailsMessages << getLoadTraitsForTargetMessage(relInfo, type)
-				relInfo.cellValuesLoaded = false
+				relInfo.cubeLoaded = false
 				relInfo.showCellValuesLink = false
 				return false
 			}

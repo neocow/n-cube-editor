@@ -38,7 +38,6 @@ import com.cedarsoftware.util.PoolInterceptor
 import com.cedarsoftware.util.RpmVisualizer
 import com.cedarsoftware.util.RpmVisualizerConstants
 import com.cedarsoftware.util.StringUtilities
-import com.cedarsoftware.util.SystemUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.UniqueIdGenerator
@@ -281,7 +280,7 @@ class NCubeController extends BaseController
         String cubeName = options.startCubeName
         Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
         appId = addTenant(appId)
-        return vis.getCellValues(appId, options)
+        return vis.loadNodeDetails(appId, options)
     }
 
     Boolean updateCubeMetaProperties(ApplicationID appId, String cubeName, Map<String, Object> newMetaProperties)
