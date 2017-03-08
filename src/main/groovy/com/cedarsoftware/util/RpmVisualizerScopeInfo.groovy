@@ -67,6 +67,7 @@ class RpmVisualizerScopeInfo extends VisualizerScopeInfo
 		if (relInfo.availableTargetScope[scopeKey] != scopeValue)
 		{
 			relInfo.availableTargetScope[scopeKey] = scopeValue
+			relInfo.targetScope[scopeKey] = scopeValue
 			return true
 		}
 		return false

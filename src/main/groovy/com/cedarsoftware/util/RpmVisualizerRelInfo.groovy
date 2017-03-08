@@ -156,11 +156,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		Set<String> scopeCollector = new CaseInsensitiveSet<>()
 		scopeCollector.addAll(visInfo.requiredScopeKeysByCube[targetCube.name])
-		scopeCollector.addAll(visInfo.allOptionalScopeKeysByCube[targetCube.name])
+		//scopeCollector.addAll(visInfo.allOptionalScopeKeysByCube[targetCube.name])
 		scopeCollector << EFFECTIVE_VERSION
 
-		RuleInfo ruleInfo = NCube.getRuleInfo(output)
-		Set keysUsed = ruleInfo.getInputKeysUsed()
+
+		Set keysUsed = NCube.getRuleInfo(output).getInputKeysUsed()
 		scopeCollector.addAll(keysUsed)
 
 		Map<String, Object> scope = new CaseInsensitiveMap(availableTargetScope)
@@ -175,7 +175,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private static void cullScope(Set<String> scopeKeys, Set scopeCollector)
 	{
-		scopeKeys.removeAll { String item -> !(scopeCollector.contains(item) || item.startsWith(SYSTEM_SCOPE_KEY_PREFIX)) }
+		scopeKeys.removeAll { String scopeKey -> !(scopeCollector.contains(scopeKey) || scopeKey.startsWith(SYSTEM_SCOPE_KEY_PREFIX)) }
 	}
 
 	@Override
@@ -316,9 +316,8 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	 * @return boolean cellValuesLoaded
 	 */
 	@Override
-	protected boolean loadCellValues(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
+	protected boolean loadCellValues(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, Map output = new CaseInsensitiveMap())
 	{
-		Map output = new CaseInsensitiveMap()
 		loadAgain = false
 		try
 		{
@@ -358,7 +357,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		retainUsedScope(visInfo, output)
 		if (loadAgain)
 		{
-			return loadCellValues(visInfo, scopeInfo)
+			return loadCellValues(visInfo, scopeInfo, output)
 		}
 		return true
 	}

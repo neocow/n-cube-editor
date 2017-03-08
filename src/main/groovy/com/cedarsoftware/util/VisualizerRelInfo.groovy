@@ -224,7 +224,7 @@ class VisualizerRelInfo
 		if (!visInfo.requiredScopeKeysByCube.containsKey(cubeName))
 		{
 			visInfo.requiredScopeKeysByCube[cubeName] = requiredScope
-			visInfo.allOptionalScopeKeysByCube[cubeName] = targetCube.getOptionalScope(availableTargetScope, new CaseInsensitiveMap())
+			//visInfo.allOptionalScopeKeysByCube[cubeName] = targetCube.getOptionalScope(availableTargetScope, new CaseInsensitiveMap())
 		}
 	}
 

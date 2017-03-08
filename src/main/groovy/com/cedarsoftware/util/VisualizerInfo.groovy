@@ -34,7 +34,7 @@ class VisualizerInfo
     protected Map<String, Object> networkOverridesTopNode
 
     protected Map<String, Set<String>> requiredScopeKeysByCube = [:]
-    protected Map<String, Set<String>> allOptionalScopeKeysByCube = [:]
+   // protected Map<String, Set<String>> allOptionalScopeKeysByCube = [:]
 
     protected Map<String, List<String>> typesToAddMap = [:]
 
