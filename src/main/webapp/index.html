@@ -90,7 +90,7 @@
                     <li><a href="#" id="releaseCubesMenu">Release SNAPSHOT</a></li>
                     <li><a href="#" id="changeVerMenu">Change SNAPSHOT version</a></li>
                     <li><a href="#" id="createSnapshotMenu">Create SNAPSHOT from RELEASE</a></li>
-                    <li class="divider" />
+                    <li class="divider"></li>
                     <li><a href="#" id="lockUnlockAppMenu"></a></li>
                     <li class="disabled"><a href="#" id="getAppLockedByMenu"></a></li>
                 </ul>
@@ -334,7 +334,10 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h3 id="view-commits-label" class="modal-title">Commit Requests</h3>
             </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
+            <div class="modal-body" style="overflow: auto;">
+                <input type="text" id="view-commits-search-text" placeholder="Transaction ID" />
+                <button id="view-commits-search-btn" class="btn btn-sm btn-primary">Find</button>
+                <button id="view-commits-search-clear" class="btn btn-sm btn-default">Clear</button>
                 <table id="view-commits-list" style="width:100%;">
                     <tr>
                         <th>App</th>
@@ -343,8 +346,8 @@
                         <th>Status</th>
                         <th>Requester</th>
                         <th>Date Requested</th>
-                        <th>Committer</th>
-                        <th>Date Committed</th>
+                        <th>Action By</th>
+                        <th>Action Date</th>
                         <th>PR ID</th>
                     </tr>
                     <tr>

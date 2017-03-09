@@ -636,10 +636,6 @@ span.selected-count {
     min-width: 225px;
 }
 
-.modal-xl {
-    width: 94%;
-}
-
 #appIdMenu {
     padding: 5px;
     float: none;
@@ -648,6 +644,10 @@ span.selected-count {
 
 #appIdMenu li, #appIdMenu button {
     width: 100%;
+}
+
+#appIdMenu button {
+    word-wrap: break-word;
 }
 
 #btnClearBranchQuickSelect {
@@ -698,6 +698,10 @@ a.section-all:hover, a.section-none:hover {
     color: #a5adb0;
 }
 
+.highlight-lightgoldenrodyellow {
+    background-color: lightgoldenrodyellow;
+}
+
 ul .checkbox-label {
     display: inline-block;
     margin: 0 0 0 20px;
@@ -705,4 +709,32 @@ ul .checkbox-label {
 
 #view-commits-list select {
     width: 90%;
+}
+
+.modal-xl {
+    width: 94%;
+}
+
+.modal-xl .modal-body {
+    height: 450px;
+}
+
+@media (min-height: 768px) {
+    .modal-xl .modal-content {
+        height: 700px;
+    }
+
+    .modal-xl .modal-body {
+        height: 590px;
+    }
+}
+
+@media (min-height: 1000px) {
+    .modal-xl .modal-content {
+        height: 930px;
+    }
+
+    .modal-xl .modal-body {
+        height: 820px;
+    }
 }

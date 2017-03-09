@@ -67,7 +67,6 @@ var NCE = (function ($) {
     var _menuList = $('#menuList');
     var _tabOverflow = $('#tab-overflow');
     var _branchNames = [];
-    var _conflictMap = [];
     var _draggingTabCubeInfo = null;
     var _tabDragIndicator = $('#tab-drag-indicator');
     var _appMenu = $('#AppMenu');
@@ -143,7 +142,20 @@ var NCE = (function ($) {
     var _rollbackOk = $('#rollbackOk');
     var _commitRollbackLabel = $('#commitRollbackLabel');
     var _viewCommits = $('#view-commits');
+    var _viewCommitsSearchText = $('#view-commits-search-text');
+    var _viewCommitsSearchButton = $('#view-commits-search-btn');
+    var _viewCommitsSearchClear = $('#view-commits-search-clear');
     var _viewCommitsList = $('#view-commits-list');
+    var _viewCommitsApp = $('#view-commits-app');
+    var _viewCommitsVersion = $('#view-commits-version');
+    var _viewCommitsBranch = $('#view-commits-branch');
+    var _viewCommitsStatus = $('#view-commits-status');
+    var _viewCommitsRequestUser = $('#view-commits-request-user');
+    var _viewCommitsRequestDate = $('#view-commits-request-date');
+    var _viewCommitsCommitUser = $('#view-commits-commit-user');
+    var _viewCommitsCommitDate = $('#view-commits-commit-date');
+    var _viewCommitsRepo = $('#view-commits-repo');
+    var _commitsData = {};
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -1662,6 +1674,31 @@ var NCE = (function ($) {
         addBranchListeners();
         addSelectAllNoneListeners();
         addSearchListeners();
+        addViewCommitsListeners();
+    }
+
+    function addViewCommitsListeners() {
+        $(_viewCommits).on('click', function() {
+            viewCommits();
+        });
+        _viewCommitsList.find('select').on('change', function() {
+            viewCommitsFilter();
+        });
+        _viewCommitsModal.on('shown.bs.modal', function() {
+            viewCommitsFilter();
+        });
+        _viewCommitsSearchText.on('keyup', function(e) {
+            var key = e.keyCode;
+            if (key === KEY_CODES.ENTER) {
+                viewCommitsSearchTransactionId(this.value.trim());
+            }
+        });
+        _viewCommitsSearchButton.on('click', function() {
+            viewCommitsSearchTransactionId(_viewCommitsSearchText.val().trim());
+        });
+        _viewCommitsSearchClear.on('click', function() {
+            _viewCommitsSearchText.val('');
+        });
     }
 
     function addSearchListeners() {
@@ -1727,15 +1764,6 @@ var NCE = (function ($) {
         });
         $('#clearStorage').click(function() {
             clearStorage();
-        });
-        $(_viewCommits).on('click', function() {
-            viewCommits();
-        });
-        _viewCommitsList.find('select').on('change', function() {
-            viewCommitsFilter();
-        });
-        _clearCache.click(function() {
-            clearCache();
         });
         $('#serverStats').click(function() {
             serverStats();
@@ -1959,11 +1987,7 @@ var NCE = (function ($) {
     }
 
     function enableDisableBatchUpdate() {
-        if (_selectedBranch === head || !checkAppPermission(PERMISSION_ACTION.UPDATE)) {
-            _batchUpdateAxisReferencesUpdate.hide();
-        } else {
-            _batchUpdateAxisReferencesUpdate.show();
-        }
+        _batchUpdateAxisReferencesUpdate.toggle(_selectedBranch !== head && checkAppPermission(PERMISSION_ACTION.UPDATE));
     }
 
     function findBatchUpdateAxisReferencesRows() {
@@ -1975,45 +1999,34 @@ var NCE = (function ($) {
     }
 
     function buildBatchUpdateAxisReferencesTable() {
-        var i, len, isDest, refAxData, html, app, version, cube, axis;
+        var i, len, isDest, refAxData, html, app, version, cube, axis, axisHeader, prefix, axisMethodText;
         findBatchUpdateAxisReferencesRows().remove();
         isDest = isBatchUpdateAxisReferencesDestinationToggled();
-        if (isDest) {
-            _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current Destination Axis';
-            _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New Destination Axis';
-            _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = 'Axis Name';
-            _batchUpdateAxisReferencesRemoveTransform.hide();
-        } else {
-            _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current Transform Axis';
-            _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New Transform Axis';
-            _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = 'Method Name';
-            _batchUpdateAxisReferencesRemoveTransform.show();
-        }
+        _batchUpdateAxisReferencesRemoveTransform.toggle(!isDest);
+        axisHeader = isDest ? 'Destination' : 'Transform';
+        prefix = isDest ? 'dest' : 'transform';
+        axisMethodText = isDest ? 'Axis' : 'Method';
+        _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current ' + axisHeader + ' Axis';
+        _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New ' + axisHeader + ' Axis';
+        _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = axisMethodText + ' Name';
 
         html = '';
         for (i = 0, len = _batchUpdateAxisReferencesData.length; i < len; i++) {
             refAxData = _batchUpdateAxisReferencesData[i];
-            if (isDest) {
-                app = refAxData.destApp;
-                version = refAxData.destVersion;
-                cube = refAxData.destCubeName;
-                axis = refAxData.destAxisName;
-            } else {
-                app = refAxData.transformApp;
-                version = refAxData.transformVersion;
-                cube = refAxData.transformCubeName;
-                axis = refAxData.transformMethodName;
-            }
+            app = refAxData[prefix + 'App'];
+            version = refAxData[prefix + 'Version'];
+            cube = refAxData[prefix + 'CubeName'];
+            axis = refAxData[prefix + axisMethodText + 'Name'];
 
-            html += '<tr class="batch-update-axis-references-entry">';
-            html += '<td><input type="checkbox" class="isSelected" /></td>';
-            html += '<td>' + refAxData.srcCubeName + '</td>';
-            html += '<td>' + refAxData.srcAxisName + '</td>';
-            html += '<td class="app">' + (app || '') + '</td>';
-            html += '<td class="version">' + (version || '') + '</td>';
-            html += '<td class="cubeName">' + (cube || '') + '</td>';
-            html += '<td class="axisName">' + (axis || '') + '</td>';
-            html += '</tr>';
+            html += '<tr class="batch-update-axis-references-entry">'
+                  + '<td><input type="checkbox" class="isSelected" /></td>'
+                  + '<td>' + refAxData.srcCubeName + '</td>'
+                  + '<td>' + refAxData.srcAxisName + '</td>'
+                  + '<td class="app">' + (app || '') + '</td>'
+                  + '<td class="version">' + (version || '') + '</td>'
+                  + '<td class="cubeName">' + (cube || '') + '</td>'
+                  + '<td class="axisName">' + (axis || '') + '</td>'
+                  + '</tr>';
         }
         _batchUpdateAxisReferencesTable.append(html);
     }
@@ -2137,38 +2150,26 @@ var NCE = (function ($) {
     }
 
     function enableDisableReleaseMenu(canReleaseApp) {
-        _releaseCubesMenu.off('click');
-        _changeVersionMenu.off('click');
-        _createSnapshotMenu.off('click');
-
-        if (canReleaseApp) {
-            _releaseCubesMenu.on('click', releaseCubes);
-            _changeVersionMenu.on('click', changeVersion);
-            _createSnapshotMenu.on('click', createSnapshotFromRelease);
-            _releaseCubesMenu.parent().removeClass('disabled');
-            _changeVersionMenu.parent().removeClass('disabled');
-            _createSnapshotMenu.parent().removeClass('disabled');
-        } else {
-            _releaseCubesMenu.parent().addClass('disabled');
-            _changeVersionMenu.parent().addClass('disabled');
-            _createSnapshotMenu.parent().addClass('disabled');
-        }
+        enableDisableMenuButton(_releaseCubesMenu, canReleaseApp, releaseCubes);
+        enableDisableMenuButton(_changeVersionMenu, canReleaseApp, changeVersion);
+        enableDisableMenuButton(_createSnapshotMenu, canReleaseApp, createSnapshotFromRelease);
     }
 
     function enableDisableCommitBranch(canCommitOnApp) {
-        if (canCommitOnApp) {
-            _branchCommit.show();
-        } else {
-            _branchCommit.hide();
-        }
+        _branchCommit.toggle(canCommitOnApp);
     }
-    
-    function enableDisableClearCache(isAppAdmin) {
-        if (isAppAdmin || head !== getAppId().branch) {
-            _clearCache.parent().removeClass('disabled');
-        }
-        else {
-            _clearCache.parent().addClass('disabled');
+
+    function enableDisableMenuButton(el, enable, onClick) {
+        el.off('click');
+        if (enable) {
+            el.parent().removeClass('disabled');
+            el.on('click', function() { onClick(); });
+        } else {
+            el.parent().addClass('disabled');
+            el.on('click', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            });
         }
     }
 
@@ -2183,13 +2184,7 @@ var NCE = (function ($) {
             showNote('Unable to check lock for app \'' + _selectedApp + '\':<hr class="hr-small"/>' + result.data);
         }
 
-        _lockUnlockAppMenu.off('click');
-        if (isAppAdmin) {
-            _lockUnlockAppMenu.on('click', lockUnlockApp);
-            _lockUnlockAppMenu.parent().removeClass('disabled');
-        } else {
-            _lockUnlockAppMenu.parent().addClass('disabled');
-        }
+        enableDisableMenuButton(_lockUnlockAppMenu, isAppAdmin, lockUnlockApp);
     }
 
     function showHideImpersonation(isAdmin) {
@@ -2267,7 +2262,7 @@ var NCE = (function ($) {
         
         enableDisableReleaseMenu(canReleaseApp);
         enableDisableCommitBranch(canCommitOnApp);
-        enableDisableClearCache(isAppAdmin);
+        enableDisableMenuButton(_clearCache, isAppAdmin || head !== getAppId().branch, clearCache);
         enableDisableLockMenu(isAppAdmin);
         showHideImpersonation(isAppAdmin);
     }
@@ -3584,10 +3579,21 @@ var NCE = (function ($) {
         return true;
     }
 
-    function viewCommits() {
+    function viewCommitsSearchTransactionId(txid) {
+        var row = _viewCommitsList.find('[data-txid="' + txid + '"]')[0];
+        if (row) {
+            commitListClick(row);
+            _viewCommitsModal.find('.modal-body')[0].scrollTop = row.offsetTop;
+        } else {
+            showNote(txid + ' was not found.', 'Transaction ID not found!', TWO_SECOND_TIMEOUT);
+        }
+    }
+
+    function viewCommits(isUpdate) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.GET_COMMITS, []);
         if (result.status) {
-            buildUlForCommitView(result.data);
+            _commitsData = result.data;
+            buildUlForCommitView(isUpdate);
             _viewCommitsModal.modal();
         } else {
             showNote('Unable to get commit list.', 'Error', TWO_SECOND_TIMEOUT);
@@ -3595,60 +3601,63 @@ var NCE = (function ($) {
     }
     
     function viewCommitsFilter() {
-        var i, len, row, idx, tds, td, el, filterVal, s;
+        var i, len, el, filterVal;
         var selects = _viewCommitsList.find('select');
         var populatedSelects = selects.filter(function() { return this.value.length; });
-        var sLen = populatedSelects.length;
         _viewCommitsList.find('tr:gt(1)').show();
-        if (sLen) {
-            for (s = 0; s < sLen; s++) {
-                el = populatedSelects[s];
-                filterVal = el.value;
-                if (filterVal.length) {
-                    idx = selects.index(el) + 1;
-                    tds = _viewCommitsList.find('tr:gt(1):visible').find('td:nth-child(' + idx + ')');
-                    for (i = 0, len = tds.length; i < len; i++) {
-                        td = tds[i];
-                        row = $(td).parent();
-                        if (td.innerHTML.indexOf(filterVal) === -1) {
-                            row.hide();
-                        }
-                    }
-                }
+        for (i = 0, len = populatedSelects.length; i < len; i++) {
+            el = populatedSelects[i];
+            filterVal = el.value;
+            if (filterVal.length) {
+                viewCommitsHideIfNotMatching(filterVal, selects.index(el) + 1);
+            }
+        }
+    }
+
+    function viewCommitsHideIfNotMatching(filterVal, idx) {
+        var i, len, tds, td, row;
+        tds = _viewCommitsList.find('tr:gt(1):visible').find('td:nth-child(' + idx + ')');
+        for (i = 0, len = tds.length; i < len; i++) {
+            td = tds[i];
+            row = $(td).parent();
+            if (td.innerHTML.indexOf(filterVal) === -1) {
+                row.hide();
             }
         }
     }
     
-    function buildUlForCommitView(commits) {
+    function buildUlForCommitView(isUpdate) {
         var i, len, commit;
         var html = '';
-        var apps = {};
-        var versions = {};
-        var branches = {};
-        var statuses = {};
-        var reqUsers = {};
-        var reqDates = {};
-        var comUsers = {};
-        var comDates = {};
-        var repos = {};
+        var data = {
+            apps: {},
+            versions: {},
+            branches: {},
+            statuses: { open:''},
+            reqUsers: {},
+            reqDates: {},
+            comUsers: {},
+            comDates: {},
+            repos: {}
+        };
         
-        for (i = 0, len = commits.length; i < len; i++) {
-            commit = commits[i];
-            apps[commit.appId.app] = '';
-            versions[commit.appId.version] = '';
-            branches[commit.appId.branch] = '';
-            statuses[commit.status] = '';
-            reqUsers[commit.requestUser] = '';
-            reqDates[commit.requestTime.substring(0, commit.requestTime.indexOf(' '))] = '';
+        for (i = 0, len = _commitsData.length; i < len; i++) {
+            commit = _commitsData[i];
+            data.apps[commit.appId.app] = '';
+            data.versions[commit.appId.version] = '';
+            data.branches[commit.appId.branch] = '';
+            data.statuses[commit.status] = '';
+            data.reqUsers[commit.requestUser] = '';
+            data.reqDates[commit.requestTime.substring(0, commit.requestTime.indexOf(' '))] = '';
             if (commit.commitUser) {
-                comUsers[commit.commitUser] = '';
-                comDates[commit.commitTime.substring(0, commit.commitTime.indexOf(' '))] = '';
+                data.comUsers[commit.commitUser] = '';
+                data.comDates[commit.commitTime.substring(0, commit.commitTime.indexOf(' '))] = '';
             }
             if (commit.prId) {
-                repos[commit.prId.substring(0, commit.prId.indexOf('-'))] = '';
+                data.repos[commit.prId.substring(0, commit.prId.indexOf('-'))] = '';
             }
 
-            html += '<tr>'
+            html += '<tr data-txid="' + commit.txid + '">'
                   + '<td>' + commit.appId.app + '</td>'
                   + '<td>' + commit.appId.version + '</td>'
                   + '<td>' + commit.appId.branch + '</td>'
@@ -3664,33 +3673,78 @@ var NCE = (function ($) {
         _viewCommitsList.find('tr:gt(1)').remove();
         _viewCommitsList.append(html);
         _viewCommitsList.find('tr:gt(1)').on('click', function() {
-            commitListClick(this, commits);
+            commitListClick(this);
         });
 
-        populateSelectFromMap($('#view-commits-app'), apps);
-        populateSelectFromMap($('#view-commits-version'), versions);
-        populateSelectFromMap($('#view-commits-branch'), branches);
-        populateSelectFromMap($('#view-commits-status'), statuses);
-        populateSelectFromMap($('#view-commits-request-user'), reqUsers);
-        populateSelectFromMap($('#view-commits-request-date'), reqDates);
-        populateSelectFromMap($('#view-commits-commit-user'), comUsers);
-        populateSelectFromMap($('#view-commits-commit-date'), comDates);
-        populateSelectFromMap($('#view-commits-repo'), repos);
+        populateSelectFromMap(_viewCommitsApp, data.apps, isUpdate);
+        populateSelectFromMap(_viewCommitsVersion, data.versions, isUpdate);
+        populateSelectFromMap(_viewCommitsBranch, data.branches, isUpdate);
+        populateSelectFromMap(_viewCommitsStatus, data.statuses, isUpdate, 'open');
+        populateSelectFromMap(_viewCommitsRequestUser, data.reqUsers, isUpdate);
+        populateSelectFromMap(_viewCommitsRequestDate, data.reqDates, isUpdate);
+        populateSelectFromMap(_viewCommitsCommitUser, data.comUsers, isUpdate);
+        populateSelectFromMap(_viewCommitsCommitDate, data.comDates, isUpdate);
+        populateSelectFromMap(_viewCommitsRepo, data.repos, isUpdate);
+
+        if (isUpdate) {
+            viewCommitsFilter();
+        }
     }
     
-    function commitListClick(row, commits) {
-        var i, len, self, commit, cubeNames, html;
-        self = $(row);
-        if (!self.has('td[colspan]').length) {
-            self.parent().find('tr').has('td[colspan]').remove();
-            commit = commits[_viewCommitsList.find('tr').index(row) - 2];
+    function commitListClick(row) {
+        var commit, cubeNames, html, numCols;
+        var self = $(row);
+        var allRows = _viewCommitsList.find('tr');
+        var openRow = allRows.has('td[colspan]');
+        var highlightClass = 'highlight-lightgoldenrodyellow';
+
+        openRow.remove();
+        allRows.removeClass(highlightClass);
+        if (!openRow.length || allRows.index(openRow[0]) !== allRows.index(row) + 1) {
+            self.addClass(highlightClass);
+            numCols = self.find('td').length;
+            commit = _commitsData[_viewCommitsList.find('tr').index(row) - 2];
             cubeNames = commit.cubeNames['@items'];
-            html = '<tr><td colspan="' + self.find('td').length + '">';
-            html += '<ul class="list-group"></ul>';
-            html += '</td></tr>';
+            html = '<tr><td colspan="' + (numCols - 5) + '"></td>'
+                 + '<td><b>Transaction ID</b></td><td><b>' + commit.txid + '</b></td>';
+            if (commit.status.indexOf('closed') === -1) {
+                html += '<td><a href="#" class="anc-honor">Honor</a></td>'
+                      + '<td><a href="#" class="anc-cancel">Cancel</a></td>';
+            } else if (commit.status.indexOf('cancelled') > -1) {
+                html += '<td><a href="#" class="anc-reopen">Reopen</a></td>';
+            }
+            html += '</tr><tr><td colspan="' + numCols + '">'
+                  + '<ul class="list-group"></ul>'
+                  + '</td></tr>';
             self.after(html);
-            buildUlForCompare(self.parent().find('ul'), commit.appId.branch, cubeNames, {compare:true, html:true, json:true});
+            addCommitActionListeners(commit);
+            buildUlForCompare(_viewCommitsList.find('ul'), commit.appId.branch, cubeNames, {compare:true, html:true, json:true});
         }
+    }
+
+    function addCommitActionListeners(commit) {
+        _viewCommitsList.find('a.anc-honor').on('click', function() {
+            var appId = appIdFrom(commit.app, commit.version, commit.status, commit.branch);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.HONOR_COMMIT, [commit.txid]);
+            handleCommitResult(appId, result);
+            viewCommits(true);
+        });
+        _viewCommitsList.find('a.anc-cancel').on('click', function() {
+            var result = call(CONTROLLER + CONTROLLER_METHOD.CANCEL_COMMIT, [commit.txid]);
+            if (result.status) {
+                viewCommits(true);
+            } else {
+                showNote(result.data, 'Error');
+            }
+        });
+        _viewCommitsList.find('a.anc-reopen').on('click', function() {
+            var result = call(CONTROLLER + CONTROLLER_METHOD.REOPEN_COMMIT, [commit.txid]);
+            if (result.status) {
+                viewCommits(true);
+            } else {
+                showNote(result.data, 'Error');
+            }
+        });
     }
 
     function clearStorage() {
@@ -3935,13 +3989,14 @@ var NCE = (function ($) {
             runSearch();
             buildMenu();
             buildBranchQuickSelectMenu();
+            southPanelResize();
         }, PROGRESS_DELAY);
         clearNotes(NOTE_CLASS.PROCESS_DURATION);
         showNote('Changing branch to: ' + branchName, 'Please wait...', ONE_SECOND_TIMEOUT);
     }
 
     function compareUpdateBranch(branchName, noNote) {
-        var result, branchChanges;
+        var result, branchChanges, branchHead, method, params;
         var appId = getAppId();
         var acceptMineBtn = _branchCompareUpdateModal.find('.accept-mine');
 
@@ -3950,15 +4005,18 @@ var NCE = (function ($) {
             return;
         }
 
-        if (branchName === head) {
-            result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
-            _branchCompareUpdateOk.removeAttr('disabled').show();
-            acceptMineBtn.show();
+        branchHead = branchName === head;
+        params = [appId];
+        _branchCompareUpdateOk.toggle(branchHead);
+        acceptMineBtn.toggle(branchHead);
+        if (branchHead) {
+            method = CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH;
+            _branchCompareUpdateOk.removeAttr('disabled');
         } else {
-            result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
-            _branchCompareUpdateOk.hide();
-            acceptMineBtn.hide();
+            method = CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH;
+            params.push(branchName);
         }
+        result = call(CONTROLLER + method, params);
         if (!result.status) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
             return;
@@ -3993,13 +4051,12 @@ var NCE = (function ($) {
     }
 
     function buildUlForCompare(ul, branchName, branchChanges, options) {
-        var inputClass = options.inputClass;
         ul.empty();
         ul.append(buildHtmlListForCompare(branchChanges, options));
         ul.find('a.anc-compare').on('click', function() {
             var infoDto, leftInfoDto, diffOptions;
             var self = $(this);
-            var idx = self.closest('ul').find('.compare-label').index(self.parent())
+            var idx = self.closest('ul').find('.compare-label').index(self.parent());
             var change = branchChanges[idx];
             if (options.hasOwnProperty('action')) {
                 infoDto = $.extend(true, {}, change);
@@ -4047,13 +4104,7 @@ var NCE = (function ($) {
         span = el.parent().find('span.glyphicon');
         show = span.hasClass(prefix + plus);
         span.removeClass(prefix + (show ? plus : minus)).addClass(prefix + (show ? minus : plus));
-        for (i = 0, len = lis.length; i < len; i++) {
-            if (show) {
-                $(lis[i]).show();
-            } else {
-                $(lis[i]).hide();
-            }
-        }
+        lis.toggle(show);
     }
     
     function getChangeTypeListItems(el) {
@@ -4068,7 +4119,7 @@ var NCE = (function ($) {
         for (i = 0, len = changeTypeHeaders.length; i < len; i++) {
             li = $(changeTypeHeaders[i]);
             cssClass = li.data('changetype');
-            count = li.parent().find('label.' + cssClass).find('input[type="checkbox"]').length;
+            count = li.parent().find('label.checkbox-label.' + cssClass).length;
             li.find('b').after('<span class="change-type-header-count">(' + count + ')</span>');
         }
     }
@@ -4176,6 +4227,7 @@ var NCE = (function ($) {
     function buildHtmlListForCompare(branchChanges, options) {
         var i, len, infoDto, prevChangeType, changeType, displayType, shouldCompare;
         var html = '';
+        var hasCheckbox = options.hasOwnProperty('inputClass');
         for (i = 0, len = branchChanges.length; i < len; i++) {
             infoDto = branchChanges[i];
             changeType = infoDto.changeType;
@@ -4184,10 +4236,12 @@ var NCE = (function ($) {
                 prevChangeType = changeType;
                 html += '<li class="list-group-item skinny-lr noselect changeTypeHeader" data-changetype="'
                     + displayType.CSS_CLASS + '"><span class="glyphicon glyphicon-minus"></span>'
-                    + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>'
-                    + '<a href="#" class="' + CLASS_SECTION_ALL + '">All</a>'
-                    + '<a href="#" class="' + CLASS_SECTION_NONE + '">None</a>'
-                    + '</li>';
+                    + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>';
+                if (hasCheckbox) {
+                    html += '<a href="#" class="' + CLASS_SECTION_ALL + '">All</a>'
+                          + '<a href="#" class="' + CLASS_SECTION_NONE + '">None</a>';
+                }
+                html += '</li>';
             }
 
             html += '<li class="list-group-item skinny-lr no-margins" data-changetype="' + displayType.CSS_CLASS + '">';
@@ -4207,7 +4261,7 @@ var NCE = (function ($) {
             }
 
             html += '<label class="checkbox checkbox-label ' + displayType.CSS_CLASS + '">';
-            if (options.hasOwnProperty('inputClass')) {
+            if (hasCheckbox) {
                 html += '<input class="' + options.inputClass + '" type="checkbox">';
             }
             html += infoDto.name;
@@ -4258,22 +4312,15 @@ var NCE = (function ($) {
     function commitBranch(state) {
         var errMsg, title, result, branchChanges, action;
         clearNote();
-        if (state) {
-            action = 'commit';
-            errMsg = 'commit to';
-            title = 'Commit changes';
-            _commitModal.find('.accept-mine, .accept-theirs').show();
-            _commitLink.removeAttr('disabled').show();
-            _commitOk.show();
-            _rollbackOk.hide();
-        } else {
-            action = 'rollback';
-            errMsg = 'rollback in';
-            title = 'Rollback changes';
-            _commitModal.find('.accept-mine, .accept-theirs').add(_commitOk).add(_commitLink).hide();
-            _rollbackOk.show();
-        }
+        _commitModal.find('.accept-mine, .accept-theirs').add(_commitLink).add(_commitOk).toggle(state);
+        _rollbackOk.toggle(!state);
+        action = state ? 'commit' : 'rollback';
+        errMsg = state ? 'commit to' : 'rollback in';
+        title = (state ? 'Commit' : 'Rollback') + ' changes';
         _commitRollbackList.data('is-commit', state);
+        if (state) {
+            _commitLink.removeAttr('disabled');
+        }
 
         if (isHeadSelected()) {
             showNote('You cannot ' + errMsg + ' HEAD.');
@@ -4346,23 +4393,26 @@ var NCE = (function ($) {
                 dtos = changedDtos;
             }
             result = call(CONTROLLER + method, [appId, dtos]);
-
-            clearNote();
-            if (!result.status) {
-                handleUpdateReturnValues(appId, result.data, false, false);
-                return;
-            }
-
-            if (appIdsEqual(appId, getAppId())) {
-                loadNCubes();
-                runSearch();
-            }
-            reloadCube();
-
-            handleUpdateReturnValues(appId, result.data, false, true);
-            saveOpenCubeList();
-            buildTabs();
+            handleCommitResult(appId, result);
         }, PROGRESS_DELAY);
+    }
+
+    function handleCommitResult(appId, result) {
+        clearNote();
+        if (!result.status) {
+            handleUpdateReturnValues(appId, result.data, false, false);
+            return;
+        }
+
+        if (appIdsEqual(appId, getAppId())) {
+            loadNCubes();
+            runSearch();
+        }
+        reloadCube();
+
+        handleUpdateReturnValues(appId, result.data, false, true);
+        saveOpenCubeList();
+        buildTabs();
     }
 
     function rollbackOk() {
@@ -4650,13 +4700,10 @@ var NCE = (function ($) {
         _diffAppId = diffOptions.appId;
         _diffCubeName = diffOptions.cubeName;
         diffOptions.canEdit = diffOptions.canEdit && checkPermissions(diffOptions.appId, _diffCubeName, PERMISSION_ACTION.UPDATE);
-        if (diffOptions.canEdit) {
-            _diffModal.find('.select-all, .select-none, .btn-primary').show();
-            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them right to left. Click a row to see more information about the change.';
-        } else {
-            _diffModal.find('.select-all, .select-none, .btn-primary').hide();
-            _diffInstructions[0].innerHTML = diffOptions.cantEditReason || 'View individual changes between two cubes.';
-        }
+        _diffModal.find('.select-all, .select-none, .btn-primary').toggle(diffOptions.canEdit);
+        _diffInstructions[0].innerHTML = diffOptions.canEdit
+            ? 'Reverse individual differences by merging them right to left. Click a row to see more information about the change.'
+            : (diffOptions.cantEditReason || 'View individual changes between two cubes.');
         diffDescriptive(diffOptions.canEdit);
         diffShow(true);
     }

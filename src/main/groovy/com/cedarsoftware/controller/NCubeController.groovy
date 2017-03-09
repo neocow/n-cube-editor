@@ -1397,7 +1397,6 @@ class NCubeController extends BaseController
 
         ApplicationID commitAppId = commitsCube.getCell([property:'appId'])
         List<Map<String, String>> commitInfo = commitsCube.getCell([property:'cubeNames']) as List
-        String user = NCubeManager.getUserId()
 
         Object[] allDtos = getBranchChangesForHead(commitAppId)
         Object[] commitDtos = allDtos.findAll {
@@ -1408,7 +1407,7 @@ class NCubeController extends BaseController
         }
 
         commitsCube.setCell('processing', [property:'status'])
-        commitsCube.setCell(user, [property:'commitUser'])
+        commitsCube.setCell(NCubeManager.getUserId(), [property:'commitUser'])
         commitsCube.setCell(new Date().format('M/d/yyyy HH:mm:ss'), [property:'commitTime'])
         nCubeService.updateHeadCube(sysAppId, commitsCube)
 
@@ -1426,6 +1425,44 @@ class NCubeController extends BaseController
         return ret
     }
 
+    Boolean cancelCommit(String commitId)
+    {
+        ApplicationID sysAppId = new ApplicationID(tenant, 'sys.app', '0.0.0', ReleaseStatus.SNAPSHOT.toString(), ApplicationID.HEAD)
+        NCube commitsCube = nCubeService.loadCube(sysAppId, "tx.${commitId}")
+
+        String status = commitsCube.getCell([property:'status'])
+        if (status == 'closed complete')
+        {
+            markRequestFailed('Commit request already closed.')
+            return false
+        }
+
+        commitsCube.setCell('closed cancelled', [property:'status'])
+        commitsCube.setCell(NCubeManager.getUserId(), [property:'commitUser'])
+        commitsCube.setCell(new Date().format('M/d/yyyy HH:mm:ss'), [property:'commitTime'])
+        nCubeService.updateHeadCube(sysAppId, commitsCube)
+        return true
+    }
+
+    Boolean reopenCommit(String commitId)
+    {
+        ApplicationID sysAppId = new ApplicationID(tenant, 'sys.app', '0.0.0', ReleaseStatus.SNAPSHOT.toString(), ApplicationID.HEAD)
+        NCube commitsCube = nCubeService.loadCube(sysAppId, "tx.${commitId}")
+
+        String status = commitsCube.getCell([property:'status'])
+        if (status == 'closed complete' || !status.contains('closed'))
+        {
+            markRequestFailed('Unable to reopen commit.')
+            return false
+        }
+
+        commitsCube.setCell('open', [property:'status'])
+        commitsCube.setCell(NCubeManager.getUserId(), [property:'commitUser'])
+        commitsCube.setCell(new Date().format('M/d/yyyy HH:mm:ss'), [property:'commitTime'])
+        nCubeService.updateHeadCube(sysAppId, commitsCube)
+        return true
+    }
+
     Object[] getCommits()
     {
         List<Map> results = []
@@ -1435,7 +1472,9 @@ class NCubeController extends BaseController
         for (NCubeInfoDto dto : dtos)
         {
             NCube cube = nCubeService.loadCubeById(Long.parseLong(dto.id))
-            results.add(cube.getMap([property:[] as Set]))
+            Map commitInfo = cube.getMap([property:[] as Set])
+            commitInfo.put('txid', dto.name.substring(3))
+            results.add(commitInfo)
         }
         return results as Object[]
     }
