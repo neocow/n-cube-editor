@@ -646,6 +646,10 @@ span.selected-count {
     width: 100%;
 }
 
+#appIdMenu button {
+    word-wrap: break-word;
+}
+
 #btnClearBranchQuickSelect {
     width: 25% !important;
     margin-right: 5px;
