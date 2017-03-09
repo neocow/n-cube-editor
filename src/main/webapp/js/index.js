@@ -3589,12 +3589,17 @@ var NCE = (function ($) {
         }
     }
 
-    function viewCommits(isUpdate) {
+    function viewCommits(isUpdate, txid) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.GET_COMMITS, []);
         if (result.status) {
             _commitsData = result.data;
             buildUlForCommitView(isUpdate);
             _viewCommitsModal.modal();
+            if (txid) {
+                _viewCommitsModal.one('shown.bs.modal', function() {
+                    viewCommitsSearchTransactionId(txid);
+                });
+            }
         } else {
             showNote('Unable to get commit list.', 'Error', TWO_SECOND_TIMEOUT);
         }
@@ -4357,8 +4362,8 @@ var NCE = (function ($) {
     }
 
     function generatePullRequestLink() {
-        var url, changes, result;
-        changes = getCommitChanges();
+        var urlPrefix, gitUrl, viewUrl, result, txid, html;
+        var changes = getCommitChanges();
         if (!changes.length) {
             showNote('No changes selected!', 'Error', TWO_SECOND_TIMEOUT);
             return;
@@ -4366,10 +4371,14 @@ var NCE = (function ($) {
         result = call(CONTROLLER + CONTROLLER_METHOD.GENERATE_COMMIT_LINK, [getAppId(), changes]);
         if (result.status) {
             _pullRequestLink.add(_commitOk).attr('disabled', '');
-            url = document.URL;
-            url = url.substring(0, url.lastIndexOf('/'));
-            url += '/cmd/ncubeController/honorCommit/?json=["' + result.data + '"]';
-            showNote(url, 'Commit Link', null, NOTE_CLASS.FORCE_MANUAL_CLOSE);
+            txid = result.data;
+            urlPrefix = document.URL;
+            urlPrefix = urlPrefix.substring(0, urlPrefix.lastIndexOf('/'));
+            gitUrl = urlPrefix + '/cmd/ncubeController/honorCommit/?json=["' + txid + '"]';
+            viewUrl = urlPrefix + '/#/viewCommit/' + txid;
+            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.closeOpenModal();NCE.viewCommits(true,\'' + txid + '\');">' + viewUrl + '</a><hr>'
+                 + 'GitHub Link (WARNING: This will merge the pull request!):<br>' + gitUrl;
+            showNote(html, 'Commit Link', null, NOTE_CLASS.HAS_EVENT);
         } else {
             showNote('Error generating link: ' + result.data, 'Error');
         }
@@ -4979,8 +4988,8 @@ var NCE = (function ($) {
 
     function addNoteListeners(noteId) {
         var noteDiv = $('#gritter-item-' + noteId);
-        if (!noteDiv.hasClass(HAS_EVENT)) {
-            noteDiv.addClass(HAS_EVENT);
+        if (!noteDiv.hasClass(NOTE_CLASS.HAS_EVENT)) {
+            noteDiv.addClass(NOTE_CLASS.HAS_EVENT);
             noteDiv.on('change click', function (e) {
                 e.preventDefault();
                 onNoteEvent(e);
@@ -5022,6 +5031,10 @@ var NCE = (function ($) {
     function isSelectedCubeInHead() {
         var appId = getSelectedTabAppId();
         return appId ? appId.branch === head : true;
+    }
+
+    function closeOpenModal() {
+        $('.modal.in').hide();
     }
 
     /**
@@ -5081,16 +5094,26 @@ var NCE = (function ($) {
 
     // API
     return {
-        getSelectedStatus: getSelectedStatus,
         buildTabs: buildTabs,
-        closeParentMenu: closeParentMenu
+        closeOpenModal: closeOpenModal,
+        closeParentMenu: closeParentMenu,
+        getSelectedStatus: getSelectedStatus,
+        viewCommits: viewCommits
     }
 
 })(jQuery);
 
 function frameLoaded(doc) {
     delay(function() {
+        var txidStartIdx, txid;
+        var url = document.URL;
         NCE.buildTabs(true);
+        if (url.indexOf('viewCommit') > -1) {
+            txidStartIdx = url.lastIndexOf('/') + 1;
+            txid = url.substring(txidStartIdx);
+            NCE.viewCommits(true, txid);
+        }
+        window.location.href = '#';
     }, 500);
     if (doc) {
         $(doc).on('click', function() {
