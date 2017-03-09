@@ -110,11 +110,7 @@ class Visualizer
 
 	protected VisualizerScopeInfo getVisualizerScopeInfo(Map options)
 	{
-		VisualizerScopeInfo scopeInfo = options.scopeInfo as VisualizerScopeInfo
-		if (!scopeInfo || scopeInfo.appId.app != appId.app)
-		{
-			scopeInfo = new VisualizerScopeInfo(appId)
-		}
+		VisualizerScopeInfo scopeInfo = new VisualizerScopeInfo(appId)
 		Map node = options.node as Map
 		if (node)
 		{

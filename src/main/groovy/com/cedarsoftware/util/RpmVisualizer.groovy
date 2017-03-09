@@ -63,11 +63,7 @@ class RpmVisualizer extends Visualizer
 
 	protected VisualizerScopeInfo getVisualizerScopeInfo(Map options)
 	{
-		RpmVisualizerScopeInfo scopeInfo = options.scopeInfo as RpmVisualizerScopeInfo
-		if (!scopeInfo || scopeInfo.appId.app != appId.app)
-		{
-			scopeInfo = new RpmVisualizerScopeInfo(appId)
-		}
+		RpmVisualizerScopeInfo scopeInfo = new RpmVisualizerScopeInfo(appId)
 		Map node = options.node as Map
 		if (node)
 		{
@@ -83,7 +79,7 @@ class RpmVisualizer extends Visualizer
 	@Override
 	protected VisualizerRelInfo getVisualizerRelInfo(Map options, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
 	{
-		RpmVisualizerRelInfo relInfo =  new RpmVisualizerRelInfo(appId)
+		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId)
 		relInfo.init(options, visInfo, scopeInfo)
 		return relInfo
 	}

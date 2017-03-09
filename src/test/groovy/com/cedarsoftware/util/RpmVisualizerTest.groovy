@@ -1659,10 +1659,10 @@ class RpmVisualizerTest
 
         //Check that sourceRisk is now part of top node nodeScope
         List<String> risks = ['ARisk', 'BRisk', 'DRisk', 'GProductOps', 'GStateOps', 'ProductLocation', 'StateOps', 'WProductOps']
-        //TODO:  assert scopeInfo.nodeScopeAvailableValues.keySet().contains('sourceRisk')
-        //TODO: assert risks as Set == scopeInfo.nodeScopeAvailableValues.sourceRisk as Set
-        //TODO: assert scopeInfo.nodeScopeCubeNames.keySet().contains('sourceRisk')
-        //TODO:  assert ['rpm.nodeScope.class.Risk.traits.Risks'] as Set== scopeInfo.nodeScopeCubeNames.sourceRisk as Set
+        //TODO:  assert scopeInfo.availableScopeValues.keySet().contains('sourceRisk')
+        //TODO: assert risks as Set == scopeInfo.availableScopeValues.sourceRisk as Set
+        //TODO: assert scopeInfo.scopeCubeNames.keySet().contains('sourceRisk')
+        //TODO:  assert ['rpm.nodeScope.class.Risk.traits.Risks'] as Set== scopeInfo.scopeCubeNames.sourceRisk as Set
         //TODO: String scopeMessage = scopeInfo.scopeMessage
         //TODO: checkScopePromptTitle(scopeMessage, 'sourceRisk', true, null, 'topNode')
         //TODO: checkScopePromptDropdown(scopeMessage, 'sourceRisk', '', risks, [DEFAULT], SELECT_OR_ENTER_VALUE)
@@ -1689,8 +1689,8 @@ class RpmVisualizerTest
         buildGraph(options)
 
         //Check that sourceRisk is not part of required graph nodeScope
-        //TODO: assert !scopeInfo.nodeScopeAvailableValues.keySet().contains('sourceRisk')
-        //TODO: assert !scopeInfo.nodeScopeCubeNames.keySet().contains('sourceRisk')
+        //TODO: assert !scopeInfo.availableScopeValues.keySet().contains('sourceRisk')
+        //TODO: assert !scopeInfo.scopeCubeNames.keySet().contains('sourceRisk')
         //TODO: checkNoScopePrompt(scopeInfo.scopeMessage, 'sourceRisk')
 
         //Check node
@@ -1835,22 +1835,22 @@ class RpmVisualizerTest
         Set<String> scopeKeys = ['policyControlDate', 'quoteDate', '_effectiveVersion', 'product'] as CaseInsensitiveSet
         Set<String> products = ['AProduct', 'BProduct', 'GProduct', 'UProduct', 'WProduct'] as CaseInsensitiveSet
 
-      *//*  assert 4 == scopeInfo.nodeScopeAvailableValues.keySet().size()
-        assert scopeInfo.nodeScopeAvailableValues.keySet().containsAll(scopeKeys)
-        assert 0 == scopeInfo.nodeScopeAvailableValues.policyControlDate.size()
-        assert 0 == scopeInfo.nodeScopeAvailableValues.quoteDate.size()
-        assert 1 == scopeInfo.nodeScopeAvailableValues._effectiveVersion.size()
-        assert [ApplicationID.DEFAULT_VERSION] as Set == scopeInfo.nodeScopeAvailableValues._effectiveVersion as Set
-        assert 5 == scopeInfo.nodeScopeAvailableValues.product.size()
-        assert scopeInfo.nodeScopeAvailableValues.product.containsAll(products)
+      *//*  assert 4 == scopeInfo.availableScopeValues.keySet().size()
+        assert scopeInfo.availableScopeValues.keySet().containsAll(scopeKeys)
+        assert 0 == scopeInfo.availableScopeValues.policyControlDate.size()
+        assert 0 == scopeInfo.availableScopeValues.quoteDate.size()
+        assert 1 == scopeInfo.availableScopeValues._effectiveVersion.size()
+        assert [ApplicationID.DEFAULT_VERSION] as Set == scopeInfo.availableScopeValues._effectiveVersion as Set
+        assert 5 == scopeInfo.availableScopeValues.product.size()
+        assert scopeInfo.availableScopeValues.product.containsAll(products)
 
-        assert 4 == scopeInfo.nodeScopeCubeNames.keySet().size()
-        assert scopeInfo.nodeScopeCubeNames.keySet().containsAll(scopeKeys)
-        assert 0 == scopeInfo.nodeScopeCubeNames.policyControlDate.size()
-        assert 0 == scopeInfo.nodeScopeCubeNames.quoteDate.size()
-        assert 0 == scopeInfo.nodeScopeCubeNames._effectiveVersion.size()
-        assert 1 == scopeInfo.nodeScopeCubeNames.product.size()
-        assert ['rpm.nodeScope.class.Product.traits'] as Set== scopeInfo.nodeScopeCubeNames.product as Set
+        assert 4 == scopeInfo.scopeCubeNames.keySet().size()
+        assert scopeInfo.scopeCubeNames.keySet().containsAll(scopeKeys)
+        assert 0 == scopeInfo.scopeCubeNames.policyControlDate.size()
+        assert 0 == scopeInfo.scopeCubeNames.quoteDate.size()
+        assert 0 == scopeInfo.scopeCubeNames._effectiveVersion.size()
+        assert 1 == scopeInfo.scopeCubeNames.product.size()
+        assert ['rpm.nodeScope.class.Product.traits'] as Set== scopeInfo.scopeCubeNames.product as Set
 
         String scopeMessage = scopeInfo.scopeMessage
         assert scopeMessage.contains(selectedProductName + SCOPE_UTILIZED_BY_TOP_NODE)
@@ -1943,14 +1943,14 @@ class RpmVisualizerTest
     private void checkGraphScopeNonEPM()
     {
         //TODO:
-       *//* assert 1 == scopeInfo.nodeScopeAvailableValues.keySet().size()
-        assert scopeInfo.nodeScopeAvailableValues.keySet().contains('_effectiveVersion')
-        assert 1 == scopeInfo.nodeScopeAvailableValues._effectiveVersion.size()
-        assert [ApplicationID.DEFAULT_VERSION] as Set == scopeInfo.nodeScopeAvailableValues._effectiveVersion as Set
+       *//* assert 1 == scopeInfo.availableScopeValues.keySet().size()
+        assert scopeInfo.availableScopeValues.keySet().contains('_effectiveVersion')
+        assert 1 == scopeInfo.availableScopeValues._effectiveVersion.size()
+        assert [ApplicationID.DEFAULT_VERSION] as Set == scopeInfo.availableScopeValues._effectiveVersion as Set
 
-        assert 1 == scopeInfo.nodeScopeCubeNames.keySet().size()
-        assert scopeInfo.nodeScopeCubeNames.keySet().containsAll('_effectiveVersion')
-        assert 0 == scopeInfo.nodeScopeCubeNames._effectiveVersion.size()
+        assert 1 == scopeInfo.scopeCubeNames.keySet().size()
+        assert scopeInfo.scopeCubeNames.keySet().containsAll('_effectiveVersion')
+        assert 0 == scopeInfo.scopeCubeNames._effectiveVersion.size()
 
         String scopeMessage = scopeInfo.scopeMessage
         assert scopeMessage.contains('partyrole.LossPrevention' + SCOPE_UTILIZED_BY_TOP_NODE )
@@ -2141,8 +2141,8 @@ class RpmVisualizerTest
     {
         //TODO:
        *//* Set<String> scopeKeys = ['policyControlDate', 'quoteDate', '_effectiveVersion', 'coverage'] as CaseInsensitiveSet
-        assert 4 == scopeInfo.nodeScopeAvailableValues.keySet().size()
-        assert scopeInfo.nodeScopeCubeNames.keySet().containsAll(scopeKeys)
+        assert 4 == scopeInfo.availableScopeValues.keySet().size()
+        assert scopeInfo.scopeCubeNames.keySet().containsAll(scopeKeys)
         assert 0 == scopeInfo.optionalGraphScopeAvailableValues.keySet().size()*//*
     }*/
 

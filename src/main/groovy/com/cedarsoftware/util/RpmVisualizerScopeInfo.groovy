@@ -49,7 +49,7 @@ class RpmVisualizerScopeInfo extends VisualizerScopeInfo
 
 	private void addScopeDefault(String scopeKey, Object value, VisualizerRelInfo relInfo)
 	{
-		addNodeScope(relInfo.targetId, null, scopeKey, true, null)
+		addNodeScope(relInfo, null, scopeKey, true, null)
 		scopeDefaults[scopeKey] = value
 	}
 
@@ -63,7 +63,7 @@ class RpmVisualizerScopeInfo extends VisualizerScopeInfo
 			values.addAll(versionsMap[ReleaseStatus.SNAPSHOT.name()])
 			effectiveVersionAvailableValues = new LinkedHashSet(values)
 		}
-		getNodeScopeInfo(relInfo.targetId).nodeScopeAvailableValues[EFFECTIVE_VERSION] = effectiveVersionAvailableValues
+		relInfo.availableScopeValues[EFFECTIVE_VERSION] = effectiveVersionAvailableValues
 	}
 
 	@Override

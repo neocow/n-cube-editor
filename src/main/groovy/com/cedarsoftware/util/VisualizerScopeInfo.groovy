@@ -25,10 +25,7 @@ class VisualizerScopeInfo
 	protected ApplicationID appId
 	protected boolean loadingCellValues
 	protected Map<String, Object> inputScope
-
-	protected Map<Long, Map> graphScopeInfo = [:]
 	Map<String, Object> scopeDefaults = new CaseInsensitiveMap()
-
 
 	VisualizerScopeInfo(){}
 
@@ -39,15 +36,14 @@ class VisualizerScopeInfo
 
 	protected void populateScopeDefaults(VisualizerRelInfo relInfo) {}
 
-	protected void addNodeScope(Long targetId, String cubeName, String scopeKey, boolean skipAvailableScopeValues = false, Map coordinate)
+	protected void addNodeScope(VisualizerRelInfo relInfo, String cubeName, String scopeKey, boolean skipAvailableScopeValues = false, Map coordinate)
 	{
-		Map nodeScopeInfo = getNodeScopeInfo(targetId)
-		Map<String, Set<Object>> nodeScopeAvailableValues = nodeScopeInfo.nodeScopeAvailableValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
-		Map<String, Set<String>> nodeScopeCubeNames = nodeScopeInfo.nodeScopeCubeNames as CaseInsensitiveMap  ?: new CaseInsensitiveMap()
-		addAvailableValues(cubeName, scopeKey, nodeScopeAvailableValues, skipAvailableScopeValues, coordinate)
-		addCubeNames(scopeKey, nodeScopeCubeNames, cubeName)
-		nodeScopeInfo.nodeScopeAvailableValues = nodeScopeAvailableValues
-		nodeScopeInfo.nodeScopeCubeNames = nodeScopeCubeNames
+		Map<String, Set<Object>> availableScopeValues = relInfo.availableScopeValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
+		Map<String, Set<String>> scopeCubeNames = relInfo.scopeCubeNames as CaseInsensitiveMap  ?: new CaseInsensitiveMap()
+		addAvailableValues(cubeName, scopeKey, availableScopeValues, skipAvailableScopeValues, coordinate)
+		addCubeNames(scopeKey, scopeCubeNames, cubeName)
+		relInfo.availableScopeValues = availableScopeValues
+		relInfo.scopeCubeNames = scopeCubeNames
 	}
 
 	private void addAvailableValues(String cubeName, String scopeKey, Map availableValues, boolean skipAvailableScopeValues, Map coordinate)
@@ -100,37 +96,17 @@ class VisualizerScopeInfo
 
 	protected String createNodeDetailsScopeMessage(VisualizerRelInfo relInfo)
 	{
-		Map nodeScopeInfo = getNodeScopeInfo(relInfo.targetId)
-		Map<String, Set<Object>> nodeScopeAvailableValues = nodeScopeInfo.nodeScopeAvailableValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
-		Map<String, Set<String>> nodeScopeCubeNames = nodeScopeInfo.nodeScopeCubeNames as CaseInsensitiveMap?: new CaseInsensitiveMap()
+		Map<String, Set<Object>> availableScopeValues = relInfo.availableScopeValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
+		Map<String, Set<String>> scopeCubeNames = relInfo.scopeCubeNames as CaseInsensitiveMap?: new CaseInsensitiveMap()
 
 		StringBuilder sb = new StringBuilder()
 		sb.append(getNodeDetailsMessages(relInfo.nodeDetailsMessages))
-		sb.append(getNodeScopeMessage(nodeScopeAvailableValues.sort(), nodeScopeCubeNames, relInfo))
+		sb.append(getNodeScopeMessage(availableScopeValues.sort(), scopeCubeNames, relInfo))
 		sb.append("""<a href="#" title="Reset scope to original defaults" class="scopeReset">Reset scope</a>""")
 		sb.append("${DOUBLE_BREAK}")
 		return sb.toString()
 	}
-
-	/*protected String createNodeScopeToastMessage(VisualizerRelInfo relInfo)
-	{
-		Map nodeScopeInfo = getNodeScopeInfo(relInfo.targetId)
-		Map<String, Set<Object>> nodeScopeAvailableValues = nodeScopeInfo.nodeScopeAvailableValues as CaseInsensitiveMap ?: new CaseInsensitiveMap()
-		Map<String, Set<String>> nodeScopeCubeNames = nodeScopeInfo.nodeScopeCubeNames as CaseInsensitiveMap?: new CaseInsensitiveMap()
-
-		String nodeName = relInfo.getLabel()
-		StringBuilder sb = new StringBuilder("""<div id="scopeMessage">""")
-		sb.append(BREAK)
-		sb.append("<b>${nodeName}</b>")
-		sb.append('<hr style="border-top: 1px solid #aaa;margin:2px">')
-		sb.append(getNodeDetailsMessages(relInfo.nodeDetailsMessages))
-		sb.append(getNodeScopeMessage(nodeScopeAvailableValues.sort(), nodeScopeCubeNames, relInfo))
-		sb.append("${DOUBLE_BREAK}")
-		sb.append("""<a href="#" title="Reset scope to original defaults" class="scopeReset">Reset scope</a>""")
-		sb.append('</div>')
-		return sb.toString()
-	}*/
-
+	
 	private static StringBuilder getNodeDetailsMessages(List<String> nodeDetailsMessages)
 	{
 		StringBuilder sb = new StringBuilder()
@@ -215,17 +191,6 @@ class VisualizerScopeInfo
 	protected boolean loadAgain(VisualizerRelInfo relInfo, String scopeKey)
 	{
 		return false
-	}
-
-	protected Map<String, CaseInsensitiveMap> getNodeScopeInfo(Long nodeId)
-	{
-		Map<String, CaseInsensitiveMap> nodeScopeInfo = graphScopeInfo[nodeId] as Map
-		if (!nodeScopeInfo)
-		{
-			nodeScopeInfo = [nodeScopeAvailableValues: new CaseInsensitiveMap(), nodeScopeCubeNames: new CaseInsensitiveMap()]
-			graphScopeInfo[nodeId] = nodeScopeInfo
-		}
-		return nodeScopeInfo
 	}
 
 	private static StringBuilder addCubeNamesList(String prefix, Set<String> cubeNames)

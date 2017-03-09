@@ -20,6 +20,8 @@ class VisualizerRelInfo
 
 	protected List<String> nodeDetailsMessages = []
 	protected Map<String, Object> availableTargetScope = new CaseInsensitiveMap()
+	Map<String, Set<Object>> availableScopeValues = new CaseInsensitiveMap()
+	Map<String, Set<String>> scopeCubeNames = new CaseInsensitiveMap()
 
 	protected long targetId
 	protected NCube targetCube
@@ -63,8 +65,8 @@ class VisualizerRelInfo
 			targetLevel = Long.valueOf(node.level as String)
 			targetScope = node.scope as CaseInsensitiveMap
 			availableTargetScope = node.availableScope as CaseInsensitiveMap
-			Map<String, Set<Object>> nodeScopeAvailableValues = scopeInfo.getNodeScopeInfo(targetId).nodeScopeAvailableValues as Map
-			availableTargetScope.keySet().removeAll(nodeScopeAvailableValues.keySet())
+			Map<String, Set<Object>> availableScopeValues = node.availableScopeValues as Map
+			availableTargetScope.keySet().removeAll(availableScopeValues.keySet())
 			showCellValuesLink = node.showCellValuesLink as boolean
 			showCellValues = node.showCellValues as boolean
 			cubeLoaded = node.cubeLoaded as boolean
