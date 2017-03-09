@@ -3580,9 +3580,12 @@ var NCE = (function ($) {
     }
 
     function viewCommitsSearchTransactionId(txid) {
-        var row = _viewCommitsList.find('[data-txid="' + txid + '"]')[0];
+        var jqrow = _viewCommitsList.find('[data-txid="' + txid + '"]');
+        var row = jqrow[0];
         if (row) {
-            commitListClick(row);
+            if (!jqrow.hasClass('highlight-lightgoldenrodyellow')) {
+                commitListClick(row);
+            }
             _viewCommitsModal.find('.modal-body')[0].scrollTop = row.offsetTop;
         } else {
             showNote(txid + ' was not found.', 'Transaction ID not found!', TWO_SECOND_TIMEOUT);
@@ -5034,7 +5037,7 @@ var NCE = (function ($) {
     }
 
     function closeOpenModal() {
-        $('.modal.in').hide();
+        $('.modal.in').modal('hide');
     }
 
     /**
