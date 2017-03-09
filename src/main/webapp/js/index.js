@@ -138,7 +138,7 @@ var NCE = (function ($) {
     var _reqScopeList = $('#reqScopeList');
     var _showReqScopeLabel = $('#showReqScopeLabel');
     var _commitOk = $('#commitOk');
-    var _commitLink = $('#commitLink');
+    var _pullRequestLink = $('#pull-link');
     var _rollbackOk = $('#rollbackOk');
     var _commitRollbackLabel = $('#commitRollbackLabel');
     var _viewCommits = $('#view-commits');
@@ -3816,8 +3816,8 @@ var NCE = (function ($) {
             setTimeout(function() { commitBranch(true); }, PROGRESS_DELAY);
             showNote('Processing commit request...');
         });
-        _commitLink.on('click', function() {
-            generateCommitLink();
+        _pullRequestLink.on('click', function() {
+            generatePullRequestLink();
         });
         _commitOk.on('click', function() {
             commitOk();
@@ -4312,14 +4312,14 @@ var NCE = (function ($) {
     function commitBranch(state) {
         var errMsg, title, result, branchChanges, action;
         clearNote();
-        _commitModal.find('.accept-mine, .accept-theirs').add(_commitLink).add(_commitOk).toggle(state);
+        _commitModal.find('.accept-mine, .accept-theirs').add(_pullRequestLink).add(_commitOk).toggle(state);
         _rollbackOk.toggle(!state);
         action = state ? 'commit' : 'rollback';
         errMsg = state ? 'commit to' : 'rollback in';
         title = (state ? 'Commit' : 'Rollback') + ' changes';
         _commitRollbackList.data('is-commit', state);
         if (state) {
-            _commitLink.removeAttr('disabled');
+            _pullRequestLink.add(_commitOk).removeAttr('disabled');
         }
 
         if (isHeadSelected()) {
@@ -4356,7 +4356,7 @@ var NCE = (function ($) {
         return changes;
     }
 
-    function generateCommitLink() {
+    function generatePullRequestLink() {
         var url, changes, result;
         changes = getCommitChanges();
         if (!changes.length) {
@@ -4365,7 +4365,7 @@ var NCE = (function ($) {
         }
         result = call(CONTROLLER + CONTROLLER_METHOD.GENERATE_COMMIT_LINK, [getAppId(), changes]);
         if (result.status) {
-            _commitLink.attr('disabled', '');
+            _pullRequestLink.add(_commitOk).attr('disabled', '');
             url = document.URL;
             url = url.substring(0, url.lastIndexOf('/'));
             url += '/cmd/ncubeController/honorCommit/?json=["' + result.data + '"]';

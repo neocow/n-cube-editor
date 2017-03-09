@@ -72,7 +72,7 @@
             <li class="dropdown">
                 <a id="DataMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Data <b class="caret"></b></a>
                 <ul class="dropdown-menu">
-                    <li><a id="view-commits" href="#">View Commits</a></li>
+                    <li><a id="view-commits" href="#">View Pull Requests</a></li>
                     <li><a id="clearStorage" href="#">Clear Local Storage</a></li>
                 </ul>
             </li>
@@ -332,7 +332,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="view-commits-label" class="modal-title">Commit Requests</h3>
+                <h3 id="view-commits-label" class="modal-title">NCube Pull Requests</h3>
             </div>
             <div class="modal-body" style="overflow: auto;">
                 <input type="text" id="view-commits-search-text" placeholder="Transaction ID" />
@@ -389,7 +389,7 @@
                 <button class="btn btn-danger btn-sm pull-left accept-mine" aria-hidden="true">Accept Mine</button>
                 <button class="btn btn-danger btn-sm pull-left accept-theirs" aria-hidden="true">Accept Theirs</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
-                <button id="commitLink" class="btn btn-info btn-sm">Generate Commit Link</button>
+                <button id="pull-link" class="btn btn-info btn-sm">Generate Pull Request Link</button>
                 <button id="commitOk" class="btn btn-primary btn-sm">Commit</button>
                 <button id="rollbackOk" class="btn btn-primary btn-sm">Rollback</button>
             </div>
