@@ -1681,7 +1681,7 @@ var NCE = (function ($) {
         $(_viewCommits).on('click', function() {
             viewCommits();
         });
-        _viewCommitsList.find('select').on('change', function() {
+        _viewCommitsModal.find('select').on('change', function() {
             viewCommitsFilter();
         });
         _viewCommitsModal.on('shown.bs.modal', function() {
@@ -3610,9 +3610,9 @@ var NCE = (function ($) {
     
     function viewCommitsFilter() {
         var i, len, el, filterVal;
-        var selects = _viewCommitsList.find('select');
+        var selects = _viewCommitsModal.find('select');
         var populatedSelects = selects.filter(function() { return this.value.length; });
-        _viewCommitsList.find('tr:gt(1)').show();
+        _viewCommitsList.find('tr').show();
         for (i = 0, len = populatedSelects.length; i < len; i++) {
             el = populatedSelects[i];
             filterVal = el.value;
@@ -3624,7 +3624,7 @@ var NCE = (function ($) {
 
     function viewCommitsHideIfNotMatching(filterVal, idx) {
         var i, len, tds, td, row;
-        tds = _viewCommitsList.find('tr:gt(1):visible').find('td:nth-child(' + idx + ')');
+        tds = _viewCommitsList.find('tr:visible').find('td:nth-child(' + idx + ')');
         for (i = 0, len = tds.length; i < len; i++) {
             td = tds[i];
             row = $(td).parent();
@@ -3666,21 +3666,21 @@ var NCE = (function ($) {
             }
 
             html += '<tr data-txid="' + commit.txid + '">'
-                  + '<td>' + commit.appId.app + '</td>'
-                  + '<td>' + commit.appId.version + '</td>'
-                  + '<td>' + commit.appId.branch + '</td>'
-                  + '<td>' + commit.status + '</td>'
-                  + '<td>' + commit.requestUser + '</td>'
-                  + '<td>' + commit.requestTime + '</td>'
-                  + '<td>' + (commit.commitUser || '') + '</td>'
-                  + '<td>' + (commit.commitTime || '') + '</td>'
-                  + '<td>' + (commit.prId || '') + '</td>'
+                  + '<td class="view-commits-app">' + commit.appId.app + '</td>'
+                  + '<td class="view-commits-version">' + commit.appId.version + '</td>'
+                  + '<td class="view-commits-branch">' + commit.appId.branch + '</td>'
+                  + '<td class="view-commits-status">' + commit.status + '</td>'
+                  + '<td class="view-commits-requester">' + commit.requestUser + '</td>'
+                  + '<td class="view-commits-request-date">' + commit.requestTime + '</td>'
+                  + '<td class="view-commits-committer">' + (commit.commitUser || '') + '</td>'
+                  + '<td class="view-commits-commit-date">' + (commit.commitTime || '') + '</td>'
+                  + '<td class="view-commits-pr">' + (commit.prId || '') + '</td>'
                   + '</tr>';
         }
         
-        _viewCommitsList.find('tr:gt(1)').remove();
+        _viewCommitsList.find('tr').remove();
         _viewCommitsList.append(html);
-        _viewCommitsList.find('tr:gt(1)').on('click', function() {
+        _viewCommitsList.find('tr').on('click', function() {
             commitListClick(this);
         });
 
@@ -3711,7 +3711,7 @@ var NCE = (function ($) {
         if (!openRow.length || allRows.index(openRow[0]) !== allRows.index(row) + 1) {
             self.addClass(highlightClass);
             numCols = self.find('td').length;
-            commit = _commitsData[_viewCommitsList.find('tr').index(row) - 2];
+            commit = _commitsData[_viewCommitsList.find('tr').index(row)];
             cubeNames = commit.cubeNames['@items'];
             html = '<tr><td colspan="' + (numCols - 5) + '"></td>'
                  + '<td><b>Transaction ID</b></td><td><b>' + commit.txid + '</b></td>';
