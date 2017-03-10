@@ -4388,7 +4388,7 @@ var NCE = (function ($) {
     }
 
     function generatePullRequestLink() {
-        var urlPrefix, gitUrl, viewUrl, result, txid, html;
+        var urlPrefix, viewUrl, result, txid, html;
         var changes = getCommitChanges();
         if (!changes.length) {
             showNote('No changes selected!', 'Error', TWO_SECOND_TIMEOUT);
@@ -4400,11 +4400,9 @@ var NCE = (function ($) {
             txid = result.data;
             urlPrefix = document.URL;
             urlPrefix = urlPrefix.substring(0, urlPrefix.lastIndexOf('/'));
-            gitUrl = urlPrefix + '/cmd/ncubeController/honorCommit/?json=["' + txid + '"]';
             viewUrl = urlPrefix + '/#/viewCommit/' + txid;
-            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.closeOpenModal();NCE.viewCommits(true,\'' + txid + '\');">' + viewUrl + '</a><hr>'
-                 + 'GitHub Link (WARNING: This will merge the pull request!):<br>' + gitUrl;
-            showNote(html, 'Commit Link', null, NOTE_CLASS.HAS_EVENT);
+            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.closeOpenModal();NCE.viewCommits(true,\'' + txid + '\');">' + viewUrl + '</a>';
+            showNote(html, 'Pull Request Link', null, NOTE_CLASS.HAS_EVENT);
         } else {
             showNote('Error generating link: ' + result.data, 'Error');
         }
