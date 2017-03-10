@@ -29,30 +29,27 @@ class Visualizer
 	 * @param options - a map containing:
 	 *           String startCubeName, name of the starting cube
 	 *           VisualizerInfo visInfo, information about the visualization
-	 *           VisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 *           Map node, representing a cube and its scope
 	 *           Map scope, the scope used in the visualization
 	 * @return a map containing:
 	 *           String status, status of the visualization
 	 *           VisualizerInfo visInfo, information about the visualization
-	 *           VisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 */
 	Map<String, Object> buildGraph(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
 		String startCubeName = options.startCubeName as String
 		VisualizerInfo visInfo = getVisualizerInfo(options)
-		VisualizerScopeInfo scopeInfo = getVisualizerScopeInfo(options)
-		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo, scopeInfo)
+		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo)
 
 		if (!isValidStartCube(visInfo, startCubeName))
 		{
-			return [status: STATUS_INVALID_START_CUBE, visInfo: visInfo, scopeInfo: scopeInfo]
+			return [status: STATUS_INVALID_START_CUBE, visInfo: visInfo]
 		}
 
-		getVisualization(visInfo, scopeInfo, relInfo)
+		getVisualization(visInfo, relInfo)
 		visInfo.convertToSingleMessage()
-		return [status: STATUS_SUCCESS, visInfo: visInfo, scopeInfo: scopeInfo]
+		return [status: STATUS_SUCCESS, visInfo: visInfo]
 	}
 
 	/**
@@ -62,30 +59,28 @@ class Visualizer
 	 * @param options - a map containing:
 	 *            Map node, representing a cube and its scope
 	 *            VisualizerInfo visInfo, information about the visualization
-	 *            VisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 *            Map scope, the scope used in the visualization
 	 * @return a map containing:
 	 *           String status, status of the visualization
 	 *           VisualizerInfo visInfo, information about the visualization
-	 *           VisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 */
 	Map loadNodeDetails(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
+		Map node = options.node as Map
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
 		visInfo.appId = applicationID
-		VisualizerScopeInfo scopeInfo = getVisualizerScopeInfo(options)
-		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo, scopeInfo)
-		return loadNodeDetails(visInfo, scopeInfo, relInfo, options)
+		visInfo.inputScope = node.availableScope as CaseInsensitiveMap
+		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo)
+		return loadNodeDetails(visInfo, relInfo, node)
 	}
 
-	protected static Map loadNodeDetails(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo, Map options)
+	protected static Map loadNodeDetails(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Map node)
 	{
 		visInfo.messages = new LinkedHashSet()
-		relInfo.loadCube(visInfo, scopeInfo)
+		relInfo.loadCube(visInfo)
 
-		Map node = options.node as Map
-		node.details = relInfo.getDetails(visInfo, scopeInfo)
+		node.details = relInfo.getDetails(visInfo)
 		node.showCellValuesLink = relInfo.showCellValuesLink
 		node.cubeLoaded = relInfo.cubeLoaded
 		boolean showCellValues = relInfo.showCellValues
@@ -94,7 +89,7 @@ class Visualizer
 		node.availableScope = relInfo.availableTargetScope
 		visInfo.nodes = [node]
 		visInfo.convertToSingleMessage()
-		return [status: STATUS_SUCCESS, visInfo: visInfo, scopeInfo: scopeInfo]
+		return [status: STATUS_SUCCESS, visInfo: visInfo]
 	}
 
 	protected VisualizerInfo getVisualizerInfo(Map options)
@@ -108,39 +103,24 @@ class Visualizer
 		return visInfo
 	}
 
-	protected VisualizerScopeInfo getVisualizerScopeInfo(Map options)
-	{
-		VisualizerScopeInfo scopeInfo = new VisualizerScopeInfo(appId)
-		Map node = options.node as Map
-		if (node)
-		{
-			scopeInfo.inputScope = node.availableScope as CaseInsensitiveMap
-		}
-		else
-		{
-			scopeInfo.inputScope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
-		}
-		return scopeInfo
-	}
-
-	protected VisualizerRelInfo getVisualizerRelInfo(Map options, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
+	protected VisualizerRelInfo getVisualizerRelInfo(Map options, VisualizerInfo visInfo)
 	{
 		VisualizerRelInfo relInfo =  new VisualizerRelInfo(appId)
-		relInfo.init(options, visInfo, scopeInfo)
+		relInfo.init(options, visInfo)
 		return relInfo
 	}
 
-	private void getVisualization(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo,  VisualizerRelInfo relInfo)
+	private void getVisualization(VisualizerInfo visInfo,  VisualizerRelInfo relInfo)
 	{
 		stack.push(relInfo)
 
 		while (!stack.empty)
 		{
-			processCube(visInfo, scopeInfo, stack.pop())
+			processCube(visInfo, stack.pop())
 		}
 	}
 
-	protected void processCube(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo)
+	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		NCube targetCube = relInfo.targetCube
 		String targetCubeName = targetCube.name
@@ -155,7 +135,7 @@ class Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo, scopeInfo)
+		visInfo.nodes << relInfo.createNode(visInfo)
 
 		Map<Map, Set<String>> refs = targetCube.referencedCubeNames
 

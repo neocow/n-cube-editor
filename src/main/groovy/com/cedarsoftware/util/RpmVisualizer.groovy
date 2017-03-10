@@ -24,23 +24,22 @@ class RpmVisualizer extends Visualizer
 	 * @param options - a map containing:
 	 *            Map node, representing a class and its scope
 	 *            RpmVisualizerInfo visInfo, information about the visualization
-	 *            RpmVisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 *            Map scope, the scope used in the visualization
 	 * @return a map containing:
 	 *           String status, status of the visualization
 	 *           RpmVisualizerInfo visInfo, information about the visualization
-	 *           RpmVisualizerScopeInfo scopeInfo, information about the scope used in the visualization
 	 */
 
 	@Override
 	Map loadNodeDetails(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
+		Map node = options.node as Map
 		RpmVisualizerInfo visInfo = options.visInfo as RpmVisualizerInfo
 		visInfo.appId = applicationID
-		VisualizerScopeInfo scopeInfo = getVisualizerScopeInfo(options)
-		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo, scopeInfo)
-		return loadNodeDetails(visInfo, scopeInfo, relInfo, options)
+		visInfo.inputScope = node.availableScope as CaseInsensitiveMap
+		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo)
+		return loadNodeDetails(visInfo, relInfo, node)
 	}
 
 	@Override
@@ -61,50 +60,35 @@ class RpmVisualizer extends Visualizer
 		return visInfo
 	}
 
-	protected VisualizerScopeInfo getVisualizerScopeInfo(Map options)
-	{
-		RpmVisualizerScopeInfo scopeInfo = new RpmVisualizerScopeInfo(appId)
-		Map node = options.node as Map
-		if (node)
-		{
-			scopeInfo.inputScope = node.availableScope as CaseInsensitiveMap
-		}
-		else
-		{
-			scopeInfo.inputScope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
-		}
-		return scopeInfo
-	}
-
 	@Override
-	protected VisualizerRelInfo getVisualizerRelInfo(Map options, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo)
+	protected VisualizerRelInfo getVisualizerRelInfo(Map options, VisualizerInfo visInfo)
 	{
 		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId)
-		relInfo.init(options, visInfo, scopeInfo)
+		relInfo.init(options, visInfo)
 		return relInfo
 	}
 
 	@Override
-	protected void processCube(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo)
+	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		if (relInfo.targetCube.name.startsWith(RPM_CLASS))
 		{
-			processClassCube((RpmVisualizerInfo) visInfo, scopeInfo, (RpmVisualizerRelInfo) relInfo)
+			processClassCube((RpmVisualizerInfo) visInfo, (RpmVisualizerRelInfo) relInfo)
 		}
 		else
 		{
-			processEnumCube((RpmVisualizerInfo) visInfo, scopeInfo, (RpmVisualizerRelInfo) relInfo)
+			processEnumCube((RpmVisualizerInfo) visInfo, (RpmVisualizerRelInfo) relInfo)
 		}
 	}
 
-	private void processClassCube(RpmVisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, RpmVisualizerRelInfo relInfo)
+	private void processClassCube(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo)
 	{
 		boolean cubeLoaded
 		String targetCubeName = relInfo.targetCube.name
 
 		if (canLoadTraitsForTarget(relInfo))
 		{
-			cubeLoaded = relInfo.loadCube(visInfo, scopeInfo)
+			cubeLoaded = relInfo.loadCube(visInfo)
 		}
 
 		if (relInfo.sourceCube)
@@ -117,7 +101,7 @@ class RpmVisualizer extends Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo, scopeInfo)
+		visInfo.nodes << relInfo.createNode(visInfo)
 
 		if (cubeLoaded)
 		{
@@ -143,12 +127,12 @@ class RpmVisualizer extends Visualizer
 		}
 	}
 
-	private void processEnumCube(RpmVisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, RpmVisualizerRelInfo relInfo)
+	private void processEnumCube(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo)
 	{
 		String group = UNSPECIFIED_ENUM
 		String targetCubeName = relInfo.targetCube.name
 
-		boolean cubeLoaded = relInfo.loadCube(visInfo, scopeInfo)
+		boolean cubeLoaded = relInfo.loadCube(visInfo)
 		if (cubeLoaded)
 		{
 			relInfo.targetTraits.each { String targetFieldName, Map targetTraits ->
@@ -174,7 +158,7 @@ class RpmVisualizer extends Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo, scopeInfo, group)
+		visInfo.nodes << relInfo.createNode(visInfo, group)
 	}
 
 	private RpmVisualizerRelInfo addToStack(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)

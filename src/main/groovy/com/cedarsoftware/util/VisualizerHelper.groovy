@@ -1,7 +1,6 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.controller.NCubeController
-import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import groovy.transform.CompileStatic
@@ -16,7 +15,7 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerHelper
 {
-	protected static void handleUnboundScope(VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo, List<MapEntry> unboundAxesList)
+	protected static void handleUnboundScope(VisualizerInfo visInfo, VisualizerRelInfo relInfo, List<MapEntry> unboundAxesList)
 	{
 		if (relInfo.targetId == visInfo.selectedNodeId && unboundAxesList)
 		{
@@ -26,14 +25,14 @@ class VisualizerHelper
 				String scopeKey = axisEntry.key as String
 				if (relInfo.includeUnboundScopeKey(visInfo, scopeKey))
 				{
-					relInfo.loadAgain = scopeInfo.loadAgain(relInfo, scopeKey) ?: relInfo.loadAgain
-					scopeInfo.addNodeScope(relInfo.targetId, cubeName, scopeKey, false, null)
+					relInfo.setLoadAgain(visInfo, scopeKey)
+					relInfo.addNodeScope(cubeName, scopeKey, false, null)
 				}
 			}
 		}
 	}
 
-	protected static StringBuilder handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo)
+	protected static StringBuilder handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		StringBuilder sb = new StringBuilder()
 		String cubeName = e.cubeName
@@ -42,8 +41,8 @@ class VisualizerHelper
 		{
 			if (relInfo.targetId == visInfo.selectedNodeId)
 			{
-				relInfo.loadAgain = scopeInfo.loadAgain(relInfo, scopeKey)
-				scopeInfo.addNodeScope(relInfo.targetId, cubeName, scopeKey, false, e.coordinate)
+				relInfo.setLoadAgain(visInfo, scopeKey)
+				relInfo.addNodeScope(cubeName, scopeKey, false, e.coordinate)
 			}
 			return sb
 		}
@@ -54,7 +53,7 @@ class VisualizerHelper
 		}
 	}
 
-	protected static StringBuilder handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerScopeInfo scopeInfo, VisualizerRelInfo relInfo, Set mandatoryScopeKeys)
+	protected static StringBuilder handleInvalidCoordinateException(InvalidCoordinateException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo, Set mandatoryScopeKeys)
 	{
 		StringBuilder sb = new StringBuilder()
 		Set<String> missingScopeKeys = findMissingScope(relInfo.availableTargetScope, e.requiredKeys, mandatoryScopeKeys)
@@ -63,8 +62,8 @@ class VisualizerHelper
 			if (relInfo.targetId == visInfo.selectedNodeId)
 			{
 				missingScopeKeys.each { String scopeKey ->
-					relInfo.loadAgain = scopeInfo.loadAgain(relInfo, scopeKey) ?: relInfo.loadAgain
-					scopeInfo.addNodeScope(relInfo.targetId, e.cubeName, scopeKey, false, null)
+					relInfo.setLoadAgain(visInfo, scopeKey)
+					relInfo.addNodeScope(e.cubeName, scopeKey, false, null)
 				}
 			}
 			return sb

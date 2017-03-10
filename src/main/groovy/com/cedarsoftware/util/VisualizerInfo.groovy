@@ -1,6 +1,8 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
+import com.cedarsoftware.ncube.Axis
+import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import groovy.transform.CompileStatic
@@ -17,6 +19,8 @@ class VisualizerInfo
     protected Long selectedNodeId
     protected List<Map<String, Object>> nodes = []
     protected List<Map<String, Object>> edges = []
+
+    protected Map<String, Object> inputScope
 
     protected long maxLevel
     protected  long nodeCount
@@ -35,7 +39,6 @@ class VisualizerInfo
     protected Map<String, Object> networkOverridesTopNode
 
     protected Map<String, Set<String>> requiredScopeKeysByCube = [:]
-   // protected Map<String, Set<String>> allOptionalScopeKeysByCube = [:]
 
     protected Map<String, List<String>> typesToAddMap = [:]
 
@@ -50,14 +53,18 @@ class VisualizerInfo
     protected void init(Map options)
     {
         messages = new LinkedHashSet()
-
         Map node = options.node as Map
-        if (!node)
+        if (node)
+        {
+            inputScope = new CaseInsensitiveMap(node.availableScope as Map)
+        }
+        else
         {
             maxLevel = 1
             nodeCount = 1
             relInfoCount = 1
             availableGroupsAllLevels = new LinkedHashSet()
+            inputScope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
         }
     }
 
