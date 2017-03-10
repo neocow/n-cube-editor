@@ -1266,7 +1266,7 @@ var Visualizer = (function ($) {
     function addNodeDetailsListeners()
     {
         var target;
-        if (!_nodeDetails.hasClass(HAS_EVENT))
+        if (!_nodeDetails.hasClass(NOTE_CLASS.HAS_EVENT))
         {
             _nodeDetails.change(function (e) {
                 target = e.target;
@@ -1287,7 +1287,7 @@ var Visualizer = (function ($) {
                     executeCell(target);
                 }
             });
-            _nodeDetails.addClass(HAS_EVENT)
+            _nodeDetails.addClass(NOTE_CLASS.HAS_EVENT)
         }
     }
 
