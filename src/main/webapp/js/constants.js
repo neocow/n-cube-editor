@@ -70,7 +70,6 @@ var PAGE_ID = 'PageId';
 var TAB_VIEW_TYPE_NCUBE = 'n-cube';
 var TAB_VIEW_TYPE_VISUALIZER = 'Visualizer';
 var DEFAULT_ACTIVE_TAB_VIEW_TYPE = TAB_VIEW_TYPE_NCUBE + PAGE_ID;
-var HAS_EVENT = 'hasEvent';
 
 var DEFAULT_COLUMN_DISPLAY_ORDER = 2147483647;
 var AXIS_DEFAULT = '00' + DEFAULT_COLUMN_DISPLAY_ORDER;
@@ -344,6 +343,7 @@ var PERMISSION_ACTION = {
 
 var NOTE_CLASS = {
     FORCE_MANUAL_CLOSE: 'force-manual',
+    HAS_EVENT: 'has-event',
     PROCESS_DURATION: 'process-duration',
     SYS_META: 'sysmeta'
 };

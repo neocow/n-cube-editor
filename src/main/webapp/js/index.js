@@ -138,7 +138,7 @@ var NCE = (function ($) {
     var _reqScopeList = $('#reqScopeList');
     var _showReqScopeLabel = $('#showReqScopeLabel');
     var _commitOk = $('#commitOk');
-    var _commitLink = $('#commitLink');
+    var _pullRequestLink = $('#pull-link');
     var _rollbackOk = $('#rollbackOk');
     var _commitRollbackLabel = $('#commitRollbackLabel');
     var _viewCommits = $('#view-commits');
@@ -1681,7 +1681,7 @@ var NCE = (function ($) {
         $(_viewCommits).on('click', function() {
             viewCommits();
         });
-        _viewCommitsList.find('select').on('change', function() {
+        _viewCommitsModal.find('select').on('change', function() {
             viewCommitsFilter();
         });
         _viewCommitsModal.on('shown.bs.modal', function() {
@@ -3580,21 +3580,29 @@ var NCE = (function ($) {
     }
 
     function viewCommitsSearchTransactionId(txid) {
-        var row = _viewCommitsList.find('[data-txid="' + txid + '"]')[0];
+        var jqrow = _viewCommitsList.find('[data-txid="' + txid + '"]');
+        var row = jqrow[0];
         if (row) {
-            commitListClick(row);
+            if (!jqrow.hasClass('highlight-lightgoldenrodyellow')) {
+                commitListClick(row);
+            }
             _viewCommitsModal.find('.modal-body')[0].scrollTop = row.offsetTop;
         } else {
             showNote(txid + ' was not found.', 'Transaction ID not found!', TWO_SECOND_TIMEOUT);
         }
     }
 
-    function viewCommits(isUpdate) {
+    function viewCommits(isUpdate, txid) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.GET_COMMITS, []);
         if (result.status) {
             _commitsData = result.data;
             buildUlForCommitView(isUpdate);
             _viewCommitsModal.modal();
+            if (txid) {
+                _viewCommitsModal.one('shown.bs.modal', function() {
+                    viewCommitsSearchTransactionId(txid);
+                });
+            }
         } else {
             showNote('Unable to get commit list.', 'Error', TWO_SECOND_TIMEOUT);
         }
@@ -3602,9 +3610,9 @@ var NCE = (function ($) {
     
     function viewCommitsFilter() {
         var i, len, el, filterVal;
-        var selects = _viewCommitsList.find('select');
+        var selects = _viewCommitsModal.find('select');
         var populatedSelects = selects.filter(function() { return this.value.length; });
-        _viewCommitsList.find('tr:gt(1)').show();
+        _viewCommitsList.find('tr').show();
         for (i = 0, len = populatedSelects.length; i < len; i++) {
             el = populatedSelects[i];
             filterVal = el.value;
@@ -3616,7 +3624,7 @@ var NCE = (function ($) {
 
     function viewCommitsHideIfNotMatching(filterVal, idx) {
         var i, len, tds, td, row;
-        tds = _viewCommitsList.find('tr:gt(1):visible').find('td:nth-child(' + idx + ')');
+        tds = _viewCommitsList.find('tr:visible').find('td:nth-child(' + idx + ')');
         for (i = 0, len = tds.length; i < len; i++) {
             td = tds[i];
             row = $(td).parent();
@@ -3658,21 +3666,21 @@ var NCE = (function ($) {
             }
 
             html += '<tr data-txid="' + commit.txid + '">'
-                  + '<td>' + commit.appId.app + '</td>'
-                  + '<td>' + commit.appId.version + '</td>'
-                  + '<td>' + commit.appId.branch + '</td>'
-                  + '<td>' + commit.status + '</td>'
-                  + '<td>' + commit.requestUser + '</td>'
-                  + '<td>' + commit.requestTime + '</td>'
-                  + '<td>' + (commit.commitUser || '') + '</td>'
-                  + '<td>' + (commit.commitTime || '') + '</td>'
-                  + '<td>' + (commit.prId || '') + '</td>'
+                  + '<td class="view-commits-app">' + commit.appId.app + '</td>'
+                  + '<td class="view-commits-version">' + commit.appId.version + '</td>'
+                  + '<td class="view-commits-branch">' + commit.appId.branch + '</td>'
+                  + '<td class="view-commits-status">' + commit.status + '</td>'
+                  + '<td class="view-commits-requester">' + commit.requestUser + '</td>'
+                  + '<td class="view-commits-request-date">' + commit.requestTime + '</td>'
+                  + '<td class="view-commits-committer">' + (commit.commitUser || '') + '</td>'
+                  + '<td class="view-commits-commit-date">' + (commit.commitTime || '') + '</td>'
+                  + '<td class="view-commits-pr">' + (commit.prId || '') + '</td>'
                   + '</tr>';
         }
         
-        _viewCommitsList.find('tr:gt(1)').remove();
+        _viewCommitsList.find('tr').remove();
         _viewCommitsList.append(html);
-        _viewCommitsList.find('tr:gt(1)').on('click', function() {
+        _viewCommitsList.find('tr').on('click', function() {
             commitListClick(this);
         });
 
@@ -3703,7 +3711,7 @@ var NCE = (function ($) {
         if (!openRow.length || allRows.index(openRow[0]) !== allRows.index(row) + 1) {
             self.addClass(highlightClass);
             numCols = self.find('td').length;
-            commit = _commitsData[_viewCommitsList.find('tr').index(row) - 2];
+            commit = _commitsData[_viewCommitsList.find('tr').index(row)];
             cubeNames = commit.cubeNames['@items'];
             html = '<tr><td colspan="' + (numCols - 5) + '"></td>'
                  + '<td><b>Transaction ID</b></td><td><b>' + commit.txid + '</b></td>';
@@ -3816,8 +3824,8 @@ var NCE = (function ($) {
             setTimeout(function() { commitBranch(true); }, PROGRESS_DELAY);
             showNote('Processing commit request...');
         });
-        _commitLink.on('click', function() {
-            generateCommitLink();
+        _pullRequestLink.on('click', function() {
+            generatePullRequestLink();
         });
         _commitOk.on('click', function() {
             commitOk();
@@ -4312,14 +4320,14 @@ var NCE = (function ($) {
     function commitBranch(state) {
         var errMsg, title, result, branchChanges, action;
         clearNote();
-        _commitModal.find('.accept-mine, .accept-theirs').add(_commitLink).add(_commitOk).toggle(state);
+        _commitModal.find('.accept-mine, .accept-theirs').add(_pullRequestLink).add(_commitOk).toggle(state);
         _rollbackOk.toggle(!state);
         action = state ? 'commit' : 'rollback';
         errMsg = state ? 'commit to' : 'rollback in';
         title = (state ? 'Commit' : 'Rollback') + ' changes';
         _commitRollbackList.data('is-commit', state);
         if (state) {
-            _commitLink.removeAttr('disabled');
+            _pullRequestLink.add(_commitOk).removeAttr('disabled');
         }
 
         if (isHeadSelected()) {
@@ -4356,20 +4364,24 @@ var NCE = (function ($) {
         return changes;
     }
 
-    function generateCommitLink() {
-        var url, changes, result;
-        changes = getCommitChanges();
+    function generatePullRequestLink() {
+        var urlPrefix, gitUrl, viewUrl, result, txid, html;
+        var changes = getCommitChanges();
         if (!changes.length) {
             showNote('No changes selected!', 'Error', TWO_SECOND_TIMEOUT);
             return;
         }
         result = call(CONTROLLER + CONTROLLER_METHOD.GENERATE_COMMIT_LINK, [getAppId(), changes]);
         if (result.status) {
-            _commitLink.attr('disabled', '');
-            url = document.URL;
-            url = url.substring(0, url.lastIndexOf('/'));
-            url += '/cmd/ncubeController/honorCommit/?json=["' + result.data + '"]';
-            showNote(url, 'Commit Link', null, NOTE_CLASS.FORCE_MANUAL_CLOSE);
+            _pullRequestLink.add(_commitOk).attr('disabled', '');
+            txid = result.data;
+            urlPrefix = document.URL;
+            urlPrefix = urlPrefix.substring(0, urlPrefix.lastIndexOf('/'));
+            gitUrl = urlPrefix + '/cmd/ncubeController/honorCommit/?json=["' + txid + '"]';
+            viewUrl = urlPrefix + '/#/viewCommit/' + txid;
+            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.closeOpenModal();NCE.viewCommits(true,\'' + txid + '\');">' + viewUrl + '</a><hr>'
+                 + 'GitHub Link (WARNING: This will merge the pull request!):<br>' + gitUrl;
+            showNote(html, 'Commit Link', null, NOTE_CLASS.HAS_EVENT);
         } else {
             showNote('Error generating link: ' + result.data, 'Error');
         }
@@ -4979,8 +4991,8 @@ var NCE = (function ($) {
 
     function addNoteListeners(noteId) {
         var noteDiv = $('#gritter-item-' + noteId);
-        if (!noteDiv.hasClass(HAS_EVENT)) {
-            noteDiv.addClass(HAS_EVENT);
+        if (!noteDiv.hasClass(NOTE_CLASS.HAS_EVENT)) {
+            noteDiv.addClass(NOTE_CLASS.HAS_EVENT);
             noteDiv.on('change click', function (e) {
                 e.preventDefault();
                 onNoteEvent(e);
@@ -5022,6 +5034,10 @@ var NCE = (function ($) {
     function isSelectedCubeInHead() {
         var appId = getSelectedTabAppId();
         return appId ? appId.branch === head : true;
+    }
+
+    function closeOpenModal() {
+        $('.modal.in').modal('hide');
     }
 
     /**
@@ -5081,16 +5097,26 @@ var NCE = (function ($) {
 
     // API
     return {
-        getSelectedStatus: getSelectedStatus,
         buildTabs: buildTabs,
-        closeParentMenu: closeParentMenu
+        closeOpenModal: closeOpenModal,
+        closeParentMenu: closeParentMenu,
+        getSelectedStatus: getSelectedStatus,
+        viewCommits: viewCommits
     }
 
 })(jQuery);
 
 function frameLoaded(doc) {
     delay(function() {
+        var txidStartIdx, txid;
+        var url = document.URL;
         NCE.buildTabs(true);
+        if (url.indexOf('viewCommit') > -1) {
+            txidStartIdx = url.lastIndexOf('/') + 1;
+            txid = url.substring(txidStartIdx);
+            NCE.viewCommits(true, txid);
+        }
+        window.location.href = '#';
     }, 500);
     if (doc) {
         $(doc).on('click', function() {

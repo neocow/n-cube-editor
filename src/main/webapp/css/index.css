@@ -707,8 +707,60 @@ ul .checkbox-label {
     margin: 0 0 0 20px;
 }
 
-#view-commits-list select {
-    width: 90%;
+#view-commits-list {
+    height: calc(100% - 91px);
+    width: 100%;
+}
+
+.view-commits-display {
+    overflow-y: scroll;
+    min-width: 1110px;
+    width: 97%;
+}
+
+.view-commits-display:first-of-type::-webkit-scrollbar {
+    width: 21px;
+}
+
+.view-commits-display, .view-commits-display tbody, .view-commits-display tr, .view-commits-display th, .view-commits-display td {
+    display: inline-block;
+}
+
+.view-commits-display tbody, .view-commits-display tr, .view-commits-display select {
+    width: 100%;
+}
+
+.view-commits-display th:not(:last-child), .view-commits-display td:not(:last-child) {
+    padding-right: 5px;
+    overflow: hidden;
+}
+
+.view-commits-app {
+    width: 14%;
+}
+.view-commits-version {
+    width: 6%;
+}
+.view-commits-branch {
+    width: 14%;
+}
+.view-commits-status {
+    width: 11%;
+}
+.view-commits-requester {
+    width: 11%;
+}
+.view-commits-request-date {
+    width: 11%;
+}
+.view-commits-committer {
+    width: 11%;
+}
+.view-commits-commit-date {
+    width: 11%;
+}
+.view-commits-pr {
+    width: 8%;
 }
 
 .modal-xl {
