@@ -1467,7 +1467,7 @@ class NCubeController extends BaseController
         List<Map> results = []
         ApplicationID sysAppId = new ApplicationID(tenant, 'sys.app', '0.0.0', ReleaseStatus.SNAPSHOT.toString(), ApplicationID.HEAD)
         List<NCubeInfoDto> dtos = nCubeService.search(sysAppId, 'tx.', null, [(SEARCH_ACTIVE_RECORDS_ONLY):true])
-        dtos.sort {it.name}
+        dtos.sort{it.name}.reverse(true)
         for (NCubeInfoDto dto : dtos)
         {
             NCube cube = nCubeService.loadCubeById(Long.parseLong(dto.id))

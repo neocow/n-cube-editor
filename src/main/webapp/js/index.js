@@ -588,17 +588,34 @@ var NCE = (function ($) {
             // background thread for heartbeat
             _heartBeatThread = new Worker('js/heartBeat.js');
             _heartBeatThread.onmessage = function (event) {
-                var result, status;
-                result = event.data.obj[0];
-                if (result.key.length) {
-                    status = result.status;
-                    saveOpenCubeInfoValue('status', status);
-                    if (status === CLASS_OUT_OF_SYNC) {
-                        showOutOfSyncNoticeForCube(_selectedCubeInfo);
-                    }
-                    updateTabStatus(_selectedCubeInfo);
-                }
+                handleHearbeatStatusResult(event.data.obj[0]);
+                handleHeartbeatPullRequestResult();
             };
+        }
+    }
+
+    function handleHeartbeatPullRequestResult() {
+        var idx, txid, allRows, openRow;
+        if (_viewCommitsModal.hasClass('in')) {
+            openRow = _viewCommitsList.find('tr:not([data-txid])');
+            if (openRow.length) {
+                allRows = _viewCommitsList.find('tr');
+                idx = allRows.index(openRow[0]);
+                txid = $(allRows.get(idx - 1)).data('txid');
+            }
+            viewCommits(true, txid);
+        }
+    }
+
+    function handleHearbeatStatusResult(result) {
+        var status;
+        if (result.key.length) {
+            status = result.status;
+            saveOpenCubeInfoValue('status', status);
+            if (status === CLASS_OUT_OF_SYNC) {
+                showOutOfSyncNoticeForCube(_selectedCubeInfo);
+            }
+            updateTabStatus(_selectedCubeInfo);
         }
     }
 
@@ -3586,6 +3603,7 @@ var NCE = (function ($) {
         var row = jqrow[0];
         if (row) {
             if (!jqrow.hasClass('highlight-lightgoldenrodyellow')) {
+                jqrow.show();
                 commitListClick(row);
             }
             _viewCommitsModal.find('.modal-body')[0].scrollTop = row.offsetTop;
@@ -3601,9 +3619,13 @@ var NCE = (function ($) {
             buildUlForCommitView(isUpdate);
             _viewCommitsModal.modal();
             if (txid) {
-                _viewCommitsModal.one('shown.bs.modal', function() {
+                if (_viewCommitsModal.hasClass('in')) {
                     viewCommitsSearchTransactionId(txid);
-                });
+                } else {
+                    _viewCommitsModal.one('shown.bs.modal', function() {
+                        viewCommitsSearchTransactionId(txid);
+                    });
+                }
             }
         } else {
             showNote('Unable to get commit list.', 'Error', TWO_SECOND_TIMEOUT);
@@ -3614,6 +3636,7 @@ var NCE = (function ($) {
         var i, len, el, filterVal;
         var selects = _viewCommitsModal.find('select');
         var populatedSelects = selects.filter(function() { return this.value.length; });
+        commitListClick(); // close open row
         _viewCommitsList.find('tr').show();
         for (i = 0, len = populatedSelects.length; i < len; i++) {
             el = populatedSelects[i];
@@ -3664,7 +3687,7 @@ var NCE = (function ($) {
                 data.comDates[commit.commitTime.substring(0, commit.commitTime.indexOf(' '))] = '';
             }
             if (commit.prId) {
-                data.repos[commit.prId.substring(0, commit.prId.indexOf('-'))] = '';
+                data.repos[commit.prId.substring(0, commit.prId.lastIndexOf('-'))] = '';
             }
 
             html += '<tr data-txid="' + commit.txid + '">'
@@ -3702,15 +3725,15 @@ var NCE = (function ($) {
     }
     
     function commitListClick(row) {
-        var commit, cubeNames, html, numCols;
-        var self = $(row);
+        var commit, cubeNames, html, numCols, self;
         var allRows = _viewCommitsList.find('tr');
         var openRow = allRows.has('td[colspan]');
         var highlightClass = 'highlight-lightgoldenrodyellow';
 
         openRow.remove();
         allRows.removeClass(highlightClass);
-        if (!openRow.length || allRows.index(openRow[0]) !== allRows.index(row) + 1) {
+        if (row && (!openRow.length || allRows.index(openRow[0]) !== allRows.index(row) + 1)) {
+            self = $(row);
             self.addClass(highlightClass);
             numCols = self.find('td').length;
             commit = _commitsData[_viewCommitsList.find('tr').index(row)];
@@ -4367,7 +4390,7 @@ var NCE = (function ($) {
     }
 
     function generatePullRequestLink() {
-        var urlPrefix, gitUrl, viewUrl, result, txid, html;
+        var urlPrefix, viewUrl, result, txid, html;
         var changes = getCommitChanges();
         if (!changes.length) {
             showNote('No changes selected!', 'Error', TWO_SECOND_TIMEOUT);
@@ -4379,14 +4402,17 @@ var NCE = (function ($) {
             txid = result.data;
             urlPrefix = document.URL;
             urlPrefix = urlPrefix.substring(0, urlPrefix.lastIndexOf('/'));
-            gitUrl = urlPrefix + '/cmd/ncubeController/honorCommit/?json=["' + txid + '"]';
             viewUrl = urlPrefix + '/#/viewCommit/' + txid;
-            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.closeOpenModal();NCE.viewCommits(true,\'' + txid + '\');">' + viewUrl + '</a><hr>'
-                 + 'GitHub Link (WARNING: This will merge the pull request!):<br>' + gitUrl;
-            showNote(html, 'Commit Link', null, NOTE_CLASS.HAS_EVENT);
+            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.pullRequestLinkClick(\'' + txid + '\');">' + viewUrl + '</a>';
+            showNote(html, 'Pull Request Link', null, NOTE_CLASS.HAS_EVENT);
         } else {
             showNote('Error generating link: ' + result.data, 'Error');
         }
+    }
+
+    function pullRequestLinkClick(txid) {
+        closeOpenModal();
+        viewCommits(true, txid);
     }
 
     function commitOk() {
@@ -4972,7 +4998,7 @@ var NCE = (function ($) {
         var transferObj = createHeartBeatTransferObj();
         _heartBeatThread.postMessage(transferObj, [transferObj.aBuffer]);
         setInterval(function() {
-            transferObj = createHeartBeatTransferObj();
+            var transferObj = createHeartBeatTransferObj();
             _heartBeatThread.postMessage(transferObj, [transferObj.aBuffer]);
         }, MINUTE_TIMEOUT);
     }
@@ -5114,10 +5140,9 @@ var NCE = (function ($) {
     // API
     return {
         buildTabs: buildTabs,
-        closeOpenModal: closeOpenModal,
         closeParentMenu: closeParentMenu,
         getSelectedStatus: getSelectedStatus,
-        viewCommits: viewCommits
+        pullRequestLinkClick: pullRequestLinkClick
     }
 
 })(jQuery);
@@ -5130,7 +5155,7 @@ function frameLoaded(doc) {
         if (url.indexOf('viewCommit') > -1) {
             txidStartIdx = url.lastIndexOf('/') + 1;
             txid = url.substring(txidStartIdx);
-            NCE.viewCommits(true, txid);
+            NCE.pullRequestLinkClick(txid);
         }
         window.location.href = '#';
     }, 500);
