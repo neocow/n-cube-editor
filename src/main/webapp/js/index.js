@@ -4401,11 +4401,16 @@ var NCE = (function ($) {
             urlPrefix = document.URL;
             urlPrefix = urlPrefix.substring(0, urlPrefix.lastIndexOf('/'));
             viewUrl = urlPrefix + '/#/viewCommit/' + txid;
-            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.closeOpenModal();NCE.viewCommits(true,\'' + txid + '\');">' + viewUrl + '</a>';
+            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.pullRequestLinkClick(\'' + txid + '\');">' + viewUrl + '</a>';
             showNote(html, 'Pull Request Link', null, NOTE_CLASS.HAS_EVENT);
         } else {
             showNote('Error generating link: ' + result.data, 'Error');
         }
+    }
+
+    function pullRequestLinkClick(txid) {
+        closeOpenModal();
+        viewCommits(true, txid);
     }
 
     function commitOk() {
@@ -5119,10 +5124,9 @@ var NCE = (function ($) {
     // API
     return {
         buildTabs: buildTabs,
-        closeOpenModal: closeOpenModal,
         closeParentMenu: closeParentMenu,
         getSelectedStatus: getSelectedStatus,
-        viewCommits: viewCommits
+        pullRequestLinkClick: pullRequestLinkClick
     }
 
 })(jQuery);
@@ -5135,7 +5139,7 @@ function frameLoaded(doc) {
         if (url.indexOf('viewCommit') > -1) {
             txidStartIdx = url.lastIndexOf('/') + 1;
             txid = url.substring(txidStartIdx);
-            NCE.viewCommits(true, txid);
+            NCE.pullRequestLinkClick(txid);
         }
         window.location.href = '#';
     }, 500);
