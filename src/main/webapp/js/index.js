@@ -3685,7 +3685,7 @@ var NCE = (function ($) {
                 data.comDates[commit.commitTime.substring(0, commit.commitTime.indexOf(' '))] = '';
             }
             if (commit.prId) {
-                data.repos[commit.prId.substring(0, commit.prId.indexOf('-'))] = '';
+                data.repos[commit.prId.substring(0, commit.prId.lastIndexOf('-'))] = '';
             }
 
             html += '<tr data-txid="' + commit.txid + '">'
