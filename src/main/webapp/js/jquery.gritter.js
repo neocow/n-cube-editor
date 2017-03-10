@@ -217,7 +217,7 @@
                 if (item.parent().is('body')) {
                     item.detach();
                     $('#gritter-notice-wrapper').append(item);
-                    item.css({position:'', top:'', left:'', width:'', 'overflow-y':'', 'max-height':''});
+                    item.css({position:'', top:'', left:'', width:'', 'overflow-y':'', 'max-height':'', 'z-index':''});
                     item.draggable('disable');
                 } else {
                     offset = item.offset();
@@ -230,7 +230,8 @@
                         left: offset.left, 
                         width: width, 
                         'overflow-y': 'auto', 
-                        'max-height': 450
+                        'max-height': 450,
+                        'z-index': 9999
                     });
                     item.draggable('enable');
                 }
