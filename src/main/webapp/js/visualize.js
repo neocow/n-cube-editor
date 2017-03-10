@@ -587,7 +587,7 @@ var Visualizer = (function ($) {
     }
 
     function loadGraph() {
-        var options, result, json;
+        var options, result, json, selectedCubeName;
         destroyNetwork();
 
         if (!_nce.getSelectedCubeName()) {
@@ -600,7 +600,11 @@ var Visualizer = (function ($) {
         //TODO: The .replace is temporary until figured out why nce.getSelectedCubeName()
         //TODO: occasionally contains a cube name with "_" instead of "." (e.g. rpm_class_product instead of
         //TODO: rpm.class.product) after a page refresh.
-        _selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
+        selectedCubeName = _nce.getSelectedCubeName().replace(/_/g, '.');
+        if (selectedCubeName !== _selectedCubeName){
+             _selectedNode = null;
+        }
+        _selectedCubeName = selectedCubeName;
 
         getAllFromLocalStorage();
         if (_visInfo) {
