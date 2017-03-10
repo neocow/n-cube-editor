@@ -606,11 +606,8 @@ var Visualizer = (function ($) {
         if (_visInfo) {
             _visInfo.nodes = {};
             _visInfo.edges = {};
-            options = {startCubeName: _selectedCubeName, visInfo: _visInfo, node: _selectedNode};
         }
-        else{
-            options =  {startCubeName: _selectedCubeName, scope: _topNodeScope};
-        }
+        options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scope: _topNodeScope, node: _selectedNode};
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
         if (!result.status) {
@@ -1322,6 +1319,7 @@ var Visualizer = (function ($) {
             e.preventDefault();
             _keepCurrentScope = true;
             _topNodeScope = _selectedNode.scope;
+            _selectedNode = null;
             _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
         });
         return visualizerLink;

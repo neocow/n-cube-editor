@@ -277,13 +277,13 @@ class VisualizerRelInfo
 		node.cubeLoaded = cubeLoaded
 		String label = getLabel(targetCubeName)
 		node.label = nodeLabelPrefix + label
+		node.detailsTitle1 = cubeDetailsTitle1
+		node.detailsTitle2 = cubeDetailsTitle2
+		node.typesToAdd = visInfo.getTypesToAdd(group)
 
 		if (targetId == visInfo.selectedNodeId)
 		{
 			node.details = getDetails(visInfo)
-			node.detailsTitle1 = cubeDetailsTitle1
-			node.detailsTitle2 = cubeDetailsTitle2
-			node.typesToAdd = visInfo.getTypesToAdd(group)
 		}
 
 		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
