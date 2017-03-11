@@ -83,10 +83,11 @@ class Visualizer
 		node.details = relInfo.getDetails(visInfo)
 		node.showCellValuesLink = relInfo.showCellValuesLink
 		node.cubeLoaded = relInfo.cubeLoaded
-		boolean showCellValues = relInfo.showCellValues
-		node.showCellValues = showCellValues
+		node.showCellValues = relInfo.showCellValues
 		node.scope = relInfo.targetScope
 		node.availableScope = relInfo.availableTargetScope
+		node.availableScopeValues = relInfo.availableScopeValues
+		node.scopeCubeNames = relInfo.scopeCubeNames
 		visInfo.nodes = [node]
 		visInfo.convertToSingleMessage()
 		return [status: STATUS_SUCCESS, visInfo: visInfo]

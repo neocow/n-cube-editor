@@ -25,7 +25,7 @@ class VisualizerRelInfo
 	Map<String, Set<Object>> availableScopeValues = new CaseInsensitiveMap()
 	Map<String, Set<String>> scopeCubeNames = new CaseInsensitiveMap()
 
-	protected boolean loadingCellValues
+	protected boolean showingHidingCellValues
 
 	protected long targetId
 	protected NCube targetCube
@@ -69,10 +69,16 @@ class VisualizerRelInfo
 			targetLevel = Long.valueOf(node.level as String)
 			availableTargetScope = node.availableScope as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
 			availableScopeValues = node.availableScopeValues as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
-			availableTargetScope.keySet().removeAll(availableScopeValues.keySet())
-			availableScopeValues = new CaseInsensitiveMap()
-			showCellValuesLink = node.showCellValuesLink as boolean
+			scopeCubeNames = node.scopeCubeNames as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
+			showingHidingCellValues = node.showingHidingCellValues as boolean
+			if (!showingHidingCellValues)
+			{
+				availableTargetScope.keySet().removeAll(availableScopeValues.keySet())
+				availableScopeValues = new CaseInsensitiveMap()
+				scopeCubeNames = new CaseInsensitiveMap()
+			}
 			showCellValues = node.showCellValues as boolean
+			showCellValuesLink = node.showCellValuesLink as boolean
 			cubeLoaded = node.cubeLoaded as boolean
 			typesToAdd = node.typesToAdd as List
 		}
@@ -407,7 +413,6 @@ class VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		String caret = availableScopeValues ? """<span class="caret"></span>""" : ''
 		String placeHolder = availableScopeValues ? 'Select or enter value...' : 'Enter value...'
-		String currentActionClass = loadingCellValues ? DETAILS_CLASS_LOAD_CELL_VALUES : ''
 		String topNodeClass = targetId == 1l ? 'topNode' : ''
 		String highlightedClass = ''
 
@@ -430,17 +435,17 @@ class VisualizerRelInfo
 			availableScopeValues.each {Object scopeValue ->
 				if (scopeValue)
 				{
-					sb.append("""<li id="${scopeKey}: ${scopeValue}" class="${DETAILS_CLASS_SCOPE_CLICK} ${currentActionClass} ${topNodeClass}" style="color: black;">${scopeValue}</li>""")
+					sb.append("""<li id="${scopeKey}: ${scopeValue}" class="${DETAILS_CLASS_SCOPE_CLICK} ${topNodeClass}" style="color: black;">${scopeValue}</li>""")
 				}
 				else
 				{
-					sb.append("""<li id="${scopeKey}: Default" class="${DETAILS_CLASS_SCOPE_CLICK} ${currentActionClass} ${topNodeClass}" style="color: black;">Default</li>""")
+					sb.append("""<li id="${scopeKey}: Default" class="${DETAILS_CLASS_SCOPE_CLICK} ${topNodeClass}" style="color: black;">Default</li>""")
 				}
 			}
 			sb.append("""</ul>""")
 		}
 		sb.append("""</div>""")
-		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${currentActionClass} ${highlightedClass} ${topNodeClass}" style="color: black;" type="text">""")
+		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${highlightedClass} ${topNodeClass}" style="color: black;" type="text">""")
 		sb.append("""</div>""")
 		return sb
 	}
@@ -465,7 +470,7 @@ class VisualizerRelInfo
 
 	protected String getLoadTarget()
 	{
-		return loadingCellValues ? "${cellValuesLabel}" : "the ${nodeLabel}"
+		return showingHidingCellValues ? "${cellValuesLabel}" : "the ${nodeLabel}"
 	}
 
 	protected String getNodesLabel()

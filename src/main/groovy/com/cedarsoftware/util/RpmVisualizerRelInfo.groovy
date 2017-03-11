@@ -368,10 +368,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			{
 				return
 			}
-			if (!loadingCellValues)
-			{
-				nodeDetailsMessages << "Defaults were used for some scope keys. Different values may be provided.${DOUBLE_BREAK}".toString()
-			}
+			nodeDetailsMessages << "Defaults were used for some scope keys. Different values may be provided.${DOUBLE_BREAK}".toString()
 		}
 	}
 

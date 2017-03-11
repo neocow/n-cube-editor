@@ -1358,6 +1358,7 @@ var Visualizer = (function ($) {
             }
             else{
                 node.showCellValues = !node.showCellValues;
+                node.showingHidingCellValues = true;
                 _selectedNode = node;
                 note = _selectedNode.showCellValues ? 'Loading ' + _visInfo.loadCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadCellValuesLabel + '...';
                 loadNodeDetails(note);
