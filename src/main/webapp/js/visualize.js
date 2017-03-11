@@ -52,8 +52,7 @@ var Visualizer = (function ($) {
     var _nodeDetails = null;
     var _layout = null;
     var _scopeButton = null;
-    var _scopeNoteId = null;
-    var _scopePromptTitle =  'Show or hide scope prompt';
+    var _loadNoteId = null;
     var _findNode = null;
     var STATUS_SUCCESS = 'success';
     var UNSPECIFIED = 'UNSPECIFIED';
@@ -63,8 +62,6 @@ var Visualizer = (function ($) {
     var NA = 'n/a';
     var NO_GROUPS_SELECTED = 'NO GROUPS SELECTED';
     var LEVEL_PREFIX = 'Level ';
-    var STICKY_SCOPE_MESSAGE = 'STICKY_SCOPE_MESSAGE';
-    var SCOPE_IMAGE = {class: 'toastScopeButton', src: './img/scope.png', width: '65px', height: '20px'};
 
     //Network layout parameters
     var _hierarchical = false;
@@ -195,6 +192,7 @@ var Visualizer = (function ($) {
 
             addSelectAllNoneGroupsListeners();
             addNetworkOptionsListeners();
+            addResetAllScopeListener();
 
             $(window).on('resize', function() {
                  if (_network) {
@@ -206,50 +204,18 @@ var Visualizer = (function ($) {
 
     function onNoteEvent(e) {
         var target = e.target;
-       /* if (e.type === 'click' && target.className.indexOf('scopeClick') > -1) {
-            scopeClickEvent(target);
-        }
-        else if ('change' === e.type && target.className.indexOf('scopeInput') > -1) {
-            scopeInputEvent(target);
-        }
-        else if ('click' === e.type && target.className.indexOf('scopeReset') > -1) {
-            scopeResetEvent();
-        }
-        else if ('click' === e.type && target.className.indexOf('toastScopeButton') > -1) {
-            scopeButtonClick();
-        }
-        else */
         if ('click' === e.type && target.className.indexOf('findNode') > -1) {
             findNode(target);
         }
     }
 
-    /*function scopeButtonClick(){
-        var button;
-        button = $('#scopeButton');
-        if (_nce.hasNote(STICKY_SCOPE_MESSAGE)){
-            _nce.clearNotes(STICKY_SCOPE_MESSAGE);
-            button.removeClass('active');
-            _scopeNoteId = null;
-        }
-        else{
-            showScopeNote();
-            button.addClass('active');
-        }
-        _scopeButton = button.hasClass('active');
-    }*/
-
-    function scopeResetEvent() {
-        //TODO: Change this to clear by node
-        _selectedNode = null;
-        _topNodeScope = null;
-        saveToLocalStorage(_topNodeScope, SCOPE);
-        /*_selectedNode.scope = {};
-       _selectedNode.availableScope = {};
+    function resetNodeScopeEvent() {
+        _selectedNode.scope = {};
+        _selectedNode.availableScope = {};
         if ('1' === _selectedNode.id){
             _topNodeScope = null;
             saveToLocalStorage(_topNodeScope, SCOPE);
-        }*/
+        }
         load();
     }
 
@@ -323,6 +289,18 @@ var Visualizer = (function ($) {
             saveToLocalStorage(NO_GROUPS_SELECTED, SELECTED_GROUPS);
             reload();
         });
+    }
+
+    function addResetAllScopeListener() {
+        $('#resetAllScope').on('click', function (e) {
+            e.preventDefault();
+            $('#groups').find('button').addClass('active');
+            _selectedNode = null;
+            _topNodeScope = null;
+            saveToLocalStorage(_topNodeScope, SCOPE);
+            load();
+        });
+
     }
 
     function setNetworkOption(inputOption, options, keys) {
@@ -521,7 +499,7 @@ var Visualizer = (function ($) {
 
     function loadNodeDetails(note) {
         setTimeout(function () {loadNodeDetailsFromServer();}, PROGRESS_DELAY);
-        showScopeNote(note);
+        showLoadNote(note);
     }
 
     function loadNodeDetailsFromServer()
@@ -544,7 +522,6 @@ var Visualizer = (function ($) {
             _visInfo = json.visInfo;
             loadDataForNode();
             loadDetailsSection();
-           //loadScopeView() ;
         }
 
         displayMessages(json.visInfo.messages);
@@ -582,7 +559,7 @@ var Visualizer = (function ($) {
             setTimeout(function () {
                 loadGraph();
             }, PROGRESS_DELAY);
-            showScopeNote('Loading data...');
+            showLoadNote('Loading data...');
         }
     }
 
@@ -664,31 +641,18 @@ var Visualizer = (function ($) {
     function loadHierarchicalView() {
         $('#hierarchical').prop('checked', _hierarchical);
     }
-
-   /* function loadScopeView() {
-        var button;
-        $('#scopeButton-div').prop('title', _scopePromptTitle + '\n\n' + getScopeString() );
-        button = $('#scopeButton');
-        button.addClass('active');
-        _scopeButton = true;
-        showScopeNote();
-    }*/
-
-    function showScopeNote(message) {
-        _nce.clearNote();
-        if (message) {
-            _nce.showNote(message);
+    
+    function showLoadNote(message) {
+        if (message){
+            if (_loadNoteId && _nce.updateNote(_loadNoteId, 'loadMessage', message)){
+                return;
+            }
+            _loadNoteId = _nce.showNote('<div id="loadMessage">' + message + '</div>', ' ', null);
         }
-       /* var scopeImage, scopeToastMessage, scopeMessagePart1, scopeMessagePart2;
-        scopeMessagePart1 = message ? message : NBSP;
-        scopeMessagePart2 = _scopeMessage ? _scopeMessage : '';
-        scopeToastMessage = '<b>' + scopeMessagePart1 + '</b><br>' + scopeMessagePart2;
-        if (scopeToastMessage && _scopeNoteId && _nce.updateNote(_scopeNoteId, 'scopeMessage', scopeToastMessage)){
-            return;
+        else{
+            _nce.clearNote();
         }
-        _nce.clearNotes(STICKY_SCOPE_MESSAGE);
-        scopeImage = $.extend({title: _scopePromptTitle}, SCOPE_IMAGE);
-        _scopeNoteId = _nce.showNote(scopeToastMessage, ' ', null, STICKY_SCOPE_MESSAGE, scopeImage);*/
+
     }
 
     function loadGroupsView() {
@@ -751,28 +715,7 @@ var Visualizer = (function ($) {
             divGroups.append(button);
         }
     }
-
-   /* function getScopeString(){
-        var scopeLen, key, i, len, scope, scopeString, keys;
-        scope = $.extend(true, {}, _nodeScope);
-        delete scope['@type'];
-        delete scope['@id'];
-        scopeString = '';
-        keys = Object.keys(scope);
-        for (i = 0, len = keys.length; i < len; i++) {
-            key = keys[i];
-            scopeString += key + ': ' + scope[key] + ', ';
-        }
-        scopeLen = scopeString.length;
-        if (1 < scopeLen) {
-            scopeString = scopeString.substring(0, scopeLen - 2);
-        }
-        else{
-            scopeString = 'No scope in the visualization.'
-        }
-        return scopeString;
-    }*/
-
+    
     function groupChangeEvent(groupId)
     {
         var button, i, len, k, kLen;
@@ -1131,7 +1074,7 @@ var Visualizer = (function ($) {
             $("#stabilizationStatus").val(DOT_DOT_DOT);
             $("#stabilizationIterations").val(DOT_DOT_DOT);
             $("#stabilizationDuration").val(DOT_DOT_DOT);
-            showScopeNote('Stabilizing network...');
+            showLoadNote('Stabilizing network...');
         }
         else if (_fullStabilizationAfterBasic) {
             _stabilizationStart = performance.now();
@@ -1145,7 +1088,7 @@ var Visualizer = (function ($) {
             $("#stabilizationStatus").val(ITERATING);
             $("#stabilizationIterations").val(DOT_DOT_DOT);
             $("#stabilizationDuration").val(DOT_DOT_DOT);
-            showScopeNote('Stabilizing network...');
+            showLoadNote('Stabilizing network...');
         }
     }
 
@@ -1174,7 +1117,7 @@ var Visualizer = (function ($) {
     }
     
     function stabilizationComplete(iterations){
-        showScopeNote();
+        showLoadNote();
         if (_tempNote) {
             _nce.showNote(_tempNote, 'Note', 5000);
         }
@@ -1280,8 +1223,8 @@ var Visualizer = (function ($) {
                 if (target.className.indexOf('scopeClick') > -1) {
                     scopeClickEvent(target);
                 }
-                else if (target.className.indexOf('scopeReset') > -1) {
-                    scopeResetEvent();
+                else if (target.className.indexOf('resetNodeScope') > -1) {
+                    resetNodeScopeEvent();
                 }
                 else if (target.className.indexOf('scope') === -1) {
                     executeCell(target);

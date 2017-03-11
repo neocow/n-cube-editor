@@ -295,14 +295,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	protected String getCubeDetailsTitle2()
+	protected String getCubeDetailsTitle2(String label)
 	{
-		String cubeName = targetCube.name
-		if (cubeName.startsWith(RPM_CLASS_DOT) && targetScopedName)
-		{
-			return getLabel(cubeName)
-		}
-		return null
+		return targetCube.name.startsWith(RPM_CLASS_DOT) ? label : null
 	}
 
 	/**

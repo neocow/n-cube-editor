@@ -284,7 +284,7 @@ class VisualizerRelInfo
 		String label = getLabel(targetCubeName)
 		node.label = nodeLabelPrefix + label
 		node.detailsTitle1 = cubeDetailsTitle1
-		node.detailsTitle2 = cubeDetailsTitle2
+		node.detailsTitle2 = getCubeDetailsTitle2(label)
 		node.typesToAdd = visInfo.getTypesToAdd(group)
 
 		if (targetId == visInfo.selectedNodeId)
@@ -365,7 +365,7 @@ class VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		sb.append(getNodeDetailsMessageSet())
 		sb.append(nodeScopeMessage)
-		sb.append("""<a href="#" title="Reset scope to original defaults" class="scopeReset">Reset scope</a>""")
+		sb.append("""<a href="#" title="Reset scope" class="resetNodeScope">Reset scope</a>""")
 		sb.append("${DOUBLE_BREAK}")
 		return sb.toString()
 	}
@@ -513,7 +513,7 @@ class VisualizerRelInfo
 		return targetCube.name
 	}
 
-	protected String getCubeDetailsTitle2()
+	protected String getCubeDetailsTitle2(String label)
 	{
 		return null
 	}
