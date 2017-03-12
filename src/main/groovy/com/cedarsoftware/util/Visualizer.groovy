@@ -29,7 +29,6 @@ class Visualizer
 	 * @param options - a map containing:
 	 *           String startCubeName, name of the starting cube
 	 *           VisualizerInfo visInfo, information about the visualization
-	 *           Map node, representing a cube and its scope
 	 *           Map scope, the scope used in the visualization
 	 * @return a map containing:
 	 *           String status, status of the visualization
@@ -57,9 +56,8 @@ class Visualizer
 	 *
 	 * @param applicationID
 	 * @param options - a map containing:
-	 *            Map node, representing a cube and its scope
-	 *            VisualizerInfo visInfo, information about the visualization
-	 *            Map scope, the scope used in the visualization
+	 *           String startCubeName, name of the starting cube
+	 *           VisualizerInfo visInfo, information about the visualization
 	 * @return a map containing:
 	 *           String status, status of the visualization
 	 *           VisualizerInfo visInfo, information about the visualization
@@ -67,19 +65,20 @@ class Visualizer
 	Map loadNodeDetails(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
-		Map node = options.node as Map
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
 		visInfo.appId = applicationID
-		visInfo.inputScope = node.availableScope as CaseInsensitiveMap
+		visInfo.selectedNode = visInfo.nodes[visInfo.selectedNodeId]
+		visInfo.inputScope = new CaseInsensitiveMap(visInfo.selectedNode.availableScope as Map)
 		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo)
-		return loadNodeDetails(visInfo, relInfo, node)
+		return loadNodeDetails(visInfo, relInfo)
 	}
 
-	protected static Map loadNodeDetails(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Map node)
+	protected static Map loadNodeDetails(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
 	{
 		visInfo.messages = new LinkedHashSet()
 		relInfo.loadCube(visInfo)
 
+		Map node = visInfo.selectedNode
 		node.details = relInfo.getDetails(visInfo)
 		node.showCellValuesLink = relInfo.showCellValuesLink
 		node.cubeLoaded = relInfo.cubeLoaded
@@ -88,7 +87,6 @@ class Visualizer
 		node.availableScope = relInfo.availableTargetScope
 		node.availableScopeValues = relInfo.availableScopeValues
 		node.scopeCubeNames = relInfo.scopeCubeNames
-		visInfo.nodes = [node]
 		visInfo.convertToSingleMessage()
 		return [status: STATUS_SUCCESS, visInfo: visInfo]
 	}
@@ -128,7 +126,8 @@ class Visualizer
 
 		if (relInfo.sourceCube)
 		{
-			visInfo.edges << relInfo.createEdge(visInfo.edges.size())
+			Long edgeId = visInfo.edges.size() + 1
+			visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
 		}
 
 		if (!visited.add(targetCubeName + relInfo.availableTargetScope.toString()))
@@ -136,7 +135,7 @@ class Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo)
+		visInfo.nodes[relInfo.targetId] = relInfo.createNode(visInfo)
 
 		Map<Map, Set<String>> refs = targetCube.referencedCubeNames
 
@@ -161,6 +160,8 @@ class Visualizer
 				nextRelInfo.sourceCube = relInfo.targetCube
 				nextRelInfo.sourceScope = new CaseInsensitiveMap(relInfo.targetScope)
 				nextRelInfo.sourceId = relInfo.targetId
+				nextRelInfo.sourceTrail = new ArrayList(relInfo.sourceTrail)
+		 		nextRelInfo.sourceTrail << relInfo.targetId
 				nextRelInfo.sourceFieldName = mapJoiner.join(coordinates)
 				nextRelInfo.targetScope = new CaseInsensitiveMap(coordinates)
 				nextRelInfo.availableTargetScope = new CaseInsensitiveMap(relInfo.availableTargetScope)

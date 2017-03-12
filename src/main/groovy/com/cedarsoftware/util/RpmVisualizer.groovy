@@ -34,12 +34,12 @@ class RpmVisualizer extends Visualizer
 	Map loadNodeDetails(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
-		Map node = options.node as Map
 		RpmVisualizerInfo visInfo = options.visInfo as RpmVisualizerInfo
 		visInfo.appId = applicationID
-		visInfo.inputScope = node.availableScope as CaseInsensitiveMap
+		visInfo.selectedNode = visInfo.nodes[visInfo.selectedNodeId]
+		visInfo.inputScope = visInfo.selectedNode.availableScope as CaseInsensitiveMap
 		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo)
-		return loadNodeDetails(visInfo, relInfo, node)
+		return loadNodeDetails(visInfo, relInfo)
 	}
 
 	@Override
@@ -65,6 +65,7 @@ class RpmVisualizer extends Visualizer
 	{
 		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId)
 		relInfo.init(options, visInfo)
+		relInfo.sourceTraits = visInfo.selectedNode?.sourceTraits as Map
 		return relInfo
 	}
 
@@ -93,7 +94,8 @@ class RpmVisualizer extends Visualizer
 
 		if (relInfo.sourceCube)
 		{
-			visInfo.edges << relInfo.createEdge(visInfo.edges.size())
+			Long edgeId = visInfo.edges.size() + 1
+			visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
 		}
 
 		if (!visited.add(targetCubeName + relInfo.availableTargetScope.toString()))
@@ -101,7 +103,7 @@ class RpmVisualizer extends Visualizer
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo)
+		visInfo.nodes[relInfo.targetId] = relInfo.createNode(visInfo)
 
 		if (cubeLoaded)
 		{
@@ -151,14 +153,15 @@ class RpmVisualizer extends Visualizer
 			}
 		}
 
-		visInfo.edges << relInfo.createEdge(visInfo.edges.size())
+		Long edgeId = visInfo.edges.size() + 1
+		visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
 
 		if (!visited.add(targetCubeName + relInfo.availableTargetScope.toString()))
 		{
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo, group)
+		visInfo.nodes[relInfo.targetId] = relInfo.createNode(visInfo, group)
 	}
 
 	private RpmVisualizerRelInfo addToStack(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)

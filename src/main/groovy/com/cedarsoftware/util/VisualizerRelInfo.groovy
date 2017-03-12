@@ -37,6 +37,7 @@ class VisualizerRelInfo
 	protected NCube sourceCube
 	protected Map<String, Object> sourceScope
 	protected String sourceFieldName
+	protected List<Long> sourceTrail = []
 
 	protected boolean cubeLoaded
 	protected boolean showCellValuesLink
@@ -58,29 +59,35 @@ class VisualizerRelInfo
 
 	protected init(Map options, VisualizerInfo visInfo)
 	{
-		Map node = options.node as Map
-		if (node)
+		Map selectedNode = visInfo.selectedNode
+		if (selectedNode)
 		{
-			targetCube = NCubeManager.getCube(appId, node.cubeName as String)
-			String sourceCubeName = node.sourceCubeName as String
+			targetCube = NCubeManager.getCube(appId, selectedNode.cubeName as String)
+			String sourceCubeName = selectedNode.sourceCubeName as String
 			sourceCube = sourceCubeName ? NCubeManager.getCube(appId, sourceCubeName) : null
-			sourceFieldName = node.fromFieldName
-			targetId = Long.valueOf(node.id as String)
-			targetLevel = Long.valueOf(node.level as String)
-			availableTargetScope = node.availableScope as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
-			availableScopeValues = node.availableScopeValues as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
-			scopeCubeNames = node.scopeCubeNames as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
-			showingHidingCellValues = node.showingHidingCellValues as boolean
-			if (!showingHidingCellValues)
+			sourceFieldName = selectedNode.fromFieldName as String
+			sourceScope = selectedNode.sourceScope as CaseInsensitiveMap
+			sourceTrail = selectedNode.sourceTrail as List
+			sourceId = selectedNode.sourceId as Long
+			targetId = Long.valueOf(selectedNode.id as String)
+			targetLevel = Long.valueOf(selectedNode.level as String)
+			availableTargetScope = selectedNode.availableScope as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
+			availableScopeValues = selectedNode.availableScopeValues as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
+			showingHidingCellValues = selectedNode.showingHidingCellValues as boolean
+			if (showingHidingCellValues)
+			{
+				scopeCubeNames = selectedNode.scopeCubeNames as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
+			}
+			else
 			{
 				availableTargetScope.keySet().removeAll(availableScopeValues.keySet())
 				availableScopeValues = new CaseInsensitiveMap()
 				scopeCubeNames = new CaseInsensitiveMap()
 			}
-			showCellValues = node.showCellValues as boolean
-			showCellValuesLink = node.showCellValuesLink as boolean
-			cubeLoaded = node.cubeLoaded as boolean
-			typesToAdd = node.typesToAdd as List
+			showCellValues = selectedNode.showCellValues as boolean
+			showCellValuesLink = selectedNode.showCellValuesLink as boolean
+			cubeLoaded = selectedNode.cubeLoaded as boolean
+			typesToAdd = selectedNode.typesToAdd as List
 		}
 		else
 		{
@@ -90,7 +97,6 @@ class VisualizerRelInfo
 			addRequiredScopeKeys(visInfo)
 			showCellValuesLink = true
 		}
-		visInfo.selectedNodeId = targetId
 		populateScopeDefaults(visInfo)
 	}
 
@@ -242,16 +248,17 @@ class VisualizerRelInfo
 		}
 	}
 
-	protected Map<String, Object> createEdge(int edgeCount)
+	protected Map<String, Object> createEdge(Long edgeId)
 	{
 		String sourceFieldName = sourceFieldName
 		Map<String, Object> edge = [:]
-		edge.id = String.valueOf(edgeCount + 1)
+		edge.id = edgeId
 		edge.from = String.valueOf(sourceId)
 		edge.to = String.valueOf(targetId)
 		edge.fromName = getLabel(sourceCube.name)
 		edge.toName = getLabel(targetCube.name)
 		edge.fromFieldName = sourceFieldName
+		edge.sourceTrail = sourceTrail
 		edge.level = String.valueOf(targetLevel)
 		edge.title = sourceFieldName
 		return edge
@@ -269,6 +276,9 @@ class VisualizerRelInfo
 		node.level = String.valueOf(targetLevel)
 		node.cubeName = targetCubeName
 		node.sourceCubeName = sourceCubeName
+		node.sourceTrail = sourceTrail
+		node.sourceId = sourceId
+		node.sourceScope = sourceScope
 		node.scope = targetScope
 		node.availableScope = availableTargetScope
 		node.availableScopeValues = availableScopeValues

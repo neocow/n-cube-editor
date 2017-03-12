@@ -31,7 +31,7 @@ class VisualizerConstants
 	static final String CONFIG_ITEM = 'configItem'
 	static final String CONFIG_NETWORK_OVERRIDES_BASIC = 'networkOverridesBasic'
 	static final String CONFIG_NETWORK_OVERRIDES_FULL = 'networkOverridesFull'
-	static final String CONFIG_NETWORK_OVERRIDES_TOP_NODE = 'networkOverridesTopNode'
+	static final String CONFIG_NETWORK_OVERRIDES_SELECTED_NODE = 'networkOverridesSelectedNode'
 	static final String CONFIG_DEFAULT_LEVEL = 'defaultLevel'
 	static final String CONFIG_ALL_GROUPS = 'allGroups'
 	static final String CONFIG_ALL_TYPES = 'allTypes'

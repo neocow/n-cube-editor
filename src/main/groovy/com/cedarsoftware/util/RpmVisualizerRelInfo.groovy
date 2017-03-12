@@ -176,9 +176,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	protected Map<String, Object> createEdge(int edgeCount)
+	protected Map<String, Object> createEdge(Long edgeId)
 	{
-		Map<String, Object> edge = super.createEdge(edgeCount)
+		Map<String, Object> edge = super.createEdge(edgeId)
 		Map<String, Map<String, Object>> sourceTraits = sourceTraits
 
 		Map<String, Map<String, Object>> sourceFieldTraitMap = sourceTraits[sourceFieldName] as Map
@@ -202,6 +202,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	protected Map<String, Object> createNode(VisualizerInfo visInfo, String group = null)
 	{
 		Map<String, Object> node = super.createNode(visInfo, group)
+		node.sourceTraits = sourceTraits
 		if (targetCube.name.startsWith(RPM_ENUM_DOT))
 		{
 			node.label = null

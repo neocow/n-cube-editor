@@ -81,7 +81,7 @@ class VisualizerTest{
         //Spot check the network overrides
         assert (visInfo.networkOverridesBasic.groups as Map).keySet().containsAll(allGroups.keySet())
         assert true == ((visInfo.networkOverridesFull.nodes as Map).shadow as Map).enabled
-        assert true == (visInfo.networkOverridesTopNode.shapeProperties as Map).useBorderWithImage
+        assert true == (visInfo.networkOverridesSelectedNode.shapeProperties as Map).useBorderWithImage
     }
 
     @Test

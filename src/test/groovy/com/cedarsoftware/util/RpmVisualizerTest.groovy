@@ -88,7 +88,7 @@ class RpmVisualizerTest
         //Spot check the network overrides
         assert (visInfo.networkOverridesBasic.groups as Map).keySet().containsAll(allGroups.keySet())
         assert false == ((visInfo.networkOverridesFull.nodes as Map).shadow as Map).enabled
-        assert (visInfo.networkOverridesTopNode.shapeProperties as Map).containsKey('borderDashes')
+        assert (visInfo.networkOverridesSelectedNode.shapeProperties as Map).containsKey('borderDashes')
     }
 
     @Test

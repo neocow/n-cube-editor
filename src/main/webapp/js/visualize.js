@@ -79,7 +79,7 @@ var Visualizer = (function ($) {
     var _networkOptionsInputHold = null;
     var _networkOverridesBasic = null;
     var _networkOverridesFull = null;
-    var _networkOverridesTopNode = null;
+    var _networkOverridesSelectedNode = null;
     var _dataLoadStart = null;
     var _basicStabilizationStart = null;
     var _stabilizationStart = null;
@@ -154,7 +154,7 @@ var Visualizer = (function ($) {
              });*/
 
             _findNode.on('change', function () {
-                var nodeLabel, nodeLabelLowerCase, nodes, nodeId, params, note, k, kLen, node, linkText, sourceDescription;
+                var nodeLabel, nodeLabelLowerCase, nodes, nodeId, note, k, kLen, node, linkText, sourceDescription;
                 nodeLabel = _findNode.val();
                 if (nodeLabel) {
                     nodeLabelLowerCase = nodeLabel.toLowerCase();
@@ -167,9 +167,7 @@ var Visualizer = (function ($) {
                         _nce.showNote(nodeLabel + ' not found');
                     }
                     else if (1 === nodes.length) {
-                        nodeId = nodes[0].id;
-                        params = {nodes: [nodeId]};
-                        networkSelectNodeEvent(params);
+                        networkSelectNodeEvent(nodes[0].id);
                     }
                     else {
                         note = 'Multiple nodes found: ';
@@ -248,9 +246,7 @@ var Visualizer = (function ($) {
     }
 
     function findNode(target) {
-        var params;
-        params = {nodes: [target.id]};
-        networkSelectNodeEvent(params);
+        networkSelectNodeEvent(target.id);
         _nce.clearNote();
     }
 
@@ -505,10 +501,9 @@ var Visualizer = (function ($) {
     function loadNodeDetailsFromServer()
     {
         var options, result, json;
-        _selectedNode.details = null;
-        _visInfo.nodes = {};
-        _visInfo.edges = {};
-        options =  {startCubeName: _selectedCubeName, visInfo: _visInfo, node: _selectedNode};
+        _visInfo.selectedNodeId = _selectedNode.id;
+        _selectedNode = null;
+        options =  {startCubeName: _selectedCubeName, visInfo: _visInfo};
 
         result = _nce.call('ncubeController.getVisualizerNodeDetails', [_nce.getSelectedTabAppId(), options]);
         if (false === result.status) {
@@ -538,15 +533,21 @@ var Visualizer = (function ($) {
     }
 
     function loadDataForNode(){
-        var dataSetNode;
-        _selectedNode = _visInfo.nodes['@items'][0];
-        dataSetNode = _nodeDataSet.get(_selectedNode.id);
-        dataSetNode.details = _selectedNode.details;
-        dataSetNode.showCellValuesLink = _selectedNode.showCellValuesLink;
-        dataSetNode.showCellValues = _selectedNode.showCellValues;
-        dataSetNode.cubeLoaded = _selectedNode.cubeLoaded;
-        dataSetNode.executeCell = _selectedNode.executeCell;
-        dataSetNode.executeCells = _selectedNode.executeCells;
+        var node, dataSetNode;
+        node = _visInfo.selectedNode;
+        dataSetNode = _nodeDataSet.get(node.id);
+        dataSetNode.details = node.details;
+        dataSetNode.showCellValuesLink = node.showCellValuesLink;
+        dataSetNode.showCellValues = node.showCellValues;
+        dataSetNode.cubeLoaded = node.cubeLoaded;
+        dataSetNode.executeCell = node.executeCell;
+        dataSetNode.executeCells = node.executeCells;
+        dataSetNode.scope = node.scope;
+        dataSetNode.availableScope = node.availableScope;
+        dataSetNode.availableScopeValues = node.availableScopeValues;
+        dataSetNode.scopeCubeNames = node.scopeCubeNames;
+
+        _selectedNode = dataSetNode;
         _nodeDataSet.update(dataSetNode);
     }
 
@@ -583,12 +584,13 @@ var Visualizer = (function ($) {
         }
         _selectedCubeName = selectedCubeName;
 
-        getAllFromLocalStorage();
-        if (_visInfo) {
-            _visInfo.nodes = {};
-            _visInfo.edges = {};
+        if (_visInfo){
+            _visInfo.selectedNodeId = _selectedNode ? _selectedNode.id : null;
+            _selectedNode = null;
         }
-        options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scope: _topNodeScope, node: _selectedNode};
+
+        getAllFromLocalStorage();
+        options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scope: _topNodeScope};
 
         result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
         if (!result.status) {
@@ -604,10 +606,7 @@ var Visualizer = (function ($) {
             displayMessages(json.visInfo.messages);
             loadGraphData(json.visInfo, json.status);
             initNetwork();
-            _topNodeScope = _nodeDataSet.get('1').availableScope;
-             _selectedNode = _nodeDataSet.get(_visInfo.selectedNodeId);
             loadDetailsSection();
-            //loadScopeView();
             loadSelectedLevelListView();
             loadHierarchicalView();
             loadGroupsView();
@@ -823,7 +822,6 @@ var Visualizer = (function ($) {
     {
         updateNetworkDataNodes();
         updateNetworkDataEdges();
-        markTopNodeSpecial();
      }
 
 
@@ -903,26 +901,24 @@ var Visualizer = (function ($) {
 
     function loadGraphData(visInfo, status)
     {
-        var nodes, edges, maxLevel;
+        var maxLevel;
 
         if (!_loadedVisInfoType || _loadedVisInfoType !== visInfo['@type']){
             _networkOverridesBasic = visInfo.networkOverridesBasic;
             _networkOverridesFull = visInfo.networkOverridesFull;
-            _networkOverridesTopNode = visInfo.networkOverridesTopNode;
+            _networkOverridesSelectedNode = visInfo.networkOverridesSelectedNode;
             formatNetworkOverrides(_networkOverridesBasic);
             formatNetworkOverrides(_networkOverridesFull);
-            formatNetworkOverrides(_networkOverridesTopNode);
-            //TODO: Figure out why the only way to make _networkOverridesTopNode work is to json stringify, then json parse.
-            _networkOverridesTopNode = JSON.parse(JSON.stringify(_networkOverridesTopNode));
+            formatNetworkOverrides(_networkOverridesSelectedNode);
+            //TODO: Figure out why the only way to make _networkOverridesSelectedNode work is to json stringify, then json parse.
+            _networkOverridesSelectedNode = JSON.parse(JSON.stringify(_networkOverridesSelectedNode));
         }
 
         if (status === STATUS_SUCCESS) {
-            nodes = visInfo.nodes['@items'];
-            edges = visInfo.edges['@items'];
-            _nodes =  nodes ? nodes : [];
-            _edges = edges ? edges : [];
-            delete visInfo['nodes'];
-            delete visInfo['edges'];
+            _nodes = visInfo.nodes['@items'];
+            _edges = visInfo.edges['@items'];
+            _nodes =  _nodes ? _nodes : [];
+            _edges = _edges ? _edges : [];
             _availableGroupsAllLevels = visInfo.availableGroupsAllLevels['@items'];
             if (_selectedGroups === null || _selectedGroups.length === 1){
                 _selectedGroups = _availableGroupsAllLevels;
@@ -993,17 +989,19 @@ var Visualizer = (function ($) {
         }
     }
 
-    function markTopNodeSpecial()  {
+    function markSelectedNodeSpecial()  {
         var node, keys, k, kLen, key;
-        node = _nodeDataSet.get(1);
-        if (node) {
-            if (_networkOverridesTopNode) {
-                keys = Object.keys(_networkOverridesTopNode);
-                for (k = 0, kLen = keys.length; k < kLen; k++) {
-                    key = keys[k];
-                    node[key] = _networkOverridesTopNode[key];
+        if (_selectedNode){
+            node = _nodeDataSet.get(_selectedNode.id);
+            if (node) {
+                if (_networkOverridesSelectedNode) {
+                    keys = Object.keys(_networkOverridesSelectedNode);
+                    for (k = 0, kLen = keys.length; k < kLen; k++) {
+                        key = keys[k];
+                        node[key] = _networkOverridesSelectedNode[key];
+                    }
+                    _nodeDataSet.update(node);
                 }
-                _nodeDataSet.update(node);
             }
         }
     }
@@ -1011,58 +1009,57 @@ var Visualizer = (function ($) {
     function initNetwork()
     {
         var container;
-        if (_network)
-        {
-            updateNetworkData();
-        }
-        else
-        {
-            container = document.getElementById('network');
-            initNetworkOptions(container);
-            _nodeDataSet = new vis.DataSet({});
-            _nodeDataSet.add(_nodes);
-            _edgeDataSet = new vis.DataSet({});
-            _edgeDataSet.add(_edges);
-            _network = new vis.Network(container, {nodes: _nodeDataSet, edges: _edgeDataSet}, _networkOptionsInput);
-            updateNetworkData();
 
-            _network.on('selectNode', function(params) {
-                networkSelectNodeEvent(params);
-            });
+        container = document.getElementById('network');
+        initNetworkOptions(container);
+        _nodeDataSet = new vis.DataSet({});
+        _nodeDataSet.add(_nodes);
+        _edgeDataSet = new vis.DataSet({});
+        _edgeDataSet.add(_edges);
+        _network = new vis.Network(container, {nodes: _nodeDataSet, edges: _edgeDataSet}, _networkOptionsInput);
+        updateNetworkData();
 
-            _network.on('deselectNode', function() {
-                _selectedNode = null;
-                clearVisLayoutWest();
-            });
+        _network.on('selectNode', function(params) {
+            networkSelectNodeEvent(params.nodes[0]);
+        });
 
-            _network.on('dragStart', function () {
-                networkChangeEvent()
-            });
+        _network.on('deselectNode', function() {
+            _selectedNode = null;
+            clearVisLayoutWest();
+        });
 
-            _network.on('startStabilizing', function () {
-                networkStartStabilizingEvent();
-             });
+        _network.on('dragStart', function () {
+            networkChangeEvent()
+        });
 
-            _network.on('stabilized', function (params) {
-                networkStabilizedEvent(params);
-            });
+        _network.on('startStabilizing', function () {
+            networkStartStabilizingEvent();
+        });
 
-            _nodeDataSet.on('add', function () {
-                networkChangeEvent()
-            });
+        _network.on('stabilized', function (params) {
+            networkStabilizedEvent(params);
+        });
 
-            _nodeDataSet.on('remove', function () {
-                networkChangeEvent()
-            });
+        _nodeDataSet.on('add', function () {
+            networkChangeEvent()
+        });
 
-            _edgeDataSet.on('add', function () {
-                networkChangeEvent()
-            });
+        _nodeDataSet.on('remove', function () {
+            networkChangeEvent()
+        });
 
-            _edgeDataSet.on('remove', function () {
-                networkChangeEvent()
-            });
-        }
+        _edgeDataSet.on('add', function () {
+            networkChangeEvent()
+        });
+
+        _edgeDataSet.on('remove', function () {
+            networkChangeEvent()
+        });
+
+        _topNodeScope = _nodeDataSet.get('1').availableScope;
+        _selectedNode = _nodeDataSet.get(_visInfo.selectedNodeId);
+        _network.selectNodes([_selectedNode.id]);
+        networkSelectNodeEvent(_selectedNode.id);
     }
 
     function networkStartStabilizingEvent(){
@@ -1144,11 +1141,12 @@ var Visualizer = (function ($) {
         }
     }
 
-    function networkSelectNodeEvent(params) {
-        _selectedNode = _nodeDataSet.get(params.nodes[0]);
+    function networkSelectNodeEvent(nodeId) {
+        _selectedNode = _nodeDataSet.get(nodeId);
         if (!_selectedNode.details) {
            loadNodeDetails('Loading details...');
         }
+        markSelectedNodeSpecial();
         loadDetailsSection();
     }
 
@@ -1156,8 +1154,6 @@ var Visualizer = (function ($) {
         var cubeName, appId, typesToAdd;
         cubeName = _selectedNode.cubeName;
         appId =_nce.getSelectedTabAppId();
-
-        _network.selectNodes([_selectedNode.id]);
 
         //Details
         _nodeDetails[0].innerHTML = _selectedNode.details;

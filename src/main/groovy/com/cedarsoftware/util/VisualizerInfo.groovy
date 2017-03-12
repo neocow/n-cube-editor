@@ -1,8 +1,6 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
-import com.cedarsoftware.ncube.Axis
-import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import groovy.transform.CompileStatic
@@ -17,8 +15,9 @@ class VisualizerInfo
 {
     protected ApplicationID appId
     protected Long selectedNodeId
-    protected List<Map<String, Object>> nodes = []
-    protected List<Map<String, Object>> edges = []
+    protected Map selectedNode
+    protected Map<Long, Map<String, Object>> nodes
+    protected Map<Long, Map<String, Object>> edges
 
     protected Map<String, Object> inputScope
 
@@ -36,7 +35,7 @@ class VisualizerInfo
 
     protected Map<String, Object> networkOverridesBasic
     protected Map<String, Object> networkOverridesFull
-    protected Map<String, Object> networkOverridesTopNode
+    protected Map<String, Object> networkOverridesSelectedNode
 
     protected Map<String, Set<String>> requiredScopeKeysByCube = [:]
 
@@ -53,19 +52,65 @@ class VisualizerInfo
     protected void init(Map options)
     {
         messages = new LinkedHashSet()
-        Map node = options.node as Map
-        if (node)
+        if (selectedNodeId)
         {
-            inputScope = new CaseInsensitiveMap(node.availableScope as Map)
+            selectedNode = new LinkedHashMap(nodes[selectedNodeId])
+            inputScope = new CaseInsensitiveMap(selectedNode.availableScope as Map)
+            if (1l == selectedNodeId)
+            {
+                nodes = [:]
+                edges = [:]
+            }
+            else
+            {
+                nodes.remove(selectedNodeId)
+                int removed = 1
+                removeSourceEdge()
+                removeTargets(edges)
+                removed += removeTargets(nodes)
+                nodeCount -= removed
+                relInfoCount -= removed
+                //TODO: What to do about max level?
+            }
         }
         else
         {
+            nodes = [:]
+            edges = [:]
+            selectedNodeId = 1
             maxLevel = 1
             nodeCount = 1
             relInfoCount = 1
             availableGroupsAllLevels = new LinkedHashSet()
             inputScope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
         }
+    }
+
+    private int removeTargets(Map<Long, Map> nodes)
+    {
+        List<Long> toRemove = []
+        nodes.each{Long id, Map node ->
+            List<Long> sourceTrail = node.sourceTrail as List
+            if (sourceTrail.contains(selectedNodeId))
+            {
+                toRemove << (node.id as Long)
+            }
+        }
+        nodes.keySet().removeAll(toRemove)
+        return toRemove.size()
+    }
+
+    private void removeSourceEdge()
+    {
+        List<Long> toRemove = []
+        edges.each{Long id, Map edge ->
+            Long edgeTo = edge.to as Long
+            if (selectedNodeId == edgeTo)
+            {
+                toRemove << edgeTo
+            }
+        }
+        edges.keySet().removeAll(toRemove)
     }
 
     protected String getCubeType()
@@ -84,7 +129,7 @@ class VisualizerInfo
 
         networkOverridesBasic = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_BASIC, (CUBE_TYPE): cubeType]) as Map
         networkOverridesFull = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_FULL, (CUBE_TYPE): cubeType]) as Map
-        networkOverridesTopNode = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_TOP_NODE, (CUBE_TYPE): cubeType]) as Map
+        networkOverridesSelectedNode = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_SELECTED_NODE, (CUBE_TYPE): cubeType]) as Map
         defaultLevel = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_LEVEL, (CUBE_TYPE): cubeType]) as long
         allGroups = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_GROUPS, (CUBE_TYPE): cubeType]) as Map
         allGroupsKeys = new CaseInsensitiveSet(allGroups.keySet())
