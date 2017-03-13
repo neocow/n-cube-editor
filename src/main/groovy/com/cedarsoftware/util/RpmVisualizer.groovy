@@ -17,31 +17,6 @@ class RpmVisualizer extends Visualizer
 {
 	private RpmVisualizerHelper helper
 
-	/**
-	 * Loads details for a given rpm class.
-	 *
-	 * @param applicationID
-	 * @param options - a map containing:
-	 *            Map node, representing a class and its scope
-	 *            RpmVisualizerInfo visInfo, information about the visualization
-	 *            Map scope, the scope used in the visualization
-	 * @return a map containing:
-	 *           String status, status of the visualization
-	 *           RpmVisualizerInfo visInfo, information about the visualization
-	 */
-
-	@Override
-	Map loadNodeDetails(ApplicationID applicationID, Map options)
-	{
-		appId = applicationID
-		RpmVisualizerInfo visInfo = options.visInfo as RpmVisualizerInfo
-		visInfo.appId = applicationID
-		visInfo.selectedNode = visInfo.nodes[visInfo.selectedNodeId]
-		visInfo.inputScope = visInfo.selectedNode.availableScope as CaseInsensitiveMap
-		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo)
-		return loadNodeDetails(visInfo, relInfo)
-	}
-
 	@Override
 	protected VisualizerInfo getVisualizerInfo(Map options)
 	{
@@ -56,17 +31,12 @@ class RpmVisualizer extends Visualizer
 		{
 			visInfo = new RpmVisualizerInfo(appId)
 		}
-		visInfo.init(options)
 		return visInfo
 	}
 
-	@Override
-	protected VisualizerRelInfo getVisualizerRelInfo(Map options, VisualizerInfo visInfo)
+	protected VisualizerRelInfo getVisualizerRelInfo()
 	{
-		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId)
-		relInfo.init(options, visInfo)
-		relInfo.sourceTraits = visInfo.selectedNode?.sourceTraits as Map
-		return relInfo
+		return new RpmVisualizerRelInfo(appId)
 	}
 
 	@Override

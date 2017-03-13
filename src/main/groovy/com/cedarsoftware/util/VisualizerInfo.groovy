@@ -15,7 +15,6 @@ class VisualizerInfo
 {
     protected ApplicationID appId
     protected Long selectedNodeId
-    protected Map selectedNode
     protected Map<Long, Map<String, Object>> nodes
     protected Map<Long, Map<String, Object>> edges
 
@@ -49,40 +48,36 @@ class VisualizerInfo
         loadConfigurations(cubeType)
     }
 
-    protected void init(Map options)
+    protected void init(Map options = null)
     {
+        inputScope = options?.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
         messages = new LinkedHashSet()
-        if (selectedNodeId)
+        nodes = [:]
+        edges = [:]
+        maxLevel = 1
+        nodeCount = 1
+        relInfoCount = 1
+        selectedNodeId = 1
+        availableGroupsAllLevels = new LinkedHashSet()
+    }
+
+    protected void initScopeChange()
+    {
+        if (1l == selectedNodeId)
         {
-            selectedNode = new LinkedHashMap(nodes[selectedNodeId])
-            inputScope = new CaseInsensitiveMap(selectedNode.availableScope as Map)
-            if (1l == selectedNodeId)
-            {
-                nodes = [:]
-                edges = [:]
-            }
-            else
-            {
-                nodes.remove(selectedNodeId)
-                int removed = 1
-                removeSourceEdge()
-                removeTargets(edges)
-                removed += removeTargets(nodes)
-                nodeCount -= removed
-                relInfoCount -= removed
-                //TODO: What to do about max level?
-            }
+            init()
         }
         else
         {
-            nodes = [:]
-            edges = [:]
-            selectedNodeId = 1
-            maxLevel = 1
-            nodeCount = 1
-            relInfoCount = 1
-            availableGroupsAllLevels = new LinkedHashSet()
-            inputScope = options.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
+            messages = new LinkedHashSet()
+            nodes.remove(selectedNodeId)
+            int removed = 1
+            removeSourceEdge()
+            removeTargets(edges)
+            removed += removeTargets(nodes)
+            nodeCount -= removed
+            relInfoCount -= removed
+            //TODO: What to do about max level and availableGroupsAllLevels?
         }
     }
 
@@ -162,11 +157,4 @@ class VisualizerInfo
         'cell values'
     }
 
-    protected void convertToSingleMessage()
-    {
-        if (messages)
-        {
-            messages = [messages.join(DOUBLE_BREAK)] as Set
-        }
-    }
 }

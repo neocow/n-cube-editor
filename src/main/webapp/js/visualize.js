@@ -27,7 +27,7 @@ var Visualizer = (function ($) {
     var _nce = null;
     var _visInfo = null;
     var _loadedVisInfoType = null;
-    var _okToLoadGraph = true;
+    var _okToLoad = true;
     var _nodes = [];
     var _edges = [];
     var _selectedNode = null;
@@ -46,6 +46,7 @@ var Visualizer = (function ($) {
     var _nodeDetailsTitle1 = null;
     var _nodeDetailsTitle2 = null;
     var _nodeCubeLink = null;
+    var _resetNodeScopeLink = null;
     var _nodeVisualizer = null;
     var _nodeCellValues = null;
     var _nodeAddTypes = null;
@@ -54,7 +55,6 @@ var Visualizer = (function ($) {
     var _scopeButton = null;
     var _loadNoteId = null;
     var _findNode = null;
-    var STATUS_SUCCESS = 'success';
     var UNSPECIFIED = 'UNSPECIFIED';
     var COMPLETE = 'complete';
     var ITERATING = 'iterating...';
@@ -62,6 +62,8 @@ var Visualizer = (function ($) {
     var NA = 'n/a';
     var NO_GROUPS_SELECTED = 'NO GROUPS SELECTED';
     var LEVEL_PREFIX = 'Level ';
+    var LOAD_NODE_DETAILS = 'loadNodeDetails';
+    var LOAD_SCOPE_CHANGE = 'loadScopeChange';
 
     //Network layout parameters
     var _hierarchical = false;
@@ -80,6 +82,7 @@ var Visualizer = (function ($) {
     var _networkOverridesBasic = null;
     var _networkOverridesFull = null;
     var _networkOverridesSelectedNode = null;
+    var _networkOverridesDeselectedNode = null;
     var _dataLoadStart = null;
     var _basicStabilizationStart = null;
     var _stabilizationStart = null;
@@ -117,6 +120,7 @@ var Visualizer = (function ($) {
             _nodeDetailsTitle1 = $('#nodeDetailsTitle1');
             _nodeDetailsTitle2 = $('#nodeDetailsTitle2');
             _nodeCubeLink = $('#nodeCubeLink');
+            _resetNodeScopeLink = $('#resetNodeScopeLink');
             _nodeCellValues = $('#nodeCellValues');
             _nodeAddTypes = $('#nodeAddTypes');
             _nodeVisualizer = $('#nodeVisualizer');
@@ -190,7 +194,7 @@ var Visualizer = (function ($) {
 
             addSelectAllNoneGroupsListeners();
             addNetworkOptionsListeners();
-            addResetAllScopeListener();
+            addResetVisualizerListener();
 
             $(window).on('resize', function() {
                  if (_network) {
@@ -205,16 +209,6 @@ var Visualizer = (function ($) {
         if ('click' === e.type && target.className.indexOf('findNode') > -1) {
             findNode(target);
         }
-    }
-
-    function resetNodeScopeEvent() {
-        _selectedNode.scope = {};
-        _selectedNode.availableScope = {};
-        if ('1' === _selectedNode.id){
-            _topNodeScope = null;
-            saveToLocalStorage(_topNodeScope, SCOPE);
-        }
-        load();
     }
 
     function scopeInputEvent(target) {
@@ -287,13 +281,16 @@ var Visualizer = (function ($) {
         });
     }
 
-    function addResetAllScopeListener() {
-        $('#resetAllScope').on('click', function (e) {
+    function addResetVisualizerListener() {
+        $('#resetVisualizer').on('click', function (e) {
             e.preventDefault();
-            $('#groups').find('button').addClass('active');
             _selectedNode = null;
             _topNodeScope = null;
-            saveToLocalStorage(_topNodeScope, SCOPE);
+            _selectedGroups = null;
+            _selectedLevel = null;
+            _hierarchical = null;
+            _networkOptionsButton = null;
+            saveAllToLocalStorage();
             load();
         });
 
@@ -481,11 +478,11 @@ var Visualizer = (function ($) {
             saveToLocalStorage(_topNodeScope, SCOPE);
         }
         setScopeValue(_selectedNode.availableScope, key, value);
-        load();
+        load(LOAD_SCOPE_CHANGE, 'Changing scope...');
     }
 
     function reload() {
-        updateNetworkData();
+        trimNetworkData();
         loadSelectedLevelListView();
         loadGroupsView();
         loadCountsView();
@@ -493,85 +490,40 @@ var Visualizer = (function ($) {
         _visualizerNetwork.show();
      }
 
-    function loadNodeDetails(note) {
-        setTimeout(function () {loadNodeDetailsFromServer();}, PROGRESS_DELAY);
-        showLoadNote(note);
-    }
-
-    function loadNodeDetailsFromServer()
-    {
-        var options, result, json;
-        _visInfo.selectedNodeId = _selectedNode.id;
-        _selectedNode = null;
-        options =  {startCubeName: _selectedCubeName, visInfo: _visInfo};
-
-        result = _nce.call('ncubeController.getVisualizerNodeDetails', [_nce.getSelectedTabAppId(), options]);
-        if (false === result.status) {
-            _nce.showNote('Failed to load details: ' + TWO_LINE_BREAKS + result.data);
-            return;
-        }
-
-        json = result.data;
-
-        if (STATUS_SUCCESS === json.status) {
-            _visInfo = json.visInfo;
-            loadDataForNode();
-            loadDetailsSection();
-        }
-
-        displayMessages(json.visInfo.messages);
-    }
-
-    function displayMessages(messages){
-        var j, jLen, items;
-        items = messages['@items'];
-        if (items) {
-            for (j = 0, jLen = items.length; j < jLen; j++) {
-                _nce.showNote(items[j]);
-            }
-        }
-    }
-
-    function loadDataForNode(){
-        var node, dataSetNode;
-        node = _visInfo.selectedNode;
-        dataSetNode = _nodeDataSet.get(node.id);
-        dataSetNode.details = node.details;
-        dataSetNode.showCellValuesLink = node.showCellValuesLink;
-        dataSetNode.showCellValues = node.showCellValues;
-        dataSetNode.cubeLoaded = node.cubeLoaded;
-        dataSetNode.executeCell = node.executeCell;
-        dataSetNode.executeCells = node.executeCells;
-        dataSetNode.scope = node.scope;
-        dataSetNode.availableScope = node.availableScope;
-        dataSetNode.availableScopeValues = node.availableScopeValues;
-        dataSetNode.scopeCubeNames = node.scopeCubeNames;
-
-        _selectedNode = dataSetNode;
-        _nodeDataSet.update(dataSetNode);
-    }
-
-    function load() {
-        if (_okToLoadGraph) {
-            _okToLoadGraph = false;
+    function load(action, note) {
+        if (_okToLoad) {
+            _okToLoad = false;
             _dataLoadStart = performance.now();
             $("#dataLoadStatus").val('loading');
             $("#dataLoadDuration").val(DOT_DOT_DOT);
             setTimeout(function () {
-                loadGraph();
+                if (LOAD_NODE_DETAILS === action){
+                    loadNodeDetails();
+                }
+                else if (LOAD_SCOPE_CHANGE === action){
+                    loadScopeChange();
+                }
+                else{
+                    loadGraph();
+                }
             }, PROGRESS_DELAY);
-            showLoadNote('Loading data...');
+
+            if (!note){
+                note = 'Loading visualizer...';
+            }
+            showLoadNote(note);
         }
     }
 
     function loadGraph() {
-        var options, result, json, selectedCubeName;
+        var options, result, selectedCubeName;
         destroyNetwork();
 
         if (!_nce.getSelectedCubeName()) {
              _visualizerContent.hide();
+            _nce.clearNote();
             _nce.showNote('Failed to load visualizer: ' + TWO_LINE_BREAKS + 'No cube selected.');
-            _okToLoadGraph = true;
+            _okToLoad = true;
             return;
         }
 
@@ -583,52 +535,137 @@ var Visualizer = (function ($) {
              _selectedNode = null;
         }
         _selectedCubeName = selectedCubeName;
-
-        if (_visInfo){
-            _visInfo.selectedNodeId = _selectedNode ? _selectedNode.id : null;
-            _selectedNode = null;
-        }
-
+        
         getAllFromLocalStorage();
         options = {startCubeName: _selectedCubeName, visInfo: _visInfo, scope: _topNodeScope};
+        result = _nce.call('ncubeController.getVisualizerGraph', [_nce.getSelectedTabAppId(), options]);
 
-        result = _nce.call('ncubeController.getVisualizerJson', [_nce.getSelectedTabAppId(), options]);
-        if (!result.status) {
-            _nce.showNote(result.data);
-             _visualizerContent.hide();
-            _okToLoadGraph = true;
-            return;
-        }
-
-        json = result.data;
-
-        if (json.status === STATUS_SUCCESS) {
-            displayMessages(json.visInfo.messages);
-            loadGraphData(json.visInfo, json.status);
+        if (result.status) {
+            _visInfo = result.data.visInfo;
+            populateDataForGraph();
             initNetwork();
             loadDetailsSection();
             loadSelectedLevelListView();
             loadHierarchicalView();
             loadGroupsView();
             loadCountsView();
+            displayMessages(_visInfo.messages);
             saveAllToLocalStorage();
             _visualizerContent.show();
             _visualizerInfo.show();
             _visualizerNetwork.show();
         }
-        else {
-             _visualizerContent.hide();
-            displayMessages(json.visInfo.messages);
+        else{
+            _nce.clearNote();
+            _nce.showNote(result.data);
+            _visualizerContent.hide();
         }
         $("#dataLoadStatus").val(COMPLETE);
         $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
-        _okToLoadGraph = true;
+        _okToLoad = true;
+    }
+
+    function loadScopeChange() {
+        var options, result;
+        _visInfo.selectedNodeId = _selectedNode.id;
+        _selectedNode = null;
+        options = {startCubeName: _selectedCubeName, visInfo: _visInfo};
+        result = _nce.call('ncubeController.getVisualizerScopeChange', [_nce.getSelectedTabAppId(), options]);
+
+        if (result.status) {
+            _visInfo = result.data.visInfo;
+            populateDataForGraph();
+            updateNetworkData();
+            trimNetworkData();
+            loadDetailsSection();
+            loadSelectedLevelListView();
+            loadHierarchicalView();
+            loadGroupsView();
+            loadCountsView();
+            displayMessages();
+            saveAllToLocalStorage();
+        }
+        else{
+            _nce.clearNote();
+            _nce.showNote(result.data);
+            _visualizerContent.hide();
+        }
+
+        $("#dataLoadStatus").val(COMPLETE);
+        $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
+        _okToLoad = true;
+    }
+
+    function loadNodeDetails()
+    {
+        var options, result;
+        _visInfo.selectedNodeId = _selectedNode.id;
+        _selectedNode = null;
+        options =  {startCubeName: _selectedCubeName, visInfo: _visInfo};
+        result = _nce.call('ncubeController.getVisualizerNodeDetails', [_nce.getSelectedTabAppId(), options]);
+
+        if (result.status) {
+            _visInfo = result.data.visInfo;
+            populateDataForNode();
+            loadDetailsSection();
+            displayMessages();
+        }
+        else{
+            _nce.clearNote();
+            _nce.showNote('Failed to load details: ' + TWO_LINE_BREAKS + result.data);
+        }
+        $("#dataLoadStatus").val(COMPLETE);
+        $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
+        _okToLoad = true;
+    }
+
+    function populateDataForNode(){
+        var dataSetNode;
+        _nodes = _visInfo.nodes['@items'];
+        _selectedNode = getNodeFromVisInfo(_visInfo.selectedNodeId.toString());
+        if ('1' === _selectedNode.id){
+            _topNodeScope = _selectedNode.availableScope;
+        }
+
+        dataSetNode = _nodeDataSet.get(_selectedNode.id);
+        dataSetNode.details = _selectedNode.details;
+        dataSetNode.showCellValuesLink = _selectedNode.showCellValuesLink;
+        dataSetNode.showCellValues = _selectedNode.showCellValues;
+        dataSetNode.cubeLoaded = _selectedNode.cubeLoaded;
+        dataSetNode.executeCell = _selectedNode.executeCell;
+        dataSetNode.executeCells = _selectedNode.executeCells;
+        dataSetNode.scope = _selectedNode.scope;
+        dataSetNode.availableScope = _selectedNode.availableScope;
+        dataSetNode.availableScopeValues = _selectedNode.availableScopeValues;
+        dataSetNode.scopeCubeNames = _selectedNode.scopeCubeNames;
+        _nodeDataSet.update(dataSetNode);
+    }
+
+    function displayMessages(){
+        var j, jLen, items;
+        items = _visInfo.messages['@items'];
+        if (items) {
+            for (j = 0, jLen = items.length; j < jLen; j++) {
+                _nce.showNote(items[j]);
+            }
+        }
+    }
+
+    function getNodeFromVisInfo(nodeId){
+        var node, k, kLen;
+        for (k = 0, kLen = _nodes.length; k < kLen; k++) {
+            node = _nodes[k];
+            if (node.id === nodeId){
+                return node;
+            }
+        }
     }
 
     function clearVisLayoutWest(){
         _nodeDetailsTitle1[0].innerHTML = '';
         _nodeDetailsTitle2[0].innerHTML = '';
         _nodeCubeLink[0].innerHTML = '';
+        _resetNodeScopeLink[0].innerHTML = '';
         _nodeVisualizer[0].innerHTML = '';
         _nodeCellValues[0].innerHTML = '';
         _nodeAddTypes.innerHTML = '';
@@ -673,7 +710,6 @@ var Visualizer = (function ($) {
             available = groupCurrentlyAvailable(id);
             label = allGroups[groupName];
             title = available ? "Show/hide " + label + " in the graph" : "Increase level to enable show/hide of " + label + " in the graph";
-
             selected = false;
             for (k = 0, kLen = _selectedGroups.length; k < kLen; k++) {
                 if (groupIdsEqual(id, _selectedGroups[k])) {
@@ -818,14 +854,13 @@ var Visualizer = (function ($) {
         return false;
     }
 
-    function updateNetworkData()
+    function trimNetworkData()
     {
-        updateNetworkDataNodes();
-        updateNetworkDataEdges();
-     }
+        trimNetworkDataNodes();
+        trimNetworkDataEdges();
+    }
 
-
-    function updateNetworkDataNodes()
+    function trimNetworkDataNodes()
     {
         var node, selectedGroup, groupNamePrefix, i, iLen;
         var groupSuffix = _visInfo.groupSuffix;
@@ -876,7 +911,7 @@ var Visualizer = (function ($) {
         _availableGroupsAtLevel = availableGroupsAtLevel;
     }
 
-    function updateNetworkDataEdges()
+    function trimNetworkDataEdges()
     {
         var edge, k, kLen;
         var edgeIdsToRemove = [];
@@ -899,14 +934,14 @@ var Visualizer = (function ($) {
         _edgeDataSet.add(edgesToAddBack);
     }
 
-    function loadGraphData(visInfo, status)
+    function populateDataForGraph()
     {
         var maxLevel;
 
-        if (!_loadedVisInfoType || _loadedVisInfoType !== visInfo['@type']){
-            _networkOverridesBasic = visInfo.networkOverridesBasic;
-            _networkOverridesFull = visInfo.networkOverridesFull;
-            _networkOverridesSelectedNode = visInfo.networkOverridesSelectedNode;
+        if (!_loadedVisInfoType || _loadedVisInfoType !== _visInfo['@type']){
+            _networkOverridesBasic = _visInfo.networkOverridesBasic;
+            _networkOverridesFull = _visInfo.networkOverridesFull;
+            _networkOverridesSelectedNode = _visInfo.networkOverridesSelectedNode;
             formatNetworkOverrides(_networkOverridesBasic);
             formatNetworkOverrides(_networkOverridesFull);
             formatNetworkOverrides(_networkOverridesSelectedNode);
@@ -914,26 +949,29 @@ var Visualizer = (function ($) {
             _networkOverridesSelectedNode = JSON.parse(JSON.stringify(_networkOverridesSelectedNode));
         }
 
-        if (status === STATUS_SUCCESS) {
-            _nodes = visInfo.nodes['@items'];
-            _edges = visInfo.edges['@items'];
-            _nodes =  _nodes ? _nodes : [];
-            _edges = _edges ? _edges : [];
-            _availableGroupsAllLevels = visInfo.availableGroupsAllLevels['@items'];
-            if (_selectedGroups === null || _selectedGroups.length === 1){
-                _selectedGroups = _availableGroupsAllLevels;
-            }
-            maxLevel = visInfo.maxLevel;
-            if (_selectedLevel === null || _selectedLevel === 1){
-                _selectedLevel = visInfo.defaultLevel;
-            }
-            if (_selectedLevel > maxLevel){
-                _selectedLevel = maxLevel;
-            }
+        _nodes = _visInfo.nodes['@items'];
+        _edges = _visInfo.edges['@items'];
+        _nodes =  _nodes ? _nodes : [];
+        _edges = _edges ? _edges : [];
+        _availableGroupsAllLevels = _visInfo.availableGroupsAllLevels['@items'];
+        if (_selectedGroups === null || _selectedGroups.length === 1){
+            _selectedGroups = _availableGroupsAllLevels;
         }
-        _visInfo = visInfo;
+        maxLevel = _visInfo.maxLevel;
+        if (_selectedLevel === null || _selectedLevel === 1){
+            _selectedLevel = _visInfo.defaultLevel;
+        }
+        if (_selectedLevel > maxLevel){
+            _selectedLevel = maxLevel;
+        }
+
+        _selectedNode = getNodeFromVisInfo(_visInfo.selectedNodeId.toString());
+        if ('1' === _selectedNode.id){
+            _topNodeScope = _selectedNode.availableScope;
+        }
+
         _loadedVisInfoType = _visInfo['@type'];
-     }
+    }
 
     function formatNetworkOverrides(overrides){
         var keys,k, kLen, key, value, valueOfValue, type;
@@ -981,7 +1019,7 @@ var Visualizer = (function ($) {
         load();
     }
 
-     function destroyNetwork()
+    function destroyNetwork()
     {
         if (_network) {
             _network.destroy();
@@ -989,15 +1027,41 @@ var Visualizer = (function ($) {
         }
     }
 
+    function resetDeselectedNode(){
+        var node, keys, k, kLen, key, valueToAddBack;
+        if (_selectedNode && _networkOverridesDeselectedNode)
+        {
+            node = _nodeDataSet.get(_selectedNode.id);
+            keys = Object.keys(_networkOverridesDeselectedNode);
+            for (k = 0, kLen = keys.length; k < kLen; k++) {
+                key = keys[k];
+                valueToAddBack = _networkOverridesDeselectedNode[key];
+                if (valueToAddBack){
+                    node[key] = valueToAddBack
+                }
+                else{
+                    delete  node[key];
+                }
+            }
+            _nodeDataSet.remove(_selectedNode.id);
+            _nodeDataSet.add(node);
+            _selectedNode = null;
+            _networkOverridesDeselectedNode = null;
+        }
+    }
+
     function markSelectedNodeSpecial()  {
-        var node, keys, k, kLen, key;
+        var node, keys, k, kLen, key, valueToSaveOff;
         if (_selectedNode){
             node = _nodeDataSet.get(_selectedNode.id);
             if (node) {
                 if (_networkOverridesSelectedNode) {
+                    _networkOverridesDeselectedNode = {};
                     keys = Object.keys(_networkOverridesSelectedNode);
                     for (k = 0, kLen = keys.length; k < kLen; k++) {
                         key = keys[k];
+                        valueToSaveOff = node[key] ? node[key] : null;
+                        _networkOverridesDeselectedNode[key] = valueToSaveOff;
                         node[key] = _networkOverridesSelectedNode[key];
                     }
                     _nodeDataSet.update(node);
@@ -1017,14 +1081,14 @@ var Visualizer = (function ($) {
         _edgeDataSet = new vis.DataSet({});
         _edgeDataSet.add(_edges);
         _network = new vis.Network(container, {nodes: _nodeDataSet, edges: _edgeDataSet}, _networkOptionsInput);
-        updateNetworkData();
+        trimNetworkData();
 
         _network.on('selectNode', function(params) {
             networkSelectNodeEvent(params.nodes[0]);
         });
 
         _network.on('deselectNode', function() {
-            _selectedNode = null;
+            resetDeselectedNode();
             clearVisLayoutWest();
         });
 
@@ -1055,11 +1119,17 @@ var Visualizer = (function ($) {
         _edgeDataSet.on('remove', function () {
             networkChangeEvent()
         });
-
-        _topNodeScope = _nodeDataSet.get('1').availableScope;
-        _selectedNode = _nodeDataSet.get(_visInfo.selectedNodeId);
+        
         _network.selectNodes([_selectedNode.id]);
         networkSelectNodeEvent(_selectedNode.id);
+    }
+
+    function updateNetworkData()
+    {
+        _nodeDataSet.clear();
+        _nodeDataSet.add(_nodes);
+        _edgeDataSet.clear();
+        _edgeDataSet.add(_edges);
     }
 
     function networkStartStabilizingEvent(){
@@ -1142,12 +1212,15 @@ var Visualizer = (function ($) {
     }
 
     function networkSelectNodeEvent(nodeId) {
-        _selectedNode = _nodeDataSet.get(nodeId);
+        resetDeselectedNode();
+        _selectedNode = getNodeFromVisInfo(nodeId);
         if (!_selectedNode.details) {
-           loadNodeDetails('Loading details...');
+           load(LOAD_NODE_DETAILS, 'Loading details...');
+        }
+        else{
+            loadDetailsSection();
         }
         markSelectedNodeSpecial();
-        loadDetailsSection();
     }
 
     function loadDetailsSection(){
@@ -1184,6 +1257,11 @@ var Visualizer = (function ($) {
                 createAddTypesDropdown(typesToAdd, _selectedNode.label);
             }
         }
+
+       /* //Reset node scope link
+        _resetNodeScopeLink[0].innerHTML = '';
+        _resetNodeScopeLink.append(createResetNodeScopeLink());*/
+
         _layout.open('west');
     }
 
@@ -1280,6 +1358,24 @@ var Visualizer = (function ($) {
         return cubeLink;
     }
 
+    /*function createResetNodeScopeLink()
+    {
+        var cubeLink = $('<a/>');
+        cubeLink.addClass('nc-anc resetNodeScope');
+        cubeLink.html('Reset scope');
+        cubeLink.click(function (e) {
+            e.preventDefault();
+            _selectedNode.scope = {};
+            _selectedNode.availableScope = {};
+            if ('1' === _selectedNode.id){
+                _topNodeScope = null;
+                saveToLocalStorage(_topNodeScope, SCOPE);
+            }
+            load();
+        });
+        return cubeLink;
+    }*/
+
     function createCellValuesLink(node) {
         var cellValuesLink = $('<a/>');
         cellValuesLink.addClass('nc-anc');
@@ -1300,7 +1396,7 @@ var Visualizer = (function ($) {
                 node.showingHidingCellValues = true;
                 _selectedNode = node;
                 note = _selectedNode.showCellValues ? 'Loading ' + _visInfo.loadCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadCellValuesLabel + '...';
-                loadNodeDetails(note);
+                load(LOAD_NODE_DETAILS, note);
             }
         });
         return cellValuesLink;

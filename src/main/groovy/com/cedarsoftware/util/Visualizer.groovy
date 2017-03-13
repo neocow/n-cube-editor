@@ -22,63 +22,78 @@ class Visualizer
 	protected VisualizerHelper helper
 
 	/**
-	 * Processes an n-cube and all its referenced n-cubes and provides information to
-	 * visualize the cubes and their relationships.
+	 * Builds the graph for an n-cube and all its referenced n-cubes.
 	 *
 	 * @param applicationID
 	 * @param options - a map containing:
+	 *           VisualizerInfo visInfo, information about the visualization
 	 *           String startCubeName, name of the starting cube
-	 *           VisualizerInfo visInfo, information about the visualization
 	 *           Map scope, the scope used in the visualization
-	 * @return a map containing:
-	 *           String status, status of the visualization
-	 *           VisualizerInfo visInfo, information about the visualization
+	 * @return   VisualizerInfo visInfo, information about the visualization
 	 */
-	Map<String, Object> buildGraph(ApplicationID applicationID, Map options)
+	Map<String, Object> loadGraph(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
 		String startCubeName = options.startCubeName as String
 		VisualizerInfo visInfo = getVisualizerInfo(options)
-		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo)
+		visInfo.init(options)
+		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		relInfo.init(options, visInfo)
 
 		if (!isValidStartCube(visInfo, startCubeName))
 		{
-			return [status: STATUS_INVALID_START_CUBE, visInfo: visInfo]
+			return [visInfo: visInfo] as Map
 		}
 
 		getVisualization(visInfo, relInfo)
-		visInfo.convertToSingleMessage()
-		return [status: STATUS_SUCCESS, visInfo: visInfo]
+		return [visInfo: visInfo] as Map
 	}
 
 	/**
-	 * Loads details for a cube given the scope provided.
+	 * Re-builds the section of the graph affected by a scope change to an n-cube.
 	 *
 	 * @param applicationID
 	 * @param options - a map containing:
+	 *           VisualizerInfo visInfo, information about the visualization
 	 *           String startCubeName, name of the starting cube
-	 *           VisualizerInfo visInfo, information about the visualization
-	 * @return a map containing:
-	 *           String status, status of the visualization
-	 *           VisualizerInfo visInfo, information about the visualization
+	 * @return   VisualizerInfo visInfo, information about the visualization
 	 */
-	Map loadNodeDetails(ApplicationID applicationID, Map options)
+	Map<String, Object> loadScopeChange(ApplicationID applicationID, Map options)
+	{
+		appId = applicationID
+		VisualizerInfo visInfo = getVisualizerInfo(options)
+		Map selectedNode = new LinkedHashMap(visInfo.nodes[visInfo.selectedNodeId])
+		visInfo.initScopeChange()
+		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		relInfo.initSelectedNode(visInfo, selectedNode)
+		getVisualization(visInfo, relInfo)
+		return [visInfo: visInfo] as Map
+	}
+
+	/**
+	 * Loads graph details for an n-cube given the scope provided.
+	 *
+	 * @param  applicationID
+	 * @param  options - a map containing:
+	 *            VisualizerInfo visInfo, information about the visualization
+	 *            String startCubeName, name of the starting cube
+	 * @return VisualizerInfo visInfo, information about the visualization
+	 */
+	Map<String, Object> loadNodeDetails(ApplicationID applicationID, Map options)
 	{
 		appId = applicationID
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
-		visInfo.appId = applicationID
-		visInfo.selectedNode = visInfo.nodes[visInfo.selectedNodeId]
-		visInfo.inputScope = new CaseInsensitiveMap(visInfo.selectedNode.availableScope as Map)
-		VisualizerRelInfo relInfo = getVisualizerRelInfo(options, visInfo)
-		return loadNodeDetails(visInfo, relInfo)
+		Map selectedNode = visInfo.nodes[visInfo.selectedNodeId]
+		visInfo.inputScope = selectedNode.availableScope as CaseInsensitiveMap
+		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		relInfo.initSelectedNode(visInfo, selectedNode)
+		return loadNodeDetails(visInfo, relInfo, selectedNode)
 	}
 
-	protected static Map loadNodeDetails(VisualizerInfo visInfo, VisualizerRelInfo relInfo)
+		protected static Map<String, Object> loadNodeDetails(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Map node)
 	{
 		visInfo.messages = new LinkedHashSet()
 		relInfo.loadCube(visInfo)
-
-		Map node = visInfo.selectedNode
 		node.details = relInfo.getDetails(visInfo)
 		node.showCellValuesLink = relInfo.showCellValuesLink
 		node.cubeLoaded = relInfo.cubeLoaded
@@ -87,8 +102,7 @@ class Visualizer
 		node.availableScope = relInfo.availableTargetScope
 		node.availableScopeValues = relInfo.availableScopeValues
 		node.scopeCubeNames = relInfo.scopeCubeNames
-		visInfo.convertToSingleMessage()
-		return [status: STATUS_SUCCESS, visInfo: visInfo]
+		return [visInfo: visInfo] as Map
 	}
 
 	protected VisualizerInfo getVisualizerInfo(Map options)
@@ -98,15 +112,16 @@ class Visualizer
 		{
 			visInfo = new VisualizerInfo(appId)
 		}
-		visInfo.init(options)
+		else
+		{
+			visInfo.appId = appId
+		}
 		return visInfo
 	}
 
-	protected VisualizerRelInfo getVisualizerRelInfo(Map options, VisualizerInfo visInfo)
+	protected VisualizerRelInfo getVisualizerRelInfo()
 	{
-		VisualizerRelInfo relInfo =  new VisualizerRelInfo(appId)
-		relInfo.init(options, visInfo)
-		return relInfo
+		return new VisualizerRelInfo(appId)
 	}
 
 	private void getVisualization(VisualizerInfo visInfo,  VisualizerRelInfo relInfo)

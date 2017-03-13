@@ -59,43 +59,48 @@ class VisualizerRelInfo
 
 	protected init(Map options, VisualizerInfo visInfo)
 	{
-		Map selectedNode = visInfo.selectedNode
-		if (selectedNode)
+		targetId = 1
+		targetLevel = 1
+		targetCube = NCubeManager.getCube(appId, options.startCubeName as String)
+		addRequiredScopeKeys(visInfo)
+		showCellValuesLink = true
+		populateScopeDefaults(visInfo)
+	}
+
+	protected initSelectedNode(VisualizerInfo visInfo, Map selectedNode)
+	{
+		targetCube = NCubeManager.getCube(appId, selectedNode.cubeName as String)
+		String sourceCubeName = selectedNode.sourceCubeName as String
+		sourceCube = sourceCubeName ? NCubeManager.getCube(appId, sourceCubeName) : null
+		sourceFieldName = selectedNode.fromFieldName as String
+		sourceScope = selectedNode.sourceScope as CaseInsensitiveMap
+		sourceTrail = selectedNode.sourceTrail as List
+		sourceId = selectedNode.sourceId as Long
+		targetId = Long.valueOf(selectedNode.id as String)
+		targetLevel = Long.valueOf(selectedNode.level as String)
+		showCellValues = selectedNode.showCellValues as boolean
+		showCellValuesLink = selectedNode.showCellValuesLink as boolean
+		cubeLoaded = selectedNode.cubeLoaded as boolean
+		typesToAdd = selectedNode.typesToAdd as List
+		visInfo.inputScope = new CaseInsensitiveMap(selectedNode.availableScope as Map)
+		availableTargetScope = selectedNode.availableScope as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
+		availableScopeValues = selectedNode.availableScopeValues as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
+		showingHidingCellValues = selectedNode.showingHidingCellValues as boolean
+
+		//If in the process of showing/hiding cell values, then the supplied scope, available scope values and scope
+		//cube names are used to load cell values.
+		if (showingHidingCellValues)
 		{
-			targetCube = NCubeManager.getCube(appId, selectedNode.cubeName as String)
-			String sourceCubeName = selectedNode.sourceCubeName as String
-			sourceCube = sourceCubeName ? NCubeManager.getCube(appId, sourceCubeName) : null
-			sourceFieldName = selectedNode.fromFieldName as String
-			sourceScope = selectedNode.sourceScope as CaseInsensitiveMap
-			sourceTrail = selectedNode.sourceTrail as List
-			sourceId = selectedNode.sourceId as Long
-			targetId = Long.valueOf(selectedNode.id as String)
-			targetLevel = Long.valueOf(selectedNode.level as String)
-			availableTargetScope = selectedNode.availableScope as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
-			availableScopeValues = selectedNode.availableScopeValues as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
-			showingHidingCellValues = selectedNode.showingHidingCellValues as boolean
-			if (showingHidingCellValues)
-			{
-				scopeCubeNames = selectedNode.scopeCubeNames as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
-			}
-			else
-			{
-				availableTargetScope.keySet().removeAll(availableScopeValues.keySet())
-				availableScopeValues = new CaseInsensitiveMap()
-				scopeCubeNames = new CaseInsensitiveMap()
-			}
-			showCellValues = selectedNode.showCellValues as boolean
-			showCellValuesLink = selectedNode.showCellValuesLink as boolean
-			cubeLoaded = selectedNode.cubeLoaded as boolean
-			typesToAdd = selectedNode.typesToAdd as List
+			scopeCubeNames = selectedNode.scopeCubeNames as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
 		}
+		//Else, node details are being loaded for the node or a scope change is being applied to the node. In this case,
+		//clear out the supplied scope, available scope values and scope cube names. This will result in the node being
+		//reloaded with updated scope information.
 		else
 		{
-			targetId = 1
-			targetLevel = 1
-			targetCube = NCubeManager.getCube(appId, options.startCubeName as String)
-			addRequiredScopeKeys(visInfo)
-			showCellValuesLink = true
+			availableTargetScope.keySet().removeAll(availableScopeValues.keySet())
+			availableScopeValues = new CaseInsensitiveMap()
+			scopeCubeNames = new CaseInsensitiveMap()
 		}
 		populateScopeDefaults(visInfo)
 	}
@@ -375,8 +380,6 @@ class VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		sb.append(getNodeDetailsMessageSet())
 		sb.append(nodeScopeMessage)
-		sb.append("""<a href="#" title="Reset scope" class="resetNodeScope">Reset scope</a>""")
-		sb.append("${DOUBLE_BREAK}")
 		return sb.toString()
 	}
 

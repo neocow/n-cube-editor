@@ -43,6 +43,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
+	protected initSelectedNode(VisualizerInfo visInfo, Map selectedNode)
+	{
+		super.initSelectedNode(visInfo, selectedNode)
+		sourceTraits = selectedNode.sourceTraits as Map
+	}
+
+	@Override
 	protected String getDetails(VisualizerInfo visInfo)
 	{
 		StringBuilder sb = new StringBuilder()

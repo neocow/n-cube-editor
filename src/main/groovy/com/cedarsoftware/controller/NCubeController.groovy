@@ -42,6 +42,7 @@ import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.UniqueIdGenerator
 import com.cedarsoftware.util.Visualizer
+import com.cedarsoftware.util.VisualizerInfo
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble
@@ -262,20 +263,25 @@ class NCubeController extends BaseController
     }
 
     // TODO: This needs to be externalized (loaded via Grapes)
-    Map<String, Object> getVisualizerJson(ApplicationID appId, Map options)
+    Map<String, Object> getVisualizerGraph(ApplicationID appId, Map options)
     {
-//        if (!SystemUtilities.getExternalVariable('NCE_VISUALIZER_ENABLED'))
-//        {
-//            throw new IllegalStateException("""The visualizer is currently available <a href="#" onclick="window.open('https://nce.dockerdev.td.afg/n-cube-editor/#');return false;">here</a>""")
-//        }
         String cubeName = options.startCubeName
         Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
         appId = addTenant(appId)
-        return vis.buildGraph(appId, options)
+        return vis.loadGraph(appId, options)
     }
 
     // TODO: This needs to be externalized (loaded via Grapes)
-    Map getVisualizerNodeDetails(ApplicationID appId, Map options)
+    Map<String, Object> getVisualizerScopeChange(ApplicationID appId, Map options)
+    {
+        String cubeName = options.startCubeName
+        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
+        appId = addTenant(appId)
+        return vis.loadScopeChange(appId, options)
+    }
+
+    // TODO: This needs to be externalized (loaded via Grapes)
+    Map<String, Object>  getVisualizerNodeDetails(ApplicationID appId, Map options)
     {
         String cubeName = options.startCubeName
         Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
