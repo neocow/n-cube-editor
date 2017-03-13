@@ -143,8 +143,8 @@ class VisualizerRelInfo
 	{
 		StringBuilder sb = new StringBuilder()
 
-		getDetailsMap(sb, 'Scope', targetScope)
-		getDetailsMap(sb, 'Available scope', availableTargetScope)
+		getDetailsMap(sb, 'Scope', targetScope.sort())
+		getDetailsMap(sb, 'Available scope', availableTargetScope.sort())
 		getDetailsSet(sb, 'Axes', targetCube.axisNames)
 
 		//Cell values

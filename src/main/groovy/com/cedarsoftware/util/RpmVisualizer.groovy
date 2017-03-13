@@ -56,10 +56,7 @@ class RpmVisualizer extends Visualizer
 		boolean cubeLoaded
 		String targetCubeName = relInfo.targetCube.name
 
-		if (canLoadTraitsForTarget(relInfo))
-		{
-			cubeLoaded = relInfo.loadCube(visInfo)
-		}
+		cubeLoaded = relInfo.loadCube(visInfo)
 
 		if (relInfo.sourceCube)
 		{
@@ -149,33 +146,6 @@ class RpmVisualizer extends Visualizer
 		return nextRelInfo
 	}
 
-	private boolean canLoadTraitsForTarget(RpmVisualizerRelInfo relInfo)
-	{
-		//When the source cube points directly to the target cube (source cube and target cube are both rpm.class),
-		//check if the source field name matches up with the scoped name of the target. If not, traits cannot
-		//be loaded for the target in the visualization.
-		NCube sourceCube = relInfo.sourceCube
-		NCube targetCube = relInfo.targetCube
-
-		if (sourceCube && sourceCube.name.startsWith(RPM_CLASS_DOT) && targetCube.name.startsWith(RPM_CLASS_DOT) &&
-				targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
-		{
-			String type = relInfo.sourceFieldRpmType
-			NCube classTraitsCube = NCubeManager.getCube(appId, RPM_SCOPE_CLASS_DOT + type + DOT_CLASS_TRAITS)
-			String sourceFieldName = relInfo.sourceFieldName
-			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
-			{
-				relInfo.nodeLabelPrefix = 'Unable to load '
-				relInfo.targetTraits = new CaseInsensitiveMap()
-				relInfo.nodeDetailsMessages << getLoadTraitsForTargetMessage(relInfo, type)
-				relInfo.cubeLoaded = false
-				relInfo.showCellValuesLink = false
-				return false
-			}
-		}
-		return true
-	}
-
 	@Override
 	protected boolean isValidStartCube(VisualizerInfo visInfo, String cubeName)
 	{
@@ -203,15 +173,5 @@ class RpmVisualizer extends Visualizer
 	protected RpmVisualizerHelper getVisualizerHelper()
 	{
 		helper =  new RpmVisualizerHelper()
-	}
-
-	private static String getLoadTraitsForTargetMessage(RpmVisualizerRelInfo relInfo, String type) {
-
-		String sourceCubeDisplayName = relInfo.getCubeDisplayName(relInfo.sourceCube.name)
-		String targetCubeDisplayName = relInfo.getCubeDisplayName(relInfo.targetCube.name)
-
-		"""\
-<b>Unable to load the class. ${sourceCubeDisplayName} points directly to ${targetCubeDisplayName} via field ${relInfo.sourceFieldName}, but \
-there is no ${type.toLowerCase()} named ${relInfo.sourceFieldName} on ${type}.</b> ${DOUBLE_BREAK}"""
 	}
 }

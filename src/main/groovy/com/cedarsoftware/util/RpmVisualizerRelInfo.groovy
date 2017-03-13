@@ -47,6 +47,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		super.initSelectedNode(visInfo, selectedNode)
 		sourceTraits = selectedNode.sourceTraits as Map
+		sourceFieldRpmType = selectedNode.sourceFieldRpmType as String
 	}
 
 	@Override
@@ -61,9 +62,9 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		if (cubeLoaded)
 		{
 			String title = showCellValues ? 'Utilized scope with traits' : 'Utilized scope with no traits'
-			getDetailsMap(sb, title, targetScope)
+			getDetailsMap(sb, title, targetScope.sort())
 		}
-		getDetailsMap(sb, 'Available scope', availableTargetScope)
+		getDetailsMap(sb, 'Available scope', availableTargetScope.sort())
 
 		//Fields
 		if (cubeLoaded)
@@ -210,6 +211,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		Map<String, Object> node = super.createNode(visInfo, group)
 		node.sourceTraits = sourceTraits
+		node.sourceFieldRpmType = sourceFieldRpmType
 		if (targetCube.name.startsWith(RPM_ENUM_DOT))
 		{
 			node.label = null
@@ -318,6 +320,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	protected boolean loadCube(VisualizerInfo visInfo, Map output = new CaseInsensitiveMap())
 	{
+		if (!canLoadTarget())
+		{
+			return false
+		}
+		
 		loadAgain = false
 		try
 		{
@@ -358,6 +365,28 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		if (loadAgain)
 		{
 			return loadCube(visInfo, output)
+		}
+		return true
+	}
+
+	private boolean canLoadTarget()
+	{
+		//When the source cube points directly to the target cube (source cube and target cube are both rpm.class),
+		//check if the source field name matches up with the scoped name of the target. If not, traits cannot
+		//be loaded for the target in the visualization.
+		if (sourceCube && sourceCube.name.startsWith(RPM_CLASS_DOT) && targetCube.name.startsWith(RPM_CLASS_DOT) &&
+				targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		{
+			NCube classTraitsCube = NCubeManager.getCube(appId, RPM_SCOPE_CLASS_DOT + sourceFieldRpmType + DOT_CLASS_TRAITS)
+			if (!classTraitsCube.getAxis(sourceFieldRpmType).findColumn(sourceFieldName))
+			{
+				nodeLabelPrefix = 'Unable to load '
+				targetTraits = new CaseInsensitiveMap()
+				nodeDetailsMessages << getCannotLoadTargetMessage(sourceFieldRpmType)
+				cubeLoaded = false
+				showCellValuesLink = false
+				return false
+			}
 		}
 		return true
 	}
@@ -531,6 +560,16 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
         }
         return inScopeMapEntries.keySet()
     }*/
+
+	private String getCannotLoadTargetMessage(String type) {
+
+		String sourceCubeDisplayName = getCubeDisplayName(sourceCube.name)
+		String targetCubeDisplayName = getCubeDisplayName(targetCube.name)
+
+		"""\
+<b>Unable to load the class. ${sourceCubeDisplayName} points directly to ${targetCubeDisplayName} via field ${sourceFieldName}, but \
+there is no ${type.toLowerCase()} named ${sourceFieldName} on ${type}.</b> ${DOUBLE_BREAK}"""
+	}
 
 	@Override
 	protected String getNodesLabel()
