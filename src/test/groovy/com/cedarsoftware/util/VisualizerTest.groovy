@@ -56,7 +56,7 @@ class VisualizerTest{
         assert [:] as CaseInsensitiveMap == scopeInfo.nodeScope
         assert 3l == visInfo.maxLevel
         assert 6l == visInfo.nodeCount
-        assert 5l == visInfo.relInfoCount
+        assert 5l == visInfo.nodeIdCounter
         assert 999999l == visInfo.defaultLevel
         assert [:] == scopeInfo.graphScopeInfo
         assert '' == visInfo.groupSuffix

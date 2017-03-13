@@ -72,7 +72,7 @@ class RpmVisualizerTest
         assert 4 == visInfo.edges.size()
         assert 4l == visInfo.maxLevel
         assert 6l == visInfo.nodeCount
-        assert 5l == visInfo.relInfoCount
+        assert 5l == visInfo.nodeIdCounter
         assert 3l == visInfo.defaultLevel
         assert '_ENUM' == visInfo.groupSuffix
         assert scope == scopeInfo.nodeScope

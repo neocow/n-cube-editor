@@ -576,6 +576,7 @@ var Visualizer = (function ($) {
             _visInfo = result.data.visInfo;
             populateDataForGraph();
             updateNetworkData();
+            markSelectedNodeSpecial();
             trimNetworkData();
             loadDetailsSection();
             loadSelectedLevelListView();

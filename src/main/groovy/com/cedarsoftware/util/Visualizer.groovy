@@ -6,8 +6,6 @@ import com.cedarsoftware.ncube.NCubeManager
 import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
 
-import static com.cedarsoftware.util.VisualizerConstants.*
-
 /**
  * Provides information to visualize n-cubes.
  */
@@ -90,7 +88,7 @@ class Visualizer
 		return loadNodeDetails(visInfo, relInfo, selectedNode)
 	}
 
-		protected static Map<String, Object> loadNodeDetails(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Map node)
+	protected static Map<String, Object> loadNodeDetails(VisualizerInfo visInfo, VisualizerRelInfo relInfo, Map node)
 	{
 		visInfo.messages = new LinkedHashSet()
 		relInfo.loadCube(visInfo)
@@ -141,7 +139,7 @@ class Visualizer
 
 		if (relInfo.sourceCube)
 		{
-			Long edgeId = visInfo.edges.size() + 1
+			Long edgeId = visInfo.edgeIdCounter += 1
 			visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
 		}
 
@@ -169,8 +167,8 @@ class Visualizer
 				nextRelInfo.appId = appId
 				long nextTargetLevel = relInfo.targetLevel + 1
 				nextRelInfo.targetLevel = nextTargetLevel
-				visInfo.relInfoCount += 1
-				nextRelInfo.targetId = visInfo.relInfoCount
+				visInfo.nodeIdCounter += 1
+				nextRelInfo.targetId = visInfo.nodeIdCounter
 				nextRelInfo.targetCube = nextTargetCube
 				nextRelInfo.sourceCube = relInfo.targetCube
 				nextRelInfo.sourceScope = new CaseInsensitiveMap(relInfo.targetScope)

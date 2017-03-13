@@ -249,7 +249,6 @@ class VisualizerRelInfo
 		if (!visInfo.requiredScopeKeysByCube.containsKey(cubeName))
 		{
 			visInfo.requiredScopeKeysByCube[cubeName] = requiredScope
-			//visInfo.allOptionalScopeKeysByCube[cubeName] = targetCube.getOptionalScope(availableTargetScope, new CaseInsensitiveMap())
 		}
 	}
 
@@ -310,7 +309,6 @@ class VisualizerRelInfo
 		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
 		long maxLevel = visInfo.maxLevel
 		visInfo.maxLevel = maxLevel < targetLevel ? targetLevel : maxLevel
-		visInfo.nodeCount += 1
 		return node
 	}
 

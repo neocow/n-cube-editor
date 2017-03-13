@@ -1,6 +1,5 @@
 package com.cedarsoftware.util
 
-import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import groovy.transform.CompileStatic
@@ -64,7 +63,7 @@ class RpmVisualizer extends Visualizer
 
 		if (relInfo.sourceCube)
 		{
-			Long edgeId = visInfo.edges.size() + 1
+			Long edgeId = visInfo.edgeIdCounter += 1
 			visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
 		}
 
@@ -123,7 +122,7 @@ class RpmVisualizer extends Visualizer
 			}
 		}
 
-		Long edgeId = visInfo.edges.size() + 1
+		Long edgeId = visInfo.edgeIdCounter += 1
 		visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
 
 		if (!visited.add(targetCubeName + relInfo.availableTargetScope.toString()))

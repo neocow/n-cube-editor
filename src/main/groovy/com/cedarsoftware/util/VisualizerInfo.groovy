@@ -21,8 +21,8 @@ class VisualizerInfo
     protected Map<String, Object> inputScope
 
     protected long maxLevel
-    protected  long nodeCount
-    protected long relInfoCount
+    protected long nodeIdCounter
+    protected long edgeIdCounter
     protected long defaultLevel
     protected String loadCellValuesLabel
 
@@ -55,8 +55,8 @@ class VisualizerInfo
         nodes = [:]
         edges = [:]
         maxLevel = 1
-        nodeCount = 1
-        relInfoCount = 1
+        nodeIdCounter = 1
+        edgeIdCounter = 0
         selectedNodeId = 1
         availableGroupsAllLevels = new LinkedHashSet()
     }
@@ -71,17 +71,14 @@ class VisualizerInfo
         {
             messages = new LinkedHashSet()
             nodes.remove(selectedNodeId)
-            int removed = 1
-            removeSourceEdge()
+            removeSourceEdges()
             removeTargets(edges)
-            removed += removeTargets(nodes)
-            nodeCount -= removed
-            relInfoCount -= removed
+            removeTargets(nodes)
             //TODO: What to do about max level and availableGroupsAllLevels?
         }
     }
 
-    private int removeTargets(Map<Long, Map> nodes)
+    private void removeTargets(Map<Long, Map> nodes)
     {
         List<Long> toRemove = []
         nodes.each{Long id, Map node ->
@@ -92,17 +89,15 @@ class VisualizerInfo
             }
         }
         nodes.keySet().removeAll(toRemove)
-        return toRemove.size()
     }
 
-    private void removeSourceEdge()
+    private void removeSourceEdges()
     {
         List<Long> toRemove = []
         edges.each{Long id, Map edge ->
-            Long edgeTo = edge.to as Long
-            if (selectedNodeId == edgeTo)
+            if (selectedNodeId == edge.to as Long)
             {
-                toRemove << edgeTo
+                toRemove << (edge.id as Long)
             }
         }
         edges.keySet().removeAll(toRemove)
