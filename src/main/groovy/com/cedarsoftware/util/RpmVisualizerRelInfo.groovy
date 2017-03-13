@@ -365,8 +365,8 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	private void handleUnboundScope(VisualizerInfo visInfo, RuleInfo ruleInfo)
 	{
 		List<MapEntry> unboundAxesList = ruleInfo.getUnboundAxesList()
-		if (unboundAxesList){
-			helper.handleUnboundScope(visInfo, this, unboundAxesList)
+		if (unboundAxesList && helper.handleUnboundScope(visInfo, this, unboundAxesList))
+		{
 			if (loadAgain)
 			{
 				return

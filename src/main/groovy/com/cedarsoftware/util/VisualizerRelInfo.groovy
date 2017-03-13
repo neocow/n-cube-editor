@@ -406,7 +406,7 @@ class VisualizerRelInfo
 				Set<Object> availableValues = availableScopeValues[scopeKey]
 				String requiredOrOptional = availableValues.contains(null) ? 'optional' : 'required'
 				StringBuilder title = new StringBuilder("Scope key ${scopeKey} is ${requiredOrOptional} to load ${nodeName}")
-				title.append(addCubeNamesList('.\n\nFirst encountered on the following cubes, but may also be present on others:', cubeNames))
+				title.append(addCubeNamesList('. First encountered on the following cubes, but may also be present on others:', cubeNames))
 				sb.append(getScopeMessage(scopeKey, availableValues, title, availableTargetScope[scopeKey]))
 				sb.append(BREAK)
 			}
@@ -471,7 +471,7 @@ class VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		if (cubeNames)
 		{
-			sb.append("${prefix}\n\n")
+			sb.append("${prefix}\n")
 			cubeNames.each { String cubeName ->
 				sb.append("  - ${cubeName}\n")
 			}

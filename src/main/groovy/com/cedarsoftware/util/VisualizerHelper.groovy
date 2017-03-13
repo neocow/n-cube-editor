@@ -15,8 +15,9 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerHelper
 {
-	protected static void handleUnboundScope(VisualizerInfo visInfo, VisualizerRelInfo relInfo, List<MapEntry> unboundAxesList)
+	protected static boolean handleUnboundScope(VisualizerInfo visInfo, VisualizerRelInfo relInfo, List<MapEntry> unboundAxesList)
 	{
+		boolean hasUnboundScopeToInclude
 		if (relInfo.targetId == visInfo.selectedNodeId && unboundAxesList)
 		{
 			unboundAxesList.each { MapEntry unboundAxis ->
@@ -27,9 +28,11 @@ class VisualizerHelper
 				{
 					relInfo.setLoadAgain(visInfo, scopeKey)
 					relInfo.addNodeScope(cubeName, scopeKey, false, null)
+					hasUnboundScopeToInclude = true
 				}
 			}
 		}
+		return hasUnboundScopeToInclude
 	}
 
 	protected static StringBuilder handleCoordinateNotFoundException(CoordinateNotFoundException e, VisualizerInfo visInfo, VisualizerRelInfo relInfo)
