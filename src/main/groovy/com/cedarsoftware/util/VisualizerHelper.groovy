@@ -27,7 +27,7 @@ class VisualizerHelper
 				if (relInfo.includeUnboundScopeKey(visInfo, scopeKey))
 				{
 					relInfo.setLoadAgain(visInfo, scopeKey)
-					relInfo.addNodeScope(cubeName, scopeKey, false, null)
+					relInfo.addNodeScope(cubeName, scopeKey, true)
 					hasUnboundScopeToInclude = true
 				}
 			}
@@ -45,7 +45,7 @@ class VisualizerHelper
 			if (relInfo.targetId == visInfo.selectedNodeId)
 			{
 				relInfo.setLoadAgain(visInfo, scopeKey)
-				relInfo.addNodeScope(cubeName, scopeKey, false, e.coordinate)
+				relInfo.addNodeScope(cubeName, scopeKey, false, false, e.coordinate)
 			}
 			return sb
 		}
@@ -66,7 +66,7 @@ class VisualizerHelper
 			{
 				missingScopeKeys.each { String scopeKey ->
 					relInfo.setLoadAgain(visInfo, scopeKey)
-					relInfo.addNodeScope(e.cubeName, scopeKey, false, null)
+					relInfo.addNodeScope(e.cubeName, scopeKey)
 				}
 			}
 			return sb

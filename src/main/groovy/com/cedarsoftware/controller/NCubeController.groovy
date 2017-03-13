@@ -42,7 +42,6 @@ import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.UniqueIdGenerator
 import com.cedarsoftware.util.Visualizer
-import com.cedarsoftware.util.VisualizerInfo
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 import com.google.common.util.concurrent.AtomicDouble

@@ -26,6 +26,7 @@ var Visualizer = (function ($) {
     var _edgeDataSet = null;
     var _nce = null;
     var _visInfo = null;
+    var _loadedAppId = null;
     var _loadedVisInfoType = null;
     var _okToLoad = true;
     var _nodes = [];
@@ -527,6 +528,10 @@ var Visualizer = (function ($) {
             return;
         }
 
+        if (_loadedAppId && !appIdMatch(_loadedAppId, _nce.getSelectedTabAppId())) {
+            _visInfo = null;
+        }
+
         //TODO: The .replace is temporary until figured out why nce.getSelectedCubeName()
         //TODO: occasionally contains a cube name with "_" instead of "." (e.g. rpm_class_product instead of
         //TODO: rpm.class.product) after a page refresh.
@@ -660,6 +665,14 @@ var Visualizer = (function ($) {
                 return node;
             }
         }
+    }
+
+    function appIdMatch(appIdA, appIdB)
+    {
+        return appIdA.appId === appIdB.appId &&
+            appIdA.version === appIdB.version &&
+            appIdA.status ===  appIdB.status &&
+            appIdA.branch === appIdB.branch;
     }
 
     function clearVisLayoutWest(){
@@ -971,6 +984,7 @@ var Visualizer = (function ($) {
             _topNodeScope = _selectedNode.availableScope;
         }
 
+        _loadedAppId = _nce.getSelectedTabAppId();
         _loadedVisInfoType = _visInfo['@type'];
     }
 

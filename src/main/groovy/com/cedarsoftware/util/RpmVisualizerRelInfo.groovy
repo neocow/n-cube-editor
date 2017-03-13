@@ -489,14 +489,14 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 		scopeValue = visInfo.inputScope[EFFECTIVE_VERSION] ?: appId.version
 		addScopeDefault(scopeDefaults, EFFECTIVE_VERSION, scopeValue)
-		loadAvailableScopeValuesEffectiveVersion(visInfo)
+		//loadAvailableScopeValuesEffectiveVersion(visInfo) TODO: Very slow, commenting out for now
 
 		availableTargetScope.putAll(scopeDefaults)
 	}
 
 	private void addScopeDefault(Map<String, Object> scopeDefaults, String scopeKey, Object value)
 	{
-		addNodeScope(null, scopeKey, true, null)
+		addNodeScope(null, scopeKey, false, true)
 		scopeDefaults[scopeKey] = value
 	}
 
@@ -518,11 +518,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	protected void setLoadAgain(VisualizerInfo visInfo, String scopeKey)
 	{
 		Object scopeValue = visInfo.inputScope[scopeKey]
-		if (availableTargetScope[scopeKey] == scopeValue)
-		{
-			loadAgain = false
-		}
-		else
+		if (availableTargetScope[scopeKey] != scopeValue)
 		{
 			availableTargetScope[scopeKey] = scopeValue
 			targetScope[scopeKey] = scopeValue

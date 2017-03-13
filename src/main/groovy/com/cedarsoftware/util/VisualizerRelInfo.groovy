@@ -314,15 +314,15 @@ class VisualizerRelInfo
 
 	protected void populateScopeDefaults(VisualizerInfo visInfo) {}
 
-	protected void addNodeScope(String cubeName, String scopeKey, boolean skipAvailableScopeValues = false, Map coordinate)
+	protected void addNodeScope(String cubeName, String scopeKey, boolean optional = false, boolean skipAvailableScopeValues = false, Map coordinate = null)
 	{
 		availableScopeValues = availableScopeValues ?: new CaseInsensitiveMap<String, Set<Object>>()
 		scopeCubeNames = scopeCubeNames ?: new CaseInsensitiveMap<String, Set<String>>()
-		addAvailableValues(cubeName, scopeKey, skipAvailableScopeValues, coordinate)
+		addAvailableValues(cubeName, scopeKey, optional, skipAvailableScopeValues, coordinate)
 		addCubeNames(scopeKey, cubeName)
 	}
 
-	private void addAvailableValues(String cubeName, String scopeKey, boolean skipAvailableScopeValues, Map coordinate)
+	private void addAvailableValues(String cubeName, String scopeKey, boolean optional, boolean skipAvailableScopeValues, Map coordinate)
 	{
 		Set<Object> scopeValues = availableScopeValues[scopeKey] as Set ?: new LinkedHashSet()
 		if (skipAvailableScopeValues)
@@ -334,7 +334,14 @@ class VisualizerRelInfo
 			Set scopeValuesThisCube = getColumnValues(cubeName, scopeKey, coordinate)
 			if (availableScopeValues.containsKey(scopeKey))
 			{
-				availableScopeValues[scopeKey] = scopeValues.intersect(scopeValuesThisCube) as Set
+				if (optional)
+				{
+					availableScopeValues[scopeKey].addAll(scopeValuesThisCube)
+				}
+				else
+				{
+					availableScopeValues[scopeKey] = scopeValues.intersect(scopeValuesThisCube) as Set
+				}
 			}
 			else
 			{
