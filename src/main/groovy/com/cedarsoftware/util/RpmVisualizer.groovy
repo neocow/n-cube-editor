@@ -1,7 +1,6 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeManager
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.RpmVisualizerConstants.*

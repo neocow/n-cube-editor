@@ -16,8 +16,6 @@ class VisualizerConstants
 	static final String UNSPECIFIED = 'UNSPECIFIED'
 	static final String NCUBE = 'NCUBE'
 	static final String RULE_NCUBE = 'RULE_NCUBE'
-	static final String STATUS_SUCCESS = 'success'
-	static final String STATUS_INVALID_START_CUBE = 'invalidStartCube'
 
 	static final SafeSimpleDateFormat DATE_TIME_FORMAT = new SafeSimpleDateFormat('yyyy-MM-dd')
 	static final String HTTP = 'http:'

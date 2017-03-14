@@ -16,7 +16,6 @@ final class RpmVisualizerConstants extends VisualizerConstants
 	static final String RPM_ENUM_DOT = 'rpm.enum.'
 	static final String CLASS_TRAITS = 'CLASS_TRAITS'
 	static final String DOT_CLASS_TRAITS = '.classTraits'
-	static final String DOT_TRAITS = '.traits'
 	static final String R_RPM_TYPE = 'r:rpmType'
 	static final String R_EXISTS = 'r:exists'
 	static final String V_ENUM = 'v:enum'

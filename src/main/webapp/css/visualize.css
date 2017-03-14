@@ -142,17 +142,6 @@ h3{
     border: none;
 }
 
-#scopeButton
-{
-    background-image: url('../img/scope.png');
-    cursor:pointer;
-    width: 65px;
-    height: 20px;
-    border: none;
-    outline: none;
-    box-shadow: none;
-}
-
 #networkOptionsSection
 {
     display:none;
@@ -166,7 +155,6 @@ h3{
 .missingValue{
     background-color:#FAFAD2;
 }
-
 
 .defaultValue{
     background-color:#F0F8FF;

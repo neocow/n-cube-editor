@@ -19,7 +19,7 @@ import static com.cedarsoftware.util.VisualizerTestConstants.*
 @CompileStatic
 class RpmVisualizerTest
 {
-   /* static final String PATH_PREFIX = 'rpmvisualizer*//**//*'
+    static final String PATH_PREFIX = 'rpmvisualizer*//**//*'
     static final String DETAILS_LABEL_UTILIZED_SCOPE_WITH_TRAITS = 'Utilized nodeScope with traits'
     static final String DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS = 'Utilized nodeScope with no traits'
     static final String DETAILS_LABEL_FIELDS = 'Fields</b>'
@@ -33,9 +33,9 @@ class RpmVisualizerTest
 
     RpmVisualizer visualizer
     Map inputScope
-    RpmVisualizerScopeInfo scopeInfo
     ApplicationID appId
     Map graphInfo
+    Map scopeInfo //TODO remove
     RpmVisualizerInfo visInfo
     Set messages
     List<Map<String, Object>> nodes
@@ -55,7 +55,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_checkVisInfo()
+    void testLoadGraph_checkVisInfo()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      policyControlDate: '2017-01-01',
@@ -64,18 +64,17 @@ class RpmVisualizerTest
         inputScope = new CaseInsensitiveMap(scope)
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert !visInfo.messages
 
         //Check visInfo
         assert 5 == visInfo.nodes.size()
         assert 4 == visInfo.edges.size()
         assert 4l == visInfo.maxLevel
-        assert 6l == visInfo.nodeCount
+        assert 6l == visInfo.edgeIdCounter
         assert 5l == visInfo.nodeIdCounter
         assert 3l == visInfo.defaultLevel
         assert '_ENUM' == visInfo.groupSuffix
-        assert scope == scopeInfo.nodeScope
 
         Map allGroups =  [PRODUCT: 'Product', FORM: 'Form', RISK: 'Risk', COVERAGE: 'Coverage', CONTAINER: 'Container', DEDUCTIBLE: 'Deductible', LIMIT: 'Limit', RATE: 'Rate', RATEFACTOR: 'Rate Factor', PREMIUM: 'Premium', PARTY: 'Party', PLACE: 'Place', ROLE: 'Role', ROLEPLAYER: 'Role Player', UNSPECIFIED: 'Unspecified']
         assert allGroups == visInfo.allGroups
@@ -92,7 +91,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_canLoadTargetAsRpmClass()
+    void testLoadGraph_canLoadTargetAsRpmClass()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      policyControlDate:'2017-01-01',
@@ -102,7 +101,7 @@ class RpmVisualizerTest
         inputScope = new CaseInsensitiveMap(scope)
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         Map node = checkNodeBasics('Location', 'Risk', UNABLE_TO_LOAD, 'Coverage points directly to Risk via field Location, but there is no risk named Location on Risk.', true)
         checkNoScopePrompt(node.details as String)
@@ -113,13 +112,13 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_checkNodeAndEdge_nonEPM()
+    void testLoadGraph_checkNodeAndEdge_nonEPM()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
         inputScope = new CaseInsensitiveMap(scope)
         String startCubeName = 'rpm.class.partyrole.LossPrevention'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //Top level source node
         Map node = checkNodeBasics('partyrole.LossPrevention', 'partyrole.LossPrevention')
@@ -173,7 +172,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_checkStructure()
+    void testLoadGraph_checkStructure()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      product          : 'WProduct',
@@ -186,7 +185,7 @@ class RpmVisualizerTest
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
 
         assert nodes.size() == 5
         assert edges.size() == 4
@@ -204,7 +203,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_checkStructure_nonEPM()
+    void testLoadGraph_checkStructure_nonEPM()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
         inputScope = new CaseInsensitiveMap(scope)
@@ -212,7 +211,7 @@ class RpmVisualizerTest
         String startCubeName = 'rpm.class.partyrole.LossPrevention'
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
 
         assert nodes.size() == 4
         assert edges.size() == 3
@@ -228,7 +227,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_checkNodeAndEdge()
+    void testLoadGraph_checkNodeAndEdge()
     {
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                      policyControlDate: '2017-01-01',
@@ -248,7 +247,7 @@ class RpmVisualizerTest
 
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //Top level source node
         Map node = checkNodeBasics('FCoverage', 'Coverage')
@@ -316,21 +315,19 @@ class RpmVisualizerTest
         //Build graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         Map node = checkNodeBasics('CCCoverage', 'Coverage')
         assert scope == node.scope
         assert scope == node.availableScope
-        assert scope == scopeInfo.nodeScope
 
         //Simulate that the user clicks Show Traits for the node. Optional nodeScope prompts display.
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNodeBasics('CCCoverage', 'Coverage', '', ADDITIONAL_SCOPE_USED_TO_LOAD_TRAITS, false, true)
         assert scope == node.scope
         assert scope == node.availableScope
-        assert scope == scopeInfo.nodeScope
         String nodeDetails = node.details as String
         assert nodeDetails.contains("Exposure</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre><li><b>")
         assert nodeDetails.contains("Location</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:rpmType: Risk</li><li>v:max: 1</li><li>v:min: 0</li></ul></pre><li><b>")
@@ -356,14 +353,14 @@ class RpmVisualizerTest
         //Build graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert nodes.size() == 2
         Map node = checkNodeBasics('CCCoverage', 'Coverage')
         checkNoScopePrompt(node.details as String)
 
         //Simulate that the user clicks Show Traits for the node
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
 
@@ -383,16 +380,15 @@ class RpmVisualizerTest
 
         //Simulate that the user picks businessDivisionCode = AAADIV
         expectedNodeScope.businessDivisionCode = 'AAADIV'
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.businessDivisionCode = 'AAADIV'
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         node = checkNodeBasics('CCCoverage', 'Coverage', '', ADDITIONAL_SCOPE_USED_TO_LOAD_TRAITS, false, true)
         assert nodes.size() == 1
         assert expectedNodeScope == node.scope
         assert expectedNodeScope == node.availableScope
-        assert scope == scopeInfo.nodeScope
         nodeDetails = node.details as String
         checkScopePromptTitle(nodeDetails, 'businessDivisionCode', false, '  - rpm.nodeScope.class.Coverage.traits.StatCode\n  - rpm.nodeScope.class.Coverage.traits.field1And2\n  - rpm.nodeScope.class.Coverage.traits.field4')
         checkScopePromptDropdown(nodeDetails, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], SELECT_OR_ENTER_VALUE, true)
@@ -429,7 +425,7 @@ class RpmVisualizerTest
         //Build graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         Map node = checkNodeBasics('AdmCoverage', 'Coverage')
         assert scope == node.scope
         assert scope == node.availableScope
@@ -437,22 +433,21 @@ class RpmVisualizerTest
         //Simulate that the user clicks Show Traits for the node.
         //An optional nodeScope prompt for business division code shows.
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
 
         //Simulate that the user picks businessDivisionCode = AAADIV
-        Map expectedNodeScope =  inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        Map expectedNodeScope =  inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         expectedNodeScope.businessDivisionCode = 'AAADIV'
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.businessDivisionCode = 'AAADIV'
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         node = checkNodeBasics('AdmCoverage', 'Coverage', '', '', false, true)
         assert nodes.size() == 1
         assert expectedNodeScope == node.scope
         assert expectedNodeScope == node.availableScope
-        assert scope == scopeInfo.nodeScope
         String nodeDetails = node.details as String
         checkScopePromptTitle(nodeDetails, 'businessDivisionCode', false, 'rpm.nodeScope.class.Coverage.traits.StatCode')
         checkScopePromptDropdown(nodeDetails, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], SELECT_OR_ENTER_VALUE, true)
@@ -476,13 +471,13 @@ class RpmVisualizerTest
         //Build graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert nodes.size() == 5
         Map node = checkEnumNodeBasics("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage")
 
         //Simulate that the user clicks Show Traits for the node
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
 
@@ -508,45 +503,43 @@ class RpmVisualizerTest
         //Build graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert nodes.size() == 1
         Map node = checkNodeBasics('TCoverage', 'Coverage')
 
         //Simulate that the user clicks Show Traits for the node.
         //Required node nodeScope prompt now shows for points.
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNodeBasics('TCoverage', 'Coverage', '', ADDITIONAL_SCOPE_REQUIRED, true, true)
 
         //Simulate that the user picks points = A in the node nodeScope prompt. Node nodeScope contains points.
         expectedNodeScope.points = 'A'
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.points = 'A'
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNodeBasics('TCoverage', 'Coverage', '', ADDITIONAL_SCOPE_USED_TO_LOAD_TRAITS, false, true)
         assert expectedNodeScope == node.scope
         assert expectedNodeScope == node.availableScope
-        assert scope == scopeInfo.nodeScope
 
         //Simulate that the user clicks Hide Traits for the node.
         //No nodeScope prompts show for the node and no traits show. Node nodeScope has been reset.
         node.showCellValues = false
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
         node = checkNodeBasics('TCoverage', 'Coverage')
         checkNoScopePrompt(node.details as String)
         assert scope == node.scope
         assert scope == node.availableScope
-        assert scope == scopeInfo.nodeScope
       }
 
     @Test
-    void testBuildGraph_cubeNotFound()
+    void testLoadGraph_cubeNotFound()
     {
         NCube cube = NCubeManager.getCube(appId, 'rpm.enum.partyrole.BasePartyRole.Parties')
         try
@@ -558,7 +551,7 @@ class RpmVisualizerTest
             String startCubeName = 'rpm.class.partyrole.LossPrevention'
             Map options = [startCubeName: startCubeName, scope: inputScope]
 
-            buildGraph(options, true)
+            loadGraph(options, true)
             assert 1 == messages.size()
             assert 'No cube exists with name of rpm.class.party.NoCubeExists. Cube not included in the visualization.' == messages.first()
         }
@@ -571,7 +564,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_effectiveVersionApplied_beforeFieldAddAndObsolete()
+    void testLoadGraph_effectiveVersionApplied_beforeFieldAddAndObsolete()
     {
         Map scope = [product: 'WProduct',
                      policyControlDate:'2017-01-01',
@@ -581,7 +574,7 @@ class RpmVisualizerTest
         String startCubeName = 'rpm.class.Product'
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
 
         Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
         String nodeDetails = node.details as String
@@ -589,7 +582,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_effectiveVersionApplied_beforeFieldAddAfterFieldObsolete()
+    void testLoadGraph_effectiveVersionApplied_beforeFieldAddAfterFieldObsolete()
     {
         Map scope = [product: 'WProduct',
                      policyControlDate:'2017-01-01',
@@ -600,7 +593,7 @@ class RpmVisualizerTest
         String startCubeName = 'rpm.class.Product'
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
 
         Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
         String nodeDetails = node.details as String
@@ -608,7 +601,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_effectiveVersionApplied_afterFieldAddAndObsolete()
+    void testLoadGraph_effectiveVersionApplied_afterFieldAddAndObsolete()
     {
         Map scope = [product: 'WProduct',
                      policyControlDate:'2017-01-01',
@@ -619,7 +612,7 @@ class RpmVisualizerTest
         String startCubeName = 'rpm.class.Product'
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
 
         Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
         String nodeDetails = node.details as String
@@ -627,7 +620,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_validRpmClass()
+    void testLoadGraph_validRpmClass()
     {
         String startCubeName = 'rpm.class.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
@@ -635,13 +628,13 @@ class RpmVisualizerTest
         inputScope = scope
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
 
         checkValidRpmClass( startCubeName)
     }
 
     @Test
-    void testBuildGraph_validRpmClass_notStartWithRpmClass()
+    void testLoadGraph_validRpmClass_notStartWithRpmClass()
     {
         String startCubeName = 'rpm.klutz.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
@@ -649,28 +642,28 @@ class RpmVisualizerTest
         inputScope = scope
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options, true)
+        loadGraph(options, true)
         assert 1 == messages.size()
         String message = messages.first()
         assert "Starting cube for visualization must begin with 'rpm.class', n-cube ${startCubeName} does not.".toString() == message
     }
 
     @Test
-    void testBuildGraph_validRpmClass_startCubeNotFound()
+    void testLoadGraph_validRpmClass_startCubeNotFound()
     {
         String startCubeName = 'ValidRpmClass'
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
         inputScope = scope
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options, true)
+        loadGraph(options, true)
         assert 1 == messages.size()
         String message = messages.first()
         assert "No cube exists with name of ${startCubeName} for application id ${appId.toString()}".toString() == message
     }
 
     @Test
-    void testBuildGraph_validRpmClass_noTraitAxis()
+    void testLoadGraph_validRpmClass_noTraitAxis()
     {
         String startCubeName = 'rpm.class.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
@@ -681,14 +674,14 @@ class RpmVisualizerTest
         inputScope = scope
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options, true)
+        loadGraph(options, true)
         assert 1 == messages.size()
         String message = messages.first()
         assert "Cube ${startCubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString() == message
     }
 
     @Test
-    void testBuildGraph_validRpmClass_noFieldAxis()
+    void testLoadGraph_validRpmClass_noFieldAxis()
     {
         String startCubeName = 'rpm.class.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
@@ -699,14 +692,14 @@ class RpmVisualizerTest
         inputScope = scope
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options, true)
+        loadGraph(options, true)
         assert 1 == messages.size()
         String message = messages.first()
         assert "Cube ${startCubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString() == message
     }
 
     @Test
-    void testBuildGraph_validRpmClass_noCLASSTRAITSField()
+    void testLoadGraph_validRpmClass_noCLASSTRAITSField()
     {
         String startCubeName = 'rpm.class.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
@@ -717,12 +710,12 @@ class RpmVisualizerTest
         inputScope = scope
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
         checkValidRpmClass( startCubeName)
     }
 
     @Test
-    void testBuildGraph_validRpmClass_noRExistsTrait()
+    void testLoadGraph_validRpmClass_noRExistsTrait()
     {
         String startCubeName = 'rpm.class.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
@@ -733,12 +726,12 @@ class RpmVisualizerTest
         inputScope = scope
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
         checkValidRpmClass(startCubeName)
     }
 
     @Test
-    void testBuildGraph_validRpmClass_noRRpmTypeTrait()
+    void testLoadGraph_validRpmClass_noRRpmTypeTrait()
     {
         String startCubeName = 'rpm.class.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
@@ -749,12 +742,12 @@ class RpmVisualizerTest
         inputScope = scope
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
         checkValidRpmClass( startCubeName)
     }
 
     @Test
-    void testBuildGraph_invokedWithParentVisualizerInfoClass()
+    void testLoadGraph_invokedWithParentVisualizerInfoClass()
     {
         Map scope     = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                          product          : 'WProduct',
@@ -770,7 +763,7 @@ class RpmVisualizerTest
 
         Map options = [startCubeName: startCubeName, scope: inputScope, visInfo: notRpmVisInfo]
 
-        buildGraph(options)
+        loadGraph(options)
 
         assert 'RpmVisualizerInfo' == visInfo.class.simpleName
         assert '_ENUM' ==  visInfo.groupSuffix
@@ -780,7 +773,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_exceptionInMinimumTrait()
+    void testLoadGraph_exceptionInMinimumTrait()
     {
         NCube cube = NCubeManager.getCube(appId, 'rpm.nodeScope.class.Coverage.traits')
         Map coordinate = [(AXIS_FIELD): 'Exposure', (AXIS_TRAIT): R_EXISTS, coverage: 'FCoverage'] as Map
@@ -799,7 +792,7 @@ class RpmVisualizerTest
 
             String startCubeName = 'rpm.class.Product'
             Map options = [startCubeName: startCubeName, scope: inputScope]
-            buildGraph(options)
+            loadGraph(options)
 
             Map node = checkNodeBasics('FCoverage', 'Coverage', UNABLE_TO_LOAD, 'Unable to load the class due to an exception.', true)
             String nodeDetails = node.details as String
@@ -816,33 +809,32 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_graph_initial()
+    void testLoadGraph_scopePrompt_graph_initial()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 1 == nodes.size()
         assert 0 == edges.size()
 
         //Check graph nodeScope prompt
         Map expectedAvailableScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION, policyControlDate: defaultScopeDate, quoteDate: defaultScopeDate] as CaseInsensitiveMap
         Map topNode = nodes.first()
-        assert scopeInfo.nodeScope == expectedAvailableScope
         assert (topNode.scopeMessage as String).contains('Reset nodeScope')
         checkTopNodeScope()
         checkOptionalGraphScope()
     }
 
     @Test
-    void testBuildGraph_scopePrompt_nodes_initial()
+    void testLoadGraph_scopePrompt_nodes_initial()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 1 == nodes.size()
         assert 0 == edges.size()
 
@@ -856,18 +848,18 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_graph_afterProductSelected()
+    void testLoadGraph_scopePrompt_graph_afterProductSelected()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //User picks AProduct. Reload.
         inputScope.product = 'AProduct'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 8 == nodes.size()
         assert 7 == edges.size()
 
@@ -880,18 +872,18 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_nodes_afterProductSelected()
+    void testLoadGraph_scopePrompt_nodes_afterProductSelected()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //User picks AProduct. Reload.
         inputScope.product = 'AProduct'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 8 == nodes.size()
         assert 7 == edges.size()
 
@@ -972,18 +964,18 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_graph_afterInvalidProductEntered()
+    void testLoadGraph_scopePrompt_graph_afterInvalidProductEntered()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //User enters invalid XXXProduct. Reload.
         inputScope.product = 'XXXProduct'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 1 == nodes.size()
         assert 0 == edges.size()
 
@@ -993,18 +985,18 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_nodes_afterInvalidProductEntered()
+    void testLoadGraph_scopePrompt_nodes_afterInvalidProductEntered()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //User enters invalid XXXProduct. Reload.
         inputScope.product = 'XXXProduct'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 1 == nodes.size()
         assert 0 == edges.size()
 
@@ -1021,39 +1013,39 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_graph_afterProductSelected_afterOptionalGraphScopeSelected()
+    void testLoadGraph_scopePrompt_graph_afterProductSelected_afterOptionalGraphScopeSelected()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 1 == nodes.size()
         assert 0 == edges.size()
 
         //User picks AProduct. Reload.
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.product = 'AProduct'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 8 == nodes.size()
         assert 7 == edges.size()
 
         //User picks pgm = pgm1, state = OH and div = div1. Reload after each.
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.pgm = 'pgm1'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.state = 'OH'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.div = 'div1'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
         assert 8 == nodes.size()
         assert 7 == edges.size()
@@ -1066,10 +1058,10 @@ class RpmVisualizerTest
         checkOptionalGraphScope('AProduct', 'pgm1', 'OH', 'div1')
 
         //User changes to div = div3. Reload.
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.div = 'div3'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 8 == nodes.size()
         assert 7 == edges.size()
 
@@ -1084,36 +1076,36 @@ class RpmVisualizerTest
 
 
     @Test
-    void testBuildGraph_scopePrompt_nodes_afterProductSelected_afterOptionalGraphScopeSelected_once()
+    void testLoadGraph_scopePrompt_nodes_afterProductSelected_afterOptionalGraphScopeSelected_once()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //User picks AProduct. Reload.
         inputScope.product = 'AProduct'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 8 == nodes.size()
         assert 7 == edges.size()
 
         //User picks pgm = pgm1, state = OH and div = div1. Reload after each.
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.pgm = 'pgm1'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.state = 'OH'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.div = 'div1'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
         //AProduct has no nodeScope prompt
         Map node = checkNodeBasics('AProduct', 'Product')
@@ -1167,42 +1159,42 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_nodes_afterProductSelected_afterOptionalGraphScopeSelected_twice()
+    void testLoadGraph_scopePrompt_nodes_afterProductSelected_afterOptionalGraphScopeSelected_twice()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //User picks AProduct. Reload.
         inputScope.product = 'AProduct'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 8 == nodes.size()
         assert 7 == edges.size()
 
         //User picks pgm = pgm1, state = OH and div = div1. Reload after each.
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.pgm = 'pgm1'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.state = 'OH'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.div = 'div1'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
 
         //User changes to div = div3. Reload.
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.div = 'div3'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 8 == nodes.size()
         assert 7 == edges.size()
 
@@ -1273,13 +1265,13 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_graph_initial_nonEPM()
+    void testLoadGraph_scopePrompt_graph_initial_nonEPM()
     {
         String startCubeName = 'rpm.class.partyrole.LossPrevention'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
         assert nodes.size() == 4
         assert edges.size() == 3
 
@@ -1289,13 +1281,13 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_nodes_initial_nonEPM()
+    void testLoadGraph_scopePrompt_nodes_initial_nonEPM()
     {
         String startCubeName = 'rpm.class.partyrole.LossPrevention'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
 
-        buildGraph(options)
+        loadGraph(options)
         assert nodes.size() == 4
         assert edges.size() == 3
 
@@ -1307,7 +1299,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_missingRequiredScope_nonEPM()
+    void testLoadGraph_scopePrompt_missingRequiredScope_nonEPM()
     {
         NCube cube = NCubeManager.getCube(appId, 'rpm.class.party.ProfitCenter')
         try
@@ -1318,7 +1310,7 @@ class RpmVisualizerTest
             inputScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
             Map options = [startCubeName: startCubeName, scope: inputScope]
 
-            buildGraph(options)
+            loadGraph(options)
             //TODO:  String scopeMessage = scopeInfo.scopeMessage
 
             //Check graph nodeScope prompt
@@ -1345,7 +1337,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_missingDeclaredRequiredScope()
+    void testLoadGraph_scopePrompt_missingDeclaredRequiredScope()
     {
         NCube cube = NCubeManager.getCube(appId, 'rpm.class.Coverage')
         try
@@ -1363,7 +1355,7 @@ class RpmVisualizerTest
             String startCubeName = 'rpm.class.Risk'
             inputScope = new CaseInsensitiveMap(scope)
             Map options = [startCubeName: startCubeName, scope: inputScope]
-            buildGraph(options)
+            loadGraph(options)
             //TODO:  String scopeMessage = scopeInfo.scopeMessage
 
             //Check graph nodeScope prompt
@@ -1403,16 +1395,15 @@ class RpmVisualizerTest
         //Build graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert nodes.size() == 1
         Map node = checkNodeBasics('TCoverage', 'Coverage')
         checkNoScopePrompt(node.details as String)
-        assert scope == scopeInfo.nodeScope
 
         //Simulate that the user clicks Show Traits for the node.
         //Required node nodeScope prompt now shows for points.
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
 
@@ -1427,14 +1418,13 @@ class RpmVisualizerTest
         checkNoScopePrompt(nodeDetails, 'businessDivisionCode')
         assert expectedNodeScope == node.scope
         assert expectedNodeScope == node.availableScope
-        assert scope == scopeInfo.nodeScope
 
         //Simulate that the user picks points = A in the node nodeScope prompt.
         //Both required nodeScope points and unbound node nodeScope prompt businessDivisionCode are now showing.
         expectedNodeScope.points = 'A'
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.points = 'A'
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
 
@@ -1450,16 +1440,15 @@ class RpmVisualizerTest
         checkScopePromptDropdown(nodeDetails, 'businessDivisionCode', DEFAULT, ['AAADIV', 'BBBDIV', DEFAULT ], [], SELECT_OR_ENTER_VALUE, true)
         assert expectedNodeScope == node.scope
         assert expectedNodeScope == node.availableScope
-        assert scope == scopeInfo.nodeScope
 
         //Simulate that the user picks businessDivisionCode = AAADIV in the node nodeScope prompt.
         //Both nodeScope prompts are still showing.
         expectedNodeScope.points = 'A'
         expectedNodeScope.businessDivisionCode = 'AAADIV'
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.points = 'A'
         inputScope.businessDivisionCode = 'AAADIV'
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
 
@@ -1475,7 +1464,6 @@ class RpmVisualizerTest
         checkScopePromptDropdown(nodeDetails, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT ], [], SELECT_OR_ENTER_VALUE, true)
         assert expectedNodeScope == node.scope
         assert expectedNodeScope == node.availableScope
-        assert scope == scopeInfo.nodeScope
     }
 
     @Test
@@ -1492,16 +1480,15 @@ class RpmVisualizerTest
         //Build graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert nodes.size() == 1
         Map node = checkNodeBasics('TCoverage', 'Coverage')
         checkNoScopePrompt(node.details as String)
-        assert scope == scopeInfo.nodeScope
 
         //Simulate that the user clicks Show Traits for the node.
         //Required node nodeScope prompt now shows for points.
         node.showCellValues = true
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: scopeInfo.nodeScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
 
@@ -1515,14 +1502,13 @@ class RpmVisualizerTest
         checkScopePromptDropdown(nodeDetails, 'points', '', ['A', 'B', 'C' ], [DEFAULT], SELECT_OR_ENTER_VALUE, true)
         assert scope == node.scope
         assert scope == node.availableScope
-        assert scope == scopeInfo.nodeScope
 
         //Simulate that the user enters points = bogus in the node nodeScope prompt.
         //Invalid node nodeScope prompt should now show for points.
         expectedNodeScope.points = 'bogus'
-        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope)
+        inputScope = new CaseInsensitiveMap(scopeInfo.nodeScope as Map)
         inputScope.points = 'bogus'
-        options = [startCubeName: startCubeName, node: node, visInfo: visInfo, scopeInfo: scopeInfo, scope: inputScope]
+        options = [startCubeName: startCubeName, node: node, visInfo: visInfo]
         loadNodeDetails(options)
         assert nodes.size() == 1
 
@@ -1536,12 +1522,11 @@ class RpmVisualizerTest
         checkScopePromptDropdown(nodeDetails, 'points', 'bogus', ['A', 'B', 'C' ], [DEFAULT], SELECT_OR_ENTER_VALUE, true)
         assert scope == node.scope
         assert expectedNodeScope == node.availableScope
-        assert scope == scopeInfo.nodeScope
     }
 
 
     @Test
-    void testBuildGraph_scopePrompt_enumWithSingleDefaultValue()
+    void testLoadGraph_scopePrompt_enumWithSingleDefaultValue()
     {
         String startCubeName = 'rpm.class.Product'
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
@@ -1557,7 +1542,7 @@ class RpmVisualizerTest
         availableScope.sourceFieldName = 'Risks'
 
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 4 == nodes.size()
         assert 3 == edges.size()
 
@@ -1576,7 +1561,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_enumWithMissingRequiredScope()
+    void testLoadGraph_scopePrompt_enumWithMissingRequiredScope()
     {
         String startCubeName = 'rpm.class.Risk'
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
@@ -1589,7 +1574,7 @@ class RpmVisualizerTest
         availableScope.sourceFieldName = 'Coverages'
 
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 2 == nodes.size()
         assert 1 == edges.size()
 
@@ -1610,7 +1595,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_enumWithInvalidRequiredScope()
+    void testLoadGraph_scopePrompt_enumWithInvalidRequiredScope()
     {
         String startCubeName = 'rpm.class.Risk'
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
@@ -1624,7 +1609,7 @@ class RpmVisualizerTest
         availableScope.sourceFieldName = 'Coverages'
 
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 2 == nodes.size()
         assert 1 == edges.size()
 
@@ -1645,7 +1630,7 @@ class RpmVisualizerTest
 
 
     @Test
-    void testBuildGraph_scopePrompt_derivedScopeKey_topNode()
+    void testLoadGraph_scopePrompt_derivedScopeKey_topNode()
     {
         String startCubeName = 'rpm.class.Risk'
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
@@ -1655,7 +1640,7 @@ class RpmVisualizerTest
         inputScope = new CaseInsensitiveMap(scope)
 
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //Check that sourceRisk is now part of top node nodeScope
         List<String> risks = ['ARisk', 'BRisk', 'DRisk', 'GProductOps', 'GStateOps', 'ProductLocation', 'StateOps', 'WProductOps']
@@ -1675,7 +1660,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_scopePrompt_derivedScopeKey_notTopNode()
+    void testLoadGraph_scopePrompt_derivedScopeKey_notTopNode()
     {
         String startCubeName = 'rpm.class.Risk'
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
@@ -1686,7 +1671,7 @@ class RpmVisualizerTest
         inputScope = new CaseInsensitiveMap(scope)
 
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
 
         //Check that sourceRisk is not part of required graph nodeScope
         //TODO: assert !scopeInfo.availableScopeValues.keySet().contains('sourceRisk')
@@ -1699,19 +1684,19 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_inScopeScopeValues_unboundAxis()
+    void testLoadGraph_inScopeScopeValues_unboundAxis()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, scope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 1 == nodes.size()
 
         //User picks GProduct. Reload. This will result in unboundAxis on div.
         inputScope.product = 'GProduct'
         options = [startCubeName: startCubeName, scope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 2 == nodes.size()
 
         //Check graph nodeScope promp
@@ -1723,27 +1708,27 @@ class RpmVisualizerTest
         checkScopePromptDropdown(node.details as String, 'div', 'Default', ['div1', 'div2', DEFAULT], [], SELECT_OR_ENTER_VALUE)
     }
 
-    *//* TODO: Will revisit providing "in nodeScope" available nodeScope values for r:exists at a later time.
+    /* TODO: Will revisit providing "in nodeScope" available nodeScope values for r:exists at a later time.
     @Test
-    void testBuildGraph_inScopeScopeValues_invalidCoordinate()
+    void testLoadGraph_inScopeScopeValues_invalidCoordinate()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, nodeScope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 1 == nodes.size()
 
         //User picks GProduct. Reload.
         inputScope.product = 'GProduct'
         options = [startCubeName: startCubeName, nodeScope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 2 == nodes.size()
 
         //User picks div = div1. Reload. This will result in InvalidCoordinateException due to missing category nodeScope.
         inputScope.div = 'div1'
         options = [startCubeName: startCubeName, nodeScope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 2 == nodes.size()
 
         //Check graph nodeScope prompt
@@ -1756,31 +1741,31 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testBuildGraph_inScopeScopeValues_coordinateNotFound()
+    void testLoadGraph_inScopeScopeValues_coordinateNotFound()
     {
         //Load graph with no nodeScope
         String startCubeName = 'rpm.class.Product'
         inputScope = new CaseInsensitiveMap()
         Map options = [startCubeName: startCubeName, nodeScope: inputScope]
-        buildGraph(options)
+        loadGraph(options)
         assert 1 == nodes.size()
 
         //User picks GProduct. Reload.
         inputScope.product = 'GProduct'
         options = [startCubeName: startCubeName, nodeScope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 2 == nodes.size()
 
         //User picks div = div1. Reload. This will result in InvalidCoordinateException since category is required nodeScope.
         inputScope.div = 'div1'
         options = [startCubeName: startCubeName, nodeScope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 2 == nodes.size()
 
         //User picks category = catBogus. Reload. This will result in CoordinateNotFoundException since catBogus doesn't exist.
         inputScope.category = 'catBogus'
         options = [startCubeName: startCubeName, nodeScope: inputScope, visInfo: visInfo]
-        buildGraph(options)
+        loadGraph(options)
         assert 2 == nodes.size()
 
         //Check graph nodeScope prompt for category
@@ -1791,19 +1776,18 @@ class RpmVisualizerTest
         Map node = checkEnumNodeBasics("${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on GProduct", IS_NOT_VALID_FOR, true)
         checkScopePromptDropdown(node.details as String, 'category', '', ['cat1', 'cat2', 'cat3', 'cat4',  'cat5'], [DEFAULT,], SELECT_OR_ENTER_VALUE)
     }
-    *//*
+    */
 
 
-    /*//*************************************************************************************
+    //*************************************************************************************
 
-    private void buildGraph(Map options, boolean hasMessages = false)
+    private void loadGraph(Map options, boolean hasMessages = false)
     {
         visualizer = new RpmVisualizer()
-        visInfo?.nodes = []
-        visInfo?.edges = []
-        Map graphInfo = visualizer.buildGraph(appId, options)
+        visInfo?.nodes = [:]
+        visInfo?.edges = [:]
+        Map graphInfo = visualizer.loadGraph(appId, options)
         visInfo = graphInfo.visInfo as RpmVisualizerInfo
-        scopeInfo = graphInfo.scopeInfo as RpmVisualizerScopeInfo
         messages = visInfo.messages
         if (!hasMessages)
         {
@@ -1815,11 +1799,8 @@ class RpmVisualizerTest
 
     private void loadNodeDetails(Map options, boolean hasMessages = false)
     {
-        visInfo?.nodes = []
-        visInfo?.edges = []
         Map graphInfo = visualizer.loadNodeDetails(appId, options)
         visInfo = graphInfo.visInfo as RpmVisualizerInfo
-        scopeInfo = graphInfo.scopeInfo as RpmVisualizerScopeInfo
         messages = visInfo.messages
         if (!hasMessages)
         {
@@ -1831,11 +1812,11 @@ class RpmVisualizerTest
 
     private void checkTopNodeScope(String selectedProductName = '')
     {
-        //TODO:
+
         Set<String> scopeKeys = ['policyControlDate', 'quoteDate', '_effectiveVersion', 'product'] as CaseInsensitiveSet
         Set<String> products = ['AProduct', 'BProduct', 'GProduct', 'UProduct', 'WProduct'] as CaseInsensitiveSet
 
-      *//*  assert 4 == scopeInfo.availableScopeValues.keySet().size()
+       /* assert 4 == scopeInfo.availableScopeValues.keySet().size()
         assert scopeInfo.availableScopeValues.keySet().containsAll(scopeKeys)
         assert 0 == scopeInfo.availableScopeValues.policyControlDate.size()
         assert 0 == scopeInfo.availableScopeValues.quoteDate.size()
@@ -1861,13 +1842,13 @@ class RpmVisualizerTest
         checkScopePromptDropdown(scopeMessage, 'policyControlDate', "${defaultScopeDate}", [], [DEFAULT], ENTER_VALUE)
         checkScopePromptDropdown(scopeMessage, 'quoteDate', "${defaultScopeDate}", [], [DEFAULT], ENTER_VALUE)
         checkScopePromptDropdown(scopeMessage, '_effectiveVersion', "${ApplicationID.DEFAULT_VERSION}", [], [DEFAULT], SELECT_OR_ENTER_VALUE)
-        checkScopePromptDropdown(scopeMessage, 'product', "${selectedProductName}", products as List, [DEFAULT], SELECT_OR_ENTER_VALUE)*//*
+        checkScopePromptDropdown(scopeMessage, 'product', "${selectedProductName}", products as List, [DEFAULT], SELECT_OR_ENTER_VALUE)*/
     }
 
     private void checkOptionalGraphScope(String selectedProductName = '', String selectedPgmName = '', String selectedStateName = 'Default', selectedDivName = 'Default', boolean includeStateNM = false)
     {
         //TODO:
-      *//*  Set<String> scopeKeys = ['pgm', 'state', 'div'] as CaseInsensitiveSet
+      /*  Set<String> scopeKeys = ['pgm', 'state', 'div'] as CaseInsensitiveSet
         String scopeMessage = scopeInfo.scopeMessage
 
         if (selectedProductName)
@@ -1937,13 +1918,12 @@ class RpmVisualizerTest
         {
             assert 0 == scopeInfo.optionalGraphScopeAvailableValues.keySet().size()
             assert 0 == scopeInfo.optionalGraphScopeCubeNames.keySet().size()
-        }*//*
+        }*/
     }
 
     private void checkGraphScopeNonEPM()
     {
-        //TODO:
-       *//* assert 1 == scopeInfo.availableScopeValues.keySet().size()
+       /* assert 1 == scopeInfo.availableScopeValues.keySet().size()
         assert scopeInfo.availableScopeValues.keySet().contains('_effectiveVersion')
         assert 1 == scopeInfo.availableScopeValues._effectiveVersion.size()
         assert [ApplicationID.DEFAULT_VERSION] as Set == scopeInfo.availableScopeValues._effectiveVersion as Set
@@ -1959,7 +1939,7 @@ class RpmVisualizerTest
         assert scopeMessage.contains("""<input id="_effectiveVersion" value="${ApplicationID.DEFAULT_VERSION}" placeholder="Select or enter value..." class="scopeInput form-control """)
 
         assert 0 == scopeInfo.optionalGraphScopeAvailableValues.keySet().size()
-        assert 0 == scopeInfo.optionalGraphScopeCubeNames.keySet().size()*//*
+        assert 0 == scopeInfo.optionalGraphScopeCubeNames.keySet().size()*/
     }
 
     private Map checkNodeBasics(String nodeName, String nodeType, String nodeNamePrefix = '', String nodeDetailsMessage = '', boolean unableToLoad = false, boolean showCellValues = false)
@@ -2077,7 +2057,7 @@ class RpmVisualizerTest
 
     private static void checkScopePromptDropdown(String message, String scopeKey, String selectedScopeValue, List<String> availableScopeValues, List<String> unavailableScopeValues, String placeHolder, boolean showCellValues = false)
     {
-        String loadCellValuesClass = showCellValues ? DETAILS_CLASS_LOAD_CELL_VALUES : ''
+        String loadCellValuesClass = showCellValues ? DETAILS_CLASS_CELL_VALUES : ''
         //TODO: Add check for highlighted class
         assert message.contains("""<input id="${scopeKey}" value="${selectedScopeValue}" placeholder="${placeHolder}" class="scopeInput form-control ${loadCellValuesClass} """)
         if (!availableScopeValues && !unavailableScopeValues)
@@ -2114,7 +2094,7 @@ class RpmVisualizerTest
         assert UNSPECIFIED == node.group
         assert null == node.fromFieldName
         assert '1' ==  node.level
-        assert scopeInfo.nodeScope == node.scope
+        //TODO: assert scopeInfo.nodeScope == node.scope
         String nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS)
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}<pre><ul></ul></pre>")
@@ -2140,10 +2120,10 @@ class RpmVisualizerTest
     private void checkTCoverageGraphScopePrompt()
     {
         //TODO:
-       *//* Set<String> scopeKeys = ['policyControlDate', 'quoteDate', '_effectiveVersion', 'coverage'] as CaseInsensitiveSet
+        /* Set<String> scopeKeys = ['policyControlDate', 'quoteDate', '_effectiveVersion', 'coverage'] as CaseInsensitiveSet
         assert 4 == scopeInfo.availableScopeValues.keySet().size()
         assert scopeInfo.scopeCubeNames.keySet().containsAll(scopeKeys)
-        assert 0 == scopeInfo.optionalGraphScopeAvailableValues.keySet().size()*//*
-    }*/
+        assert 0 == scopeInfo.optionalGraphScopeAvailableValues.keySet().size()*/
+    }
 
 }

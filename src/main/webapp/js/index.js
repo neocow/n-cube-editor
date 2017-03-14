@@ -1376,7 +1376,6 @@ var NCE = (function ($) {
             call: call,
             clearNote: clearNote,
             clearNotes: clearNotes,
-            hasNote: hasNote,
             displayMap: displayMap,
             doesCubeExist: doesCubeExist,
             ensureModifiable: ensureModifiable,
@@ -5003,11 +5002,11 @@ var NCE = (function ($) {
         }, MINUTE_TIMEOUT);
     }
 
-    function showNote(msg, title, millis, noteClass, image) {
+    function showNote(msg, title, millis, noteClass) {
         var noteId = $.gritter.add({
             title: (title || 'Note'),
             text: msg,
-            image: image ? image : CUBE_IMAGE,
+            image: './img/cube-logo.png',
             sticky: !millis,
             append: false,
             time: (millis || 0),
@@ -5063,10 +5062,6 @@ var NCE = (function ($) {
         } else {
             $.gritter.removeAll();
         }
-    }
-
-    function hasNote(noteClass){
-        return $('.gritter-item-wrapper.' + noteClass).length > 0;
     }
     
     function isHeadSelected() {

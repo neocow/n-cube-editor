@@ -573,6 +573,4 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 <b>Unable to load the class. ${sourceCubeDisplayName} points directly to ${targetCubeDisplayName} via field ${sourceFieldName}, but \
 there is no ${type.toLowerCase()} named ${sourceFieldName} on ${type}.</b> ${DOUBLE_BREAK}"""
 	}
-
-
 }
