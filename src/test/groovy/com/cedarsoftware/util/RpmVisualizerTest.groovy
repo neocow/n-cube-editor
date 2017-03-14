@@ -38,8 +38,8 @@ class RpmVisualizerTest
     Map scopeInfo //TODO remove
     RpmVisualizerInfo visInfo
     Set messages
-    List<Map<String, Object>> nodes
-    List<Map<String, Object>> edges
+    Map<Long, Map<String, Object>> nodes
+    Map<Long, Map<String, Object>> edges
 
     @Before
     void beforeTest(){
@@ -133,7 +133,7 @@ class RpmVisualizerTest
         assert (node.details as String).contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>roleRefCode</li><li>Parties</li></ul></pre>")
 
         //Edge from top level node to enum
-        Map edge = edges.find { Map edge -> 'partyrole.LossPrevention' == edge.fromName && 'partyrole.BasePartyRole.Parties' == edge.toName}
+        Map edge = edges.values().find { Map edge -> 'partyrole.LossPrevention' == edge.fromName && 'partyrole.BasePartyRole.Parties' == edge.toName}
         assert 'Parties' == edge.fromFieldName
         assert '2' == edge.level
         assert 'Parties' == edge.label
@@ -152,7 +152,7 @@ class RpmVisualizerTest
         assert (node.details as String).contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>party.MoreNamedInsured</li><li>party.ProfitCenter</li></ul></pre>")
 
         //Edge from enum to target node
-        edge = edges.find { Map edge1 -> 'partyrole.BasePartyRole.Parties' == edge1.fromName && 'party.ProfitCenter' == edge1.toName}
+        edge = edges.values().find { Map edge1 -> 'partyrole.BasePartyRole.Parties' == edge1.fromName && 'party.ProfitCenter' == edge1.toName}
         assert 'party.ProfitCenter' == edge.fromFieldName
         assert '3' == edge.level
         assert !edge.label
@@ -190,16 +190,16 @@ class RpmVisualizerTest
         assert nodes.size() == 5
         assert edges.size() == 4
 
-        assert nodes.find { Map node -> 'FCoverage' == node.label}
-        assert nodes.find { Map node -> 'ICoverage' == node.label}
-        assert nodes.find { Map node -> 'CCCoverage' == node.label}
-        assert nodes.find { Map node -> "${UNABLE_TO_LOAD}Location".toString() == node.label}
-        assert nodes.find { Map node -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage".toString() == node.title}
+        assert nodes.values().find { Map node -> 'FCoverage' == node.label}
+        assert nodes.values().find { Map node -> 'ICoverage' == node.label}
+        assert nodes.values().find { Map node -> 'CCCoverage' == node.label}
+        assert nodes.values().find { Map node -> "${UNABLE_TO_LOAD}Location".toString() == node.label}
+        assert nodes.values().find { Map node -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage".toString() == node.title}
 
-        assert edges.find { Map edge -> 'FCoverage' == edge.fromName && 'Coverage.Coverages' == edge.toName}
-        assert edges.find { Map edge -> 'Coverage.Coverages' == edge.fromName && 'ICoverage' == edge.toName}
-        assert edges.find { Map edge -> 'Coverage.Coverages' == edge.fromName && 'CCCoverage' == edge.toName}
-        assert edges.find { Map edge -> 'CCCoverage' == edge.fromName && 'Location' == edge.toName}
+        assert edges.values().find { Map edge -> 'FCoverage' == edge.fromName && 'Coverage.Coverages' == edge.toName}
+        assert edges.values().find { Map edge -> 'Coverage.Coverages' == edge.fromName && 'ICoverage' == edge.toName}
+        assert edges.values().find { Map edge -> 'Coverage.Coverages' == edge.fromName && 'CCCoverage' == edge.toName}
+        assert edges.values().find { Map edge -> 'CCCoverage' == edge.fromName && 'Location' == edge.toName}
     }
 
     @Test
@@ -216,14 +216,14 @@ class RpmVisualizerTest
         assert nodes.size() == 4
         assert edges.size() == 3
 
-        assert nodes.find { Map node ->'rpm.class.partyrole.LossPrevention' == node.cubeName}
-        assert nodes.find { Map node ->'rpm.class.party.MoreNamedInsured' == node.cubeName}
-        assert nodes.find { Map node ->'rpm.class.party.ProfitCenter' == node.cubeName}
-        assert nodes.find { Map node ->'rpm.enum.partyrole.BasePartyRole.Parties' == node.cubeName}
+        assert nodes.values().find { Map node ->'rpm.class.partyrole.LossPrevention' == node.cubeName}
+        assert nodes.values().find { Map node ->'rpm.class.party.MoreNamedInsured' == node.cubeName}
+        assert nodes.values().find { Map node ->'rpm.class.party.ProfitCenter' == node.cubeName}
+        assert nodes.values().find { Map node ->'rpm.enum.partyrole.BasePartyRole.Parties' == node.cubeName}
 
-        assert edges.find { Map edge ->'partyrole.BasePartyRole.Parties' == edge.fromName && 'party.ProfitCenter' == edge.toName}
-        assert edges.find { Map edge ->'partyrole.BasePartyRole.Parties' == edge.fromName && 'party.MoreNamedInsured' == edge.toName}
-        assert edges.find { Map edge ->'partyrole.LossPrevention' == edge.fromName && 'partyrole.BasePartyRole.Parties' == edge.toName}
+        assert edges.values().find { Map edge ->'partyrole.BasePartyRole.Parties' == edge.fromName && 'party.ProfitCenter' == edge.toName}
+        assert edges.values().find { Map edge ->'partyrole.BasePartyRole.Parties' == edge.fromName && 'party.MoreNamedInsured' == edge.toName}
+        assert edges.values().find { Map edge ->'partyrole.LossPrevention' == edge.fromName && 'partyrole.BasePartyRole.Parties' == edge.toName}
     }
 
     @Test
@@ -263,7 +263,7 @@ class RpmVisualizerTest
         assert (node.details as String).contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>Coverages</li><li>Exposure</li><li>StatCode</li></ul></pre>")
 
         //Edge from top level node to enum
-        Map edge = edges.find { Map edge -> 'FCoverage' == edge.fromName && 'Coverage.Coverages' == edge.toName}
+        Map edge = edges.values().find { Map edge -> 'FCoverage' == edge.fromName && 'Coverage.Coverages' == edge.toName}
         assert 'Coverages' == edge.fromFieldName
         assert '2' == edge.level
         assert 'Coverages' == edge.label
@@ -283,7 +283,7 @@ class RpmVisualizerTest
         assert (node.details as String).contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>CCCoverage</li><li>ICoverage</li></ul></pre>")
 
         //Edge from enum to target node
-        edge = edges.find { Map edge1 -> 'Coverage.Coverages' == edge1.fromName && 'CCCoverage' == edge1.toName}
+        edge = edges.values().find { Map edge1 -> 'Coverage.Coverages' == edge1.fromName && 'CCCoverage' == edge1.toName}
         assert 'CCCoverage' == edge.fromFieldName
         assert '3' == edge.level
         assert !edge.label
@@ -576,7 +576,7 @@ class RpmVisualizerTest
 
         loadGraph(options)
 
-        Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
+        Map node = nodes.values().find { Map node1 -> 'WProduct' == node1.label}
         String nodeDetails = node.details as String
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>CurrentCommission</li><li>CurrentExposure</li><li>Risks</li><li>fieldObsolete101</li></ul></pre>")
     }
@@ -595,7 +595,7 @@ class RpmVisualizerTest
 
         loadGraph(options)
 
-        Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
+        Map node = nodes.values().find { Map node1 -> 'WProduct' == node1.label}
         String nodeDetails = node.details as String
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>CurrentCommission</li><li>CurrentExposure</li><li>Risks</li></ul></pre>")
     }
@@ -614,7 +614,7 @@ class RpmVisualizerTest
 
         loadGraph(options)
 
-        Map node = nodes.find { Map node1 -> 'WProduct' == node1.label}
+        Map node = nodes.values().find { Map node1 -> 'WProduct' == node1.label}
         String nodeDetails = node.details as String
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>CurrentCommission</li><li>CurrentExposure</li><li>Risks</li><li>fieldAdded102</li></ul></pre>")
     }
@@ -768,7 +768,7 @@ class RpmVisualizerTest
         assert 'RpmVisualizerInfo' == visInfo.class.simpleName
         assert '_ENUM' ==  visInfo.groupSuffix
 
-        Map node = nodes.find { Map node ->'FCoverage' == node.label}
+        Map node = nodes.values().find { Map node ->'FCoverage' == node.label}
         assert 'COVERAGE' == node.group
     }
 
@@ -821,7 +821,7 @@ class RpmVisualizerTest
 
         //Check graph nodeScope prompt
         Map expectedAvailableScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION, policyControlDate: defaultScopeDate, quoteDate: defaultScopeDate] as CaseInsensitiveMap
-        Map topNode = nodes.first()
+        Map topNode = nodes[1] as Map
         assert (topNode.scopeMessage as String).contains('Reset nodeScope')
         checkTopNodeScope()
         checkOptionalGraphScope()
@@ -1547,7 +1547,7 @@ class RpmVisualizerTest
         assert 3 == edges.size()
 
         //The edge for field Risks from BProduct to enum Product.Risks
-        Map edge = edges.find { Map edge -> 'BProduct' == edge.fromName && 'Product.Risks' == edge.toName}
+        Map edge = edges.values().find { Map edge -> 'BProduct' == edge.fromName && 'Product.Risks' == edge.toName}
         assert 'Risks' == edge.label
         assert "Field Risks cardinality ${V_MIN_CARDINALITY}:${V_MAX_CARDINALITY}".toString() == edge.title
 
@@ -1579,7 +1579,7 @@ class RpmVisualizerTest
         assert 1 == edges.size()
 
         //The edge for field Coverages from DRisk to enum Risk.Coverages
-        Map edge = edges.find { Map edge -> 'DRisk' == edge.fromName && 'Risk.Coverages' == edge.toName}
+        Map edge = edges.values().find { Map edge -> 'DRisk' == edge.fromName && 'Risk.Coverages' == edge.toName}
         assert "${ADDITIONAL_SCOPE_REQUIRED_FOR}Coverages".toString() == edge.label
         assert "Field Coverages cardinality ${V_MIN_CARDINALITY}:${V_MAX_CARDINALITY}".toString() == edge.title
 
@@ -1614,7 +1614,7 @@ class RpmVisualizerTest
         assert 1 == edges.size()
 
         //The edge for field Coverages from DRisk to enum Risk.Coverages
-        Map edge = edges.find { Map edge -> 'DRisk' == edge.fromName && 'Risk.Coverages' == edge.toName}
+        Map edge = edges.values().find { Map edge -> 'DRisk' == edge.fromName && 'Risk.Coverages' == edge.toName}
         assert "${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}Coverages".toString() == edge.label
         assert "Field Coverages cardinality ${V_MIN_CARDINALITY}:${V_MAX_CARDINALITY}".toString() == edge.title
 
@@ -1793,8 +1793,8 @@ class RpmVisualizerTest
         {
             assert !messages
         }
-        nodes = visInfo.nodes as List
-        edges = visInfo.edges as List
+        nodes = visInfo.nodes as Map
+        edges = visInfo.edges as Map
     }
 
     private void loadNodeDetails(Map options, boolean hasMessages = false)
@@ -1806,8 +1806,8 @@ class RpmVisualizerTest
         {
             assert !messages
         }
-        nodes = visInfo.nodes as List
-        edges = visInfo.edges as List
+        nodes = visInfo.nodes as Map
+        edges = visInfo.edges as Map
     }
 
     private void checkTopNodeScope(String selectedProductName = '')
@@ -1944,7 +1944,7 @@ class RpmVisualizerTest
 
     private Map checkNodeBasics(String nodeName, String nodeType, String nodeNamePrefix = '', String nodeDetailsMessage = '', boolean unableToLoad = false, boolean showCellValues = false)
     {
-        Map node = nodes.find {Map node1 ->  "${nodeNamePrefix}${nodeName}".toString() == node1.label}
+        Map node = nodes.values().find {Map node1 ->  "${nodeNamePrefix}${nodeName}".toString() == node1.label}
         checkNodeAndEnumNodeBasics(node, unableToLoad, showCellValues)
         assert nodeType == node.title
         assert nodeType == node.detailsTitle1
@@ -1966,7 +1966,7 @@ class RpmVisualizerTest
 
     private Map checkEnumNodeBasics(String nodeTitle, String nodeDetailsMessage = '', boolean unableToLoad = false, boolean showCellValues = false)
     {
-        Map node = nodes.find {Map node1 ->  nodeTitle == node1.title}
+        Map node = nodes.values().find {Map node1 ->  nodeTitle == node1.title}
         checkNodeAndEnumNodeBasics(node, unableToLoad, showCellValues)
         assert null == node.label
         assert nodeTitle == node.detailsTitle1
@@ -2085,7 +2085,7 @@ class RpmVisualizerTest
     {
         assert nodes.size() == 1
         assert edges.size() == 0
-        Map node = nodes.find { startCubeName == (it as Map).cubeName}
+        Map node = nodes.values().find { startCubeName == (it as Map).cubeName}
         assert 'ValidRpmClass' == node.title
         assert 'ValidRpmClass' == node.detailsTitle1
         assert null == node.detailsTitle2
