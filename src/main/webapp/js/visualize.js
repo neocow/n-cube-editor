@@ -154,10 +154,6 @@ var Visualizer = (function ($) {
                 //updateNetworkOptions();
             });
 
-           /* $('#scopeButton').click(function () {
-             scopeButtonClick();
-             });*/
-
             _findNode.on('change', function () {
                 var nodeLabel, nodeLabelLowerCase, nodes, nodeId, note, k, kLen, node, linkText, sourceDescription;
                 nodeLabel = _findNode.val();
