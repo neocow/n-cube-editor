@@ -1356,7 +1356,7 @@ var Visualizer = (function ($) {
             }
             else {
                 _keepCurrentScope = true;
-                _topNodeScope = _selectedNode.scope;
+                _topNodeScope = _selectedNode.availableScope;
                 _selectedNode = null;
                 _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
             }
