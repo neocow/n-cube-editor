@@ -3099,28 +3099,29 @@ var NCubeEditor2 = (function ($) {
             title: 'Metaproperties - ' + metaPropertyOptions.objectName,
             instructionsTitle: 'Instructions - Metaproperties',
             instructionsText: 'Add custom properties for this ' + metaPropertyOptions.objectType + '.',
+            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
             columns: {
                 key: {
                     heading: 'Key',
-                    type: PropertyBuilder.COLUMN_TYPES.TEXT
+                    type: FormBuilder.INPUT_TYPE.TEXT
                 },
                 dataType: {
                     heading: 'Type',
-                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
+                    type: FormBuilder.INPUT_TYPE.SELECT,
                     default: 'string',
                     selectOptions: METAPROPERTIES.DATA_TYPE_LIST
                 },
                 isUrl: {
                     heading: 'Url',
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX
                 },
                 isCached: {
                     heading: 'Cached',
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX
                 },
                 value: {
                     heading: 'Value',
-                    type: PropertyBuilder.COLUMN_TYPES.TEXT
+                    type: FormBuilder.INPUT_TYPE.TEXT
                 }
             },
             readonly: metaPropertyOptions.readonly,
@@ -3145,7 +3146,7 @@ var NCubeEditor2 = (function ($) {
         };
 
         addHotBeforeKeyDown();
-        PropertyBuilder.openBuilderModal(builderOptions, metaProperties);
+        FormBuilder.openBuilderModal(builderOptions, metaProperties);
     }
 
     // ===================================== End Edit Metaproperties ===================================================
@@ -3771,27 +3772,27 @@ var NCubeEditor2 = (function ($) {
             columns: {
                 isApplied: {
                     heading: 'Apply',
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX,
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
                     default: true
                 },
                 column: {
                     heading: 'Column',
-                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
+                    type: FormBuilder.INPUT_TYPE.SELECT,
                     selectOptions: columnSelectList
                 },
                 comparator: {
                     heading: 'Comparator',
-                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
+                    type: FormBuilder.INPUT_TYPE.SELECT,
                     selectOptions: FILTER_COMPARATOR_LIST,
                     default: FILTER_COMPARATOR_LIST[0]
                 },
                 expressionValue: {
                     heading: 'Comparison Value',
-                    type: PropertyBuilder.COLUMN_TYPES.TEXT
+                    type: FormBuilder.INPUT_TYPE.TEXT
                 },
                 isIncludeAll: {
                     heading: 'Include Empty Cells',
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX,
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
                     default: true
                 }
             },
@@ -3802,7 +3803,7 @@ var NCubeEditor2 = (function ($) {
         };
 
         addHotBeforeKeyDown();
-        PropertyBuilder.openBuilderModal(builderOptions, _filters);
+        FormBuilder.openBuilderModal(builderOptions, _filters);
     }
 
     // =============================================== End Filtering ===================================================
@@ -4649,109 +4650,138 @@ var NCubeEditor2 = (function ($) {
     }
 
     function updateAxis(axisName) {
-        var result, axis, isRule, isNearest, metaProps;
+        var builderOptions, axis, metaProps;
         var appId = nce.getSelectedTabAppId();
-        var modifiable = checkCubeUpdatePermissions(axisName);
-        _updateAxisModal.find('input').not('.always-disabled').attr('disabled', !modifiable);
-        $('#updateAxisOk').toggle(modifiable);
-
-        result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [appId, cubeName, axisName]);
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [appId, cubeName, axisName]);
         if (result.status) {
             axis = result.data;
         } else {
             nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
-        isRule = axis.type.name === 'RULE';
-        isNearest = axis.type.name === 'NEAREST';
-        _updateAxisName.val(axisName);
-        _updateAxisTypeName.val(axis.type.name);
-        _updateAxisValueTypeName.val(axis.valueType.name);
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol !== null});
-        if (isRule) {
-            showHideAxisSortOption();
-            showHideAxisDefaultColumnOption(axis);
-            showHideAxisFireAllOption(axis);
-        }
-        else if (isNearest) {
-            showHideAxisSortOption();
-            showHideAxisDefaultColumnOption();
-            showHideAxisFireAllOption();
-        }
-        else {
-            showHideAxisSortOption(axis);
-            showHideAxisDefaultColumnOption(axis);
-            showHideAxisFireAllOption();
-        }
 
-        if (axis.isRef) {
-            _updateAxisSortOrder.prop('disabled', true);
-            metaProps = axis.metaProps;
-            _refAxisGroupUpdate.show();
-            _isRefAxisUpdate[0].checked = true;
-            _hasRefFilterUpdate[0].checked = metaProps.transformApp;
-            _refFilterGroupUpdate.toggle(metaProps.transformApp);
-            if (!metaProps.transformApp) {
-                _refFilterGroupUpdate.find('input').val('');
+        metaProps = axis.metaProps || {};
+        builderOptions = {
+            title: 'Update Axis - ' + axisName,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: !checkCubeUpdatePermissions(axisName),
+            afterSave: function(data) {
+                updateAxisOk(axisName, data);
+            },
+            formInputs: {
+                name: {
+                    label: 'Axis name',
+                    data: axis.name
+                },
+                refSectionStart: {
+                    label: 'Reference Axis',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    hidden: !axis.isRef,
+                    readonly: true,
+                    formInputs: {
+                        refApp: {
+                            label: 'Application',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            data: metaProps.referenceApp
+                        },
+                        refVer: {
+                            label: 'Version',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            data: metaProps.referenceVersion
+                        },
+                        refCube: {
+                            label: 'Cube',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            data: metaProps.referenceCubeName
+                        },
+                        refAxis: {
+                            label: 'Axis',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            data: metaProps.referenceAxisName
+                        }
+                    }
+                },
+                transformSectionStart: {
+                    label: 'Transform',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    hidden: !metaProps.transformApp,
+                    readonly: true,
+                    formInputs: {
+                        transApp: {
+                            label: 'Application',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            readonly: true,
+                            hidden: !metaProps.transformApp,
+                            data: metaProps.transformApp
+                        },
+                        transVer: {
+                            label: 'Version',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            readonly: true,
+                            hidden: !metaProps.transformApp,
+                            data: metaProps.transformVersion
+                        },
+                        transCube: {
+                            label: 'Cube',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            readonly: true,
+                            hidden: !metaProps.transformApp,
+                            data: metaProps.transformCubeName
+                        },
+                        transMeth: {
+                            label: 'Method',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            readonly: true,
+                            hidden: !metaProps.transformApp,
+                            data: metaProps.transformMethodName
+                        }
+                    }
+                },
+                type: {
+                    label: 'Axis type (Discrete, Range, Set, Nearest, Rule)',
+                    readonly: true,
+                    data: axis.type.name
+                },
+                valueType: {
+                    label: 'Column data type (String, Date, Integer, ...)',
+                    readonly: true,
+                    data: axis.valueType.name
+                },
+                default: {
+                    label: 'Has Default Column',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    hidden: axis.type.name === 'NEAREST',
+                    data: axis.defaultCol,
+                    default: false
+                },
+                sorted: {
+                    label: 'Sorted',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    readonly: axis.isRef,
+                    hidden: ['RULE','NEAREST'].indexOf(axis.type.name) > -1,
+                    data: axis.preferredOrder,
+                    default: false
+                },
+                fireAll: {
+                    label: 'Fire all matching (versus first matching)',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    hidden: axis.type.name !== 'RULE',
+                    data: axis.fireAll,
+                    default: false
+                }
             }
-            _refAxisBranchUpdate.val(metaProps.referenceBranch);
-            _refAxisStatusUpdate.val(metaProps.referenceStatus);
-            _refAxisAppUpdate.val(metaProps.referenceApp);
-            _refAxisVersionUpdate.val(metaProps.referenceVersion);
-            _refAxisCubeUpdate.val(metaProps.referenceCubeName);
-            _refAxisAxisUpdate.val(metaProps.referenceAxisName);
-            _refFilterBranchUpdate.val(metaProps.transformBranch);
-            _refFilterStatusUpdate.val(metaProps.transformStatus);
-            _refFilterAppUpdate.val(metaProps.transformApp);
-            _refFilterVersionUpdate.val(metaProps.transformVersion);
-            _refFilterCubeUpdate.val(metaProps.transformCubeName);
-            _refFilterMethodUpdate.val(metaProps.transformMethodName);
-        } else {
-            _refAxisGroupUpdate.hide();
-            _refFilterGroupUpdate.hide();
-            _isRefAxisUpdate[0].checked = false;
-            _hasRefFilterUpdate[0].checked = false;
-            _refAxisGroupUpdate.find('input').val('');
-            _refFilterGroupUpdate.find('input').val('');
-        }
+        };
 
-        _axisName = axisName;
-        _updateAxisModal.modal({
-            keyboard: true
-        });
+        addHotBeforeKeyDown();
+        FormBuilder.openBuilderModal(builderOptions);
     }
 
-    function showHideUpdateAxisOption(axis, rowEl, checkEl, val) {
-        var show = !!axis;
-        rowEl.toggle(show);
-        if (show) {
-            checkEl[0].checked = val;
-        }
-    }
-
-    function showHideAxisSortOption(axis) {
-        showHideUpdateAxisOption(axis, $('#updateAxisSortOrderRow'), _updateAxisSortOrder, !(axis || {}).preferredOrder);
-    }
-
-    function showHideAxisDefaultColumnOption(axis) {
-        showHideUpdateAxisOption(axis, $('#updateAxisDefaultColRow'), $('#updateAxisDefaultCol'), (axis || {}).defaultCol !== null);
-    }
-
-    function showHideAxisFireAllOption(axis) {
-        showHideUpdateAxisOption(axis, $('#updateAxisFireAllRow'), $('#updateAxisFireAll'), (axis || {}).fireAll);
-    }
-
-    function updateAxisOk() {
-        var axisName, hasDefault, sortOrder, fireAll, result, oldName, newName, order;
-        _updateAxisModal.modal('hide');
-        axisName = $('#updateAxisName').val();
-        hasDefault = $('#updateAxisDefaultCol')[0].checked;
-        sortOrder = _updateAxisSortOrder[0].checked;
-        fireAll = $('#updateAxisFireAll')[0].checked;
-        result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_AXIS, [nce.getSelectedTabAppId(), cubeName, _axisName, axisName, hasDefault, sortOrder, fireAll]);
+    function updateAxisOk(oldAxisName, data) {
+        var result, oldName, newName, order;
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_AXIS, [nce.getSelectedTabAppId(), cubeName, oldAxisName, data.name, data.default || false, data.sorted || false, data.fireAll || false]);
         if (result.status) {
-            oldName = _axisName.toLowerCase();
-            newName = axisName.toLowerCase();
+            oldName = oldAxisName.toLowerCase();
+            newName = data.name.toLowerCase();
             if (oldName !== newName) {
                 callUpdateMetaPropertiesForDefaultCubeView(true);
                 _hiddenColumns[newName] = _hiddenColumns[oldName];

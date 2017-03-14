@@ -233,131 +233,6 @@
     </div>
 </div>
 
-<!-- Update Axis Modal -->
-<div id="updateAxisModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="updateAxisLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="updateAxisLabel" class="modal-title">Update Axis</h3>
-            </div>
-            <div class="modal-body">
-                <form role="form">
-                    <div class="form-group">
-                        <label for="updateAxisName">Axis name</label>
-                        <input id="updateAxisName" type="text" class="form-control">
-                    </div>
-                    <div id="refAxisGroupUpdate" style="display:none;">
-                        <div class="form-group">
-                            <div class="checkbox">
-                                <label>
-                                    <input id="isRefAxisUpdate" type="checkbox" disabled="disabled" class="always-disabled"> Reference Axis
-                                </label>
-                            </div>
-                        </div>
-                        <div class="axisTable">
-                            <div class="axisTableRow">
-                                <div class="axisTableCellLeft">Application:</div>
-                                <div class="axisTableCellRight">
-                                    <input id="refAxisAppUpdate" type="text" class="form-control input-sm" readonly>
-
-                                </div>
-                            </div>
-                            <div class="axisTableRow">
-                                <div class="axisTableCellLeft">Version:</div>
-                                <div class="axisTableCellRight">
-                                    <input id="refAxisVersionUpdate" type="text" class="form-control input-sm" readonly>
-                                </div>
-                            </div>
-                            <div class="axisTableRow">
-                                <div class="axisTableCellLeft">Cube:</div>
-                                <div class="axisTableCellRight">
-                                    <input id="refAxisCubeUpdate" type="text" class="form-control input-sm" readonly>
-                                </div>
-                            </div>
-                            <div class="axisTableRow">
-                                <div class="axisTableCellLeft">Axis:</div>
-                                <div class="axisTableCellRight">
-                                    <input id="refAxisAxisUpdate" type="text" class="form-control input-sm" readonly>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="refFilterGroupUpdate" style="display:none;">
-                            <div class="form-group">
-                                <div class="checkbox">
-                                    <label>
-                                        <input id="hasRefFilterUpdate" type="checkbox" disabled="disabled" class="always-disabled"> Transform
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="axisTable">
-                                <div class="axisTableRow">
-                                    <div class="axisTableCellLeft">Application:</div>
-                                    <div class="axisTableCellRight">
-                                        <input id="refFilterAppUpdate" type="text" class="form-control input-sm" readonly>
-                                    </div>
-                                </div>
-                                <div class="axisTableRow">
-                                    <div class="axisTableCellLeft">Version:</div>
-                                    <div class="axisTableCellRight">
-                                        <input id="refFilterVersionUpdate" type="text" class="form-control input-sm" readonly>
-                                    </div>
-                                </div>
-                                <div class="axisTableRow">
-                                    <div class="axisTableCellLeft">Cube:</div>
-                                    <div class="axisTableCellRight">
-                                        <input id="refFilterCubeUpdate" type="text" class="form-control input-sm" readonly>
-                                    </div>
-                                </div>
-                                <div class="axisTableRow">
-                                    <div class="axisTableCellLeft">Method:</div>
-                                    <div class="axisTableCellRight">
-                                        <input id="refFilterMethodUpdate" type="text" class="form-control input-sm" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="updateAxisTypeName">Axis type (Discrete, Range, Set, Nearest, Rule)</label>
-                        <input id="updateAxisTypeName" type="text" class="form-control" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="updateAxisValueTypeName">Column data type (String, Date, Integer, ...)</label>
-                        <input id="updateAxisValueTypeName" type="text" class="form-control" readonly>
-                    </div>
-                    <div class="form-group">
-                        <div class="checkbox" id="updateAxisDefaultColRow">
-                            <label>
-                                <input id="updateAxisDefaultCol" type="checkbox">Has Default Column
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="checkbox" id="updateAxisSortOrderRow">
-                            <label>
-                                <input id="updateAxisSortOrder" type="checkbox">Sorted
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="checkbox" id="updateAxisFireAllRow">
-                            <label>
-                                <input id="updateAxisFireAll" type="checkbox">Fire all matching (versus first matching)
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't update</button>
-                <button id="updateAxisOk" class="btn btn-primary">Update</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- 'Update Columns' Modal -->
 <div id="editColumnsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editColumnsLabel"
      aria-hidden="true" data-backdrop="static">
@@ -623,6 +498,7 @@
 <script src="js/constants.js"></script>
 <script src="js/common.js"></script>
 <script src="js/prop-builder.js"></script>
+<script src="js/form-builder.js"></script>
 <script src="js/ntwobe.js"></script>
 
 </body>
