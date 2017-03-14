@@ -163,8 +163,13 @@ h3{
 .borders div{
 }
 
-.highlighted{
+.missingValue{
     background-color:#FAFAD2;
+}
+
+
+.defaultValue{
+    background-color:#F0F8FF;
 }
 
 .readOnly{

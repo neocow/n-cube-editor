@@ -432,11 +432,12 @@ class VisualizerRelInfo
 		String caret = availableScopeValues ? """<span class="caret"></span>""" : ''
 		String placeHolder = availableScopeValues ? 'Select or enter value...' : 'Enter value...'
 		String topNodeClass = targetId == 1l ? 'topNode' : ''
-		String highlightedClass = ''
+		String missingValueClass = ''
+		String defaultValueClass = ''
 
 		if (availableScopeValues.contains(null))
 		{
-			value = providedScopeValue ?: 'Default'
+			value = providedScopeValue ?: DEFAULT
 		}
 		else
 		{
@@ -448,7 +449,8 @@ class VisualizerRelInfo
 		sb.append("""<button type="button" class="btn btn-default dropdown-toggle"  data-toggle="dropdown">${scopeKey} ${caret}</button>""")
 		if (availableScopeValues)
 		{
-			highlightedClass = availableScopeValues.contains(providedScopeValue) ? highlightedClass : DETAILS_CLASS_HIGHLIGHTED
+			missingValueClass = availableScopeValues.contains(providedScopeValue) ? missingValueClass : DETAILS_CLASS_MISSING_VALUE
+			defaultValueClass = DEFAULT == value ? DETAILS_CLASS_DEFAULT_VALUE : defaultValueClass
 			sb.append("""<ul class="dropdown-menu">""")
 			availableScopeValues.each {Object scopeValue ->
 				if (scopeValue)
@@ -463,7 +465,7 @@ class VisualizerRelInfo
 			sb.append("""</ul>""")
 		}
 		sb.append("""</div>""")
-		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${highlightedClass} ${topNodeClass}" style="color: black;" type="text">""")
+		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${missingValueClass} ${defaultValueClass} ${topNodeClass}" style="color: black;" type="text">""")
 		sb.append("""</div>""")
 		return sb
 	}
@@ -484,26 +486,6 @@ class VisualizerRelInfo
 			}
 		}
 		return sb
-	}
-
-	protected String getLoadTarget()
-	{
-		return showingHidingCellValues ? "${cellValuesLabel}" : "the ${nodeLabel}"
-	}
-
-	protected String getNodesLabel()
-	{
-		return 'cubes'
-	}
-
-	protected String getNodeLabel()
-	{
-		return 'cube'
-	}
-
-	protected String getCellValuesLabel()
-	{
-		return 'cell values'
 	}
 
 	protected boolean includeUnboundScopeKey(VisualizerInfo visInfo, String scopeKey)

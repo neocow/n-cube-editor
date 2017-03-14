@@ -261,31 +261,31 @@ class NCubeController extends BaseController
         return nCubeService.getCube(appId, cubeName, true)
     }
 
-    // TODO: This needs to be externalized (loaded via Grapes)
     Map<String, Object> getVisualizerGraph(ApplicationID appId, Map options)
     {
-        String cubeName = options.startCubeName
-        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
+        Visualizer vis = getVisualizer(options.startCubeName as String)
         appId = addTenant(appId)
         return vis.loadGraph(appId, options)
     }
 
-    // TODO: This needs to be externalized (loaded via Grapes)
     Map<String, Object> getVisualizerScopeChange(ApplicationID appId, Map options)
     {
-        String cubeName = options.startCubeName
-        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
+        Visualizer vis = getVisualizer(options.startCubeName as String)
         appId = addTenant(appId)
         return vis.loadScopeChange(appId, options)
     }
 
-    // TODO: This needs to be externalized (loaded via Grapes)
     Map<String, Object>  getVisualizerNodeDetails(ApplicationID appId, Map options)
     {
-        String cubeName = options.startCubeName
-        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
+        Visualizer vis = getVisualizer(options.startCubeName as String)
         appId = addTenant(appId)
         return vis.loadNodeDetails(appId, options)
+    }
+
+    // TODO: This needs to be externalized (loaded via Grapes)
+    private static Visualizer getVisualizer(String cubeName)
+    {
+        return cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
     }
 
     Boolean updateCubeMetaProperties(ApplicationID appId, String cubeName, Map<String, Object> newMetaProperties)

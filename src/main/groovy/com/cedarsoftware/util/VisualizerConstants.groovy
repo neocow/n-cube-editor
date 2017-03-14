@@ -24,6 +24,7 @@ class VisualizerConstants
 	static final String HTTPS = 'https:'
 	static final String FILE = 'file:'
 
+	static final String DEFAULT = 'Default'
 	static final String JSON_FILE_PREFIX = 'config/'
 	static final String JSON_FILE_SUFFIX = '.json'
 	static final String VISUALIZER_CONFIG_CUBE_NAME = 'VisualizerConfig'
@@ -48,5 +49,6 @@ class VisualizerConstants
 	static final String DETAILS_CLASS_COLLAPSE_ALL = 'collapseAll'
 	static final String DETAILS_CLASS_EXECUTED_CELL = 'executedCell'
 	static final String DETAILS_CLASS_FORM_CONTROL = 'form-control'
-	static final String DETAILS_CLASS_HIGHLIGHTED = 'highlighted'
+	static final String DETAILS_CLASS_MISSING_VALUE = 'missingValue'
+	static final String DETAILS_CLASS_DEFAULT_VALUE = 'defaultValue'
 }

@@ -547,6 +547,7 @@ var Visualizer = (function ($) {
 
         if (result.status) {
             _visInfo = result.data.visInfo;
+            displayMessages(_visInfo.messages);
             populateDataForGraph();
             initNetwork();
             loadDetailsSection();
@@ -554,7 +555,6 @@ var Visualizer = (function ($) {
             loadHierarchicalView();
             loadGroupsView();
             loadCountsView();
-            displayMessages(_visInfo.messages);
             saveAllToLocalStorage();
             _visualizerContent.show();
             _visualizerInfo.show();
@@ -579,6 +579,8 @@ var Visualizer = (function ($) {
 
         if (result.status) {
             _visInfo = result.data.visInfo;
+            _selectedNode = getNodeFromVisInfo(_visInfo.selectedNodeId.toString());
+            displayMessages();
             populateDataForGraph();
             updateNetworkData();
             markSelectedNodeSpecial();
@@ -588,7 +590,6 @@ var Visualizer = (function ($) {
             loadHierarchicalView();
             loadGroupsView();
             loadCountsView();
-            displayMessages();
             saveAllToLocalStorage();
         }
         else{
@@ -612,9 +613,9 @@ var Visualizer = (function ($) {
 
         if (result.status) {
             _visInfo = result.data.visInfo;
+            displayMessages();
             populateDataForNode();
             loadDetailsSection();
-            displayMessages();
         }
         else{
             _nce.clearNote();
@@ -648,11 +649,12 @@ var Visualizer = (function ($) {
     }
 
     function displayMessages(){
-        var j, jLen, items;
-        items = _visInfo.messages['@items'];
-        if (items) {
-            for (j = 0, jLen = items.length; j < jLen; j++) {
-                _nce.showNote(items[j]);
+        var j, jLen, messages;
+        messages = _visInfo.messages['@items'];
+        if (messages) {
+            _nce.clearNote();
+            for (j = 0, jLen = messages.length; j < jLen; j++) {
+                _nce.showNote(messages[j]);
             }
         }
     }
@@ -1252,7 +1254,7 @@ var Visualizer = (function ($) {
 
         //Visualize from here link
         _nodeVisualizer[0].innerHTML = '';
-        _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName, _selectedNode));
+        _nodeVisualizer.append(createVisualizeFromHereLink(appId, cubeName));
 
         //Open cube link
         _nodeCubeLink[0].innerHTML = '';
@@ -1261,7 +1263,7 @@ var Visualizer = (function ($) {
         //Show cell values link
         if (_selectedNode.showCellValuesLink) {
             _nodeCellValues[0].innerHTML = '';
-            _nodeCellValues.append(createCellValuesLink(_selectedNode));
+            _nodeCellValues.append(createCellValuesLink());
          }
 
          //Add link
@@ -1353,10 +1355,15 @@ var Visualizer = (function ($) {
         visualizerLink.html('New visual from here');
         visualizerLink.click(function (e) {
             e.preventDefault();
-            _keepCurrentScope = true;
-            _topNodeScope = _selectedNode.scope;
-            _selectedNode = null;
-            _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
+            if (_selectedNode.newVisualFromHereMessage){
+                _nce.showNote(_selectedNode.newVisualFromHereMessage);
+            }
+            else {
+                _keepCurrentScope = true;
+                _topNodeScope = _selectedNode.scope;
+                _selectedNode = null;
+                _nce.selectCubeByName(cubeName, appId, TAB_VIEW_TYPE_VISUALIZER + PAGE_ID);
+            }
         });
         return visualizerLink;
     }
@@ -1394,11 +1401,11 @@ var Visualizer = (function ($) {
     function createCellValuesLink(node) {
         var cellValuesLink = $('<a/>');
         cellValuesLink.addClass('nc-anc');
-        if (node.showCellValues) {
-            cellValuesLink.html('Hide ' + _visInfo.loadCellValuesLabel);
+        if (_selectedNode.showCellValues) {
+            cellValuesLink.html('Hide ' + _visInfo.cellValuesLabel);
         }
         else {
-            cellValuesLink.html('Show ' + _visInfo.loadCellValuesLabel);
+            cellValuesLink.html('Show ' + _visInfo.cellValuesLabel);
         }
         cellValuesLink.click(function (e) {
             var note;
@@ -1407,23 +1414,22 @@ var Visualizer = (function ($) {
                 _nce.showNote('Show cell values for n-cubes is currently not available.'); //TODO: Temporary
             }
             else{
-                node.showCellValues = !node.showCellValues;
-                node.showingHidingCellValues = true;
-                _selectedNode = node;
-                note = _selectedNode.showCellValues ? 'Loading ' + _visInfo.loadCellValuesLabel + '...' : 'Hiding ' + _visInfo.loadCellValuesLabel + '...';
+                _selectedNode.showCellValues = !_selectedNode.showCellValues;
+                _selectedNode.showingHidingCellValues = true;
+                note = _selectedNode.showCellValues ? 'Loading ' + _visInfo.cellValuesLabel + '...' : 'Hiding ' + _visInfo.cellValuesLabel + '...';
                 load(LOAD_NODE_DETAILS, note);
             }
         });
         return cellValuesLink;
     }
 
-    function createAddTypesDropdown(typesToAdd, label) {
+    function createAddTypesDropdown(typesToAdd) {
         var li, addLink, a, ul, i, len;
 
         addLink = $('<a/>');
         addLink.prop({class: 'nc-anc', id:"addLink" });
         addLink.attr("data-toggle", "dropdown");
-        addLink.html('Add to ' + label);
+        addLink.html('Add to ' + _visInfo.nodeLabel);
 
         ul = $('<ul/>');
         ul.addClass('dropdown-menu');

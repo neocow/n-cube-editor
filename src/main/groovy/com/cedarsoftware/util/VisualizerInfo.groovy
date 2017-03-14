@@ -24,7 +24,8 @@ class VisualizerInfo
     protected long nodeIdCounter
     protected long edgeIdCounter
     protected long defaultLevel
-    protected String loadCellValuesLabel
+    protected String cellValuesLabel
+    protected String nodeLabel
 
     protected  Map<String,String> allGroups
     protected Set<String> allGroupsKeys
@@ -126,7 +127,8 @@ class VisualizerInfo
         String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
         this.groupSuffix = groupSuffix ?: ''
         loadTypesToAddMap(configCube)
-        loadCellValuesLabel = getLoadCellValuesLabel()
+        cellValuesLabel = getCellValuesLabel()
+        nodeLabel = getNodeLabel()
         return configCube
     }
 
@@ -147,9 +149,24 @@ class VisualizerInfo
         }
     }
 
-    protected String getLoadCellValuesLabel()
+    protected String getLoadTarget(boolean showingHidingCellValues)
     {
-        'cell values'
+        return showingHidingCellValues ? "${cellValuesLabel}" : "the ${nodeLabel}"
+    }
+
+    protected String getNodeLabel()
+    {
+        'n-cube'
+    }
+
+    protected String getNodesLabel()
+    {
+        return 'cubes'
+    }
+
+    protected String getCellValuesLabel()
+    {
+        return 'cell values'
     }
 
 }

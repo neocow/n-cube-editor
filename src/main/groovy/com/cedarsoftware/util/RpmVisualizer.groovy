@@ -119,8 +119,11 @@ class RpmVisualizer extends Visualizer
 			}
 		}
 
-		Long edgeId = visInfo.edgeIdCounter += 1
-		visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
+		if (relInfo.sourceCube)
+		{
+			Long edgeId = visInfo.edgeIdCounter += 1
+			visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
+		}
 
 		if (!visited.add(targetCubeName + relInfo.availableTargetScope.toString()))
 		{
@@ -147,26 +150,37 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
-	protected boolean isValidStartCube(VisualizerInfo visInfo, String cubeName)
+	protected NCube isValidStartCube(VisualizerInfo visInfo, String cubeName)
 	{
-		if (!super.isValidStartCube(visInfo, cubeName))
+		NCube cube = super.isValidStartCube(visInfo, cubeName)
+		if (!cube)
 		{
-			return false
+			return null
 		}
 
-		if (!cubeName.startsWith(RPM_CLASS_DOT))
+		if (cubeName.startsWith(RPM_CLASS_DOT))
 		{
-			visInfo.messages << "Starting cube for visualization must begin with 'rpm.class', n-cube ${cubeName} does not.".toString()
-			return false
+			if (!cube.getAxis(AXIS_FIELD) || !cube.getAxis(AXIS_TRAIT) )
+			{
+				visInfo.messages << "Cube ${cubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString()
+				return null
+			}
 		}
-
-		NCube cube = NCubeManager.getCube(appId, cubeName)
-		if (!cube.getAxis(AXIS_FIELD) || !cube.getAxis(AXIS_TRAIT) )
+		/* TODO: Add ability to start rpm visualization with an rpm enum class
+		else if (cubeName.startsWith(RPM_ENUM_DOT))
 		{
-			visInfo.messages << "Cube ${cubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString()
-			return false
+			if (!cube.getAxis(AXIS_NAME) || !cube.getAxis(AXIS_TRAIT) )
+			{
+				visInfo.messages << "Cube ${cubeName} is not a valid rpm enum since it does not have both a name axis and a traits axis.".toString()
+				return null
+			}
+		}*/
+		else
+		{
+			visInfo.messages << "Starting cube for visualization must begin with 'rpm.class', ${cubeName} does not.".toString()
+			return null
 		}
-		return true
+		return cube
 	}
 
 	@Override

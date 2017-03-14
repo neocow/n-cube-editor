@@ -58,9 +58,21 @@ class RpmVisualizerInfo extends VisualizerInfo
         }
     }
 
-    @Override
-    protected String getLoadCellValuesLabel()
+     @Override
+    protected String getNodeLabel()
     {
-        'traits'
+        'class'
     }
+
+    @Override
+    protected String getNodesLabel()
+    {
+        return 'classes'
+    }
+
+    protected String getCellValuesLabel()
+    {
+        return 'traits'
+    }
+
 }

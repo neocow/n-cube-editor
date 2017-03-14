@@ -218,6 +218,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			node.detailsTitle2 = null
 			node.title = node.detailsTitle1
 			node.typesToAdd = null
+			node.newVisualFromHereMessage = 'Functionality to start a new visual from a valid values (rpm.enum) class is not yet implemented'
 		}
 		return node
 	}
@@ -298,8 +299,14 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		}
 		else if (targetCubeName.startsWith(RPM_ENUM_DOT))
 		{
-			String prefix = nodeLabelPrefix ? "${nodeLabelPrefix}valid" : 'Valid'
-			return "${prefix} values for field ${sourceFieldName} on ${getLabel(sourceCube.name)}".toString()
+			if (sourceFieldName && sourceCube)
+			{
+				String prefix = nodeLabelPrefix ? "${nodeLabelPrefix}valid" : 'Valid'
+				return "${prefix} values for field ${sourceFieldName} on ${getLabel(sourceCube.name)}".toString()
+			}
+			else{
+				return getCubeDisplayName(targetCubeName)
+			}
 		}
 		return null
 	}
@@ -400,7 +407,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			{
 				return
 			}
-			nodeDetailsMessages << "Defaults were used for some scope keys. Different values may be provided.${DOUBLE_BREAK}".toString()
+			nodeDetailsMessages << "Defaults were used for some scope keys.${DOUBLE_BREAK}".toString()
 		}
 	}
 
@@ -411,7 +418,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		{
 			return
 		}
-		StringBuilder message = new StringBuilder("<b>Unable to load ${loadTarget}. The value ${e.value} is not valid for ${e.axisName}.</b>${DOUBLE_BREAK}")
+		StringBuilder message = new StringBuilder("<b>Unable to load ${visInfo.getLoadTarget(this.showingHidingCellValues)}. The value ${e.value} is not valid for ${e.axisName}.</b>${DOUBLE_BREAK}")
 		message.append(sb)
 		nodeDetailsMessages << message.toString()
 		nodeLabelPrefix = 'Required scope value not found for '
@@ -426,7 +433,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			return
 		}
 
-		StringBuilder message = new StringBuilder("<b>Unable to load ${loadTarget}. Additional scope is required.</b> ${DOUBLE_BREAK}")
+		StringBuilder message = new StringBuilder("<b>Unable to load ${visInfo.getLoadTarget(this.showingHidingCellValues)}. Additional scope is required.</b> ${DOUBLE_BREAK}")
 		message.append(sb)
 		nodeDetailsMessages << message.toString()
 		nodeLabelPrefix = 'Additional scope required for '
@@ -435,7 +442,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	private void handleException(Throwable e, VisualizerInfo visInfo)
 	{
-		StringBuilder sb = new StringBuilder("<b>Unable to load ${loadTarget} due to an exception.</b>${DOUBLE_BREAK}")
+		StringBuilder sb = new StringBuilder("<b>Unable to load ${visInfo.getLoadTarget(this.showingHidingCellValues)} due to an exception.</b>${DOUBLE_BREAK}")
 		sb.append(helper.handleException(e))
 		nodeDetailsMessages << sb.toString()
 		nodeLabelPrefix = "Unable to load "
@@ -567,21 +574,5 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 there is no ${type.toLowerCase()} named ${sourceFieldName} on ${type}.</b> ${DOUBLE_BREAK}"""
 	}
 
-	@Override
-	protected String getNodesLabel()
-	{
-		return 'classes'
-	}
-
-	@Override
-	protected String getNodeLabel()
-	{
-		return 'class'
-	}
-
-	protected String getCellValuesLabel()
-	{
-		return 'traits'
-	}
 
 }
