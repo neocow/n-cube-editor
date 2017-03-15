@@ -47,6 +47,7 @@ class VisualizerConstants
 	static final String DETAILS_CLASS_COLLAPSE_ALL = 'collapseAll'
 	static final String DETAILS_CLASS_EXECUTED_CELL = 'executedCell'
 	static final String DETAILS_CLASS_FORM_CONTROL = 'form-control'
+	static final String DETAILS_CLASS_TOP_NODE = 'topNode'
 	static final String DETAILS_CLASS_MISSING_VALUE = 'missingValue'
 	static final String DETAILS_CLASS_DEFAULT_VALUE = 'defaultValue'
 }

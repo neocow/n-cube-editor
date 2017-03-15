@@ -315,7 +315,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithExecutedCellAndThreeTypesExceptionCells'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, scope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -353,7 +353,7 @@ class VisualizerTest{
     {
          //Build graph
         String startCubeName = 'CubeWithExecutedCell'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, scope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -387,7 +387,7 @@ class VisualizerTest{
 
         //Build graph
         String startCubeName = 'CubeWithExecutedCellsWithURLs'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, scope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -423,7 +423,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithNoDefaultsAndNoValues'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, scope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -446,7 +446,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithExecutedCell'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, scope: topNodeScope]
         loadGraph(options)
         Map node = checkNode('CubeWithExecutedCell')
 
@@ -470,11 +470,11 @@ class VisualizerTest{
     {
         Map nodeScope = [Axis1Primary: 'Axis1Col2',
                      Axis2Primary: 'Axis2Col2']
-        inputScope = new CaseInsensitiveMap(nodeScope)
+        topNodeScope = new CaseInsensitiveMap(nodeScope)
 
         //Build graph
         String startCubeName = 'CubeWithDefaultColumn'
-        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -493,7 +493,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithDefaultsAndNoValues'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, scope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -516,7 +516,7 @@ class VisualizerTest{
     {
        //Build graph
         String startCubeName = 'RuleCubeWithAllDefaultsAndOnlyDefaultValues'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, scope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -543,7 +543,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithExceptionCell'
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map options = [startCubeName: startCubeName, scope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -576,7 +576,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithCoordinateNotFoundCell'
-        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -608,7 +608,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithCoordinateNotFoundCellDueToTwoNotFoundValues'
-        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -642,7 +642,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithInvalidCoordinateCell'
-        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 
@@ -681,7 +681,7 @@ class VisualizerTest{
     {
         //Build graph
         String startCubeName = 'CubeWithInvalidCoordinateCellDueToTwoInvalidKeys'
-        Map options = [startCubeName: startCubeName, nodeScope: inputScope]
+        Map options = [startCubeName: startCubeName, nodeScope: topNodeScope]
         loadGraph(options)
         Map node = checkNode(startCubeName)
 

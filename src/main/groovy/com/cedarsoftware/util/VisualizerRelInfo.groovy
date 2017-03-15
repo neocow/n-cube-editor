@@ -431,9 +431,8 @@ class VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 		String caret = availableScopeValues ? """<span class="caret"></span>""" : ''
 		String placeHolder = availableScopeValues ? 'Select or enter value...' : 'Enter value...'
-		String topNodeClass = targetId == 1l ? 'topNode' : ''
-		String missingValueClass = ''
-		String defaultValueClass = ''
+		String topNodeClass = targetId == 1l ? DETAILS_CLASS_TOP_NODE : ''
+		String typeValueClass = ''
 
 		if (availableScopeValues.contains(null))
 		{
@@ -449,8 +448,8 @@ class VisualizerRelInfo
 		sb.append("""<button type="button" class="btn btn-default dropdown-toggle"  data-toggle="dropdown">${scopeKey} ${caret}</button>""")
 		if (availableScopeValues)
 		{
-			missingValueClass = availableScopeValues.contains(providedScopeValue) ? missingValueClass : DETAILS_CLASS_MISSING_VALUE
-			defaultValueClass = DEFAULT == value ? DETAILS_CLASS_DEFAULT_VALUE : defaultValueClass
+			typeValueClass = availableScopeValues.contains(providedScopeValue) ? typeValueClass : DETAILS_CLASS_MISSING_VALUE
+			typeValueClass = DEFAULT == value ? DETAILS_CLASS_DEFAULT_VALUE : typeValueClass
 			sb.append("""<ul class="dropdown-menu">""")
 			availableScopeValues.each {Object scopeValue ->
 				if (scopeValue)
@@ -465,7 +464,7 @@ class VisualizerRelInfo
 			sb.append("""</ul>""")
 		}
 		sb.append("""</div>""")
-		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${missingValueClass} ${defaultValueClass} ${topNodeClass}" style="color: black;" type="text">""")
+		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${typeValueClass} ${topNodeClass}" style="color: black;" type="text">""")
 		sb.append("""</div>""")
 		return sb
 	}
