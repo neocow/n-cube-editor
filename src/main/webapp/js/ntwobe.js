@@ -73,27 +73,6 @@ var NCubeEditor2 = (function ($) {
     var _refFilterVersion = null;
     var _refFilterCube = null;
     var _refFilterMethod = null;
-    var _isRefAxisUpdate = null;
-    var _hasRefFilterUpdate = null;
-    var _updateAxisModal = null;
-    var _updateAxisName = null;
-    var _updateAxisTypeName = null;
-    var _updateAxisValueTypeName = null;
-    var _updateAxisSortOrder = null;
-    var _refAxisGroupUpdate = null;
-    var _refAxisBranchUpdate = null;
-    var _refAxisStatusUpdate = null;
-    var _refAxisAppUpdate = null;
-    var _refAxisVersionUpdate = null;
-    var _refAxisCubeUpdate = null;
-    var _refAxisAxisUpdate = null;
-    var _refFilterGroupUpdate = null;
-    var _refFilterBranchUpdate = null;
-    var _refFilterStatusUpdate = null;
-    var _refFilterAppUpdate = null;
-    var _refFilterVersionUpdate = null;
-    var _refFilterCubeUpdate = null;
-    var _refFilterMethodUpdate = null;
     var _topAxisBtn = null;
     var _filterModal = null;
     var _filters = null;
@@ -138,7 +117,7 @@ var NCubeEditor2 = (function ($) {
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
             _editColClipboard = $('#edit-columns-clipboard');
-            _searchField = document.getElementById('search-field');
+            _searchField = $('#search-field');
             _searchInfo = $('#search-info');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
@@ -161,27 +140,6 @@ var NCubeEditor2 = (function ($) {
             _refFilterVersion = $('#refFilterVersion');
             _refFilterCube = $('#refFilterCube');
             _refFilterMethod = $('#refFilterMethod');
-            _isRefAxisUpdate = $('#isRefAxisUpdate');
-            _hasRefFilterUpdate = $('#hasRefFilterUpdate');
-            _updateAxisModal = $('#updateAxisModal');
-            _updateAxisName = $('#updateAxisName');
-            _updateAxisTypeName = $('#updateAxisTypeName');
-            _updateAxisValueTypeName = $('#updateAxisValueTypeName');
-            _updateAxisSortOrder = $('#updateAxisSortOrder');
-            _refAxisGroupUpdate = $('#refAxisGroupUpdate');
-            _refAxisBranchUpdate = $('#refAxisBranchUpdate');
-            _refAxisStatusUpdate = $('#refAxisStatusUpdate');
-            _refAxisAppUpdate = $('#refAxisAppUpdate');
-            _refAxisVersionUpdate = $('#refAxisVersionUpdate');
-            _refAxisCubeUpdate = $('#refAxisCubeUpdate');
-            _refAxisAxisUpdate = $('#refAxisAxisUpdate');
-            _refFilterGroupUpdate = $('#refFilterGroupUpdate');
-            _refFilterBranchUpdate = $('#refFilterBranchUpdate');
-            _refFilterStatusUpdate = $('#refFilterStatusUpdate');
-            _refFilterAppUpdate = $('#refFilterAppUpdate');
-            _refFilterVersionUpdate = $('#refFilterVersionUpdate');
-            _refFilterCubeUpdate = $('#refFilterCubeUpdate');
-            _refFilterMethodUpdate = $('#refFilterMethodUpdate');
             _topAxisBtn = $('#topAxisBtn');
             _filterModal = $('#filterModal');
             _filterTable = $('#filterTable');
@@ -216,7 +174,6 @@ var NCubeEditor2 = (function ($) {
             $('#deleteAxisCancel').on('click', deleteAxisClose);
             $('#deleteAxisOk').on('click', deleteAxisOk);
             $('#updateAxisMenu').on('click', updateAxis);
-            $('#updateAxisOk').on('click', updateAxisOk);
             $('#searchOptionsCancel').on('click', function() {
                 searchOptionsClose();
             });
@@ -4888,7 +4845,7 @@ function cubeSelected() {
     NCubeEditor2.handleCubeSelected();
 }
 
-function onNoteEvent(e, element){};
+function onNoteEvent(e, element){}
 
 function closeChildMenu() {
     $('.open').removeClass('open');
