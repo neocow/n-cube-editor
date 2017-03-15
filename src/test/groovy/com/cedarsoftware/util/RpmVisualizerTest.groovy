@@ -105,7 +105,9 @@ class RpmVisualizerTest
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
-        Map node = loadGraph(options)
+        loadGraph(options)
+        Map node = nodes.values().find { Map node1 -> "${UNABLE_TO_LOAD}Location".toString() == node1.label }
+        node = loadNodeDetails(node)
         checkNode('Location', 'Risk', UNABLE_TO_LOAD, 'Coverage points directly to Risk via field Location, but there is no risk named Location on Risk.', true)
         availableScope.Risk = 'Location'
         assert availableScope == node.availableScope
@@ -464,19 +466,22 @@ class RpmVisualizerTest
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
         Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
-        Map node = loadGraph(options)
-        checkEnumNode("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage")
+        loadGraph(options)
+        String enumNodeTitle = "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage"
+        Map enumNode = nodes.values().find {Map node1 ->  enumNodeTitle == node1.title}
+        enumNode = loadNodeDetails(enumNode)
+        checkEnumNode(enumNodeTitle)
 
         //Simulate that the user clicks Show Traits for the node
-        node.showCellValues = true
-        node.showingHidingCellValues = true
-        node = loadNodeDetails(node)
-        checkEnumNode("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage", '', false, true)
+        enumNode.showCellValues = true
+        enumNode.showingHidingCellValues = true
+        enumNode = loadNodeDetails(enumNode)
+        checkEnumNode(enumNodeTitle, '', false, true)
         utilizedScope.sourceFieldName = 'Coverages'
-        assert utilizedScope == node.scope
+        assert utilizedScope == enumNode.scope
         availableScope.sourceFieldName = 'Coverages'
-        assert availableScope == node.availableScope
-        String nodeDetails = node.details as String
+        assert availableScope == enumNode.availableScope
+        String nodeDetails = enumNode.details as String
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS_AND_TRAITS}</b><pre><ul><li><b>CCCoverage</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:name: CCCoverage</li><li>v:max: 999999</li><li>v:min: 0</li></ul></pre><li><b>ICoverage</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:name: ICoverage</li><li>v:max: 1</li><li>v:min: 0</li></ul>")
         assert nodeDetails.contains("${DETAILS_LABEL_CLASS_TRAITS}</b><pre><ul><li>r:exists: true</li></ul></pre><br><b>")
     }
@@ -782,8 +787,10 @@ class RpmVisualizerTest
             //Load graph
             String startCubeName = 'rpm.class.Product'
             Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
-            Map node = loadGraph(options)
+            loadGraph(options)
 
+            Map node = nodes.values().find { Map node1 -> "${UNABLE_TO_LOAD}FCoverage".toString() == node1.label }
+            node = loadNodeDetails(node)
             checkNode('FCoverage', 'Coverage', UNABLE_TO_LOAD, 'Unable to load the class due to an exception.', true)
             String nodeDetails = node.details as String
             assert nodeDetails.contains(DETAILS_LABEL_MESSAGE)
@@ -1456,7 +1463,7 @@ class RpmVisualizerTest
         availableScope.points = 'bogus'
         node.availableScope = new CaseInsensitiveMap(availableScope)
         node = loadScopeChange(node)
-        checkNode('TCoverage', 'Coverage', '', IS_NOT_VALID_FOR, true, true)
+        checkNode('TCoverage', 'Coverage', REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR, IS_NOT_VALID_FOR, true, true)
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
         checkScopePromptDropdown(node, 'points', 'bogus', ['A', 'B', 'C'], [DEFAULT], true)
         assert utilizedScope == node.scope
@@ -1536,27 +1543,68 @@ class RpmVisualizerTest
     @Test
     void testLoadGraph_scopePrompt_enumWithInvalidRequiredScope()
     {
-        Map utilizedScope = new CaseInsensitiveMap()
-        Map availableScope = defaultRpmScope + [risk: 'DRisk', pgm: 'pgm4']
+        Map availableScope = defaultRpmScope + [risk: 'DRisk']
+
+        Map enumUtilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                                 risk             : 'DRisk',
+                                 sourceFieldName  : 'Coverages'] as CaseInsensitiveMap
+        Map enumAvailableScope = defaultRpmScope + enumUtilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Risk'
         Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
-        Map node = loadGraph(options)
+        loadGraph(options)
 
-        //The edge for field Coverages from DRisk to enum Risk.Coverages
+        //The edge for field Coverages from DRisk to enum Risk.Coverages has missing scope label.
         Map edge = edges.values().find { Map edge -> 'DRisk' == edge.fromName && 'Risk.Coverages' == edge.toName}
-       // assert "${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}Coverages".toString() == edge.label
+        assert "${ADDITIONAL_SCOPE_REQUIRED_FOR}Coverages".toString() == edge.label
+        assert "Field Coverages cardinality ${V_MIN_CARDINALITY}:${V_MAX_CARDINALITY}".toString() == edge.title
+
+        //Risk.Coverages enum has one required prompt
+        String enumNodeTitle = "${ADDITIONAL_SCOPE_REQUIRED_FOR}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Coverages on DRisk"
+        Map node = nodes.values().find {Map node1 ->  enumNodeTitle == node1.title}
+        node = loadNodeDetails(node)
+        checkEnumNode(enumNodeTitle, ADDITIONAL_SCOPE_REQUIRED, true)
+        checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.enum.Risk.Coverages.traits.exists')
+        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        assert enumUtilizedScope == node.scope
+        assert enumAvailableScope == node.availableScope
+
+        //Simulate that the user enters invalid pgm = pgm4 in the node scope prompt.
+        enumAvailableScope.pgm = 'pgm4'
+        node.availableScope = new CaseInsensitiveMap(enumAvailableScope)
+        node = loadScopeChange(node)
+
+        //The edge for field Coverages from DRisk to enum Risk.Coverages has invalid scope label.
+        edge = edges.values().find { Map edge1 -> 'DRisk' == edge1.fromName && 'Risk.Coverages' == edge1.toName}
+        assert "${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}Coverages".toString() == edge.label
         assert "Field Coverages cardinality ${V_MIN_CARDINALITY}:${V_MAX_CARDINALITY}".toString() == edge.title
 
         //Risk.Coverages enum has one required prompt
         checkEnumNode("${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Coverages on DRisk", IS_NOT_VALID_FOR, true)
         checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.enum.Risk.Coverages.traits.exists')
         checkScopePromptDropdown(node, 'pgm', 'pgm4', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
-        checkNoScopePrompt(node, 'state')
-        assert utilizedScope == node.scope
-        availableScope.sourceFieldName = 'Coverages'
-        assert availableScope == node.availableScope
+        enumUtilizedScope.pgm = 'pgm4'
+        assert enumUtilizedScope == node.scope
+        assert enumAvailableScope == node.availableScope
+
+        //Simulate that the user enters valid pgm = pgm1 in the node scope prompt.
+        enumAvailableScope.pgm = 'pgm1'
+        node.availableScope = new CaseInsensitiveMap(enumAvailableScope)
+        node = loadScopeChange(node)
+
+        //The edge for field Coverages from DRisk to enum Risk.Coverages has no label.
+        edge = edges.values().find { Map edge1 -> 'DRisk' == edge1.fromName && 'Risk.Coverages' == edge1.toName}
+        assert 'Coverages' == edge.label
+        assert "Field Coverages cardinality ${V_MIN_CARDINALITY}:${V_MAX_CARDINALITY}".toString() == edge.title
+
+        //Risk.Coverages enum has one required prompt
+        checkEnumNode("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on DRisk")
+        checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.enum.Risk.Coverages.traits.exists')
+        checkScopePromptDropdown(node, 'pgm', 'pgm1', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        enumUtilizedScope.pgm = 'pgm1'
+        assert enumUtilizedScope == node.scope
+        assert enumAvailableScope == node.availableScope
     }
 
     @Test
@@ -1589,9 +1637,11 @@ class RpmVisualizerTest
         //Load graph
         String startCubeName = 'rpm.class.Risk'
         Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
-        Map node = loadGraph(options)
+        loadGraph(options)
 
         //Check that sourceRisk is not a scope prompt
+        Map node = nodes.values().find { Map node1 -> 'StateOps' == node1.label }
+        node = loadNodeDetails(node)
         checkNode('StateOps', 'Risk')
         checkNoScopePrompt(node, 'sourceRisk')
     }
