@@ -4042,7 +4042,6 @@ var NCE = (function ($) {
         acceptMineBtn.toggle(branchHead);
         if (branchHead) {
             method = CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH;
-            _branchCompareUpdateOk.removeAttr('disabled');
         } else {
             method = CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH;
             params.push(branchName);
@@ -4230,6 +4229,7 @@ var NCE = (function ($) {
         setTimeout(function() {
             var result;
             clearNote();
+            _branchCompareUpdateOk.removeAttr('disabled');
             if (isFromTabMenu) {
                 result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_CUBE_FROM_HEAD, [appId, cubeDtos[0].name]);
             } else {
