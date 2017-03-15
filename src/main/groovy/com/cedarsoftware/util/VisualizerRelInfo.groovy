@@ -299,6 +299,9 @@ class VisualizerRelInfo
 		node.label = nodeLabelPrefix + label
 		node.detailsTitle1 = cubeDetailsTitle1
 		node.detailsTitle2 = getCubeDetailsTitle2(label)
+		if (node.detailsTitle1 == node.detailsTitle2){
+			node.detailsTitle2 = null
+		}
 		node.typesToAdd = visInfo.getTypesToAdd(group)
 
 		if (targetId == visInfo.selectedNodeId)

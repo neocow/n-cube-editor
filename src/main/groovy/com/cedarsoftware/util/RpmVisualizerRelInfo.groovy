@@ -486,18 +486,18 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	protected void populateScopeDefaults(VisualizerInfo visInfo)
 	{
 		Map<String, Object> scopeDefaults = new CaseInsensitiveMap()
-		String date = DATE_TIME_FORMAT.format(new Date())
-
-		String scopeValue = visInfo.inputScope[POLICY_CONTROL_DATE] ?: date
-		addScopeDefault(scopeDefaults, POLICY_CONTROL_DATE, scopeValue)
-
-		scopeValue = visInfo.inputScope[QUOTE_DATE] ?: date
-		addScopeDefault(scopeDefaults, QUOTE_DATE, scopeValue)
-
-		scopeValue = visInfo.inputScope[EFFECTIVE_VERSION] ?: appId.version
+		String scopeValue = visInfo.inputScope[EFFECTIVE_VERSION] ?: appId.version
 		addScopeDefault(scopeDefaults, EFFECTIVE_VERSION, scopeValue)
 		//loadAvailableScopeValuesEffectiveVersion(visInfo) TODO: Very slow, commenting out for now
 
+		if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		{
+			String date = DATE_TIME_FORMAT.format(new Date())
+			scopeValue = visInfo.inputScope[POLICY_CONTROL_DATE] ?: date
+			addScopeDefault(scopeDefaults, POLICY_CONTROL_DATE, scopeValue)
+			scopeValue = visInfo.inputScope[QUOTE_DATE] ?: date
+			addScopeDefault(scopeDefaults, QUOTE_DATE, scopeValue)
+		}
 		availableTargetScope.putAll(scopeDefaults)
 	}
 

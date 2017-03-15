@@ -35,13 +35,14 @@ class Visualizer
 		String startCubeName = options.startCubeName as String
 		VisualizerInfo visInfo = getVisualizerInfo(options)
 		visInfo.init(options)
-		VisualizerRelInfo relInfo = getVisualizerRelInfo()
-		relInfo.init(options, visInfo)
 
 		if (!isValidStartCube(visInfo, startCubeName))
 		{
 			return [visInfo: visInfo] as Map
 		}
+
+		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		relInfo.init(options, visInfo)
 
 		getVisualization(visInfo, relInfo)
 		return [visInfo: visInfo] as Map
