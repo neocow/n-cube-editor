@@ -3,7 +3,9 @@
  *      title               - title of modal dialog
  *      instructionsTitle   - title of instructions area (omit for no instructions box)
  *      instructionsText    - text of instructions area (omit for no instructions box)
+ *      saveButtonText      - text of save button; default 'Save'
  *      afterSave           - callback fires upon clicking save button
+ *      onClose             - callback fires whenever modal closes (save or otherwise)
  *      readonly            - should the user be able to edit or only view; default FALSE
  *      displayType         - type of display (table, list, form); use constant DISPLAY_TYPE
  *      draggable           - should modal be draggable; default TRUE
@@ -75,6 +77,8 @@ var FormBuilder = (function ($) {
         var container;
         _data = data || {};
         _options = options;
+        setDefaultOptions();
+
         _modal = buildModal();
         container = _modal.find('.modal-content');
         container.append(buildModalHeader());
@@ -88,8 +92,20 @@ var FormBuilder = (function ($) {
         _modal.modal();
     }
 
+    function setDefaultOptions() {
+        if (!_options.hasOwnProperty('size')) {
+            _options.size = MODAL_SIZE.MEDIUM;
+        }
+        if (!_options.hasOwnProperty('saveButtonText')) {
+            _options.saveButtonText = 'Save';
+        }
+        if (!_options.hasOwnProperty('draggable')) {
+            _options.draggable = true;
+        }
+    }
+
     function buildModal() {
-        var sizeClass = _options.size || MODAL_SIZE.MEDIUM;
+        var sizeClass = _options.size;
         var filterClass = _options.hasFilter ? 'modal-filter' : '';
 
         var html = '<div tabindex="-1" data-role="dialog" data-backdrop="static" class="modal fade">'
@@ -100,6 +116,9 @@ var FormBuilder = (function ($) {
         var modal = $(html).on('shown.bs.modal', function() {
             makeModalDraggable();
         }).on('hidden.bs.modal', function() {
+            if (_options.hasOwnProperty('onClose')) {
+                _options.onClose();
+            }
             $(this).remove();
         });
 
@@ -154,7 +173,7 @@ var FormBuilder = (function ($) {
         };
 
         if (!_options.readonly) {
-            buttons.save = '<button class="btn btn-primary btn-sm form-builder-save">Save</button>';
+            buttons.save = '<button class="btn btn-primary btn-sm form-builder-save">' + _options.saveButtonText + '</button>';
             if (_options.displayType !== DISPLAY_TYPE.FORM) {
                 if (_options.hasSelectAllNone) {
                     buttons.selectAll = '<button class="btn btn-info btn-sm pull-left form-builder-select-all" aria-hidden="true">Select All</button>';
@@ -467,7 +486,6 @@ var FormBuilder = (function ($) {
     // I know this code is also in common.js, but I wanted FormBuilder to be independent
     function makeModalDraggable() {
         var realPosX, realPosY;
-        var shouldBeDraggable = !_options.hasOwnProperty('draggable') || _options.draggable;
         var $doc = $(document);
         var docWidth = $doc.width();
         var docHeight = $doc.height();
@@ -475,6 +493,7 @@ var FormBuilder = (function ($) {
         var modalWidth = content.outerWidth();
         var modalHeight = content.outerHeight();
         var marginTop = _modal.find('.modal-dialog').css('margin-top');
+        var shouldBeDraggable = _options.draggable && docHeight > modalHeight;
         marginTop = marginTop.substring(0, marginTop.indexOf('px'));
         marginTop = parseInt(marginTop);
         realPosX = docWidth - modalWidth;
@@ -483,7 +502,7 @@ var FormBuilder = (function ($) {
             handle: '.modal-header',
             containment: [-realPosX, -marginTop, realPosX, realPosY]
         });
-        _modal.draggable(shouldBeDraggable && docHeight > modalHeight ? 'enable' : 'disable');
+        _modal.draggable(shouldBeDraggable ? 'enable' : 'disable');
     }
 
     function checkAll(state, queryStr) {
@@ -494,7 +513,8 @@ var FormBuilder = (function ($) {
         openBuilderModal: openBuilderModal,
         DISPLAY_TYPE: DISPLAY_TYPE,
         INPUT_LAYOUT: INPUT_LAYOUT,
-        INPUT_TYPE: INPUT_TYPE
+        INPUT_TYPE: INPUT_TYPE,
+        MODAL_SIZE: MODAL_SIZE
     };
 
 })(jQuery);

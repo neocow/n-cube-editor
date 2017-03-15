@@ -1,6 +1,6 @@
 var NCEBuilderOptions = (function () {
 
-    function filterData(columnSelectList, readonly, afterSave) {
+    function filterData(columnSelectList, readonly, afterSave, onClose) {
         return {
             title: 'Filter Data',
             instructionsTitle: 'Instructions - Filter Data',
@@ -8,6 +8,7 @@ var NCEBuilderOptions = (function () {
             displayType: FormBuilder.DISPLAY_TYPE.TABLE,
             readonly: readonly,
             afterSave: afterSave,
+            onClose: onClose,
             columns: {
                 isApplied: {
                     heading: 'Apply',
@@ -38,14 +39,16 @@ var NCEBuilderOptions = (function () {
         };
     }
 
-    function metaProperties(name, type, readonly, afterSave) {
+    function metaProperties(name, type, readonly, afterSave, onClose) {
         return {
             title: 'Metaproperties - ' + name,
             instructionsTitle: 'Instructions - Metaproperties',
             instructionsText: 'Add custom properties for this ' + type + '.',
             displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            size: FormBuilder.MODAL_SIZE.LARGE,
             readonly: readonly,
             afterSave: afterSave,
+            onClose: onClose,
             columns: {
                 key: {
                     heading: 'Key',
@@ -73,13 +76,33 @@ var NCEBuilderOptions = (function () {
         };
     }
 
-    function updateAxis(axis, readonly, afterSave) {
+    function deleteAxis(axisName, afterSave, onClose) {
+        return {
+            title: 'Delete Axis - ' + axisName,
+            instructionsTitle: '',
+            instructionsText: 'Note: All cells will be cleared when an axis is deleted.',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            afterSave: afterSave,
+            onClose: onClose,
+            saveButtonText: 'Delete Axis',
+            formInputs: {
+                name: {
+                    label: 'Axis to delete',
+                    readonly: true,
+                    data: axisName
+                }
+            }
+        };
+    }
+
+    function updateAxis(axis, readonly, afterSave, onClose) {
         var metaProps = axis.metaProps || {};
         return {
             title: 'Update Axis - ' + axis.name,
             displayType: FormBuilder.DISPLAY_TYPE.FORM,
             readonly: readonly,
             afterSave: afterSave,
+            onClose: onClose,
             formInputs: {
                 name: {
                     label: 'Axis name',
@@ -188,6 +211,7 @@ var NCEBuilderOptions = (function () {
     return {
         filterData: filterData,
         metaProperties: metaProperties,
+        deleteAxis: deleteAxis,
         updateAxis: updateAxis
     };
 })(jQuery);

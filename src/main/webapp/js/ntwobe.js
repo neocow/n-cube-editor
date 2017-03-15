@@ -171,8 +171,6 @@ var NCubeEditor2 = (function ($) {
 
             $('#addAxisCancel').on('click', addAxisClose);
             $('#addAxisOk').on('click', addAxisOk);
-            $('#deleteAxisCancel').on('click', deleteAxisClose);
-            $('#deleteAxisOk').on('click', deleteAxisOk);
             $('#updateAxisMenu').on('click', updateAxis);
             $('#searchOptionsCancel').on('click', function() {
                 searchOptionsClose();
@@ -3053,7 +3051,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         addHotBeforeKeyDown();
-        builderOptions = NCEBuilderOptions.metaProperties(metaPropertyOptions.objectName, metaPropertyOptions.objectType, metaPropertyOptions.readonly, function() { metaPropertiesSave(metaProperties, metaPropertyOptions) });
+        builderOptions = NCEBuilderOptions.metaProperties(metaPropertyOptions.objectName, metaPropertyOptions.objectType, metaPropertyOptions.readonly, function() { metaPropertiesSave(metaProperties, metaPropertyOptions); }, removeHotBeforeKeyDown);
         FormBuilder.openBuilderModal(builderOptions, metaProperties);
     }
 
@@ -3072,7 +3070,6 @@ var NCubeEditor2 = (function ($) {
             };
         }
         updateMetaProperties(metaPropertyOptions, mpMap);
-        removeHotBeforeKeyDown();
         reload();
     }
 
@@ -3692,7 +3689,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         addHotBeforeKeyDown();
-        builderOptions = NCEBuilderOptions.filterData(columnSelectList, nce.getFilterOutBlankRows(), function() { filterSave(); removeHotBeforeKeyDown(); });
+        builderOptions = NCEBuilderOptions.filterData(columnSelectList, nce.getFilterOutBlankRows(), function() { filterSave(); removeHotBeforeKeyDown(); }, removeHotBeforeKeyDown);
         FormBuilder.openBuilderModal(builderOptions, _filters);
     }
 
@@ -4501,20 +4498,13 @@ var NCubeEditor2 = (function ($) {
             return;
         }
 
-        $('#deleteAxisName').val(axisName);
-        $('#deleteAxisModal').modal();
         addHotBeforeKeyDown();
-    }
-    
-    function deleteAxisClose() {
-        $('#deleteAxisModal').modal('hide');
-        removeHotBeforeKeyDown();
-        destroyEditor();
+        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteAxis(axisName, deleteAxisOk, removeHotBeforeKeyDown));
     }
 
-    function deleteAxisOk() {
+    function deleteAxisOk(data) {
         var lowerAxisName, order;
-        var axisName = $('#deleteAxisName').val();
+        var axisName = data.name;
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.DELETE_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
         if (result.status) {
             lowerAxisName = axisName.toLowerCase();
@@ -4532,11 +4522,12 @@ var NCubeEditor2 = (function ($) {
             clearFilters();
             deleteSavedColumnWidths();
             markCubeModified();
+            removeHotBeforeKeyDown();
+            destroyEditor();
             nce.loadCube();
         } else {
             nce.showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
-        deleteAxisClose();
     }
 
     function updateAxis(axisName) {
@@ -4549,7 +4540,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         addHotBeforeKeyDown();
-        builderOptions = NCEBuilderOptions.updateAxis(result.data, !checkCubeUpdatePermissions(axisName), function(data) { updateAxisOk(axisName, data); });
+        builderOptions = NCEBuilderOptions.updateAxis(result.data, !checkCubeUpdatePermissions(axisName), function(data) { updateAxisOk(axisName, data); }, removeHotBeforeKeyDown);
         FormBuilder.openBuilderModal(builderOptions);
     }
 
