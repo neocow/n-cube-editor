@@ -97,22 +97,18 @@ class RpmVisualizerTest
     @Test
     void testLoadGraph_canLoadTargetAsRpmClass()
     {
-        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     policyControlDate:'2017-01-01',
-                     quoteDate:'2017-01-01',
-                     coverage: 'CCCoverage'] as CaseInsensitiveMap
+        Map utilizedScope = new CaseInsensitiveMap()
+        Map availableScope = defaultRpmScope + [coverage: 'CCCoverage']
 
-        topNodeScope = new CaseInsensitiveMap(scope)
+        //Load graph
         String startCubeName = 'rpm.class.Coverage'
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
         loadGraph(options)
 
         Map node = loadDetailsAndCheckNode('Location', 'Risk', UNABLE_TO_LOAD, 'Coverage points directly to Risk via field Location, but there is no risk named Location on Risk.', true)
-        checkNoScopePrompt(node)
-        Map availableScope = new CaseInsensitiveMap(scope)
-        availableScope.putAll([risk: 'Location'])
-        assert node.availableScope == availableScope
-        assert node.scope == new CaseInsensitiveMap()
+        availableScope.Risk = 'Location'
+        assert availableScope == node.availableScope
+        assert utilizedScope == node.scope
     }
 
     @Test
@@ -233,24 +229,27 @@ class RpmVisualizerTest
     @Test
     void testLoadGraph_checkNodeAndEdge()
     {
-        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     policyControlDate: '2017-01-01',
-                     quoteDate        : '2017-01-01',
-                     coverage         : 'FCoverage'] as CaseInsensitiveMap
-        topNodeScope = new CaseInsensitiveMap(scope)
+        Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                             coverage         : 'FCoverage'] as CaseInsensitiveMap
+        Map availableScope = defaultRpmScope + [coverage: 'FCoverage']
 
-        Map enumScope = new CaseInsensitiveMap(scope)
+        Map enumScope = new CaseInsensitiveMap(utilizedScope)
         enumScope.sourceFieldName = 'Coverages'
 
-        Map cCoverageScope = new CaseInsensitiveMap(scope)
-        cCoverageScope.coverage = 'CCCoverage'
-        cCoverageScope.sourceCoverage = 'FCoverage'
+        Map availableEnumScope = new CaseInsensitiveMap(availableScope)
+        availableEnumScope.sourceFieldName = 'Coverages'
 
-        Map availableCCCoverageScope = new CaseInsensitiveMap(cCoverageScope)
+        Map ccCoverageScope = new CaseInsensitiveMap(utilizedScope)
+        ccCoverageScope.coverage = 'CCCoverage'
+
+        Map availableCCCoverageScope = new CaseInsensitiveMap(availableScope)
+        availableCCCoverageScope.putAll(ccCoverageScope)
+        availableCCCoverageScope.sourceCoverage = 'FCoverage'
         availableCCCoverageScope.sourceFieldName = 'Coverages'
 
+        //Load graph
         String startCubeName = 'rpm.class.Coverage'
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
         loadGraph(options)
 
         //Top level source node
@@ -262,8 +261,8 @@ class RpmVisualizerTest
         assert null == node.sourceCubeName
         assert null == node.sourceDescription
         assert ['Coverage', 'Deductible', 'Limit', 'Premium', 'Rate', 'Ratefactor', 'Role'] == node.typesToAdd
-        assert scope == node.scope
-        assert scope == node.availableScope
+        assert utilizedScope == node.scope
+        assert availableScope == node.availableScope
         assert (node.details as String).contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>Coverages</li><li>Exposure</li><li>StatCode</li></ul></pre>")
 
         //Edge from top level node to enum
@@ -282,7 +281,7 @@ class RpmVisualizerTest
         assert 'rpm.class.Coverage' == node.sourceCubeName
         assert 'FCoverage' == node.sourceDescription
         assert enumScope == node.scope
-        assert enumScope == node.availableScope
+        assert availableEnumScope == node.availableScope
         assert null == node.typesToAdd
         assert (node.details as String).contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>CCCoverage</li><li>ICoverage</li></ul></pre>")
 
@@ -302,7 +301,7 @@ class RpmVisualizerTest
         assert 'rpm.enum.Coverage.Coverages' == node.sourceCubeName
         assert 'field Coverages on FCoverage' == node.sourceDescription
         assert ['Coverage', 'Deductible', 'Limit', 'Premium', 'Rate', 'Ratefactor', 'Role'] == node.typesToAdd
-        assert cCoverageScope == node.scope
+        assert ccCoverageScope == node.scope
         assert availableCCCoverageScope == node.availableScope
         assert (node.details as String).contains("${DETAILS_LABEL_FIELDS}<pre><ul><li>Exposure</li><li>Location</li><li>StatCode</li><li>field1</li><li>field2</li><li>field3</li><li>field4</li></ul></pre>")
     }
@@ -342,54 +341,45 @@ class RpmVisualizerTest
     @Test
     void testGetCellValues_classNode_show_unboundAxes_changeToNonDefault()
     {
-        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     policyControlDate: '2017-01-01',
-                     quoteDate        : '2017-01-01',
-                     coverage         : 'CCCoverage'] as CaseInsensitiveMap
-        topNodeScope = new CaseInsensitiveMap(scope)
-
-        Map expectedNodeScope = new CaseInsensitiveMap(scope)
+        Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                             coverage         : 'CCCoverage'] as CaseInsensitiveMap
+        Map availableScope = defaultRpmScope + [coverage: 'CCCoverage']
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
         loadGraph(options)
-        assert nodes.size() == 2
         Map node = loadDetailsAndCheckNode('CCCoverage', 'Coverage')
-        checkNoScopePrompt(node)
 
         //Simulate that the user clicks Show Traits for the node
         node.showCellValues = true
+        node.showingHidingCellValues = true
         node = loadDetailsAndCheckNode('CCCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false, true)
-        String nodeDetails = node.details as String
         checkScopePromptTitle(node, 'businessDivisionCode', false, '  - rpm.scope.class.Coverage.traits.StatCode\n  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field4')
         checkScopePromptDropdown(node, 'businessDivisionCode', 'Default', ['AAADIV', 'BBBDIV', DEFAULT], [], true)
-
         checkScopePromptTitle(node, 'program', false, '  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field4')
         checkScopePromptDropdown(node, 'program', 'Default', ['program1', 'program2', 'program3', DEFAULT], [], true)
-
         checkScopePromptTitle(node, 'type', false, '  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field3CovC\n  - rpm.scope.class.Coverage.traits.field4')
         checkScopePromptDropdown(node, 'type', 'Default', ['type1', 'type2', 'type3', 'typeA', 'typeB', DEFAULT], [], true)
-
-        assert node.availableScope == scope
-        assert node.scope == scope
+        assert utilizedScope == node.scope
+        assert availableScope == node.availableScope
 
         //Simulate that the user picks businessDivisionCode = AAADIV
-        expectedNodeScope.businessDivisionCode = 'AAADIV'
-        topNodeScope = new CaseInsensitiveMap(scopeInfo.scope as Map)
-        topNodeScope.businessDivisionCode = 'AAADIV'
-        node.showCellValues = true
+        utilizedScope.businessDivisionCode = 'AAADIV'
+        availableScope.businessDivisionCode = 'AAADIV'
+        node.availableScope = new CaseInsensitiveMap(availableScope)
+        node.showingHidingCellValues = false
         node = loadDetailsAndCheckNode('CCCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false, true)
-        assert nodes.size() == 1
-        assert expectedNodeScope == node.scope
-        assert expectedNodeScope == node.availableScope
-        nodeDetails = node.details as String
         checkScopePromptTitle(node, 'businessDivisionCode', false, '  - rpm.scope.class.Coverage.traits.StatCode\n  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field4')
         checkScopePromptDropdown(node, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], true)
         checkScopePromptTitle(node, 'program', false, '  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field4')
         checkScopePromptDropdown(node, 'program', 'Default', ['program1', 'program2', 'program3', DEFAULT], [], true)
         checkScopePromptTitle(node, 'type', false, '  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field3CovC\n  - rpm.scope.class.Coverage.traits.field4')
         checkScopePromptDropdown(node, 'type', 'Default', ['type1', 'type2', 'type3', 'typeA', 'typeB', DEFAULT], [], true)
+        assert utilizedScope == node.scope
+        assert availableScope == node.availableScope
+
+        String nodeDetails = node.details as String
         assert nodeDetails.contains("Exposure</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre><li><b>")
         assert nodeDetails.contains("Location</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:rpmType: Risk</li><li>v:max: 1</li><li>v:min: 0</li></ul></pre><li><b>")
         assert nodeDetails.contains("StatCode</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: 1133</li><li>r:exists: true</li><li>r:extends: DataElementInventory[StatCode]</li><li>r:rpmType: string</li></ul></pre>")
@@ -410,35 +400,32 @@ class RpmVisualizerTest
         String httpsLink = """<a href="#" onclick='window.open("${httpsURL}");return false;'>${httpsURL}</a>"""
         String httpLink = """<a href="#" onclick='window.open("${httpURL}");return false;'>${httpURL}</a>"""
 
-        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     policyControlDate: '2017-01-01',
-                     quoteDate        : '2017-01-01',
-                     coverage         : 'AdmCoverage'] as CaseInsensitiveMap
-        topNodeScope = new CaseInsensitiveMap(scope)
+        Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                             coverage         : 'AdmCoverage'] as CaseInsensitiveMap
+        Map availableScope = defaultRpmScope + [coverage: 'AdmCoverage']
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
         loadGraph(options)
         Map node = loadDetailsAndCheckNode('AdmCoverage', 'Coverage')
-        assert scope == node.scope
-        assert scope == node.availableScope
+        assert utilizedScope == node.scope
+        assert availableScope == node.availableScope
 
         //Simulate that the user clicks Show Traits for the node.
         //An optional scope prompt for business division code shows.
         node.showCellValues = true
+        node.showingHidingCellValues = true
+        node = loadDetailsAndCheckNode('AdmCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false, true)
+        assert utilizedScope == node.scope
+        assert availableScope == node.availableScope
 
         //Simulate that the user picks businessDivisionCode = AAADIV
-        Map expectedNodeScope =  topNodeScope = new CaseInsensitiveMap(scopeInfo.scope as Map)
-        expectedNodeScope.businessDivisionCode = 'AAADIV'
-        topNodeScope = new CaseInsensitiveMap(scopeInfo.scope as Map)
-        topNodeScope.businessDivisionCode = 'AAADIV'
-        node.showCellValues = true
-
+        utilizedScope.businessDivisionCode = 'AAADIV'
+        availableScope.businessDivisionCode = 'AAADIV'
+        node.availableScope = new CaseInsensitiveMap(availableScope)
+        node.showingHidingCellValues = false
         node = loadDetailsAndCheckNode('AdmCoverage', 'Coverage', '', '', false, true)
-        assert nodes.size() == 1
-        assert expectedNodeScope == node.scope
-        assert expectedNodeScope == node.availableScope
         String nodeDetails = node.details as String
         checkScopePromptTitle(node, 'businessDivisionCode', false, 'rpm.scope.class.Coverage.traits.StatCode')
         checkScopePromptDropdown(node, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], true)
@@ -446,33 +433,31 @@ class RpmVisualizerTest
         assert nodeDetails.contains("Location</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: ${httpLink}</li><li>r:exists: true</li><li>r:rpmType: Risk</li><li>v:max: 1</li><li>v:min: 0</li></ul></pre><li><b>")
         assert nodeDetails.contains("StatCode</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: ${httpsLink}</li><li>r:exists: true</li><li>r:extends: DataElementInventory[StatCode]</li><li>r:rpmType: string</li></ul></pre></ul></pre>")
         assert nodeDetails.contains("${DETAILS_LABEL_CLASS_TRAITS}</b><pre><ul><li>r:exists: true</li><li>r:name: AdmCoverage</li><li>r:scopedName: AdmCoverage</li></ul></pre><br><b>")
+        assert utilizedScope == node.scope
+        assert availableScope == node.availableScope
     }
 
     @Test
     void testGetCellValues_enumNode_show()
     {
-        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     policyControlDate: '2017-01-01',
-                     quoteDate        : '2017-01-01',
-                     coverage         : 'FCoverage'] as CaseInsensitiveMap
-        topNodeScope = new CaseInsensitiveMap(scope)
-        Map nodeScope = new CaseInsensitiveMap(scope)
-        nodeScope.sourceFieldName = 'Coverages'
+        Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                             coverage         : 'FCoverage'] as CaseInsensitiveMap
+        Map availableScope = defaultRpmScope + [coverage: 'FCoverage']
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
         loadGraph(options)
-        assert nodes.size() == 5
         Map node = checkEnumNodeBasics("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage")
 
         //Simulate that the user clicks Show Traits for the node
         node.showCellValues = true
-
-
+        node.showingHidingCellValues = true
         node = checkEnumNodeBasics("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on FCoverage", '', false, true)
-        assert nodeScope == node.scope
-        assert nodeScope == node.availableScope
+        utilizedScope.sourceFieldName = 'Coverages'
+        assert utilizedScope == node.scope
+        availableScope.sourceFieldName = 'Coverages'
+        assert availableScope == node.availableScope
         String nodeDetails = node.details as String
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS_AND_TRAITS}</b><pre><ul><li><b>CCCoverage</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:name: CCCoverage</li><li>v:max: 999999</li><li>v:min: 0</li></ul></pre><li><b>ICoverage</b></li><pre><ul><li>r:declared: true</li><li>r:exists: true</li><li>r:name: ICoverage</li><li>v:max: 1</li><li>v:min: 0</li></ul>")
         assert nodeDetails.contains("${DETAILS_LABEL_CLASS_TRAITS}</b><pre><ul><li>r:exists: true</li></ul></pre><br><b>")
@@ -1889,7 +1874,7 @@ class RpmVisualizerTest
         {
             assert nodeName == node.detailsTitle2
         }
-        else if (nodeName == nodeType || unableToLoad)  //No detailsTitle2 when missing required scope or a non-EPM class (i.e. nodeName equals nodeType)
+        else if (nodeName == nodeType)  //No detailsTitle2 for non-EPM classes (i.e. nodeName equals nodeType)
         {
             assert null == node.detailsTitle2
         }
