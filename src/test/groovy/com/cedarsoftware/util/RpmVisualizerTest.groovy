@@ -1472,76 +1472,29 @@ class RpmVisualizerTest
 
 
     @Test
-    void testLoadGraph_scopePrompt_enumWithSingleDefaultValue()
+    void testLoadGraph_scopePrompt_nodeWithSingleDefaultValue()
     {
+        Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                             product          :'BProduct'] as CaseInsensitiveMap
+        Map availableScope = defaultRpmScope + utilizedScope
+
+        //Load graph
         String startCubeName = 'rpm.class.Product'
-        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     product:'BProduct',
-                     policyControlDate:'2017-01-01',
-                     quoteDate:'2017-01-01']
-        topNodeScope = new CaseInsensitiveMap(scope)
+        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
+        loadGraph(options)
 
-        Map nodeScope = new CaseInsensitiveMap(scope)
-        nodeScope.risk = 'DRisk'
-
-        Map availableScope = new CaseInsensitiveMap(nodeScope)
-        availableScope.sourceFieldName = 'Risks'
-
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
-        Map node = loadGraph(options)
-        assert 4 == nodes.size()
-        assert 3 == edges.size()
-
-        //The edge for field Risks from BProduct to enum Product.Risks
-        Map edge = edges.values().find { Map edge -> 'BProduct' == edge.fromName && 'Product.Risks' == edge.toName}
-        assert 'Risks' == edge.label
-        assert "Field Risks cardinality ${V_MIN_CARDINALITY}:${V_MAX_CARDINALITY}".toString() == edge.title
-
+        Map node = nodes.values().find { Map node1 -> 'DRisk' == node1.label }
         checkNode('DRisk', 'Risk', '', DEFAULTS_WERE_USED, false)
-        String nodeDetails = node.details as String
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Risk.traits.fieldDRisk')
         checkScopePromptDropdown(node, 'state', 'Default', [DEFAULT], [])
-
-        assert node.availableScope == availableScope
-        assert node.scope == nodeScope
+        utilizedScope.risk = 'DRisk'
+        availableScope.risk = 'DRisk'
+        assert utilizedScope == node.scope
+        assert availableScope == node.availableScope
     }
 
     @Test
-    void testLoadGraph_scopePrompt_enumWithMissingRequiredScope()
-    {
-        String startCubeName = 'rpm.class.Risk'
-        Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                     risk: 'DRisk',
-                     policyControlDate:'2017-01-01',
-                     quoteDate:'2017-01-01'] as CaseInsensitiveMap
-        topNodeScope = new CaseInsensitiveMap(scope)
-
-        Map availableScope = new CaseInsensitiveMap(scope)
-        availableScope.sourceFieldName = 'Coverages'
-
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
-        Map node = loadGraph(options)
-        assert 2 == nodes.size()
-        assert 1 == edges.size()
-
-        //The edge for field Coverages from DRisk to enum Risk.Coverages
-        Map edge = edges.values().find { Map edge -> 'DRisk' == edge.fromName && 'Risk.Coverages' == edge.toName}
-        assert "${ADDITIONAL_SCOPE_REQUIRED_FOR}Coverages".toString() == edge.label
-        assert "Field Coverages cardinality ${V_MIN_CARDINALITY}:${V_MAX_CARDINALITY}".toString() == edge.title
-
-        //Risk.Coverages enum has one required prompt
-        checkEnumNode("${ADDITIONAL_SCOPE_REQUIRED_FOR}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Coverages on DRisk", ADDITIONAL_SCOPE_REQUIRED, true)
-        String nodeDetails = node.details as String
-        checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.enum.Risk.Coverages.traits.exists')
-        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
-        checkNoScopePrompt(node, 'state')
-
-        assert node.availableScope == availableScope
-        assert node.scope == new CaseInsensitiveMap()
-    }
-
-    @Test
-    void testLoadGraph_scopePrompt_enumWithInvalidRequiredScope()
+    void testLoadGraph_scopePrompt_enumWithMissingThenInvalidRequiredScope()
     {
         Map availableScope = defaultRpmScope + [risk: 'DRisk']
 
