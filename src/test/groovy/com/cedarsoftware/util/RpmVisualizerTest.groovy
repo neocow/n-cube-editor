@@ -806,7 +806,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testLoadGraph_scopePrompt_nodes_afterTopNodeScopeChange()
+    void testLoadGraph_scopePrompt_nodeScope_afterTopNodeScopeChange()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'AProduct'] as CaseInsensitiveMap
@@ -839,7 +839,7 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testLoadGraph_scopePrompt_nodes_afterNonTopNodeScopeChange()
+    void testLoadGraph_scopePrompt_nodeScope_afterNonTopNodeScopeChange()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'AProduct'] as CaseInsensitiveMap
@@ -857,10 +857,9 @@ class RpmVisualizerTest
         assert 7 == edges.size()
         assert 8 == nodes.values().findAll { Map node1 -> defaultScopeDate == (node1.availableScope as Map).policyControlDate }.size()
 
-        //Simulate that the user changes policyControlDate on Risk.Coverages for ARisk. The policy control date
+        //Simulate that the user changes policyControlDate on for ARisk. The policy control date
         //should have changed on it and on all its target nodes, but no other classes.
-        node = nodes.values().find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on ARisk".toString() == node1.title }
-        availableScope.policyControlDate = tomorrow
+        node = nodes.values().find { Map node1 -> 'ARisk' == node1.label }
         (node.availableScope as Map).policyControlDate = tomorrow
         loadScopeChange(node)
         assert 8 == nodes.size()
@@ -871,12 +870,12 @@ class RpmVisualizerTest
         assert defaultScopeDate == (node.availableScope as Map).policyControlDate
         node = nodes.values().find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on AProduct".toString() == node1.title }
         assert defaultScopeDate == (node.availableScope as Map).policyControlDate
-        node = nodes.values().find { Map node1 -> 'ARisk' == node1.label }
-        assert defaultScopeDate == (node.availableScope as Map).policyControlDate
         node = nodes.values().find { Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}BRisk".toString() == node1.label }
         assert defaultScopeDate == (node.availableScope as Map).policyControlDate
 
         //Changed date
+        node = nodes.values().find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on ARisk".toString() == node1.title }
+        assert tomorrow == (node.availableScope as Map).policyControlDate
         node = nodes.values().find { Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}ACoverage".toString() == node1.label }
         assert tomorrow == (node.availableScope as Map).policyControlDate
         node = nodes.values().find { Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}BCoverage".toString() == node1.label }
@@ -918,59 +917,124 @@ class RpmVisualizerTest
     }
 
     @Test
-    void testLoadGraph_scopePrompt_nodesAfterChangeTopNodeScope()
+    void testLoadGraph_scopePrompt_nodes_afterScopeChange()
     {
-        Map availableScope = defaultRpmScope
+        Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                             product          : 'AProduct'] as CaseInsensitiveMap
+        Map availableScope = defaultRpmScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
-        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap()]
+        Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
         Map node = loadGraph(options)
-        assert 1 == nodes.size()
-        assert 0 == edges.size()
+        assert utilizedScope == node.scope
+        assert availableScope == node.availableScope
+        assert 8 == nodes.size()
+        assert 7 == edges.size()
+        List<Map> preScopeChangeNodes = []
+        nodes.values().each{
+            preScopeChangeNodes << new LinkedHashMap(it)
+        }
 
-        //Simulate that the user picks product = AProduct in the node scope prompt.
-        availableScope.product = 'AProduct'
-        node.availableScope = new CaseInsensitiveMap(availableScope)
-        node = loadScopeChange(node)
+        //Risk.Coverages for ARisk
+        node =  nodes.values().find {Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on ARisk".toString() == node1.title}
+        node = loadNodeDetails(node)
+        checkNoScopePrompt(node, 'product')
+        checkNoScopePrompt(node, 'pgm')
+        checkNoScopePrompt(node, 'state')
+        checkNoScopePrompt(node, 'div')
+
+        //ACoverage
+        node =  nodes.values().find {Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}ACoverage".toString() == node1.label}
+        node = loadNodeDetails(node)
+        checkNode('ACoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
+        checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.class.Coverage.traits.fieldACoverage')
+        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldACoverage')
+        checkScopePromptDropdown(node, 'div', '', ['div1', 'div2'], ['div3', DEFAULT])
+        checkNoScopePrompt(node, 'product')
+        checkNoScopePrompt(node, 'state')
+
+        //BCoverage
+        node = nodes.values().find { Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}${'BCoverage'}".toString() == node1.label }
+        node = loadNodeDetails(node)
+        checkNode('BCoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
+        checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldBCoverage')
+        checkScopePromptDropdown(node, 'div', '', ['div3'], ['div1', 'div2', DEFAULT])
+        checkNoScopePrompt(node, 'product')
+        checkNoScopePrompt(node, 'pgm')
+        checkNoScopePrompt(node, 'state')
+
+        //CCoverage
+        node = nodes.values().find { Map node1 -> 'CCoverage' == node1.label }
+        node = loadNodeDetails(node)
+        checkNode('CCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false)
+        checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Coverage.traits.fieldCCoverage')
+        checkScopePromptDropdown(node, 'state', '', ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'])
+        checkNoScopePrompt(node, 'product')
+        checkNoScopePrompt(node, 'div')
+        checkNoScopePrompt(node, 'pgm')
+
+        //Simulate that the user picks state = OH on ARisk.
+        node = nodes.values().find { Map node1 -> 'ARisk' == node1.label }
+        (node.availableScope as Map).state = 'OH'
+        loadScopeChange(node)
+
+        //Simulate that the user picks div = div1 on ARisk
+        node = nodes.values().find { Map node1 -> 'ARisk' == node1.label }
+        (node.availableScope as Map).div = 'div1'
+        loadScopeChange(node)
         assert 8 == nodes.size()
         assert 7 == edges.size()
 
-        //Simulate that the user picks pgm = pgm1, state = OH and div = div1. Reload after each.
-        availableScope.pgm = 'pgm1'
-        node.availableScope = new CaseInsensitiveMap(availableScope)
-        node = loadScopeChange(node)
-        availableScope.state = 'OH'
-        node.availableScope = new CaseInsensitiveMap(availableScope)
-        node = loadScopeChange(node)
-        availableScope.div = 'div1'
-        node.availableScope = new CaseInsensitiveMap(availableScope)
-        node = loadScopeChange(node)
-        assert 8 == nodes.size()
-        assert 7 == edges.size()
+        //Unchanged nodes
+        assert nodes.values().find {Map node1 -> 'AProduct' == node1.label} ==
+                preScopeChangeNodes.find {Map node1 -> 'AProduct' == node1.label}
+        assert nodes.values().find {Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on AProduct".toString() == node1.title} ==
+                preScopeChangeNodes.find {Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on AProduct".toString() == node1.title}
+        assert nodes.values().find {Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}BRisk".toString() == node1.label} ==
+                preScopeChangeNodes.find {Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}BRisk".toString() == node1.label}
 
-        //BCoverage has one required scope prompt since requires div=div3.
+        //Changed nodes
+
+        //Risk.Coverages for ARisk
+        node =  nodes.values().find {Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on ARisk".toString() == node1.title}
+        node = loadNodeDetails(node)
+        checkNoScopePrompt(node, 'product')
+        checkNoScopePrompt(node, 'pgm')
+        checkNoScopePrompt(node, 'state')
+        checkNoScopePrompt(node, 'div')
+
+        //ACoverage
+        node =  nodes.values().find {Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}ACoverage".toString() == node1.label}
+        node = loadNodeDetails(node)
+        checkNode('ACoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
+        checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.class.Coverage.traits.fieldACoverage')
+        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        checkNoScopePrompt(node, 'product')
+        checkNoScopePrompt(node, 'state')
+        checkNoScopePrompt(node, 'div')
+
+        //BCoverage
+        node = nodes.values().find { Map node1 -> "${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}${'BCoverage'}".toString() == node1.label }
+        node = loadNodeDetails(node)
         checkNode('BCoverage', 'Coverage', REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR, IS_NOT_VALID_FOR, true)
         checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldBCoverage')
         checkScopePromptDropdown(node, 'div', 'div1', ['div3'], ['div1', 'div2', DEFAULT])
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'pgm')
         checkNoScopePrompt(node, 'state')
-        assert node.scope == new CaseInsensitiveMap()
 
-        //CCoverage has one default scope prompt since it doesn't have OH as an optional scope value.
+        //CCoverage
+        node = nodes.values().find { Map node1 -> 'CCoverage' == node1.label }
+        node = loadNodeDetails(node)
         checkNode('CCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false)
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Coverage.traits.fieldCCoverage')
         checkScopePromptDropdown(node, 'state', 'OH', ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'])
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'div')
         checkNoScopePrompt(node, 'pgm')
-        assert node.scope == [state: 'OH', coverage: 'CCoverage', risk: 'ARisk', product: 'AProduct', _effectiveVersion: ApplicationID.DEFAULT_VERSION, policyControlDate: defaultScopeDate, quoteDate: defaultScopeDate] as CaseInsensitiveMap
-
-        //Check graph scope prompt - BCoverage no longer has missing required scope since div=div3, and as a result exposes a
-        //new optional scope value for state (NM).
-
-    }
+     }
 
 
     @Test
@@ -1138,13 +1202,10 @@ class RpmVisualizerTest
         loadGraph(options)
 
         Map node = nodes.values().find { Map node1 -> 'DRisk' == node1.label }
+        node = loadNodeDetails(node)
         checkNode('DRisk', 'Risk', '', DEFAULTS_WERE_USED, false)
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Risk.traits.fieldDRisk')
         checkScopePromptDropdown(node, 'state', 'Default', [DEFAULT], [])
-        utilizedScope.risk = 'DRisk'
-        availableScope.risk = 'DRisk'
-        assert utilizedScope == node.scope
-        assert availableScope == node.availableScope
     }
 
     @Test
