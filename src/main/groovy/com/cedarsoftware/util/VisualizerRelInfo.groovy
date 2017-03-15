@@ -430,29 +430,18 @@ class VisualizerRelInfo
 
 	protected StringBuilder getScopeMessage(String scopeKey, Set<Object> availableScopeValues, StringBuilder title, Object providedScopeValue)
 	{
-		String value
 		StringBuilder sb = new StringBuilder()
 		String caret = availableScopeValues ? """<span class="caret"></span>""" : ''
 		String placeHolder = availableScopeValues ? 'Select or enter value...' : 'Enter value...'
 		String topNodeClass = targetId == 1l ? DETAILS_CLASS_TOP_NODE : ''
-		String typeValueClass = ''
-
-		if (availableScopeValues.contains(null))
-		{
-			value = providedScopeValue ?: DEFAULT
-		}
-		else
-		{
-			value = providedScopeValue ?: ''
-		}
+		Object value = getValue(availableScopeValues, providedScopeValue)
+		String valueClass = getClassForValue(availableScopeValues, value, providedScopeValue)
 
 		sb.append("""<div class="input-group" title="${title}">""")
 		sb.append("""<div class="input-group-btn">""")
 		sb.append("""<button type="button" class="btn btn-default dropdown-toggle"  data-toggle="dropdown">${scopeKey} ${caret}</button>""")
 		if (availableScopeValues)
 		{
-			typeValueClass = availableScopeValues.contains(providedScopeValue) ? typeValueClass : DETAILS_CLASS_MISSING_VALUE
-			typeValueClass = DEFAULT == value ? DETAILS_CLASS_DEFAULT_VALUE : typeValueClass
 			sb.append("""<ul class="dropdown-menu">""")
 			availableScopeValues.each {Object scopeValue ->
 				if (scopeValue)
@@ -467,9 +456,41 @@ class VisualizerRelInfo
 			sb.append("""</ul>""")
 		}
 		sb.append("""</div>""")
-		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${typeValueClass} ${topNodeClass}" style="color: black;" type="text">""")
+		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${valueClass} ${topNodeClass}" style="color: black;" type="text">""")
 		sb.append("""</div>""")
 		return sb
+	}
+
+	private static Object getValue(Set<Object> availableScopeValues, Object providedScopeValue)
+	{
+		if (availableScopeValues.contains(null))
+		{
+			return providedScopeValue ?: DEFAULT
+		}
+		else
+		{
+			return providedScopeValue ?: ''
+		}
+	}
+
+	private static String getClassForValue(Set<Object> availableScopeValues, Object value, Object providedScopeValue)
+	{
+		if (DEFAULT == value && availableScopeValues.contains(null))
+		{
+			return DETAILS_CLASS_DEFAULT_VALUE
+		}
+		else if (!availableScopeValues && !providedScopeValue)
+		{
+			return DETAILS_CLASS_MISSING_VALUE
+		}
+		else if (!availableScopeValues.contains(providedScopeValue))
+		{
+			return DETAILS_CLASS_MISSING_VALUE
+		}
+		else
+		{
+			return ''
+		}
 	}
 
 	protected void setLoadAgain(VisualizerInfo visInfo, String scopeKey)
