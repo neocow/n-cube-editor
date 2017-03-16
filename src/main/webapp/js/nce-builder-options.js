@@ -145,6 +145,29 @@ var NCEBuilderOptions = (function () {
     /*
      * additional required options:
      *  appId
+     */
+    function deleteBranch(opts) {
+        var appId = opts.appId;
+        return {
+            title: 'Delete ' + appId.app + ' ' + appId.version + '-' + appId.status + ' ' + appId.branch,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            size: FormBuilder.MODAL_SIZE.SMALL,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Delete Branch',
+            formInputs: {
+                surety: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    label: 'Are you sure?'
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  appId
      *  cubeName
      *  appSelectList
      *  populateVersionFunc
@@ -360,6 +383,7 @@ var NCEBuilderOptions = (function () {
         filterData: filterData,
         metaProperties: metaProperties,
         copyBranch: copyBranch,
+        deleteBranch: deleteBranch,
         copyCube: copyCube,
         deleteAxis: deleteAxis,
         updateAxis: updateAxis

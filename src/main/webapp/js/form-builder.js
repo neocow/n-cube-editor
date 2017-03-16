@@ -53,6 +53,7 @@ var FormBuilder = (function ($) {
         TABLE: 'table'
     };
     var MODAL_SIZE = {
+        SMALL: 'modal-sm',
         MEDIUM: '',
         LARGE: 'modal-lg',
         XL: 'modal-xl'
@@ -202,7 +203,8 @@ var FormBuilder = (function ($) {
 
     function buildModalContent() {
         var body;
-        var html = '<div class="modal-body" style="overflow-y:auto;min-height:450px;">';
+        var style = _options.size === MODAL_SIZE.SMALL ? '' : 'overflow-y:auto;min-height:450px;';
+        var html = '<div class="modal-body" style="'+ style + '">';
 
         if (_options.hasOwnProperty('instructionsTitle') && _options.hasOwnProperty('instructionsText')) {
             html += '<div class="panel-group"><div class="panel panel-default">'
@@ -290,6 +292,8 @@ var FormBuilder = (function ($) {
                     return createFormDefaultSelectInput(id, label, formInput.selectOptions, readonly, initVal);
                 case INPUT_TYPE.TEXT_SELECT:
                     return createFormTextSelectInput(id, label, formInput.selectOptions, readonly, initVal);
+                case INPUT_TYPE.READONLY:
+                    return $('<span id="' + id + '">' + label + '</span>');
                 default:
                     return createFormDefaultTextInput(id, label, readonly, initVal);
             }

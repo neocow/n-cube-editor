@@ -3852,9 +3852,6 @@ var NCE = (function ($) {
         $('#branchDelete').on('click', function() {
             deleteBranch();
         });
-        $('#deleteBranchOk').on('click', function() {
-            deleteBranchOk();
-        });
         $('#branchCopy').on('click', function() {
             copyBranch();
         });
@@ -4576,21 +4573,22 @@ var NCE = (function ($) {
     }
 
     function deleteBranch() {
+        var opts;
         if (isHeadSelected()) {
             showNote('HEAD branch cannot be deleted.');
             return;
         }
 
-        $('#deleteBranchLabel')[0].textContent = "Delete '" + _selectedBranch + "' ?";
-        $('#deleteBranchModal').modal();
+        opts = {
+            appId: getAppId(),
+            afterSave: deleteBranchOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteBranch(opts));
     }
 
     function deleteBranchOk() {
-        var result;
         var appId = getAppId();
-        $('#deleteBranchModal').modal('hide');
-
-        result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_BRANCH, [appId]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_BRANCH, [appId]);
         if (result.status) {
             removeFromVisitedBranchesList(appId);
             removeCubeInfoInOpenCubeList(CUBE_INFO.BRANCH);
