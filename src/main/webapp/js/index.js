@@ -112,8 +112,6 @@ var NCE = (function ($) {
     var _branchNameWarning = $('#branchNameWarning');
     var _createSnapshotLabel = $('#createSnapshotLabel');
     var _createSnapshotVersion = $('#createSnapshotVersion');
-    var _copyBranchLabel = $('#copyBranchLabel');
-    var _copyBranchWithHistory = $('#copy-branch-with-history');
     var _globalComparatorLeftApp = $('#globalComparatorLeftApp');
     var _globalComparatorRightApp = $('#globalComparatorRightApp');
     var _globalComparatorLeftVersion = $('#globalComparatorLeftVersion');
@@ -159,7 +157,6 @@ var NCE = (function ($) {
     var _releaseCubesModal = $('#releaseCubesModal');
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
     var _createSnapshotModal = $('#createSnapshotModal');
-    var _copyBranchModal = $('#copyBranchModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
     var _globalComparatorModal = $('#globalComparatorModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
@@ -3170,8 +3167,8 @@ var NCE = (function ($) {
             appId: appId,
             cubeName: _selectedCubeName,
             appSelectList: loadAppNames(),
-            populateVersionDropdownFunc: getAppVersions,
-            populateBranchDropdownFunc: getBranchNamesByAppId,
+            populateVersionFunc: getAppVersions,
+            populateBranchFunc: getBranchNamesByAppId,
             readonly: false,
             afterSave: dupeCubeCopy
         };
@@ -3861,9 +3858,6 @@ var NCE = (function ($) {
         $('#branchCopy').on('click', function() {
             copyBranch();
         });
-        $('#copyBranchOk').on('click', function() {
-            copyBranchOk();
-        });
         // From 'Select / Create Branch' Modal
         $('#createBranch').on('click', function() {
             createBranch();
@@ -4551,33 +4545,24 @@ var NCE = (function ($) {
     }
 
     function copyBranch() {
-        $('#copyBranchAppName').val(_selectedApp);
-        $('#copyBranchStatus').val(STATUS.SNAPSHOT);
-        $('#copyBranchVersion').val(_selectedVersion);
-        $('#copyBranchName').val('');
-        _copyBranchWithHistory.prop('checked', false);
-        buildDropDown('#copyBranchAppList', '#copyBranchAppName', loadAppNames(), function (app) {
-            buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion', app);
-        });
-        buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
-
-        _copyBranchLabel[0].textContent = 'Copy ' + _selectedApp + ' ' + _selectedVersion + '-' + _selectedStatus + ' ' + _selectedBranch;
-        _copyBranchModal.modal();
+        var opts = {
+            appId: getAppId(),
+            appSelectList: loadAppNames(),
+            populateVersionFunc: getAppVersions,
+            readonly: false,
+            afterSave: copyBranchOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.copyBranch(opts));
     }
 
-    function copyBranchOk() {
-        var result;
-        var origAppId = getAppId();
-        var copyAppId = appIdFrom($('#copyBranchAppName').val(), $('#copyBranchVersion').val(), STATUS.SNAPSHOT, $('#copyBranchName').val());
-        var shouldCopyWithHistory = _copyBranchWithHistory[0].checked;
-        
-        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, shouldCopyWithHistory]);
+    function copyBranchOk(data) {
+        var copyAppId = appIdFrom(data.app, data.version, STATUS.SNAPSHOT, data.branch);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [getAppId(), copyAppId, data.copyHistory]);
         if (!result.status) {
             showNote('Unable to copy branch:<hr class="hr-small"/>' + result.data);
             return;
         }
         
-        _copyBranchModal.modal('hide');
         saveSelectedApp(copyAppId.app);
         saveSelectedVersion(copyAppId.version);
         saveSelectedStatus(copyAppId.status);

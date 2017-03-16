@@ -94,10 +94,61 @@ var NCEBuilderOptions = (function () {
     /*
      * additional required options:
      *  appId
+     *  appSelectList
+     *  populateVersionFunc
+     */
+    function copyBranch(opts) {
+        var appId = opts.appId;
+        return {
+            title: 'Copy ' + appId.app + ' ' + appId.version + '-' + appId.status + ' ' + appId.branch,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Copy Branch',
+            formInputs: {
+                app: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'New app',
+                    selectOptions: opts.appSelectList,
+                    data: appId.app,
+                    listeners: {
+                        change: function() {
+                            $('#' + FormBuilder.ID_PREFIX + 'version').trigger('populate');
+                        }
+                    }
+                },
+                version: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'New version',
+                    data: appId.version,
+                    listeners: {
+                        populate: function() {
+                            var appSelect = $('#' + FormBuilder.ID_PREFIX + 'app');
+                            var app = appSelect.length ? appSelect.val() : appId.app;
+                            var versions = opts.populateVersionFunc(app);
+                            FormBuilder.populateTextSelect($(this).parent(), versions);
+                        }
+                    }
+                },
+                branch: {
+                    label: 'New branch'
+                },
+                copyHistory: {
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    label: 'Copy branch with history'
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  appId
      *  cubeName
      *  appSelectList
-     *  populateVersionDropdownFunc
-     *  populateBranchDropdownFunc
+     *  populateVersionFunc
+     *  populateBranchFunc
      */
     function copyCube(opts) {
         var appId = opts.appId;
@@ -132,7 +183,7 @@ var NCEBuilderOptions = (function () {
                         populate: function() {
                             var appSelect = $('#' + FormBuilder.ID_PREFIX + 'app');
                             var app = appSelect.length ? appSelect.val() : appId.app;
-                            var versions = opts.populateVersionDropdownFunc(app);
+                            var versions = opts.populateVersionFunc(app);
                             FormBuilder.populateTextSelect($(this).parent(), versions);
                         }
                     }
@@ -151,7 +202,7 @@ var NCEBuilderOptions = (function () {
                                 status: STATUS.SNAPSHOT,
                                 branch: 'HEAD'
                             } : appId;
-                            var branches = opts.populateBranchDropdownFunc(newAppId);
+                            var branches = opts.populateBranchFunc(newAppId);
                             FormBuilder.populateTextSelect($(this).parent(), branches);
                         }
                     }
@@ -308,6 +359,7 @@ var NCEBuilderOptions = (function () {
     return {
         filterData: filterData,
         metaProperties: metaProperties,
+        copyBranch: copyBranch,
         copyCube: copyCube,
         deleteAxis: deleteAxis,
         updateAxis: updateAxis
