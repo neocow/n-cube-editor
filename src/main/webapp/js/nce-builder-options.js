@@ -102,12 +102,12 @@ var NCEBuilderOptions = (function () {
     function copyCube(opts) {
         var appId = opts.appId;
         return {
-            title: 'Copy - ' + opts.cubeName,
+            title: 'Duplicate - ' + opts.cubeName,
             displayType: FormBuilder.DISPLAY_TYPE.FORM,
             readonly: opts.readonly,
             afterSave: opts.afterSave,
             onClose: opts.onClose,
-            saveButtonText: 'Copy',
+            saveButtonText: 'Duplicate',
             formInputs: {
                 app: {
                     type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
