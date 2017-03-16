@@ -114,7 +114,7 @@ var NCEBuilderOptions = (function () {
                     data: appId.app,
                     listeners: {
                         change: function() {
-                            $('#' + FormBuilder.ID_PREFIX + 'version').trigger('populate');
+                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'version').trigger('populate');
                         }
                     }
                 },
@@ -124,9 +124,8 @@ var NCEBuilderOptions = (function () {
                     data: appId.version,
                     listeners: {
                         populate: function() {
-                            var appSelect = $('#' + FormBuilder.ID_PREFIX + 'app');
-                            var app = appSelect.length ? appSelect.val() : appId.app;
-                            var versions = opts.populateVersionFunc(app);
+                            var app = FormBuilder.getInputValue('app') || appId.app;
+                            var versions = opts.populateVersionFunc(app, STATUS.SNAPSHOT);
                             FormBuilder.populateTextSelect($(this).parent(), versions);
                         }
                     }
@@ -190,8 +189,8 @@ var NCEBuilderOptions = (function () {
                     data: appId.app,
                     listeners: {
                         change: function() {
-                            $('#' + FormBuilder.ID_PREFIX + 'version').trigger('populate');
-                            $('#' + FormBuilder.ID_PREFIX + 'branch').trigger('populate');
+                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'version').trigger('populate');
+                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'branch').trigger('populate');
                         }
                     }
                 },
@@ -201,12 +200,11 @@ var NCEBuilderOptions = (function () {
                     data: appId.version,
                     listeners: {
                         change: function() {
-                            $('#' + FormBuilder.ID_PREFIX + 'branch').trigger('populate');
+                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'branch').trigger('populate');
                         },
                         populate: function() {
-                            var appSelect = $('#' + FormBuilder.ID_PREFIX + 'app');
-                            var app = appSelect.length ? appSelect.val() : appId.app;
-                            var versions = opts.populateVersionFunc(app);
+                            var app = FormBuilder.getInputValue('app') || appId.app;
+                            var versions = opts.populateVersionFunc(app, STATUS.SNAPSHOT);
                             FormBuilder.populateTextSelect($(this).parent(), versions);
                         }
                     }
@@ -217,11 +215,11 @@ var NCEBuilderOptions = (function () {
                     data: appId.branch,
                     listeners: {
                         populate: function() {
-                            var appSelect = $('#' + FormBuilder.ID_PREFIX + 'app');
-                            var versionSelect = $('#' + FormBuilder.ID_PREFIX + 'version');
-                            var newAppId = appSelect.length ? {
-                                app: appSelect.val(),
-                                version: versionSelect.val(),
+                            var app = FormBuilder.getInputValue('app');
+                            var version = FormBuilder.getInputValue('version');
+                            var newAppId = app ? {
+                                app: app,
+                                version: version,
                                 status: STATUS.SNAPSHOT,
                                 branch: 'HEAD'
                             } : appId;
@@ -233,6 +231,231 @@ var NCEBuilderOptions = (function () {
                 cubeName: {
                     label: 'New n-cube name',
                     data: opts.cubeName
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  appSelectList
+     *  populateVersionFunc
+     *  populateCubeFunc
+     *  populateAxisFunc
+     *  populateMethodFunc
+     */
+    function addAxis(opts) {
+        return {
+            title: 'Add Axis',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Add Axis',
+            formInputs: {
+                name: {
+                    label: 'Axis name'
+                },
+                isRef: {
+                    label: 'Reference Axis',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    listeners: {
+                        change: function() {
+                            FormBuilder.toggle('refSection');
+                            FormBuilder.toggle('hasTransform');
+                            FormBuilder.toggle('transformSection', false);
+                        }
+                    }
+                },
+                refSection: {
+                    label: 'Reference Axis',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    hidden: true,
+                    formInputs: {
+                        refApp: {
+                            label: 'Application',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            selectOptions: opts.appSelectList,
+                            listeners: {
+                                change: function() {
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refVer').trigger('populate');
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refCube').trigger('populate');
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refAxis').trigger('populate');
+                                }
+                            }
+                        },
+                        refVer: {
+                            label: 'Version',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            listeners: {
+                                change: function() {
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refCube').trigger('populate');
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refAxis').trigger('populate');
+                                },
+                                populate: function() {
+                                    var app = FormBuilder.getInputValue('refApp');
+                                    var versions = app ? opts.populateVersionFunc(app, STATUS.RELEASE) : null;
+                                    FormBuilder.populateSelect($(this), versions);
+                                }
+                            }
+                        },
+                        refCube: {
+                            label: 'Cube',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            listeners: {
+                                change: function() {
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refAxis').trigger('populate');
+                                },
+                                populate: function() {
+                                    var cubes;
+                                    var app = FormBuilder.getInputValue('refApp');
+                                    var version = FormBuilder.getInputValue('refVer');
+                                    if (app && version) {
+                                        cubes = opts.populateCubeFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'));
+                                    }
+                                    FormBuilder.populateSelect($(this), cubes);
+                                }
+                            }
+                        },
+                        refAxis: {
+                            label: 'Axis',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            listeners: {
+                                change: function() {
+                                    var axis;
+                                    var app = FormBuilder.getInputValue('refApp');
+                                    var version = FormBuilder.getInputValue('refVer');
+                                    var cube = FormBuilder.getInputValue('refCube');
+                                    if (app && version && cube) {
+                                        axis = opts.populateAxisFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'), cube, $(this).val());
+                                        FormBuilder.setInputValue('type', axis.type);
+                                        FormBuilder.setInputValue('valueType', axis.valueType);
+                                    }
+                                },
+                                populate: function() {
+                                    var axisNames;
+                                    var app = FormBuilder.getInputValue('refApp');
+                                    var version = FormBuilder.getInputValue('refVer');
+                                    var cube = FormBuilder.getInputValue('refCube');
+                                    if (app && version && cube) {
+                                        axisNames = opts.populateAxisFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'), cube);
+                                    }
+                                    FormBuilder.populateSelect($(this), axisNames);
+                                }
+                            }
+                        }
+                    }
+                },
+                hasTransform: {
+                    label: 'Transform',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    hidden: true,
+                    listeners: {
+                        change: function() {
+                            FormBuilder.toggle('transformSection');
+                        }
+                    }
+                },
+                transformSection: {
+                    label: 'Transform',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    hidden: true,
+                    formInputs: {
+                        transApp: {
+                            label: 'Application',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            selectOptions: opts.appSelectList,
+                            listeners: {
+                                change: function() {
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transVer').trigger('populate');
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transCube').trigger('populate');
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transMethod').trigger('populate');
+                                }
+                            }
+                        },
+                        transVer: {
+                            label: 'Version',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            listeners: {
+                                change: function() {
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transCube').trigger('populate');
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transMethod').trigger('populate');
+                                },
+                                populate: function() {
+                                    var app = FormBuilder.getInputValue('transApp');
+                                    var versions = app ? opts.populateVersionFunc(app, STATUS.RELEASE) : null;
+                                    FormBuilder.populateSelect($(this), versions);
+                                }
+                            }
+                        },
+                        transCube: {
+                            label: 'Cube',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            listeners: {
+                                change: function() {
+                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transMethod').trigger('populate');
+                                },
+                                populate: function() {
+                                    var cubes;
+                                    var app = FormBuilder.getInputValue('transApp');
+                                    var version = FormBuilder.getInputValue('transVer');
+                                    if (app && version) {
+                                        cubes = opts.populateCubeFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'));
+                                    }
+                                    FormBuilder.populateSelect($(this), cubes);
+                                }
+                            }
+                        },
+                        transMethod: {
+                            label: 'Method',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            listeners: {
+                                populate: function() {
+                                    var methods;
+                                    var app = FormBuilder.getInputValue('transApp');
+                                    var version = FormBuilder.getInputValue('transVer');
+                                    var cube = FormBuilder.getInputValue('transCube');
+                                    if (app && version && cube) {
+                                        methods = opts.populateMethodFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'), cube);
+                                    }
+                                    FormBuilder.populateSelect($(this), methods);
+                                }
+                            }
+                        }
+                    }
+                },
+                type: {
+                    label: 'Axis type (Discrete, Range, Set, Nearest, Rule)',
+                    type: FormBuilder.INPUT_TYPE.SELECT,
+                    selectOptions: AXIS_TYPE_LIST.TYPE,
+                    data: 'DISCRETE',
+                    listeners: {
+                        change: function() {
+                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'valueType').trigger('populate');
+                        }
+                    }
+                },
+                valueType: {
+                    label: 'Column data type (String, Date, Integer, ...)',
+                    type: FormBuilder.INPUT_TYPE.SELECT,
+                    data: AXIS_SUBTYPES.STRING,
+                    listeners: {
+                        populate: function() {
+                            var axisType = FormBuilder.getInputValue('type');
+                            var isRuleAxis = axisType === 'RULE';
+                            var valueTypes = isRuleAxis ? AXIS_TYPE_LIST.RULE_SUBTYPE : AXIS_TYPE_LIST.GENERAL_SUBTYPE;
+                            var initVal = isRuleAxis ? 'EXPRESSION' : 'STRING';
+                            FormBuilder.populateSelect($(this), valueTypes, initVal);
+                        }
+                    }
                 }
             }
         };
@@ -279,7 +502,7 @@ var NCEBuilderOptions = (function () {
                     label: 'Axis name',
                     data: axis.name
                 },
-                refSectionStart: {
+                refSection: {
                     label: 'Reference Axis',
                     type: FormBuilder.INPUT_TYPE.SECTION,
                     hidden: !axis.isRef,
@@ -307,7 +530,7 @@ var NCEBuilderOptions = (function () {
                         }
                     }
                 },
-                transformSectionStart: {
+                transformSection: {
                     label: 'Transform',
                     type: FormBuilder.INPUT_TYPE.SECTION,
                     hidden: !metaProps.transformApp,
@@ -385,6 +608,7 @@ var NCEBuilderOptions = (function () {
         copyBranch: copyBranch,
         deleteBranch: deleteBranch,
         copyCube: copyCube,
+        addAxis: addAxis,
         deleteAxis: deleteAxis,
         updateAxis: updateAxis
     };

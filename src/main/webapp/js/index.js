@@ -1372,6 +1372,7 @@ var NCE = (function ($) {
             ensureModifiable: ensureModifiable,
             exec: exec,
             getAppId: getAppId,
+            getAppVersions: getAppVersions,
             getSelectedTabAppId: getSelectedTabAppId,
             getInfoDto: getInfoDto,
             getCubeMap: getCubeMap,
@@ -1383,6 +1384,7 @@ var NCE = (function ($) {
             getSelectedBranch: getSelectedBranch,
             getSelectedCubeInfoKey: getSelectedCubeInfoKey,
             isHeadSelected: isHeadSelected,
+            loadAppNames: loadAppNames,
             loadCube: loadCube,
             reloadCube: reloadCube,
             selectBranch: selectBranch,
@@ -3175,8 +3177,8 @@ var NCE = (function ($) {
         FormBuilder.openBuilderModal(NCEBuilderOptions.copyCube(opts));
     }
 
-    function getAppVersions(app) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app, STATUS.SNAPSHOT]);
+    function getAppVersions(app, status) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app, status]);
         if (!result.status) {
             showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
             return [];
