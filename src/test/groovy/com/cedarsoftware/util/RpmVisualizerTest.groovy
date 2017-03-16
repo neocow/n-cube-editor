@@ -28,16 +28,14 @@ class RpmVisualizerTest
     static final String VALID_VALUES_FOR_FIELD_SENTENCE_CASE = 'Valid values for field '
     static final String VALID_VALUES_FOR_FIELD_LOWER_CASE = 'valid values for field '
 
-    static final String defaultScopeDate = DATE_TIME_FORMAT.format(new Date())
+    static final String DEFAULT_SCOPE_DATE = DATE_TIME_FORMAT.format(new Date())
     Map defaultRpmScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                           policyControlDate: defaultScopeDate,
-                           quoteDate        : defaultScopeDate] as CaseInsensitiveMap
+                           policyControlDate: DEFAULT_SCOPE_DATE,
+                           quoteDate        : DEFAULT_SCOPE_DATE] as CaseInsensitiveMap
 
     RpmVisualizer visualizer
-    Map topNodeScope
     ApplicationID appId
     Map returnMap
-    Map scopeInfo //TODO remove
     RpmVisualizerInfo visInfo
     Set messages
     Map<Long, Map<String, Object>> nodes
@@ -48,7 +46,6 @@ class RpmVisualizerTest
     void beforeTest(){
         appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'test.visualizer', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
         visualizer = new RpmVisualizer()
-        topNodeScope = new CaseInsensitiveMap()
         returnMap = null
         visInfo = null
         messages = null
@@ -623,7 +620,7 @@ class RpmVisualizerTest
         String startCubeName = 'rpm.class.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
         Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
-        Map node = loadGraph(options)
+        loadGraph(options)
 
         checkValidRpmClass( startCubeName)
     }
@@ -638,7 +635,7 @@ class RpmVisualizerTest
         String startCubeName = 'rpm.klutz.ValidRpmClass'
         createNCubeWithValidRpmClass(startCubeName)
         Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
-        Map node = loadGraph(options, true)
+        loadGraph(options, true)
 
         assert 1 == messages.size()
         String message = messages.first()
@@ -654,7 +651,7 @@ class RpmVisualizerTest
         //Load graph
         String startCubeName = 'ValidRpmClass'
         Map options = [startCubeName: startCubeName, scope: new CaseInsensitiveMap(availableScope)]
-        Map node = loadGraph(options, true)
+        loadGraph(options, true)
 
         assert 1 == messages.size()
         String message = messages.first()
@@ -670,10 +667,9 @@ class RpmVisualizerTest
         cube.deleteAxis(AXIS_TRAIT)
 
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        topNodeScope = scope
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: scope]
 
-        Map node = loadGraph(options, true)
+        loadGraph(options, true)
         assert 1 == messages.size()
         String message = messages.first()
         assert "Cube ${startCubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString() == message
@@ -688,10 +684,9 @@ class RpmVisualizerTest
         cube.deleteAxis(AXIS_FIELD)
 
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        topNodeScope = scope
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: scope]
 
-        Map node = loadGraph(options, true)
+        loadGraph(options, true)
         assert 1 == messages.size()
         String message = messages.first()
         assert "Cube ${startCubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString() == message
@@ -706,11 +701,10 @@ class RpmVisualizerTest
         cube.getAxis(AXIS_FIELD).columns.remove(CLASS_TRAITS)
 
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        topNodeScope = scope
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: scope]
 
-        Map node = loadGraph(options)
-        checkValidRpmClass( startCubeName)
+        loadGraph(options)
+        checkValidRpmClass(startCubeName)
     }
 
     @Test
@@ -722,10 +716,9 @@ class RpmVisualizerTest
         cube.getAxis(AXIS_TRAIT).columns.remove(R_EXISTS)
 
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        topNodeScope = scope
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: scope]
 
-        Map node = loadGraph(options)
+        loadGraph(options)
         checkValidRpmClass(startCubeName)
     }
 
@@ -738,10 +731,9 @@ class RpmVisualizerTest
         cube.getAxis(AXIS_TRAIT).columns.remove(R_RPM_TYPE)
 
         Map scope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        topNodeScope = scope
-        Map options = [startCubeName: startCubeName, scope: topNodeScope]
+        Map options = [startCubeName: startCubeName, scope: scope]
 
-        Map node = loadGraph(options)
+        loadGraph(options)
         checkValidRpmClass( startCubeName)
     }
 
@@ -822,7 +814,7 @@ class RpmVisualizerTest
         assert availableScope == node.availableScope
         assert 8 == nodes.size()
         assert 7 == edges.size()
-        assert 8 == nodes.values().findAll { Map node1 -> defaultScopeDate == (node1.availableScope as Map).policyControlDate }.size()
+        assert 8 == nodes.values().findAll { Map node1 -> DEFAULT_SCOPE_DATE == (node1.availableScope as Map).policyControlDate }.size()
 
         //Simulate that the user changes policyControlDate on AProduct. The policy control date
         //should have changed on product and on all its target nodes.
@@ -855,7 +847,7 @@ class RpmVisualizerTest
         assert availableScope == node.availableScope
         assert 8 == nodes.size()
         assert 7 == edges.size()
-        assert 8 == nodes.values().findAll { Map node1 -> defaultScopeDate == (node1.availableScope as Map).policyControlDate }.size()
+        assert 8 == nodes.values().findAll { Map node1 -> DEFAULT_SCOPE_DATE == (node1.availableScope as Map).policyControlDate }.size()
 
         //Simulate that the user changes policyControlDate on for ARisk. The policy control date
         //should have changed on it and on all its target nodes, but no other classes.
@@ -867,11 +859,11 @@ class RpmVisualizerTest
 
         //Unchanged date
         node = nodes.values().find { Map node1 -> 'AProduct' == node1.label }
-        assert defaultScopeDate == (node.availableScope as Map).policyControlDate
+        assert DEFAULT_SCOPE_DATE == (node.availableScope as Map).policyControlDate
         node = nodes.values().find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on AProduct".toString() == node1.title }
-        assert defaultScopeDate == (node.availableScope as Map).policyControlDate
+        assert DEFAULT_SCOPE_DATE == (node.availableScope as Map).policyControlDate
         node = nodes.values().find { Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}BRisk".toString() == node1.label }
-        assert defaultScopeDate == (node.availableScope as Map).policyControlDate
+        assert DEFAULT_SCOPE_DATE == (node.availableScope as Map).policyControlDate
 
         //Changed date
         node = nodes.values().find { Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on ARisk".toString() == node1.title }
@@ -970,7 +962,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('CCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false)
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Coverage.traits.fieldCCoverage')
-        checkScopePromptDropdown(node, 'state', '', ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'])
+        checkScopePromptDropdown(node, 'state', DEFAULT, ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'])
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'div')
         checkNoScopePrompt(node, 'pgm')
@@ -1618,7 +1610,6 @@ class RpmVisualizerTest
         assert UNSPECIFIED == node.group
         assert null == node.fromFieldName
         assert '1' ==  node.level
-        //TODO: assert scopeInfo.scope == node.scope
         String nodeDetails = node.details as String
         assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS)
         assert nodeDetails.contains("${DETAILS_LABEL_FIELDS}<pre><ul></ul></pre>")
@@ -1640,14 +1631,4 @@ class RpmVisualizerTest
         NCubeManager.addCube(cube.applicationID, cube)
         return cube
     }
-
-    private void checkTCoverageGraphScopePrompt()
-    {
-        //TODO:
-        /* Set<String> scopeKeys = ['policyControlDate', 'quoteDate', '_effectiveVersion', 'coverage'] as CaseInsensitiveSet
-        assert 4 == scopeInfo.availableScopeValues.keySet().size()
-        assert scopeInfo.scopeCubeNames.keySet().containsAll(scopeKeys)
-        assert 0 == scopeInfo.optionalGraphScopeAvailableValues.keySet().size()*/
-    }
-
 }

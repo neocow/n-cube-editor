@@ -41,7 +41,7 @@ class Visualizer
 			return [visInfo: visInfo] as Map
 		}
 
-		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		VisualizerRelInfo relInfo = visualizerRelInfo
 		relInfo.init(options, visInfo)
 
 		getVisualization(visInfo, relInfo)
@@ -63,7 +63,7 @@ class Visualizer
 		VisualizerInfo visInfo = getVisualizerInfo(options)
 		Map selectedNode = new LinkedHashMap(visInfo.nodes[visInfo.selectedNodeId])
 		visInfo.initScopeChange()
-		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		VisualizerRelInfo relInfo = visualizerRelInfo
 		relInfo.initSelectedNode(visInfo, selectedNode)
 		getVisualization(visInfo, relInfo)
 		return [visInfo: visInfo] as Map
@@ -84,7 +84,7 @@ class Visualizer
 		VisualizerInfo visInfo = options.visInfo as VisualizerInfo
 		Map selectedNode = visInfo.nodes[visInfo.selectedNodeId]
 		visInfo.inputScope = selectedNode.availableScope as CaseInsensitiveMap
-		VisualizerRelInfo relInfo = getVisualizerRelInfo()
+		VisualizerRelInfo relInfo = visualizerRelInfo
 		relInfo.initSelectedNode(visInfo, selectedNode)
 		return loadNodeDetails(visInfo, relInfo, selectedNode)
 	}
