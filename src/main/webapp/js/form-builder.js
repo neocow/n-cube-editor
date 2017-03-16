@@ -22,13 +22,13 @@
  *      formInputs          - input values to use in form view
  *          type            - type of input; use constant INPUT_TYPE; default TEXT
  *          default         - if input has a desired default value
+ *          selectOptions   - if type is SELECT, use for list of options for select input
  *          label           - label for input field
  *          layout          - layout for input field; use constant INPUT_LAYOUT; default NEW_LINE
  *          readonly        - should be disabled
  *          hidden          - should be hidden
  *          listeners       - listeners to attach to the field
- *              action      - listener action to attach
- *              func        - listener result
+ *              action:func - listener action to attach
  */
 
 var FormBuilder = (function ($) {
@@ -39,7 +39,8 @@ var FormBuilder = (function ($) {
         READONLY: 'readonly',
         SECTION: 'section',
         SELECT: 'select',
-        TEXT: 'text'
+        TEXT: 'text',
+        TEXT_SELECT: 'text-select'
     };
     var DISPLAY_TYPE = {
         FORM: 'form',
@@ -63,10 +64,11 @@ var FormBuilder = (function ($) {
     };
     var TR_CLASS = 'builder-data-row';
 
+    var ID_PREFIX = 'form-builder-input-';
+
     // elements;
     var _modal = null;
     var _table = null;
-    var _list = null;
 
     // external variables
     var _data = null;
@@ -115,11 +117,9 @@ var FormBuilder = (function ($) {
 
         var modal = $(html).on('shown.bs.modal', function() {
             makeModalDraggable();
+            positionDropdownMenus();
         }).on('hidden.bs.modal', function() {
-            if (_options.hasOwnProperty('onClose')) {
-                _options.onClose();
-            }
-            $(this).remove();
+            closeModal();
         });
 
         if (!_options.readonly) {
@@ -246,18 +246,29 @@ var FormBuilder = (function ($) {
                     subSection.append(buildFormSection(formInput.formInputs, readonly || formInput.readonly));
                     section.append(subSection);
                 } else {
-                    section.append(buildFormInput(formInput, readonly));
+                    section.append(buildFormControl(formInput, readonly));
                 }
             }
         }
         return section;
     }
 
-    function buildFormInput(formInput, readonlyOverride) {
-        var inputGroup;
-        var inputId = 'form-builder-input-' + formInput.name;
-        var readonly = readonlyOverride || formInput.readonly;
+    function buildFormControl(formInput, readonlyOverride) {
         var control = $('<div class="form-group"/>');
+        control.append(buildFormInput(formInput, readonlyOverride));
+        if (formInput.hasOwnProperty('listeners')) {
+            addListenersToControl(control, formInput.listeners);
+            if (formInput.listeners.hasOwnProperty('populate')) {
+                control.find('input,select').trigger('populate');
+            }
+        }
+        return control;
+    }
+
+    function buildFormInput(formInput, readonlyOverride) {
+        var id = ID_PREFIX + formInput.name;
+        var label = formInput.label;
+        var readonly = readonlyOverride || formInput.readonly;
         var initVal = '';
 
         if (formInput.data !== undefined && formInput.data !== null) {
@@ -269,37 +280,116 @@ var FormBuilder = (function ($) {
         if (formInput.layout === INPUT_LAYOUT.TABLE) {
             switch (formInput.type) {
                 default:
-                    inputGroup = $('<label for="' + inputId + '" style="width:20%;">' + formInput.label + ':</label>'
-                        + '<input id="' + inputId + '" type="text" class="form-control" style="display:inline-block;width:77%;"'
-                        + (readonly ? 'readonly' : '') + '>');
-                    inputGroup.last().val(initVal);
-                    break;
+                    return createFormTableDisplayTextInput(id, label, readonly, initVal);
             }
         } else {
             switch (formInput.type) {
                 case INPUT_TYPE.CHECKBOX:
-                    inputGroup = $('<div class="checkbox"><label><input id="' + inputId + '" type="checkbox"'
-                          + (readonly ? 'disabled' : '') + '>' + formInput.label + '</label></div>');
-                    inputGroup.find('input')[0].checked = initVal;
-                    break;
+                    return createFormCheckboxInput(id, label, readonly, initVal);
+                case INPUT_TYPE.SELECT:
+                    return createFormDefaultSelectInput(id, label, formInput.selectOptions, readonly, initVal);
+                case INPUT_TYPE.TEXT_SELECT:
+                    return createFormTextSelectInput(id, label, formInput.selectOptions, readonly, initVal);
                 default:
-                    inputGroup = $('<label for="' + inputId + '">' + formInput.label + '</label>'
-                          + '<input id="' + inputId + '" type="text" class="form-control"'
-                          + (readonly ? 'readonly' : '') + '>');
-                    inputGroup.last().val(initVal);
-                    break;
+                    return createFormDefaultTextInput(id, label, readonly, initVal);
             }
         }
+    }
 
-        control.append(inputGroup);
-        if (formInput.hasOwnProperty('listeners')) {
-            addListenersToControl(control, formInput.listeners);
-        }
-        return control;
+    function createFormDefaultSelectInput(id, label, opts, readonly, initVal) {
+        var inputGroup = $('<label for="' + id + '">' + label + '</label>'
+            + '<select id="' + id + '" class="form-control input-sm"'
+            + (readonly ? ' disabled' : '') + '>');
+        populateSelect(inputGroup.last(), opts, initVal);
+        return inputGroup;
+    }
+
+    function createFormTextSelectInput(id, label, opts, readonly, initVal) {
+        var inputGroup = $('<label for="' + id + '">' + label + '</label>'
+            + '<div class="input-group"><div class="input-group-btn">'
+            + '<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">'
+            + 'Choose<span class="caret"></span></button><ul class="dropdown-menu"></ul></div>'
+            + '<input id="' + id + '" type="text" class="form-control"'
+            + (readonly ? ' readonly' : '') + '></div>');
+        populateTextSelect(inputGroup, opts);
+        inputGroup.find('input').val(initVal);
+        return inputGroup;
+    }
+
+    function createFormCheckboxInput(id, label, readonly, initVal) {
+        var inputGroup = $('<div class="checkbox"><label><input id="' + id + '" type="checkbox"'
+            + (readonly ? ' disabled' : '') + '>' + label + '</label></div>');
+        inputGroup.find('input')[0].checked = initVal;
+        return inputGroup;
+    }
+
+    function createFormTableDisplayTextInput(id, label, readonly, initVal) {
+        return createFormTextInput(id, label, readonly, initVal, {label:'width:20%;', input:'display:inline-block;width:77%;'});
+    }
+
+    function createFormDefaultTextInput(id, label, readonly, initVal) {
+        return createFormTextInput(id, label, readonly, initVal, {label:'', input:''});
+    }
+
+    // req styles for label and input
+    function createFormTextInput(id, label, readonly, initVal, styles) {
+        var inputGroup = $('<label for="' + id + '" style="' + styles.label + '">' + label + ':</label>'
+            + '<input id="' + id + '" type="text" class="form-control" style="' + styles.input + '"'
+            + (readonly ? ' readonly' : '') + '>');
+        inputGroup.last().val(initVal);
+        return inputGroup;
     }
 
     function addListenersToControl(control, listeners) {
-        // TODO - implement, duh
+        var i, len, key;
+        var keys = Object.keys(listeners);
+        var input = control.find('input,select');
+        for (i = 0, len = keys.length; i < len; i++) {
+            key = keys[i];
+            input.on(key, listeners[key]);
+        }
+    }
+
+    function populateSelect(el, opts, init) {
+        var i, len, optEl, opt;
+        if (!opts) {
+            return;
+        }
+        el.empty();
+        for (i = 0, len = opts.length; i < len; i++) {
+            optEl = $('<option/>');
+            opt = opts[i];
+
+            if (typeof opt === 'object') {
+                optEl.val(opt.key);
+                optEl.text(opt.value);
+            } else {
+                optEl.text(opts[i]);
+            }
+
+            el.append(optEl);
+        }
+        el.val(init);
+    }
+
+    function populateTextSelect(inputGroup, opts) {
+        var i, len, html, ul, input;
+        if (!opts) {
+            return;
+        }
+        html = '';
+        ul = inputGroup.find('ul');
+        input = inputGroup.find('input');
+        for (i = 0, len = opts.length; i < len; i++) {
+            html += '<li><a href="#">' + opts[i] + '</a></li>';
+        }
+        ul.empty();
+        ul.append(html);
+        ul.find('a').on('click', function(e) {
+            e.preventDefault();
+            input.val(this.innerHTML);
+            input.trigger('change');
+        });
     }
 
     function buildTable() {
@@ -380,7 +470,7 @@ var FormBuilder = (function ($) {
     }
 
     function getDataRowInput(column, dataVal) {
-        var inputElement, selectOptions, o, oLen, optEl, curOption;
+        var inputElement;
         switch (column.type) {
             case INPUT_TYPE.CHECKBOX:
                 inputElement = $('<input/>').prop({type:'checkbox', checked:dataVal});
@@ -390,21 +480,7 @@ var FormBuilder = (function ($) {
                 break;
             case INPUT_TYPE.SELECT:
                 inputElement = $('<select/>');
-                selectOptions = column.selectOptions;
-                for (o = 0, oLen = selectOptions.length; o < oLen; o++) {
-                    optEl = $('<option/>');
-                    curOption = selectOptions[o];
-
-                    if (typeof curOption === 'object') {
-                        optEl.val(curOption.key);
-                        optEl.text(curOption.value);
-                    } else {
-                        optEl.text(selectOptions[o]);
-                    }
-
-                    inputElement.append(optEl);
-                }
-                inputElement.val(dataVal);
+                populateSelect(inputElement, column.selectOptions, dataVal);
                 break;
             case INPUT_TYPE.TEXT:
                 inputElement = $('<input/>').prop('type','text').val(dataVal);
@@ -439,7 +515,7 @@ var FormBuilder = (function ($) {
         var keys = Object.keys(formInputs);
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
-            input = $('#form-builder-input-' + key);
+            input = $('#' + ID_PREFIX + key);
             inputOpts = formInputs[key];
             if (!inputOpts.hidden) {
                 switch (inputOpts.type) {
@@ -483,7 +559,6 @@ var FormBuilder = (function ($) {
         return dataRow;
     }
 
-    // I know this code is also in common.js, but I wanted FormBuilder to be independent
     function makeModalDraggable() {
         var realPosX, realPosY;
         var $doc = $(document);
@@ -505,13 +580,41 @@ var FormBuilder = (function ($) {
         _modal.draggable(shouldBeDraggable ? 'enable' : 'disable');
     }
 
+    function positionDropdownMenus() {
+        _modal.find('.dropdown-toggle').on('click', function () {
+            var contentOffset;
+            var button = $(this);
+            var offset = button.offset();
+            var dropDownTop = offset.top + button.outerHeight();
+            var dropDownLeft = offset.left;
+            var content = button.closest('.modal-content');
+            if (content.length) {
+                contentOffset = content.offset();
+                dropDownTop -= contentOffset.top;
+                dropDownLeft -= contentOffset.left;
+            }
+
+            button.parent().find('ul').css({position: 'fixed', top: dropDownTop + 'px', left: dropDownLeft + 'px'});
+        });
+    }
+
+    function closeModal() {
+        if (typeof _options.onClose === FUNCTION) {
+            _options.onClose();
+        }
+        _modal.remove();
+    }
+
     function checkAll(state, queryStr) {
         $(queryStr).filter(':visible').not('.exclude').prop('checked', state).change();
     }
 
     return {
         openBuilderModal: openBuilderModal,
+        populateSelect: populateSelect,
+        populateTextSelect: populateTextSelect,
         DISPLAY_TYPE: DISPLAY_TYPE,
+        ID_PREFIX: ID_PREFIX,
         INPUT_LAYOUT: INPUT_LAYOUT,
         INPUT_TYPE: INPUT_TYPE,
         MODAL_SIZE: MODAL_SIZE

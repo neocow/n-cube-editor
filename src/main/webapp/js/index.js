@@ -114,11 +114,6 @@ var NCE = (function ($) {
     var _createSnapshotVersion = $('#createSnapshotVersion');
     var _copyBranchLabel = $('#copyBranchLabel');
     var _copyBranchWithHistory = $('#copy-branch-with-history');
-    var _dupeCubeAppName = $('#dupeCubeAppName');
-    var _dupeCubeVersion = $('#dupeCubeVersion');
-    var _dupeCubeName = $('#dupeCubeName');
-    var _dupeCubeBranch = $('#dupeCubeBranch');
-    var _dupeCubeLabel = $('#dupeCubeLabel');
     var _globalComparatorLeftApp = $('#globalComparatorLeftApp');
     var _globalComparatorRightApp = $('#globalComparatorRightApp');
     var _globalComparatorLeftVersion = $('#globalComparatorLeftVersion');
@@ -166,7 +161,6 @@ var NCE = (function ($) {
     var _createSnapshotModal = $('#createSnapshotModal');
     var _copyBranchModal = $('#copyBranchModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
-    var _dupeCubeModal = $('#dupeCubeModal');
     var _globalComparatorModal = $('#globalComparatorModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
@@ -3161,47 +3155,45 @@ var NCE = (function ($) {
     }
 
     function dupeCube() {
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
+        var opts;
+        var appId = getSelectedTabAppId();
+        if (!appId.app || !appId.version || !_selectedCubeName || !appId.status) {
             showNote('No n-cube selected. Nothing to duplicate.');
             return;
         }
         if (isSelectedCubeInHead()) {
             selectBranch();
-            return false;
+            return;
         }
 
-        _dupeCubeAppName.val(_selectedApp);
-        _dupeCubeVersion.val(_selectedVersion);
-        _dupeCubeName.val(_selectedCubeName);
-        _dupeCubeBranch.val(_selectedBranch);
-        _dupeCubeLabel[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
-        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', loadAppNames(), function (app) {
-            buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', app, function() {
-                buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-            });
-            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:app, version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-        });
-        buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', _selectedApp, function() {
-            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-        });
-        buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNames());
-        _dupeCubeModal.modal();
+        opts = {
+            appId: appId,
+            cubeName: _selectedCubeName,
+            appSelectList: loadAppNames(),
+            populateVersionDropdownFunc: getAppVersions,
+            populateBranchDropdownFunc: getBranchNamesByAppId,
+            readonly: false,
+            afterSave: dupeCubeCopy
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.copyCube(opts));
     }
 
-    function dupeCubeCopy() {
-        var result, newName, newApp, newVersion, newBranch, destAppId;
-        _dupeCubeModal.modal('hide');
-        newName = _dupeCubeName.val();
-        newApp = _dupeCubeAppName.val();
-        newVersion = _dupeCubeVersion.val();
-        newBranch = _dupeCubeBranch.val();
-        destAppId = {
-            'app':newApp,
-            'version':newVersion,
-            'status':STATUS.SNAPSHOT,
-            'branch':newBranch
-        };
-        result = call(CONTROLLER + CONTROLLER_METHOD.DUPLICATE_CUBE, [getAppId(), destAppId, _selectedCubeName, newName]);
+    function getAppVersions(app) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app, STATUS.SNAPSHOT]);
+        if (!result.status) {
+            showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
+            return [];
+        }
+        return result.data;
+    }
+
+    function dupeCubeCopy(data) {
+        var newName = data.cubeName;
+        var newApp = data.app;
+        var newVersion = data.version;
+        var newBranch = data.branch;
+        var destAppId = appIdFrom(newApp, newVersion, STATUS.SNAPSHOT, newBranch);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.DUPLICATE_CUBE, [getSelectedTabAppId(), destAppId, _selectedCubeName, newName]);
         if (result.status) {
             saveSelectedApp(newApp);
             loadAppListView();

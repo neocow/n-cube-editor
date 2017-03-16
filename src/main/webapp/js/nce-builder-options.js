@@ -1,14 +1,24 @@
 var NCEBuilderOptions = (function () {
+    /*
+     * All methods have valid options of:
+     * readonly     -   self-explanatory
+     * afterSave    - callback to fire on save
+     * onClose      - callback to fire when the modal closes (fires after save if saved)
+     */
 
-    function filterData(columnSelectList, readonly, afterSave, onClose) {
+    /*
+     * additional required options:
+     *  columnSelectList
+     */
+    function filterData(opts) {
         return {
             title: 'Filter Data',
             instructionsTitle: 'Instructions - Filter Data',
             instructionsText: 'Select filters to apply to cell data for ncube.',
             displayType: FormBuilder.DISPLAY_TYPE.TABLE,
-            readonly: readonly,
-            afterSave: afterSave,
-            onClose: onClose,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
             columns: {
                 isApplied: {
                     heading: 'Apply',
@@ -18,7 +28,7 @@ var NCEBuilderOptions = (function () {
                 column: {
                     heading: 'Column',
                     type: FormBuilder.INPUT_TYPE.SELECT,
-                    selectOptions: columnSelectList
+                    selectOptions: opts.columnSelectList
                 },
                 comparator: {
                     heading: 'Comparator',
@@ -39,16 +49,21 @@ var NCEBuilderOptions = (function () {
         };
     }
 
-    function metaProperties(name, type, readonly, afterSave, onClose) {
+    /*
+     * additional required options:
+     *  name
+     *  type
+     */
+    function metaProperties(opts) {
         return {
-            title: 'Metaproperties - ' + name,
+            title: 'Metaproperties - ' + opts.name,
             instructionsTitle: 'Instructions - Metaproperties',
-            instructionsText: 'Add custom properties for this ' + type + '.',
+            instructionsText: 'Add custom properties for this ' + opts.type + '.',
             displayType: FormBuilder.DISPLAY_TYPE.TABLE,
             size: FormBuilder.MODAL_SIZE.LARGE,
-            readonly: readonly,
-            afterSave: afterSave,
-            onClose: onClose,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
             columns: {
                 key: {
                     heading: 'Key',
@@ -76,33 +91,115 @@ var NCEBuilderOptions = (function () {
         };
     }
 
-    function deleteAxis(axisName, afterSave, onClose) {
+    /*
+     * additional required options:
+     *  appId
+     *  cubeName
+     *  appSelectList
+     *  populateVersionDropdownFunc
+     *  populateBranchDropdownFunc
+     */
+    function copyCube(opts) {
+        var appId = opts.appId;
         return {
-            title: 'Delete Axis - ' + axisName,
-            instructionsTitle: '',
-            instructionsText: 'Note: All cells will be cleared when an axis is deleted.',
+            title: 'Copy - ' + opts.cubeName,
             displayType: FormBuilder.DISPLAY_TYPE.FORM,
-            afterSave: afterSave,
-            onClose: onClose,
-            saveButtonText: 'Delete Axis',
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Copy',
             formInputs: {
-                name: {
-                    label: 'Axis to delete',
-                    readonly: true,
-                    data: axisName
+                app: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'New app',
+                    selectOptions: opts.appSelectList,
+                    data: appId.app,
+                    listeners: {
+                        change: function() {
+                            $('#' + FormBuilder.ID_PREFIX + 'version').trigger('populate');
+                            $('#' + FormBuilder.ID_PREFIX + 'branch').trigger('populate');
+                        }
+                    }
+                },
+                version: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'New version',
+                    data: appId.version,
+                    listeners: {
+                        change: function() {
+                            $('#' + FormBuilder.ID_PREFIX + 'branch').trigger('populate');
+                        },
+                        populate: function() {
+                            var appSelect = $('#' + FormBuilder.ID_PREFIX + 'app');
+                            var app = appSelect.length ? appSelect.val() : appId.app;
+                            var versions = opts.populateVersionDropdownFunc(app);
+                            FormBuilder.populateTextSelect($(this).parent(), versions);
+                        }
+                    }
+                },
+                branch: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'New branch',
+                    data: appId.branch,
+                    listeners: {
+                        populate: function() {
+                            var appSelect = $('#' + FormBuilder.ID_PREFIX + 'app');
+                            var versionSelect = $('#' + FormBuilder.ID_PREFIX + 'version');
+                            var newAppId = appSelect.length ? {
+                                app: appSelect.val(),
+                                version: versionSelect.val(),
+                                status: STATUS.SNAPSHOT,
+                                branch: 'HEAD'
+                            } : appId;
+                            var branches = opts.populateBranchDropdownFunc(newAppId);
+                            FormBuilder.populateTextSelect($(this).parent(), branches);
+                        }
+                    }
+                },
+                cubeName: {
+                    label: 'New n-cube name',
+                    data: opts.cubeName
                 }
             }
         };
     }
 
-    function updateAxis(axis, readonly, afterSave, onClose) {
+    /*
+     * additional required options:
+     *  axisName
+     */
+    function deleteAxis(opts) {
+        return {
+            title: 'Delete Axis - ' + opts.axisName,
+            instructionsTitle: '',
+            instructionsText: 'Note: All cells will be cleared when an axis is deleted.',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Delete Axis',
+            formInputs: {
+                name: {
+                    label: 'Axis to delete',
+                    readonly: true,
+                    data: opts.axisName
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  axis
+     */
+    function updateAxis(opts) {
+        var axis = opts.axis;
         var metaProps = axis.metaProps || {};
         return {
             title: 'Update Axis - ' + axis.name,
             displayType: FormBuilder.DISPLAY_TYPE.FORM,
-            readonly: readonly,
-            afterSave: afterSave,
-            onClose: onClose,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
             formInputs: {
                 name: {
                     label: 'Axis name',
@@ -211,6 +308,7 @@ var NCEBuilderOptions = (function () {
     return {
         filterData: filterData,
         metaProperties: metaProperties,
+        copyCube: copyCube,
         deleteAxis: deleteAxis,
         updateAxis: updateAxis
     };

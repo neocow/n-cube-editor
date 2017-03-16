@@ -3019,7 +3019,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function openMetaPropertiesBuilder(metaPropertyOptions) {
-        var mpData, metaKeys, metaProperties, i, len, key, builderOptions, val;
+        var mpData, metaKeys, metaProperties, i, len, key, opts, val;
         mpData = getMetaProperties(metaPropertyOptions);
         if (mpData === null) {
             return;
@@ -3051,8 +3051,14 @@ var NCubeEditor2 = (function ($) {
         }
 
         addHotBeforeKeyDown();
-        builderOptions = NCEBuilderOptions.metaProperties(metaPropertyOptions.objectName, metaPropertyOptions.objectType, metaPropertyOptions.readonly, function() { metaPropertiesSave(metaProperties, metaPropertyOptions); }, removeHotBeforeKeyDown);
-        FormBuilder.openBuilderModal(builderOptions, metaProperties);
+        opts = {
+            name: metaPropertyOptions.objectName,
+            type: metaPropertyOptions.objectType,
+            readonly: metaPropertyOptions.readonly,
+            afterSave: function () { metaPropertiesSave(metaProperties, metaPropertyOptions); },
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.metaProperties(opts), metaProperties);
     }
 
     function metaPropertiesSave(metaProperties, metaPropertyOptions) {
@@ -3679,7 +3685,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function filterOpen() {
-        var i, len, colId, builderOptions;
+        var i, len, colId, opts;
         var columnSelectList = [];
         var columns = axes[colOffset].columns;
         var columnKeys = Object.keys(columns);
@@ -3689,8 +3695,13 @@ var NCubeEditor2 = (function ($) {
         }
 
         addHotBeforeKeyDown();
-        builderOptions = NCEBuilderOptions.filterData(columnSelectList, nce.getFilterOutBlankRows(), function() { filterSave(); removeHotBeforeKeyDown(); }, removeHotBeforeKeyDown);
-        FormBuilder.openBuilderModal(builderOptions, _filters);
+        opts = {
+            columnSelectList: columnSelectList,
+            readonly: nce.getFilterOutBlankRows(),
+            afterSave: function() { filterSave(); removeHotBeforeKeyDown(); },
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.filterData(opts), _filters);
     }
 
     // =============================================== End Filtering ===================================================
@@ -4493,13 +4504,19 @@ var NCubeEditor2 = (function ($) {
     }
 
     function deleteAxis(axisName) {
+        var opts;
         if (!checkCubeUpdatePermissions(axisName)) {
             nce.showNote('Axis cannot be deleted.');
             return;
         }
 
         addHotBeforeKeyDown();
-        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteAxis(axisName, deleteAxisOk, removeHotBeforeKeyDown));
+        opts = {
+            axisName: axisName,
+            afterSave: deleteAxisOk,
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteAxis(opts));
     }
 
     function deleteAxisOk(data) {
@@ -4531,7 +4548,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function updateAxis(axisName) {
-        var builderOptions;
+        var opts;
         var appId = nce.getSelectedTabAppId();
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [appId, cubeName, axisName]);
         if (!result.status) {
@@ -4540,8 +4557,13 @@ var NCubeEditor2 = (function ($) {
         }
 
         addHotBeforeKeyDown();
-        builderOptions = NCEBuilderOptions.updateAxis(result.data, !checkCubeUpdatePermissions(axisName), function(data) { updateAxisOk(axisName, data); }, removeHotBeforeKeyDown);
-        FormBuilder.openBuilderModal(builderOptions);
+        opts = {
+            axis: result.data,
+            readonly: !checkCubeUpdatePermissions(axisName),
+            afterSave: function(data) { updateAxisOk(axisName, data); },
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.updateAxis(opts));
     }
 
     function updateAxisOk(oldAxisName, data) {
