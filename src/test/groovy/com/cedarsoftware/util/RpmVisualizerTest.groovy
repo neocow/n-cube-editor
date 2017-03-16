@@ -7,19 +7,15 @@ import com.cedarsoftware.ncube.AxisValueType
 import com.cedarsoftware.ncube.GroovyExpression
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.ncube.NCubeResourcePersister
-import com.cedarsoftware.ncube.ReleaseStatus
 import groovy.transform.CompileStatic
-import org.junit.Before
 import org.junit.Test
 
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
 import static com.cedarsoftware.util.VisualizerTestConstants.*
 
 @CompileStatic
-class RpmVisualizerTest
+class RpmVisualizerTest extends VisualizerBaseTest
 {
-    static final String PATH_PREFIX = 'rpmvisualizer*//**//*'
     static final String DETAILS_LABEL_UTILIZED_SCOPE_WITH_TRAITS = 'Utilized scope with traits'
     static final String DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS = 'Utilized scope with no traits'
     static final String DETAILS_LABEL_FIELDS = 'Fields</b>'
@@ -28,39 +24,16 @@ class RpmVisualizerTest
     static final String VALID_VALUES_FOR_FIELD_SENTENCE_CASE = 'Valid values for field '
     static final String VALID_VALUES_FOR_FIELD_LOWER_CASE = 'valid values for field '
 
-    static final String DEFAULT_SCOPE_DATE = DATE_TIME_FORMAT.format(new Date())
-    Map defaultRpmScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                           policyControlDate: DEFAULT_SCOPE_DATE,
-                           quoteDate        : DEFAULT_SCOPE_DATE] as CaseInsensitiveMap
-
-    RpmVisualizer visualizer
-    ApplicationID appId
-    Map returnMap
-    RpmVisualizerInfo visInfo
-    Set messages
-    Map<Long, Map<String, Object>> nodes
-    Map<Long, Map<String, Object>> edges
-    Map<String, Object> selectedNode
-
-    @Before
-    void beforeTest(){
-        appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'test.visualizer', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
-        visualizer = new RpmVisualizer()
-        returnMap = null
-        visInfo = null
-        messages = null
-        nodes = null
-        edges = null
-        selectedNode = null
-        NCubeManager.NCubePersister = new NCubeResourcePersister(PATH_PREFIX)
-    }
+    Map defaultScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                        policyControlDate: DEFAULT_SCOPE_DATE,
+                        quoteDate        : DEFAULT_SCOPE_DATE] as CaseInsensitiveMap
 
     @Test
     void testLoadGraph_checkVisInfo()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'FCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -97,7 +70,7 @@ class RpmVisualizerTest
     void testLoadGraph_canLoadTargetAsRpmClass()
     {
         Map utilizedScope = new CaseInsensitiveMap()
-        Map availableScope = defaultRpmScope + [coverage: 'CCCoverage']
+        Map availableScope = defaultScope + [coverage: 'CCCoverage']
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -186,7 +159,7 @@ class RpmVisualizerTest
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'FCoverage',
                              risk             : 'WProductOps'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -236,7 +209,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'FCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         Map enumScope = new CaseInsensitiveMap(utilizedScope)
         enumScope.sourceFieldName = 'Coverages'
@@ -322,7 +295,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'CCCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -355,7 +328,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'CCCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -369,11 +342,11 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('CCCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false, true)
         checkScopePromptTitle(node, 'businessDivisionCode', false, '  - rpm.scope.class.Coverage.traits.StatCode\n  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field4')
-        checkScopePromptDropdown(node, 'businessDivisionCode', 'Default', ['AAADIV', 'BBBDIV', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'businessDivisionCode', DEFAULT, ['AAADIV', 'BBBDIV', DEFAULT], [], DETAILS_CLASS_DEFAULT_VALUE, true)
         checkScopePromptTitle(node, 'program', false, '  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field4')
-        checkScopePromptDropdown(node, 'program', 'Default', ['program1', 'program2', 'program3', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'program', DEFAULT, ['program1', 'program2', 'program3', DEFAULT], [], DETAILS_CLASS_DEFAULT_VALUE, true)
         checkScopePromptTitle(node, 'type', false, '  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field3CovC\n  - rpm.scope.class.Coverage.traits.field4')
-        checkScopePromptDropdown(node, 'type', 'Default', ['type1', 'type2', 'type3', 'typeA', 'typeB', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'type', DEFAULT, ['type1', 'type2', 'type3', 'typeA', 'typeB', DEFAULT], [], DETAILS_CLASS_DEFAULT_VALUE, true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
 
@@ -385,11 +358,11 @@ class RpmVisualizerTest
         node = loadScopeChange(node)
         checkNode('CCCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false, true)
         checkScopePromptTitle(node, 'businessDivisionCode', false, '  - rpm.scope.class.Coverage.traits.StatCode\n  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field4')
-        checkScopePromptDropdown(node, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], '', true)
         checkScopePromptTitle(node, 'program', false, '  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field4')
-        checkScopePromptDropdown(node, 'program', 'Default', ['program1', 'program2', 'program3', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'program', DEFAULT, ['program1', 'program2', 'program3', DEFAULT], [], DETAILS_CLASS_DEFAULT_VALUE, true)
         checkScopePromptTitle(node, 'type', false, '  - rpm.scope.class.Coverage.traits.field1And2\n  - rpm.scope.class.Coverage.traits.field3CovC\n  - rpm.scope.class.Coverage.traits.field4')
-        checkScopePromptDropdown(node, 'type', 'Default', ['type1', 'type2', 'type3', 'typeA', 'typeB', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'type', DEFAULT, ['type1', 'type2', 'type3', 'typeA', 'typeB', DEFAULT], [], DETAILS_CLASS_DEFAULT_VALUE, true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
 
@@ -416,7 +389,7 @@ class RpmVisualizerTest
 
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'AdmCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -444,7 +417,7 @@ class RpmVisualizerTest
         checkNode('AdmCoverage', 'Coverage', '', '', false, true)
         String nodeDetails = node.details as String
         checkScopePromptTitle(node, 'businessDivisionCode', false, 'rpm.scope.class.Coverage.traits.StatCode')
-        checkScopePromptDropdown(node, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], '', true)
         assert nodeDetails.contains("Exposure</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: ${fileLink}</li><li>r:exists: true</li><li>r:extends: DataElementInventory</li><li>r:rpmType: string</li></ul></pre>")
         assert nodeDetails.contains("Location</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: ${httpLink}</li><li>r:exists: true</li><li>r:rpmType: Risk</li><li>v:max: 1</li><li>v:min: 0</li></ul></pre><li><b>")
         assert nodeDetails.contains("StatCode</b></li><pre><ul><li>r:declared: true</li><li>r:defaultValue: ${httpsLink}</li><li>r:exists: true</li><li>r:extends: DataElementInventory[StatCode]</li><li>r:rpmType: string</li></ul></pre></ul></pre>")
@@ -458,7 +431,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'FCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -488,7 +461,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'TCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -505,7 +478,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('TCoverage', 'Coverage', '', ADDITIONAL_SCOPE_REQUIRED, true, true)
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
-        checkScopePromptDropdown(node, 'points', '', ['A', 'B', 'C'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'points', '', ['A', 'B', 'C'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE, true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
 
@@ -519,7 +492,7 @@ class RpmVisualizerTest
         node = loadScopeChange(node)
         checkNode('TCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false, true)
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
-        checkScopePromptDropdown(node, 'points', 'A', ['A', 'B', 'C'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'points', 'A', ['A', 'B', 'C'], [DEFAULT], '', true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
 
@@ -530,7 +503,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('TCoverage', 'Coverage')
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
-        checkScopePromptDropdown(node, 'points', 'A', ['A', 'B', 'C'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'points', 'A', ['A', 'B', 'C'], [DEFAULT], '', true)
         utilizedScope.remove('points')
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
@@ -547,7 +520,7 @@ class RpmVisualizerTest
             cube.setCell(true,[name:'party.NoCubeExists', trait: R_EXISTS])
 
             Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-            Map availableScope = defaultRpmScope + utilizedScope
+            Map availableScope = defaultScope + utilizedScope
 
             //Load graph
             String startCubeName = 'rpm.class.partyrole.LossPrevention'
@@ -570,7 +543,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: '1.0.0',
                              product          : 'WProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -585,7 +558,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: '1.0.1',
                              product          : 'WProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -600,7 +573,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'WProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -614,7 +587,7 @@ class RpmVisualizerTest
     void testLoadGraph_validRpmClass()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.ValidRpmClass'
@@ -629,7 +602,7 @@ class RpmVisualizerTest
     void testLoadGraph_validRpmClass_notStartWithRpmClass()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.klutz.ValidRpmClass'
@@ -646,7 +619,7 @@ class RpmVisualizerTest
     void testLoadGraph_validRpmClass_startCubeNotFound()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'ValidRpmClass'
@@ -744,7 +717,7 @@ class RpmVisualizerTest
                              product          : 'WProduct',
                              coverage         : 'FCoverage',
                              risk             : 'WProductOps'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
 
         VisualizerInfo notRpmVisInfo = new VisualizerInfo()
@@ -774,7 +747,7 @@ class RpmVisualizerTest
 
             Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                                  product          : 'WProduct'] as CaseInsensitiveMap
-            Map availableScope = defaultRpmScope + utilizedScope
+            Map availableScope = defaultScope + utilizedScope
 
             //Load graph
             String startCubeName = 'rpm.class.Product'
@@ -802,7 +775,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'AProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         String tomorrow = DATE_TIME_FORMAT.format(new Date() + 1)
 
@@ -835,7 +808,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'AProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         String tomorrow = DATE_TIME_FORMAT.format(new Date() + 1)
 
@@ -880,7 +853,7 @@ class RpmVisualizerTest
     void testLoadGraph_scopePrompt_noInitialScope()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope
+        Map availableScope = defaultScope
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -888,7 +861,7 @@ class RpmVisualizerTest
         Map node = loadGraph(options)
         checkNode('Product', 'Product', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true, false)
         checkScopePromptTitle(node, 'product', true, 'rpm.scope.class.Product.traits')
-        checkScopePromptDropdown(node, 'product', '', ['AProduct', 'BProduct', 'GProduct', 'UProduct', 'WProduct'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'product', '', ['AProduct', 'BProduct', 'GProduct', 'UProduct', 'WProduct'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE, true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
         assert 1 == nodes.size()
@@ -901,7 +874,14 @@ class RpmVisualizerTest
         node = loadScopeChange(node)
         checkNode('AProduct', 'Product')
         checkScopePromptTitle(node, 'product', true, 'rpm.scope.class.Product.traits')
-        checkScopePromptDropdown(node, 'product', 'AProduct', ['AProduct', 'BProduct', 'GProduct', 'UProduct', 'WProduct'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'product', 'AProduct', ['AProduct', 'BProduct', 'GProduct', 'UProduct', 'WProduct'], [DEFAULT], '',  true)
+        checkScopePromptTitle(node, '_effectiveVersion', true)
+        checkScopePromptDropdown(node, '_effectiveVersion', ApplicationID.DEFAULT_VERSION, [], [], '', true)
+        checkScopePromptTitle(node, 'policyControlDate', true)
+        checkScopePromptDropdown(node, 'policyControlDate', DEFAULT_SCOPE_DATE, [], [], '',  true)
+        checkScopePromptTitle(node, 'quoteDate', true)
+        checkScopePromptDropdown(node, 'quoteDate', DEFAULT_SCOPE_DATE, [], [], '', true)
+
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
         assert 8 == nodes.size()
@@ -913,7 +893,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'AProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -941,9 +921,9 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('ACoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
         checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.class.Coverage.traits.fieldACoverage')
-        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE)
         checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldACoverage')
-        checkScopePromptDropdown(node, 'div', '', ['div1', 'div2'], ['div3', DEFAULT])
+        checkScopePromptDropdown(node, 'div', '', ['div1', 'div2'], ['div3', DEFAULT], DETAILS_CLASS_MISSING_VALUE)
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'state')
 
@@ -952,7 +932,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('BCoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
         checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldBCoverage')
-        checkScopePromptDropdown(node, 'div', '', ['div3'], ['div1', 'div2', DEFAULT])
+        checkScopePromptDropdown(node, 'div', '', ['div3'], ['div1', 'div2', DEFAULT], DETAILS_CLASS_MISSING_VALUE)
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'pgm')
         checkNoScopePrompt(node, 'state')
@@ -962,7 +942,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('CCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false)
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Coverage.traits.fieldCCoverage')
-        checkScopePromptDropdown(node, 'state', DEFAULT, ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'])
+        checkScopePromptDropdown(node, 'state', DEFAULT, ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'], DETAILS_CLASS_DEFAULT_VALUE )
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'div')
         checkNoScopePrompt(node, 'pgm')
@@ -1002,7 +982,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('ACoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
         checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.class.Coverage.traits.fieldACoverage')
-        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE)
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'state')
         checkNoScopePrompt(node, 'div')
@@ -1012,7 +992,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('BCoverage', 'Coverage', REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR, IS_NOT_VALID_FOR, true)
         checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldBCoverage')
-        checkScopePromptDropdown(node, 'div', 'div1', ['div3'], ['div1', 'div2', DEFAULT])
+        checkScopePromptDropdown(node, 'div', 'div1', ['div3'], ['div1', 'div2', DEFAULT], DETAILS_CLASS_MISSING_VALUE)
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'pgm')
         checkNoScopePrompt(node, 'state')
@@ -1022,7 +1002,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('CCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false)
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Coverage.traits.fieldCCoverage')
-        checkScopePromptDropdown(node, 'state', 'OH', ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'])
+        checkScopePromptDropdown(node, 'state', 'OH', ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'], DETAILS_CLASS_MISSING_VALUE)
         checkNoScopePrompt(node, 'product')
         checkNoScopePrompt(node, 'div')
         checkNoScopePrompt(node, 'pgm')
@@ -1049,7 +1029,7 @@ class RpmVisualizerTest
             node = loadNodeDetails(node)
             checkNode('party.ProfitCenter', 'party.ProfitCenter', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true, false)
             checkScopePromptTitle(node, 'dummyRequiredScopeKey', true, 'rpm.class.party.ProfitCenter')
-            checkScopePromptDropdown(node, 'dummyRequiredScopeKey', '', [], [])
+            checkScopePromptDropdown(node, 'dummyRequiredScopeKey', '', [], [], DETAILS_CLASS_MISSING_VALUE)
         }
         finally
         {
@@ -1069,7 +1049,7 @@ class RpmVisualizerTest
 
             Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                                  risk             : 'WProductOps'] as CaseInsensitiveMap
-            Map availableScope = defaultRpmScope + utilizedScope
+            Map availableScope = defaultScope + utilizedScope
 
             //Load graph
             String startCubeName = 'rpm.class.Risk'
@@ -1079,7 +1059,7 @@ class RpmVisualizerTest
             node = loadNodeDetails(node)
             checkNode('CCCoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true, false)
             checkScopePromptTitle(node, 'dummyRequiredScopeKey', true, 'rpm.class.Coverage')
-            checkScopePromptDropdown(node, 'dummyRequiredScopeKey', '', [], [])
+            checkScopePromptDropdown(node, 'dummyRequiredScopeKey', '', [], [], DETAILS_CLASS_MISSING_VALUE)
         }
         finally
         {
@@ -1093,7 +1073,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'TCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -1108,7 +1088,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('TCoverage', 'Coverage', '', ADDITIONAL_SCOPE_REQUIRED, true, true)
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
-        checkScopePromptDropdown(node, 'points', '', ['A', 'B', 'C'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'points', '', ['A', 'B', 'C'], [DEFAULT],DETAILS_CLASS_MISSING_VALUE, true)
         checkNoScopePrompt(node, 'businessDivisionCode')
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
@@ -1122,9 +1102,9 @@ class RpmVisualizerTest
         node = loadScopeChange(node)
         checkNode('TCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false, true)
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
-        checkScopePromptDropdown(node, 'points', 'A', ['A', 'B', 'C'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'points', 'A', ['A', 'B', 'C'], [DEFAULT], '', true)
         checkScopePromptTitle(node, 'businessDivisionCode', false, 'rpm.scope.class.Coverage.traits.StatCode')
-        checkScopePromptDropdown(node, 'businessDivisionCode', DEFAULT, ['AAADIV', 'BBBDIV', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'businessDivisionCode', DEFAULT, ['AAADIV', 'BBBDIV', DEFAULT], [], DETAILS_CLASS_DEFAULT_VALUE,  true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
 
@@ -1136,9 +1116,9 @@ class RpmVisualizerTest
         node = loadScopeChange(node)
         checkNode('TCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false, true)
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
-        checkScopePromptDropdown(node, 'points', 'A', ['A', 'B', 'C'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'points', 'A', ['A', 'B', 'C'], [DEFAULT], '', true)
         checkScopePromptTitle(node, 'businessDivisionCode', false, 'rpm.scope.class.Coverage.traits.StatCode')
-        checkScopePromptDropdown(node, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], true)
+        checkScopePromptDropdown(node, 'businessDivisionCode', 'AAADIV', ['AAADIV', 'BBBDIV', DEFAULT], [], '', true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
     }
@@ -1148,7 +1128,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'TCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
         
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -1164,7 +1144,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('TCoverage', 'Coverage', '', ADDITIONAL_SCOPE_REQUIRED, true, true)
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
-        checkScopePromptDropdown(node, 'points', '', ['A', 'B', 'C'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'points', '', ['A', 'B', 'C'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE, true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
 
@@ -1175,7 +1155,7 @@ class RpmVisualizerTest
         node = loadScopeChange(node)
         checkNode('TCoverage', 'Coverage', REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR, IS_NOT_VALID_FOR, true, true)
         checkScopePromptTitle(node, 'points', true, 'rpm.scope.class.Coverage.traits.fieldTCoverage')
-        checkScopePromptDropdown(node, 'points', 'bogus', ['A', 'B', 'C'], [DEFAULT], true)
+        checkScopePromptDropdown(node, 'points', 'bogus', ['A', 'B', 'C'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE,  true)
         assert utilizedScope == node.scope
         assert availableScope == node.availableScope
     }
@@ -1186,7 +1166,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          :'BProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -1197,18 +1177,18 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkNode('DRisk', 'Risk', '', DEFAULTS_WERE_USED, false)
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Risk.traits.fieldDRisk')
-        checkScopePromptDropdown(node, 'state', 'Default', [DEFAULT], [])
+        checkScopePromptDropdown(node, 'state', DEFAULT, [DEFAULT], [], DETAILS_CLASS_DEFAULT_VALUE)
     }
 
     @Test
     void testLoadGraph_scopePrompt_enumWithMissingThenInvalidRequiredScope()
     {
-        Map availableScope = defaultRpmScope + [risk: 'DRisk']
+        Map availableScope = defaultScope + [risk: 'DRisk']
 
         Map enumUtilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                                  risk             : 'DRisk',
                                  sourceFieldName  : 'Coverages'] as CaseInsensitiveMap
-        Map enumAvailableScope = defaultRpmScope + enumUtilizedScope
+        Map enumAvailableScope = defaultScope + enumUtilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Risk'
@@ -1226,7 +1206,7 @@ class RpmVisualizerTest
         node = loadNodeDetails(node)
         checkEnumNode(enumNodeTitle, ADDITIONAL_SCOPE_REQUIRED, true)
         checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.enum.Risk.Coverages.traits.exists')
-        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE)
         assert enumUtilizedScope == node.scope
         assert enumAvailableScope == node.availableScope
 
@@ -1243,7 +1223,7 @@ class RpmVisualizerTest
         //Risk.Coverages enum has one required prompt
         checkEnumNode("${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Coverages on DRisk", IS_NOT_VALID_FOR, true)
         checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.enum.Risk.Coverages.traits.exists')
-        checkScopePromptDropdown(node, 'pgm', 'pgm4', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        checkScopePromptDropdown(node, 'pgm', 'pgm4', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE)
         enumUtilizedScope.pgm = 'pgm4'
         assert enumUtilizedScope == node.scope
         assert enumAvailableScope == node.availableScope
@@ -1261,7 +1241,7 @@ class RpmVisualizerTest
         //Risk.Coverages enum has one required prompt
         checkEnumNode("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on DRisk")
         checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.enum.Risk.Coverages.traits.exists')
-        checkScopePromptDropdown(node, 'pgm', 'pgm1', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT])
+        checkScopePromptDropdown(node, 'pgm', 'pgm1', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT], '')
         enumUtilizedScope.pgm = 'pgm1'
         assert enumUtilizedScope == node.scope
         assert enumAvailableScope == node.availableScope
@@ -1272,7 +1252,7 @@ class RpmVisualizerTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              risk             : 'StateOps'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Risk'
@@ -1283,7 +1263,7 @@ class RpmVisualizerTest
         List<String> risks = ['ARisk', 'BRisk', 'DRisk', 'GProductOps', 'GStateOps', 'ProductLocation', 'StateOps', 'WProductOps']
         checkNode('StateOps', 'Risk', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
         checkScopePromptTitle(node, 'sourceRisk', true, 'rpm.scope.class.Risk.traits.Risks')
-        checkScopePromptDropdown(node, 'sourceRisk', '', risks, [DEFAULT])
+        checkScopePromptDropdown(node, 'sourceRisk', '', risks, [DEFAULT], DETAILS_CLASS_MISSING_VALUE)
     }
 
     @Test
@@ -1292,7 +1272,7 @@ class RpmVisualizerTest
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'WProduct',
                              risk             : 'WProductOps'] as CaseInsensitiveMap
-        Map availableScope = defaultRpmScope + utilizedScope
+        Map availableScope = defaultScope + utilizedScope
 
         //Load graph
         String startCubeName = 'rpm.class.Risk'
@@ -1325,7 +1305,7 @@ class RpmVisualizerTest
 
        //Check node scope prompt
        Map node = checkEnumNodeBasics("${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Risks on GProduct")
-       checkScopePromptDropdown(node, 'div', 'Default', ['div1', 'div2', DEFAULT], [])
+       checkScopePromptDropdown(node, 'div', DEFAULT, ['div1', 'div2', DEFAULT], [], DETAILS_CLASS_DEFAULT_VALUE, )
    }
 
    @Test
@@ -1393,58 +1373,23 @@ class RpmVisualizerTest
 
        //Check node scope prompt
        Map node = checkEnumNodeBasics("${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}${VALID_VALUES_FOR_FIELD_LOWER_CASE}Risks on GProduct", IS_NOT_VALID_FOR, true)
-       checkScopePromptDropdown(node, 'category', '', ['cat1', 'cat2', 'cat3', 'cat4',  'cat5'], [DEFAULT,], SELECT_OR_ENTER_VALUE)
+       checkScopePromptDropdown(node, 'category', '', ['cat1', 'cat2', 'cat3', 'cat4',  'cat5'], [DEFAULT,], SELECT_OR_ENTER_VALUE, '')
    }
    */
 
 
     //*************************************************************************************
 
-    private Map loadGraph(Map options, boolean hasMessages = false)
+    @Override
+    protected Visualizer getVisualizer()
     {
-        visualizer = new RpmVisualizer()
-        visInfo?.nodes = [:]
-        visInfo?.edges = [:]
-        Map returnMap = visualizer.loadGraph(appId, options)
-        visInfo = returnMap.visInfo as RpmVisualizerInfo
-        messages = visInfo.messages
-        if (!hasMessages)
-        {
-            assert !messages
-        }
-        nodes = visInfo.nodes as Map
-        edges = visInfo.edges as Map
-        return nodes[1l]
+        return new RpmVisualizer()
     }
 
-    private Map loadScopeChange(Map node, boolean hasMessages = false)
+    @Override
+    protected String getPathPrefix()
     {
-        visInfo.selectedNodeId = node.id as Long
-        Map returnMap = visualizer.loadScopeChange(appId, [visInfo: visInfo])
-        visInfo = returnMap.visInfo as RpmVisualizerInfo
-        messages = visInfo.messages
-        if (!hasMessages)
-        {
-            assert !messages
-        }
-        nodes = visInfo.nodes as Map
-        edges = visInfo.edges as Map
-        return nodes[node.id as Long]
-    }
-
-    private Map loadNodeDetails(Map node, boolean hasMessages = false)
-    {
-        visInfo.selectedNodeId = node.id as Long
-        Map returnMap = visualizer.loadNodeDetails(appId, [visInfo: visInfo])
-        visInfo = returnMap.visInfo as RpmVisualizerInfo
-        messages = visInfo.messages
-        if (!hasMessages)
-        {
-            assert !messages
-        }
-        nodes = visInfo.nodes as Map
-        edges = visInfo.edges as Map
-        return nodes[node.id as Long]
+        return 'rpmvisualizer*//**//*'
     }
 
     private void checkNode(String nodeName, String nodeType, String nodeNamePrefix = '', String nodeDetailsMessage = '', boolean unableToLoad = false, boolean showCellValues = false)
@@ -1537,64 +1482,6 @@ class RpmVisualizerTest
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
         }
-    }
-
-    private static void checkScopePromptTitle(Map node, String scopeKey, boolean required, String cubeNames = null, String scopeType = null)
-    {
-        String nodeDetails = node.details as String
-        if (required)
-        {
-            assert nodeDetails.contains("""title="Scope key ${scopeKey} is required to load""")
-        }
-        else if ('additionalGraphScope' == scopeType)
-        {
-            assert nodeDetails.contains("Scope key ${scopeKey} is used in the in the visualization. It may be optional for some classes and required by others.")
-        }
-        else
-        {
-            assert nodeDetails.contains("""title="Scope key ${scopeKey} is optional to load""")
-        }
-        if (cubeNames)
-        {
-            assert nodeDetails.contains(cubeNames)
-        }
-    }
-
-    private static void checkScopePromptDropdown(Map node, String scopeKey, String selectedScopeValue, List<String> availableScopeValues, List<String> unavailableScopeValues, boolean isTopNode = false)
-    {
-        String nodeDetails = node.details as String
-        String placeHolder = availableScopeValues ? SELECT_OR_ENTER_VALUE : ENTER_VALUE
-        String topNodeClass = isTopNode ? DETAILS_CLASS_TOP_NODE : ''
-        String typeValueClass = ''
-        if (DEFAULT == selectedScopeValue)
-        {
-            typeValueClass = DETAILS_CLASS_DEFAULT_VALUE
-        }
-        else if (!availableScopeValues.contains(selectedScopeValue))
-        {
-            typeValueClass = DETAILS_CLASS_MISSING_VALUE
-        }
-        assert nodeDetails.contains("""<input id="${scopeKey}" value="${selectedScopeValue}" placeholder="${placeHolder}" class="scopeInput form-control ${typeValueClass} ${topNodeClass}""")
-        if (!availableScopeValues && !unavailableScopeValues)
-        {
-            assert !nodeDetails.contains("""<li id=""")
-            return
-        }
-
-        availableScopeValues.each{String scopeValue ->
-            assert nodeDetails.contains("""<li id="${scopeKey}: ${scopeValue}" class="scopeClick ${topNodeClass}""")
-        }
-        unavailableScopeValues.each{String scopeValue ->
-            assert !nodeDetails.contains("""<li id="${scopeKey}: ${scopeValue}" class="scopeClick ${topNodeClass}""")
-        }
-    }
-
-    private static void checkNoScopePrompt(Map node, String scopeKey = '')
-    {
-        String nodeDetails = node.details as String
-        assert !nodeDetails.contains("""title="${scopeKey}""")
-        assert !nodeDetails.contains("""<input id="${scopeKey}""")
-        assert !nodeDetails.contains("""<li id="${scopeKey}""")
     }
 
     private checkValidRpmClass( String startCubeName)

@@ -14,7 +14,7 @@ import static com.cedarsoftware.util.RpmVisualizerConstants.*
 @CompileStatic
 class RpmVisualizerInfo extends VisualizerInfo
 {
-    Set<Object> effectiveVersionAvailableValues = new LinkedHashSet()
+    //Set<Object> effectiveVersionAvailableValues = new LinkedHashSet()
 
     RpmVisualizerInfo(){}
 

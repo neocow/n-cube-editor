@@ -46,6 +46,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	protected initSelectedNode(VisualizerInfo visInfo, Map selectedNode)
 	{
 		super.initSelectedNode(visInfo, selectedNode)
+		targetScope = new CaseInsensitiveMap()
 		sourceTraits = selectedNode.sourceTraits as Map
 		sourceFieldRpmType = selectedNode.sourceFieldRpmType as String
 	}
@@ -507,7 +508,8 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		scopeDefaults[scopeKey] = value
 	}
 
-	private void loadAvailableScopeValuesEffectiveVersion(VisualizerInfo visInfo)
+	/* TODO: Very slow, commenting out for now
+	 private void loadAvailableScopeValuesEffectiveVersion(VisualizerInfo visInfo)
 	{
 		RpmVisualizerInfo rpmVisInfo = visInfo as RpmVisualizerInfo
 		if (!rpmVisInfo.effectiveVersionAvailableValues)
@@ -519,7 +521,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			rpmVisInfo.effectiveVersionAvailableValues = new LinkedHashSet(values)
 		}
 		availableScopeValues[EFFECTIVE_VERSION] = rpmVisInfo.effectiveVersionAvailableValues
-	}
+	}*/
 
 	@Override
 	protected void setLoadAgain(VisualizerInfo visInfo, String scopeKey)

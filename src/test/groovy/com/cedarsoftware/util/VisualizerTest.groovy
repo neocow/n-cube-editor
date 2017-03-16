@@ -1,52 +1,24 @@
 package com.cedarsoftware.util
 
-import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.ncube.NCubeResourcePersister
-import com.cedarsoftware.ncube.ReleaseStatus
+
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
 import groovy.transform.CompileStatic
-import org.junit.Before
 import org.junit.Test
 
 import static com.cedarsoftware.util.VisualizerConstants.*
 import static com.cedarsoftware.util.VisualizerTestConstants.*
 
 @CompileStatic
-class VisualizerTest{
-
-    static final String PATH_PREFIX = 'visualizer*//**//*'
-
-    Visualizer visualizer
-    Map inputScope
-    ApplicationID appId
-    Map graphInfo
-    VisualizerInfo visInfo
-    Set messages
-    Map<Long, Map> nodes
-    Map<Long, Map> edges
-
-    @Before
-    void beforeTest(){
-        appId = new ApplicationID(ApplicationID.DEFAULT_TENANT, 'test.visualizer', ApplicationID.DEFAULT_VERSION, ReleaseStatus.SNAPSHOT.name(), ApplicationID.HEAD)
-        visualizer = new Visualizer()
-        inputScope = new CaseInsensitiveMap()
-        graphInfo = null
-        visInfo = null
-        messages = null
-        nodes = null
-        edges = null
-        NCubeManager.NCubePersister = new NCubeResourcePersister(PATH_PREFIX)
-    }
-
+class VisualizerTest extends VisualizerBaseTest
+{
     @Test
     void testLoadGraph_checkVisInfo()
     {
         String startCubeName = 'CubeWithRefs'
-        inputScope = new CaseInsensitiveMap()
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map scope = new CaseInsensitiveMap()
+        Map options = [startCubeName: startCubeName, scope: scope]
         loadGraph(options)
 
         assert 5 == nodes.size()
@@ -83,15 +55,14 @@ class VisualizerTest{
     void testLoadGraph_checkNodeAndEdgeInfo()
     {
         String startCubeName = 'CubeWithRefs'
-        inputScope = new CaseInsensitiveMap()
-        Map options = [startCubeName: startCubeName, scope: inputScope]
-        loadGraph(options)
-        assert !messages
+        Map scope = new CaseInsensitiveMap()
+        Map options = [startCubeName: startCubeName, scope: scope]
+        Map node = loadGraph(options)
         assert 5 == nodes.size()
         assert 4 == edges.size()
 
         //Check top node
-        Map node = nodes.values().find { Map node ->'CubeWithRefs' == node.cubeName}
+        node = nodes.values().find { Map node1 ->'CubeWithRefs' == node.cubeName}
         assert null == node.fromFieldName
         assert startCubeName == node.title
         assert startCubeName == node.detailsTitle1
@@ -133,12 +104,9 @@ class VisualizerTest{
         assert false == node.cubeLoaded
 
         //Check details on target node
-        visInfo.selectedNodeId = node.id as Long
-        options = [startCubeName: startCubeName, visInfo: visInfo]
-        loadNodeDetails(options)
+        node = loadNodeDetails(node)
         nodeDetails = node.details as String
-        //TODO: assert nodeDetails.contains("${DETAILS_LABEL_SCOPE}</b><pre><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>")
-        assert nodeDetails.contains("${DETAILS_LABEL_SCOPE}")
+        assert nodeDetails.contains("${DETAILS_LABEL_SCOPE}</b><pre><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>")
         assert nodeDetails.contains("${DETAILS_LABEL_AVAILABLE_SCOPE}</b><pre><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>")
         assert nodeDetails.contains("${DETAILS_LABEL_AXES}</b><pre><ul><li>CubeEAxis1</li><li>CubeEAxis2</li></ul></pre><br>")
         assert !nodeDetails.contains(DETAILS_LABEL_CELL_VALUES)
@@ -155,10 +123,9 @@ class VisualizerTest{
     void testLoadGraph_checkStructure()
     {
         String startCubeName = 'CubeWithRefs'
-        inputScope = new CaseInsensitiveMap()
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map scope = new CaseInsensitiveMap()
+        Map options = [startCubeName: startCubeName, scope: scope]
         loadGraph(options)
-        assert !messages
         assert nodes.size() == 5
         assert edges.size() == 4
 
@@ -180,8 +147,8 @@ class VisualizerTest{
         assert 'VisualizerInfo' != otherVisInfo.class.simpleName
         otherVisInfo.groupSuffix = 'shouldGetResetToEmpty'
 
-        inputScope = new CaseInsensitiveMap()
-        Map options = [startCubeName: startCubeName, visInfo: otherVisInfo, scope: inputScope]
+        Map scope = new CaseInsensitiveMap()
+        Map options = [startCubeName: startCubeName, visInfo: otherVisInfo, scope: scope]
         loadGraph(options)
         assert !messages
 
@@ -196,8 +163,8 @@ class VisualizerTest{
     void testLoadGraph_cubeHasRefToNotExistsCube()
     {
         String startCubeName = 'CubeHasRefToNotExistsCube'
-        inputScope = new CaseInsensitiveMap()
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map scope = new CaseInsensitiveMap()
+        Map options = [startCubeName: startCubeName, scope: scope]
         loadGraph(options, true)
         assert ['No cube exists with name of NotExistCube. Cube not included in the visualization.'] as Set == messages
         assert 1 == nodes.size()
@@ -212,10 +179,9 @@ class VisualizerTest{
     void testLoadGraph_ruleCubeWithAllDefaultsAndOnlyDefaultValues()
     {
         String startCubeName = 'RuleCubeWithAllDefaultsAndOnlyDefaultValues'
-        inputScope = new CaseInsensitiveMap()
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map scope = new CaseInsensitiveMap()
+        Map options = [startCubeName: startCubeName, scope: scope]
         loadGraph(options)
-        assert !messages
 
         assert 4l == visInfo.maxLevel
 
@@ -246,10 +212,9 @@ class VisualizerTest{
     void testLoadGraph_cubeHasTwoRefsToSameCube()
     {
         String startCubeName = 'CubeHasTwoRefsToSameCube'
-        inputScope = new CaseInsensitiveMap()
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map scope = new CaseInsensitiveMap()
+        Map options = [startCubeName: startCubeName, scope: scope]
         loadGraph(options)
-        assert !messages
 
         assert 2l == visInfo.maxLevel
 
@@ -273,10 +238,9 @@ class VisualizerTest{
     void testLoadGraph_hasCircularRef()
     {
         String startCubeName = 'CubeHasCircularRef1'
-        inputScope = new CaseInsensitiveMap()
-        Map options = [startCubeName: startCubeName, scope: inputScope]
+        Map scope = new CaseInsensitiveMap()
+        Map options = [startCubeName: startCubeName, scope: scope]
         loadGraph(options)
-        assert !messages
 
         assert 4l == visInfo.maxLevel
 
@@ -307,6 +271,43 @@ class VisualizerTest{
 
         assert nodes.size() == 4
         assert edges.size() == 4
+    }
+
+    @Test
+    void testHandleCoordinateNotFoundException_withNoCubeNameOrAxisName()
+    {
+        //Neither cube name nor axis name
+        CoordinateNotFoundException e = new CoordinateNotFoundException('CoordinateNotFoundException', null, null, null, null)
+        VisualizerRelInfo relInfo = new VisualizerRelInfo()
+        VisualizerInfo visInfo = new VisualizerInfo()
+        relInfo.targetId = 1l
+        String message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, relInfo)
+        checkExceptionMessage(message, 'CoordinateNotFoundException')
+
+        //No cube name
+        e = new CoordinateNotFoundException('CoordinateNotFoundException', null, null, 'dummyAxis', null)
+        message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, relInfo)
+        checkExceptionMessage(message, 'CoordinateNotFoundException')
+
+        //No axis name
+        e = new CoordinateNotFoundException('CoordinateNotFoundException', 'dummyCube', null, null, null)
+        message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, relInfo)
+        checkExceptionMessage(message, 'CoordinateNotFoundException')
+    }
+
+    @Test
+    void testHandleInvalidCoordinateException_withNoMissingScope()
+    {
+        Map relInfoScope = [dummyRelInfoKey: 'dummyValue'] as CaseInsensitiveMap
+        NCube cube = new NCube('dummyCube')
+        InvalidCoordinateException e = new InvalidCoordinateException('InvalidCoordinateException', null, null, relInfoScope.keySet())
+        VisualizerInfo visInfo = new VisualizerInfo()
+        VisualizerRelInfo relInfo = new VisualizerRelInfo(appId)
+        relInfo.targetId = 1l
+        relInfo.targetCube = cube
+        relInfo.availableTargetScope = new CaseInsensitiveMap(relInfoScope)
+        String message = VisualizerHelper.handleInvalidCoordinateException(e, visInfo, relInfo, [] as Set)
+        checkExceptionMessage(message, 'InvalidCoordinateException')
     }
 
     /*
@@ -713,45 +714,7 @@ class VisualizerTest{
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col2")
         assert nodeDetails.contains("CubeKAxis2: CubeKAxis2Col3")
     }
-
      */
-
-    @Test
-    void testHandleCoordinateNotFoundException_withNoCubeNameOrAxisName()
-    {
-        //Neither cube name nor axis name
-        CoordinateNotFoundException e = new CoordinateNotFoundException('CoordinateNotFoundException', null, null, null, null)
-        VisualizerRelInfo relInfo = new VisualizerRelInfo()
-        VisualizerInfo visInfo = new VisualizerInfo()
-        relInfo.targetId = 1l
-        String message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, relInfo)
-        checkExceptionMessage(message, 'CoordinateNotFoundException')
-
-        //No cube name
-        e = new CoordinateNotFoundException('CoordinateNotFoundException', null, null, 'dummyAxis', null)
-        message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, relInfo)
-        checkExceptionMessage(message, 'CoordinateNotFoundException')
-
-        //No axis name
-        e = new CoordinateNotFoundException('CoordinateNotFoundException', 'dummyCube', null, null, null)
-        message = VisualizerHelper.handleCoordinateNotFoundException(e, visInfo, relInfo)
-        checkExceptionMessage(message, 'CoordinateNotFoundException')
-    }
-
-    @Test
-    void testHandleInvalidCoordinateException_withNoMissingScope()
-    {
-        Map relInfoScope = [dummyRelInfoKey: 'dummyValue'] as CaseInsensitiveMap
-        NCube cube = new NCube('dummyCube')
-        InvalidCoordinateException e = new InvalidCoordinateException('InvalidCoordinateException', null, null, relInfoScope.keySet())
-        VisualizerInfo visInfo = new VisualizerInfo()
-        VisualizerRelInfo relInfo = new VisualizerRelInfo(appId)
-        relInfo.targetId = 1l
-        relInfo.targetCube = cube
-        relInfo.availableTargetScope = new CaseInsensitiveMap(relInfoScope)
-        String message = VisualizerHelper.handleInvalidCoordinateException(e, visInfo, relInfo, [] as Set)
-        checkExceptionMessage(message, 'InvalidCoordinateException')
-    }
 
     private static void checkExceptionMessage(String message, String exceptionName)
     {
@@ -759,35 +722,6 @@ class VisualizerTest{
         assert message.contains(DETAILS_LABEL_ROOT_CAUSE)
         assert message.contains(exceptionName)
         assert message.contains(DETAILS_LABEL_STACK_TRACE)
-    }
-
-    private void loadGraph(Map options, boolean hasMessages = false)
-    {
-        visualizer = new Visualizer()
-        visInfo?.nodes = [:]
-        visInfo?.edges = [:]
-        Map graphInfo = visualizer.loadGraph(appId, options)
-        visInfo = graphInfo.visInfo as VisualizerInfo
-        messages = visInfo.messages
-        if (!hasMessages)
-        {
-            assert !messages
-        }
-        nodes = visInfo.nodes as Map
-        edges = visInfo.edges as Map
-    }
-
-    private void loadNodeDetails(Map options, boolean hasMessages = false)
-    {
-         Map graphInfo = visualizer.loadNodeDetails(appId, options)
-        visInfo = graphInfo.visInfo as VisualizerInfo
-        messages = visInfo.messages
-        if (!hasMessages)
-        {
-            assert !messages
-        }
-        nodes = visInfo.nodes as Map
-        edges = visInfo.edges as Map
     }
 
     private Map checkNode(String nodeName, boolean exceptionCell = false, boolean showCellValues = false, boolean cubeLoaded = false, boolean hasCellValues = true)

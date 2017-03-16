@@ -83,6 +83,7 @@ class VisualizerRelInfo
 		cubeLoaded = selectedNode.cubeLoaded as boolean
 		typesToAdd = selectedNode.typesToAdd as List
 		visInfo.inputScope = new CaseInsensitiveMap(selectedNode.availableScope as Map)
+		targetScope = selectedNode.scope as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
 		availableTargetScope = selectedNode.availableScope as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
 		availableScopeValues = selectedNode.availableScopeValues as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
 		showingHidingCellValues = selectedNode.showingHidingCellValues as boolean
@@ -386,7 +387,7 @@ class VisualizerRelInfo
 		scopeCubeNames = scopeCubeNames ?: new CaseInsensitiveMap<String, Set<String>> ()
 
 		StringBuilder sb = new StringBuilder()
-		sb.append(getNodeDetailsMessageSet())
+		sb.append(nodeDetailsMessageSet)
 		sb.append(nodeScopeMessage)
 		return sb.toString()
 	}
@@ -479,11 +480,11 @@ class VisualizerRelInfo
 		{
 			return DETAILS_CLASS_DEFAULT_VALUE
 		}
-		else if (!availableScopeValues && !providedScopeValue)
+		else if (!providedScopeValue)
 		{
 			return DETAILS_CLASS_MISSING_VALUE
 		}
-		else if (!availableScopeValues.contains(providedScopeValue))
+		else if (providedScopeValue && availableScopeValues && !availableScopeValues.contains(providedScopeValue))
 		{
 			return DETAILS_CLASS_MISSING_VALUE
 		}
