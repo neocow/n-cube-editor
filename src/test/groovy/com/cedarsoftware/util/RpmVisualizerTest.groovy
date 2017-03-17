@@ -24,16 +24,16 @@ class RpmVisualizerTest extends VisualizerBaseTest
     static final String VALID_VALUES_FOR_FIELD_SENTENCE_CASE = 'Valid values for field '
     static final String VALID_VALUES_FOR_FIELD_LOWER_CASE = 'valid values for field '
 
-    Map defaultScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
-                        policyControlDate: DEFAULT_SCOPE_DATE,
-                        quoteDate        : DEFAULT_SCOPE_DATE] as CaseInsensitiveMap
+    static final Map DEFAULT_SCOPE = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
+                                      policyControlDate: DEFAULT_SCOPE_DATE,
+                                      quoteDate        : DEFAULT_SCOPE_DATE] as CaseInsensitiveMap
 
     @Test
     void testLoadGraph_checkVisInfo()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'FCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -70,7 +70,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     void testLoadGraph_canLoadTargetAsRpmClass()
     {
         Map utilizedScope = new CaseInsensitiveMap()
-        Map availableScope = defaultScope + [coverage: 'CCCoverage']
+        Map availableScope = getAvailableScope([coverage: 'CCCoverage'])
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -159,7 +159,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'FCoverage',
                              risk             : 'WProductOps'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -209,7 +209,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'FCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         Map enumScope = new CaseInsensitiveMap(utilizedScope)
         enumScope.sourceFieldName = 'Coverages'
@@ -295,7 +295,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'CCCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -328,7 +328,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'CCCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -389,7 +389,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
 
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'AdmCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -431,7 +431,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'FCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -461,7 +461,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'TCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -520,7 +520,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
             cube.setCell(true,[name:'party.NoCubeExists', trait: R_EXISTS])
 
             Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-            Map availableScope = defaultScope + utilizedScope
+            Map availableScope = getAvailableScope(utilizedScope)
 
             //Load graph
             String startCubeName = 'rpm.class.partyrole.LossPrevention'
@@ -543,7 +543,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: '1.0.0',
                              product          : 'WProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -558,7 +558,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: '1.0.1',
                              product          : 'WProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -573,7 +573,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'WProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -587,7 +587,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     void testLoadGraph_validRpmClass()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.ValidRpmClass'
@@ -602,7 +602,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     void testLoadGraph_validRpmClass_notStartWithRpmClass()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.klutz.ValidRpmClass'
@@ -619,7 +619,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     void testLoadGraph_validRpmClass_startCubeNotFound()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'ValidRpmClass'
@@ -717,7 +717,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
                              product          : 'WProduct',
                              coverage         : 'FCoverage',
                              risk             : 'WProductOps'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
 
         VisualizerInfo notRpmVisInfo = new VisualizerInfo()
@@ -747,7 +747,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
 
             Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                                  product          : 'WProduct'] as CaseInsensitiveMap
-            Map availableScope = defaultScope + utilizedScope
+            Map availableScope = getAvailableScope(utilizedScope)
 
             //Load graph
             String startCubeName = 'rpm.class.Product'
@@ -775,7 +775,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'AProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         String tomorrow = DATE_TIME_FORMAT.format(new Date() + 1)
 
@@ -808,7 +808,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'AProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         String tomorrow = DATE_TIME_FORMAT.format(new Date() + 1)
 
@@ -853,7 +853,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     void testLoadGraph_scopePrompt_noInitialScope()
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION] as CaseInsensitiveMap
-        Map availableScope = defaultScope
+        Map availableScope = getAvailableScope()
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -893,7 +893,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'AProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -1049,7 +1049,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
 
             Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                                  risk             : 'WProductOps'] as CaseInsensitiveMap
-            Map availableScope = defaultScope + utilizedScope
+            Map availableScope = getAvailableScope(utilizedScope)
 
             //Load graph
             String startCubeName = 'rpm.class.Risk'
@@ -1073,7 +1073,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'TCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -1128,7 +1128,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              coverage         : 'TCoverage'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
         
         //Load graph
         String startCubeName = 'rpm.class.Coverage'
@@ -1166,7 +1166,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          :'BProduct'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Product'
@@ -1183,12 +1183,12 @@ class RpmVisualizerTest extends VisualizerBaseTest
     @Test
     void testLoadGraph_scopePrompt_enumWithMissingThenInvalidRequiredScope()
     {
-        Map availableScope = defaultScope + [risk: 'DRisk']
+        Map availableScope = getAvailableScope([risk: 'DRisk'])
 
         Map enumUtilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                                  risk             : 'DRisk',
                                  sourceFieldName  : 'Coverages'] as CaseInsensitiveMap
-        Map enumAvailableScope = defaultScope + enumUtilizedScope
+        Map enumAvailableScope = getAvailableScope(enumUtilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Risk'
@@ -1252,7 +1252,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
     {
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              risk             : 'StateOps'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Risk'
@@ -1272,7 +1272,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         Map utilizedScope = [_effectiveVersion: ApplicationID.DEFAULT_VERSION,
                              product          : 'WProduct',
                              risk             : 'WProductOps'] as CaseInsensitiveMap
-        Map availableScope = defaultScope + utilizedScope
+        Map availableScope = getAvailableScope(utilizedScope)
 
         //Load graph
         String startCubeName = 'rpm.class.Risk'
@@ -1517,5 +1517,12 @@ class RpmVisualizerTest extends VisualizerBaseTest
         cube.addColumn(axisName, R_RPM_TYPE)
         NCubeManager.addCube(cube.applicationID, cube)
         return cube
+    }
+
+    private static Map getAvailableScope(Map utilizedScope = [:])
+    {
+        Map availableScope = new CaseInsensitiveMap(DEFAULT_SCOPE)
+        availableScope.putAll(utilizedScope)
+        return availableScope
     }
 }
