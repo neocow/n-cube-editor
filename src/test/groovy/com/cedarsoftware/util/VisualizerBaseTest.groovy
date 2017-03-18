@@ -99,16 +99,12 @@ class VisualizerBaseTest
         return nodes[node.id as Long]
     }
 
-    protected static void checkScopePromptTitle(Map node, String scopeKey, boolean required, String cubeNames = null, String scopeType = null)
+    protected static void checkScopePromptTitle(Map node, String scopeKey, boolean required, String cubeNames = null)
     {
         String nodeDetails = node.details as String
         if (required)
         {
             assert nodeDetails.contains("""title="Scope key ${scopeKey} is required to load""")
-        }
-        else if ('additionalGraphScope' == scopeType)
-        {
-            assert nodeDetails.contains("Scope key ${scopeKey} is used in the in the visualization. It may be optional for some classes and required by others.")
         }
         else
         {
