@@ -1397,6 +1397,7 @@ var NCE = (function ($) {
             selectBranch: selectBranch,
             selectCubeByName: selectCubeByName,
             showNote: showNote,
+            updateNote: updateNote,
             loadNCubes: loadNCubes,
             loadNCubeListView: loadNCubeListView,
             runSearch: runSearch,
@@ -5013,6 +5014,16 @@ var NCE = (function ($) {
         });
         addNoteListeners(noteId);
         return noteId;
+    }
+
+    function updateNote(noteId, updateId, html) {
+        var note;
+        note = $('#gritter-item-' + noteId + ' #' + updateId);
+        if (note && note[0] && note[0].innerHTML){
+            note[0].innerHTML = html;
+            return true;
+        }
+        return false;
     }
 
     function addNoteListeners(noteId) {
