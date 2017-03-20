@@ -23,6 +23,7 @@ class VisualizerInfo
     protected long maxLevel
     protected long nodeIdCounter
     protected long edgeIdCounter
+    protected Map<Integer, Integer> levelCumulativeNodeCount
     protected long defaultLevel
     protected String cellValuesLabel
     protected String nodeLabel
@@ -120,7 +121,6 @@ class VisualizerInfo
 
         networkOverridesBasic = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_BASIC, (CUBE_TYPE): cubeType]) as Map
         networkOverridesFull = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_FULL, (CUBE_TYPE): cubeType]) as Map
-        defaultLevel = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_LEVEL, (CUBE_TYPE): cubeType]) as long
         allGroups = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_GROUPS, (CUBE_TYPE): cubeType]) as Map
         allGroupsKeys = new CaseInsensitiveSet(allGroups.keySet())
         String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
@@ -145,6 +145,37 @@ class VisualizerInfo
                 value == type
             }
             typesToAddMap[entry.value] = allTypes as List
+        }
+    }
+
+    protected void calculateAggregateInfo()
+    {
+        //Determine maxLevel and availableGroupsAllLevels
+        Map<Integer, Integer> levelNodeCount = [:]
+        nodes.values().each{Map node ->
+            availableGroupsAllLevels << (node.group as String) - groupSuffix
+            long nodeLevel = node.level as long
+            maxLevel = maxLevel < nodeLevel ? nodeLevel : maxLevel
+            int nodeCountAtLevel = levelNodeCount[nodeLevel as int] ?: 0
+            nodeCountAtLevel++
+            levelNodeCount[nodeLevel as int] = nodeCountAtLevel
+        }
+
+        //Determine cumulative node count at each level + determine defaultLevel
+        levelCumulativeNodeCount = [:]
+        for (Integer i = 1; i < levelNodeCount.size() + 1; i++)
+        {
+            if (1 == i)
+            {
+                levelCumulativeNodeCount[i] = levelNodeCount[i]
+            }
+            else
+            {
+                levelCumulativeNodeCount[i] = levelCumulativeNodeCount[i - 1] + levelNodeCount[i]
+            }
+            if (levelCumulativeNodeCount[i] <= 100 ){
+                defaultLevel = i as long
+            }
         }
     }
 

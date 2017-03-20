@@ -132,12 +132,8 @@ class Visualizer
 			processCube(visInfo, stack.pop())
 		}
 
-		visInfo.nodes.values().each{Map node ->
-			visInfo.availableGroupsAllLevels << (node.group as String) - visInfo.groupSuffix
-			long maxLevel = visInfo.maxLevel
-			long nodeLevel = node.level as long
-			visInfo.maxLevel = maxLevel < nodeLevel ? nodeLevel : maxLevel
-		}
+		visInfo.calculateAggregateInfo()
+
 	}
 
 	protected void processCube(VisualizerInfo visInfo, VisualizerRelInfo relInfo)

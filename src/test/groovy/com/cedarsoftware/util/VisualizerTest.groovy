@@ -25,7 +25,7 @@ class VisualizerTest extends VisualizerBaseTest
         assert 4 == edges.size()
         assert 3l == visInfo.maxLevel
         assert 5l == visInfo.nodeIdCounter
-        assert 5l == visInfo.defaultLevel
+        assert 3l == visInfo.defaultLevel
         assert '' == visInfo.groupSuffix
         assert ['NCUBE'] as Set == visInfo.availableGroupsAllLevels
 

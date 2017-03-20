@@ -128,7 +128,7 @@ var Visualizer = (function ($) {
             _networkOptionsSection = $('#networkOptionsSection');
 
              $('#selectedLevel-list').on('change', function () {
-                 var selectedLevelString = $('#selectedLevel-list').val().substring(LEVEL_PREFIX.length)
+                 var selectedLevelString = $('#selectedLevel-list').val();
                 _selectedLevel = Number(selectedLevelString);
                 saveToLocalStorage(_selectedLevel, SELECTED_LEVEL);
                 reload();
@@ -830,13 +830,14 @@ var Visualizer = (function ($) {
 
     function loadCountsView()
     {
-        var  maxLevel = _visInfo.maxLevel;
-        var totalNodeCount = _nodes.length;
-        var maxLevelLabel = 1 === maxLevel ? 'level' : 'levels';
-        var nodeCountLabel = 1 === totalNodeCount ? 'node' : 'nodes';
+        var  maxLevel, totalNodeCount, maxLevelLabel, nodeCountLabel, nodesDisplayingAtLevelCount, nodesAtLevelLabel;
+        maxLevel = _visInfo.maxLevel;
+        totalNodeCount = _nodes.length;
+        maxLevelLabel = 1 === maxLevel ? 'level' : 'levels';
+        nodeCountLabel = 1 === totalNodeCount ? 'node' : 'nodes';
 
-        var nodesDisplayingAtLevelCount = _network.body.data.nodes.length;
-        var nodesAtLevelLabel = 1 === nodesDisplayingAtLevelCount ? 'node' : 'nodes';
+        nodesDisplayingAtLevelCount = _network.body.data.nodes.length;
+        nodesAtLevelLabel = 1 === nodesDisplayingAtLevelCount ? 'node' : 'nodes';
 
         $('#levelCounts')[0].textContent = nodesDisplayingAtLevelCount  + ' ' + nodesAtLevelLabel + ' of ' + _countNodesAtLevel + ' at current level';
         $('#totalCounts')[0].textContent = totalNodeCount + ' ' + nodeCountLabel + ' total over ' +  maxLevel + ' ' + maxLevelLabel ;
@@ -844,17 +845,25 @@ var Visualizer = (function ($) {
 
     function loadSelectedLevelListView()
     {
-        var option, j;
-        var select = $('#selectedLevel-list');
+        var option, j, select, levelNodeCounts, levelNodeCount, optionLabel, optionValue, nodeCountLabel ;
+        select = $('#selectedLevel-list');
         select.empty();
+        levelNodeCounts = _visInfo.levelCumulativeNodeCount['@items'];
 
         for (j = 1; j <= _visInfo.maxLevel; j++)
         {
             option = $('<option/>');
-            option[0].textContent = LEVEL_PREFIX + j.toString();
+            optionValue = j.toString();
+            levelNodeCount = levelNodeCounts[j - 1].value;
+            nodeCountLabel = 1 === levelNodeCount ? ' node' : ' nodes';
+            optionLabel = LEVEL_PREFIX + optionValue + ' - ' + levelNodeCount + nodeCountLabel;
+            option[0].value = optionValue;
+            option[0].textContent = optionLabel;
             select.append(option);
+            if (j === _selectedLevel){
+                select.val(j);
+            }
         }
-        select.val(LEVEL_PREFIX + _selectedLevel);
     }
 
     function getVisNetworkHeight() {

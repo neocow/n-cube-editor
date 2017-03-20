@@ -46,7 +46,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         assert 4l == visInfo.maxLevel
         assert 4l == visInfo.edgeIdCounter
         assert 5l == visInfo.nodeIdCounter
-        assert 5l == visInfo.defaultLevel
+        assert 4l == visInfo.defaultLevel
         assert 1l == visInfo.selectedNodeId
         assert '_ENUM' == visInfo.groupSuffix
         assert 'class' == visInfo.nodeLabel
