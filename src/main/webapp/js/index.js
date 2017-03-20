@@ -1277,7 +1277,7 @@ var NCE = (function ($) {
         buildViewsFromTabMenu(menu);
         buildNavigationMenu(menu);
     }
-    
+
     function buildNavigationMenu(menu) {
         var navMenu, html, i, len, menuKeys, heading, menuOptions, optionsKeys, linkText, linkVal, o, oLen;
         _menuList.empty();
@@ -1286,7 +1286,7 @@ var NCE = (function ($) {
         if (!navMenu) {
             return;
         }
-        
+
         delete navMenu['@type'];
         menuKeys = Object.keys(navMenu);
         for (i = 0, len = menuKeys.length; i < len; i++) {
@@ -1305,7 +1305,11 @@ var NCE = (function ($) {
                 linkVal = null;
                 linkVal = menuOptions[linkText];
 
-                html += '<li><a href="' + encodeURIComponent(linkVal.html) + '">' + linkText + '</a>';
+                if (linkVal.hasOwnProperty('html')) {
+                    html += '<li><a href="' + encodeURIComponent(linkVal.html) + '">' + linkText + '</a></li>';
+                } else if (linkVal.hasOwnProperty('expression')) {
+                    html += '<li><a href="#" target="_blank" data-heading="' + heading + '">' + linkText + '</a></li>';
+                }
                 if (linkVal.hasOwnProperty('divider')) {
                     html += '<div class="divider"/>';
                 }
@@ -1313,8 +1317,50 @@ var NCE = (function ($) {
 
             html += '</ul></li>'
         }
-        
         _menuList.append(html);
+        buildMenuExpressionListeners(navMenu);
+    }
+
+    function buildMenuExpressionListeners(navMenu) {
+        _menuList.find('[data-heading]').on('click', function(e) {
+            var opts;
+            var anc = $(this);
+            var exp = navMenu[anc.data('heading')][this.innerHTML].expression;
+            var appId = appIdFrom(exp.app, exp.version, exp.status, exp.branch);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'model'}]);
+            e.preventDefault();
+            if (!result.status) {
+                showNote('Unable to initialize plugin.', 'Error', TWO_SECOND_TIMEOUT);
+                return;
+            }
+            opts = eval(result.data.value);
+            opts.afterSave = function(data) {
+                data.component = 'controller';
+                data.appId = getAppId();
+                onMenuExpressionSave(exp, appId, data);
+            };
+            FormBuilder.openBuilderModal(opts);
+        });
+    }
+
+    function onMenuExpressionSave(exp, appId, data) {
+        var viewData, viewOpts;
+        var result = exec(exp.cube + '.' + exp.method, [appId, data]);
+        if (!result.status) {
+            showNote('Unable to perform action: ' + result.data, 'Error!');
+            return;
+        }
+        viewData = result.data;
+        viewData.component = 'view';
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'view'}]);
+        if (!result.status) {
+            showNote('Unable to perform action: ' + result.data, 'Error!');
+            return;
+        }
+        viewOpts = function (opts) {
+            return eval(result.data.value);
+        };
+        delay(function() { FormBuilder.openBuilderModal(viewOpts(data)); }, 1000);
     }
     
     function buildViewsFromTabMenu(menu) {

@@ -1029,6 +1029,16 @@ class NCubeController extends BaseController
         return output
     }
 
+    Object getCellNoExecuteByCoordinate(ApplicationID appId, String cubeName, Map coordinate)
+    {
+        appId = addTenant(appId)
+        NCube ncube = nCubeService.getCube(appId, cubeName)
+        Object cell = ncube.getCellNoExecute(coordinate)
+        CellInfo cellInfo = new CellInfo(cell)
+        cellInfo.collapseToUiSupportedTypes()
+        return cellInfo
+    }
+
     Object getCellNoExecute(ApplicationID appId, String cubeName, Object[] ids)
     {
         appId = addTenant(appId)
