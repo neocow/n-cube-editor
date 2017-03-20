@@ -402,7 +402,7 @@ class VisualizerRelInfo
 		String nodeName = getLabel()
 		StringBuilder sb = new StringBuilder()
 		sb.append("<b>Scope</b>")
-		sb.append(DOUBLE_BREAK)
+		sb.append(BREAK)
 		Map<String, Set<Object>> derivedScope = new CaseInsensitiveMap(availableTargetScope)
 		if (availableScopeValues)
 		{
@@ -416,7 +416,6 @@ class VisualizerRelInfo
 				StringBuilder title = new StringBuilder("Scope key ${scopeKey} is ${requiredOrOptional} to load ${nodeName}")
 				title.append(addCubeNamesList(cubeNamesTitle, cubeNames))
 				sb.append(getScopeMessage(scopeKey, availableValues, title, availableTargetScope[scopeKey]))
-				sb.append(BREAK)
 			}
 			derivedScope.keySet().removeAll(sortedScopeKeys)
 		}
@@ -429,8 +428,8 @@ class VisualizerRelInfo
 		sortedScopeKeys.each {String scopeKey ->
 			StringBuilder title = new StringBuilder("Scope key ${scopeKey} is added for this ${nodeLabel} during the visualization and may not be changed in this visual. Start a new visual from here to access all scope keys for the ${nodeLabel}.")
 			sb.append(getScopeMessage(scopeKey, null, title, derivedScope[scopeKey]))
-			sb.append(BREAK)
 		}
+		sb.append(BREAK)
 		return sb
 	}
 
@@ -449,7 +448,7 @@ class VisualizerRelInfo
 		String valueClass = getClassForValue(availableScopeValues, value, providedScopeValue)
 		String disabled = availableScopeValues == null ? 'disabled="disabled"' : ''
 
-		sb.append("""<div class="input-group" title="${title}">""")
+		sb.append("""<div class="input-group input-group-sm input-scope-group" title="${title}">""")
 		sb.append("""<div class="input-group-btn">""")
 		sb.append("""<button type="button" class="btn btn-default dropdown-toggle"  data-toggle="dropdown">${scopeKey} ${caret}</button>""")
 		if (availableScopeValues)
