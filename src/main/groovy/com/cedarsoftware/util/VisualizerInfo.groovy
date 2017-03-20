@@ -35,7 +35,6 @@ class VisualizerInfo
 
     protected Map<String, Object> networkOverridesBasic
     protected Map<String, Object> networkOverridesFull
-    protected Map<String, Object> networkOverridesSelectedNode
 
     protected Map<String, Set<String>> requiredScopeKeysByCube = [:]
 
@@ -55,10 +54,10 @@ class VisualizerInfo
         messages = new LinkedHashSet()
         nodes = [:]
         edges = [:]
-        maxLevel = 1
         nodeIdCounter = 1
         edgeIdCounter = 0
         selectedNodeId = 1
+        maxLevel = 1
         availableGroupsAllLevels = new LinkedHashSet()
     }
 
@@ -75,7 +74,8 @@ class VisualizerInfo
             removeSourceEdges()
             removeTargets(edges)
             removeTargets(nodes)
-            //TODO: What to do about max level and availableGroupsAllLevels?
+            maxLevel = 1
+            availableGroupsAllLevels = new LinkedHashSet()
         }
     }
 
@@ -120,7 +120,6 @@ class VisualizerInfo
 
         networkOverridesBasic = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_BASIC, (CUBE_TYPE): cubeType]) as Map
         networkOverridesFull = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_FULL, (CUBE_TYPE): cubeType]) as Map
-        networkOverridesSelectedNode = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_SELECTED_NODE, (CUBE_TYPE): cubeType]) as Map
         defaultLevel = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_LEVEL, (CUBE_TYPE): cubeType]) as long
         allGroups = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_GROUPS, (CUBE_TYPE): cubeType]) as Map
         allGroupsKeys = new CaseInsensitiveSet(allGroups.keySet())

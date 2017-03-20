@@ -46,7 +46,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         assert 4l == visInfo.maxLevel
         assert 4l == visInfo.edgeIdCounter
         assert 5l == visInfo.nodeIdCounter
-        assert 3l == visInfo.defaultLevel
+        assert 5l == visInfo.defaultLevel
         assert 1l == visInfo.selectedNodeId
         assert '_ENUM' == visInfo.groupSuffix
         assert 'class' == visInfo.nodeLabel
@@ -62,8 +62,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
 
         //Spot check the network overrides
         assert (visInfo.networkOverridesBasic.groups as Map).keySet().containsAll(allGroups.keySet())
-        assert false == ((visInfo.networkOverridesFull.nodes as Map).shadow as Map).enabled
-        assert (visInfo.networkOverridesSelectedNode.shapeProperties as Map).containsKey('borderDashes')
+        assert true == ((visInfo.networkOverridesFull.nodes as Map).shadow as Map).enabled
     }
 
     @Test

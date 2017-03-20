@@ -27,7 +27,6 @@ var Visualizer = (function ($) {
     var _nce = null;
     var _visInfo = null;
     var _loadedAppId = null;
-    var _loadedVisInfoType = null;
     var _okToLoad = true;
     var _nodes = [];
     var _edges = [];
@@ -82,8 +81,6 @@ var Visualizer = (function ($) {
     var _networkOptionsInputHold = null;
     var _networkOverridesBasic = null;
     var _networkOverridesFull = null;
-    var _networkOverridesSelectedNode = null;
-    var _networkOverridesDeselectedNode = null;
     var _dataLoadStart = null;
     var _basicStabilizationStart = null;
     var _stabilizationStart = null;
@@ -168,6 +165,7 @@ var Visualizer = (function ($) {
                         _nce.showNote(nodeLabel + ' not found');
                     }
                     else if (1 === nodes.length) {
+                        _network.selectNodes([nodes[0].id], false);
                         networkSelectNodeEvent(nodes[0].id);
                     }
                     else {
@@ -237,6 +235,7 @@ var Visualizer = (function ($) {
     }
 
     function findNode(target) {
+        _network.selectNodes([target.id], false);
         networkSelectNodeEvent(target.id);
         _nce.clearNote();
     }
@@ -281,6 +280,7 @@ var Visualizer = (function ($) {
     function addResetVisualizerListener() {
         $('#resetVisualizer').on('click', function (e) {
             e.preventDefault();
+            _loadedAppId = null;
             _selectedNode = null;
             _topNodeScope = null;
             _selectedGroups = null;
@@ -332,10 +332,15 @@ var Visualizer = (function ($) {
         var emptyDataSet, emptyNetwork, copy;
         _basicStabilizationAfterInitNetwork  = true;
         _networkOptionsSection.hide();
+
+        _networkOverridesBasic = $.extend(true, {}, _visInfo.networkOverridesBasic);
+        _networkOverridesFull = $.extend(true, {}, _visInfo.networkOverridesFull);
+        formatNetworkOverrides(_networkOverridesBasic);
+        formatNetworkOverrides(_networkOverridesFull);
         _networkOverridesBasic.height = getVisNetworkHeight();
+
         emptyDataSet = new vis.DataSet({});
         emptyNetwork = new vis.Network(container, {nodes: emptyDataSet, edges: emptyDataSet}, {});
-
         _networkOptionsVis.physics = emptyNetwork.physics.defaultOptions;
         _networkOptionsVis.layout = emptyNetwork.layoutEngine.defaultOptions;
         _networkOptionsVis.nodes = emptyNetwork.nodesHandler.defaultOptions;
@@ -343,6 +348,7 @@ var Visualizer = (function ($) {
         _networkOptionsVis.interaction = emptyNetwork.interactionHandler.defaultOptions;
         _networkOptionsVis.manipulation = emptyNetwork.manipulation.defaultOptions;
         _networkOptionsVis.groups = emptyNetwork.groups.defaultOptions;
+        emptyNetwork.destroy();
 
         //TODO: Figure out why these keys throw "unknown" exception in vis when set on the network despite originating
         //TODO: from vis. Removing keys for now.
@@ -350,10 +356,11 @@ var Visualizer = (function ($) {
         delete _networkOptionsVis.physics.forceAtlas2Based['theta'];
         delete _networkOptionsVis.physics.repulsion['avoidOverlap'];
 
+        formatNetworkOverridesForSize();
+
         copy = $.extend(true, {}, _networkOptionsVis);
         _networkOptionsBasicStabilization = $.extend(true, copy, _networkOverridesBasic);
         _networkOptionsInput = $.extend(true, {}, _networkOptionsBasicStabilization);
-        emptyNetwork.destroy();
     }
 
     function loadNetworkOptionsSectionView()
@@ -546,7 +553,6 @@ var Visualizer = (function ($) {
             displayMessages(_visInfo.messages);
             populateDataForGraph();
             initNetwork();
-            loadDetailsSection();
             loadSelectedLevelListView();
             loadHierarchicalView();
             loadGroupsView();
@@ -555,6 +561,8 @@ var Visualizer = (function ($) {
             _visualizerContent.show();
             _visualizerInfo.show();
             _visualizerNetwork.show();
+            _network.selectNodes([_selectedNode.id], false);
+            networkSelectNodeEvent(_selectedNode.id);
         }
         else{
             _nce.clearNote();
@@ -564,6 +572,7 @@ var Visualizer = (function ($) {
         $("#dataLoadStatus").val(COMPLETE);
         $("#dataLoadDuration").val(Math.round(performance.now() - _dataLoadStart));
         _okToLoad = true;
+        _loadedAppId = _nce.getSelectedTabAppId();
     }
 
     function loadScopeChange() {
@@ -578,15 +587,14 @@ var Visualizer = (function ($) {
             _selectedNode = getNodeFromVisInfo(_visInfo.selectedNodeId.toString());
             displayMessages();
             populateDataForGraph();
-            updateNetworkData();
-            markSelectedNodeSpecial();
-            trimNetworkData();
-            loadDetailsSection();
+            updateNetwork();
             loadSelectedLevelListView();
             loadHierarchicalView();
             loadGroupsView();
             loadCountsView();
             saveAllToLocalStorage();
+            _network.selectNodes([_selectedNode.id], false);
+            networkSelectNodeEvent(_selectedNode.id);
         }
         else{
             _nce.clearNote();
@@ -731,7 +739,7 @@ var Visualizer = (function ($) {
             }
 
             groupMap = groups.hasOwnProperty(groupName) ? groups[groupName] : _networkOptionsInput.groups[UNSPECIFIED];
-            background = groupMap.color;
+            background = groupMap.color.background;
             fontMap = groupMap.font;
             if (fontMap) {
                 color = fontMap.hasOwnProperty('buttonColor') ? fontMap.buttonColor : fontMap.color;
@@ -950,21 +958,11 @@ var Visualizer = (function ($) {
     {
         var maxLevel;
 
-        if (!_loadedVisInfoType || _loadedVisInfoType !== _visInfo['@type']){
-            _networkOverridesBasic = _visInfo.networkOverridesBasic;
-            _networkOverridesFull = _visInfo.networkOverridesFull;
-            _networkOverridesSelectedNode = _visInfo.networkOverridesSelectedNode;
-            formatNetworkOverrides(_networkOverridesBasic);
-            formatNetworkOverrides(_networkOverridesFull);
-            formatNetworkOverrides(_networkOverridesSelectedNode);
-            //TODO: Figure out why the only way to make _networkOverridesSelectedNode work is to json stringify, then json parse.
-            _networkOverridesSelectedNode = JSON.parse(JSON.stringify(_networkOverridesSelectedNode));
-        }
-
         _nodes = _visInfo.nodes['@items'];
         _edges = _visInfo.edges['@items'];
         _nodes =  _nodes ? _nodes : [];
         _edges = _edges ? _edges : [];
+
         _availableGroupsAllLevels = _visInfo.availableGroupsAllLevels['@items'];
         if (_selectedGroups === null || _selectedGroups.length === 1){
             _selectedGroups = _availableGroupsAllLevels;
@@ -981,9 +979,23 @@ var Visualizer = (function ($) {
         if ('1' === _selectedNode.id){
             _topNodeScope = _selectedNode.availableScope;
         }
+    }
 
-        _loadedAppId = _nce.getSelectedTabAppId();
-        _loadedVisInfoType = _visInfo['@type'];
+    function formatNetworkOverridesForSize(){
+        var k, kLen, group, basicGroupOverrides;
+        if (_nodes.length > 50){
+            for (k = 0, kLen = _availableGroupsAllLevels.length; k < kLen; k++) {
+                group = _availableGroupsAllLevels[k];
+                basicGroupOverrides = _networkOverridesBasic.groups[group];
+                if ('image' === basicGroupOverrides.shape){
+                    basicGroupOverrides.shape = basicGroupOverrides.altshape;
+                }
+                if (_nodes.length > 100) {
+                    _networkOverridesFull.nodes.shadow.enabled = false;
+                    _networkOverridesFull.edges.shadow.enabled = false;
+                }
+            }
+        }
     }
 
     function formatNetworkOverrides(overrides){
@@ -1040,54 +1052,10 @@ var Visualizer = (function ($) {
         }
     }
 
-    function resetDeselectedNode(){
-        var node, keys, k, kLen, key, valueToAddBack;
-        if (_selectedNode && _networkOverridesDeselectedNode)
-        {
-            node = _nodeDataSet.get(_selectedNode.id);
-            keys = Object.keys(_networkOverridesDeselectedNode);
-            for (k = 0, kLen = keys.length; k < kLen; k++) {
-                key = keys[k];
-                valueToAddBack = _networkOverridesDeselectedNode[key];
-                if (valueToAddBack){
-                    node[key] = valueToAddBack
-                }
-                else{
-                    delete  node[key];
-                }
-            }
-            _nodeDataSet.remove(_selectedNode.id);
-            _nodeDataSet.add(node);
-            _selectedNode = null;
-            _networkOverridesDeselectedNode = null;
-        }
-    }
-
-    function markSelectedNodeSpecial()  {
-        var node, keys, k, kLen, key, valueToSaveOff;
-        if (_selectedNode){
-            node = _nodeDataSet.get(_selectedNode.id);
-            if (node) {
-                if (_networkOverridesSelectedNode) {
-                    _networkOverridesDeselectedNode = {};
-                    keys = Object.keys(_networkOverridesSelectedNode);
-                    for (k = 0, kLen = keys.length; k < kLen; k++) {
-                        key = keys[k];
-                        valueToSaveOff = node[key] ? node[key] : null;
-                        _networkOverridesDeselectedNode[key] = valueToSaveOff;
-                        node[key] = _networkOverridesSelectedNode[key];
-                    }
-                    _nodeDataSet.update(node);
-                }
-            }
-        }
-    }
-
     function initNetwork()
     {
-        var container;
-
-        container = document.getElementById('network');
+        var container = document.getElementById('network');
+        
         initNetworkOptions(container);
         _nodeDataSet = new vis.DataSet({});
         _nodeDataSet.add(_nodes);
@@ -1101,7 +1069,6 @@ var Visualizer = (function ($) {
         });
 
         _network.on('deselectNode', function() {
-            resetDeselectedNode();
             clearVisLayoutWest();
         });
 
@@ -1132,17 +1099,21 @@ var Visualizer = (function ($) {
         _edgeDataSet.on('remove', function () {
             networkChangeEvent()
         });
-        
-        _network.selectNodes([_selectedNode.id]);
-        networkSelectNodeEvent(_selectedNode.id);
     }
 
-    function updateNetworkData()
+    function updateNetwork()
     {
-        _nodeDataSet.clear();
-        _nodeDataSet.add(_nodes);
-        _edgeDataSet.clear();
-        _edgeDataSet.add(_edges);
+        if (_nodeDataSet.length === _nodes.length){
+            _nodeDataSet.clear();
+            _nodeDataSet.add(_nodes);
+            _edgeDataSet.clear();
+            _edgeDataSet.add(_edges);
+            trimNetworkData();
+        }
+        else{
+            destroyNetwork();
+            initNetwork();
+        }
     }
 
     function networkStartStabilizingEvent(){
@@ -1225,7 +1196,6 @@ var Visualizer = (function ($) {
     }
 
     function networkSelectNodeEvent(nodeId) {
-        resetDeselectedNode();
         _selectedNode = getNodeFromVisInfo(nodeId);
         if (!_selectedNode.details) {
            load(LOAD_NODE_DETAILS, 'Loading details...');
@@ -1233,7 +1203,6 @@ var Visualizer = (function ($) {
         else{
             loadDetailsSection();
         }
-        markSelectedNodeSpecial();
     }
 
     function loadDetailsSection(){
@@ -1406,7 +1375,7 @@ var Visualizer = (function ($) {
         cellValuesLink.click(function (e) {
             var note;
             e.preventDefault();
-            if (_visInfo.loadCellValuesLabel === 'cell values'){
+            if (_visInfo.cellValuesLabel === 'cell values'){
                 _nce.showNote('Show cell values for n-cubes is currently not available.'); //TODO: Temporary
             }
             else{

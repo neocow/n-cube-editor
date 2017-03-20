@@ -25,7 +25,7 @@ class VisualizerTest extends VisualizerBaseTest
         assert 4 == edges.size()
         assert 3l == visInfo.maxLevel
         assert 5l == visInfo.nodeIdCounter
-        assert 999999l == visInfo.defaultLevel
+        assert 5l == visInfo.defaultLevel
         assert '' == visInfo.groupSuffix
         assert ['NCUBE'] as Set == visInfo.availableGroupsAllLevels
 
@@ -48,7 +48,6 @@ class VisualizerTest extends VisualizerBaseTest
         //Spot check the network overrides
         assert (visInfo.networkOverridesBasic.groups as Map).keySet().containsAll(allGroups.keySet())
         assert true == ((visInfo.networkOverridesFull.nodes as Map).shadow as Map).enabled
-        assert true == (visInfo.networkOverridesSelectedNode.shapeProperties as Map).useBorderWithImage
     }
 
     @Test

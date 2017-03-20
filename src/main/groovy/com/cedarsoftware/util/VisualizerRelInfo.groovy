@@ -309,10 +309,6 @@ class VisualizerRelInfo
 		{
 			node.details = getDetails(visInfo)
 		}
-
-		visInfo.availableGroupsAllLevels << group - visInfo.groupSuffix
-		long maxLevel = visInfo.maxLevel
-		visInfo.maxLevel = maxLevel < targetLevel ? targetLevel : maxLevel
 		return node
 	}
 
