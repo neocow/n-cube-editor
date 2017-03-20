@@ -144,8 +144,8 @@ class VisualizerRelInfo
 	{
 		StringBuilder sb = new StringBuilder()
 
-		getDetailsMap(sb, 'Scope', targetScope.sort())
-		getDetailsMap(sb, 'Available scope', availableTargetScope.sort())
+		getDetailsMap(sb, 'Scope', targetScope.sort(), 'The scope keys used to load the cube. A sub-set of available scope.')
+		getDetailsMap(sb, 'Available scope', availableTargetScope.sort(), 'The scope keys available as the cube was loaded in the visualization.')
 		getDetailsSet(sb, 'Axes', targetCube.axisNames)
 
 		//Cell values
@@ -190,10 +190,10 @@ class VisualizerRelInfo
 		}
 	}
 
-	protected static void getDetailsMap(StringBuilder sb, String title, Map<String, Object> map)
+	protected static void getDetailsMap(StringBuilder sb, String heading, Map<String, Object> map, String title = '')
 	{
-		sb.append("<b>${title}</b>")
-		sb.append("<pre><ul>")
+		sb.append("<b>${heading}</b>")
+		sb.append("""<pre title="${title}"><ul>""")
 		if (map)
 		{
 			map.each { String key, Object value ->
@@ -207,10 +207,10 @@ class VisualizerRelInfo
 		sb.append("</ul></pre>${BREAK}")
 	}
 
-	protected static void getDetailsSet(StringBuilder sb, String title, Collection<String> set)
+	protected static void getDetailsSet(StringBuilder sb, String heading, Collection<String> set, String title = '')
 	{
-		sb.append("<b>${title}</b>")
-		sb.append("<pre><ul>")
+		sb.append("<b>${heading}</b>")
+		sb.append("""<pre title="$title)"><ul>""")
 		if (set)
 		{
 			set.each { String value ->
@@ -350,7 +350,7 @@ class VisualizerRelInfo
 		}
 	}
 
-	protected void addCubeNames(String scopeKey, String valueToAdd)
+	private void addCubeNames(String scopeKey, String valueToAdd)
 	{
 		Set<String> values = scopeCubeNames[scopeKey] as Set ?: new LinkedHashSet()
 		values << valueToAdd
@@ -391,11 +391,8 @@ class VisualizerRelInfo
 	private StringBuilder getNodeDetailsMessageSet()
 	{
 		StringBuilder sb = new StringBuilder()
-		if (nodeDetailsMessages)
-		{
-			nodeDetailsMessages.each { String message ->
-				sb.append("${message}")
-			}
+		nodeDetailsMessages.each {String message ->
+			sb.append("${message}")
 		}
 		return sb
 	}
@@ -404,25 +401,42 @@ class VisualizerRelInfo
 	{
 		String nodeName = getLabel()
 		StringBuilder sb = new StringBuilder()
+		sb.append("<b>Scope</b>")
+		sb.append(DOUBLE_BREAK)
+		Map<String, Set<Object>> derivedScope = new CaseInsensitiveMap(availableTargetScope)
 		if (availableScopeValues)
 		{
-			Map sortedMap = availableScopeValues.sort()
-			sortedMap.keySet().each { String scopeKey ->
+			Set sortedScopeKeys = availableScopeValues.sort().keySet()
+			sortedScopeKeys.each {String scopeKey ->
 				Set<String> cubeNames = scopeCubeNames[scopeKey]
 				cubeNames.remove(null)
 				Set<Object> availableValues = availableScopeValues[scopeKey]
 				String requiredOrOptional = availableValues.contains(null) ? 'optional' : 'required'
+				String cubeNamesTitle = getCubeNamesTitle(availableValues.contains(null))
 				StringBuilder title = new StringBuilder("Scope key ${scopeKey} is ${requiredOrOptional} to load ${nodeName}")
-				title.append(addCubeNamesList('. First encountered on the following cubes, but may also be present on others:', cubeNames))
+				title.append(addCubeNamesList(cubeNamesTitle, cubeNames))
 				sb.append(getScopeMessage(scopeKey, availableValues, title, availableTargetScope[scopeKey]))
 				sb.append(BREAK)
 			}
+			derivedScope.keySet().removeAll(sortedScopeKeys)
 		}
 		else{
 			sb.append("<b>No scope</b>")
 			sb.append(BREAK)
 		}
+
+		Set<String> sortedScopeKeys = derivedScope.sort().keySet()
+		sortedScopeKeys.each {String scopeKey ->
+			StringBuilder title = new StringBuilder("Scope key ${scopeKey} is added for this ${nodeLabel} during the visualization and may not be changed in this visual. Start a new visual from here to access all scope keys for the ${nodeLabel}.")
+			sb.append(getScopeMessage(scopeKey, null, title, derivedScope[scopeKey]))
+			sb.append(BREAK)
+		}
 		return sb
+	}
+
+	private static getCubeNamesTitle(boolean optional)
+	{
+		return optional ? '. Encountered on the following cubes:' : '. First encountered on the following cubes, but may also be required on others:'
 	}
 
 	protected StringBuilder getScopeMessage(String scopeKey, Set<Object> availableScopeValues, StringBuilder title, Object providedScopeValue)
@@ -433,6 +447,7 @@ class VisualizerRelInfo
 		String topNodeClass = targetId == 1l ? DETAILS_CLASS_TOP_NODE : ''
 		Object value = getValue(availableScopeValues, providedScopeValue)
 		String valueClass = getClassForValue(availableScopeValues, value, providedScopeValue)
+		String disabled = availableScopeValues == null ? 'disabled="disabled"' : ''
 
 		sb.append("""<div class="input-group" title="${title}">""")
 		sb.append("""<div class="input-group-btn">""")
@@ -453,14 +468,14 @@ class VisualizerRelInfo
 			sb.append("""</ul>""")
 		}
 		sb.append("""</div>""")
-		sb.append("""<input id="${scopeKey}" value="${value}" placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${valueClass} ${topNodeClass}" style="color: black;" type="text">""")
+		sb.append("""<input id="${scopeKey}" value="${value}" ${disabled} placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${valueClass} ${topNodeClass}" style="color: black;" type="text">""")
 		sb.append("""</div>""")
 		return sb
 	}
 
 	private static Object getValue(Set<Object> availableScopeValues, Object providedScopeValue)
 	{
-		if (availableScopeValues.contains(null))
+		if (availableScopeValues && availableScopeValues.contains(null))
 		{
 			return providedScopeValue ?: DEFAULT
 		}
@@ -472,7 +487,11 @@ class VisualizerRelInfo
 
 	private static String getClassForValue(Set<Object> availableScopeValues, Object value, Object providedScopeValue)
 	{
-		if (DEFAULT == value && availableScopeValues.contains(null))
+		if (!availableScopeValues)
+		{
+			return ''
+		}
+		else if (DEFAULT == value && availableScopeValues.contains(null))
 		{
 			return DETAILS_CLASS_DEFAULT_VALUE
 		}
@@ -536,5 +555,10 @@ class VisualizerRelInfo
 	protected String getCubeDetailsTitle2(String label)
 	{
 		return null
+	}
+
+	protected String getNodeLabel()
+	{
+		'n-cube'
 	}
 }

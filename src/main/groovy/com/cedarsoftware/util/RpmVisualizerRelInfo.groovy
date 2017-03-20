@@ -62,10 +62,20 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		//Scope
 		if (cubeLoaded)
 		{
-			String title = showCellValues ? 'Utilized scope with traits' : 'Utilized scope with no traits'
-			getDetailsMap(sb, title, targetScope.sort())
+			String heading
+			String title
+			if (showCellValues)
+			{
+				heading = 'Utilized scope with traits'
+				title = 'The scope keys used to load the class with all available traits. A sub-set of available scope.'
+			}
+			else
+			{
+				heading = 'Utilized scope with no traits'
+				title = 'The scope keys used to load the class in the visualization, relying on a minimal set of traits. A sub-set of available scope.'
+			}
+			getDetailsMap(sb, heading, targetScope.sort(), title)
 		}
-		getDetailsMap(sb, 'Available scope', availableTargetScope.sort())
 
 		//Fields
 		if (cubeLoaded)
@@ -565,6 +575,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
         }
         return inScopeMapEntries.keySet()
     }*/
+
+
+	@Override
+	protected String getNodeLabel()
+	{
+		'class'
+	}
 
 	private String getCannotLoadTargetMessage(String type) {
 
