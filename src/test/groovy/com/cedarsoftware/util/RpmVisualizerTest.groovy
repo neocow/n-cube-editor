@@ -910,7 +910,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         //Risk.Coverages for ARisk
         node =  nodes.values().find {Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on ARisk".toString() == node1.title}
         node = loadNodeDetails(node)
-        checkNoScopePrompt(node, 'product')
+        checkScopePromptDropdown(node, 'product', 'AProduct', null, null, '', false)
         checkNoScopePrompt(node, 'pgm')
         checkNoScopePrompt(node, 'state')
         checkNoScopePrompt(node, 'div')
@@ -923,7 +923,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE)
         checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldACoverage')
         checkScopePromptDropdown(node, 'div', '', ['div1', 'div2'], ['div3', DEFAULT], DETAILS_CLASS_MISSING_VALUE)
-        checkNoScopePrompt(node, 'product')
+        checkScopePromptDropdown(node, 'product', 'AProduct', null, null, '', false)
         checkNoScopePrompt(node, 'state')
 
         //BCoverage
@@ -932,7 +932,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         checkNode('BCoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
         checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldBCoverage')
         checkScopePromptDropdown(node, 'div', '', ['div3'], ['div1', 'div2', DEFAULT], DETAILS_CLASS_MISSING_VALUE)
-        checkNoScopePrompt(node, 'product')
+        checkScopePromptDropdown(node, 'product', 'AProduct', null, null, '', false)
         checkNoScopePrompt(node, 'pgm')
         checkNoScopePrompt(node, 'state')
 
@@ -942,7 +942,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         checkNode('CCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false)
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Coverage.traits.fieldCCoverage')
         checkScopePromptDropdown(node, 'state', DEFAULT, ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'], DETAILS_CLASS_DEFAULT_VALUE )
-        checkNoScopePrompt(node, 'product')
+        checkScopePromptDropdown(node, 'product', 'AProduct', null, null, '', false)
         checkNoScopePrompt(node, 'div')
         checkNoScopePrompt(node, 'pgm')
 
@@ -971,10 +971,10 @@ class RpmVisualizerTest extends VisualizerBaseTest
         //Risk.Coverages for ARisk
         node =  nodes.values().find {Map node1 -> "${VALID_VALUES_FOR_FIELD_SENTENCE_CASE}Coverages on ARisk".toString() == node1.title}
         node = loadNodeDetails(node)
-        checkNoScopePrompt(node, 'product')
+        checkScopePromptDropdown(node, 'product', 'AProduct', null, null, '', false)
         checkNoScopePrompt(node, 'pgm')
-        checkNoScopePrompt(node, 'state')
-        checkNoScopePrompt(node, 'div')
+        checkScopePromptDropdown(node, 'state', 'OH', null, null, '', false)
+        checkScopePromptDropdown(node, 'div', 'div1', null, null, '', false)
 
         //ACoverage
         node =  nodes.values().find {Map node1 -> "${ADDITIONAL_SCOPE_REQUIRED_FOR}ACoverage".toString() == node1.label}
@@ -982,9 +982,9 @@ class RpmVisualizerTest extends VisualizerBaseTest
         checkNode('ACoverage', 'Coverage', ADDITIONAL_SCOPE_REQUIRED_FOR, ADDITIONAL_SCOPE_REQUIRED, true)
         checkScopePromptTitle(node, 'pgm', true, 'rpm.scope.class.Coverage.traits.fieldACoverage')
         checkScopePromptDropdown(node, 'pgm', '', ['pgm1', 'pgm2', 'pgm3'], [DEFAULT], DETAILS_CLASS_MISSING_VALUE)
-        checkNoScopePrompt(node, 'product')
-        checkNoScopePrompt(node, 'state')
-        checkNoScopePrompt(node, 'div')
+        checkScopePromptDropdown(node, 'product', 'AProduct', null, null, '', false)
+        checkScopePromptDropdown(node, 'state', 'OH', null, null, '', false)
+        checkScopePromptDropdown(node, 'div', 'div1', null, null, '', false)
 
         //BCoverage
         node = nodes.values().find { Map node1 -> "${REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR}${'BCoverage'}".toString() == node1.label }
@@ -992,9 +992,9 @@ class RpmVisualizerTest extends VisualizerBaseTest
         checkNode('BCoverage', 'Coverage', REQUIRED_SCOPE_VALUE_NOT_FOUND_FOR, IS_NOT_VALID_FOR, true)
         checkScopePromptTitle(node, 'div', true, 'rpm.scope.class.Coverage.traits.fieldBCoverage')
         checkScopePromptDropdown(node, 'div', 'div1', ['div3'], ['div1', 'div2', DEFAULT], DETAILS_CLASS_MISSING_VALUE)
-        checkNoScopePrompt(node, 'product')
+        checkScopePromptDropdown(node, 'product', 'AProduct', null, null, '', false)
         checkNoScopePrompt(node, 'pgm')
-        checkNoScopePrompt(node, 'state')
+        checkScopePromptDropdown(node, 'state', 'OH', null, null, '', false)
 
         //CCoverage
         node = nodes.values().find { Map node1 -> 'CCoverage' == node1.label }
@@ -1002,8 +1002,8 @@ class RpmVisualizerTest extends VisualizerBaseTest
         checkNode('CCoverage', 'Coverage', '', DEFAULTS_WERE_USED, false)
         checkScopePromptTitle(node, 'state', false, 'rpm.scope.class.Coverage.traits.fieldCCoverage')
         checkScopePromptDropdown(node, 'state', 'OH', ['GA', 'IN', 'NY', DEFAULT], ['KY', 'OH'], DETAILS_CLASS_MISSING_VALUE)
-        checkNoScopePrompt(node, 'product')
-        checkNoScopePrompt(node, 'div')
+        checkScopePromptDropdown(node, 'product', 'AProduct', null, null, '', false)
+        checkScopePromptDropdown(node, 'div', 'div1', null, null, '', false)
         checkNoScopePrompt(node, 'pgm')
      }
 
@@ -1282,7 +1282,8 @@ class RpmVisualizerTest extends VisualizerBaseTest
         Map node = nodes.values().find { Map node1 -> 'StateOps' == node1.label }
         node = loadNodeDetails(node)
         checkNode('StateOps', 'Risk')
-        checkNoScopePrompt(node, 'sourceRisk')
+        checkScopePromptTitle(node, 'sourceRisk', false, null, true)
+        checkScopePromptDropdown(node, 'sourceRisk', 'WProductOps', null, null, '', false)
     }
 
     /* TODO: Will revisit providing "in scope" available scope values for r:exists at a later time.
@@ -1457,19 +1458,21 @@ class RpmVisualizerTest extends VisualizerBaseTest
 
         if (unableToLoad)
         {
+            assert nodeDetails.contains(DETAILS_LABEL_SCOPE)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITH_TRAITS)
-            assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
+            assert !nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS)
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
         }
         else if (showCellValues)
         {
+            assert nodeDetails.contains(DETAILS_LABEL_SCOPE)
             assert !nodeDetails.contains(UNABLE_TO_LOAD)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS)
             assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITH_TRAITS)
-            assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
+            assert !nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
         }
@@ -1477,6 +1480,7 @@ class RpmVisualizerTest extends VisualizerBaseTest
         {
             assert !nodeDetails.contains(UNABLE_TO_LOAD)
             assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS)
+            assert !nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert nodeDetails.contains(DETAILS_LABEL_FIELDS)
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)

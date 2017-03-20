@@ -8,10 +8,7 @@ import groovy.transform.CompileStatic
 import org.junit.Before
 
 import static com.cedarsoftware.util.VisualizerConstants.DATE_TIME_FORMAT
-import static com.cedarsoftware.util.VisualizerConstants.DETAILS_CLASS_DEFAULT_VALUE
-import static com.cedarsoftware.util.VisualizerConstants.DETAILS_CLASS_MISSING_VALUE
 import static com.cedarsoftware.util.VisualizerConstants.DETAILS_CLASS_TOP_NODE
-import static com.cedarsoftware.util.VisualizerTestConstants.DEFAULT
 import static com.cedarsoftware.util.VisualizerTestConstants.ENTER_VALUE
 import static com.cedarsoftware.util.VisualizerTestConstants.SELECT_OR_ENTER_VALUE
 
@@ -99,10 +96,14 @@ class VisualizerBaseTest
         return nodes[node.id as Long]
     }
 
-    protected static void checkScopePromptTitle(Map node, String scopeKey, boolean required, String cubeNames = null)
+    protected static void checkScopePromptTitle(Map node, String scopeKey, boolean required, String cubeNames = null, boolean derivedScopeKey = false)
     {
         String nodeDetails = node.details as String
-        if (required)
+        if (derivedScopeKey)
+        {
+            assert nodeDetails.contains("""title="Scope key ${scopeKey} is added for this""")
+        }
+        else if (required)
         {
             assert nodeDetails.contains("""title="Scope key ${scopeKey} is required to load""")
         }
@@ -121,7 +122,8 @@ class VisualizerBaseTest
         String nodeDetails = node.details as String
         String placeHolder = availableScopeValues ? SELECT_OR_ENTER_VALUE : ENTER_VALUE
         String topNodeClass = isTopNode ? DETAILS_CLASS_TOP_NODE : ''
-        assert nodeDetails.contains("""<input id="${scopeKey}" value="${selectedScopeValue}" placeholder="${placeHolder}" class="scopeInput form-control ${valueClass} ${topNodeClass}""")
+        String disabled = availableScopeValues == null ? 'disabled="disabled"' : ''
+        assert nodeDetails.contains("""<input id="${scopeKey}" value="${selectedScopeValue}" ${disabled} placeholder="${placeHolder}" class="scopeInput form-control ${valueClass} ${topNodeClass}""")
         if (!availableScopeValues && !unavailableScopeValues)
         {
             assert !nodeDetails.contains("""<li id="${scopeKey}:""")

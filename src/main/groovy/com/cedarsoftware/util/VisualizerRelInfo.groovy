@@ -210,7 +210,7 @@ class VisualizerRelInfo
 	protected static void getDetailsSet(StringBuilder sb, String heading, Collection<String> set, String title = '')
 	{
 		sb.append("<b>${heading}</b>")
-		sb.append("""<pre title="$title)"><ul>""")
+		sb.append("""<pre title="$title"><ul>""")
 		if (set)
 		{
 			set.each { String value ->
@@ -487,7 +487,7 @@ class VisualizerRelInfo
 
 	private static String getClassForValue(Set<Object> availableScopeValues, Object value, Object providedScopeValue)
 	{
-		if (!availableScopeValues)
+		if (null == availableScopeValues)
 		{
 			return ''
 		}

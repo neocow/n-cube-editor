@@ -79,9 +79,9 @@ class VisualizerTest extends VisualizerBaseTest
         assert false == node.showCellValues
         assert false == node.cubeLoaded
         String nodeDetails = node.details as String
-        assert nodeDetails.contains("${DETAILS_LABEL_SCOPE}</b><pre><ul><li>none</li></ul></pre><br><b>")
-        assert nodeDetails.contains("${DETAILS_LABEL_AVAILABLE_SCOPE}</b><pre><ul><li>none</li></ul></pre><br><b>")
-        assert nodeDetails.contains("${DETAILS_LABEL_AXES}</b><pre><ul><li>CubeDAxis1</li><li>CubeDAxis2</li></ul></pre><br>")
+        assert nodeDetails.contains("""${DETAILS_LABEL_SCOPE}</b><pre title="The scope keys used to load the cube. A sub-set of available scope."><ul><li>none</li></ul></pre><br><b>""")
+        assert nodeDetails.contains("""${DETAILS_LABEL_AVAILABLE_SCOPE}</b><pre title="The scope keys available as the cube was loaded in the visualization."><ul><li>none</li></ul></pre><br><b>""")
+        assert nodeDetails.contains("""${DETAILS_LABEL_AXES}</b><pre title=""><ul><li>CubeDAxis1</li><li>CubeDAxis2</li></ul></pre><br>""")
         assert !nodeDetails.contains(DETAILS_LABEL_CELL_VALUES)
 
         //Check one target node
@@ -105,9 +105,9 @@ class VisualizerTest extends VisualizerBaseTest
         //Check details on target node
         node = loadNodeDetails(node)
         nodeDetails = node.details as String
-        assert nodeDetails.contains("${DETAILS_LABEL_SCOPE}</b><pre><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>")
-        assert nodeDetails.contains("${DETAILS_LABEL_AVAILABLE_SCOPE}</b><pre><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>")
-        assert nodeDetails.contains("${DETAILS_LABEL_AXES}</b><pre><ul><li>CubeEAxis1</li><li>CubeEAxis2</li></ul></pre><br>")
+        assert nodeDetails.contains("""${DETAILS_LABEL_SCOPE}</b><pre title="The scope keys used to load the cube. A sub-set of available scope."><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>""")
+        assert nodeDetails.contains("""${DETAILS_LABEL_AVAILABLE_SCOPE}</b><pre title="The scope keys available as the cube was loaded in the visualization."><ul><li>CubeDAxis1: CubeDAxis1Col3</li></ul></pre><br><b>""")
+        assert nodeDetails.contains("""${DETAILS_LABEL_AXES}</b><pre title=""><ul><li>CubeEAxis1</li><li>CubeEAxis2</li></ul></pre><br>""")
         assert !nodeDetails.contains(DETAILS_LABEL_CELL_VALUES)
 
         //Check edge between top node and target node above
