@@ -1,8 +1,6 @@
 package com.cedarsoftware.util
 
-import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
-import com.cedarsoftware.ncube.NCubeManager
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
@@ -12,33 +10,10 @@ import static com.cedarsoftware.util.RpmVisualizerConstants.*
  * visualize the classes and their relationships.
  */
 
-// TODO: This code needs to be moved out of NCE and pulled-in via Grapes.
 @CompileStatic
 class RpmVisualizer extends Visualizer
 {
-	protected RpmVisualizerHelper helper
-	protected String defaultScopeEffectiveVersion
-	protected String defaultScopeDate
-
-	/**
-	 * Loads all cell values available for a given rpm class.
-	 *
-	 * @param applicationID
-	 * @param options - a map containing:
-	 *            Map node, representing a class and its scope
-	 *            VisualizerInfo visInfo, information about the visualization
-	 * @return a map containing:
-	 *           String status, status of the visualization
-	 *           VisualizerInfo visInfo, information about the visualization
-	 */
-
-	@Override
-	Map getCellValues(ApplicationID applicationID, Map options)
-	{
-		appId = applicationID
-		RpmVisualizerRelInfo relInfo = new RpmVisualizerRelInfo(appId, options.node as Map)
-		return getCellValues(relInfo, options)
-	}
+	private RpmVisualizerHelper helper
 
 	@Override
 	protected VisualizerInfo getVisualizerInfo(Map options)
@@ -48,20 +23,18 @@ class RpmVisualizer extends Visualizer
 		if (optionsVisInfo && optionsVisInfo instanceof RpmVisualizerInfo)
 		{
 			visInfo = optionsVisInfo as RpmVisualizerInfo
+			visInfo.appId = appId
 		}
 		else
 		{
-			visInfo = new RpmVisualizerInfo(appId, options)
+			visInfo = new RpmVisualizerInfo(appId)
 		}
-		visInfo.init(options.scope as Map)
 		return visInfo
 	}
 
-	@Override
-	protected void loadFirstVisualizerRelInfo(VisualizerInfo visInfo, VisualizerRelInfo relInfo, String startCubeName)
+	protected VisualizerRelInfo getVisualizerRelInfo()
 	{
-		super.loadFirstVisualizerRelInfo(visInfo, relInfo, startCubeName)
-		relInfo.showCellValuesLink = false
+		return new RpmVisualizerRelInfo(appId)
 	}
 
 	@Override
@@ -79,33 +52,31 @@ class RpmVisualizer extends Visualizer
 
 	private void processClassCube(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo)
 	{
-		boolean cellValuesLoaded
+		boolean cubeLoaded
 		String targetCubeName = relInfo.targetCube.name
 
-		if (canLoadTraitsForTarget(relInfo))
-		{
-			cellValuesLoaded = relInfo.loadCellValues(visInfo)
-		}
+		cubeLoaded = relInfo.loadCube(visInfo)
 
 		if (relInfo.sourceCube)
 		{
-			visInfo.edges << relInfo.createEdge(visInfo.edges.size())
+			Long edgeId = visInfo.edgeIdCounter += 1
+			visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
 		}
 
-		if (!visited.add(targetCubeName + relInfo.scope.toString()))
+		if (!visited.add(targetCubeName + relInfo.availableTargetScope.toString()))
 		{
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo)
+		visInfo.nodes[relInfo.targetId] = relInfo.createNode(visInfo)
 
-		if (cellValuesLoaded)
+		if (cubeLoaded)
 		{
 			relInfo.targetTraits.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
 				{
 					String targetFieldRpmType = targetTraits[R_RPM_TYPE]
-					if (!getVisualizerHelper().isPrimitive(targetFieldRpmType))
+					if (!visualizerHelper.isPrimitive(targetFieldRpmType))
 					{
 						String nextTargetCubeName = ""
 						if (targetTraits.containsKey(V_ENUM))
@@ -128,8 +99,8 @@ class RpmVisualizer extends Visualizer
 		String group = UNSPECIFIED_ENUM
 		String targetCubeName = relInfo.targetCube.name
 
-		boolean cellValuesLoaded = relInfo.loadCellValues(visInfo)
-		if (cellValuesLoaded)
+		boolean cubeLoaded = relInfo.loadCube(visInfo)
+		if (cubeLoaded)
 		{
 			relInfo.targetTraits.each { String targetFieldName, Map targetTraits ->
 				if (CLASS_TRAITS != targetFieldName)
@@ -147,24 +118,28 @@ class RpmVisualizer extends Visualizer
 			}
 		}
 
-		visInfo.edges << relInfo.createEdge(visInfo.edges.size())
+		if (relInfo.sourceCube)
+		{
+			Long edgeId = visInfo.edgeIdCounter += 1
+			visInfo.edges[edgeId] = relInfo.createEdge(edgeId)
+		}
 
-		if (!visited.add(targetCubeName + relInfo.scope.toString()))
+		if (!visited.add(targetCubeName + relInfo.availableTargetScope.toString()))
 		{
 			return
 		}
 
-		visInfo.nodes << relInfo.createNode(visInfo, group)
+		visInfo.nodes[relInfo.targetId] = relInfo.createNode(visInfo, group)
 	}
 
 	private RpmVisualizerRelInfo addToStack(RpmVisualizerInfo visInfo, RpmVisualizerRelInfo relInfo, String nextTargetCubeName, String rpmType, String targetFieldName)
 	{
-		RpmVisualizerRelInfo nextRelInfo = new RpmVisualizerRelInfo()
+		RpmVisualizerRelInfo nextRelInfo = new RpmVisualizerRelInfo(appId)
 		super.addToStack(visInfo, relInfo, nextRelInfo, nextTargetCubeName)
 		NCube nextTargetCube = nextRelInfo.targetCube
 		if (nextTargetCube)
 		{
-			nextRelInfo.scope = getScopeRelativeToSource(nextTargetCube, rpmType, targetFieldName, relInfo.scope)
+			nextRelInfo.populateScopeRelativeToSource(rpmType, targetFieldName, relInfo.availableTargetScope)
 			nextRelInfo.sourceFieldName = targetFieldName
 			nextRelInfo.sourceFieldRpmType = rpmType
 			nextRelInfo.sourceTraits = relInfo.targetTraits
@@ -174,171 +149,42 @@ class RpmVisualizer extends Visualizer
 	}
 
 	@Override
-	protected VisualizerRelInfo getVisualizerRelInfo()
+	protected NCube isValidStartCube(VisualizerInfo visInfo, String cubeName)
 	{
-		return new RpmVisualizerRelInfo()
-	}
-
-	private boolean canLoadTraitsForTarget(RpmVisualizerRelInfo relInfo)
-	{
-		//When the source cube points directly to the target cube (source cube and target cube are both rpm.class),
-		//check if the source field name matches up with the scoped name of the target. If not, traits cannot
-		//be loaded for the target in the visualization.
-		NCube sourceCube = relInfo.sourceCube
-		NCube targetCube = relInfo.targetCube
-
-		if (sourceCube && sourceCube.name.startsWith(RPM_CLASS_DOT) && targetCube.name.startsWith(RPM_CLASS_DOT) &&
-				targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		NCube cube = super.isValidStartCube(visInfo, cubeName)
+		if (!cube)
 		{
-			String type = relInfo.sourceFieldRpmType
-			NCube classTraitsCube = NCubeManager.getCube(appId, RPM_SCOPE_CLASS_DOT + type + DOT_CLASS_TRAITS)
-			String sourceFieldName = relInfo.sourceFieldName
-			if (!classTraitsCube.getAxis(type).findColumn(sourceFieldName))
+			return null
+		}
+
+		if (cubeName.startsWith(RPM_CLASS_DOT))
+		{
+			if (!cube.getAxis(AXIS_FIELD) || !cube.getAxis(AXIS_TRAIT) )
 			{
-				relInfo.nodeLabelPrefix = 'Unable to load '
-				relInfo.targetTraits = new CaseInsensitiveMap()
-				String msg = getLoadTraitsForTargetMessage(relInfo, type)
-				relInfo.notes << msg
-				relInfo.cellValuesLoaded = false
-				relInfo.showCellValuesLink = false
-				return false
+				visInfo.messages << "Cube ${cubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString()
+				return null
 			}
 		}
-		return true
-	}
-
-	/**
-	 * Sets the basic scope required to load a target class based on scoped source class,
-	 * source field name, target class name, and current scope.
-	 * Retains all other scope.
-	 * If the source class is not a scoped class, returns the scope unchanged.
-	 *
-	 * @param targetCube String target cube
-	 * @param sourceFieldRpmType String source field type
-	 * @param sourceFieldName String source field name
-	 * @param scope Map<String, Object> scope
-	 *
-	 * @return Map new scope
-	 *
-	 */
-	private static Map<String, Object> getScopeRelativeToSource(NCube targetCube, String sourceFieldRpmType, String targetFieldName, Map scope)
-	{
-		Map<String, Object> newScope = new CaseInsensitiveMap<>(scope)
-
-		if (targetCube.name.startsWith(RPM_ENUM))
+		/* TODO: Add ability to start rpm visualization with an rpm enum class
+		else if (cubeName.startsWith(RPM_ENUM_DOT))
 		{
-			newScope[SOURCE_FIELD_NAME] = targetFieldName
-		}
-		else if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
-		{
-			String newScopeKey = sourceFieldRpmType
-			String oldValue = scope[newScopeKey]
-			if (oldValue)
+			if (!cube.getAxis(AXIS_NAME) || !cube.getAxis(AXIS_TRAIT) )
 			{
-				newScope[SOURCE_SCOPE_KEY_PREFIX + sourceFieldRpmType] = oldValue
+				visInfo.messages << "Cube ${cubeName} is not a valid rpm enum since it does not have both a name axis and a traits axis.".toString()
+				return null
 			}
-			newScope[newScopeKey] = targetFieldName
-		}
-		return newScope
-	}
-
-	private Map<String, Object> getDefaultScope(String type)
-	{
-		Map<String, Object> scope = new CaseInsensitiveMap<>()
-		if (type)
+		}*/
+		else
 		{
-			scope[POLICY_CONTROL_DATE] = defaultScopeDate
-			scope[QUOTE_DATE] = defaultScopeDate
+			visInfo.messages << "Starting cube for visualization must begin with 'rpm.class', ${cubeName} does not.".toString()
+			return null
 		}
-		scope[EFFECTIVE_VERSION] = defaultScopeEffectiveVersion
-		return scope
-	}
-
-	@Override
-	protected boolean isValidStartCube(VisualizerInfo visInfo, String cubeName)
-	{
-		if (!cubeName.startsWith(RPM_CLASS_DOT))
-		{
-			visInfo.messages << "Starting cube for visualization must begin with 'rpm.class', n-cube ${cubeName} does not.".toString()
-			return false
-		}
-
-		NCube cube = NCubeManager.getCube(appId, cubeName)
-		if (!cube.getAxis(AXIS_FIELD) || !cube.getAxis(AXIS_TRAIT) )
-		{
-			visInfo.messages << "Cube ${cubeName} is not a valid rpm class since it does not have both a field axis and a traits axis.".toString()
-			return false
-		}
-		return true
+		return cube
 	}
 
 	@Override
 	protected RpmVisualizerHelper getVisualizerHelper()
 	{
 		helper =  new RpmVisualizerHelper()
-	}
-
-	@Override
-	protected boolean hasMissingMinimumScope(VisualizerInfo visInfo, String startCubeName)
-	{
-		RpmVisualizerHelper helper = getVisualizerHelper()
-		RpmVisualizerInfo rpmVisInfo = (RpmVisualizerInfo) visInfo
-		defaultScopeEffectiveVersion = appId.version
-		defaultScopeDate = DATE_TIME_FORMAT.format(new Date())
-		Set<String> messages = visInfo.messages
-
-		boolean hasMissingScope = false
-		Map<String, Object> scope = rpmVisInfo.scope
-
-		if (NCubeManager.getCube(appId, startCubeName).getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
-		{
-			String type = getTypeFromCubeName(startCubeName)
-			String scopeCubeName = startCubeName.replace(RPM_CLASS_DOT, RPM_SCOPE_CLASS_DOT) + DOT_TRAITS
-			Set<Object> requiredScopeValues = visInfo.getRequiredScopeValues(scopeCubeName, type)
-			String messageScopeValues = BREAK + helper.getRequiredScopeValueMessage(type, requiredScopeValues)
-			if (scope)
-			{
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(type, null, messageScopeValues, messages) ?: hasMissingScope
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(POLICY_CONTROL_DATE, defaultScopeDate, null, messages) ?: hasMissingScope
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(QUOTE_DATE, defaultScopeDate, null, messages) ?: hasMissingScope
-				hasMissingScope = rpmVisInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, null, messages) ?: hasMissingScope
-			}
-			else
-			{
-				hasMissingScope = true
-				Map<String, Object> defaultScope = getDefaultScope(type)
-				visInfo.scope = defaultScope
-				String msg = helper.getMissingMinimumScopeMessage(defaultScope, messageScopeValues)
-				messages << msg
-			}
-		}
-		else{
-			if (scope)
-			{
-				hasMissingScope = visInfo.addMissingMinimumScope(EFFECTIVE_VERSION, defaultScopeEffectiveVersion, null, messages) ?: hasMissingScope
-			}
-			else
-			{
-				hasMissingScope = false
-				visInfo.scope = getDefaultScope(null)
-			}
-		}
-		return hasMissingScope
-	}
-
-	private static String getTypeFromCubeName(String cubeName)
-	{
-		return (cubeName - RPM_CLASS_DOT)
-	}
-
-	private static String getLoadTraitsForTargetMessage(RpmVisualizerRelInfo relInfo, String type) {
-
-		String sourceCubeDisplayName = relInfo.getCubeDisplayName(relInfo.sourceCube.name)
-		String targetCubeDisplayName = relInfo.getCubeDisplayName(relInfo.targetCube.name)
-
-		"""\
-${sourceCubeDisplayName} points directly to ${targetCubeDisplayName} via field ${relInfo.sourceFieldName}, but \
-there is no ${type.toLowerCase()} named ${relInfo.sourceFieldName} on ${type}.  ${DOUBLE_BREAK}Therefore \
-it cannot be loaded in the visualization."""
 	}
 }
