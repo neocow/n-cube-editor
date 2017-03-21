@@ -377,14 +377,14 @@ class VisualizerRelInfo
 		return values
 	}
 
-	protected String createNodeDetailsScopeMessage()
+	protected String createNodeDetailsScopeMessage(VisualizerInfo visInfo)
 	{
 		availableScopeValues =  availableScopeValues ?: new CaseInsensitiveMap<String, Set<Object>> ()
 		scopeCubeNames = scopeCubeNames ?: new CaseInsensitiveMap<String, Set<String>> ()
 
 		StringBuilder sb = new StringBuilder()
 		sb.append(nodeDetailsMessageSet)
-		sb.append(nodeScopeMessage)
+		sb.append(getNodeScopeMessage(visInfo))
 		return sb.toString()
 	}
 
@@ -397,37 +397,60 @@ class VisualizerRelInfo
 		return sb
 	}
 
-	private StringBuilder getNodeScopeMessage()
+	private StringBuilder getNodeScopeMessage(VisualizerInfo visInfo)
 	{
 		String nodeName = getLabel()
 		StringBuilder sb = new StringBuilder()
 		sb.append("<b>Scope</b>")
 		sb.append(BREAK)
-		Map<String, Set<Object>> derivedScope = new CaseInsensitiveMap(availableTargetScope)
-		if (availableScopeValues)
+
+		Set<String> scopeKeys = new CaseInsensitiveSet(availableTargetScope.keySet())
+		scopeKeys.addAll(availableScopeValues.keySet())
+		Set<String> sortedScopeKeys = new CaseInsensitiveSet(scopeKeys.sort())
+		if (sortedScopeKeys)
 		{
-			Set sortedScopeKeys = availableScopeValues.sort().keySet()
-			sortedScopeKeys.each {String scopeKey ->
+			sortedScopeKeys.each { String scopeKey ->
 				Set<String> cubeNames = scopeCubeNames[scopeKey]
-				cubeNames.remove(null)
 				Set<Object> availableValues = availableScopeValues[scopeKey]
-				String requiredOrOptional = availableValues.contains(null) ? 'optional' : 'required'
-				String cubeNamesTitle = getCubeNamesTitle(availableValues.contains(null))
-				StringBuilder title = new StringBuilder("Scope key ${scopeKey} is ${requiredOrOptional} to load ${nodeName}")
-				title.append(addCubeNamesList(cubeNamesTitle, cubeNames))
-				sb.append(getScopeMessage(scopeKey, availableValues, title, availableTargetScope[scopeKey]))
+				StringBuilder title = new StringBuilder()
+				String nodeLabel = visInfo.nodeLabel
+				boolean disabled = false
+				if (availableValues == null)
+				{
+					if (isDerivedScopeKey(visInfo, scopeKey))
+					{
+						title.append("Scope key ${scopeKey} is added by the visualizer and may not be changed for this ${nodeLabel} in this visualization.")
+						title.append("Start a new visual from here to access all scope keys for the ${nodeLabel}.")
+						disabled = true
+					}
+					else if (targetScope.containsKey(scopeKey))
+					{
+						title.append("LOOK INTO: Not a derived scope key and no available value for the key, but the key is used by the ${nodeLabel}.")
+						//throw new IllegalStateException('should not get here')
+					}
+					else
+					{
+						title.append("Scope key ${scopeKey} is not used by this ${nodeLabel}, but is available to the ${nodeLabel} during the visualization.")
+						title.append("Changing the scope value here will not affect this ${nodeLabel}, but may affect target classes using the scope key.")
+					}
+				}
+				else
+				{
+					cubeNames.remove(null)
+					String cubeNamesTitle = getCubeNamesTitle(availableValues.contains(null))
+					String requiredOrOptional = availableValues.contains(null) ? 'optional' : 'required'
+					title.append("Scope key ${scopeKey} is ${requiredOrOptional} to load ${nodeName}. ")
+					title.append("Changing the scope value here may affect this ${nodeLabel} and may also affect target classes using the scope key. ")
+					title.append(addCubeNamesList(cubeNamesTitle, cubeNames))
+				}
+				sb.append(getScopeMessage(scopeKey, availableValues, title, availableTargetScope[scopeKey], disabled))
 			}
-			derivedScope.keySet().removeAll(sortedScopeKeys)
 		}
-		else{
+		else
+		{
+			sb.append(BREAK)
 			sb.append("<b>No scope</b>")
 			sb.append(BREAK)
-		}
-
-		Set<String> sortedScopeKeys = derivedScope.sort().keySet()
-		sortedScopeKeys.each {String scopeKey ->
-			StringBuilder title = new StringBuilder("Scope key ${scopeKey} is added for this ${nodeLabel} during the visualization and may not be changed in this visual. Start a new visual from here to access all scope keys for the ${nodeLabel}.")
-			sb.append(getScopeMessage(scopeKey, null, title, derivedScope[scopeKey]))
 		}
 		sb.append(BREAK)
 		return sb
@@ -435,10 +458,10 @@ class VisualizerRelInfo
 
 	private static getCubeNamesTitle(boolean optional)
 	{
-		return optional ? '. Encountered on the following cubes:' : '. First encountered on the following cubes, but may also be required on others:'
+		return optional ? 'The scope key was encountered on the following cubes:' : 'The scope key was first encountered on the following cubes, but may also be required on others:'
 	}
 
-	protected StringBuilder getScopeMessage(String scopeKey, Set<Object> availableScopeValues, StringBuilder title, Object providedScopeValue)
+	protected StringBuilder getScopeMessage(String scopeKey, Set<Object> availableScopeValues, StringBuilder title, Object providedScopeValue, boolean disabled)
 	{
 		StringBuilder sb = new StringBuilder()
 		String caret = availableScopeValues ? """<span class="caret"></span>""" : ''
@@ -446,7 +469,7 @@ class VisualizerRelInfo
 		String topNodeClass = targetId == 1l ? DETAILS_CLASS_TOP_NODE : ''
 		Object value = getValue(availableScopeValues, providedScopeValue)
 		String valueClass = getClassForValue(availableScopeValues, value, providedScopeValue)
-		String disabled = availableScopeValues == null ? 'disabled="disabled"' : ''
+		String disabledAttribute = disabled ? 'disabled="disabled"' : ''
 
 		sb.append("""<div class="input-group input-group-sm input-scope-group" title="${title}">""")
 		sb.append("""<div class="input-group-btn">""")
@@ -467,7 +490,7 @@ class VisualizerRelInfo
 			sb.append("""</ul>""")
 		}
 		sb.append("""</div>""")
-		sb.append("""<input id="${scopeKey}" value="${value}" ${disabled} placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${valueClass} ${topNodeClass}" style="color: black;" type="text">""")
+		sb.append("""<input id="${scopeKey}" value="${value}" ${disabledAttribute} placeholder="${placeHolder}" class="${DETAILS_CLASS_SCOPE_INPUT} ${DETAILS_CLASS_FORM_CONTROL} ${valueClass} ${topNodeClass}" style="color: black;" type="text">""")
 		sb.append("""</div>""")
 		return sb
 	}
@@ -526,10 +549,11 @@ class VisualizerRelInfo
 		return sb
 	}
 
-	protected boolean includeUnboundScopeKey(VisualizerInfo visInfo, String scopeKey)
+	protected boolean isDerivedScopeKey(VisualizerInfo visInfo, String scopeKey)
 	{
 		return true
 	}
+
 
 	protected String getLabel(String cubeName = targetCube.name)
 	{
@@ -554,10 +578,5 @@ class VisualizerRelInfo
 	protected String getCubeDetailsTitle2(String label)
 	{
 		return null
-	}
-
-	protected String getNodeLabel()
-	{
-		'n-cube'
 	}
 }

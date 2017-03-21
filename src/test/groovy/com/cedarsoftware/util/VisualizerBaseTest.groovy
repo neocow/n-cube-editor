@@ -101,7 +101,7 @@ class VisualizerBaseTest
         String nodeDetails = node.details as String
         if (derivedScopeKey)
         {
-            assert nodeDetails.contains("""title="Scope key ${scopeKey} is added for this""")
+            assert nodeDetails.contains("""title="Scope key ${scopeKey} is added by the visualizer and may not be changed""")
         }
         else if (required)
         {

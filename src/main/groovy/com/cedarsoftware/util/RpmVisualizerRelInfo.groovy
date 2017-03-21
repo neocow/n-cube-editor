@@ -57,7 +57,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		StringBuilder sb = new StringBuilder()
 
 		//Scope messages
-		sb.append(createNodeDetailsScopeMessage())
+		sb.append(createNodeDetailsScopeMessage(visInfo))
 
 		//Scope
 		if (cubeLoaded)
@@ -235,21 +235,24 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	}
 
 	@Override
-	protected boolean includeUnboundScopeKey(VisualizerInfo visInfo, String scopeKey)
+	protected boolean isDerivedScopeKey(VisualizerInfo visInfo, String scopeKey)
 	{
-		//For the starting cube of the graph (top node) keep all unbound axis keys. For all other
-		//classes (which all have a sourceCube), remove any keys that are "derived" scope keys,
-		//i.e. keys that the visualizer adds to the scope as it processes through the graph
+		//For the starting cube of the graph (top node) no scope keys are derived by
+		//the visualizer. For all other classes (which all have a sourceCube), the
+		//visualizer adds to the scope as it processes through the graph and it is
+		//considered derived.
 		//(keys like product, risk, coverage, sourceProduct, sourceRisk, sourceCoverage, etc.).
-		if (sourceCube)
+		if (SOURCE_FIELD_NAME == scopeKey)
 		{
-			String strippedKey = scopeKey.replaceFirst('source', '')
-			if (visInfo.allGroupsKeys.contains(strippedKey))
-			{
-				return false
-			}
+			return true
 		}
-		return true
+
+		String strippedKey = scopeKey.replaceFirst('source', '')
+		if (visInfo.allGroupsKeys.contains(strippedKey))
+		{
+			return true
+		}
+		return false
 	}
 
 	@Override
@@ -576,12 +579,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
         return inScopeMapEntries.keySet()
     }*/
 
-
-	@Override
-	protected String getNodeLabel()
-	{
-		'class'
-	}
 
 	private String getCannotLoadTargetMessage(String type) {
 
