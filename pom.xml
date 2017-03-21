@@ -98,6 +98,7 @@
         <version.plugin.gmavenplus>1.5</version.plugin.gmavenplus>
         <version.plugin.surefire>2.19.1</version.plugin.surefire>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
     </properties>
 
     <pluginRepositories>
