@@ -1,5 +1,5 @@
 {
-  "ncube":"rpm.scope.class.Coverage.traits.fieldCCoverage",
+  "ncube":"rpm.scope.class.Coverage.traits.fieldTCoverage",
   "defaultCellValueType":"string",
   "defaultCellValue":"#NOT_DEFINED",
   "cube_tags":"EPM",
@@ -30,14 +30,14 @@
         {
           "id":3000000000035,
           "type":"string",
-          "value":"r:exists"
+          "value":"r:defaultValue"
         }
       ]
     },
     {
       "id":5,
-      "name":"state",
-      "hasDefault":true,
+      "name":"points",
+      "hasDefault":false,
       "type":"DISCRETE",
       "valueType":"STRING",
       "preferredOrder":1,
@@ -46,17 +46,17 @@
         {
           "id":5001683995653,
           "type":"string",
-          "value":"GA"
+          "value":"A"
         },
         {
           "id":5001175698947,
           "type":"string",
-          "value":"IN"
+          "value":"B"
         },
         {
           "id":5001479111097,
           "type":"string",
-          "value":"NY"
+          "value":"C"
         }
       ]
     }
@@ -64,38 +64,30 @@
   "cells":[
     {
       "id":[
-        1000000000050,
-        3000000000035,
-        5001683995653
-      ],
-      "type":"exp",
-      "value":"true"
-    },
-    {
-      "id":[
-        1000000000050,
-        3000000000035
-      ],
-      "type":"exp",
-      "value":"true"
-    },
-    {
-      "id":[
-        1000000000050,
-        3000000000035,
-        5001479111097
-      ],
-      "type":"exp",
-      "value":"true"
-    },
-    {
-      "id":[
-        1000000000050,
+        1000000000060,
         3000000000035,
         5001175698947
       ],
-      "type":"exp",
-      "value":"true"
+      "type":"string",
+      "value":"bb"
+    },
+    {
+      "id":[
+        1000000000060,
+        3000000000035,
+        5001683995653
+      ],
+      "type":"string",
+      "value":"aa"
+    },
+    {
+      "id":[
+        1000000000060,
+        3000000000035,
+        5001479111097
+      ],
+      "type":"string",
+      "value":"cc"
     }
   ]
 }

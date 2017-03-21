@@ -10,12 +10,6 @@ div.inline-block {
     padding:0
 }
 
-#scope-info{
-    color:black;
-    background:#D1C5B7;
-    padding:0;
-}
-
 #scope {
     width: 100%;
 }
@@ -95,7 +89,7 @@ ul, li{
 .cellValues li.Exception
 {
     background-image: url('../img/redexclamationmarkcircle.png');
-     background-repeat: no-repeat;
+    background-repeat: no-repeat;
     background-position: 0 50%;
     padding: 3px 0 3px 20px;
     margin: .4em 0;
@@ -158,8 +152,12 @@ h3{
 .borders div{
 }
 
-.highlighted{
-    background-color:#FFFF00;
+.missingValue{
+    background-color:#FAFAD2;
+}
+
+.defaultValue{
+    background-color:#F0F8FF;
 }
 
 .readOnly{

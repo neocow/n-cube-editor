@@ -38,7 +38,6 @@ import com.cedarsoftware.util.PoolInterceptor
 import com.cedarsoftware.util.RpmVisualizer
 import com.cedarsoftware.util.RpmVisualizerConstants
 import com.cedarsoftware.util.StringUtilities
-import com.cedarsoftware.util.SystemUtilities
 import com.cedarsoftware.util.ThreadAwarePrintStream
 import com.cedarsoftware.util.ThreadAwarePrintStreamErr
 import com.cedarsoftware.util.UniqueIdGenerator
@@ -262,26 +261,31 @@ class NCubeController extends BaseController
         return nCubeService.getCube(appId, cubeName, true)
     }
 
-    // TODO: This needs to be externalized (loaded via Grapes)
-    Map<String, Object> getVisualizerJson(ApplicationID appId, Map options)
+    Map<String, Object> getVisualizerGraph(ApplicationID appId, Map options)
     {
-//        if (!SystemUtilities.getExternalVariable('NCE_VISUALIZER_ENABLED'))
-//        {
-//            throw new IllegalStateException("""The visualizer is currently available <a href="#" onclick="window.open('https://nce.dockerdev.td.afg/n-cube-editor/#');return false;">here</a>""")
-//        }
-        String cubeName = options.startCubeName
-        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
+        Visualizer vis = getVisualizer(options.startCubeName as String)
         appId = addTenant(appId)
-        return vis.buildGraph(appId, options)
+        return vis.loadGraph(appId, options)
+    }
+
+    Map<String, Object> getVisualizerScopeChange(ApplicationID appId, Map options)
+    {
+        Visualizer vis = getVisualizer(options.startCubeName as String)
+        appId = addTenant(appId)
+        return vis.loadScopeChange(appId, options)
+    }
+
+    Map<String, Object>  getVisualizerNodeDetails(ApplicationID appId, Map options)
+    {
+        Visualizer vis = getVisualizer(options.startCubeName as String)
+        appId = addTenant(appId)
+        return vis.loadNodeDetails(appId, options)
     }
 
     // TODO: This needs to be externalized (loaded via Grapes)
-    Map getVisualizerCellValues(ApplicationID appId, Map options)
+    private static Visualizer getVisualizer(String cubeName)
     {
-        String cubeName = options.startCubeName
-        Visualizer vis = cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
-        appId = addTenant(appId)
-        return vis.getCellValues(appId, options)
+        return cubeName.startsWith(RpmVisualizerConstants.RPM_CLASS) ? new RpmVisualizer() : new Visualizer()
     }
 
     Boolean updateCubeMetaProperties(ApplicationID appId, String cubeName, Map<String, Object> newMetaProperties)
@@ -1468,7 +1472,7 @@ class NCubeController extends BaseController
         List<Map> results = []
         ApplicationID sysAppId = new ApplicationID(tenant, 'sys.app', '0.0.0', ReleaseStatus.SNAPSHOT.toString(), ApplicationID.HEAD)
         List<NCubeInfoDto> dtos = nCubeService.search(sysAppId, 'tx.', null, [(SEARCH_ACTIVE_RECORDS_ONLY):true])
-        dtos.sort {it.name}
+        dtos.sort{it.name}.reverse(true)
         for (NCubeInfoDto dto : dtos)
         {
             NCube cube = nCubeService.loadCubeById(Long.parseLong(dto.id))

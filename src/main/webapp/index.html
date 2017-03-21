@@ -72,7 +72,7 @@
             <li class="dropdown">
                 <a id="DataMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Data <b class="caret"></b></a>
                 <ul class="dropdown-menu">
-                    <li><a id="view-commits" href="#">View Commits</a></li>
+                    <li><a id="view-commits" href="#">View Pull Requests</a></li>
                     <li><a id="clearStorage" href="#">Clear Local Storage</a></li>
                 </ul>
             </li>
@@ -332,35 +332,37 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="view-commits-label" class="modal-title">Commit Requests</h3>
+                <h3 id="view-commits-label" class="modal-title">NCube Pull Requests</h3>
             </div>
             <div class="modal-body" style="overflow: auto;">
                 <input type="text" id="view-commits-search-text" placeholder="Transaction ID" />
                 <button id="view-commits-search-btn" class="btn btn-sm btn-primary">Find</button>
                 <button id="view-commits-search-clear" class="btn btn-sm btn-default">Clear</button>
-                <table id="view-commits-list" style="width:100%;">
+                <table class="view-commits-display">
                     <tr>
-                        <th>App</th>
-                        <th>Version</th>
-                        <th>Branch</th>
-                        <th>Status</th>
-                        <th>Requester</th>
-                        <th>Date Requested</th>
-                        <th>Action By</th>
-                        <th>Action Date</th>
-                        <th>PR ID</th>
+                        <th class="view-commits-app">App</th>
+                        <th class="view-commits-version">Version</th>
+                        <th class="view-commits-branch">Branch</th>
+                        <th class="view-commits-status">Status</th>
+                        <th class="view-commits-requester">Requester</th>
+                        <th class="view-commits-request-date">Date Requested</th>
+                        <th class="view-commits-committer">Action By</th>
+                        <th class="view-commits-commit-date">Action Date</th>
+                        <th class="view-commits-pr">PR ID</th>
                     </tr>
                     <tr>
-                        <td><select id="view-commits-app"></select></td>
-                        <td><select id="view-commits-version"></select></td>
-                        <td><select id="view-commits-branch"></select></td>
-                        <td><select id="view-commits-status"></select></td>
-                        <td><select id="view-commits-request-user"></select></td>
-                        <td><select id="view-commits-request-date"></select></td>
-                        <td><select id="view-commits-commit-user"></select></td>
-                        <td><select id="view-commits-commit-date"></select></td>
-                        <td><select id="view-commits-repo"></select></td>
+                        <td class="view-commits-app"><select id="view-commits-app"></select></td>
+                        <td class="view-commits-version"><select id="view-commits-version"></select></td>
+                        <td class="view-commits-branch"><select id="view-commits-branch"></select></td>
+                        <td class="view-commits-status"><select id="view-commits-status"></select></td>
+                        <td class="view-commits-requester"><select id="view-commits-request-user"></select></td>
+                        <td class="view-commits-request-date"><select id="view-commits-request-date"></select></td>
+                        <td class="view-commits-committer"><select id="view-commits-commit-user"></select></td>
+                        <td class="view-commits-commit-date"><select id="view-commits-commit-date"></select></td>
+                        <td class="view-commits-pr"><select id="view-commits-repo"></select></td>
                     </tr>
+                </table>
+                <table id="view-commits-list" class="view-commits-display">
                 </table>
             </div>
             <div class="modal-footer">
@@ -389,7 +391,7 @@
                 <button class="btn btn-danger btn-sm pull-left accept-mine" aria-hidden="true">Accept Mine</button>
                 <button class="btn btn-danger btn-sm pull-left accept-theirs" aria-hidden="true">Accept Theirs</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
-                <button id="commitLink" class="btn btn-info btn-sm">Generate Commit Link</button>
+                <button id="pull-link" class="btn btn-info btn-sm">Generate Pull Request Link</button>
                 <button id="commitOk" class="btn btn-primary btn-sm">Commit</button>
                 <button id="rollbackOk" class="btn btn-primary btn-sm">Rollback</button>
             </div>
@@ -791,10 +793,10 @@
                     </tr>
                     <tr class="batchUpdateAxisReferencesNewAxisSelect">
                         <td colspan="3"></td>
-                        <td><select id="batchUpdateAxisReferencesApp"></select></td>
-                        <td><select id="batchUpdateAxisReferencesVersion"></select></td>
-                        <td><select id="batchUpdateAxisReferencesCubeName"></select></td>
-                        <td><select id="batchUpdateAxisReferencesAxisName"></select></td>
+                        <td  class="view-commits-app"><select id="batchUpdateAxisReferencesApp"></select></td>
+                        <td  class="view-commits-app"><select id="batchUpdateAxisReferencesVersion"></select></td>
+                        <td  class="view-commits-app"><select id="batchUpdateAxisReferencesCubeName"></select></td>
+                        <td  class="view-commits-app"><select id="batchUpdateAxisReferencesAxisName"></select></td>
                     </tr>
                     <tr>
                         <th></th>
@@ -850,24 +852,24 @@
                 </div>
                 <table id="globalComparatorTable">
                     <tr>
-                        <td>App:</td>
-                        <td><select id="globalComparatorLeftApp"></select></td>
-                        <td><select id="globalComparatorRightApp"></select></td>
+                        <td  class="view-commits-app">App:</td>
+                        <td  class="view-commits-app"><select id="globalComparatorLeftApp"></select></td>
+                        <td  class="view-commits-app"><select id="globalComparatorRightApp"></select></td>
                     </tr>
                     <tr>
-                        <td>Version:</td>
-                        <td><select id="globalComparatorLeftVersion"></select></td>
-                        <td><select id="globalComparatorRightVersion"></select></td>
+                        <td  class="view-commits-app">Version:</td>
+                        <td  class="view-commits-app"><select id="globalComparatorLeftVersion"></select></td>
+                        <td  class="view-commits-app"><select id="globalComparatorRightVersion"></select></td>
                     </tr>
                     <tr>
-                        <td>Branch:</td>
-                        <td><select id="globalComparatorLeftBranch"></select></td>
-                        <td><select id="globalComparatorRightBranch"></select></td>
+                        <td  class="view-commits-app">Branch:</td>
+                        <td  class="view-commits-app"><select id="globalComparatorLeftBranch"></select></td>
+                        <td  class="view-commits-app"><select id="globalComparatorRightBranch"></select></td>
                     </tr>
                     <tr>
-                        <td>Cube:</td>
-                        <td><select id="globalComparatorLeftCube"></select></td>
-                        <td><select id="globalComparatorRightCube"></select></td>
+                        <td  class="view-commits-app">Cube:</td>
+                        <td  class="view-commits-app"><select id="globalComparatorLeftCube"></select></td>
+                        <td  class="view-commits-app"><select id="globalComparatorRightCube"></select></td>
                     </tr>
                 </table>
             </div>

@@ -1,12 +1,9 @@
 package com.cedarsoftware.util
 
 import com.cedarsoftware.ncube.ApplicationID
-import com.cedarsoftware.ncube.Axis
-import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import groovy.transform.CompileStatic
-
 import static com.cedarsoftware.util.VisualizerConstants.*
 
 /**
@@ -16,53 +13,96 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 @CompileStatic
 class VisualizerInfo
 {
-    ApplicationID appId
-    Map<String, Object> scope
-    List<Map<String, Object>> nodes = []
-    List<Map<String, Object>> edges = []
+    protected ApplicationID appId
+    protected Long selectedNodeId
+    protected Map<Long, Map<String, Object>> nodes
+    protected Map<Long, Map<String, Object>> edges
 
-    long maxLevel
-    long nodeCount
-    long relInfoCount
-    long defaultLevel
-    String loadCellValuesLabel
+    protected Map<String, Object> inputScope
 
-    Map<String,String> allGroups
-    Set<String> allGroupsKeys
-    String groupSuffix
-    Set<String> availableGroupsAllLevels
-    Set<String> messages
+    protected long maxLevel
+    protected long nodeIdCounter
+    protected long edgeIdCounter
+    protected Map<Integer, Integer> levelCumulativeNodeCount
+    protected long defaultLevel
+    protected String cellValuesLabel
+    protected String nodeLabel
 
-    Map<String, Map<String, Set<Object>>> optionalScopeValues = new CaseInsensitiveMap()
-    Map<String, Map<String, Set<Object>>> requiredScopeValues = new CaseInsensitiveMap()
-    Map<String, Set<String>> requiredScopeKeys = [:]
-    Map<String, Set<String>> optionalScopeKeys = [:]
-    VisualizerScopeInfo scopeInfo = new VisualizerScopeInfo()
+    protected  Map<String,String> allGroups
+    protected Set<String> allGroupsKeys
+    protected String groupSuffix
+    protected Set<String> availableGroupsAllLevels
+    protected Set<String> messages
 
-    Map<String, Object> networkOverridesBasic
-    Map<String, Object> networkOverridesFull
-    Map<String, Object> networkOverridesTopNode
+    protected Map<String, Object> networkOverridesBasic
+    protected Map<String, Object> networkOverridesFull
 
-    Map<String, List<String>> typesToAddMap = [:]
+    protected Map<String, Set<String>> requiredScopeKeysByCube = [:]
+
+    protected Map<String, List<String>> typesToAddMap = [:]
 
     VisualizerInfo(){}
 
-    VisualizerInfo(ApplicationID applicationID, Map options)
+    protected VisualizerInfo(ApplicationID applicationID)
     {
         appId = applicationID
-        scope = options.scope as CaseInsensitiveMap
         loadConfigurations(cubeType)
     }
 
-    protected void init(Map scope)
+    protected void init(Map options = null)
     {
-        maxLevel = 1
-        nodeCount = 1
-        relInfoCount = 1
+        inputScope = options?.scope as CaseInsensitiveMap ?: new CaseInsensitiveMap()
         messages = new LinkedHashSet()
+        nodes = [:]
+        edges = [:]
+        nodeIdCounter = 1
+        edgeIdCounter = 0
+        selectedNodeId = 1
+        maxLevel = 1
         availableGroupsAllLevels = new LinkedHashSet()
-        this.scope = scope as CaseInsensitiveMap ?: new CaseInsensitiveMap<>()
-        scopeInfo = new VisualizerScopeInfo()
+    }
+
+    protected void initScopeChange()
+    {
+        if (1l == selectedNodeId)
+        {
+            init()
+        }
+        else
+        {
+            messages = new LinkedHashSet()
+            nodes.remove(selectedNodeId)
+            removeSourceEdges()
+            removeTargets(edges)
+            removeTargets(nodes)
+            maxLevel = 1
+            availableGroupsAllLevels = new LinkedHashSet()
+        }
+    }
+
+    private void removeTargets(Map<Long, Map> nodes)
+    {
+        List<Long> toRemove = []
+        nodes.each{Long id, Map node ->
+            List<Long> sourceTrail = node.sourceTrail as List
+            if (sourceTrail.contains(selectedNodeId))
+            {
+                toRemove << (node.id as Long)
+            }
+        }
+        nodes.keySet().removeAll(toRemove)
+    }
+
+    private void removeSourceEdges()
+    {
+        List<Long> toRemove = []
+        edges.each{Long id, Map edge ->
+            if (selectedNodeId == edge.to as Long)
+            {
+                toRemove << (edge.id as Long)
+            }
+        }
+        edges.keySet().removeAll(toRemove)
     }
 
     protected String getCubeType()
@@ -70,35 +110,7 @@ class VisualizerInfo
         return CUBE_TYPE_DEFAULT
     }
 
-    boolean addMissingMinimumScope(String scopeKey, String value, String message, Set<String> messages)
-    {
-        Map<String, Object> scope = scope
-        boolean missingScope
-        if (scope.containsKey(scopeKey))
-        {
-            if (!scope[scopeKey])
-            {
-                missingScope = true
-            }
-        }
-        else
-        {
-            missingScope = true
-        }
-
-        if (missingScope)
-        {
-            message = message ?: "Scope for ${scopeKey} was added since required. The scope value may be changed as desired."
-            messages << message
-            if (value)
-            {
-                scope[scopeKey] = value
-            }
-        }
-        return missingScope
-    }
-
-    NCube loadConfigurations(String cubeType)
+    protected NCube loadConfigurations(String cubeType)
     {
         String configJson = NCubeManager.getResourceAsString(JSON_FILE_PREFIX + VISUALIZER_CONFIG_CUBE_NAME + JSON_FILE_SUFFIX)
         NCube configCube = NCube.fromSimpleJson(configJson)
@@ -109,23 +121,22 @@ class VisualizerInfo
 
         networkOverridesBasic = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_BASIC, (CUBE_TYPE): cubeType]) as Map
         networkOverridesFull = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_FULL, (CUBE_TYPE): cubeType]) as Map
-        networkOverridesTopNode = networkConfigCube.getCell([(CONFIG_ITEM): CONFIG_NETWORK_OVERRIDES_TOP_NODE, (CUBE_TYPE): cubeType]) as Map
-        defaultLevel = configCube.getCell([(CONFIG_ITEM): CONFIG_DEFAULT_LEVEL, (CUBE_TYPE): cubeType]) as long
         allGroups = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_GROUPS, (CUBE_TYPE): cubeType]) as Map
         allGroupsKeys = new CaseInsensitiveSet(allGroups.keySet())
         String groupSuffix = configCube.getCell([(CONFIG_ITEM): CONFIG_GROUP_SUFFIX, (CUBE_TYPE): cubeType]) as String
         this.groupSuffix = groupSuffix ?: ''
         loadTypesToAddMap(configCube)
-        loadCellValuesLabel = getLoadCellValuesLabel()
+        cellValuesLabel = getCellValuesLabel()
+        nodeLabel = getNodeLabel()
         return configCube
     }
 
-    List getTypesToAdd(String group)
+    protected List getTypesToAdd(String group)
     {
         return typesToAddMap[allGroups[group]]
     }
 
-    void loadTypesToAddMap(NCube configCube)
+    protected void loadTypesToAddMap(NCube configCube)
     {
         typesToAddMap = [:]
         Set<String> allTypes = configCube.getCell([(CONFIG_ITEM): CONFIG_ALL_TYPES, (CUBE_TYPE): cubeType]) as Set
@@ -137,48 +148,55 @@ class VisualizerInfo
         }
     }
 
-    protected String getLoadCellValuesLabel()
+    protected void calculateAggregateInfo()
     {
-        'cell values'
-    }
+        //Determine maxLevel and availableGroupsAllLevels
+        Map<Integer, Integer> levelNodeCount = [:]
+        nodes.values().each{Map node ->
+            availableGroupsAllLevels << (node.group as String) - groupSuffix
+            long nodeLevel = node.level as long
+            maxLevel = maxLevel < nodeLevel ? nodeLevel : maxLevel
+            int nodeCountAtLevel = levelNodeCount[nodeLevel as int] ?: 0
+            nodeCountAtLevel++
+            levelNodeCount[nodeLevel as int] = nodeCountAtLevel
+        }
 
-    Set<Object> getOptionalScopeValues( String cubeName, String scopeKey)
-    {
-        return getScopeValues(optionalScopeValues, cubeName, scopeKey)
-    }
-
-    Set<Object> getRequiredScopeValues(String cubeName, String scopeKey)
-    {
-        return getScopeValues(requiredScopeValues, cubeName, scopeKey)
-    }
-
-    Set<Object> getScopeValues( Map<String, Map<String, Set<Object>>> scopeValues, String cubeName, String scopeKey)
-    {
-        //The key to the map scopeValues is a scope key. The map contains a map of scope values by cube name.
-        Map<String, Set<Object>> scopeValuesForScopeKey = scopeValues[scopeKey] as Map ?: new CaseInsensitiveMap()
-        Set<Object> scopeValuesForCubeAndScopeKey = scopeValuesForScopeKey[cubeName] ?: getColumnValues(appId, cubeName, scopeKey)
-        scopeValuesForScopeKey[cubeName] = scopeValuesForCubeAndScopeKey
-        scopeValues[scopeKey] = scopeValuesForScopeKey
-        return scopeValuesForCubeAndScopeKey
-    }
-
-    protected static Set<Object> getColumnValues(ApplicationID applicationID, String cubeName, String axisName)
-    {
-        NCube cube = NCubeManager.getCube(applicationID, cubeName)
-        Set values = new LinkedHashSet()
-        Axis axis = cube?.getAxis(axisName)
-        if (axis)
+        //Determine cumulative node count at each level + determine defaultLevel
+        levelCumulativeNodeCount = [:]
+        for (Integer i = 1; i < levelNodeCount.size() + 1; i++)
         {
-            for (Column column : axis.columnsWithoutDefault)
+            if (1 == i)
             {
-                values.add(column.value)
+                levelCumulativeNodeCount[i] = levelNodeCount[i]
+            }
+            else
+            {
+                levelCumulativeNodeCount[i] = levelCumulativeNodeCount[i - 1] + levelNodeCount[i]
+            }
+            if (levelCumulativeNodeCount[i] <= 100 ){
+                defaultLevel = i as long
             }
         }
-        return values
     }
 
-    void convertToSingleMessage()
+    protected String getLoadTarget(boolean showingHidingCellValues)
     {
-        messages = messages ? [messages.join(DOUBLE_BREAK)] as Set : null
+        return showingHidingCellValues ? "${cellValuesLabel}" : "the ${nodeLabel}"
     }
+
+    protected String getNodeLabel()
+    {
+        'n-cube'
+    }
+
+    protected String getNodesLabel()
+    {
+        return 'cubes'
+    }
+
+    protected String getCellValuesLabel()
+    {
+        return 'cell values'
+    }
+
 }
