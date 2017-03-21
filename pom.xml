@@ -78,7 +78,7 @@
         <version.log4j>2.8</version.log4j>
         <version.groovy>2.4.10</version.groovy>
         <version.junit>4.12</version.junit>
-        <version.spring>4.3.5.RELEASE</version.spring>
+        <version.spring>4.3.7.RELEASE</version.spring>
         <version.servlet>3.1.0</version.servlet>
         <version.tomcat>8.0.32</version.tomcat>
         <version.mysql>5.1.40</version.mysql>
