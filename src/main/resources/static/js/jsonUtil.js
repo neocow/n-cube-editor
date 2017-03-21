@@ -183,7 +183,7 @@ function call(target, args, params)
         cache : false,
         data : json,
         dataType : "json",
-        contentType: "application/json",
+        contentType: "application/json; charset=utf-8",
         timeout : params.timeout,
         success : function(data, textStatus)
         {
