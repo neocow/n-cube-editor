@@ -73,7 +73,7 @@
     </developers>
 
     <properties>
-        <version.ncube>3.6.12</version.ncube>
+        <version.ncube>3.6.13-SNAPSHOT</version.ncube>
         <version.json-command-servlet>1.4.2</version.json-command-servlet>
         <version.log4j>2.8</version.log4j>
         <version.groovy>2.4.9</version.groovy>
@@ -386,6 +386,12 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
             <version>${version.spring}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>ojdbc6</artifactId>
+            <version>11.2.0.3</version>
         </dependency>
 
         <!--<dependency>-->
