@@ -1355,6 +1355,9 @@ class NCubeController extends BaseController
     String generateCommitLink(ApplicationID appId, Object[] infoDtos)
     {
         // TODO - would like to use constants, but waiting until ncube client refactor complete
+        if (!infoDtos || !infoDtos.size()) {
+            throw new IllegalArgumentException('No N-Cubes provided.')
+        }
         appId = addTenant(appId)
         ApplicationID sysAppId = new ApplicationID(tenant, 'sys.app', '0.0.0', ReleaseStatus.SNAPSHOT.toString(), ApplicationID.HEAD)
         ApplicationID headAppId = appId.asHead()
@@ -1366,10 +1369,13 @@ class NCubeController extends BaseController
             NCubeInfoDto dto = infoDto as NCubeInfoDto
             if (dto.headSha1)
             {
-                NCubeInfoDto headDto = nCubeService.search(headAppId, dto.name, null, [(SEARCH_ACTIVE_RECORDS_ONLY):true, (SEARCH_EXACT_MATCH_NAME):true]).first()
+                NCubeInfoDto headDto = nCubeService.search(headAppId, dto.name, null, [(SEARCH_EXACT_MATCH_NAME):true]).first()
                 headId = headDto.id
             }
             sb.append("[name:'${dto.name}',changeType:'${dto.changeType}',id:'${dto.id}',head:'${headId}'],".toString())
+        }
+        if (sb.length() == 1) {
+            throw new IllegalStateException('Error creating pull request.')
         }
         sb.deleteCharAt(sb.length() - 1).append(']') // replace last comma with bracket
         Date time = new Date()
