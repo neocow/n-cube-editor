@@ -161,7 +161,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 
 	protected String getNextTargetCubeName(String targetFieldName)
 	{
-		if (sourceCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		if (hasScopedNameTrait(sourceCube))
 		{
 			String scopedName = sourceTraits[CLASS_TRAITS][R_SCOPED_NAME]
 			return !scopedName ?: RPM_CLASS_DOT + sourceFieldRpmType
@@ -239,12 +239,16 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 	{
 		//For the starting cube of the graph (top node) no scope keys are derived by
 		//the visualizer. For all other classes (which all have a sourceCube), the
-		//visualizer adds to the scope as it processes through the graph and it is
-		//considered derived.
-		//(keys like product, risk, coverage, sourceProduct, sourceRisk, sourceCoverage, etc.).
+		//visualizer adds to the scope as it processes through the graph and that scope is
+		//considered derived (e.g. scope for product, risk, coverage, sourceProduct,
+		//sourceRisk, sourceCoverage, etc.).
 		if (SOURCE_FIELD_NAME == scopeKey)
 		{
 			return true
+		}
+		else if (!sourceCube)
+		{
+			return false
 		}
 
 		String strippedKey = scopeKey.replaceFirst('source', '')
@@ -396,7 +400,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		//check if the source field name matches up with the scoped name of the target. If not, traits cannot
 		//be loaded for the target in the visualization.
 		if (sourceCube && sourceCube.name.startsWith(RPM_CLASS_DOT) && targetCube.name.startsWith(RPM_CLASS_DOT) &&
-				targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+				hasScopedNameTrait(targetCube))
 		{
 			NCube classTraitsCube = NCubeManager.getCube(appId, RPM_SCOPE_CLASS_DOT + sourceFieldRpmType + DOT_CLASS_TRAITS)
 			if (!classTraitsCube.getAxis(sourceFieldRpmType).findColumn(sourceFieldName))
@@ -484,7 +488,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		{
 			availableTargetScope[SOURCE_FIELD_NAME] = targetFieldName
 		}
-		else if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		else if (hasScopedNameTrait(targetCube))
 		{
 			String newScopeKey = sourceFieldRpmType
 			String oldValue = scope[newScopeKey]
@@ -504,7 +508,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		addScopeDefault(scopeDefaults, EFFECTIVE_VERSION, scopeValue)
 		//loadAvailableScopeValuesEffectiveVersion(visInfo) TODO: Very slow, commenting out for now
 
-		if (targetCube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME))
+		if (hasScopedNameTrait(targetCube) || targetCube.name.startsWith(RPM_ENUM_DOT) && hasScopedNameTrait(sourceCube))
 		{
 			String date = DATE_TIME_FORMAT.format(new Date())
 			scopeValue = visInfo.inputScope[POLICY_CONTROL_DATE] ?: date
@@ -546,6 +550,11 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			targetScope[scopeKey] = scopeValue
 			loadAgain = true
 		}
+	}
+
+	private static boolean hasScopedNameTrait(NCube cube)
+	{
+		return cube.getAxis(AXIS_TRAIT).findColumn(R_SCOPED_NAME)
 	}
 
 	/* TODO: Will revisit providing "in scope" available scope values for r:exists at a later time.

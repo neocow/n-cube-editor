@@ -22,6 +22,7 @@ class VisualizerConstants
 	static final String HTTPS = 'https:'
 	static final String FILE = 'file:'
 
+	static final Set<String> DEFAULT_SCOPE_KEYS = new CaseInsensitiveSet()
 	static final String DEFAULT = 'Default'
 	static final String JSON_FILE_PREFIX = 'config/'
 	static final String JSON_FILE_SUFFIX = '.json'
@@ -30,7 +31,6 @@ class VisualizerConstants
 	static final String CONFIG_ITEM = 'configItem'
 	static final String CONFIG_NETWORK_OVERRIDES_BASIC = 'networkOverridesBasic'
 	static final String CONFIG_NETWORK_OVERRIDES_FULL = 'networkOverridesFull'
-	static final String CONFIG_DEFAULT_LEVEL = 'defaultLevel'
 	static final String CONFIG_ALL_GROUPS = 'allGroups'
 	static final String CONFIG_ALL_TYPES = 'allTypes'
 	static final String CONFIG_GROUP_SUFFIX = 'groupSuffix'

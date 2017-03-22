@@ -95,11 +95,17 @@ class VisualizerRelInfo
 			scopeCubeNames = selectedNode.scopeCubeNames as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
 		}
 		//Else, node details are being loaded for the node or a scope change is being applied to the node. In this case,
-		//clear out the supplied scope, available scope values and scope cube names. This will result in the node being
-		//reloaded with updated scope information.
+		//clear out any available target scope that is not default scope or derived scope. This will result in the node being
+		//reloaded with updated available scope values for the removed scope.
 		else
 		{
-			availableTargetScope.keySet().removeAll(availableScopeValues.keySet())
+			Set<String> scopeKeys = new CaseInsensitiveSet(availableTargetScope.keySet())
+			scopeKeys.each {String scopeKey ->
+				if (!DEFAULT_SCOPE_KEYS.contains(scopeKey) && !isDerivedScopeKey(visInfo, scopeKey))
+				{
+					availableTargetScope.remove(scopeKey)
+				}
+			}
 			availableScopeValues = new CaseInsensitiveMap()
 			scopeCubeNames = new CaseInsensitiveMap()
 		}
@@ -420,7 +426,7 @@ class VisualizerRelInfo
 					if (isDerivedScopeKey(visInfo, scopeKey))
 					{
 						title.append("Scope key ${scopeKey} is added by the visualizer and may not be changed for this ${nodeLabel} in this visualization.")
-						title.append("Start a new visual from here to access all scope keys for the ${nodeLabel}.")
+						title.append("\nStart a new visual from here to access all scope keys for the ${nodeLabel}.")
 						disabled = true
 					}
 					else if (targetScope.containsKey(scopeKey))
@@ -431,7 +437,6 @@ class VisualizerRelInfo
 					else
 					{
 						title.append("Scope key ${scopeKey} is not used by this ${nodeLabel}, but is available to the ${nodeLabel} during the visualization.")
-						title.append("Changing the scope value here will not affect this ${nodeLabel}, but may affect target classes using the scope key.")
 					}
 				}
 				else
@@ -440,7 +445,6 @@ class VisualizerRelInfo
 					String cubeNamesTitle = getCubeNamesTitle(availableValues.contains(null))
 					String requiredOrOptional = availableValues.contains(null) ? 'optional' : 'required'
 					title.append("Scope key ${scopeKey} is ${requiredOrOptional} to load ${nodeName}. ")
-					title.append("Changing the scope value here may affect this ${nodeLabel} and may also affect target classes using the scope key. ")
 					title.append(addCubeNamesList(cubeNamesTitle, cubeNames))
 				}
 				sb.append(getScopeMessage(scopeKey, availableValues, title, availableTargetScope[scopeKey], disabled))
@@ -579,4 +583,5 @@ class VisualizerRelInfo
 	{
 		return null
 	}
+
 }
