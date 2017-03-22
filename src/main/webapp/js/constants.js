@@ -267,6 +267,7 @@ var CONTROLLER_METHOD = {
     GET_HEAD_CHANGES_FOR_BRANCH: 'getHeadChangesForBranch',
     GET_BRANCHES: 'getBranches',
     GET_CELL_NO_EXECUTE: 'getCellNoExecute',
+    GET_CELL_NO_EXECUTE_BY_COORDINATE: 'getCellNoExecuteByCoordinate',
     GET_CELLS_NO_EXECUTE: 'getCellsNoExecute',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
     GET_COMMITS: 'getCommits',

@@ -112,13 +112,6 @@ var NCE = (function ($) {
     var _branchNameWarning = $('#branchNameWarning');
     var _createSnapshotLabel = $('#createSnapshotLabel');
     var _createSnapshotVersion = $('#createSnapshotVersion');
-    var _copyBranchLabel = $('#copyBranchLabel');
-    var _copyBranchWithHistory = $('#copy-branch-with-history');
-    var _dupeCubeAppName = $('#dupeCubeAppName');
-    var _dupeCubeVersion = $('#dupeCubeVersion');
-    var _dupeCubeName = $('#dupeCubeName');
-    var _dupeCubeBranch = $('#dupeCubeBranch');
-    var _dupeCubeLabel = $('#dupeCubeLabel');
     var _globalComparatorLeftApp = $('#globalComparatorLeftApp');
     var _globalComparatorRightApp = $('#globalComparatorRightApp');
     var _globalComparatorLeftVersion = $('#globalComparatorLeftVersion');
@@ -164,9 +157,7 @@ var NCE = (function ($) {
     var _releaseCubesModal = $('#releaseCubesModal');
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
     var _createSnapshotModal = $('#createSnapshotModal');
-    var _copyBranchModal = $('#copyBranchModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
-    var _dupeCubeModal = $('#dupeCubeModal');
     var _globalComparatorModal = $('#globalComparatorModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
@@ -1286,7 +1277,7 @@ var NCE = (function ($) {
         buildViewsFromTabMenu(menu);
         buildNavigationMenu(menu);
     }
-    
+
     function buildNavigationMenu(menu) {
         var navMenu, html, i, len, menuKeys, heading, menuOptions, optionsKeys, linkText, linkVal, o, oLen;
         _menuList.empty();
@@ -1295,7 +1286,7 @@ var NCE = (function ($) {
         if (!navMenu) {
             return;
         }
-        
+
         delete navMenu['@type'];
         menuKeys = Object.keys(navMenu);
         for (i = 0, len = menuKeys.length; i < len; i++) {
@@ -1314,7 +1305,11 @@ var NCE = (function ($) {
                 linkVal = null;
                 linkVal = menuOptions[linkText];
 
-                html += '<li><a href="' + encodeURIComponent(linkVal.html) + '">' + linkText + '</a>';
+                if (linkVal.hasOwnProperty('html')) {
+                    html += '<li><a href="' + encodeURIComponent(linkVal.html) + '">' + linkText + '</a></li>';
+                } else if (linkVal.hasOwnProperty('expression')) {
+                    html += '<li><a href="#" target="_blank" data-heading="' + heading + '">' + linkText + '</a></li>';
+                }
                 if (linkVal.hasOwnProperty('divider')) {
                     html += '<div class="divider"/>';
                 }
@@ -1322,8 +1317,50 @@ var NCE = (function ($) {
 
             html += '</ul></li>'
         }
-        
         _menuList.append(html);
+        buildMenuExpressionListeners(navMenu);
+    }
+
+    function buildMenuExpressionListeners(navMenu) {
+        _menuList.find('[data-heading]').on('click', function(e) {
+            var opts;
+            var anc = $(this);
+            var exp = navMenu[anc.data('heading')][this.innerHTML].expression;
+            var appId = appIdFrom(exp.app, exp.version, exp.status, exp.branch);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'model'}]);
+            e.preventDefault();
+            if (!result.status) {
+                showNote('Unable to initialize plugin.', 'Error', TWO_SECOND_TIMEOUT);
+                return;
+            }
+            opts = eval(result.data.value);
+            opts.afterSave = function(data) {
+                data.component = 'controller';
+                data.appId = getAppId();
+                onMenuExpressionSave(exp, appId, data);
+            };
+            FormBuilder.openBuilderModal(opts);
+        });
+    }
+
+    function onMenuExpressionSave(exp, appId, data) {
+        var viewData, viewOpts;
+        var result = exec(exp.cube + '.' + exp.method, [appId, data]);
+        if (!result.status) {
+            showNote('Unable to perform action: ' + result.data, 'Error!');
+            return;
+        }
+        viewData = result.data;
+        viewData.component = 'view';
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'view'}]);
+        if (!result.status) {
+            showNote('Unable to perform action: ' + result.data, 'Error!');
+            return;
+        }
+        viewOpts = function (opts) {
+            return eval(result.data.value);
+        };
+        delay(function() { FormBuilder.openBuilderModal(viewOpts(data)); }, 1000);
     }
     
     function buildViewsFromTabMenu(menu) {
@@ -1381,6 +1418,7 @@ var NCE = (function ($) {
             ensureModifiable: ensureModifiable,
             exec: exec,
             getAppId: getAppId,
+            getAppVersions: getAppVersions,
             getSelectedTabAppId: getSelectedTabAppId,
             getInfoDto: getInfoDto,
             getCubeMap: getCubeMap,
@@ -1392,6 +1430,7 @@ var NCE = (function ($) {
             getSelectedBranch: getSelectedBranch,
             getSelectedCubeInfoKey: getSelectedCubeInfoKey,
             isHeadSelected: isHeadSelected,
+            loadAppNames: loadAppNames,
             loadCube: loadCube,
             reloadCube: reloadCube,
             selectBranch: selectBranch,
@@ -3162,47 +3201,45 @@ var NCE = (function ($) {
     }
 
     function dupeCube() {
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
+        var opts;
+        var appId = getSelectedTabAppId();
+        if (!appId.app || !appId.version || !_selectedCubeName || !appId.status) {
             showNote('No n-cube selected. Nothing to duplicate.');
             return;
         }
         if (isSelectedCubeInHead()) {
             selectBranch();
-            return false;
+            return;
         }
 
-        _dupeCubeAppName.val(_selectedApp);
-        _dupeCubeVersion.val(_selectedVersion);
-        _dupeCubeName.val(_selectedCubeName);
-        _dupeCubeBranch.val(_selectedBranch);
-        _dupeCubeLabel[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
-        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', loadAppNames(), function (app) {
-            buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', app, function() {
-                buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-            });
-            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:app, version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-        });
-        buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', _selectedApp, function() {
-            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-        });
-        buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNames());
-        _dupeCubeModal.modal();
+        opts = {
+            appId: appId,
+            cubeName: _selectedCubeName,
+            appSelectList: loadAppNames(),
+            populateVersionFunc: getAppVersions,
+            populateBranchFunc: getBranchNamesByAppId,
+            readonly: false,
+            afterSave: dupeCubeCopy
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.copyCube(opts));
     }
 
-    function dupeCubeCopy() {
-        var result, newName, newApp, newVersion, newBranch, destAppId;
-        _dupeCubeModal.modal('hide');
-        newName = _dupeCubeName.val();
-        newApp = _dupeCubeAppName.val();
-        newVersion = _dupeCubeVersion.val();
-        newBranch = _dupeCubeBranch.val();
-        destAppId = {
-            'app':newApp,
-            'version':newVersion,
-            'status':STATUS.SNAPSHOT,
-            'branch':newBranch
-        };
-        result = call(CONTROLLER + CONTROLLER_METHOD.DUPLICATE_CUBE, [getAppId(), destAppId, _selectedCubeName, newName]);
+    function getAppVersions(app, status) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app, status]);
+        if (!result.status) {
+            showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
+            return [];
+        }
+        return result.data;
+    }
+
+    function dupeCubeCopy(data) {
+        var newName = data.cubeName;
+        var newApp = data.app;
+        var newVersion = data.version;
+        var newBranch = data.branch;
+        var destAppId = appIdFrom(newApp, newVersion, STATUS.SNAPSHOT, newBranch);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.DUPLICATE_CUBE, [getSelectedTabAppId(), destAppId, _selectedCubeName, newName]);
         if (result.status) {
             saveSelectedApp(newApp);
             loadAppListView();
@@ -3864,14 +3901,8 @@ var NCE = (function ($) {
         $('#branchDelete').on('click', function() {
             deleteBranch();
         });
-        $('#deleteBranchOk').on('click', function() {
-            deleteBranchOk();
-        });
         $('#branchCopy').on('click', function() {
             copyBranch();
-        });
-        $('#copyBranchOk').on('click', function() {
-            copyBranchOk();
         });
         // From 'Select / Create Branch' Modal
         $('#createBranch').on('click', function() {
@@ -4043,7 +4074,6 @@ var NCE = (function ($) {
         acceptMineBtn.toggle(branchHead);
         if (branchHead) {
             method = CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH;
-            _branchCompareUpdateOk.removeAttr('disabled');
         } else {
             method = CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH;
             params.push(branchName);
@@ -4231,6 +4261,7 @@ var NCE = (function ($) {
         setTimeout(function() {
             var result;
             clearNote();
+            _branchCompareUpdateOk.removeAttr('disabled');
             if (isFromTabMenu) {
                 result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_CUBE_FROM_HEAD, [appId, cubeDtos[0].name]);
             } else {
@@ -4560,33 +4591,24 @@ var NCE = (function ($) {
     }
 
     function copyBranch() {
-        $('#copyBranchAppName').val(_selectedApp);
-        $('#copyBranchStatus').val(STATUS.SNAPSHOT);
-        $('#copyBranchVersion').val(_selectedVersion);
-        $('#copyBranchName').val('');
-        _copyBranchWithHistory.prop('checked', false);
-        buildDropDown('#copyBranchAppList', '#copyBranchAppName', loadAppNames(), function (app) {
-            buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion', app);
-        });
-        buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
-
-        _copyBranchLabel[0].textContent = 'Copy ' + _selectedApp + ' ' + _selectedVersion + '-' + _selectedStatus + ' ' + _selectedBranch;
-        _copyBranchModal.modal();
+        var opts = {
+            appId: getAppId(),
+            appSelectList: loadAppNames(),
+            populateVersionFunc: getAppVersions,
+            readonly: false,
+            afterSave: copyBranchOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.copyBranch(opts));
     }
 
-    function copyBranchOk() {
-        var result;
-        var origAppId = getAppId();
-        var copyAppId = appIdFrom($('#copyBranchAppName').val(), $('#copyBranchVersion').val(), STATUS.SNAPSHOT, $('#copyBranchName').val());
-        var shouldCopyWithHistory = _copyBranchWithHistory[0].checked;
-        
-        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, shouldCopyWithHistory]);
+    function copyBranchOk(data) {
+        var copyAppId = appIdFrom(data.app, data.version, STATUS.SNAPSHOT, data.branch);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [getAppId(), copyAppId, data.copyHistory]);
         if (!result.status) {
             showNote('Unable to copy branch:<hr class="hr-small"/>' + result.data);
             return;
         }
         
-        _copyBranchModal.modal('hide');
         saveSelectedApp(copyAppId.app);
         saveSelectedVersion(copyAppId.version);
         saveSelectedStatus(copyAppId.status);
@@ -4600,21 +4622,22 @@ var NCE = (function ($) {
     }
 
     function deleteBranch() {
+        var opts;
         if (isHeadSelected()) {
             showNote('HEAD branch cannot be deleted.');
             return;
         }
 
-        $('#deleteBranchLabel')[0].textContent = "Delete '" + _selectedBranch + "' ?";
-        $('#deleteBranchModal').modal();
+        opts = {
+            appId: getAppId(),
+            afterSave: deleteBranchOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteBranch(opts));
     }
 
     function deleteBranchOk() {
-        var result;
         var appId = getAppId();
-        $('#deleteBranchModal').modal('hide');
-
-        result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_BRANCH, [appId]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_BRANCH, [appId]);
         if (result.status) {
             removeFromVisitedBranchesList(appId);
             removeCubeInfoInOpenCubeList(CUBE_INFO.BRANCH);
