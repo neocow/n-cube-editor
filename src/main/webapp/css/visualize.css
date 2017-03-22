@@ -22,6 +22,10 @@ div.col-width-xs {
     width: 25px
 }
 
+div.input-scope-group{
+    margin-bottom: 0.5em;
+}
+
 .nc-anc {
     cursor: pointer;
 }
@@ -157,7 +161,7 @@ h3{
 }
 
 .defaultValue{
-    background-color:#F0F8FF;
+    background-color:#ADD8E6;
 }
 
 .readOnly{

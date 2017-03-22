@@ -163,7 +163,7 @@ class VisualizerInfo
 
         //Determine cumulative node count at each level + determine defaultLevel
         levelCumulativeNodeCount = [:]
-        for (Integer i = 1; i < levelNodeCount.size() + 1; i++)
+        for (int i = 1; i < levelNodeCount.size() + 1; i++)
         {
             if (1 == i)
             {
@@ -173,7 +173,8 @@ class VisualizerInfo
             {
                 levelCumulativeNodeCount[i] = levelCumulativeNodeCount[i - 1] + levelNodeCount[i]
             }
-            if (levelCumulativeNodeCount[i] <= 100 ){
+            if (levelCumulativeNodeCount[i] <= 100 )
+            {
                 defaultLevel = i as long
             }
         }
