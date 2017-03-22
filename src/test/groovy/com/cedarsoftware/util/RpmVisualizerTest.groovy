@@ -1474,29 +1474,27 @@ class RpmVisualizerTest extends VisualizerBaseTest
 
         if (unableToLoad)
         {
-            assert nodeDetails.contains(DETAILS_LABEL_SCOPE)
+            assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITH_TRAITS)
-            assert !nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS)
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
         }
         else if (showCellValues)
         {
-            assert nodeDetails.contains(DETAILS_LABEL_SCOPE)
+            assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert !nodeDetails.contains(UNABLE_TO_LOAD)
             assert !nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS)
             assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITH_TRAITS)
-            assert !nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)
         }
         else
         {
+            assert nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert !nodeDetails.contains(UNABLE_TO_LOAD)
             assert nodeDetails.contains(DETAILS_LABEL_UTILIZED_SCOPE_WITHOUT_TRAITS)
-            assert !nodeDetails.contains(DETAILS_LABEL_AVAILABLE_SCOPE)
             assert nodeDetails.contains(DETAILS_LABEL_FIELDS)
             assert !nodeDetails.contains(DETAILS_LABEL_FIELDS_AND_TRAITS)
             assert !nodeDetails.contains(DETAILS_LABEL_CLASS_TRAITS)

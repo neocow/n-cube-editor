@@ -406,7 +406,7 @@ class VisualizerRelInfo
 	{
 		String nodeName = getLabel()
 		StringBuilder sb = new StringBuilder()
-		sb.append("<b>Scope</b>")
+		sb.append("<b>Available scope</b>")
 		sb.append(BREAK)
 
 		Set<String> scopeKeys = new CaseInsensitiveSet(availableTargetScope.keySet())
