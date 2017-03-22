@@ -70,7 +70,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			else
 			{
 				heading = 'Utilized scope with no traits'
-				title = 'The scope keys used to load the class in the visualization, relying on a minimal set of traits. A sub-set of available scope.'
+				title = 'The scope keys used to load the class with the minimal set of traits needed for visualization. A sub-set of available scope.'
 			}
 			getDetailsMap(sb, heading, targetScope.sort(), title)
 		}
@@ -594,7 +594,6 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
         }
         return inScopeMapEntries.keySet()
     }*/
-
 
 	private String getCannotLoadTargetMessage(String type) {
 

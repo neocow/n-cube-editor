@@ -22,7 +22,6 @@ class VisualizerConstants
 	static final String HTTPS = 'https:'
 	static final String FILE = 'file:'
 
-	static final Set<String> DEFAULT_SCOPE_KEYS = new CaseInsensitiveSet()
 	static final String DEFAULT = 'Default'
 	static final String JSON_FILE_PREFIX = 'config/'
 	static final String JSON_FILE_SUFFIX = '.json'

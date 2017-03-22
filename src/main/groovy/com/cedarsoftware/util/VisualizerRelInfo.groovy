@@ -6,7 +6,6 @@ import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.util.LongHashSet
-import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.VisualizerConstants.*
@@ -95,13 +94,13 @@ class VisualizerRelInfo
 			scopeCubeNames = selectedNode.scopeCubeNames as CaseInsensitiveMap ?:  new CaseInsensitiveMap()
 		}
 		//Else, node details are being loaded for the node or a scope change is being applied to the node. In this case,
-		//clear out any available target scope that is not default scope or derived scope. This will result in the node being
+		//clear out any available target scope that is derived scope. This will result in the node being
 		//reloaded with updated available scope values for the removed scope.
 		else
 		{
 			Set<String> scopeKeys = new CaseInsensitiveSet(availableTargetScope.keySet())
 			scopeKeys.each {String scopeKey ->
-				if (!DEFAULT_SCOPE_KEYS.contains(scopeKey) && !isDerivedScopeKey(visInfo, scopeKey))
+				if (!isDerivedScopeKey(visInfo, scopeKey))
 				{
 					availableTargetScope.remove(scopeKey)
 				}
@@ -412,9 +411,10 @@ class VisualizerRelInfo
 
 		Set<String> scopeKeys = new CaseInsensitiveSet(availableTargetScope.keySet())
 		scopeKeys.addAll(availableScopeValues.keySet())
-		Set<String> sortedScopeKeys = new CaseInsensitiveSet(scopeKeys.sort())
-		if (sortedScopeKeys)
+		if (scopeKeys)
 		{
+			List<String> sortedScopeKeys = scopeKeys as List
+			Collections.sort(sortedScopeKeys, String.CASE_INSENSITIVE_ORDER)
 			sortedScopeKeys.each { String scopeKey ->
 				Set<String> cubeNames = scopeCubeNames[scopeKey]
 				Set<Object> availableValues = availableScopeValues[scopeKey]
@@ -432,7 +432,7 @@ class VisualizerRelInfo
 					else
 					{
 						title.append("Scope key ${scopeKey} was added for a source ${nodeLabel} of this ${nodeLabel}, but is not used by this ${nodeLabel}.")
-						title.append("\nAccess a source ${nodeLabel} that uses this scope key in order to see a list of available scope values.")
+						title.append("\nAccess a source ${nodeLabel} that uses the scope key in order to see a list of available scope values.")
 					}
 				}
 				else
@@ -554,7 +554,6 @@ class VisualizerRelInfo
 		return true
 	}
 
-
 	protected String getLabel(String cubeName = targetCube.name)
 	{
 		cubeName
@@ -579,5 +578,4 @@ class VisualizerRelInfo
 	{
 		return null
 	}
-
 }
