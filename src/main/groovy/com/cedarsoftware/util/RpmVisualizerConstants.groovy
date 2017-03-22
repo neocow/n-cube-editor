@@ -34,8 +34,6 @@ final class RpmVisualizerConstants extends VisualizerConstants
 	static final String POLICY_CONTROL_DATE = 'policyControlDate'
 	static final String QUOTE_DATE = 'quoteDate'
 	static final String EFFECTIVE_VERSION = SYSTEM_SCOPE_KEY_PREFIX + "effectiveVersion"
-	static final Set<String> DEFAULT_SCOPE_KEYS = [POLICY_CONTROL_DATE, QUOTE_DATE, EFFECTIVE_VERSION] as CaseInsensitiveSet
-
 	static final Set<String> MANDATORY_SCOPE_KEYS = [AXIS_FIELD, AXIS_NAME, AXIS_TRAIT] as Set
 
 	static final String CUBE_TYPE_RPM = 'rpm'
