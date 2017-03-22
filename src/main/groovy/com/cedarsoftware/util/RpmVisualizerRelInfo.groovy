@@ -3,11 +3,9 @@ package com.cedarsoftware.util
 import com.cedarsoftware.ncube.ApplicationID
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
-import com.cedarsoftware.ncube.ReleaseStatus
 import com.cedarsoftware.ncube.RuleInfo
 import com.cedarsoftware.ncube.exception.CoordinateNotFoundException
 import com.cedarsoftware.ncube.exception.InvalidCoordinateException
-import com.cedarsoftware.ncube.util.VersionComparator
 import com.google.common.base.Splitter
 import static com.cedarsoftware.util.RpmVisualizerConstants.*
 import groovy.transform.CompileStatic
@@ -169,12 +167,12 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		return RPM_CLASS_DOT + targetFieldName
 	}
 
-	private void retainUsedScope(VisualizerInfo visInfo, Map output)
+	private void setTargetScope(VisualizerInfo visInfo, Map output)
 	{
 		Set<String> scopeCollector = new CaseInsensitiveSet<>()
+		addRequiredScopeKeys(visInfo)
 		scopeCollector.addAll(visInfo.requiredScopeKeysByCube[targetCube.name])
 		scopeCollector << EFFECTIVE_VERSION
-
 
 		Set keysUsed = NCube.getRuleInfo(output).getInputKeysUsed()
 		scopeCollector.addAll(keysUsed)
@@ -182,6 +180,13 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		Map<String, Object> scope = new CaseInsensitiveMap(availableTargetScope)
 		cullScope(scope.keySet(), scopeCollector)
 		targetScope.putAll(scope)
+	}
+
+	private void addBackToAvailableTargetScope(VisualizerInfo visInfo)
+	{
+		visInfo.inputScope.each{String scopeKey, Object ScopeValue ->
+			availableTargetScope.putIfAbsent(scopeKey, ScopeValue)
+		}
 	}
 
 	private void removeNotExistsFields()
@@ -385,12 +390,14 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 				handleException(t, visInfo)
 			}
 		}
-		addRequiredScopeKeys(visInfo)
-		retainUsedScope(visInfo, output)
+
 		if (loadAgain)
 		{
 			return loadCube(visInfo, output)
 		}
+
+		setTargetScope(visInfo, output)
+		addBackToAvailableTargetScope(visInfo)
 		return true
 	}
 
@@ -425,7 +432,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			{
 				return
 			}
-			nodeDetailsMessages << "Defaults were used for some scope keys.${DOUBLE_BREAK}".toString()
+			nodeDetailsMessages << """<span class="${DETAILS_CLASS_DEFAULT_VALUE}">Defaults were used for some scope keys.</span>${DOUBLE_BREAK}""".toString()
 		}
 	}
 
@@ -436,7 +443,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 		{
 			return
 		}
-		StringBuilder message = new StringBuilder("<b>Unable to load ${visInfo.getLoadTarget(this.showingHidingCellValues)}. The value ${e.value} is not valid for ${e.axisName}.</b>${DOUBLE_BREAK}")
+		StringBuilder message = new StringBuilder("""<span class="${DETAILS_CLASS_MISSING_VALUE}">Unable to load ${visInfo.getLoadTarget(this.showingHidingCellValues)}. The value ${e.value} is not valid for ${e.axisName}.</span>${DOUBLE_BREAK}""")
 		message.append(sb)
 		nodeDetailsMessages << message.toString()
 		nodeLabelPrefix = 'Required scope value not found for '
@@ -451,7 +458,7 @@ class RpmVisualizerRelInfo extends VisualizerRelInfo
 			return
 		}
 
-		StringBuilder message = new StringBuilder("<b>Unable to load ${visInfo.getLoadTarget(this.showingHidingCellValues)}. Additional scope is required.</b> ${DOUBLE_BREAK}")
+		StringBuilder message = new StringBuilder("""<span class="${DETAILS_CLASS_MISSING_VALUE}">Unable to load ${visInfo.getLoadTarget(this.showingHidingCellValues)}. Additional scope is required.</span>${DOUBLE_BREAK}""")
 		message.append(sb)
 		nodeDetailsMessages << message.toString()
 		nodeLabelPrefix = 'Additional scope required for '

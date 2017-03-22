@@ -6,6 +6,7 @@ import com.cedarsoftware.ncube.Column
 import com.cedarsoftware.ncube.NCube
 import com.cedarsoftware.ncube.NCubeManager
 import com.cedarsoftware.ncube.util.LongHashSet
+import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
 
 import static com.cedarsoftware.util.VisualizerConstants.*
@@ -19,11 +20,10 @@ import static com.cedarsoftware.util.VisualizerConstants.*
 class VisualizerRelInfo
 {
 	protected ApplicationID appId
-
 	protected List<String> nodeDetailsMessages = []
 	protected Map<String, Object> availableTargetScope = new CaseInsensitiveMap()
-	Map<String, Set<Object>> availableScopeValues = new CaseInsensitiveMap()
-	Map<String, Set<String>> scopeCubeNames = new CaseInsensitiveMap()
+	protected Map<String, Set<Object>> availableScopeValues = new CaseInsensitiveMap()
+	protected Map<String, Set<String>> scopeCubeNames = new CaseInsensitiveMap()
 
 	protected boolean showingHidingCellValues
 
@@ -425,18 +425,14 @@ class VisualizerRelInfo
 				{
 					if (isDerivedScopeKey(visInfo, scopeKey))
 					{
-						title.append("Scope key ${scopeKey} is added by the visualizer and may not be changed for this ${nodeLabel} in this visualization.")
+						title.append("Scope key ${scopeKey} was added by the visualizer and may not be changed for this ${nodeLabel} in this visualization.")
 						title.append("\nStart a new visual from here to access all scope keys for the ${nodeLabel}.")
 						disabled = true
 					}
-					else if (targetScope.containsKey(scopeKey))
-					{
-						title.append("LOOK INTO: Not a derived scope key and no available value for the key, but the key is used by the ${nodeLabel}.")
-						//throw new IllegalStateException('should not get here')
-					}
 					else
 					{
-						title.append("Scope key ${scopeKey} is not used by this ${nodeLabel}, but is available to the ${nodeLabel} during the visualization.")
+						title.append("Scope key ${scopeKey} was added for a source ${nodeLabel} of this ${nodeLabel}, but is not used by this ${nodeLabel}.")
+						title.append("\nAccess a source ${nodeLabel} that uses this scope key in order to see a list of available scope values.")
 					}
 				}
 				else
@@ -517,9 +513,12 @@ class VisualizerRelInfo
 		{
 			return ''
 		}
-		else if (DEFAULT == value && availableScopeValues.contains(null))
+		else if (availableScopeValues.contains(null))
 		{
-			return DETAILS_CLASS_DEFAULT_VALUE
+			if (DEFAULT == value || !availableScopeValues.contains(providedScopeValue))
+			{
+				return DETAILS_CLASS_DEFAULT_VALUE
+			}
 		}
 		else if (!providedScopeValue)
 		{
@@ -529,10 +528,7 @@ class VisualizerRelInfo
 		{
 			return DETAILS_CLASS_MISSING_VALUE
 		}
-		else
-		{
-			return ''
-		}
+		return ''
 	}
 
 	protected void setLoadAgain(VisualizerInfo visInfo, String scopeKey)
