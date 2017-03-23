@@ -173,7 +173,7 @@ var NCubeEditor2 = (function ($) {
                 switch (keyCode) {
                     case KEY_CODES.F:
                         e.preventDefault();
-                        _searchField.focus();
+                        _searchField[0].focus();
                         break;
                     case KEY_CODES.X:
                         if (CLIP_NCE === _clipFormat) {
@@ -362,7 +362,7 @@ var NCubeEditor2 = (function ($) {
         }
         selectSavedOrDefaultCell();
         setClipFormatToggleListener();
-        _searchField.value = nce.getSearchQuery() || '';
+        _searchField.val(nce.getSearchQuery() || '');
         _searchText = '';
         runSearch();
         searchDown();
@@ -459,7 +459,7 @@ var NCubeEditor2 = (function ($) {
 
     function setSearchHelperText() {
         var len, idx, html;
-        var query = _searchField.value;
+        var query = _searchField.val();
         if (query !== null && query !== '') {
             len = _searchCoords.length;
             idx = _currentSearchResultIndex + 1;
@@ -469,11 +469,11 @@ var NCubeEditor2 = (function ($) {
     }
 
     function addSearchListeners() {
-        $(_searchField).on('focus', addHotBeforeKeyDown);
+        _searchField.on('focus', addHotBeforeKeyDown);
 
-        $(_searchField).on('blur', removeHotBeforeKeyDown);
+        _searchField.on('blur', removeHotBeforeKeyDown);
 
-        $(_searchField).on('keyup', function (e) {
+        _searchField.on('keyup', function (e) {
             var keyCode = e.keyCode;
             if (keyCode === KEY_CODES.ENTER) {
                 runSearch();
@@ -546,18 +546,18 @@ var NCubeEditor2 = (function ($) {
     }
 
     function searchClear() {
-        _searchField.value = '';
+        _searchField.val('');
         clearSearchMatches();
         setSearchHelperText();
         render();
     }
 
     function searchClick() {
-        _searchField.focus();
+        _searchField[0].focus();
     }
 
     function runSearch(forceSearch) {
-        var query = _searchField.value;
+        var query = _searchField.val();
         if (forceSearch || _searchText !== query) {
             if (query && query.length) {
                 searchCubeData(query, false);
@@ -1407,7 +1407,7 @@ var NCubeEditor2 = (function ($) {
         _searchCoords = null;
         _searchCoords = [];
         _currentSearchResultIndex = 0;
-        _searchField.value = '';
+        _searchField.val('');
         setSearchHelperText();
         _defaultCellText = null;
 
@@ -2795,7 +2795,7 @@ var NCubeEditor2 = (function ($) {
         if (hot.getActiveEditor()) {
             hot.getActiveEditor().finishEditing(null, null, null, true);
         }
-        var searchQuery = _searchField.value;
+        var searchQuery = _searchField.val();
         if (searchQuery !== null && searchQuery.length) {
             var curCell = getSelectedCellRange();
             if (curCell) {
