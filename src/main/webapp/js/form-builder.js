@@ -4,8 +4,10 @@
  *      instructionsTitle   - title of instructions area (omit for no instructions box)
  *      instructionsText    - text of instructions area (omit for no instructions box)
  *      saveButtonText      - text of save button; default 'Save'
+ *      closeButtonText     - text of close button; default 'Cancel'
  *      afterSave           - callback fires upon clicking save button
  *      onClose             - callback fires whenever modal closes (save or otherwise)
+ *      closeAfterSave      - should the modal close or stay open after saving; default TRUE
  *      readonly            - should the user be able to edit or only view; default FALSE
  *      displayType         - type of display (table, list, form); use constant DISPLAY_TYPE
  *      draggable           - should modal be draggable; default TRUE
@@ -19,7 +21,10 @@
  *          selectOptions   - if type is SELECT, use for list of options for select input
  *          hasFilter       - can filter on column; default FALSE
  *          sortable        - can sort on column; default FALSE
+ *          css             - optional css for column
  *      formInputs          - input values to use in form view
+ *          collapsible     - used to collapse sections; default FALSE
+ *          sectionType     - bootstrap type style of section; use constant BOOTSTRAP_TYPE
  *          type            - type of input; use constant INPUT_TYPE; default TEXT
  *          default         - if input has a desired default value
  *          selectOptions   - if type is SELECT, use for list of options for select input
@@ -39,8 +44,17 @@ var FormBuilder = (function ($) {
         READONLY: 'readonly',
         SECTION: 'section',
         SELECT: 'select',
+        TABLE: 'table',
         TEXT: 'text',
         TEXT_SELECT: 'text-select'
+    };
+    var BOOTSTRAP_TYPE = {
+        DANGER: 'danger',
+        DEFAULT: 'default',
+        INFO: 'info',
+        PRIMARY: 'primary',
+        SUCCESS: 'success',
+        WARNING: 'warning'
     };
     var DISPLAY_TYPE = {
         FORM: 'form',
@@ -63,16 +77,16 @@ var FormBuilder = (function ($) {
         'padding-right': 25,
         'text-align':'center'
     };
-    var TR_CLASS = 'builder-data-row';
+    var TR_CLASS = 'form-builder-data-row';
 
     var ID_PREFIX = {
+        COLLAPSE: 'form-builder-collapse-',
         INPUT: 'form-builder-input-',
         SECTION: 'form-builder-section-'
     };
 
     // elements;
     var _modal = null;
-    var _table = null;
 
     // external variables
     var _data = null;
@@ -81,12 +95,16 @@ var FormBuilder = (function ($) {
     // public
     function openBuilderModal(options, data) {
         var container;
+        var buildNew = !_modal;
         _data = data || {};
         _options = options;
         setDefaultOptions();
 
-        _modal = buildModal();
+        _modal = _modal || buildModal();
         container = _modal.find('.modal-content');
+        if (!buildNew) {
+            container.empty();
+        }
         container.append(buildModalHeader());
         container.append(buildModalContent());
         container.append(buildModalFooter());
@@ -95,7 +113,9 @@ var FormBuilder = (function ($) {
             container.find('input,textarea,select').attr('disabled', _options.readonly);
         }
 
-        _modal.modal();
+        if (buildNew) {
+            _modal.modal();
+        }
     }
 
     function setDefaultOptions() {
@@ -105,8 +125,14 @@ var FormBuilder = (function ($) {
         if (!_options.hasOwnProperty('saveButtonText')) {
             _options.saveButtonText = 'Save';
         }
+        if (!_options.hasOwnProperty('closeButtonText')) {
+            _options.closeButtonText = 'Cancel';
+        }
         if (!_options.hasOwnProperty('draggable')) {
             _options.draggable = true;
+        }
+        if (!_options.hasOwnProperty('closeAfterSave')) {
+            _options.closeAfterSave = true;
         }
     }
 
@@ -130,7 +156,7 @@ var FormBuilder = (function ($) {
             modal.keyup(function (e) {
                 if (_options.displayType === DISPLAY_TYPE.TABLE) {
                     if (e.keyCode === KEY_CODES.ENTER) {
-                        addTableRow();
+                        addTableRowForTableTypeBuilder();
                     }
                 }
             });
@@ -149,6 +175,7 @@ var FormBuilder = (function ($) {
     }
 
     function closeBuilderModal(shouldSave) {
+        var shouldClose = _options.closeAfterSave;
         if (shouldSave) {
             switch (_options.displayType) {
                 case DISPLAY_TYPE.TABLE:
@@ -162,14 +189,16 @@ var FormBuilder = (function ($) {
                 _options.afterSave(_data);
             }
         }
-        _modal.modal('hide');
+        if (!shouldSave || (shouldSave && shouldClose)) {
+            _modal.modal('hide');
+        }
     }
 
     function buildModalFooter() {
         var html, footer;
         var buttons = {
             add: '',
-            cancel: '<button class="btn btn-default btn-sm form-builder-cancel">Cancel</button>',
+            cancel: '<button class="btn btn-default btn-sm form-builder-cancel">' + _options.closeButtonText + '</button>',
             clear: '',
             save: '',
             selectAll: '',
@@ -196,7 +225,7 @@ var FormBuilder = (function ($) {
         footer = $(html);
         footer.find('.form-builder-select-all').on('click', function() { checkAll(true, 'input[type="checkbox"]'); });
         footer.find('.form-builder-select-none').on('click', function() { checkAll(false, 'input[type="checkbox"]'); });
-        footer.find('.form-builder-add').on('click', function() { addTableRow() });
+        footer.find('.form-builder-add').on('click', function() { addTableRowForTableTypeBuilder(); });
         footer.find('.form-builder-clear').on('click', function() { clearTableRows() });
         footer.find('.form-builder-cancel').on('click', function() { closeBuilderModal() });
         footer.find('.form-builder-save').on('click', function() { closeBuilderModal(true) });
@@ -205,22 +234,16 @@ var FormBuilder = (function ($) {
     }
 
     function buildModalContent() {
-        var body;
         var style = _options.size === MODAL_SIZE.SMALL ? '' : 'overflow-y:auto;min-height:450px;';
-        var html = '<div class="modal-body" style="'+ style + '">';
+        var body = $('<div class="modal-body" style="'+ style + '">');
 
         if (_options.hasOwnProperty('instructionsTitle') && _options.hasOwnProperty('instructionsText')) {
-            html += '<div class="panel-group"><div class="panel panel-default">'
-                  + '<div class="panel-heading"><h4 class="panel-title">'
-                  + '<a data-toggle="collapse" href="#form-builder-inst-collapse">' + _options.instructionsTitle + '</a></h4></div>'
-                  + '<div id="form-builder-inst-collapse" class="panel-collapse collapse in">'
-                  + '<div class="panel-body">' + _options.instructionsText + '</div></div></div></div>';
+            body.append(initSubSection('inst', _options.instructionsTitle, _options.instructionsText, BOOTSTRAP_TYPE.DEFAULT, true));
         }
 
-        body = $(html);
         switch (_options.displayType) {
             case DISPLAY_TYPE.TABLE:
-                body.append(buildTable());
+                body.append(buildTable(_data, _options));
                 break;
             case DISPLAY_TYPE.FORM:
                 body.append(buildForm());
@@ -236,7 +259,7 @@ var FormBuilder = (function ($) {
     }
 
     function buildFormSection(formInputs, readonly) {
-        var i, len, formInput, key, subSection;
+        var i, len, formInput, key, subSection, control, sectionReadonly;
         var section = $('<div style="clear:both;"/>');
         var keys = Object.keys(formInputs);
         for (i = 0, len = keys.length; i < len; i++) {
@@ -245,22 +268,39 @@ var FormBuilder = (function ($) {
             formInput.name = key;
             if (!formInput.hidden) {
                 if (formInput.type === INPUT_TYPE.SECTION) {
-                    subSection = initSubSection(formInput);
-                    subSection.append(buildFormSection(formInput.formInputs, readonly || formInput.readonly));
+                    subSection = initSubSectionFromFormInput(formInput);
+                    sectionReadonly = readonly || formInput.readonly;
+                    control = buildFormSection(formInput.formInputs, sectionReadonly);
+                    addToSubSection(subSection, control);
                     section.append(subSection);
                 } else {
-                    section.append(buildFormControl(formInput, readonly));
+                    control = buildFormControl(formInput, readonly);
+                    section.append(control);
                 }
             }
         }
         return section;
     }
 
-    function initSubSection(formInput) {
-        return $('<div id="' + ID_PREFIX.SECTION + formInput.name
-            + '" class="form-builder-section" style="padding:10px;border:1px solid #CCC;margin-bottom:10px;">'
-            + '<h4 style="float:left;margin-top:-18px;background-color:white;">&nbsp;'
-            + formInput.label + '&nbsp;</h4></div>');
+    function initSubSection(id, title, body, type, collapsible) {
+        var sectionId = ID_PREFIX.SECTION + id;
+        var collapseId = ID_PREFIX.COLLAPSE + id;
+        var panelType = type || BOOTSTRAP_TYPE.DEFAULT;
+        var html = '<div id="' + sectionId + '" class="panel-group">'
+            + '<div class="panel panel-' + panelType + '">'
+            + '<div class="panel-heading"><h4 class="panel-title">'
+            + (collapsible ? ('<a data-toggle="collapse" href="#' + collapseId + '">' + title + '</a>') : title)
+            + '</h4></div><div id="' + collapseId + '" class="panel-collapse collapse in">'
+            + '<div class="panel-body">' + (body || '') + '</div></div></div></div>';
+        return $(html);
+    }
+    
+    function initSubSectionFromFormInput(formInput) {
+        return initSubSection(formInput.name, formInput.label, formInput.data, formInput.sectionType, formInput.collapsible);
+    }
+    
+    function addToSubSection(section, toAdd) {
+        section.find('.panel-body').append(toAdd);
     }
 
     function buildFormControl(formInput, readonlyOverride) {
@@ -285,8 +325,8 @@ var FormBuilder = (function ($) {
             findInputGroup(formInput).remove();
         } else {
             if (formInput.type === INPUT_TYPE.SECTION) {
-                control = initSubSection(formInput);
-                control.append(buildFormSection(formInput.formInputs));
+                control = initSubSectionFromFormInput(formInput);
+                addToSubSection(control, buildFormSection(formInput.formInputs));
             } else {
                 control = buildFormControl(formInput);
             }
@@ -364,6 +404,8 @@ var FormBuilder = (function ($) {
                     return createFormCheckboxInput(id, label, readonly, initVal);
                 case INPUT_TYPE.SELECT:
                     return createFormDefaultDisplaySelectInput(id, label, selectOptions, readonly, initVal);
+                case INPUT_TYPE.TABLE:
+                    return $('<div id="' + id + '" style="max-height:300px; overflow-y:auto;"/>').append(buildTable(initVal, formInput));
                 case INPUT_TYPE.TEXT_SELECT:
                     return createFormTextSelectInput(id, label, selectOptions, readonly, initVal);
                 case INPUT_TYPE.READONLY:
@@ -478,70 +520,74 @@ var FormBuilder = (function ($) {
         });
     }
 
-    function buildTable() {
+    function buildTable(data, tableOpts) {
         var columns, columnKeys, headingRow, c, cLen, column, header;
-        _table = $('<table/>').css({margin: '0 auto'});
+        var style = tableOpts.css || "margin:0 auto;";
+        var table = $('<table/>').css(style);
 
-        columns = _options.columns;
+        columns = tableOpts.columns;
         columnKeys = Object.keys(columns);
-        _options.columnKeys = columnKeys;
+        tableOpts.columnKeys = columnKeys;
         headingRow = $('<tr/>');
-        _table.append(headingRow);
+        table.append(headingRow);
         for (c = 0, cLen = columnKeys.length; c < cLen; c++) {
             column = columns[columnKeys[c]];
-            header = $('<th/>').html(column.heading).css(TD_CSS);
+            header = $('<th/>').html(column.heading).css(column.css || TD_CSS);
             if (column.sortable) {
                 header.on('click', function() {
-                    sortTable(this);
+                    sortTable($(this).closest('table'), this, tableOpts);
                 });
             }
             headingRow.append(header);
         }
-        createTableRows();
-        return _table;
+        createTableRows(table, data, tableOpts);
+        return table;
     }
 
-    function sortTable(header) {
-        var idx = _table.find('th').index(header);
-        var key = _options.columnKeys[idx];
-        _data.sort(function(a, b) {
-            return a[key] - b[key];
-        });
+    function sortTable(table, header, tableOpts) {
+        // TODO - NEEDS FLESHED OUT
+        // var idx = table.find('th').index(header);
+        // var key = tableOpts.columnKeys[idx];
+        // _data.sort(function(a, b) {
+        //     return a[key] - b[key];
+        // });
     }
 
-    function createTableRows() {
+    function createTableRows(table, data, tableOpts) {
         var d, dLen;
-        dLen = _data.length;
+        dLen = data.length;
         if (dLen) {
             for (d = 0; d < dLen; d++) {
-                addTableRow(_data[d]);
+                addTableRow(table, data[d], tableOpts);
             }
         } else {
-            addTableRow(); //start with empty row
+            addTableRow(table, null, tableOpts); //start with empty row
         }
     }
 
-    function addTableRow(dataRow) {
+    function addTableRowForTableTypeBuilder(dataRow) {
+        addTableRow(_modal.find('table'), dataRow, _options);
+    }
+
+    function addTableRow(table, dataRow, tableOpts) {
         var c, cLen, key, column, dataVal, inputElement, closeBtn;
         var tr = $('<tr/>').addClass(TR_CLASS);
-        var columnKeys = _options.columnKeys;
-        var columns = _options.columns;
+        var columnKeys = tableOpts.columnKeys;
+        var columns = tableOpts.columns;
         for (c = 0, cLen = columnKeys.length; c < cLen; c++) {
             key = columnKeys[c];
-            column = null;
             column = columns[key];
             if (dataRow) {
-                dataVal = dataRow[key];
+                dataVal = typeof dataRow === OBJECT ? dataRow[key] : dataRow;
             } else if (column.hasOwnProperty('default')) {
                 dataVal = column.default;
             } else {
                 dataVal = null;
             }
 
-            inputElement = null;
             inputElement = getDataRowInput(column, dataVal);
             inputElement.addClass(key);
-            tr.append($('<td/>').append(inputElement).css(TD_CSS));
+            tr.append($('<td/>').append(inputElement).css(column.css || TD_CSS));
         }
 
         if (!_options.readonly) {
@@ -550,7 +596,7 @@ var FormBuilder = (function ($) {
                 tr.remove();
             });
         }
-        _table.append(tr);
+        table.append(tr);
         tr.append($('<td/>').append(closeBtn));
         tr.find('input').first().focus();
     }
@@ -580,7 +626,7 @@ var FormBuilder = (function ($) {
     }
 
     function findTableRows() {
-        return _table.find('tr.' + TR_CLASS);
+        return _modal.find('tr.' + TR_CLASS);
     }
 
     function copyTableDataToModel() {
@@ -703,6 +749,7 @@ var FormBuilder = (function ($) {
             _options.onClose();
         }
         _modal.remove();
+        _modal = null;
     }
 
     function checkAll(state, queryStr) {
@@ -716,6 +763,7 @@ var FormBuilder = (function ($) {
         populateSelect: populateSelect,
         populateTextSelect: populateTextSelect,
         toggle: toggle,
+        BOOTSTRAP_TYPE: BOOTSTRAP_TYPE,
         DISPLAY_TYPE: DISPLAY_TYPE,
         ID_PREFIX: ID_PREFIX,
         INPUT_LAYOUT: INPUT_LAYOUT,
