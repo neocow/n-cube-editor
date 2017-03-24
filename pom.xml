@@ -80,7 +80,7 @@
         <version.plugin.gpg>1.6</version.plugin.gpg>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <tomcat.version>8.0.38</tomcat.version>
+        <tomcat.version>8.5.12</tomcat.version>
     </properties>
 
     <pluginRepositories>
