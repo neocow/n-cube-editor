@@ -522,7 +522,7 @@ var FormBuilder = (function ($) {
 
     function buildTable(data, tableOpts) {
         var columns, columnKeys, headingRow, c, cLen, column, header;
-        var style = tableOpts.css || "margin:0 auto;";
+        var style = tableOpts.css || { margin: '0 auto' };
         var table = $('<table/>').css(style);
 
         columns = tableOpts.columns;
