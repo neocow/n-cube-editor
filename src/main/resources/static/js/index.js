@@ -2623,7 +2623,7 @@ var NCE = (function ($) {
     function loadAppNames() {
         var result;
         var apps = [];
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_NAMES, [_selectedStatus, _selectedBranch]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_NAMES, []);
         if (result.status) {
             apps = null;
             apps = result.data;
