@@ -1333,6 +1333,7 @@ var NCE = (function ($) {
                 showNote('Unable to initialize plugin.', 'Error', TWO_SECOND_TIMEOUT);
                 return;
             }
+            // yes, eval is evil. i'm sorry.
             opts = eval(result.data.value);
             opts.afterSave = function(data) {
                 data.component = 'controller';
@@ -1344,23 +1345,44 @@ var NCE = (function ($) {
     }
 
     function onMenuExpressionSave(exp, appId, data) {
-        var viewData, viewOpts;
-        var result = exec(exp.cube + '.' + exp.method, [appId, data]);
-        if (!result.status) {
-            showNote('Unable to perform action: ' + result.data, 'Error!');
+        var viewData, viewResult;
+        var controllerResult = exec(exp.cube + '.' + exp.method, [appId, data]);
+        if (!controllerResult.status) {
+            showNote('Unable to perform action: ' + controllerResult.data, 'Error!');
             return;
         }
-        viewData = result.data;
-        viewData.component = 'view';
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'view'}]);
-        if (!result.status) {
-            showNote('Unable to perform action: ' + result.data, 'Error!');
+        viewResult = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'view'}]);
+        if (!viewResult.status) {
+            showNote('Unable to perform action: ' + viewResult.data, 'Error!');
             return;
         }
-        viewOpts = function (opts) {
-            return eval(result.data.value);
-        };
-        delay(function() { FormBuilder.openBuilderModal(viewOpts(data)); }, 1000);
+        viewData = controllerResult.data;
+        delete viewData.component;
+        cleanGroovyObject(viewData);
+        FormBuilder.openBuilderModal(getViewOptions(viewResult.data.value, data, viewData), viewData);
+    }
+
+    // keep params, they are used in eval.
+    // yes, eval is evil. i'm sorry.
+    function getViewOptions(result, opts, data) {
+        return eval(result);
+    }
+
+    function cleanGroovyObject(data) {
+        var i, len, keys, key, obj;
+        keys = Object.keys(data);
+        for (i = 0, len = keys.length; i < len; i++) {
+            key = keys[i];
+            obj = data[key];
+            if (typeof obj === OBJECT) {
+                if (obj.hasOwnProperty('@items')) {
+                    data[key] = obj['@items'];
+                } else {
+                    delete obj['@id'];
+                    delete obj['@type'];
+                }
+            }
+        }
     }
     
     function buildViewsFromTabMenu(menu) {
