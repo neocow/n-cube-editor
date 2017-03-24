@@ -4625,7 +4625,8 @@ var NCE = (function ($) {
 
     function copyBranchOk(data) {
         var copyAppId = appIdFrom(data.app, data.version, STATUS.SNAPSHOT, data.branch);
-        var result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [getAppId(), copyAppId, data.copyHistory]);
+        var copyHistory = data.copyHistory || false;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [getAppId(), copyAppId, copyHistory]);
         if (!result.status) {
             showNote('Unable to copy branch:<hr class="hr-small"/>' + result.data);
             return;
