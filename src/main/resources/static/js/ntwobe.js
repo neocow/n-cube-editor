@@ -4416,7 +4416,7 @@ var NCubeEditor2 = (function ($) {
             if (data.hasTransform) {
                 transformAppId = appIdFrom(data.transApp, data.transVer, STATUS.RELEASE, 'HEAD');
             }
-            params = [refAppId, data.refCube, data.refAxis, transformAppId, data.transCube, data.transMethod];
+            params = [refAppId, data.refCube, data.refAxis, transformAppId, data.transCube];
         } else {
             params = [data.type, data.valueType];
         }

@@ -253,7 +253,7 @@ var CONTROLLER_METHOD = {
     DELETE_AXIS: 'deleteAxis',
     DELETE_BRANCH: 'deleteBranch',
     DELETE_CUBES: 'deleteCubes',
-    DUPLICATE_CUBE: 'duplicateCube',
+    DUPLICATE_CUBE: 'duplicate',
     FETCH_JSON_BRANCH_DIFFS: 'fetchJsonBranchDiffs',
     FETCH_JSON_REV_DIFFS: 'fetchJsonRevDiffs',
     GENERATE_COMMIT_LINK: 'generateCommitLink',
