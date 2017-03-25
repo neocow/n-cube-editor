@@ -522,7 +522,7 @@ var NCubeEditor = (function ($)
             return;
         }
 
-        var generalTypes = ['STRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
+        var generalTypes = ['STRING', 'CISTRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'];
         var ruleTypes = ['EXPRESSION'];
         buildDropDown('#addAxisTypeList', '#addAxisTypeName', ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE'], function (selected)
         {

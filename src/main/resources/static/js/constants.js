@@ -14,7 +14,7 @@ var COLUMN_WIDTHS = NCE_PREFIX + 'COLUMN_WIDTHS';
 var ROW_HEIGHTS = NCE_PREFIX + 'ROW_HEIGHTS';
 var TEST_RESULTS = NCE_PREFIX + 'TEST_RESULTS';
 var FILTERS = NCE_PREFIX + 'FILTERS';
-var SCOPE_MAP = NCE_PREFIX + 'SCOPE_MAP';
+var SCOPE = NCE_PREFIX + 'SCOPE';
 var SELECTED_LEVEL = NCE_PREFIX + 'SELECTED_LEVEL';
 var SELECTED_GROUPS = NCE_PREFIX + 'SELECTED_GROUPS';
 var NETWORK_OPTIONS_DISPLAY = NCE_PREFIX + 'NETWORK_OPTIONS_DISPLAY'; 
@@ -70,7 +70,6 @@ var PAGE_ID = 'PageId';
 var TAB_VIEW_TYPE_NCUBE = 'n-cube';
 var TAB_VIEW_TYPE_VISUALIZER = 'Visualizer';
 var DEFAULT_ACTIVE_TAB_VIEW_TYPE = TAB_VIEW_TYPE_NCUBE + PAGE_ID;
-var HAS_EVENT = 'hasEvent';
 
 var DEFAULT_COLUMN_DISPLAY_ORDER = 2147483647;
 var AXIS_DEFAULT = '00' + DEFAULT_COLUMN_DISPLAY_ORDER;
@@ -161,7 +160,7 @@ var AXIS_SUBTYPES = {
     STRING: 'STRING'
 };
 var AXIS_TYPE_LIST = {
-    GENERAL_SUBTYPE: ['STRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'],
+    GENERAL_SUBTYPE: ['STRING', 'CISTRING', 'LONG', 'BIG_DECIMAL', 'DOUBLE', 'DATE', 'COMPARABLE'],
     RULE_SUBTYPE: ['EXPRESSION'],
     TYPE: ['DISCRETE', 'RANGE', 'SET', 'NEAREST', 'RULE']
 };
@@ -242,6 +241,7 @@ var CONTROLLER_METHOD = {
     ACCEPT_THEIRS: 'acceptTheirs',
     ADD_AXIS: 'addAxis',
     BREAK_AXIS_REFERENCE: 'breakAxisReference',
+    CANCEL_COMMIT: 'cancelCommit',
     CHANGE_VERSION_VALUE: 'changeVersionValue',
     CHECK_PERMISSIONS: 'checkPermissions',
     CLEAR_CACHE: 'clearCache',
@@ -256,6 +256,7 @@ var CONTROLLER_METHOD = {
     DUPLICATE_CUBE: 'duplicateCube',
     FETCH_JSON_BRANCH_DIFFS: 'fetchJsonBranchDiffs',
     FETCH_JSON_REV_DIFFS: 'fetchJsonRevDiffs',
+    GENERATE_COMMIT_LINK: 'generateCommitLink',
     GET_APP_LOCKED_BY: 'getAppLockedBy',
     GET_APP_NAMES: 'getAppNames',
     GET_APP_VERSIONS: 'getAppVersions',
@@ -266,9 +267,11 @@ var CONTROLLER_METHOD = {
     GET_HEAD_CHANGES_FOR_BRANCH: 'getHeadChangesForBranch',
     GET_BRANCHES: 'getBranches',
     GET_CELL_NO_EXECUTE: 'getCellNoExecute',
+    GET_CELL_NO_EXECUTE_BY_COORDINATE: 'getCellNoExecuteByCoordinate',
     GET_CELLS_NO_EXECUTE: 'getCellsNoExecute',
-    GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
+    GET_COMMITS: 'getCommits',
+    GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
     GET_HEADERS: 'getHeaders',
     GET_JSON: 'getJson',
     GET_MENU: 'getMenu',
@@ -278,6 +281,7 @@ var CONTROLLER_METHOD = {
     GET_REVISION_HISTORY: 'getRevisionHistory',
     GET_VERSIONS: 'getVersions',
     HEARTBEAT: 'heartBeat',
+    HONOR_COMMIT: 'honorCommit',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     IS_CUBE_CURRENT: 'isCubeUpToDate',
@@ -289,6 +293,7 @@ var CONTROLLER_METHOD = {
     PASTE_CELLS_NCE: 'pasteCellsNce',
     PROMOTE_REVISION: 'promoteRevision',
     RELEASE_VERSION: 'releaseVersion',
+    REOPEN_COMMIT: 'reopenCommit',
     RESOLVE_RELATIVE_URL: 'resolveRelativeUrl',
     RESTORE_CUBES: 'restoreCubes',
     ROLLBACK_BRANCH: 'rollbackBranch',
@@ -335,6 +340,13 @@ var PERMISSION_ACTION = {
     READ: 'read',
     RELEASE: 'release',
     UPDATE: 'update'
+};
+
+var NOTE_CLASS = {
+    FORCE_MANUAL_CLOSE: 'force-manual',
+    HAS_EVENT: 'has-event',
+    PROCESS_DURATION: 'process-duration',
+    SYS_META: 'sysmeta'
 };
 
 //noinspection MagicNumberJS

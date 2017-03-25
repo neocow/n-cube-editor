@@ -25,6 +25,7 @@ var NCE = (function ($) {
     var _savedCall = null;
     var _searchThread;
     var _heartBeatThread;
+    var _impersonationApp = null;
     var _cubeList = {};
     var _openCubes = localStorage[OPEN_CUBES];
     var _visitedBranches = localStorage[VISITED_BRANCHES];
@@ -66,11 +67,11 @@ var NCE = (function ($) {
     var _menuList = $('#menuList');
     var _tabOverflow = $('#tab-overflow');
     var _branchNames = [];
-    var _conflictMap = [];
     var _draggingTabCubeInfo = null;
     var _tabDragIndicator = $('#tab-drag-indicator');
     var _appMenu = $('#AppMenu');
     var _versionMenu = $('#VersionMenu');
+    var _serverMenu = $('#server-menu');
     var _batchUpdateAxisReferencesTable = $('#batchUpdateAxisReferencesTable');
     var _batchUpdateAxisReferencesUpdate = $('#batchUpdateAxisReferencesUpdate');
     var _batchUpdateAxisReferencesToggle = $('#batchUpdateAxisReferencesToggle');
@@ -110,13 +111,6 @@ var NCE = (function ($) {
     var _branchNameWarning = $('#branchNameWarning');
     var _createSnapshotLabel = $('#createSnapshotLabel');
     var _createSnapshotVersion = $('#createSnapshotVersion');
-    var _copyBranchLabel = $('#copyBranchLabel');
-    var _copyBranchWithHistory = $('#copy-branch-with-history');
-    var _dupeCubeAppName = $('#dupeCubeAppName');
-    var _dupeCubeVersion = $('#dupeCubeVersion');
-    var _dupeCubeName = $('#dupeCubeName');
-    var _dupeCubeBranch = $('#dupeCubeBranch');
-    var _dupeCubeLabel = $('#dupeCubeLabel');
     var _globalComparatorLeftApp = $('#globalComparatorLeftApp');
     var _globalComparatorRightApp = $('#globalComparatorRightApp');
     var _globalComparatorLeftVersion = $('#globalComparatorLeftVersion');
@@ -136,8 +130,24 @@ var NCE = (function ($) {
     var _reqScopeList = $('#reqScopeList');
     var _showReqScopeLabel = $('#showReqScopeLabel');
     var _commitOk = $('#commitOk');
+    var _pullRequestLink = $('#pull-link');
     var _rollbackOk = $('#rollbackOk');
     var _commitRollbackLabel = $('#commitRollbackLabel');
+    var _viewCommits = $('#view-commits');
+    var _viewCommitsSearchText = $('#view-commits-search-text');
+    var _viewCommitsSearchButton = $('#view-commits-search-btn');
+    var _viewCommitsSearchClear = $('#view-commits-search-clear');
+    var _viewCommitsList = $('#view-commits-list');
+    var _viewCommitsApp = $('#view-commits-app');
+    var _viewCommitsVersion = $('#view-commits-version');
+    var _viewCommitsBranch = $('#view-commits-branch');
+    var _viewCommitsStatus = $('#view-commits-status');
+    var _viewCommitsRequestUser = $('#view-commits-request-user');
+    var _viewCommitsRequestDate = $('#view-commits-request-date');
+    var _viewCommitsCommitUser = $('#view-commits-commit-user');
+    var _viewCommitsCommitDate = $('#view-commits-commit-date');
+    var _viewCommitsRepo = $('#view-commits-repo');
+    var _commitsData = {};
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -146,15 +156,14 @@ var NCE = (function ($) {
     var _releaseCubesModal = $('#releaseCubesModal');
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
     var _createSnapshotModal = $('#createSnapshotModal');
-    var _copyBranchModal = $('#copyBranchModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
-    var _dupeCubeModal = $('#dupeCubeModal');
     var _globalComparatorModal = $('#globalComparatorModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
     var _deleteCubeModal = $('#deleteCubeModal');
     var _showRefsFromCubeModal = $('#showRefsFromCubeModal');
     var _showReqScopeModal = $('#showReqScopeModal');
+    var _viewCommitsModal = $('#view-commits-modal');
 
     preInit();
     initialize();
@@ -187,7 +196,7 @@ var NCE = (function ($) {
                 _openCubes = [];
             }
         } catch (ignore) {
-            _openCubes = []
+            _openCubes = [];
         }
     }
 
@@ -569,17 +578,34 @@ var NCE = (function ($) {
             // background thread for heartbeat
             _heartBeatThread = new Worker('js/heartBeat.js');
             _heartBeatThread.onmessage = function (event) {
-                var result, status;
-                result = event.data.obj[0];
-                if (result.key.length) {
-                    status = result.status;
-                    saveOpenCubeInfoValue('status', status);
-                    if (status === CLASS_OUT_OF_SYNC) {
-                        showOutOfSyncNoticeForCube(_selectedCubeInfo);
-                    }
-                    updateTabStatus(_selectedCubeInfo);
-                }
+                handleHearbeatStatusResult(event.data.obj[0]);
+                handleHeartbeatPullRequestResult();
             };
+        }
+    }
+
+    function handleHeartbeatPullRequestResult() {
+        var idx, txid, allRows, openRow;
+        if (_viewCommitsModal.hasClass('in')) {
+            openRow = _viewCommitsList.find('tr:not([data-txid])');
+            if (openRow.length) {
+                allRows = _viewCommitsList.find('tr');
+                idx = allRows.index(openRow[0]);
+                txid = $(allRows.get(idx - 1)).data('txid');
+            }
+            viewCommits(true, txid);
+        }
+    }
+
+    function handleHearbeatStatusResult(result) {
+        var status;
+        if (result.key.length) {
+            status = result.status;
+            saveOpenCubeInfoValue('status', status);
+            if (status === CLASS_OUT_OF_SYNC) {
+                showOutOfSyncNoticeForCube(_selectedCubeInfo);
+            }
+            updateTabStatus(_selectedCubeInfo);
         }
     }
 
@@ -707,30 +733,35 @@ var NCE = (function ($) {
             title: cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - '),
             template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
         });
-        li.click(function(e) {
-            // only show dropdown when clicking the caret, not just the tab
-            var target, isClose, isDropdown, xthis;
+        li.on('click auxclick', function(e) {
+            var target, isClose, isDropdown, self;
+            self = $(this);
+            if (e.which === KEY_CODES.MOUSE_MIDDLE) { // middle click should close tab
+                e.preventDefault();
+                self.tooltip('destroy');
+                removeTab(cubeInfo);
+            }
             target = $(e.target);
             isClose = target.hasClass('glyphicon-remove');
             isDropdown = target.hasClass('click-space') || target.hasClass('big-caret');
-            xthis = $(this);
 
+            // only show dropdown when clicking the caret, not just the tab
             if (isClose) {
-                xthis.tooltip('destroy');
+                self.tooltip('destroy');
                 removeTab(cubeInfo);
             } else {
                 if (isDropdown) { // clicking caret for dropdown
-                    if (!xthis.find('ul').length) {
-                        addTabDropdownList(xthis, cubeInfo);
+                    if (!self.find('ul').length) {
+                        addTabDropdownList(self, cubeInfo);
                     }
-                    xthis.find('.ncube-tab-top-level')
+                    self.find('.ncube-tab-top-level')
                         .addClass('dropdown-toggle')
                         .attr('data-toggle', 'dropdown');
                     $(document).one('click', function() { // prevent tooltip and dropdown from remaining on screen
-                        closeTab(xthis);
+                        closeTab(self);
                     });
                 } else { // when clicking tab show tab, not dropdown
-                    xthis.find('.ncube-tab-top-level')
+                    self.find('.ncube-tab-top-level')
                         .removeClass('dropdown-toggle')
                         .attr('data-toggle', '')
                         .tab('show');
@@ -1207,7 +1238,7 @@ var NCE = (function ($) {
                                     removeTab(cubeInfo);
                                 } else {
                                     makeCubeInfoActive(cubeInfo);
-                                    buildTabs(true, cubeInfo);
+                                    buildTabs(true);
                                 }
                             })
                     )
@@ -1245,7 +1276,7 @@ var NCE = (function ($) {
         buildViewsFromTabMenu(menu);
         buildNavigationMenu(menu);
     }
-    
+
     function buildNavigationMenu(menu) {
         var navMenu, html, i, len, menuKeys, heading, menuOptions, optionsKeys, linkText, linkVal, o, oLen;
         _menuList.empty();
@@ -1254,7 +1285,7 @@ var NCE = (function ($) {
         if (!navMenu) {
             return;
         }
-        
+
         delete navMenu['@type'];
         menuKeys = Object.keys(navMenu);
         for (i = 0, len = menuKeys.length; i < len; i++) {
@@ -1273,7 +1304,11 @@ var NCE = (function ($) {
                 linkVal = null;
                 linkVal = menuOptions[linkText];
 
-                html += '<li><a href="' + encodeURIComponent(linkVal.html) + '">' + linkText + '</a>';
+                if (linkVal.hasOwnProperty('html')) {
+                    html += '<li><a href="' + encodeURIComponent(linkVal.html) + '">' + linkText + '</a></li>';
+                } else if (linkVal.hasOwnProperty('expression')) {
+                    html += '<li><a href="#" target="_blank" data-heading="' + heading + '">' + linkText + '</a></li>';
+                }
                 if (linkVal.hasOwnProperty('divider')) {
                     html += '<div class="divider"/>';
                 }
@@ -1281,8 +1316,72 @@ var NCE = (function ($) {
 
             html += '</ul></li>'
         }
-        
         _menuList.append(html);
+        buildMenuExpressionListeners(navMenu);
+    }
+
+    function buildMenuExpressionListeners(navMenu) {
+        _menuList.find('[data-heading]').on('click', function(e) {
+            var opts;
+            var anc = $(this);
+            var exp = navMenu[anc.data('heading')][this.innerHTML].expression;
+            var appId = appIdFrom(exp.app, exp.version, exp.status, exp.branch);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'model'}]);
+            e.preventDefault();
+            if (!result.status) {
+                showNote('Unable to initialize plugin.', 'Error', TWO_SECOND_TIMEOUT);
+                return;
+            }
+            // yes, eval is evil. i'm sorry.
+            opts = eval(result.data.value);
+            opts.afterSave = function(data) {
+                data.component = 'controller';
+                data.appId = getAppId();
+                onMenuExpressionSave(exp, appId, data);
+            };
+            FormBuilder.openBuilderModal(opts);
+        });
+    }
+
+    function onMenuExpressionSave(exp, appId, data) {
+        var viewData, viewResult;
+        var controllerResult = exec(exp.cube + '.' + exp.method, [appId, data]);
+        if (!controllerResult.status) {
+            showNote('Unable to perform action: ' + controllerResult.data, 'Error!');
+            return;
+        }
+        viewResult = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'view'}]);
+        if (!viewResult.status) {
+            showNote('Unable to perform action: ' + viewResult.data, 'Error!');
+            return;
+        }
+        viewData = controllerResult.data;
+        delete viewData.component;
+        cleanGroovyObject(viewData);
+        FormBuilder.openBuilderModal(getViewOptions(viewResult.data.value, data, viewData), viewData);
+    }
+
+    // keep params, they are used in eval.
+    // yes, eval is evil. i'm sorry.
+    function getViewOptions(result, opts, data) {
+        return eval(result);
+    }
+
+    function cleanGroovyObject(data) {
+        var i, len, keys, key, obj;
+        keys = Object.keys(data);
+        for (i = 0, len = keys.length; i < len; i++) {
+            key = keys[i];
+            obj = data[key];
+            if (typeof obj === OBJECT) {
+                if (obj.hasOwnProperty('@items')) {
+                    data[key] = obj['@items'];
+                } else {
+                    delete obj['@id'];
+                    delete obj['@type'];
+                }
+            }
+        }
     }
     
     function buildViewsFromTabMenu(menu) {
@@ -1340,6 +1439,7 @@ var NCE = (function ($) {
             ensureModifiable: ensureModifiable,
             exec: exec,
             getAppId: getAppId,
+            getAppVersions: getAppVersions,
             getSelectedTabAppId: getSelectedTabAppId,
             getInfoDto: getInfoDto,
             getCubeMap: getCubeMap,
@@ -1351,11 +1451,13 @@ var NCE = (function ($) {
             getSelectedBranch: getSelectedBranch,
             getSelectedCubeInfoKey: getSelectedCubeInfoKey,
             isHeadSelected: isHeadSelected,
+            loadAppNames: loadAppNames,
             loadCube: loadCube,
             reloadCube: reloadCube,
             selectBranch: selectBranch,
             selectCubeByName: selectCubeByName,
             showNote: showNote,
+            updateNote: updateNote,
             loadNCubes: loadNCubes,
             loadNCubeListView: loadNCubeListView,
             runSearch: runSearch,
@@ -1467,7 +1569,7 @@ var NCE = (function ($) {
                         selectTab(cubeInfo);
                     } else {
                         makeCubeInfoActive(cubeInfo);
-                        buildTabs();
+                        buildTabs(true);
                         return;
                     }
                     found = true;
@@ -1496,8 +1598,8 @@ var NCE = (function ($) {
         if (hasSearchOptions(opts)) {
             callServerSideSearch();
         } else {
-            nameFilter = _searchNames.val();
-            mainList = nameFilter && nameFilter.length ? filterCubeNames(nameFilter) : _cubeList;
+            nameFilter = _searchNames.val().trim();
+            mainList = nameFilter.length ? filterCubeNames(nameFilter) : _cubeList;
             loadFilteredNCubeListView(mainList);
         }
     }
@@ -1540,8 +1642,8 @@ var NCE = (function ($) {
 
     function callServerSideSearch() {
         var nameFilter, pattern, regex;
-        nameFilter = _searchNames.val();
-        if (nameFilter && nameFilter.length) {
+        nameFilter = _searchNames.val().trim();
+        if (nameFilter.length) {
             pattern = wildcardToRegexString(nameFilter);
             regex = new RegExp(pattern, 'i');
         }
@@ -1650,44 +1752,60 @@ var NCE = (function ($) {
         addBranchListeners();
         addSelectAllNoneListeners();
         addSearchListeners();
+        addViewCommitsListeners();
+    }
+
+    function addViewCommitsListeners() {
+        $(_viewCommits).on('click', function() {
+            viewCommits();
+        });
+        _viewCommitsModal.find('select').on('change', function() {
+            viewCommitsFilter();
+        });
+        _viewCommitsModal.on('shown.bs.modal', function() {
+            viewCommitsFilter();
+        });
+        _viewCommitsSearchText.on('keyup', function(e) {
+            var key = e.keyCode;
+            if (key === KEY_CODES.ENTER) {
+                viewCommitsSearchTransactionId(this.value.trim());
+            }
+        });
+        _viewCommitsSearchButton.on('click', function() {
+            viewCommitsSearchTransactionId(_viewCommitsSearchText.val().trim());
+        });
+        _viewCommitsSearchClear.on('click', function() {
+            _viewCommitsSearchText.val('');
+        });
     }
 
     function addSearchListeners() {
-        _searchNames.add(_cubeSearchContains)
+        _searchNames
+            .add(_cubeSearchContains)
             .add(_cubeSearchTagsInclude)
             .add(_cubeSearchTagsExclude)
             .on('input', function () {
-            _searchKeyPressed = true;
-            _searchLastKeyTime = Date.now();
-        });
+                _searchKeyPressed = true;
+                _searchLastKeyTime = Date.now();
+            });
 
-        _searchNames.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                clearSearch();
-            }
-        });
+        _searchNames
+            .on('keyup', function(e) {
+                if (e.keyCode === KEY_CODES.ESCAPE) {
+                    clearSearch();
+                }
+            });
 
-        _cubeSearchContains.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
-        });
-        _cubeSearchTagsInclude.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
-        });
-        _cubeSearchTagsExclude.on('keyup', function (e) {
-            if (e.keyCode === KEY_CODES.ESCAPE) {
-                this.value = '';
-                saveCubeSearchOptions();
-                runSearch();
-            }
-        });
+        _cubeSearchContains
+            .add(_cubeSearchTagsInclude)
+            .add(_cubeSearchTagsExclude)
+            .on('keyup', function(e) {
+                if (e.keyCode === KEY_CODES.ESCAPE) {
+                    this.value = '';
+                    saveCubeSearchOptions();
+                    runSearch();
+                }
+            });
 
         $('#cube-search-reset').on('click', function() {
             clearSearch();
@@ -1724,9 +1842,6 @@ var NCE = (function ($) {
         });
         $('#clearStorage').click(function() {
             clearStorage();
-        });
-        _clearCache.click(function() {
-            clearCache();
         });
         $('#serverStats').click(function() {
             serverStats();
@@ -1950,11 +2065,7 @@ var NCE = (function ($) {
     }
 
     function enableDisableBatchUpdate() {
-        if (_selectedBranch === head || !checkAppPermission(PERMISSION_ACTION.UPDATE)) {
-            _batchUpdateAxisReferencesUpdate.hide();
-        } else {
-            _batchUpdateAxisReferencesUpdate.show();
-        }
+        _batchUpdateAxisReferencesUpdate.toggle(_selectedBranch !== head && checkAppPermission(PERMISSION_ACTION.UPDATE));
     }
 
     function findBatchUpdateAxisReferencesRows() {
@@ -1966,45 +2077,34 @@ var NCE = (function ($) {
     }
 
     function buildBatchUpdateAxisReferencesTable() {
-        var i, len, isDest, refAxData, html, app, version, cube, axis;
+        var i, len, isDest, refAxData, html, app, version, cube, axis, axisHeader, prefix, axisMethodText;
         findBatchUpdateAxisReferencesRows().remove();
         isDest = isBatchUpdateAxisReferencesDestinationToggled();
-        if (isDest) {
-            _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current Destination Axis';
-            _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New Destination Axis';
-            _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = 'Axis Name';
-            _batchUpdateAxisReferencesRemoveTransform.hide();
-        } else {
-            _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current Transform Axis';
-            _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New Transform Axis';
-            _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = 'Method Name';
-            _batchUpdateAxisReferencesRemoveTransform.show();
-        }
+        _batchUpdateAxisReferencesRemoveTransform.toggle(!isDest);
+        axisHeader = isDest ? 'Destination' : 'Transform';
+        prefix = isDest ? 'dest' : 'transform';
+        axisMethodText = isDest ? 'Axis' : 'Method';
+        _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current ' + axisHeader + ' Axis';
+        _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New ' + axisHeader + ' Axis';
+        _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = axisMethodText + ' Name';
 
         html = '';
         for (i = 0, len = _batchUpdateAxisReferencesData.length; i < len; i++) {
             refAxData = _batchUpdateAxisReferencesData[i];
-            if (isDest) {
-                app = refAxData.destApp;
-                version = refAxData.destVersion;
-                cube = refAxData.destCubeName;
-                axis = refAxData.destAxisName;
-            } else {
-                app = refAxData.transformApp;
-                version = refAxData.transformVersion;
-                cube = refAxData.transformCubeName;
-                axis = refAxData.transformMethodName;
-            }
+            app = refAxData[prefix + 'App'];
+            version = refAxData[prefix + 'Version'];
+            cube = refAxData[prefix + 'CubeName'];
+            axis = refAxData[prefix + axisMethodText + 'Name'];
 
-            html += '<tr class="batch-update-axis-references-entry">';
-            html += '<td><input type="checkbox" class="isSelected" /></td>';
-            html += '<td>' + refAxData.srcCubeName + '</td>';
-            html += '<td>' + refAxData.srcAxisName + '</td>';
-            html += '<td class="app">' + (app || '') + '</td>';
-            html += '<td class="version">' + (version || '') + '</td>';
-            html += '<td class="cubeName">' + (cube || '') + '</td>';
-            html += '<td class="axisName">' + (axis || '') + '</td>';
-            html += '</tr>';
+            html += '<tr class="batch-update-axis-references-entry">'
+                  + '<td><input type="checkbox" class="isSelected" /></td>'
+                  + '<td>' + refAxData.srcCubeName + '</td>'
+                  + '<td>' + refAxData.srcAxisName + '</td>'
+                  + '<td class="app">' + (app || '') + '</td>'
+                  + '<td class="version">' + (version || '') + '</td>'
+                  + '<td class="cubeName">' + (cube || '') + '</td>'
+                  + '<td class="axisName">' + (axis || '') + '</td>'
+                  + '</tr>';
         }
         _batchUpdateAxisReferencesTable.append(html);
     }
@@ -2128,37 +2228,26 @@ var NCE = (function ($) {
     }
 
     function enableDisableReleaseMenu(canReleaseApp) {
-        _releaseCubesMenu.off('click');
-        _changeVersionMenu.off('click');
-        _createSnapshotMenu.off('click');
-
-        if (canReleaseApp) {
-            _releaseCubesMenu.on('click', releaseCubes);
-            _changeVersionMenu.on('click', changeVersion);
-            _createSnapshotMenu.on('click', createSnapshotFromRelease);
-            _releaseCubesMenu.parent().removeClass('disabled');
-            _changeVersionMenu.parent().removeClass('disabled');
-            _createSnapshotMenu.parent().removeClass('disabled');
-        } else {
-            _releaseCubesMenu.parent().addClass('disabled');
-            _changeVersionMenu.parent().addClass('disabled');
-            _createSnapshotMenu.parent().addClass('disabled');
-        }
+        enableDisableMenuButton(_releaseCubesMenu, canReleaseApp, releaseCubes);
+        enableDisableMenuButton(_changeVersionMenu, canReleaseApp, changeVersion);
+        enableDisableMenuButton(_createSnapshotMenu, canReleaseApp, createSnapshotFromRelease);
     }
 
     function enableDisableCommitBranch(canCommitOnApp) {
-        if (canCommitOnApp) {
-            _branchCommit.show();
-        } else {
-            _branchCommit.hide();
-        }
+        _branchCommit.toggle(canCommitOnApp);
     }
-    
-    function enableDisableClearCache(isAppAdmin) {
-        if (isAppAdmin) {
-            _clearCache.parent().removeClass('disabled');
+
+    function enableDisableMenuButton(el, enable, onClick) {
+        el.off('click');
+        if (enable) {
+            el.parent().removeClass('disabled');
+            el.on('click', function() { onClick(); });
         } else {
-            _clearCache.parent().addClass('disabled');
+            el.parent().addClass('disabled');
+            el.on('click', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            });
         }
     }
 
@@ -2173,12 +2262,74 @@ var NCE = (function ($) {
             showNote('Unable to check lock for app \'' + _selectedApp + '\':<hr class="hr-small"/>' + result.data);
         }
 
-        _lockUnlockAppMenu.off('click');
-        if (isAppAdmin) {
-            _lockUnlockAppMenu.on('click', lockUnlockApp);
-            _lockUnlockAppMenu.parent().removeClass('disabled');
+        enableDisableMenuButton(_lockUnlockAppMenu, isAppAdmin, lockUnlockApp);
+    }
+
+    function showHideImpersonation(isAdmin) {
+        var html, ul;
+        ul = _serverMenu.parent().find('ul');
+        if (isAdmin || (_impersonationApp && _impersonationApp.app === getAppId().app)) {
+            if (!ul.find('#impersonate').length) {
+                html = '<li class="show-admin-only"><a id="impersonate" href="#">Impersonate User</a></a></li>';
+                ul.append(html);
+                ul.find('#impersonate').on('click', function(e) {
+                    var parent, inputs, newNameInput, anc, html;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    anc = $(this);
+                    parent = anc.parent();
+                    inputs = parent.find('input');
+                    if (inputs.length) {
+                        inputs.remove();
+                        parent.find('button, br').remove();
+                    } else {
+                        newNameInput = $('<input/>')
+                            .prop({type:'text', id:'impersonate-text'})
+                            .addClass('form-control')
+                            .click(function (ie) {
+                                ie.preventDefault();
+                                ie.stopPropagation();
+                            })
+                            .keyup(function (ie) {
+                                if (ie.keyCode === KEY_CODES.ENTER) {
+                                    onImpersonateSubmit();
+                                }
+                            });
+                        parent.append(newNameInput);
+                        html = '<br/>';
+                        html += '<button class="btn btn-primary btn-xs btn-menu-confirm">Confirm</button>';
+                        html += '<button class="btn btn-danger btn-xs">Cancel</button>';
+                        anc.append(html);
+                        anc.find('button.btn-menu-confirm').on('click', function () {
+                            onImpersonateSubmit();
+                        });
+                        newNameInput[0].focus();
+                    }
+                });
+            }
         } else {
-            _lockUnlockAppMenu.parent().addClass('disabled');
+            ul.find('.show-admin-only').remove();
+            if (_impersonationApp) {
+                impersonate(null);
+            }
+        }
+    }
+
+    function onImpersonateSubmit() {
+        var user = $('#impersonate-text').val();
+        closeTab(_serverMenu.parent());
+        delay(function() { impersonate(user); }, 1);
+    }
+
+    function impersonate(user) {
+        var appId = getAppId();
+        var result = call(CONTROLLER + CONTROLLER_METHOD.HEARTBEAT, [{}], { fakeuser: user || '', appid: getTextAppId(appId) });
+        if (result.status) {
+            _impersonationApp = user !== undefined && user !== null && user !== '' ? appId : null;
+            showNote('Impersonating user: ' + user, null, TWO_SECOND_TIMEOUT, NOTE_CLASS.SYS_META);
+            handleAppPermissions();
+        } else {
+            showNote(result.data, 'Unable to impersonate...', null, NOTE_CLASS.SYS_META);
         }
     }
 
@@ -2189,8 +2340,9 @@ var NCE = (function ($) {
 
         enableDisableReleaseMenu(canReleaseApp);
         enableDisableCommitBranch(canCommitOnApp);
-        enableDisableClearCache(isAppAdmin);
+        enableDisableMenuButton(_clearCache, isAppAdmin || head !== getAppId().branch, clearCache);
         enableDisableLockMenu(isAppAdmin);
+        showHideImpersonation(isAppAdmin);
     }
     
     function buildBranchUpdateMenu() {
@@ -2436,11 +2588,10 @@ var NCE = (function ($) {
 
     function loadFilteredNCubeListView(cubes) {
         var cubeIdx, cubeLen, cubeKeys, loName, activeTab;
-        var filter = _searchNames.val();
+        var filter = _searchNames.val().trim();
         var isNotHead = !isHeadSelected();
         var listItemHtml = '';
         _listOfCubes.empty();
-
 
         cubeKeys = Object.keys(cubes);
         for (cubeIdx = 0, cubeLen = cubeKeys.length; cubeIdx < cubeLen; cubeIdx++) {
@@ -2489,7 +2640,7 @@ var NCE = (function ($) {
         if (isNotHead) {
             if (!infoDto.headSha1) {
                 classes.push(CHANGETYPE.CREATED.CSS_CLASS);
-            } else if (infoDto.headSha1 !== infoDto.sha1) {
+            } else if (infoDto.changed) {
                 classes.push(CHANGETYPE.UPDATED.CSS_CLASS);
             }
         }
@@ -2792,7 +2943,8 @@ var NCE = (function ($) {
     }
 
     function appIdsEqual(id1, id2) {
-        return id1.app     === id2.app
+        return id1 && id2
+            && id1.app     === id2.app
             && id1.version === id2.version
             && id1.status  === id2.status
             && id1.branch  === id2.branch;
@@ -2859,7 +3011,7 @@ var NCE = (function ($) {
         var appId = getSelectedTabAppId();
         _revisionHistoryList.empty();
         _revisionHistoryLabel[0].textContent = 'Revision History for ' + _selectedCubeName;
-        showNote('Loading...');
+        showNote('Loading...', null, null, NOTE_CLASS.PROCESS_DURATION);
         call(CONTROLLER + CONTROLLER_METHOD.GET_REVISION_HISTORY, [appId, _selectedCubeName, ignoreVersion], {callback:function(result) {
             revisionHistoryCallback(appId, ignoreVersion, result);
         }});
@@ -2867,6 +3019,7 @@ var NCE = (function ($) {
     
     function revisionHistoryCallback(appId, ignoreVersion, result) {
         var dtos, dto, i, len, html, text, date, prevVer, curVer;
+        clearNotes(NOTE_CLASS.PROCESS_DURATION);
         if (result.status) {
             html = '';
             dtos = result.data;
@@ -3061,47 +3214,45 @@ var NCE = (function ($) {
     }
 
     function dupeCube() {
-        if (!_selectedApp || !_selectedVersion || !_selectedCubeName || !_selectedStatus) {
+        var opts;
+        var appId = getSelectedTabAppId();
+        if (!appId.app || !appId.version || !_selectedCubeName || !appId.status) {
             showNote('No n-cube selected. Nothing to duplicate.');
             return;
         }
         if (isSelectedCubeInHead()) {
             selectBranch();
-            return false;
+            return;
         }
 
-        _dupeCubeAppName.val(_selectedApp);
-        _dupeCubeVersion.val(_selectedVersion);
-        _dupeCubeName.val(_selectedCubeName);
-        _dupeCubeBranch.val(_selectedBranch);
-        _dupeCubeLabel[0].textContent = 'Duplicate: ' + _selectedCubeName + ' ?';
-        buildDropDown('#dupeCubeAppList', '#dupeCubeAppName', loadAppNames(), function (app) {
-            buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', app, function() {
-                buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-            });
-            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:app, version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-        });
-        buildVersionsDropdown('#dupeCubeVersionList', '#dupeCubeVersion', _selectedApp, function() {
-            buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNamesByAppId({app:_dupeCubeAppName.val(), version:_dupeCubeVersion.val(), status:STATUS.SNAPSHOT, branch:head}));
-        });
-        buildDropDown('#dupeCubeBranchList', '#dupeCubeBranch', getBranchNames());
-        _dupeCubeModal.modal();
+        opts = {
+            appId: appId,
+            cubeName: _selectedCubeName,
+            appSelectList: loadAppNames(),
+            populateVersionFunc: getAppVersions,
+            populateBranchFunc: getBranchNamesByAppId,
+            readonly: false,
+            afterSave: dupeCubeCopy
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.copyCube(opts));
     }
 
-    function dupeCubeCopy() {
-        var result, newName, newApp, newVersion, newBranch, destAppId;
-        _dupeCubeModal.modal('hide');
-        newName = _dupeCubeName.val();
-        newApp = _dupeCubeAppName.val();
-        newVersion = _dupeCubeVersion.val();
-        newBranch = _dupeCubeBranch.val();
-        destAppId = {
-            'app':newApp,
-            'version':newVersion,
-            'status':STATUS.SNAPSHOT,
-            'branch':newBranch
-        };
-        result = call(CONTROLLER + CONTROLLER_METHOD.DUPLICATE_CUBE, [getAppId(), destAppId, _selectedCubeName, newName]);
+    function getAppVersions(app, status) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app, status]);
+        if (!result.status) {
+            showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
+            return [];
+        }
+        return result.data;
+    }
+
+    function dupeCubeCopy(data) {
+        var newName = data.cubeName;
+        var newApp = data.app;
+        var newVersion = data.version;
+        var newBranch = data.branch;
+        var destAppId = appIdFrom(newApp, newVersion, STATUS.SNAPSHOT, newBranch);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.DUPLICATE_CUBE, [getSelectedTabAppId(), destAppId, _selectedCubeName, newName]);
         if (result.status) {
             saveSelectedApp(newApp);
             loadAppListView();
@@ -3496,6 +3647,188 @@ var NCE = (function ($) {
         return true;
     }
 
+    function viewCommitsSearchTransactionId(txid) {
+        var jqrow = _viewCommitsList.find('[data-txid="' + txid + '"]');
+        var row = jqrow[0];
+        if (row) {
+            if (!jqrow.hasClass('highlight-lightgoldenrodyellow')) {
+                jqrow.show();
+                commitListClick(row);
+            }
+            _viewCommitsModal.find('.modal-body')[0].scrollTop = row.offsetTop;
+        } else {
+            showNote(txid + ' was not found.', 'Transaction ID not found!', TWO_SECOND_TIMEOUT);
+        }
+    }
+
+    function viewCommits(isUpdate, txid) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_COMMITS, []);
+        if (result.status) {
+            _commitsData = result.data;
+            buildUlForCommitView(isUpdate);
+            _viewCommitsModal.modal();
+            if (txid) {
+                if (_viewCommitsModal.hasClass('in')) {
+                    viewCommitsSearchTransactionId(txid);
+                } else {
+                    _viewCommitsModal.one('shown.bs.modal', function() {
+                        viewCommitsSearchTransactionId(txid);
+                    });
+                }
+            }
+        } else {
+            showNote('Unable to get commit list.', 'Error', TWO_SECOND_TIMEOUT);
+        }
+    }
+
+    function viewCommitsFilter() {
+        var i, len, el, filterVal;
+        var selects = _viewCommitsModal.find('select');
+        var populatedSelects = selects.filter(function() { return this.value.length; });
+        commitListClick(); // close open row
+        _viewCommitsList.find('tr').show();
+        for (i = 0, len = populatedSelects.length; i < len; i++) {
+            el = populatedSelects[i];
+            filterVal = el.value;
+            if (filterVal.length) {
+                viewCommitsHideIfNotMatching(filterVal, selects.index(el) + 1);
+            }
+        }
+    }
+
+    function viewCommitsHideIfNotMatching(filterVal, idx) {
+        var i, len, tds, td, row;
+        tds = _viewCommitsList.find('tr:visible').find('td:nth-child(' + idx + ')');
+        for (i = 0, len = tds.length; i < len; i++) {
+            td = tds[i];
+            row = $(td).parent();
+            if (td.innerHTML.indexOf(filterVal) === -1) {
+                row.hide();
+            }
+        }
+    }
+
+    function buildUlForCommitView(isUpdate) {
+        var i, len, commit;
+        var html = '';
+        var data = {
+            apps: {},
+            versions: {},
+            branches: {},
+            statuses: { open:''},
+            reqUsers: {},
+            reqDates: {},
+            comUsers: {},
+            comDates: {},
+            repos: {}
+        };
+
+        for (i = 0, len = _commitsData.length; i < len; i++) {
+            commit = _commitsData[i];
+            data.apps[commit.appId.app] = '';
+            data.versions[commit.appId.version] = '';
+            data.branches[commit.appId.branch] = '';
+            data.statuses[commit.status] = '';
+            data.reqUsers[commit.requestUser] = '';
+            data.reqDates[commit.requestTime.substring(0, commit.requestTime.indexOf(' '))] = '';
+            if (commit.commitUser) {
+                data.comUsers[commit.commitUser] = '';
+                data.comDates[commit.commitTime.substring(0, commit.commitTime.indexOf(' '))] = '';
+            }
+            if (commit.prId) {
+                data.repos[commit.prId.substring(0, commit.prId.lastIndexOf('-'))] = '';
+            }
+
+            html += '<tr data-txid="' + commit.txid + '">'
+                  + '<td class="view-commits-app">' + commit.appId.app + '</td>'
+                  + '<td class="view-commits-version">' + commit.appId.version + '</td>'
+                  + '<td class="view-commits-branch">' + commit.appId.branch + '</td>'
+                  + '<td class="view-commits-status">' + commit.status + '</td>'
+                  + '<td class="view-commits-requester">' + commit.requestUser + '</td>'
+                  + '<td class="view-commits-request-date">' + commit.requestTime + '</td>'
+                  + '<td class="view-commits-committer">' + (commit.commitUser || '') + '</td>'
+                  + '<td class="view-commits-commit-date">' + (commit.commitTime || '') + '</td>'
+                  + '<td class="view-commits-pr">' + (commit.prId || '') + '</td>'
+                  + '</tr>';
+        }
+
+        _viewCommitsList.find('tr').remove();
+        _viewCommitsList.append(html);
+        _viewCommitsList.find('tr').on('click', function() {
+            commitListClick(this);
+        });
+
+        populateSelectFromMap(_viewCommitsApp, data.apps, isUpdate);
+        populateSelectFromMap(_viewCommitsVersion, data.versions, isUpdate);
+        populateSelectFromMap(_viewCommitsBranch, data.branches, isUpdate);
+        populateSelectFromMap(_viewCommitsStatus, data.statuses, isUpdate, 'open');
+        populateSelectFromMap(_viewCommitsRequestUser, data.reqUsers, isUpdate);
+        populateSelectFromMap(_viewCommitsRequestDate, data.reqDates, isUpdate);
+        populateSelectFromMap(_viewCommitsCommitUser, data.comUsers, isUpdate);
+        populateSelectFromMap(_viewCommitsCommitDate, data.comDates, isUpdate);
+        populateSelectFromMap(_viewCommitsRepo, data.repos, isUpdate);
+
+        if (isUpdate) {
+            viewCommitsFilter();
+        }
+    }
+
+    function commitListClick(row) {
+        var commit, cubeNames, html, numCols, self;
+        var allRows = _viewCommitsList.find('tr');
+        var openRow = allRows.has('td[colspan]');
+        var highlightClass = 'highlight-lightgoldenrodyellow';
+
+        openRow.remove();
+        allRows.removeClass(highlightClass);
+        if (row && (!openRow.length || allRows.index(openRow[0]) !== allRows.index(row) + 1)) {
+            self = $(row);
+            self.addClass(highlightClass);
+            numCols = self.find('td').length;
+            commit = _commitsData[_viewCommitsList.find('tr').index(row)];
+            cubeNames = commit.cubeNames['@items'];
+            html = '<tr><td colspan="' + (numCols - 5) + '"></td>'
+                 + '<td><b>Transaction ID</b></td><td><b>' + commit.txid + '</b></td>';
+            if (commit.status.indexOf('closed') === -1) {
+                html += '<td><a href="#" class="anc-honor">Honor</a></td>'
+                      + '<td><a href="#" class="anc-cancel">Cancel</a></td>';
+            } else if (commit.status.indexOf('cancelled') > -1) {
+                html += '<td><a href="#" class="anc-reopen">Reopen</a></td>';
+            }
+            html += '</tr><tr><td colspan="' + numCols + '">'
+                  + '<ul class="list-group"></ul>'
+                  + '</td></tr>';
+            self.after(html);
+            addCommitActionListeners(commit);
+            buildUlForCompare(_viewCommitsList.find('ul'), commit.appId.branch, cubeNames, {compare:true, html:true, json:true});
+        }
+    }
+
+    function addCommitActionListeners(commit) {
+        _viewCommitsList.find('a.anc-honor').on('click', function() {
+            var appId = appIdFrom(commit.app, commit.version, commit.status, commit.branch);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.HONOR_COMMIT, [commit.txid]);
+            handleCommitResult(appId, result);
+            viewCommits(true);
+        });
+        _viewCommitsList.find('a.anc-cancel').on('click', function() {
+            var result = call(CONTROLLER + CONTROLLER_METHOD.CANCEL_COMMIT, [commit.txid]);
+            if (result.status) {
+                viewCommits(true);
+            } else {
+                showNote(result.data, 'Error');
+            }
+        });
+        _viewCommitsList.find('a.anc-reopen').on('click', function() {
+            var result = call(CONTROLLER + CONTROLLER_METHOD.REOPEN_COMMIT, [commit.txid]);
+            if (result.status) {
+                viewCommits(true);
+            } else {
+                showNote(result.data, 'Error');
+            }
+        });
+    }
+
     function clearStorage() {
         var i, len, key;
         var keys = Object.keys(localStorage);
@@ -3547,8 +3880,8 @@ var NCE = (function ($) {
 
         msg = '<dl class="dl-horizontal">' + msg;
         msg += '</dl>';
-        clearNotes('sysmeta');
-        showNote(msg, title, null, 'sysmeta');
+        clearNotes(NOTE_CLASS.SYS_META);
+        showNote(msg, title, null, NOTE_CLASS.SYS_META);
     }
 
     // ======================================== Everything to do with Branching ========================================
@@ -3565,6 +3898,9 @@ var NCE = (function ($) {
             setTimeout(function() { commitBranch(true); }, PROGRESS_DELAY);
             showNote('Processing commit request...');
         });
+        _pullRequestLink.on('click', function() {
+            generatePullRequestLink();
+        });
         _commitOk.on('click', function() {
             commitOk();
         });
@@ -3578,14 +3914,8 @@ var NCE = (function ($) {
         $('#branchDelete').on('click', function() {
             deleteBranch();
         });
-        $('#deleteBranchOk').on('click', function() {
-            deleteBranchOk();
-        });
         $('#branchCopy').on('click', function() {
             copyBranch();
-        });
-        $('#copyBranchOk').on('click', function() {
-            copyBranchOk();
         });
         // From 'Select / Create Branch' Modal
         $('#createBranch').on('click', function() {
@@ -3644,6 +3974,9 @@ var NCE = (function ($) {
     function showActiveBranch() {
         if (getBranchNames().indexOf(_selectedBranch) > -1) {
             addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
+        } else if (_selectedBranch === head) {
+            showNote('Unable to get branch list.', 'Error');
+            return;
         } else {
             saveSelectedBranch(head);
             changeBranch(head);
@@ -3698,8 +4031,7 @@ var NCE = (function ($) {
 
         appId = getAppId();
         appId.branch = branchName;
-        if (!_selectedApp || !_selectedVersion || !_selectedStatus)
-        {
+        if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
             changeBranch(branchName);
             return;
         }
@@ -3707,13 +4039,14 @@ var NCE = (function ($) {
         setTimeout(function() {
             var result = call(CONTROLLER + CONTROLLER_METHOD.CREATE_BRANCH, [appId]);
             if (!result.status) {
+                clearNotes(NOTE_CLASS.PROCESS_DURATION);
                 showNote('Unable to create branch:<hr class="hr-small"/>' + result.data);
                 return;
             }
             changeBranch(branchName);
         }, PROGRESS_DELAY);
         _selectBranchModal.modal('hide');
-        showNote('Creating branch: ' + branchName, 'Creating...');
+        showNote('Creating branch: ' + branchName, 'Creating...', null, NOTE_CLASS.PROCESS_DURATION);
     }
 
     function changeBranch(branchName) {
@@ -3732,12 +4065,14 @@ var NCE = (function ($) {
             runSearch();
             buildMenu();
             buildBranchQuickSelectMenu();
+            southPanelResize();
         }, PROGRESS_DELAY);
+        clearNotes(NOTE_CLASS.PROCESS_DURATION);
         showNote('Changing branch to: ' + branchName, 'Please wait...', ONE_SECOND_TIMEOUT);
     }
 
     function compareUpdateBranch(branchName, noNote) {
-        var result, branchChanges;
+        var result, branchChanges, branchHead, method, params;
         var appId = getAppId();
         var acceptMineBtn = _branchCompareUpdateModal.find('.accept-mine');
 
@@ -3746,15 +4081,17 @@ var NCE = (function ($) {
             return;
         }
 
-        if (branchName === head) {
-            result = call(CONTROLLER + CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH, [appId]);
-            _branchCompareUpdateOk.show();
-            acceptMineBtn.show();
+        branchHead = branchName === head;
+        params = [appId];
+        _branchCompareUpdateOk.toggle(branchHead);
+        acceptMineBtn.toggle(branchHead);
+        if (branchHead) {
+            method = CONTROLLER_METHOD.GET_HEAD_CHANGES_FOR_BRANCH;
         } else {
-            result = call(CONTROLLER + CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH, [appId, branchName]);
-            _branchCompareUpdateOk.hide();
-            acceptMineBtn.hide();
+            method = CONTROLLER_METHOD.GET_BRANCH_CHANGES_FOR_MY_BRANCH;
+            params.push(branchName);
         }
+        result = call(CONTROLLER + method, params);
         if (!result.status) {
             showNote('Unable to get branch changes:<hr class="hr-small"/>' + result.data);
             return;
@@ -3789,20 +4126,33 @@ var NCE = (function ($) {
     }
 
     function buildUlForCompare(ul, branchName, branchChanges, options) {
-        var inputClass = options.inputClass;
         ul.empty();
         ul.append(buildHtmlListForCompare(branchChanges, options));
         ul.find('a.anc-compare').on('click', function() {
-            var checkbox = $(this).parent().parent().find('.' + inputClass);
-            var ul = $(this).parent().parent().parent().parent();
-            var idx = ul.find('.' + inputClass).index(checkbox);
-            var infoDto = $.extend(true, {}, branchChanges[idx]);
-            var leftInfoDto = $.extend(true, {}, infoDto);
-            leftInfoDto.branch = branchName;
-            if ('commit' === options.action) {
-                diffCubes(infoDto, leftInfoDto, infoDto.name, appIdFrom(leftInfoDto.app, leftInfoDto.version, leftInfoDto.status, leftInfoDto.branch));
-            } else { // rollback or update
-                diffCubes(leftInfoDto, infoDto, infoDto.name, appIdFrom(infoDto.app, infoDto.version, infoDto.status, infoDto.branch));
+            var infoDto, leftInfoDto, diffOptions;
+            var self = $(this);
+            var idx = self.closest('ul').find('.compare-label').index(self.parent());
+            var change = branchChanges[idx];
+            if (options.hasOwnProperty('action')) {
+                infoDto = $.extend(true, {}, change);
+                leftInfoDto = $.extend(true, {}, infoDto);
+                leftInfoDto.branch = branchName;
+                if ('commit' === options.action) {
+                    diffCubes(infoDto, leftInfoDto, infoDto.name, appIdFrom(leftInfoDto.app, leftInfoDto.version, leftInfoDto.status, leftInfoDto.branch));
+                } else { // rollback or update
+                    diffCubes(leftInfoDto, infoDto, infoDto.name, appIdFrom(infoDto.app, infoDto.version, infoDto.status, infoDto.branch));
+                }
+            } else {
+                diffOptions = {
+                    leftName: 'BRANCH',
+                    rightName: head,
+                    title: change.name,
+                    appId: null,
+                    cubeName: change.name,
+                    canEdit: false,
+                    cantEditReason: 'Commit request is view-only.'
+                };
+                diffCubeRevs(change.id, change.head, diffOptions);
             }
         });
         ul.find('a.anc-html').on('click', function () {
@@ -3834,13 +4184,7 @@ var NCE = (function ($) {
         span = el.parent().find('span.glyphicon');
         show = span.hasClass(prefix + plus);
         span.removeClass(prefix + (show ? plus : minus)).addClass(prefix + (show ? minus : plus));
-        for (i = 0, len = lis.length; i < len; i++) {
-            if (show) {
-                $(lis[i]).show();
-            } else {
-                $(lis[i]).hide();
-            }
-        }
+        lis.toggle(show);
     }
     
     function getChangeTypeListItems(el) {
@@ -3855,7 +4199,7 @@ var NCE = (function ($) {
         for (i = 0, len = changeTypeHeaders.length; i < len; i++) {
             li = $(changeTypeHeaders[i]);
             cssClass = li.data('changetype');
-            count = li.parent().find('label.' + cssClass).find('input[type="checkbox"]').length;
+            count = li.parent().find('label.checkbox-label.' + cssClass).length;
             li.find('b').after('<span class="change-type-header-count">(' + count + ')</span>');
         }
     }
@@ -3866,6 +4210,7 @@ var NCE = (function ($) {
         var branchChanges = _branchCompareUpdateModal.prop('branchChanges');
         var inputs = _branchCompareUpdateList.find('.updateCheck');
         var changes = [];
+        _branchCompareUpdateOk.attr('disabled', '');
         for (i = 0, len = inputs.length; i < len; i++) {
             if (inputs[i].checked) {
                 changes.push(branchChanges[i]);
@@ -3934,6 +4279,7 @@ var NCE = (function ($) {
         setTimeout(function() {
             var result;
             clearNote();
+            _branchCompareUpdateOk.removeAttr('disabled');
             if (isFromTabMenu) {
                 result = call(CONTROLLER + CONTROLLER_METHOD.UPDATE_CUBE_FROM_HEAD, [appId, cubeDtos[0].name]);
             } else {
@@ -3962,7 +4308,7 @@ var NCE = (function ($) {
     function buildHtmlListForCompare(branchChanges, options) {
         var i, len, infoDto, prevChangeType, changeType, displayType, shouldCompare;
         var html = '';
-        var inputClass = options.inputClass;
+        var hasCheckbox = options.hasOwnProperty('inputClass');
         for (i = 0, len = branchChanges.length; i < len; i++) {
             infoDto = branchChanges[i];
             changeType = infoDto.changeType;
@@ -3971,10 +4317,12 @@ var NCE = (function ($) {
                 prevChangeType = changeType;
                 html += '<li class="list-group-item skinny-lr noselect changeTypeHeader" data-changetype="'
                     + displayType.CSS_CLASS + '"><span class="glyphicon glyphicon-minus"></span>'
-                    + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>'
-                    + '<a href="#" class="' + CLASS_SECTION_ALL + '">All</a>'
-                    + '<a href="#" class="' + CLASS_SECTION_NONE + '">None</a>'
-                    + '</li>';
+                    + '<b class="' + displayType.CSS_CLASS + '"> ' + displayType.LABEL + ' </b>';
+                if (hasCheckbox) {
+                    html += '<a href="#" class="' + CLASS_SECTION_ALL + '">All</a>'
+                          + '<a href="#" class="' + CLASS_SECTION_NONE + '">None</a>';
+                }
+                html += '</li>';
             }
 
             html += '<li class="list-group-item skinny-lr no-margins" data-changetype="' + displayType.CSS_CLASS + '">';
@@ -3997,8 +4345,10 @@ var NCE = (function ($) {
                 html += '</label>';
             }
 
-            html += '<label style="display:inline-block;margin:0 0 0 20px;" class="checkbox ' + displayType.CSS_CLASS + '">';
-            html += '<input class="' + inputClass + '" type="checkbox">';
+            html += '<label class="checkbox checkbox-label ' + displayType.CSS_CLASS + '">';
+            if (hasCheckbox) {
+                html += '<input class="' + options.inputClass + '" type="checkbox">';
+            }
             html += infoDto.name;
             html += '</label>';
 
@@ -4029,22 +4379,15 @@ var NCE = (function ($) {
     function commitBranch(state) {
         var errMsg, title, result, branchChanges, action;
         clearNote();
-        if (state) {
-            action = 'commit';
-            errMsg = 'commit to';
-            title = 'Commit changes';
-            _commitModal.find('.accept-mine, .accept-theirs').show();
-            _commitOk.show();
-            _rollbackOk.hide();
-        } else {
-            action = 'rollback';
-            errMsg = 'rollback in';
-            title = 'Rollback changes';
-            _commitModal.find('.accept-mine, .accept-theirs').hide();
-            _commitOk.hide();
-            _rollbackOk.show();
-        }
+        _commitModal.find('.accept-mine, .accept-theirs').add(_pullRequestLink).add(_commitOk).toggle(state);
+        _rollbackOk.toggle(!state);
+        action = state ? 'commit' : 'rollback';
+        errMsg = state ? 'commit to' : 'rollback in';
+        title = (state ? 'Commit' : 'Rollback') + ' changes';
         _commitRollbackList.data('is-commit', state);
+        if (state) {
+            _pullRequestLink.add(_commitOk).removeAttr('disabled');
+        }
 
         if (isHeadSelected()) {
             showNote('You cannot ' + errMsg + ' HEAD.');
@@ -4067,7 +4410,7 @@ var NCE = (function ($) {
         _commitModal.modal('show');
     }
 
-    function commitOk() {
+    function getCommitChanges() {
         var i, len;
         var branchChanges = _commitModal.prop('branchChanges');
         var input = _commitRollbackList.find('.commitCheck');
@@ -4077,14 +4420,44 @@ var NCE = (function ($) {
                 changes.push(branchChanges[i]);
             }
         }
+        return changes;
+    }
+
+    function generatePullRequestLink() {
+        var urlPrefix, viewUrl, result, txid, html;
+        var changes = getCommitChanges();
+        if (!changes.length) {
+            showNote('No changes selected!', 'Error', TWO_SECOND_TIMEOUT);
+            return;
+        }
+        result = call(CONTROLLER + CONTROLLER_METHOD.GENERATE_COMMIT_LINK, [getAppId(), changes]);
+        if (result.status) {
+            _pullRequestLink.add(_commitOk).attr('disabled', '');
+            txid = result.data;
+            urlPrefix = document.URL;
+            urlPrefix = urlPrefix.substring(0, urlPrefix.lastIndexOf('/'));
+            viewUrl = urlPrefix + '/#/viewCommit/' + txid;
+            html = 'Pull Request View Link:<br><a href="#" onclick="NCE.pullRequestLinkClick(\'' + txid + '\');">' + viewUrl + '</a>';
+            showNote(html, 'Pull Request Link', null, NOTE_CLASS.HAS_EVENT);
+        } else {
+            showNote('Error generating link: ' + result.data, 'Error');
+        }
+    }
+
+    function pullRequestLinkClick(txid) {
+        closeOpenModal();
+        viewCommits(true, txid);
+    }
+
+    function commitOk() {
         _commitModal.modal('hide');
-        callCommit(changes);
+        callCommit(getCommitChanges());
     }
 
     function callCommit(changedDtos, appId) {
         showNote('Committing changes on selected cubes...', 'Please wait...');
         setTimeout(function() {
-            var result, note, method, dtos;
+            var result, method, dtos;
             if (appId) {
                 method = CONTROLLER_METHOD.COMMIT_CUBE;
                 dtos = changedDtos.name;
@@ -4094,37 +4467,31 @@ var NCE = (function ($) {
                 dtos = changedDtos;
             }
             result = call(CONTROLLER + method, [appId, dtos]);
-
-            clearNote();
-            if (!result.status) {
-                handleUpdateReturnValues(appId, result.data, false, false);
-                return;
-            }
-
-            if (appIdsEqual(appId, getAppId())) {
-                loadNCubes();
-                runSearch();
-            }
-            reloadCube();
-
-            handleUpdateReturnValues(appId, result.data, false, true);
-            saveOpenCubeList();
-            buildTabs();
+            handleCommitResult(appId, result);
         }, PROGRESS_DELAY);
     }
 
-    function rollbackOk() {
-        var branchChanges = _commitModal.prop('branchChanges');
-        var input = _commitRollbackList.find('.commitCheck');
-        var changes = [];
-        $.each(input, function (index, label) {
-            if (this.checked) {
-                changes.push(branchChanges[index]);
-            }
-        });
+    function handleCommitResult(appId, result) {
+        clearNote();
+        if (!result.status) {
+            handleUpdateReturnValues(appId, result.data, false, false);
+            return;
+        }
 
+        if (appIdsEqual(appId, getAppId())) {
+            loadNCubes();
+            runSearch();
+        }
+        reloadCube();
+
+        handleUpdateReturnValues(appId, result.data, false, true);
+        saveOpenCubeList();
+        buildTabs();
+    }
+
+    function rollbackOk() {
         _commitModal.modal('hide');
-        callRollback(changes);
+        callRollback(getCommitChanges());
     }
 
     function callRollback(changes) {
@@ -4228,33 +4595,25 @@ var NCE = (function ($) {
     }
 
     function copyBranch() {
-        $('#copyBranchAppName').val(_selectedApp);
-        $('#copyBranchStatus').val(STATUS.SNAPSHOT);
-        $('#copyBranchVersion').val(_selectedVersion);
-        $('#copyBranchName').val('');
-        _copyBranchWithHistory.prop('checked', false);
-        buildDropDown('#copyBranchAppList', '#copyBranchAppName', loadAppNames(), function (app) {
-            buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion', app);
-        });
-        buildVersionsDropdown('#copyBranchVersionList', '#copyBranchVersion');
-
-        _copyBranchLabel[0].textContent = 'Copy ' + _selectedApp + ' ' + _selectedVersion + '-' + _selectedStatus + ' ' + _selectedBranch;
-        _copyBranchModal.modal();
+        var opts = {
+            appId: getAppId(),
+            appSelectList: loadAppNames(),
+            populateVersionFunc: getAppVersions,
+            readonly: false,
+            afterSave: copyBranchOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.copyBranch(opts));
     }
 
-    function copyBranchOk() {
-        var result;
-        var origAppId = getAppId();
-        var copyAppId = appIdFrom($('#copyBranchAppName').val(), $('#copyBranchVersion').val(), STATUS.SNAPSHOT, $('#copyBranchName').val());
-        var shouldCopyWithHistory = _copyBranchWithHistory[0].checked;
-        
-        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId, shouldCopyWithHistory]);
+    function copyBranchOk(data) {
+        var copyAppId = appIdFrom(data.app, data.version, STATUS.SNAPSHOT, data.branch);
+        var copyHistory = data.copyHistory || false;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [getAppId(), copyAppId, copyHistory]);
         if (!result.status) {
             showNote('Unable to copy branch:<hr class="hr-small"/>' + result.data);
             return;
         }
-        
-        _copyBranchModal.modal('hide');
+
         saveSelectedApp(copyAppId.app);
         saveSelectedVersion(copyAppId.version);
         saveSelectedStatus(copyAppId.status);
@@ -4268,21 +4627,22 @@ var NCE = (function ($) {
     }
 
     function deleteBranch() {
+        var opts;
         if (isHeadSelected()) {
             showNote('HEAD branch cannot be deleted.');
             return;
         }
 
-        $('#deleteBranchLabel')[0].textContent = "Delete '" + _selectedBranch + "' ?";
-        $('#deleteBranchModal').modal();
+        opts = {
+            appId: getAppId(),
+            afterSave: deleteBranchOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteBranch(opts));
     }
 
     function deleteBranchOk() {
-        var result;
         var appId = getAppId();
-        $('#deleteBranchModal').modal('hide');
-
-        result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_BRANCH, [appId]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_BRANCH, [appId]);
         if (result.status) {
             removeFromVisitedBranchesList(appId);
             removeCubeInfoInOpenCubeList(CUBE_INFO.BRANCH);
@@ -4407,20 +4767,19 @@ var NCE = (function ($) {
         _diffAppId = diffOptions.appId;
         _diffCubeName = diffOptions.cubeName;
         diffOptions.canEdit = diffOptions.canEdit && checkPermissions(diffOptions.appId, _diffCubeName, PERMISSION_ACTION.UPDATE);
-        if (diffOptions.canEdit) {
-            _diffModal.find('.select-all, .select-none, .btn-primary').show();
-            _diffInstructions[0].innerHTML = 'Reverse individual differences by merging them right to left. Click a row to see more information about the change.';
-        } else {
-            _diffModal.find('.select-all, .select-none, .btn-primary').hide();
-            _diffInstructions[0].innerHTML = diffOptions.cantEditReason || 'View individual changes between two cubes.';
-        }
+        _diffModal.find('.select-all, .select-none, .btn-primary').toggle(diffOptions.canEdit);
+        _diffInstructions[0].innerHTML = diffOptions.canEdit
+            ? 'Reverse individual differences by merging them right to left. Click a row to see more information about the change.'
+            : (diffOptions.cantEditReason || 'View individual changes between two cubes.');
         diffDescriptive(diffOptions.canEdit);
         diffShow(true);
     }
     
     function diffShow(shouldShow) {
         if (shouldShow) {
-            _diffModal.show();
+            _diffModal.show(0, function() {
+                $(this).trigger('show');
+            });
         } else {
             _diffModal.hide();
             if (_didMergeChange) {
@@ -4666,7 +5025,7 @@ var NCE = (function ($) {
         var transferObj = createHeartBeatTransferObj();
         _heartBeatThread.postMessage(transferObj, [transferObj.aBuffer]);
         setInterval(function() {
-            transferObj = createHeartBeatTransferObj();
+            var transferObj = createHeartBeatTransferObj();
             _heartBeatThread.postMessage(transferObj, [transferObj.aBuffer]);
         }, MINUTE_TIMEOUT);
     }
@@ -4685,10 +5044,20 @@ var NCE = (function ($) {
         return noteId;
     }
 
+    function updateNote(noteId, updateId, html) {
+        var note;
+        note = $('#gritter-item-' + noteId + ' #' + updateId);
+        if (note && note[0] && note[0].innerHTML){
+            note[0].innerHTML = html;
+            return true;
+        }
+        return false;
+    }
+
     function addNoteListeners(noteId) {
         var noteDiv = $('#gritter-item-' + noteId);
-        if (!noteDiv.hasClass(HAS_EVENT)) {
-            noteDiv.addClass(HAS_EVENT);
+        if (!noteDiv.hasClass(NOTE_CLASS.HAS_EVENT)) {
+            noteDiv.addClass(NOTE_CLASS.HAS_EVENT);
             noteDiv.on('change click', function (e) {
                 e.preventDefault();
                 onNoteEvent(e);
@@ -4730,6 +5099,10 @@ var NCE = (function ($) {
     function isSelectedCubeInHead() {
         var appId = getSelectedTabAppId();
         return appId ? appId.branch === head : true;
+    }
+
+    function closeOpenModal() {
+        $('.modal.in').modal('hide');
     }
 
     /**
@@ -4789,16 +5162,25 @@ var NCE = (function ($) {
 
     // API
     return {
-        getSelectedStatus: getSelectedStatus,
         buildTabs: buildTabs,
-        closeParentMenu: closeParentMenu
+        closeParentMenu: closeParentMenu,
+        getSelectedStatus: getSelectedStatus,
+        pullRequestLinkClick: pullRequestLinkClick
     }
 
 })(jQuery);
 
 function frameLoaded(doc) {
     delay(function() {
+        var txidStartIdx, txid;
+        var url = document.URL;
         NCE.buildTabs(true);
+        if (url.indexOf('viewCommit') > -1) {
+            txidStartIdx = url.lastIndexOf('/') + 1;
+            txid = url.substring(txidStartIdx);
+            NCE.pullRequestLinkClick(txid);
+        }
+        window.location.href = '#';
     }, 500);
     if (doc) {
         $(doc).on('click', function() {

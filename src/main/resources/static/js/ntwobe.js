@@ -36,6 +36,8 @@ var NCubeEditor2 = (function ($) {
     var _editCellClear = null;
     var _editCellRadioURL = null;
     var _editColumnModal = null;
+    var _editColInstTitle = null;
+    var _editColInstructions = null;
     var _valueDropdown = null;
     var _urlDropdown = null;
     var _colIds = -1;   // Negative and gets smaller (to differentiate on server side what is new)
@@ -51,47 +53,6 @@ var NCubeEditor2 = (function ($) {
     var _bufferText = null;
     var _firstRenderedCol = null;
     var _defaultCellText = null;
-    var _axisName = null;
-    var _isRefAxis = null;
-    var _hasRefFilter = null;
-    var _addAxisName = null;
-    var _addAxisTypeName = null;
-    var _addAxisValueTypeName = null;
-    var _refAxisGroup = null;
-    var _refAxisBranch = null;
-    var _refAxisStatus = null;
-    var _refAxisApp = null;
-    var _refAxisVersion = null;
-    var _refAxisCube = null;
-    var _refAxisAxis = null;
-    var _refFilterGroup = null;
-    var _refFilterBranch = null;
-    var _refFilterStatus = null;
-    var _refFilterApp = null;
-    var _refFilterVersion = null;
-    var _refFilterCube = null;
-    var _refFilterMethod = null;
-    var _isRefAxisUpdate = null;
-    var _hasRefFilterUpdate = null;
-    var _updateAxisModal = null;
-    var _updateAxisName = null;
-    var _updateAxisTypeName = null;
-    var _updateAxisValueTypeName = null;
-    var _updateAxisSortOrder = null;
-    var _refAxisGroupUpdate = null;
-    var _refAxisBranchUpdate = null;
-    var _refAxisStatusUpdate = null;
-    var _refAxisAppUpdate = null;
-    var _refAxisVersionUpdate = null;
-    var _refAxisCubeUpdate = null;
-    var _refAxisAxisUpdate = null;
-    var _refFilterGroupUpdate = null;
-    var _refFilterBranchUpdate = null;
-    var _refFilterStatusUpdate = null;
-    var _refFilterAppUpdate = null;
-    var _refFilterVersionUpdate = null;
-    var _refFilterCubeUpdate = null;
-    var _refFilterMethodUpdate = null;
     var _topAxisBtn = null;
     var _filterModal = null;
     var _filters = null;
@@ -126,54 +87,16 @@ var NCubeEditor2 = (function ($) {
             _editCellClear = $('#editCellClear');
             _editCellRadioURL = $('#editCellRadioURL');
             _editColumnModal = $('#editColumnsModal');
+            _editColInstTitle = $('#editColInstTitle');
+            _editColInstructions = $('#editColInstructions');
             _valueDropdown = $('#datatypes-value');
             _urlDropdown = $('#datatypes-url');
             _clipboard = $('#cell-clipboard');
             _editColClipboard = $('#edit-columns-clipboard');
-            _searchField = document.getElementById('search-field');
+            _searchField = $('#search-field');
             _searchInfo = $('#search-info');
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
-            _isRefAxis = $('#isRefAxis');
-            _hasRefFilter = $('#hasRefFilter');
-            _addAxisName = $('#addAxisName');
-            _addAxisTypeName = $('#addAxisTypeName');
-            _addAxisValueTypeName = $('#addAxisValueTypeName');
-            _refAxisGroup = $('#refAxisGroup');
-            _refAxisBranch = $('#refAxisBranch');
-            _refAxisStatus = $('#refAxisStatus');
-            _refAxisApp = $('#refAxisApp');
-            _refAxisVersion = $('#refAxisVersion');
-            _refAxisCube = $('#refAxisCube');
-            _refAxisAxis = $('#refAxisAxis');
-            _refFilterGroup = $('#refFilterGroup');
-            _refFilterBranch = $('#refFilterBranch');
-            _refFilterStatus = $('#refFilterStatus');
-            _refFilterApp = $('#refFilterApp');
-            _refFilterVersion = $('#refFilterVersion');
-            _refFilterCube = $('#refFilterCube');
-            _refFilterMethod = $('#refFilterMethod');
-            _isRefAxisUpdate = $('#isRefAxisUpdate');
-            _hasRefFilterUpdate = $('#hasRefFilterUpdate');
-            _updateAxisModal = $('#updateAxisModal');
-            _updateAxisName = $('#updateAxisName');
-            _updateAxisTypeName = $('#updateAxisTypeName');
-            _updateAxisValueTypeName = $('#updateAxisValueTypeName');
-            _updateAxisSortOrder = $('#updateAxisSortOrder');
-            _refAxisGroupUpdate = $('#refAxisGroupUpdate');
-            _refAxisBranchUpdate = $('#refAxisBranchUpdate');
-            _refAxisStatusUpdate = $('#refAxisStatusUpdate');
-            _refAxisAppUpdate = $('#refAxisAppUpdate');
-            _refAxisVersionUpdate = $('#refAxisVersionUpdate');
-            _refAxisCubeUpdate = $('#refAxisCubeUpdate');
-            _refAxisAxisUpdate = $('#refAxisAxisUpdate');
-            _refFilterGroupUpdate = $('#refFilterGroupUpdate');
-            _refFilterBranchUpdate = $('#refFilterBranchUpdate');
-            _refFilterStatusUpdate = $('#refFilterStatusUpdate');
-            _refFilterAppUpdate = $('#refFilterAppUpdate');
-            _refFilterVersionUpdate = $('#refFilterVersionUpdate');
-            _refFilterCubeUpdate = $('#refFilterCubeUpdate');
-            _refFilterMethodUpdate = $('#refFilterMethodUpdate');
             _topAxisBtn = $('#topAxisBtn');
             _filterModal = $('#filterModal');
             _filterTable = $('#filterTable');
@@ -189,7 +112,6 @@ var NCubeEditor2 = (function ($) {
             _searchOptionsLoadAllData = $('#searchOptionsLoadAllData');
 
             addSelectAllNoneListeners();
-            addAxisEditListeners();
             addColumnEditListeners();
             addColumnHideListeners();
             addSetUpHideListeners();
@@ -199,12 +121,7 @@ var NCubeEditor2 = (function ($) {
             addModalFilters();
             modalsDraggable(true);
 
-            $('#addAxisCancel').on('click', addAxisClose);
-            $('#addAxisOk').on('click', addAxisOk);
-            $('#deleteAxisCancel').on('click', deleteAxisClose);
-            $('#deleteAxisOk').on('click', deleteAxisOk);
             $('#updateAxisMenu').on('click', updateAxis);
-            $('#updateAxisOk').on('click', updateAxisOk);
             $('#searchOptionsCancel').on('click', function() {
                 searchOptionsClose();
             });
@@ -248,7 +165,7 @@ var NCubeEditor2 = (function ($) {
                 switch (keyCode) {
                     case KEY_CODES.F:
                         e.preventDefault();
-                        _searchField.focus();
+                        _searchField[0].focus();
                         break;
                     case KEY_CODES.X:
                         if (CLIP_NCE === _clipFormat) {
@@ -438,7 +355,7 @@ var NCubeEditor2 = (function ($) {
         }
         selectSavedOrDefaultCell();
         setClipFormatToggleListener();
-        _searchField.value = nce.getSearchQuery() || '';
+        _searchField.val(nce.getSearchQuery() || '');
         _searchText = '';
         runSearch();
         searchDown();
@@ -535,7 +452,7 @@ var NCubeEditor2 = (function ($) {
 
     function setSearchHelperText() {
         var len, idx, html;
-        var query = _searchField.value;
+        var query = _searchField.val();
         if (query !== null && query !== '') {
             len = _searchCoords.length;
             idx = _currentSearchResultIndex + 1;
@@ -545,11 +462,11 @@ var NCubeEditor2 = (function ($) {
     }
 
     function addSearchListeners() {
-        $(_searchField).on('focus', addHotBeforeKeyDown);
+        _searchField.on('focus', addHotBeforeKeyDown);
 
-        $(_searchField).on('blur', removeHotBeforeKeyDown);
+        _searchField.on('blur', removeHotBeforeKeyDown);
 
-        $(_searchField).on('keyup', function (e) {
+        _searchField.on('keyup', function (e) {
             var keyCode = e.keyCode;
             if (keyCode === KEY_CODES.ENTER) {
                 runSearch();
@@ -622,18 +539,18 @@ var NCubeEditor2 = (function ($) {
     }
 
     function searchClear() {
-        _searchField.value = '';
+        _searchField.val('');
         clearSearchMatches();
         setSearchHelperText();
         render();
     }
 
     function searchClick() {
-        _searchField.focus();
+        _searchField[0].focus();
     }
 
     function runSearch(forceSearch) {
-        var query = _searchField.value;
+        var query = _searchField.val();
         if (forceSearch || _searchText !== query) {
             if (query && query.length) {
                 searchCubeData(query, false);
@@ -1483,7 +1400,7 @@ var NCubeEditor2 = (function ($) {
         _searchCoords = null;
         _searchCoords = [];
         _currentSearchResultIndex = 0;
-        _searchField.value = '';
+        _searchField.val('');
         setSearchHelperText();
         _defaultCellText = null;
 
@@ -2656,7 +2573,7 @@ var NCubeEditor2 = (function ($) {
         }
         appId = nce.getSelectedTabAppId();
         resource = cubeName;
-        if (axisName !== undefined && axisName != null) {
+        if (axisName !== undefined && axisName !== null) {
             resource += '/' + axisName;
         }
         canUpdate = nce.checkPermissions(appId, resource, PERMISSION_ACTION.UPDATE);
@@ -2855,23 +2772,11 @@ var NCubeEditor2 = (function ($) {
     }
 
     function resetCoordinateBar(displayText) {
-        var bar = getDomCoordinateBar();
-        var left = getDomCoordinateBarLeftButton();
-        var right = getDomCoordinateBarRightButton();
-
-        bar.scrollLeft = 0;
-        bar.innerHTML = displayText || '';
-
-        if ($(bar).hasScrollBar()) {
-            $(left).show();
-            $(right).show();
-        } else {
-            $(left).hide();
-            $(right).hide();
-        }
-        bar = null;
-        left = null;
-        right = null;
+        var show = _coordBarText.hasScrollBar();
+        _coordBarText[0].scrollLeft = 0;
+        _coordBarText[0].innerHTML = displayText || '';
+        _coordBarLeftBtn.toggle(show);
+        _coordBarRightBtn.toggle(show);
     }
 
     function setCoordinateBarListeners() {
@@ -2895,7 +2800,7 @@ var NCubeEditor2 = (function ($) {
         if (hot.getActiveEditor()) {
             hot.getActiveEditor().finishEditing(null, null, null, true);
         }
-        var searchQuery = _searchField.value;
+        var searchQuery = _searchField.val();
         if (searchQuery !== null && searchQuery.length) {
             var curCell = getSelectedCellRange();
             if (curCell) {
@@ -3077,7 +2982,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function openMetaPropertiesBuilder(metaPropertyOptions) {
-        var mpData, metaKeys, metaProperties, i, len, key, builderOptions, val;
+        var mpData, metaKeys, metaProperties, i, len, key, opts, val;
         mpData = getMetaProperties(metaPropertyOptions);
         if (mpData === null) {
             return;
@@ -3108,57 +3013,33 @@ var NCubeEditor2 = (function ($) {
             }
         }
 
-        builderOptions = {
-            title: 'Metaproperties - ' + metaPropertyOptions.objectName,
-            instructionsTitle: 'Instructions - Metaproperties',
-            instructionsText: 'Add custom properties for this ' + metaPropertyOptions.objectType + '.',
-            columns: {
-                key: {
-                    heading: 'Key',
-                    type: PropertyBuilder.COLUMN_TYPES.TEXT
-                },
-                dataType: {
-                    heading: 'Type',
-                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
-                    default: 'string',
-                    selectOptions: METAPROPERTIES.DATA_TYPE_LIST
-                },
-                isUrl: {
-                    heading: 'Url',
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX
-                },
-                isCached: {
-                    heading: 'Cached',
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX
-                },
-                value: {
-                    heading: 'Value',
-                    type: PropertyBuilder.COLUMN_TYPES.TEXT
-                }
-            },
-            readonly: metaPropertyOptions.readonly,
-            afterSave: function() {
-                var mpMap, mpIdx, mpLen, prop;
-                mpMap = {};
-                for (mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
-                    prop = null;
-                    prop = metaProperties[mpIdx];
-                    mpMap[prop.key] = {
-                        '@type': GROOVY_CLASS.CELL_INFO,
-                        isUrl: prop.isUrl,
-                        isCached: prop.isCached,
-                        value: prop.value,
-                        dataType: prop.dataType
-                    };
-                }
-                updateMetaProperties(metaPropertyOptions, mpMap);
-                removeHotBeforeKeyDown();
-                reload();
-            }
-        };
-
         addHotBeforeKeyDown();
-        PropertyBuilder.openBuilderModal(builderOptions, metaProperties);
+        opts = {
+            name: metaPropertyOptions.objectName,
+            type: metaPropertyOptions.objectType,
+            readonly: metaPropertyOptions.readonly,
+            afterSave: function () { metaPropertiesSave(metaProperties, metaPropertyOptions); },
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.metaProperties(opts), metaProperties);
+    }
+
+    function metaPropertiesSave(metaProperties, metaPropertyOptions) {
+        var mpMap, mpIdx, mpLen, prop;
+        mpMap = {};
+        for (mpIdx = 0, mpLen = metaProperties.length; mpIdx < mpLen; mpIdx++) {
+            prop = null;
+            prop = metaProperties[mpIdx];
+            mpMap[prop.key] = {
+                '@type': GROOVY_CLASS.CELL_INFO,
+                isUrl: prop.isUrl,
+                isCached: prop.isCached,
+                value: prop.value,
+                dataType: prop.dataType
+            };
+        }
+        updateMetaProperties(metaPropertyOptions, mpMap);
+        reload();
     }
 
     // ===================================== End Edit Metaproperties ===================================================
@@ -3642,20 +3523,17 @@ var NCubeEditor2 = (function ($) {
 
         enabledDisableCheckBoxes(); // reset for form
         _editCellModal.find('input,textarea,select').attr('disabled', !modifiable);
+        _editCellCancel.toggle(modifiable);
+        _editCellClear.toggle(modifiable);
         if (modifiable) {
-            _editCellCancel.show();
-            _editCellClear.show();
-
             _editCellModal.one('shown.bs.modal', function () {
                 if (_bufferText.trim() !== '') {
                     _editCellValue.val(isDefault ? _bufferText : (cellValue + _bufferText));
+                    _isCellDirty = true;
                 } else if (isDefault) {
                     _editCellValue.select();
                 }
             });
-        } else {
-            _editCellCancel.hide();
-            _editCellClear.hide();
         }
         _editCellModal.modal('show');
     }
@@ -3764,7 +3642,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function filterOpen() {
-        var i, len, colId, builderOptions;
+        var i, len, colId, opts;
         var columnSelectList = [];
         var columns = axes[colOffset].columns;
         var columnKeys = Object.keys(columns);
@@ -3773,46 +3651,14 @@ var NCubeEditor2 = (function ($) {
             columnSelectList.push({key:colId, value:columns[colId].value});
         }
 
-        builderOptions = {
-            title: 'Filter Data',
-            instructionsTitle: 'Instructions - Filter Data',
-            instructionsText: 'Select filters to apply to cell data for ncube.',
-            readonly: nce.getFilterOutBlankRows(),
-            columns: {
-                isApplied: {
-                    heading: 'Apply',
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX,
-                    default: true
-                },
-                column: {
-                    heading: 'Column',
-                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
-                    selectOptions: columnSelectList
-                },
-                comparator: {
-                    heading: 'Comparator',
-                    type: PropertyBuilder.COLUMN_TYPES.SELECT,
-                    selectOptions: FILTER_COMPARATOR_LIST,
-                    default: FILTER_COMPARATOR_LIST[0]
-                },
-                expressionValue: {
-                    heading: 'Comparison Value',
-                    type: PropertyBuilder.COLUMN_TYPES.TEXT
-                },
-                isIncludeAll: {
-                    heading: 'Include Empty Cells',
-                    type: PropertyBuilder.COLUMN_TYPES.CHECKBOX,
-                    default: true
-                }
-            },
-            afterSave: function() {
-                filterSave();
-                removeHotBeforeKeyDown();
-            }
-        };
-
         addHotBeforeKeyDown();
-        PropertyBuilder.openBuilderModal(builderOptions, _filters);
+        opts = {
+            columnSelectList: columnSelectList,
+            readonly: nce.getFilterOutBlankRows(),
+            afterSave: function() { filterSave(); removeHotBeforeKeyDown(); },
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.filterData(opts), _filters);
     }
 
     // =============================================== End Filtering ===================================================
@@ -3950,13 +3796,7 @@ var NCubeEditor2 = (function ($) {
         editColumnInstructions(axis);
         sortColumns(axis);
         loadColumns(axis);
-        if (axis.preferredOrder === 1) {
-            $('#editColUp').show();
-            $('#editColDown').show();
-        } else {
-            $('#editColUp').hide();
-            $('#editColDown').hide();
-        }
+        $('#editColUp, #editColDown').toggle(axis.preferredOrder === 1);
         $('#editColumnsLabel')[0].innerHTML = 'Edit ' + axisName;
         addHotBeforeKeyDown();
         _editColumnModal.modal();
@@ -4123,87 +3963,92 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editColumnInstructions(axis) {
-        var insTitle = $('#editColInstTitle');
-        var inst = $('#editColInstructions');
-        if ('DISCRETE' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Discrete Column';
-            inst[0].innerHTML = "<i>Discrete</i> column has a single value per column. Values are matched with '='. \
-            Strings are matched case-sensitively.  Look ups are indexed and run \
-            in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
-        <ul><li>Examples: \
-        <ul> \
-        <li>Enter string values as is, no quotes: <code>OH</code></li> \
-        <li>Valid number: <code>42</code></li> \
-        <li>Valid date: <code>2015/02/14</code> (or <code>14 Feb 2015</code>, <code>Feb 14, 2015</code>, <code>February 14th, 2015</code>, <code>2015-02-14</code>)</li> \
-        <li>Do not use mm/dd/yyyy or dd/mm/yyyy. \
-        </li></ul></li></ul>";
+        var insTitle, inst;
+        switch (axis.type.name) {
+            case 'DISCRETE':
+                insTitle = 'Instructions - Discrete Column';
+                inst = "<i>Discrete</i> column has a single value per column. Values are matched with '='. \
+                    Strings are matched case-sensitively.  Look ups are indexed and run \
+                    in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>. \
+                    <ul><li>Examples: \
+                    <ul> \
+                    <li>Enter string values as is, no quotes: <code>OH</code></li> \
+                    <li>Valid number: <code>42</code></li> \
+                    <li>Valid date: <code>2015/02/14</code> (or <code>14 Feb 2015</code>, <code>Feb 14, 2015</code>, <code>February 14th, 2015</code>, <code>2015-02-14</code>)</li> \
+                    <li>Do not use mm/dd/yyyy or dd/mm/yyyy. \
+                    </li></ul></li></ul>";
+                break;
+            case 'RANGE':
+                insTitle = 'Instructions - Range Column';
+                inst = "A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
+                    <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Look ups are indexed \
+                    and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+                    <ul><li>Enter low value, high value. Treated [inclusive, exclusive).</li> \
+                    <li>Examples: \
+                    <ul> \
+                    <li><i>Number range</i>: <code>25, 75</code> (meaning x >= 25 AND x < 75)</li> \
+                    <li><i>Number range</i>: <code>[100, 1000]</code> (brackets optional)</li> \
+                    <li><i>Date range</i>: <code>2015/01/01, 2017-01-01</code> (date >= 2015-01-01 AND date < 2017-01-01) \
+                    </li></ul></li></ul>";
+                break;
+            case 'SET':
+                insTitle = 'Instructions - Set Column';
+                inst = "A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
+                    match with '=' and ranges match when value is within the range [inclusive, exclusive).  Overlapping\
+                    ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis.\
+                    Look ups are indexed and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
+                    <ul><li>Examples: \
+                    <ul> \
+                    <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
+                    <li><i>Strings</i>: <code>\"TX\", \"OH\", \"GA\"</code></li> \
+                    <li><i>Dates</i>: <code>\"2016-01-01\"</code></li> \
+                    <li><i>Date range</i>: <code>[\"2010/01/01\", \"2012/12/31\"]</code></li> \
+                    <li><i>Date ranges</i>: <code>[\"2015-01-01\", \"2016-12-31\"], [\"2019/01/01\", \"2020/12/31\"]</code> \
+                    </li></ul></li></ul>";
+                break;
+            case 'NEAREST':
+                insTitle = 'Instructions - Nearest Column';
+                inst = "A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
+                    axis to the passed in value is matched.  Strings are compared similar to spell-check \
+                    (See <a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm). \
+                    Lat/Lon's column values are compared using earth curvature in distance calculation \
+                    (See <a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla). \
+                    Numbers compared using abs(column - value).  Look ups scan all columns and run in \
+                    <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
+                    <ul><li>Examples: \
+                    <ul> \
+                    <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> <code>alfa</code> will match column <code>Alpha</code>.  It has the closest 'edit' distance.</li> \
+                    <li>With columns <code>1, 10, 100, 1000</code>, <i>value</i> <code>400</code> will match column <code>100</code>. (Distance of 300 is smallest).</li> \
+                    <li>Dates are entered in the same formats in Discrete column instructions (many formats supported).</li> \
+                    <li>Do not use mm/dd/yyyy or dd/mm/yyyy for dates.</li></ul></li></ul>";
+                break;
+            case 'RULE':
+                insTitle = 'Instructions - Rule Column';
+                inst = "A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
+                    that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> \
+                    conditions will fire. (See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>). \
+                    The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, \
+                    if the name of a rule is bound to the rule axis, execution will start on the named rule.  A rule axis can \
+                    have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, \
+                    otherwise a CoordinateNotFound exception will be thrown.  Look ups scan all columns (except when fire once is indicated) \
+                    and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
+                    <ul><li>Notes: \
+                    <ul> \
+                    <li>Enter the [optional] rule name in the top line (no quotes).</li> \
+                    <li>Enter <i>condition</i> in <a href=\"http://groovy.codehaus.org/\" target=\"_blank\">Groovy</a> on the second line.</li> \
+                    <li>The <i>input</i> and <i>output</i> Maps and <i>ncube</i> are available in the condition and statements (cells).</li> \
+                    <li><i>Example condition</i>: <code>input.state == 'OH'</code></li> \
+                    </ul></li></ul>";
+                break;
+            default:
+                insTitle = 'Instructions';
+                inst = 'Unknown axis type';
+                break;
         }
-        else if ('RANGE' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Range Column';
-            inst[0].innerHTML = "A <i>Range</i> column contains a <i>low</i> and <i>high</i> value.  It matches when \
-            <i>value</i> is within the range: value >= <i>low</i> and value < <i>high</i>. Look ups are indexed \
-            and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <ul><li>Enter low value, high value. Treated [inclusive, exclusive).</li> \
-        <li>Examples: \
-        <ul> \
-        <li><i>Number range</i>: <code>25, 75</code> (meaning x >= 25 AND x < 75)</li> \
-        <li><i>Number range</i>: <code>[100, 1000]</code> (brackets optional)</li> \
-        <li><i>Date range</i>: <code>2015/01/01, 2017-01-01</code> (date >= 2015-01-01 AND date < 2017-01-01) \
-        </li></ul></li></ul>";
-        }
-        else if ('SET' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Set Column';
-            inst[0].innerHTML = "A <i>Set</i> column can contain unlimited discrete values and ranges. Discrete values \
-            match with '=' and ranges match when value is within the range [inclusive, exclusive).  Overlapping\
-            ranges and values are <b>not</b> allowed.  If you need that capability, use a <i>Rule</i> axis.\
-            Look ups are indexed and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(log n)</a>.\
-        <ul><li>Examples: \
-        <ul> \
-        <li><i>Numbers</i>: <code>6, 10, [20, 30], 45</code></li> \
-        <li><i>Strings</i>: <code>\"TX\", \"OH\", \"GA\"</code></li> \
-        <li><i>Dates</i>: <code>\"2016-01-01\"</code></li> \
-        <li><i>Date range</i>: <code>[\"2010/01/01\", \"2012/12/31\"]</code></li> \
-        <li><i>Date ranges</i>: <code>[\"2015-01-01\", \"2016-12-31\"], [\"2019/01/01\", \"2020/12/31\"]</code> \
-        </li></ul></li></ul>";
-        }
-        else if ('NEAREST' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Nearest Column';
-            inst[0].innerHTML = "A <i>Nearest</i> column has a single value per column.  The <i>closest</i> column on the \
-            axis to the passed in value is matched.  Strings are compared similar to spell-check \
-            (See <a href=\"http://en.wikipedia.org/wiki/Levenshtein_distance\" target=\"_blank\">Levenshtein</a> algorithm). \
-            Lat/Lon's column values are compared using earth curvature in distance calculation \
-            (See <a href=\"http://en.wikipedia.org/wiki/Haversine_formula\" target=\"_blank\">Haversine</a> forumla). \
-            Numbers compared using abs(column - value).  Look ups scan all columns and run in \
-            <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
-        <ul><li>Examples: \
-        <ul> \
-        <li>With columns <code>Alpha, Bravo, Charlie</code>, <i>value</i> <code>alfa</code> will match column <code>Alpha</code>.  It has the closest 'edit' distance.</li> \
-        <li>With columns <code>1, 10, 100, 1000</code>, <i>value</i> <code>400</code> will match column <code>100</code>. (Distance of 300 is smallest).</li> \
-        <li>Dates are entered in the same formats in Discrete column instructions (many formats supported).</li> \
-        <li>Do not use mm/dd/yyyy or dd/mm/yyyy for dates.</li></ul></li></ul>";
-        }
-        else if ('RULE' == axis.type.name) {
-            insTitle[0].textContent = 'Instructions - Rule Column';
-            inst[0].innerHTML = "A <i>Rule condition</i> column is entered as a rule name and condition.  All rule conditions \
-            that evaluate to <i>true</i> have their associated statement cells executed.  By default all <i>true</i> \
-            conditions will fire. (See our definition of <a href=\"http://groovy.codehaus.org/Groovy+Truth\" target=\"_blank\">true</a>). \
-            The Rule axis can be set so that only the first <i>true</i> condition fires.  When running a rule-cube, \
-            if the name of a rule is bound to the rule axis, execution will start on the named rule.  A rule axis can \
-            have a <i>Default</i> column. Just like all other axis types, at least one condition on a rule axis must fire, \
-            otherwise a CoordinateNotFound exception will be thrown.  Look ups scan all columns (except when fire once is indicated) \
-            and run in <a href=\"http://en.wikipedia.org/wiki/Time_complexity\" target=\"_blank\">O(n)</a>. \
-        <ul><li>Notes: \
-        <ul> \
-        <li>Enter the [optional] rule name in the top line (no quotes).</li> \
-        <li>Enter <i>condition</i> in <a href=\"http://groovy.codehaus.org/\" target=\"_blank\">Groovy</a> on the second line.</li> \
-        <li>The <i>input</i> and <i>output</i> Maps and <i>ncube</i> are available in the condition and statements (cells).</li> \
-        <li><i>Example condition</i>: <code>input.state == 'OH'</code></li> \
-        </ul></li></ul>";
-        }
-        else {
-            insTitle[0].textContent = 'Instructions';
-            inst[0].innerHTML = 'Unknown axis type';
-        }
+
+        inst += '<br>CTRL+V pastes in list of columns<br>CTRL+C copies all or selected column text';
+        _editColInstTitle[0].textContent = insTitle;
+        _editColInstructions[0].innerHTML = inst;
     }
 
     function loadColumns(axis) {
@@ -4482,119 +4327,100 @@ var NCubeEditor2 = (function ($) {
 
     // =============================================== Begin Axis Editing ==============================================
 
-    function addAxisEditListeners() {
-        var axisTypes = {};
+    function getCubeListForApp(appId) {
+        var i, len, cubes, results;
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appId, '*', null, getDefaultSearchOptions()]);
+        if (!result.status) {
+            nce.showNote('Unable to run search: ' + result.data, 'Error');
+            return;
+        }
+        cubes = [];
+        results = result.data;
+        for (i = 0, len = results.length; i < len; i++) {
+            cubes.push(results[i].name);
+        }
+        return cubes;
+    }
 
-        _isRefAxis.on('change', function() {
-            var toggleVal;
-            _refAxisGroup.toggle();
-            toggleVal = $(this)[0].checked;
-            _addAxisTypeName.parent().find('button').prop('disabled', toggleVal);
-            _addAxisValueTypeName.parent().find('button').prop('disabled', toggleVal);
+    function getAxesFromCube(appId, cubeName, axisName) {
+        var axisNames, results, i, len, axis;
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:'json'}], {noResolveRefs:true});
+        if (!result.status) {
+            nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
+            return {};
+        }
+        axisNames = [];
+        results = JSON.parse(result.data).axes;
+        for (i = 0, len = results.length; i < len; i++) {
+            axis = results[i];
+            if (axis.name === axisName) {
+                return axis;
+            }
+            axisNames.push(axis.name);
+        }
+        return axisNames;
+    }
 
-            populateSelect(nce, _refAxisApp, CONTROLLER_METHOD.GET_APP_NAMES, [] , null, toggleVal);
-            _refAxisAxis.empty();
-        });
-        _hasRefFilter.on('change', function() {
-            var toggleVal;
-            _refFilterGroup.toggle();
-            toggleVal = $(this)[0].checked;
-            populateSelect(nce, _refFilterApp, CONTROLLER_METHOD.GET_APP_NAMES, [], null, toggleVal);
-            _refFilterMethod.empty();
-        });
-
-        _refAxisApp.on('change', function() {
-            _refAxisVersion.empty();
-            _refAxisCube.empty();
-            _refAxisAxis.empty();
-            populateSelect(nce, _refAxisVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refAxisStatus.val()], null, true);
-        });
-        _refFilterApp.on('change', function() {
-            _refFilterVersion.empty();
-            _refFilterCube.empty();
-            _refFilterMethod.empty();
-            populateSelect(nce, _refFilterVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, [$(this).val(), _refFilterStatus.val()], null, true);
-        });
-
-        _refAxisVersion.on('change', function() {
-            _refAxisCube.empty();
-            _refAxisAxis.empty();
-            populateSelect(nce, _refAxisCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_refAxisApp.val(), $(this).val(), _refAxisStatus.val(), _refAxisBranch.val()), '*', null, getDefaultSearchOptions()]);
-        });
-        _refFilterVersion.on('change', function() {
-            _refFilterCube.empty();
-            _refFilterMethod.empty();
-            populateSelect(nce, _refFilterCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_refFilterApp.val(), $(this).val(), _refFilterStatus.val(), _refFilterBranch.val()), '*', null, getDefaultSearchOptions()]);
-        });
-
-        _refAxisCube.on('change', function() {
-            axisTypes = populateSelectFromCube(nce, _refAxisAxis, [appIdFrom(_refAxisApp.val(), _refAxisVersion.val(), _refAxisStatus.val(), _refAxisBranch.val()), _refAxisCube.val(), {mode:'json'}], POPULATE_SELECT_FROM_CUBE.AXIS);
-        });
-        _refFilterCube.on('change', function() {
-            populateSelectFromCube(nce, _refFilterMethod, [appIdFrom(_refFilterApp.val(), _refFilterVersion.val(), _refFilterStatus.val(), _refFilterBranch.val()), _refFilterCube.val(), {mode:'json'}], POPULATE_SELECT_FROM_CUBE.METHOD);
-        });
-
-        _refAxisAxis.on('change', function() {
-            var val = axisTypes[$(this).val()];
-            $('#addAxisTypeName').val(val.axisType);
-            $('#addAxisValueTypeName').val(val.valueType);
-        });
+    function getMethodsFromTransformCube(appId, cubeName) {
+        var methods, results, i, len, axis, columns, c, cLen;
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:'json'}], {noResolveRefs:true});
+        if (!result.status) {
+            nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
+            return;
+        }
+        methods = [];
+        results = JSON.parse(result.data).axes;
+        for (i = 0, len = results.length; i < len; i++) {
+            axis = results[i];
+            if (['method','methods'].indexOf(axis.name) > -1) {
+                columns = axis.columns;
+                for (c = 0, cLen = columns.length; c < cLen; c++) {
+                    methods.push(columns[c].value);
+                }
+                break;
+            }
+        }
+        return methods;
     }
 
     function addAxis() {
+        var opts;
         if (!checkCubeUpdatePermissions('*')) {
             nce.showNote('Axis cannot be added.');
             return;
         }
 
-        buildDropDown('#addAxisTypeList', '#addAxisTypeName', AXIS_TYPE_LIST.TYPE, onAxisTypeChange);
-        buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', AXIS_TYPE_LIST.GENERAL_SUBTYPE, function () { });
-        _addAxisName.val('');
-        $('#addAxisModal').modal();
-        addHotBeforeKeyDown();
-    }
-
-    function onAxisTypeChange(selected) {
-        if ('RULE' === selected) {
-            buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', AXIS_TYPE_LIST.RULE_SUBTYPE, function () { });
-            _addAxisValueTypeName.val(AXIS_SUBTYPES.EXPRESSION);
-        } else {
-            buildDropDown('#addAxisValueTypeList', '#addAxisValueTypeName', AXIS_TYPE_LIST.GENERAL_SUBTYPE, function () { });
-            _addAxisValueTypeName.val(AXIS_SUBTYPES.STRING);
-        }
+        opts = {
+            appSelectList: nce.loadAppNames(),
+            populateVersionFunc: nce.getAppVersions,
+            populateCubeFunc: getCubeListForApp,
+            populateAxisFunc: getAxesFromCube,
+            populateMethodFunc: getMethodsFromTransformCube,
+            afterSave: addAxisOk,
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.addAxis(opts));
     }
     
-    function addAxisClose() {
-        $('#addAxisModal').modal('hide');
-        removeHotBeforeKeyDown();
-        destroyEditor();
-    }
-
-    function addAxisOk() {
-        var axisName, appId, params, refAppId, refCubeName, refAxisName,
-            filterAppId, filterCubeName, filterMethodName, axisType, axisValueType, result, axisOrderMetaProp;
-        addAxisClose();
-        axisName = _addAxisName.val();
-        appId = nce.getSelectedTabAppId();
+    function addAxisOk(data) {
+        var params, refAppId, transformAppId, result, axisOrderMetaProp;
+        var axisName = data.name;
+        var appId = nce.getSelectedTabAppId();
         if (!checkCubeUpdatePermissions(axisName)) {
             nce.showNote('Cannot add axis ' + axisName);
             return;
         }
-        if (_isRefAxis[0].checked) {
-            refAppId = appIdFrom(_refAxisApp.val(), _refAxisVersion.val(), _refAxisStatus.val(), _refAxisBranch.val());
-            refCubeName = _refAxisCube.val();
-            refAxisName = _refAxisAxis.val();
-            if (_hasRefFilter[0].checked) {
-                filterAppId = appIdFrom(_refFilterApp.val(), _refFilterVersion.val(), _refFilterStatus.val(), _refFilterBranch.val());
-                filterCubeName = _refFilterCube.val();
-                filterMethodName = _refFilterMethod.val();
+
+        if (data.isRef) {
+            refAppId = appIdFrom(data.refApp, data.refVer, STATUS.RELEASE, 'HEAD');
+            if (data.hasTransform) {
+                transformAppId = appIdFrom(data.transApp, data.transVer, STATUS.RELEASE, 'HEAD');
             }
-            params = [refAppId, refCubeName, refAxisName, filterAppId, filterCubeName, filterMethodName];
+            params = [refAppId, data.refCube, data.refAxis, transformAppId, data.transCube, data.transMethod];
         } else {
-            axisType = _addAxisTypeName.val();
-            axisValueType = _addAxisValueTypeName.val();
-            params = [axisType, axisValueType];
+            params = [data.type, data.valueType];
         }
+
         result = nce.call(CONTROLLER + CONTROLLER_METHOD.ADD_AXIS, [appId, cubeName, axisName].concat(params));
         if (result.status) {
             if (hasCustomAxisOrder()) {
@@ -4616,25 +4442,24 @@ var NCubeEditor2 = (function ($) {
     }
 
     function deleteAxis(axisName) {
+        var opts;
         if (!checkCubeUpdatePermissions(axisName)) {
             nce.showNote('Axis cannot be deleted.');
             return;
         }
 
-        $('#deleteAxisName').val(axisName);
-        $('#deleteAxisModal').modal();
         addHotBeforeKeyDown();
-    }
-    
-    function deleteAxisClose() {
-        $('#deleteAxisModal').modal('hide');
-        removeHotBeforeKeyDown();
-        destroyEditor();
+        opts = {
+            axisName: axisName,
+            afterSave: deleteAxisOk,
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteAxis(opts));
     }
 
-    function deleteAxisOk() {
+    function deleteAxisOk(data) {
         var lowerAxisName, order;
-        var axisName = $('#deleteAxisName').val();
+        var axisName = data.name;
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.DELETE_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
         if (result.status) {
             lowerAxisName = axisName.toLowerCase();
@@ -4652,131 +4477,39 @@ var NCubeEditor2 = (function ($) {
             clearFilters();
             deleteSavedColumnWidths();
             markCubeModified();
+            removeHotBeforeKeyDown();
+            destroyEditor();
             nce.loadCube();
         } else {
             nce.showNote("Unable to delete axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
-        deleteAxisClose();
     }
 
     function updateAxis(axisName) {
-        var result, axis, isRule, isNearest, metaProps;
+        var opts;
         var appId = nce.getSelectedTabAppId();
-        var modifiable = checkCubeUpdatePermissions(axisName);
-        _updateAxisModal.find('input').not('.always-disabled').attr('disabled', !modifiable);
-        if (modifiable) {
-            $('#updateAxisOk').show();
-        } else {
-            $('#updateAxisOk').hide();
-        }
-
-        result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [appId, cubeName, axisName]);
-        if (result.status) {
-            axis = result.data;
-        } else {
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [appId, cubeName, axisName]);
+        if (!result.status) {
             nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
             return;
         }
-        isRule = axis.type.name === 'RULE';
-        isNearest = axis.type.name === 'NEAREST';
-        _updateAxisName.val(axisName);
-        _updateAxisTypeName.val(axis.type.name);
-        _updateAxisValueTypeName.val(axis.valueType.name);
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol !== null});
-        if (isRule) {
-            hideAxisSortOption();
-            showAxisDefaultColumnOption(axis);
-            showAxisFireAllOption(axis);
-        }
-        else if (isNearest) {
-            hideAxisSortOption();
-            hideAxisDefaultColumnOption();
-            hideAxisFireAllOption();
-        }
-        else {
-            showAxisSortOption(axis);
-            showAxisDefaultColumnOption(axis);
-            hideAxisFireAllOption();
-        }
 
-        if (axis.isRef) {
-            _updateAxisSortOrder.prop('disabled', true);
-            metaProps = axis.metaProps;
-            _refAxisGroupUpdate.show();
-            _isRefAxisUpdate[0].checked = true;
-            if (metaProps.transformApp) {
-                _refFilterGroupUpdate.show();
-                _hasRefFilterUpdate[0].checked = true;
-            } else {
-                _refFilterGroupUpdate.hide();
-                _hasRefFilterUpdate[0].checked = false;
-                _refFilterGroupUpdate.find('input').val('');
-            }
-            _refAxisBranchUpdate.val(metaProps.referenceBranch);
-            _refAxisStatusUpdate.val(metaProps.referenceStatus);
-            _refAxisAppUpdate.val(metaProps.referenceApp);
-            _refAxisVersionUpdate.val(metaProps.referenceVersion);
-            _refAxisCubeUpdate.val(metaProps.referenceCubeName);
-            _refAxisAxisUpdate.val(metaProps.referenceAxisName);
-            _refFilterBranchUpdate.val(metaProps.transformBranch);
-            _refFilterStatusUpdate.val(metaProps.transformStatus);
-            _refFilterAppUpdate.val(metaProps.transformApp);
-            _refFilterVersionUpdate.val(metaProps.transformVersion);
-            _refFilterCubeUpdate.val(metaProps.transformCubeName);
-            _refFilterMethodUpdate.val(metaProps.transformMethodName);
-        } else {
-            _refAxisGroupUpdate.hide();
-            _refFilterGroupUpdate.hide();
-            _isRefAxisUpdate[0].checked = false;
-            _hasRefFilterUpdate[0].checked = false;
-            _refAxisGroupUpdate.find('input').val('');
-            _refFilterGroupUpdate.find('input').val('');
-        }
-
-        _axisName = axisName;
-        _updateAxisModal.modal({
-            keyboard: true
-        });
+        addHotBeforeKeyDown();
+        opts = {
+            axis: result.data,
+            readonly: !checkCubeUpdatePermissions(axisName),
+            afterSave: function(data) { updateAxisOk(axisName, data); },
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.updateAxis(opts));
     }
 
-    function showAxisSortOption(axis) {
-        $('#updateAxisSortOrderRow').show();
-        _updateAxisSortOrder.prop({'checked': axis.preferredOrder === 0});
-    }
-
-    function hideAxisSortOption() {
-        $('#updateAxisSortOrderRow').hide();
-    }
-
-    function showAxisDefaultColumnOption(axis) {
-        $('#updateAxisDefaultColRow').show();
-        $('#updateAxisDefaultCol').prop({'checked': axis.defaultCol !== null});
-    }
-
-    function hideAxisDefaultColumnOption() {
-        $('#updateAxisDefaultColRow').hide();
-    }
-
-    function showAxisFireAllOption(axis) {
-        $('#updateAxisFireAllRow').show();
-        $('#updateAxisFireAll').prop({'checked': axis.fireAll === true});
-    }
-
-    function hideAxisFireAllOption() {
-        $('#updateAxisFireAllRow').hide();
-    }
-
-    function updateAxisOk() {
-        var axisName, hasDefault, sortOrder, fireAll, result, oldName, newName, order;
-        _updateAxisModal.modal('hide');
-        axisName = $('#updateAxisName').val();
-        hasDefault = $('#updateAxisDefaultCol')[0].checked;
-        sortOrder = _updateAxisSortOrder[0].checked;
-        fireAll = $('#updateAxisFireAll')[0].checked;
-        result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_AXIS, [nce.getSelectedTabAppId(), cubeName, _axisName, axisName, hasDefault, sortOrder, fireAll]);
+    function updateAxisOk(oldAxisName, data) {
+        var result, oldName, newName, order;
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.UPDATE_AXIS, [nce.getSelectedTabAppId(), cubeName, oldAxisName, data.name, data.default || false, data.sorted || false, data.fireAll || false]);
         if (result.status) {
-            oldName = _axisName.toLowerCase();
-            newName = axisName.toLowerCase();
+            oldName = oldAxisName.toLowerCase();
+            newName = data.name.toLowerCase();
             if (oldName !== newName) {
                 callUpdateMetaPropertiesForDefaultCubeView(true);
                 _hiddenColumns[newName] = _hiddenColumns[oldName];
@@ -4792,7 +4525,7 @@ var NCubeEditor2 = (function ($) {
             markCubeModified();
             nce.loadCube();
         } else {
-            nce.showNote("Unable to update axis '" + _axisName + "':<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Unable to update axis '" + oldAxisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
     }
 
@@ -4883,7 +4616,7 @@ function cubeSelected() {
     NCubeEditor2.handleCubeSelected();
 }
 
-function onNoteEvent(e, element){};
+function onNoteEvent(e, element){}
 
 function closeChildMenu() {
     $('.open').removeClass('open');
