@@ -106,6 +106,7 @@ var NCE = (function ($) {
     var _branchCompareUpdateList = $('#branchCompareUpdateList');
     var _branchList = $('#branchList');
     var _deleteCubeList = $('#deleteCubeList');
+    var _deletedCubeList = $('#deletedCubeList');
     var _deleteCubeLabel = $('#deleteCubeLabel');
     var _newBranchName = $('#newBranchName');
     var _branchNameWarning = $('#branchNameWarning');
@@ -2852,15 +2853,9 @@ var NCE = (function ($) {
             selectBranch();
             return;
         }
-        html = '';
-        cubeLinks = _listOfCubes.find('a');
-        for (i = 0, len = cubeLinks.length; i < len; i++) {
-            cubeName = cubeLinks[i].textContent;
-            html += '<li class="list-group-item skinny-lr"><div class="container-fluid"><label class="checkbox no-margins">'
-                  + '<input class="deleteCheck" type="checkbox">' + cubeName + '</label></div></li>';
-        }
+
         _deleteCubeList.empty();
-        _deleteCubeList.append(html);
+        buildUlForRestoreDelete(_deleteCubeList, _cubeList);
         _deleteCubeLabel[0].textContent = 'Delete Cubes in ' + _selectedVersion + ', ' + _selectedStatus;
         _deleteCubeModal.modal();
     }
@@ -2868,7 +2863,7 @@ var NCE = (function ($) {
     function deleteCubeOk() {
         var i, len, checkboxes, cubesToDelete;
         _deleteCubeModal.modal('hide');
-        checkboxes = $('.deleteCheck:checked');
+        checkboxes = _deleteCubeList.find(':checked');
         cubesToDelete = [];
         for (i = 0, len = checkboxes.length; i < len; i++) {
             cubesToDelete.push($(checkboxes[i]).parent()[0].textContent);
@@ -2961,33 +2956,43 @@ var NCE = (function ($) {
             return;
         }
 
-        ul = $('#deletedCubeList');
-        ul.empty();
+        _deletedCubeList.empty();
         $('#restoreCubeLabel')[0].textContent = 'Restore Cubes in ' + _selectedVersion + ', ' + _selectedStatus;
         result = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [getAppId(), "*", null, getDeletedRecordsSearchOptions()]);
         if (result.status) {
-            $.each(result.data, function (index, value) {
-                var li = $('<li/>').prop({class: 'list-group-item skinny-lr'});
-                var div = $('<div/>').prop({class:'container-fluid'});
-                var checkbox = $('<input>').prop({class:'restoreCheck', type:'checkbox'});
-                var label = $('<label/>').prop({class: 'checkbox no-margins'});
-                label[0].textContent = value.name;
-                ul.append(li);
-                li.append(div);
-                div.append(label);
-                checkbox.prependTo(label); // <=== create input without the closing tag
-            });
+            buildUlForRestoreDelete(_deletedCubeList, result.data);
             _restoreCubeModal.modal();
         } else {
             showNote('Error fetching deleted cubes (' + _selectedVersion + ', ' + _selectedStatus + '):<hr class="hr-small"/>' + result.data);
         }
     }
 
+    function buildUlForRestoreDelete(ul, dtos) {
+        var i, len, html, dto, keys, isObj;
+        if (typeof dtos === OBJECT) {
+            isObj = true;
+            keys = Object.keys(dtos);
+            len = keys.length;
+        } else {
+            len = dtos.length;
+        }
+        html = '';
+        for (i = 0; i < len; i++) {
+            dto = isObj ? dtos[keys[i]] : dtos[i];
+            html += '<li class="list-group-item skinny-lr no-margins"><div class="container-fluid">';
+            html += getJsonHtmlLabelsHtml(dto);
+            html += '<label class="checkbox checkbox-label"><input type="checkbox">' + dto.name + '</label>';
+            html += '</div></li>';
+        }
+        ul.append(html);
+        addJsonHtmlListeners(ul);
+    }
+
     function restoreCubeOk() {
         var cubesToRestore, result, cubeName, i, len, checkboxes;
         _restoreCubeModal.modal('hide');
 
-        checkboxes = $('.restoreCheck:checked');
+        checkboxes = _deletedCubeList.find(':checked');
         cubesToRestore = [];
         for (i = 0, len = checkboxes.length; i < len; i++) {
             cubesToRestore.push($(checkboxes[i]).parent()[0].textContent);
@@ -3068,19 +3073,23 @@ var NCE = (function ($) {
             }
 
             _revisionHistoryList.append(html);
-            _revisionHistoryList.find('a.anc-html').on('click', function () {
-                onRevisionViewClick($(this), false);
-            });
-            _revisionHistoryList.find('a.anc-json').on('click', function () {
-                onRevisionViewClick($(this), true);
-            });
+            addJsonHtmlListeners(_revisionHistoryList);
             _revisionHistoryModal.modal();
         } else {
             showNote('Error fetching revision history (' + appId.version + ', ' + appId.status + '):<hr class="hr-small"/>' + result.data);
         }
     }
+    
+    function addJsonHtmlListeners(ul) {
+        ul.find('a.anc-html').on('click', function () {
+            onJsonHtmlViewClick($(this), false);
+        });
+        ul.find('a.anc-json').on('click', function () {
+            onJsonHtmlViewClick($(this), true);
+        });
+    }
 
-    function onRevisionViewClick(el, isJson) {
+    function onJsonHtmlViewClick(el, isJson) {
         var title, oldWindow, result, suffix, format;
         suffix = isJson ? '.json' : '.html';
         format = isJson ? JSON_MODE.PRETTY : JSON_MODE.HTML;
@@ -4155,12 +4164,7 @@ var NCE = (function ($) {
                 diffCubeRevs(change.id, change.head, diffOptions);
             }
         });
-        ul.find('a.anc-html').on('click', function () {
-            onRevisionViewClick($(this), false);
-        });
-        ul.find('a.anc-json').on('click', function () {
-            onRevisionViewClick($(this), true);
-        });
+        addJsonHtmlListeners(ul);
         ul.find('li.changeTypeHeader').find('a').on('click', function() {
             selectAllNoneChangeTypeHeaderClick($(this));
         });
@@ -4335,14 +4339,10 @@ var NCE = (function ($) {
                 html += '</label>';
             }
             if (options.hasOwnProperty('html')) {
-                html += '<label class="html-label">';
-                html += '<a href="#" class="anc-html" data-cube-id="' + infoDto.id + '" data-rev-id="' + infoDto.revision + '" data-cube-name="' + infoDto.name + '"><kbd>HTML</kbd></a>';
-                html += '</label>';
+                html += getHtmlLabelHtml(infoDto);
             }
             if (options.hasOwnProperty('json')) {
-                html += '<label class="json-label">';
-                html += '<a href="#" class="anc-json" data-cube-id="' + infoDto.id + '" data-rev-id="' + infoDto.revision + '" data-cube-name="' + infoDto.name + '"><kbd>JSON</kbd></a>';
-                html += '</label>';
+                html += getJsonLabelHtml(infoDto);
             }
 
             html += '<label class="checkbox checkbox-label ' + displayType.CSS_CLASS + '">';
@@ -4354,6 +4354,24 @@ var NCE = (function ($) {
 
             html += '</div></li>';
         }
+        return html;
+    }
+    
+    function getJsonHtmlLabelsHtml(dto) {
+        return getHtmlLabelHtml(dto) + getJsonLabelHtml(dto);
+    }
+    
+    function getJsonLabelHtml(dto) {
+        var html = '<label class="json-label">';
+        html += '<a href="#" class="anc-json" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>JSON</kbd></a>';
+        html += '</label>';
+        return html;
+    }
+    
+    function getHtmlLabelHtml(dto) {
+        var html = '<label class="html-label">';
+        html += '<a href="#" class="anc-html" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>HTML</kbd></a>';
+        html += '</label>';
         return html;
     }
     
