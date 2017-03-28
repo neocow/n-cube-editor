@@ -3283,19 +3283,24 @@ var NCE = (function ($) {
         var result, cubeNames, i, len, html;
         _showRefsFromLabel[0].textContent = 'Outbound refs of: ' + _selectedCubeName;
         _refsFromCubeList.empty();
-        _showRefsFromCubeModal.modal();
         result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCES_FROM, [getSelectedTabAppId(), _selectedCubeName]);
         if (result.status) {
             cubeNames = result.data;
-            html = '';
-            for (i = 0, len = cubeNames.length; i < len; i++){
-                html += '<li class="list-group-item skinny-lr"><a href="#">' + cubeNames[i] + '</a></li>';
+            len = cubeNames.length;
+            if (len) {
+                _showRefsFromCubeModal.modal();
+                html = '';
+                for (i = 0; i < len; i++) {
+                    html += '<li class="list-group-item skinny-lr"><a href="#">' + cubeNames[i] + '</a></li>';
+                }
+                _refsFromCubeList.append(html);
+                _refsFromCubeList.find('a').on('click', function () {
+                    _showRefsFromCubeModal.modal('hide');
+                    selectCubeByName(this.innerHTML);
+                });
+            } else {
+                showNote('No references to show.', null, TWO_SECOND_TIMEOUT);
             }
-            _refsFromCubeList.append(html);
-            _refsFromCubeList.find('a').on('click', function() {
-                _showRefsFromCubeModal.modal('hide');
-                selectCubeByName(this.innerHTML);
-            });
         } else {
             showNote('Error fetching outbound references for ' + _selectedCubeName + '):<hr class="hr-small"/>' + result.data);
         }
