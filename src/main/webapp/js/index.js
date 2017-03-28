@@ -3293,7 +3293,7 @@ var NCE = (function ($) {
             }
             _refsFromCubeList.append(html);
             _refsFromCubeList.find('a').on('click', function() {
-                showRefsFromCubeClose();
+                _showRefsFromCubeModal.modal('hide');
                 selectCubeByName(this.innerHTML);
             });
         } else {
