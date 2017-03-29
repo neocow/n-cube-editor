@@ -286,12 +286,12 @@ var FormBuilder = (function ($) {
         var sectionId = ID_PREFIX.SECTION + id;
         var collapseId = ID_PREFIX.COLLAPSE + id;
         var panelType = type || BOOTSTRAP_TYPE.DEFAULT;
-        var html = '<div id="' + sectionId + '" class="panel-group">'
+        var html = '<div class="form-builder-section"><div id="' + sectionId + '" class="panel-group">'
             + '<div class="panel panel-' + panelType + '">'
             + '<div class="panel-heading"><h4 class="panel-title">'
             + (collapsible ? ('<a data-toggle="collapse" href="#' + collapseId + '">' + title + '</a>') : title)
             + '</h4></div><div id="' + collapseId + '" class="panel-collapse collapse in">'
-            + '<div class="panel-body">' + (body || '') + '</div></div></div></div>';
+            + '<div class="panel-body">' + (body || '') + '</div></div></div></div></div>';
         return $(html);
     }
     
