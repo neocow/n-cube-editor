@@ -126,8 +126,6 @@ var NCE = (function ($) {
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
     var _diffModalMerge = $('#diffModalMerge');
     var _diffInstructions = $('#diffInstructions');
-    var _refsFromCubeList = $('#refsFromCubeList');
-    var _showRefsFromLabel = $('#showRefsFromLabel');
     var _reqScopeList = $('#reqScopeList');
     var _showReqScopeLabel = $('#showReqScopeLabel');
     var _commitOk = $('#commitOk');
@@ -162,7 +160,6 @@ var NCE = (function ($) {
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
     var _deleteCubeModal = $('#deleteCubeModal');
-    var _showRefsFromCubeModal = $('#showRefsFromCubeModal');
     var _showReqScopeModal = $('#showReqScopeModal');
     var _viewCommitsModal = $('#view-commits-modal');
 
@@ -3280,24 +3277,19 @@ var NCE = (function ($) {
     }
 
     function showRefsFromCube() {
-        var result, cubeNames, i, len, html;
-        _showRefsFromLabel[0].textContent = 'Outbound refs of: ' + _selectedCubeName;
-        _refsFromCubeList.empty();
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCES_FROM, [getSelectedTabAppId(), _selectedCubeName]);
+        var cubeNames, opts;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCES_FROM, [getSelectedTabAppId(), _selectedCubeName]);
         if (result.status) {
             cubeNames = result.data;
-            len = cubeNames.length;
-            if (len) {
-                _showRefsFromCubeModal.modal();
-                html = '';
-                for (i = 0; i < len; i++) {
-                    html += '<li class="list-group-item skinny-lr"><a href="#">' + cubeNames[i] + '</a></li>';
-                }
-                _refsFromCubeList.append(html);
-                _refsFromCubeList.find('a').on('click', function () {
-                    _showRefsFromCubeModal.modal('hide');
-                    selectCubeByName(this.innerHTML);
-                });
+            if (cubeNames.length) {
+                opts = {
+                    cubeName: _selectedCubeName,
+                    refClick: function (e) {
+                        selectCubeByName(e.target.textContent, getSelectedTabAppId());
+                        FormBuilder.closeBuilderModal();
+                    }
+                };
+                FormBuilder.openBuilderModal(NCEBuilderOptions.outboundRefs(opts), cubeNames);
             } else {
                 showNote('No references to show.', null, TWO_SECOND_TIMEOUT);
             }

@@ -14,6 +14,7 @@
  *      size                - size of modal; use constant MODAL_SIZE; default LARGE
  *      hasSelectAllNone    - does modal use select all and select none; default FALSE
  *      hasFilter           - does modal use filter; list view only; default FALSE
+ *      canRemoveRows       - for table if rows can be deleted
  *      columns             - columns to show on modal for either table or list view
  *          heading         - heading for column
  *          type            - type of input for column; use constant INPUT_TYPE
@@ -40,7 +41,9 @@ var FormBuilder = (function ($) {
 
     // constants
     var INPUT_TYPE = {
+        BUTTON: 'button',
         CHECKBOX: 'checkbox',
+        LINK: 'link',
         READONLY: 'readonly',
         SECTION: 'section',
         SELECT: 'select',
@@ -138,15 +141,14 @@ var FormBuilder = (function ($) {
 
     function buildModal() {
         var sizeClass = _options.size;
-        var filterClass = _options.hasFilter ? 'modal-filter' : '';
-
         var html = '<div tabindex="-1" data-role="dialog" data-backdrop="static" class="modal fade">'
                  + '<div class="modal-dialog ' + sizeClass + '">'
-                 + '<div class="modal-content ' + filterClass + '"></div>'
+                 + '<div class="modal-content"></div>'
                  + '</div></div>';
 
         var modal = $(html).on('shown.bs.modal', function() {
             makeModalDraggable();
+            addModalFilter();
             positionDropdownMenus();
         }).on('hidden.bs.modal', function() {
             closeModal();
@@ -306,13 +308,17 @@ var FormBuilder = (function ($) {
     function buildFormControl(formInput, readonlyOverride) {
         var control = $('<div class="form-group"/>');
         control.append(buildFormInput(formInput, readonlyOverride));
+        registerListeners(formInput, control);
+        return control;
+    }
+
+    function registerListeners(formInput, control) {
         if (formInput.hasOwnProperty('listeners')) {
             addListenersToControl(control, formInput.listeners);
             if (formInput.listeners.hasOwnProperty('populate')) {
                 control.find('input,select').trigger('populate');
             }
         }
-        return control;
     }
 
     function toggle(formInputKey, forceState) {
@@ -471,7 +477,7 @@ var FormBuilder = (function ($) {
     function addListenersToControl(control, listeners) {
         var i, len, key;
         var keys = Object.keys(listeners);
-        var input = control.find('input,select');
+        var input = control.find('input,select,a');
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             input.on(key, listeners[key]);
@@ -521,7 +527,7 @@ var FormBuilder = (function ($) {
     }
 
     function buildTable(data, tableOpts) {
-        var columns, columnKeys, headingRow, c, cLen, column, header;
+        var columns, columnKeys, headingRow, c, cLen, column, header, key;
         var style = tableOpts.css || { margin: '0 auto' };
         var table = $('<table/>').css(style);
 
@@ -531,7 +537,9 @@ var FormBuilder = (function ($) {
         headingRow = $('<tr/>');
         table.append(headingRow);
         for (c = 0, cLen = columnKeys.length; c < cLen; c++) {
-            column = columns[columnKeys[c]];
+            key = columnKeys[c];
+            column = columns[key];
+            column.name = key;
             header = $('<th/>').html(column.heading).css(column.css || TD_CSS);
             if (column.sortable) {
                 header.on('click', function() {
@@ -570,7 +578,7 @@ var FormBuilder = (function ($) {
     }
 
     function addTableRow(table, dataRow, tableOpts) {
-        var c, cLen, key, column, dataVal, inputElement, closeBtn;
+        var c, cLen, key, column, dataVal, inputElement, closeBtn, td;
         var tr = $('<tr/>').addClass(TR_CLASS);
         var columnKeys = tableOpts.columnKeys;
         var columns = tableOpts.columns;
@@ -587,13 +595,15 @@ var FormBuilder = (function ($) {
 
             inputElement = getDataRowInput(column, dataVal);
             inputElement.addClass(key);
-            tr.append($('<td/>').append(inputElement).css(column.css || TD_CSS));
+            td = $('<td/>').append(inputElement).css(column.css || TD_CSS);
+            registerListeners(column, td);
+            tr.append(td);
         }
 
-        if (!_options.readonly) {
+        if (_options.canRemoveRows && !_options.readonly) {
             closeBtn = $('<span/>').addClass('glyphicon glyphicon-remove tab-close-icon');
             closeBtn.click(function () {
-                tr.remove();
+                $(this).closest('tr').remove();
             });
         }
         table.append(tr);
@@ -603,19 +613,23 @@ var FormBuilder = (function ($) {
 
     function getDataRowInput(column, dataVal) {
         var inputElement;
+        var inputClass = ID_PREFIX.INPUT + column.name;
         switch (column.type) {
             case INPUT_TYPE.CHECKBOX:
-                inputElement = $('<input/>').prop({type:'checkbox', checked:dataVal});
+                inputElement = $('<input class="' + inputClass + '"/>').prop({type:'checkbox', checked:dataVal});
                 break;
             case INPUT_TYPE.READONLY:
-                inputElement = $('<span/>').html(dataVal);
+                inputElement = $('<span class="' + inputClass + '">' + dataVal + '</span>');
                 break;
             case INPUT_TYPE.SELECT:
-                inputElement = $('<select/>');
+                inputElement = $('<select class="' + inputClass + '"/>');
                 populateSelect(inputElement, column.selectOptions, dataVal);
                 break;
             case INPUT_TYPE.TEXT:
-                inputElement = $('<input/>').prop('type','text').val(dataVal);
+                inputElement = $('<input class="' + inputClass + '" type="text"/>').val(dataVal);
+                break;
+            case INPUT_TYPE.LINK:
+                inputElement = $('<a class="' + inputClass + '" href="#">' + dataVal + '</a>');
                 break;
         }
         return inputElement;
@@ -726,6 +740,99 @@ var FormBuilder = (function ($) {
         _modal.draggable(shouldBeDraggable ? 'enable' : 'disable');
     }
 
+    function addModalFilter() {
+        var items, checkBoxes, checkedItems, contentDiv, countSpan, div, input;
+        if (!_options.hasFilter) {
+            return;
+        }
+        items = [];
+        checkBoxes = [];
+        checkedItems = [];
+        contentDiv = _modal.find('.modal-content');
+        countSpan = $('<span/>');
+        div = $('<div/>');
+        input = $('<input/>');
+
+        function refreshItems() {
+            input.val('');
+            input.focus();
+            items = contentDiv.find('.modal-body').find('li,tr');
+            if (items.find('input[type="checkbox"]').length) {
+                items = items.has('input[type="checkbox"]:not(".exclude")');
+            }
+            items.on('remove', function() {
+                delay(function() {
+                    refreshItems();
+                }, 50);
+            });
+            checkBoxes = items.find('input[type="checkbox"]');
+            refreshCount();
+        }
+
+        function refreshCount() {
+            checkedItems = checkBoxes.filter(function() {
+                return $(this)[0].checked;
+            });
+            countSpan[0].innerHTML = checkedItems.length + ' of ' + items.length + ' Selected';
+        }
+
+        countSpan.addClass('pull-left selected-count');
+        contentDiv.find('.btn.pull-left:last').after(countSpan);
+
+        contentDiv.click(function() {
+            refreshCount();
+        });
+
+        input.addClass('modal-filter-input');
+        input.prop({'type':'text','placeholder':'Filter...'});
+        input.css({'width':'100%'});
+        input.on('keyup', function(e) {
+            delay(function() {
+                var query = input.val().toLowerCase();
+                if (query === '') {
+                    items.show();
+                } else {
+                    items.hide();
+                    items.filter(function () {
+                        var el, cb, tds, td;
+                        var item = $(this);
+                        if (item.is('li')) {
+                            el = item;
+                            cb = item.find('input[type="checkbox"]');
+                            if (cb.length) {
+                                el = cb.parent();
+                            }
+                            return el[0].textContent.toLowerCase().indexOf(query) > -1;
+                        }
+                        if (item.is('tr')) {
+                            tds = item.find('td').filter(function() {
+                                td = $(this);
+                                if (td.find('input[type="checkbox"]').length) {
+                                    return false;
+                                }
+                                return td[0].textContent.toLowerCase().indexOf(query) > -1;
+                            });
+                            return tds.length;
+                        }
+                    }).show();
+                }
+            }, e.keyCode === KEY_CODES.ENTER ? 0 : PROGRESS_DELAY);
+        });
+
+        contentDiv.find('.modal-header').after(div);
+        div.append(input);
+
+        contentDiv.parent().parent().on('shown.bs.modal', function(){
+            refreshItems();
+        });
+        contentDiv.on('show', function() {
+            refreshItems();
+        });
+
+        // run on init
+        refreshItems();
+    }
+
     function positionDropdownMenus() {
         _modal.find('.dropdown-toggle').on('click', function () {
             var contentOffset;
@@ -757,6 +864,7 @@ var FormBuilder = (function ($) {
     }
 
     return {
+        closeBuilderModal: closeBuilderModal,
         getInputValue: getInputValue,
         setInputValue: setInputValue,
         openBuilderModal: openBuilderModal,

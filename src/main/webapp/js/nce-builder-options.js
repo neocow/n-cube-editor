@@ -1,7 +1,7 @@
 var NCEBuilderOptions = (function () {
     /*
      * All methods have valid options of:
-     * readonly     -   self-explanatory
+     * readonly     - self-explanatory
      * afterSave    - callback to fire on save
      * onClose      - callback to fire when the modal closes (fires after save if saved)
      */
@@ -16,6 +16,7 @@ var NCEBuilderOptions = (function () {
             instructionsTitle: 'Instructions - Filter Data',
             instructionsText: 'Select filters to apply to cell data for ncube.',
             displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            canRemoveRows: true,
             readonly: opts.readonly,
             afterSave: opts.afterSave,
             onClose: opts.onClose,
@@ -60,6 +61,7 @@ var NCEBuilderOptions = (function () {
             instructionsTitle: 'Instructions - Metaproperties',
             instructionsText: 'Add custom properties for this ' + opts.type + '.',
             displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            canRemoveRows: true,
             size: FormBuilder.MODAL_SIZE.LARGE,
             readonly: opts.readonly,
             afterSave: opts.afterSave,
@@ -602,6 +604,32 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  cubeName
+     */
+    function outboundRefs(opts) {
+        return {
+            title: 'Outbound refs of - ' + opts.cubeName,
+            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            size: FormBuilder.MODAL_SIZE.MEDIUM,
+            readonly: true,
+            onClose: opts.onClose,
+            closeButtonText: 'Close',
+            hasFilter: true,
+            css: {},
+            columns: {
+                refCube: {
+                    type: FormBuilder.INPUT_TYPE.LINK,
+                    css: {},
+                    listeners: {
+                        click: opts.refClick
+                    }
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -610,6 +638,7 @@ var NCEBuilderOptions = (function () {
         copyCube: copyCube,
         addAxis: addAxis,
         deleteAxis: deleteAxis,
-        updateAxis: updateAxis
+        updateAxis: updateAxis,
+        outboundRefs: outboundRefs
     };
 })(jQuery);
