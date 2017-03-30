@@ -607,6 +607,7 @@ var NCEBuilderOptions = (function () {
     /*
      * additional required options:
      *  cubeName
+     *  refClick
      */
     function outboundRefs(opts) {
         return {
@@ -630,6 +631,29 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  cubeName
+     */
+    function requiredScope(opts) {
+        return {
+            title: 'Scope for - ' + opts.cubeName,
+            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            size: FormBuilder.MODAL_SIZE.MEDIUM,
+            readonly: true,
+            onClose: opts.onClose,
+            closeButtonText: 'Close',
+            hasFilter: true,
+            css: {},
+            columns: {
+                scopeKey: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: {}
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -639,6 +663,7 @@ var NCEBuilderOptions = (function () {
         addAxis: addAxis,
         deleteAxis: deleteAxis,
         updateAxis: updateAxis,
-        outboundRefs: outboundRefs
+        outboundRefs: outboundRefs,
+        requiredScope: requiredScope
     };
 })(jQuery);

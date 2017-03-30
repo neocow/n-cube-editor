@@ -126,8 +126,6 @@ var NCE = (function ($) {
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
     var _diffModalMerge = $('#diffModalMerge');
     var _diffInstructions = $('#diffInstructions');
-    var _reqScopeList = $('#reqScopeList');
-    var _showReqScopeLabel = $('#showReqScopeLabel');
     var _commitOk = $('#commitOk');
     var _pullRequestLink = $('#pull-link');
     var _rollbackOk = $('#rollbackOk');
@@ -160,7 +158,6 @@ var NCE = (function ($) {
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
     var _deleteCubeModal = $('#deleteCubeModal');
-    var _showReqScopeModal = $('#showReqScopeModal');
     var _viewCommitsModal = $('#view-commits-modal');
 
     preInit();
@@ -3299,18 +3296,9 @@ var NCE = (function ($) {
     }
 
     function showReqScope() {
-        var result, scopeKeys, i, len, html;
-        _showReqScopeLabel[0].textContent = "Scope for '" + _selectedCubeName + "'";
-        _reqScopeList.empty();
-        _showReqScopeModal.modal();
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_REQUIRED_SCOPE, [getSelectedTabAppId(), _selectedCubeName]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_REQUIRED_SCOPE, [getSelectedTabAppId(), _selectedCubeName]);
         if (result.status) {
-            scopeKeys = result.data;
-            html = '';
-            for (i = 0, len = scopeKeys.length; i < len; i++) {
-                html += '<li class="list-group-item skinny-lr">' + scopeKeys[i] + '</li>';
-            }
-            _reqScopeList.append(html);
+            FormBuilder.openBuilderModal(NCEBuilderOptions.requiredScope({cubeName: _selectedCubeName}), result.data);
         } else {
             showNote('Error fetching required scope for: ' + _selectedCubeName + '):<hr class="hr-small"/>' + result.data);
         }
