@@ -14,7 +14,7 @@
  *      size                - size of modal; use constant MODAL_SIZE; default LARGE
  *      hasSelectAllNone    - does modal use select all and select none; default FALSE
  *      hasFilter           - does modal use filter; list view only; default FALSE
- *      canRemoveRows       - for table if rows can be deleted
+ *      canAddRemoveRows    - for table if rows can be added or deleted; default FALSE
  *      columns             - columns to show on modal for either table or list view
  *          heading         - heading for column
  *          type            - type of input for column; use constant INPUT_TYPE
@@ -99,7 +99,7 @@ var FormBuilder = (function ($) {
     function openBuilderModal(options, data) {
         var container;
         var buildNew = !_modal;
-        _data = data || {};
+        _data = data || options.data || {};
         _options = options;
         setDefaultOptions();
 
@@ -214,8 +214,10 @@ var FormBuilder = (function ($) {
                     buttons.selectAll = '<button class="btn btn-info btn-sm pull-left form-builder-select-all" aria-hidden="true">Select All</button>';
                     buttons.selectNone = '<button class="btn btn-info btn-sm pull-left form-builder-select-none" aria-hidden="true">Select None</button>';
                 }
-                buttons.add = '<button class="btn btn-success btn-sm form-builder-add">Add New</button>';
-                buttons.clear = '<button class="btn btn-danger btn-sm form-builder-clear">Clear</button>';
+                if (_options.canAddRemoveRows) {
+                    buttons.add = '<button class="btn btn-success btn-sm form-builder-add">Add New</button>';
+                    buttons.clear = '<button class="btn btn-danger btn-sm form-builder-clear">Clear</button>';
+                }
             }
         }
 
@@ -306,7 +308,8 @@ var FormBuilder = (function ($) {
     }
 
     function buildFormControl(formInput, readonlyOverride) {
-        var control = $('<div class="form-group"/>');
+        var style = formInput.layout === INPUT_LAYOUT.INLINE ? 'display:inline-block;margin: 0 10px;' : '';
+        var control = $('<div class="form-group" style="' + style + '"/>');
         control.append(buildFormInput(formInput, readonlyOverride));
         registerListeners(formInput, control);
         return control;
@@ -386,7 +389,7 @@ var FormBuilder = (function ($) {
 
     function buildFormInput(formInput, readonlyOverride) {
         var id = ID_PREFIX.INPUT + formInput.name;
-        var label = formInput.label;
+        var label = formInput.label || '';
         var readonly = readonlyOverride || formInput.readonly;
         var selectOptions = formInput.selectOptions;
         var initVal = '';
@@ -404,21 +407,21 @@ var FormBuilder = (function ($) {
                 default:
                     return createFormTableDisplayTextInput(id, label, readonly, initVal);
             }
-        } else {
-            switch (formInput.type) {
-                case INPUT_TYPE.CHECKBOX:
-                    return createFormCheckboxInput(id, label, readonly, initVal);
-                case INPUT_TYPE.SELECT:
-                    return createFormDefaultDisplaySelectInput(id, label, selectOptions, readonly, initVal);
-                case INPUT_TYPE.TABLE:
-                    return $('<div id="' + id + '" style="max-height:300px; overflow-y:auto;"/>').append(buildTable(initVal, formInput));
-                case INPUT_TYPE.TEXT_SELECT:
-                    return createFormTextSelectInput(id, label, selectOptions, readonly, initVal);
-                case INPUT_TYPE.READONLY:
-                    return $('<span id="' + id + '">' + label + '</span>');
-                default:
-                    return createFormDefaultTextInput(id, label, readonly, initVal);
-            }
+        }
+
+        switch (formInput.type) {
+            case INPUT_TYPE.CHECKBOX:
+                return createFormCheckboxInput(id, label, readonly, initVal);
+            case INPUT_TYPE.SELECT:
+                return createFormDefaultDisplaySelectInput(id, label, selectOptions, readonly, initVal);
+            case INPUT_TYPE.TABLE:
+                return $('<div id="' + id + '" style="max-height:300px; overflow-y:auto;"/>').append(buildTable(initVal, formInput));
+            case INPUT_TYPE.TEXT_SELECT:
+                return createFormTextSelectInput(id, label, selectOptions, readonly, initVal);
+            case INPUT_TYPE.READONLY:
+                return $('<span id="' + id + '">' + label + '</span>');
+            default:
+                return createFormDefaultTextInput(id, label, readonly, initVal);
         }
     }
 
@@ -582,11 +585,17 @@ var FormBuilder = (function ($) {
         var tr = $('<tr/>').addClass(TR_CLASS);
         var columnKeys = tableOpts.columnKeys;
         var columns = tableOpts.columns;
+        if (tableOpts.canAddRemoveRows && !tableOpts.readonly) {
+            closeBtn = $('<span/>').addClass('glyphicon glyphicon-remove tab-close-icon');
+            closeBtn.click(function () {
+                $(this).closest('tr').remove();
+            });
+        }
         for (c = 0, cLen = columnKeys.length; c < cLen; c++) {
             key = columnKeys[c];
             column = columns[key];
             if (dataRow) {
-                dataVal = typeof dataRow === OBJECT ? dataRow[key] : dataRow;
+                dataVal = typeof dataRow === 'object' ? dataRow[key] : dataRow;
             } else if (column.hasOwnProperty('default')) {
                 dataVal = column.default;
             } else {
@@ -597,17 +606,16 @@ var FormBuilder = (function ($) {
             inputElement.addClass(key);
             td = $('<td/>').append(inputElement).css(column.css || TD_CSS);
             registerListeners(column, td);
+            if (column.readonly) {
+                td.find('input,textarea,select').attr('disabled', true);
+            }
             tr.append(td);
         }
 
-        if (_options.canRemoveRows && !_options.readonly) {
-            closeBtn = $('<span/>').addClass('glyphicon glyphicon-remove tab-close-icon');
-            closeBtn.click(function () {
-                $(this).closest('tr').remove();
-            });
-        }
         table.append(tr);
-        tr.append($('<td/>').append(closeBtn));
+        if (closeBtn) {
+            tr.append($('<td/>').append(closeBtn));
+        }
         tr.find('input').first().focus();
     }
 
@@ -622,7 +630,7 @@ var FormBuilder = (function ($) {
                 inputElement = $('<span class="' + inputClass + '">' + dataVal + '</span>');
                 break;
             case INPUT_TYPE.SELECT:
-                inputElement = $('<select class="' + inputClass + '"/>');
+                inputElement = $('<select class="' + inputClass + '" style="width:100%;max-width:95%;"/>');
                 populateSelect(inputElement, column.selectOptions, dataVal);
                 break;
             case INPUT_TYPE.TEXT:
@@ -668,6 +676,8 @@ var FormBuilder = (function ($) {
                     case INPUT_TYPE.SECTION:
                         copyFormDataToModel(inputOpts.formInputs);
                         break;
+                    case INPUT_TYPE.TABLE:
+                        copyFormTableDataToModel(inputOpts.columns);
                     case INPUT_TYPE.CHECKBOX:
                         val = input.prop('checked');
                         break;
@@ -677,6 +687,15 @@ var FormBuilder = (function ($) {
                 }
                 _data[key] = val || inputOpts.default;
             }
+        }
+    }
+
+    function copyFormTableDataToModel(columns) {
+        var i, len, key;
+        var columnKeys = Object.keys(columns);
+        for (i = 0, len = columnKeys.length; i < len; i++) {
+            key = columnKeys[i];
+            _data[key] = findTableElementsByKey(key).val();
         }
     }
 
@@ -706,17 +725,25 @@ var FormBuilder = (function ($) {
     }
 
     function getInputValue(key) {
-        var el = _modal.find('#' + ID_PREFIX.INPUT + key);
+        var el = findElementByKey(key);
         if (el.length) {
             return el.val();
         }
     }
 
     function setInputValue(key, value) {
-        var el = _modal.find('#' + ID_PREFIX.INPUT + key);
+        var el = findElementByKey(key);
         if (el.length) {
             el.val(value);
         }
+    }
+
+    function findElementByKey(key) {
+        return _modal.find('#' + ID_PREFIX.INPUT + key);
+    }
+
+    function findTableElementsByKey(key) {
+        return $('.' + TR_CLASS).find('.' + key);
     }
 
     function makeModalDraggable() {
@@ -865,6 +892,8 @@ var FormBuilder = (function ($) {
 
     return {
         closeBuilderModal: closeBuilderModal,
+        findElementByKey: findElementByKey,
+        findTableElementsByKey: findTableElementsByKey,
         getInputValue: getInputValue,
         setInputValue: setInputValue,
         openBuilderModal: openBuilderModal,
