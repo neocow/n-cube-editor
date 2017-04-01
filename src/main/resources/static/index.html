@@ -475,46 +475,6 @@
     </div>
 </div>
 
-<!-- 'Show References from' Modal -->
-<div id="showRefsFromCubeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showRefsFromLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content modal-filter">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="showRefsFromLabel" class="modal-title"></h3>
-            </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
-                <ul id="refsFromCubeList" class="list-group">
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button id="showRefsFromClose" data-dismiss="modal" class="btn btn-primary">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 'Show Required Scope' Modal -->
-<div id="showReqScopeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="showReqScopeLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content modal-filter">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="showReqScopeLabel" class="modal-title"></h3>
-            </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
-                <ul id="reqScopeList" class="list-group">
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button id="showReqScopeClose" data-dismiss="modal" class="btn btn-primary">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Release Cubes Modal -->
 <div id="releaseCubesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="releaseCubesLabel"
      aria-hidden="true" data-backdrop="static">
@@ -672,60 +632,6 @@
                 <input id="batchUpdateAxisReferencesToggle" type="checkbox" checked data-toggle="toggle" data-width="150"
                        data-on="Destination Axis" data-off="Transform Axis" data-onstyle="primary" data-offstyle="primary" />
                 <button id="batchUpdateAxisReferencesUpdate" class="btn btn-primary btn-sm">Update Selected References</button>
-                <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Global Cube Comparator Modal -->
-<div id="globalComparatorModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="globalComparatorLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="globalComparatorLabel" class="modal-title">Compare Any Two Cubes</h3>
-            </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
-                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-                    <div class="panel panel-default">
-                        <div class="panel-heading" role="tab" id="globalComparatorHeading">
-                            <h4 class="panel-title">
-                                <a id="globalComparatorInstTitle" data-toggle="collapse" data-parent="#accordion" href="#globalComparatorCollapse"
-                                   aria-expanded="true" aria-controls="globalComparatorCollapse">Instructions</a>
-                            </h4>
-                        </div>
-                        <div id="globalComparatorCollapse" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="globalComparatorHeading">
-                            <div id="globalComparatorInstructions" class="panel-body">Select two cubes to compare using the left (merge to) and right (merge from) selectors.</div>
-                        </div>
-                    </div>
-                </div>
-                <table id="globalComparatorTable">
-                    <tr>
-                        <td  class="view-commits-app">App:</td>
-                        <td  class="view-commits-app"><select id="globalComparatorLeftApp"></select></td>
-                        <td  class="view-commits-app"><select id="globalComparatorRightApp"></select></td>
-                    </tr>
-                    <tr>
-                        <td  class="view-commits-app">Version:</td>
-                        <td  class="view-commits-app"><select id="globalComparatorLeftVersion"></select></td>
-                        <td  class="view-commits-app"><select id="globalComparatorRightVersion"></select></td>
-                    </tr>
-                    <tr>
-                        <td  class="view-commits-app">Branch:</td>
-                        <td  class="view-commits-app"><select id="globalComparatorLeftBranch"></select></td>
-                        <td  class="view-commits-app"><select id="globalComparatorRightBranch"></select></td>
-                    </tr>
-                    <tr>
-                        <td  class="view-commits-app">Cube:</td>
-                        <td  class="view-commits-app"><select id="globalComparatorLeftCube"></select></td>
-                        <td  class="view-commits-app"><select id="globalComparatorRightCube"></select></td>
-                    </tr>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button id="globalComparatorCompare" class="btn btn-primary btn-sm">Compare</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
             </div>
         </div>

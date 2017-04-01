@@ -4328,21 +4328,6 @@ var NCubeEditor2 = (function ($) {
 
     // =============================================== Begin Axis Editing ==============================================
 
-    function getCubeListForApp(appId) {
-        var i, len, cubes, results;
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appId, '*', null, getDefaultSearchOptions()]);
-        if (!result.status) {
-            nce.showNote('Unable to run search: ' + result.data, 'Error');
-            return;
-        }
-        cubes = [];
-        results = result.data;
-        for (i = 0, len = results.length; i < len; i++) {
-            cubes.push(results[i].name);
-        }
-        return cubes;
-    }
-
     function getAxesFromCube(appId, cubeName, axisName) {
         var axisNames, results, i, len, axis;
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:'json'}], {noResolveRefs:true});
@@ -4394,7 +4379,7 @@ var NCubeEditor2 = (function ($) {
         opts = {
             appSelectList: nce.loadAppNames(),
             populateVersionFunc: nce.getAppVersions,
-            populateCubeFunc: getCubeListForApp,
+            populateCubeFunc: nce.getCubeListForApp,
             populateAxisFunc: getAxesFromCube,
             populateMethodFunc: getMethodsFromTransformCube,
             afterSave: addAxisOk,

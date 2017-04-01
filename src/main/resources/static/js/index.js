@@ -112,24 +112,10 @@ var NCE = (function ($) {
     var _branchNameWarning = $('#branchNameWarning');
     var _createSnapshotLabel = $('#createSnapshotLabel');
     var _createSnapshotVersion = $('#createSnapshotVersion');
-    var _globalComparatorLeftApp = $('#globalComparatorLeftApp');
-    var _globalComparatorRightApp = $('#globalComparatorRightApp');
-    var _globalComparatorLeftVersion = $('#globalComparatorLeftVersion');
-    var _globalComparatorRightVersion = $('#globalComparatorRightVersion');
-    var _globalComparatorLeftBranch = $('#globalComparatorLeftBranch');
-    var _globalComparatorRightBranch = $('#globalComparatorRightBranch');
-    var _globalComparatorLeftCube = $('#globalComparatorLeftCube');
-    var _globalComparatorRightCube = $('#globalComparatorRightCube');
-    var _globalComparatorCompare = $('#globalComparatorCompare');
-    var _globalComparatorMenu = $('#globalComparatorMenu');
     var _revisionHistoryList = $('#revisionHistoryList');
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
     var _diffModalMerge = $('#diffModalMerge');
     var _diffInstructions = $('#diffInstructions');
-    var _refsFromCubeList = $('#refsFromCubeList');
-    var _showRefsFromLabel = $('#showRefsFromLabel');
-    var _reqScopeList = $('#reqScopeList');
-    var _showReqScopeLabel = $('#showReqScopeLabel');
     var _commitOk = $('#commitOk');
     var _pullRequestLink = $('#pull-link');
     var _rollbackOk = $('#rollbackOk');
@@ -158,12 +144,9 @@ var NCE = (function ($) {
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
     var _createSnapshotModal = $('#createSnapshotModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
-    var _globalComparatorModal = $('#globalComparatorModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
     var _deleteCubeModal = $('#deleteCubeModal');
-    var _showRefsFromCubeModal = $('#showRefsFromCubeModal');
-    var _showReqScopeModal = $('#showReqScopeModal');
     var _viewCommitsModal = $('#view-commits-modal');
 
     preInit();
@@ -970,52 +953,25 @@ var NCE = (function ($) {
     }
 
     function openGlobalComparator(cubeInfo) {
-        var appId, nce, appOpt, verOpt, branchOpt, cubeOpt;
-        appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
-        appOpt = [];
-        verOpt = [_selectedApp];
-        branchOpt = [appId];
-        cubeOpt = [appId, '*', null, getDefaultSearchOptions()];
-        nce = buildAppState();
-        _globalComparatorLeftApp.empty();
-        _globalComparatorRightApp.empty();
-        _globalComparatorLeftVersion.empty();
-        _globalComparatorRightVersion.empty();
-        _globalComparatorLeftBranch.empty();
-        _globalComparatorRightBranch.empty();
-        _globalComparatorLeftCube.empty();
-        _globalComparatorRightCube.empty();
-        _globalComparatorLeftApp.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorLeftVersion.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorLeftBranch.prop('disabled', cubeInfo !== undefined);
-        _globalComparatorLeftCube.prop('disabled', cubeInfo !== undefined);
-        
-        if (cubeInfo) {
-            _globalComparatorLeftApp.append('<option>' + cubeInfo[CUBE_INFO.APP] + '</option>');
-            _globalComparatorLeftVersion.append('<option>' + cubeInfo[CUBE_INFO.VERSION] + '-' + cubeInfo[CUBE_INFO.STATUS] + '</option>');
-            _globalComparatorLeftBranch.append('<option>' + cubeInfo[CUBE_INFO.BRANCH] + '</option>');
-            _globalComparatorLeftCube.append('<option>' + cubeInfo[CUBE_INFO.NAME] + '</option>');
-            populateSelect(nce, _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, appOpt, _selectedApp);
-            populateSelect(nce, _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, verOpt, _selectedVersion + '-' + _selectedStatus, true);
-            populateSelect(nce, _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, branchOpt, _selectedBranch, true);
-            populateSelect(nce, _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, cubeOpt, _selectedCubeName, true);
-        } else {
-            appId = appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
-            appOpt = [];
-            verOpt = [_selectedApp];
-            branchOpt = [appId];
-            cubeOpt = [appId, '*', null, getDefaultSearchOptions()];
-            populateSelect(nce, _globalComparatorRightApp, CONTROLLER_METHOD.GET_APP_NAMES, appOpt, _selectedApp);
-            populateSelect(nce, _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, verOpt, _selectedVersion + '-' + _selectedStatus, true);
-            populateSelect(nce, _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, branchOpt, _selectedBranch, true);
-            populateSelect(nce, _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, cubeOpt, _selectedCubeName, true);
-            populateSelect(nce, _globalComparatorLeftApp, CONTROLLER_METHOD.GET_APP_NAMES, appOpt, _selectedApp);
-            populateSelect(nce, _globalComparatorLeftVersion, CONTROLLER_METHOD.GET_VERSIONS, verOpt, _selectedVersion + '-' + _selectedStatus, true);
-            populateSelect(nce, _globalComparatorLeftBranch, CONTROLLER_METHOD.GET_BRANCHES, branchOpt, _selectedBranch, true);
-            populateSelect(nce, _globalComparatorLeftCube, CONTROLLER_METHOD.SEARCH, cubeOpt, _selectedCubeName, true);
-        }
+        var appId = getAppId();
+        var opts = {
+            rightAppId: appId,
+            rightCube: _selectedCubeName,
+            appSelectList: loadAppNames(),
+            populateVersionFunc: loadVersions,
+            populateBranchFunc: getBranchNamesByAppId,
+            populateCubeFunc: getCubeListForApp,
+            afterSave: globalComparatorCompare
+        };
 
-        _globalComparatorModal.modal();
+        if (cubeInfo) {
+            opts.leftDisabled = true;
+            opts.leftAppId = appIdFrom(cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH]);
+            opts.leftCube = cubeInfo[CUBE_INFO.NAME];
+        } else {
+            opts.leftAppId = getAppId();
+        }
+        FormBuilder.openBuilderModal(NCEBuilderOptions.globalComparator(opts));
     }
 
     function addMenuConfirmationButtons(li, anc, actionFunc) {
@@ -1441,6 +1397,7 @@ var NCE = (function ($) {
             exec: exec,
             getAppId: getAppId,
             getAppVersions: getAppVersions,
+            getCubeListForApp: getCubeListForApp,
             getSelectedTabAppId: getSelectedTabAppId,
             getInfoDto: getInfoDto,
             getCubeMap: getCubeMap,
@@ -1749,7 +1706,6 @@ var NCE = (function ($) {
         });
         
         addSystemMenuListeners();
-        addGlobalComparatorListeners();
         addBranchListeners();
         addSelectAllNoneListeners();
         addSearchListeners();
@@ -1911,53 +1867,16 @@ var NCE = (function ($) {
         }
     }
 
-    function addGlobalComparatorListeners() {
-        _globalComparatorMenu.on('click', function() {
-            openGlobalComparator();
-        });
-        _globalComparatorCompare.on('click', function() {
-            globalComparatorCompare();
-        });
-        _globalComparatorLeftApp.on('change', function() {
-            _globalComparatorLeftBranch.empty().val('');
-            _globalComparatorLeftCube.empty().val('');
-            populateSelect(buildAppState(), _globalComparatorLeftVersion, CONTROLLER_METHOD.GET_VERSIONS, [$(this).val()], null, true);
-        });
-        _globalComparatorRightApp.on('change', function() {
-            _globalComparatorRightBranch.empty().val('');
-            _globalComparatorRightCube.empty().val('');
-            populateSelect(buildAppState(), _globalComparatorRightVersion, CONTROLLER_METHOD.GET_VERSIONS, [$(this).val()], null, true);
-        });
-        _globalComparatorLeftVersion.on('change', function() {
-            var val = $(this).val().split('-');
-            _globalComparatorLeftCube.empty().val('');
-            populateSelect(buildAppState(), _globalComparatorLeftBranch, CONTROLLER_METHOD.GET_BRANCHES, [appIdFrom(_globalComparatorLeftApp.val(), val[0], val[1], head)], null, true);
-        });
-        _globalComparatorRightVersion.on('change', function() {
-            var val = $(this).val().split('-');
-            _globalComparatorRightCube.empty().val('');
-            populateSelect(buildAppState(), _globalComparatorRightBranch, CONTROLLER_METHOD.GET_BRANCHES, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], head)], null, true);
-        });
-        _globalComparatorLeftBranch.on('change', function() {
-            var val = _globalComparatorLeftVersion.val().split('-');
-            populateSelect(buildAppState(), _globalComparatorLeftCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorLeftApp.val(), val[0], val[1], $(this).val()), '*', null, getDefaultSearchOptions()], null, true);
-        });
-        _globalComparatorRightBranch.on('change', function() {
-            var val = _globalComparatorRightVersion.val().split('-');
-            populateSelect(buildAppState(), _globalComparatorRightCube, CONTROLLER_METHOD.SEARCH, [appIdFrom(_globalComparatorRightApp.val(), val[0], val[1], $(this).val()), '*', null, getDefaultSearchOptions()], null, true);
-        });
-    }
-
-    function globalComparatorCompare() {
+    function globalComparatorCompare(data) {
         var leftDto, rightDto, leftResult, rightResult, title, leftVerSplit, rightVerSplit;
-        var leftApp = _globalComparatorLeftApp.val();
-        var rightApp = _globalComparatorRightApp.val();
-        var leftVersion = _globalComparatorLeftVersion.val();
-        var rightVersion = _globalComparatorRightVersion.val();
-        var leftBranch = _globalComparatorLeftBranch.val();
-        var rightBranch = _globalComparatorRightBranch.val();
-        var leftCube = _globalComparatorLeftCube.val();
-        var rightCube = _globalComparatorRightCube.val();
+        var leftApp = data.leftApp;
+        var rightApp = data.rightApp;
+        var leftVersion = data.leftVersion;
+        var rightVersion = data.rightVersion;
+        var leftBranch = data.leftBranch;
+        var rightBranch = data.rightBranch;
+        var leftCube = data.leftCube;
+        var rightCube = data.rightCube;
 
         if (rightApp && rightVersion && rightBranch && rightCube) {
             rightVerSplit = rightVersion.split('-');
@@ -2736,13 +2655,14 @@ var NCE = (function ($) {
         return nameToChk in _cubeList;
     }
 
-    function loadVersions() {
+    function loadVersions(app) {
         var result, arr, versions;
-        if (!_selectedApp) {
+        app = app || _selectedApp;
+        if (!app) {
             showNote('Unable to load versions, no n-cube App selected.');
             return;
         }
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_VERSIONS, [_selectedApp]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.GET_VERSIONS, [app]);
         if (result.status) {
             versions = result.data;
         } else {
@@ -3280,24 +3200,19 @@ var NCE = (function ($) {
     }
 
     function showRefsFromCube() {
-        var result, cubeNames, i, len, html;
-        _showRefsFromLabel[0].textContent = 'Outbound refs of: ' + _selectedCubeName;
-        _refsFromCubeList.empty();
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCES_FROM, [getSelectedTabAppId(), _selectedCubeName]);
+        var cubeNames, opts;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCES_FROM, [getSelectedTabAppId(), _selectedCubeName]);
         if (result.status) {
             cubeNames = result.data;
-            len = cubeNames.length;
-            if (len) {
-                _showRefsFromCubeModal.modal();
-                html = '';
-                for (i = 0; i < len; i++) {
-                    html += '<li class="list-group-item skinny-lr"><a href="#">' + cubeNames[i] + '</a></li>';
-                }
-                _refsFromCubeList.append(html);
-                _refsFromCubeList.find('a').on('click', function () {
-                    _showRefsFromCubeModal.modal('hide');
-                    selectCubeByName(this.innerHTML);
-                });
+            if (cubeNames.length) {
+                opts = {
+                    cubeName: _selectedCubeName,
+                    refClick: function (e) {
+                        selectCubeByName(e.target.textContent, getSelectedTabAppId());
+                        FormBuilder.closeBuilderModal();
+                    }
+                };
+                FormBuilder.openBuilderModal(NCEBuilderOptions.outboundRefs(opts), cubeNames);
             } else {
                 showNote('No references to show.', null, TWO_SECOND_TIMEOUT);
             }
@@ -3307,18 +3222,9 @@ var NCE = (function ($) {
     }
 
     function showReqScope() {
-        var result, scopeKeys, i, len, html;
-        _showReqScopeLabel[0].textContent = "Scope for '" + _selectedCubeName + "'";
-        _reqScopeList.empty();
-        _showReqScopeModal.modal();
-        result = call(CONTROLLER + CONTROLLER_METHOD.GET_REQUIRED_SCOPE, [getSelectedTabAppId(), _selectedCubeName]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_REQUIRED_SCOPE, [getSelectedTabAppId(), _selectedCubeName]);
         if (result.status) {
-            scopeKeys = result.data;
-            html = '';
-            for (i = 0, len = scopeKeys.length; i < len; i++) {
-                html += '<li class="list-group-item skinny-lr">' + scopeKeys[i] + '</li>';
-            }
-            _reqScopeList.append(html);
+            FormBuilder.openBuilderModal(NCEBuilderOptions.requiredScope({cubeName: _selectedCubeName}), result.data);
         } else {
             showNote('Error fetching required scope for: ' + _selectedCubeName + '):<hr class="hr-small"/>' + result.data);
         }
@@ -4011,6 +3917,21 @@ var NCE = (function ($) {
             return [];
         }
         return result.data;
+    }
+
+    function getCubeListForApp(appId) {
+        var i, len, cubes, results;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.SEARCH, [appId, '*', null, getDefaultSearchOptions()]);
+        if (!result.status) {
+            showNote('Unable to run search: ' + result.data, 'Error');
+            return;
+        }
+        cubes = [];
+        results = result.data;
+        for (i = 0, len = results.length; i < len; i++) {
+            cubes.push(results[i].name);
+        }
+        return cubes;
     }
 
     function selectBranch() {

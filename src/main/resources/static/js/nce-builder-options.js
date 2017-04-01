@@ -1,7 +1,7 @@
 var NCEBuilderOptions = (function () {
     /*
      * All methods have valid options of:
-     * readonly     -   self-explanatory
+     * readonly     - self-explanatory
      * afterSave    - callback to fire on save
      * onClose      - callback to fire when the modal closes (fires after save if saved)
      */
@@ -16,6 +16,7 @@ var NCEBuilderOptions = (function () {
             instructionsTitle: 'Instructions - Filter Data',
             instructionsText: 'Select filters to apply to cell data for ncube.',
             displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            canAddRemoveRows: true,
             readonly: opts.readonly,
             afterSave: opts.afterSave,
             onClose: opts.onClose,
@@ -60,6 +61,7 @@ var NCEBuilderOptions = (function () {
             instructionsTitle: 'Instructions - Metaproperties',
             instructionsText: 'Add custom properties for this ' + opts.type + '.',
             displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            canAddRemoveRows: true,
             size: FormBuilder.MODAL_SIZE.LARGE,
             readonly: opts.readonly,
             afterSave: opts.afterSave,
@@ -114,7 +116,7 @@ var NCEBuilderOptions = (function () {
                     data: appId.app,
                     listeners: {
                         change: function() {
-                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'version').trigger('populate');
+                            FormBuilder.findElementByKey('version').trigger('populate');
                         }
                     }
                 },
@@ -189,8 +191,8 @@ var NCEBuilderOptions = (function () {
                     data: appId.app,
                     listeners: {
                         change: function() {
-                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'version').trigger('populate');
-                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'branch').trigger('populate');
+                            FormBuilder.findElementByKey('version').trigger('populate');
+                            FormBuilder.findElementByKey('branch').trigger('populate');
                         }
                     }
                 },
@@ -200,7 +202,7 @@ var NCEBuilderOptions = (function () {
                     data: appId.version,
                     listeners: {
                         change: function() {
-                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'branch').trigger('populate');
+                            FormBuilder.findElementByKey('branch').trigger('populate');
                         },
                         populate: function() {
                             var app = FormBuilder.getInputValue('app') || appId.app;
@@ -279,9 +281,9 @@ var NCEBuilderOptions = (function () {
                             selectOptions: opts.appSelectList,
                             listeners: {
                                 change: function() {
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refVer').trigger('populate');
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refCube').trigger('populate');
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refAxis').trigger('populate');
+                                    FormBuilder.findElementByKey('refVer').trigger('populate');
+                                    FormBuilder.findElementByKey('refCube').trigger('populate');
+                                    FormBuilder.findElementByKey('refAxis').trigger('populate');
                                 }
                             }
                         },
@@ -291,8 +293,8 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
                                 change: function() {
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refCube').trigger('populate');
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refAxis').trigger('populate');
+                                    FormBuilder.findElementByKey('refCube').trigger('populate');
+                                    FormBuilder.findElementByKey('refAxis').trigger('populate');
                                 },
                                 populate: function() {
                                     var app = FormBuilder.getInputValue('refApp');
@@ -307,7 +309,7 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
                                 change: function() {
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'refAxis').trigger('populate');
+                                    FormBuilder.findElementByKey('refAxis').trigger('populate');
                                 },
                                 populate: function() {
                                     var cubes;
@@ -372,9 +374,9 @@ var NCEBuilderOptions = (function () {
                             selectOptions: opts.appSelectList,
                             listeners: {
                                 change: function() {
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transVer').trigger('populate');
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transCube').trigger('populate');
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transMethod').trigger('populate');
+                                    FormBuilder.findElementByKey('transVer').trigger('populate');
+                                    FormBuilder.findElementByKey('transCube').trigger('populate');
+                                    FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 }
                             }
                         },
@@ -384,8 +386,8 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
                                 change: function() {
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transCube').trigger('populate');
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transMethod').trigger('populate');
+                                    FormBuilder.findElementByKey('transCube').trigger('populate');
+                                    FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 },
                                 populate: function() {
                                     var app = FormBuilder.getInputValue('transApp');
@@ -400,7 +402,7 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
                                 change: function() {
-                                    $('#' + FormBuilder.ID_PREFIX.INPUT + 'transMethod').trigger('populate');
+                                    FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 },
                                 populate: function() {
                                     var cubes;
@@ -439,7 +441,7 @@ var NCEBuilderOptions = (function () {
                     data: 'DISCRETE',
                     listeners: {
                         change: function() {
-                            $('#' + FormBuilder.ID_PREFIX.INPUT + 'valueType').trigger('populate');
+                            FormBuilder.findElementByKey('valueType').trigger('populate');
                         }
                     }
                 },
@@ -602,6 +604,267 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  cubeName
+     *  refClick
+     */
+    function outboundRefs(opts) {
+        return {
+            title: 'Outbound refs of - ' + opts.cubeName,
+            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            size: FormBuilder.MODAL_SIZE.MEDIUM,
+            readonly: true,
+            onClose: opts.onClose,
+            closeButtonText: 'Close',
+            hasFilter: true,
+            css: {},
+            columns: {
+                refCube: {
+                    type: FormBuilder.INPUT_TYPE.LINK,
+                    css: {},
+                    listeners: {
+                        click: opts.refClick
+                    }
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  cubeName
+     */
+    function requiredScope(opts) {
+        return {
+            title: 'Scope for - ' + opts.cubeName,
+            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            size: FormBuilder.MODAL_SIZE.MEDIUM,
+            readonly: true,
+            onClose: opts.onClose,
+            closeButtonText: 'Close',
+            hasFilter: true,
+            css: {},
+            columns: {
+                scopeKey: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: {}
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  leftAppId
+     *  leftCube
+     *  rightAppId
+     *  rightCube
+     *  leftDisabled
+     *  appSelectList
+     *  populateVersionFunc
+     *  populateBranchFunc
+     *  populateCubeFunc
+     */
+    function globalComparator(opts) {
+        return {
+            title: 'Compare Any Two Cubes',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Compare',
+            formInputs: {
+                appRow: {
+                    type: FormBuilder.INPUT_TYPE.TABLE,
+                    css: { margin: '0 auto', width: '90%'},
+                    data: [{
+                        appLabel: 'Application',
+                        leftApp: [opts.leftAppId.app],
+                        rightApp: [opts.rightAppId.app]
+                    }],
+                    columns: {
+                        appLabel: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: { width: '20%' }
+                        },
+                        leftApp: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            selectOptions: opts.appSelectList,
+                            readonly: opts.leftDisabled,
+                            css: { width: '40%' },
+                            listeners: {
+                                load: function() { $(this).trigger('change'); },
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('leftVersion').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('leftBranch').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('leftCube').trigger('populate');
+                                }
+                            }
+                        },
+                        rightApp: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            selectOptions: opts.appSelectList,
+                            css: { width: '40%' },
+                            listeners: {
+                                load: function() { $(this).trigger('change'); },
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('rightVersion').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('rightBranch').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('rightCube').trigger('populate');
+                                }
+                            }
+                        }
+                    }
+                },
+                versionRow: {
+                    type: FormBuilder.INPUT_TYPE.TABLE,
+                    css: { margin: '0 auto', width: '90%'},
+                    data: [{
+                        versionLabel: 'Version',
+                        leftVersion: [opts.leftAppId.version + '-' + opts.rightAppId.status],
+                        rightVersion: [opts.rightAppId.version + '-' + opts.rightAppId.status]
+                    }],
+                    columns: {
+                        versionLabel: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: { width: '20%' }
+                        },
+                        leftVersion: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            readonly: opts.leftDisabled,
+                            css: { width: '40%' },
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('leftBranch').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('leftCube').trigger('populate');
+                                },
+                                populate: function() {
+                                    var app = FormBuilder.findTableElementsByKey('leftApp').val();
+                                    var versions = opts.populateVersionFunc(app || opts.leftAppId.app);
+                                    var def = app ? '' : opts.leftAppId.version + '-' + opts.leftAppId.status;
+                                    FormBuilder.populateSelect($(this), versions, def);
+                                }
+                            }
+                        },
+                        rightVersion: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            css: { width: '40%' },
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('rightBranch').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('rightCube').trigger('populate');
+                                },
+                                populate: function() {
+                                    var app = FormBuilder.findTableElementsByKey('rightApp').val();
+                                    var versions = opts.populateVersionFunc(app || opts.rightAppId.app);
+                                    var def = app ? '' : opts.rightAppId.version + '-' + opts.rightAppId.status;
+                                    FormBuilder.populateSelect($(this), versions, def);
+                                }
+                            }
+                        }
+                    }
+                },
+                branchRow: {
+                    type: FormBuilder.INPUT_TYPE.TABLE,
+                    css: { margin: '0 auto', width: '90%'},
+                    data: [{
+                        branchLabel: 'Branch',
+                        leftBranch: [opts.leftAppId.branch],
+                        rightBranch: [opts.rightAppId.branch]
+                    }],
+                    columns: {
+                        branchLabel: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: { width: '20%' }
+                        },
+                        leftBranch: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            readonly: opts.leftDisabled,
+                            css: { width: '40%' },
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('leftCube').trigger('populate');
+                                },
+                                populate: function() {
+                                    var app = FormBuilder.findTableElementsByKey('leftApp').val();
+                                    var version = FormBuilder.findTableElementsByKey('leftVersion').val();
+                                    var verstat = version ? version.split('-') : version;
+                                    var newAppId = app && verstat ? appIdFrom(app, verstat[0], verstat[1], 'HEAD') : opts.leftAppId;
+                                    var branches = opts.populateBranchFunc(newAppId);
+                                    FormBuilder.populateSelect($(this), branches, newAppId.branch);
+                                }
+                            }
+                        },
+                        rightBranch: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            css: { width: '40%' },
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('rightCube').trigger('populate');
+                                },
+                                populate: function() {
+                                    var app = FormBuilder.findTableElementsByKey('rightApp').val();
+                                    var version = FormBuilder.findTableElementsByKey('rightVersion').val();
+                                    var verstat = version ? version.split('-') : version;
+                                    var newAppId = app && verstat ? appIdFrom(app, verstat[0], verstat[1], 'HEAD') : opts.rightAppId;
+                                    var branches = opts.populateBranchFunc(newAppId);
+                                    FormBuilder.populateSelect($(this), branches, newAppId.branch);
+                                }
+                            }
+                        }
+                    }
+                },
+                cubeRow: {
+                    type: FormBuilder.INPUT_TYPE.TABLE,
+                    css: { margin: '0 auto', width: '90%'},
+                    data: [{
+                        cubeLabel: 'Cube',
+                        leftCube: [opts.leftAppId.cube],
+                        rightCube: [opts.rightAppId.cube]
+                    }],
+                    columns: {
+                        cubeLabel: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: { width: '20%' }
+                        },
+                        leftCube: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            readonly: opts.leftDisabled,
+                            css: { width: '40%' },
+                            listeners: {
+                                populate: function() {
+                                    var app = FormBuilder.findTableElementsByKey('leftApp').val();
+                                    var version = FormBuilder.findTableElementsByKey('leftVersion').val();
+                                    var branch = FormBuilder.findTableElementsByKey('leftBranch').val();
+                                    var verstat = version ? version.split('-') : version;
+                                    var newAppId = app && verstat && branch ? appIdFrom(app, verstat[0], verstat[1], branch) : opts.leftAppId;
+                                    var cubes = opts.populateCubeFunc(newAppId);
+                                    FormBuilder.populateSelect($(this), cubes, opts.leftCube);
+                                }
+                            }
+                        },
+                        rightCube: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            css: { width: '40%' },
+                            listeners: {
+                                populate: function() {
+                                    var app = FormBuilder.findTableElementsByKey('rightApp').val();
+                                    var version = FormBuilder.findTableElementsByKey('rightVersion').val();
+                                    var branch = FormBuilder.findTableElementsByKey('rightBranch').val();
+                                    var verstat = version ? version.split('-') : version;
+                                    var newAppId = app && verstat && branch ? appIdFrom(app, verstat[0], verstat[1], branch) : opts.rightAppId;
+                                    var cubes = opts.populateCubeFunc(newAppId);
+                                    FormBuilder.populateSelect($(this), cubes, opts.rightCube);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -610,6 +873,9 @@ var NCEBuilderOptions = (function () {
         copyCube: copyCube,
         addAxis: addAxis,
         deleteAxis: deleteAxis,
-        updateAxis: updateAxis
+        updateAxis: updateAxis,
+        outboundRefs: outboundRefs,
+        requiredScope: requiredScope,
+        globalComparator: globalComparator
     };
 })(jQuery);
