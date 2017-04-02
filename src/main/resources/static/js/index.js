@@ -4418,7 +4418,7 @@ var NCE = (function ($) {
     function handleCommitResult(appId, result) {
         clearNote();
         if (!result.status) {
-            handleUpdateReturnValues(appId, result.data, false, false);
+            handleUpdateReturnValues(appId, result.exception.errors, false, false);
             return;
         }
 
