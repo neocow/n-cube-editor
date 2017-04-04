@@ -120,21 +120,21 @@ var NCE = (function ($) {
     var _pullRequestLink = $('#pull-link');
     var _rollbackOk = $('#rollbackOk');
     var _commitRollbackLabel = $('#commitRollbackLabel');
-    var _viewCommits = $('#view-commits');
-    var _viewCommitsSearchText = $('#view-commits-search-text');
-    var _viewCommitsSearchButton = $('#view-commits-search-btn');
-    var _viewCommitsSearchClear = $('#view-commits-search-clear');
-    var _viewCommitsList = $('#view-commits-list');
-    var _viewCommitsApp = $('#view-commits-app');
-    var _viewCommitsVersion = $('#view-commits-version');
-    var _viewCommitsBranch = $('#view-commits-branch');
-    var _viewCommitsStatus = $('#view-commits-status');
-    var _viewCommitsRequestUser = $('#view-commits-request-user');
-    var _viewCommitsRequestDate = $('#view-commits-request-date');
-    var _viewCommitsCommitUser = $('#view-commits-commit-user');
-    var _viewCommitsCommitDate = $('#view-commits-commit-date');
-    var _viewCommitsRepo = $('#view-commits-repo');
-    var _commitsData = {};
+    var _viewPullRequests = $('#view-pull-requests');
+    var _viewPullRequestsSearchText = $('#view-pull-requests-search-text');
+    var _viewPullRequestsSearchButton = $('#view-pull-requests-search-btn');
+    var _viewPullRequestsSearchClear = $('#view-pull-requests-search-clear');
+    var _viewPullRequestsList = $('#view-pull-requests-list');
+    var _viewPullRequestsApp = $('#view-pull-requests-app');
+    var _viewPullRequestsVersion = $('#view-pull-requests-version');
+    var _viewPullRequestsBranch = $('#view-pull-requests-branch');
+    var _viewPullRequestsStatus = $('#view-pull-requests-status');
+    var _viewPullRequestsRequestUser = $('#view-pull-requests-request-user');
+    var _viewPullRequestsRequestDate = $('#view-pull-requests-request-date');
+    var _viewPullRequestsCommitUser = $('#view-pull-requests-commit-user');
+    var _viewPullRequestsCommitDate = $('#view-pull-requests-commit-date');
+    var _viewPullRequestsRepo = $('#view-pull-requests-repo');
+    var _pullRequestData = {};
 
     //  modal dialogs
     var _selectBranchModal = $('#selectBranchModal');
@@ -147,7 +147,7 @@ var NCE = (function ($) {
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
     var _deleteCubeModal = $('#deleteCubeModal');
-    var _viewCommitsModal = $('#view-commits-modal');
+    var _viewPullRequestsModal = $('#view-pull-requests-modal');
 
     preInit();
     initialize();
@@ -570,14 +570,14 @@ var NCE = (function ($) {
 
     function handleHeartbeatPullRequestResult() {
         var idx, txid, allRows, openRow;
-        if (_viewCommitsModal.hasClass('in')) {
-            openRow = _viewCommitsList.find('tr:not([data-txid])');
+        if (_viewPullRequestsModal.hasClass('in')) {
+            openRow = _viewPullRequestsList.find('tr:not([data-txid])');
             if (openRow.length) {
-                allRows = _viewCommitsList.find('tr');
+                allRows = _viewPullRequestsList.find('tr');
                 idx = allRows.index(openRow[0]);
                 txid = $(allRows.get(idx - 1)).data('txid');
             }
-            viewCommits(true, txid);
+            viewPullRequests(true, txid);
         }
     }
 
@@ -1709,30 +1709,30 @@ var NCE = (function ($) {
         addBranchListeners();
         addSelectAllNoneListeners();
         addSearchListeners();
-        addViewCommitsListeners();
+        addViewPullRequestsListeners();
     }
 
-    function addViewCommitsListeners() {
-        $(_viewCommits).on('click', function() {
-            viewCommits();
+    function addViewPullRequestsListeners() {
+        $(_viewPullRequests).on('click', function() {
+            viewPullRequests();
         });
-        _viewCommitsModal.find('select').on('change', function() {
-            viewCommitsFilter();
+        _viewPullRequestsModal.find('select').on('change', function() {
+            viewPullRequestsFilter();
         });
-        _viewCommitsModal.on('shown.bs.modal', function() {
-            viewCommitsFilter();
+        _viewPullRequestsModal.on('shown.bs.modal', function() {
+            viewPullRequestsFilter();
         });
-        _viewCommitsSearchText.on('keyup', function(e) {
+        _viewPullRequestsSearchText.on('keyup', function(e) {
             var key = e.keyCode;
             if (key === KEY_CODES.ENTER) {
-                viewCommitsSearchTransactionId(this.value.trim());
+                viewPullRequestsSearchTransactionId(this.value.trim());
             }
         });
-        _viewCommitsSearchButton.on('click', function() {
-            viewCommitsSearchTransactionId(_viewCommitsSearchText.val().trim());
+        _viewPullRequestsSearchButton.on('click', function() {
+            viewPullRequestsSearchTransactionId(_viewPullRequestsSearchText.val().trim());
         });
-        _viewCommitsSearchClear.on('click', function() {
-            _viewCommitsSearchText.val('');
+        _viewPullRequestsSearchClear.on('click', function() {
+            _viewPullRequestsSearchText.val('');
         });
     }
 
@@ -3567,58 +3567,58 @@ var NCE = (function ($) {
         return true;
     }
 
-    function viewCommitsSearchTransactionId(txid) {
-        var jqrow = _viewCommitsList.find('[data-txid="' + txid + '"]');
+    function viewPullRequestsSearchTransactionId(txid) {
+        var jqrow = _viewPullRequestsList.find('[data-txid="' + txid + '"]');
         var row = jqrow[0];
         if (row) {
             if (!jqrow.hasClass('highlight-lightgoldenrodyellow')) {
                 jqrow.show();
-                commitListClick(row);
+                pullRequestListClick(row);
             }
-            _viewCommitsModal.find('.modal-body')[0].scrollTop = row.offsetTop;
+            _viewPullRequestsModal.find('.modal-body')[0].scrollTop = row.offsetTop;
         } else {
             showNote(txid + ' was not found.', 'Transaction ID not found!', TWO_SECOND_TIMEOUT);
         }
     }
 
-    function viewCommits(isUpdate, txid) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_COMMITS, []);
+    function viewPullRequests(isUpdate, txid) {
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_PULL_REQUESTS, [null, null]);
         if (result.status) {
-            _commitsData = result.data;
-            buildUlForCommitView(isUpdate);
-            _viewCommitsModal.modal();
+            _pullRequestData = result.data;
+            buildUlForPullRequestView(isUpdate);
+            _viewPullRequestsModal.modal();
             if (txid) {
-                if (_viewCommitsModal.hasClass('in')) {
-                    viewCommitsSearchTransactionId(txid);
+                if (_viewPullRequestsModal.hasClass('in')) {
+                    viewPullRequestsSearchTransactionId(txid);
                 } else {
-                    _viewCommitsModal.one('shown.bs.modal', function() {
-                        viewCommitsSearchTransactionId(txid);
+                    _viewPullRequestsModal.one('shown.bs.modal', function() {
+                        viewPullRequestsSearchTransactionId(txid);
                     });
                 }
             }
         } else {
-            showNote('Unable to get commit list.', 'Error', TWO_SECOND_TIMEOUT);
+            showNote('Unable to get pull request list.', 'Error', TWO_SECOND_TIMEOUT);
         }
     }
 
-    function viewCommitsFilter() {
+    function viewPullRequestsFilter() {
         var i, len, el, filterVal;
-        var selects = _viewCommitsModal.find('select');
+        var selects = _viewPullRequestsModal.find('select');
         var populatedSelects = selects.filter(function() { return this.value.length; });
-        commitListClick(); // close open row
-        _viewCommitsList.find('tr').show();
+        pullRequestListClick(); // close open row
+        _viewPullRequestsList.find('tr').show();
         for (i = 0, len = populatedSelects.length; i < len; i++) {
             el = populatedSelects[i];
             filterVal = el.value;
             if (filterVal.length) {
-                viewCommitsHideIfNotMatching(filterVal, selects.index(el) + 1);
+                viewPullRequestsHideIfNotMatching(filterVal, selects.index(el) + 1);
             }
         }
     }
 
-    function viewCommitsHideIfNotMatching(filterVal, idx) {
+    function viewPullRequestsHideIfNotMatching(filterVal, idx) {
         var i, len, tds, td, row;
-        tds = _viewCommitsList.find('tr:visible').find('td:nth-child(' + idx + ')');
+        tds = _viewPullRequestsList.find('tr:visible').find('td:nth-child(' + idx + ')');
         for (i = 0, len = tds.length; i < len; i++) {
             td = tds[i];
             row = $(td).parent();
@@ -3628,8 +3628,8 @@ var NCE = (function ($) {
         }
     }
 
-    function buildUlForCommitView(isUpdate) {
-        var i, len, commit;
+    function buildUlForPullRequestView(isUpdate) {
+        var i, len, pullRequest;
         var html = '';
         var data = {
             apps: {},
@@ -3643,59 +3643,59 @@ var NCE = (function ($) {
             repos: {}
         };
 
-        for (i = 0, len = _commitsData.length; i < len; i++) {
-            commit = _commitsData[i];
-            data.apps[commit.appId.app] = '';
-            data.versions[commit.appId.version] = '';
-            data.branches[commit.appId.branch] = '';
-            data.statuses[commit.status] = '';
-            data.reqUsers[commit.requestUser] = '';
-            data.reqDates[commit.requestTime.substring(0, commit.requestTime.indexOf(' '))] = '';
-            if (commit.commitUser) {
-                data.comUsers[commit.commitUser] = '';
-                data.comDates[commit.commitTime.substring(0, commit.commitTime.indexOf(' '))] = '';
+        for (i = 0, len = _pullRequestData.length; i < len; i++) {
+            pullRequest = _pullRequestData[i];
+            data.apps[pullRequest.appId.app] = '';
+            data.versions[pullRequest.appId.version] = '';
+            data.branches[pullRequest.appId.branch] = '';
+            data.statuses[pullRequest.status] = '';
+            data.reqUsers[pullRequest.requestUser] = '';
+            data.reqDates[pullRequest.requestTime.substring(0, pullRequest.requestTime.indexOf(' '))] = '';
+            if (pullRequest.commitUser) {
+                data.comUsers[pullRequest.commitUser] = '';
+                data.comDates[pullRequest.commitTime.substring(0, pullRequest.commitTime.indexOf(' '))] = '';
             }
-            if (commit.prId) {
-                data.repos[commit.prId.substring(0, commit.prId.lastIndexOf('-'))] = '';
+            if (pullRequest.prId) {
+                data.repos[pullRequest.prId.substring(0, pullRequest.prId.lastIndexOf('-'))] = '';
             }
 
-            html += '<tr data-txid="' + commit.txid + '">'
-                  + '<td class="view-commits-app">' + commit.appId.app + '</td>'
-                  + '<td class="view-commits-version">' + commit.appId.version + '</td>'
-                  + '<td class="view-commits-branch">' + commit.appId.branch + '</td>'
-                  + '<td class="view-commits-status">' + commit.status + '</td>'
-                  + '<td class="view-commits-requester">' + commit.requestUser + '</td>'
-                  + '<td class="view-commits-request-date">' + commit.requestTime + '</td>'
-                  + '<td class="view-commits-committer">' + (commit.commitUser || '') + '</td>'
-                  + '<td class="view-commits-commit-date">' + (commit.commitTime || '') + '</td>'
-                  + '<td class="view-commits-pr">' + (commit.prId || '') + '</td>'
+            html += '<tr data-txid="' + pullRequest.txid + '">'
+                  + '<td class="view-pull-requests-app">' + pullRequest.appId.app + '</td>'
+                  + '<td class="view-pull-requests-version">' + pullRequest.appId.version + '</td>'
+                  + '<td class="view-pull-requests-branch">' + pullRequest.appId.branch + '</td>'
+                  + '<td class="view-pull-requests-status">' + pullRequest.status + '</td>'
+                  + '<td class="view-pull-requests-requester">' + pullRequest.requestUser + '</td>'
+                  + '<td class="view-pull-requests-request-date">' + pullRequest.requestTime + '</td>'
+                  + '<td class="view-pull-requests-committer">' + (pullRequest.commitUser || '') + '</td>'
+                  + '<td class="view-pull-requests-commit-date">' + (pullRequest.commitTime || '') + '</td>'
+                  + '<td class="view-pull-requests-pr">' + (pullRequest.prId || '') + '</td>'
                   + '</tr>';
         }
 
-        _viewCommitsList.find('tr').remove();
-        _viewCommitsList.append(html);
-        _viewCommitsList.find('tr').on('click', function() {
-            commitListClick(this);
+        _viewPullRequestsList.find('tr').remove();
+        _viewPullRequestsList.append(html);
+        _viewPullRequestsList.find('tr').on('click', function() {
+            pullRequestListClick(this);
         });
 
-        populateSelectFromMap(_viewCommitsApp, data.apps, isUpdate);
-        populateSelectFromMap(_viewCommitsVersion, data.versions, isUpdate);
-        populateSelectFromMap(_viewCommitsBranch, data.branches, isUpdate);
-        populateSelectFromMap(_viewCommitsStatus, data.statuses, isUpdate, 'open');
-        populateSelectFromMap(_viewCommitsRequestUser, data.reqUsers, isUpdate);
-        populateSelectFromMap(_viewCommitsRequestDate, data.reqDates, isUpdate);
-        populateSelectFromMap(_viewCommitsCommitUser, data.comUsers, isUpdate);
-        populateSelectFromMap(_viewCommitsCommitDate, data.comDates, isUpdate);
-        populateSelectFromMap(_viewCommitsRepo, data.repos, isUpdate);
+        populateSelectFromMap(_viewPullRequestsApp, data.apps, isUpdate);
+        populateSelectFromMap(_viewPullRequestsVersion, data.versions, isUpdate);
+        populateSelectFromMap(_viewPullRequestsBranch, data.branches, isUpdate);
+        populateSelectFromMap(_viewPullRequestsStatus, data.statuses, isUpdate, 'open');
+        populateSelectFromMap(_viewPullRequestsRequestUser, data.reqUsers, isUpdate);
+        populateSelectFromMap(_viewPullRequestsRequestDate, data.reqDates, isUpdate);
+        populateSelectFromMap(_viewPullRequestsCommitUser, data.comUsers, isUpdate);
+        populateSelectFromMap(_viewPullRequestsCommitDate, data.comDates, isUpdate);
+        populateSelectFromMap(_viewPullRequestsRepo, data.repos, isUpdate);
 
         if (isUpdate) {
-            viewCommitsFilter();
+            viewPullRequestsFilter();
         }
     }
 
-    function commitListClick(row) {
-        var commit, cubeNames, html, numCols, self;
-        var allRows = _viewCommitsList.find('tr');
+    function pullRequestListClick(row) {
+        var pr, cubeNames, html, numCols, self;
+        var allRows = _viewPullRequestsList.find('tr');
         var openRow = allRows.has('td[colspan]');
         var highlightClass = 'highlight-lightgoldenrodyellow';
 
@@ -3705,44 +3705,44 @@ var NCE = (function ($) {
             self = $(row);
             self.addClass(highlightClass);
             numCols = self.find('td').length;
-            commit = _commitsData[_viewCommitsList.find('tr').index(row)];
-            cubeNames = commit.cubeNames['@items'];
+            pr = _pullRequestData[_viewPullRequestsList.find('tr').index(row)];
+            cubeNames = pr.cubeNames['@items'];
             html = '<tr><td colspan="' + (numCols - 5) + '"></td>'
-                 + '<td><b>Transaction ID</b></td><td><b>' + commit.txid + '</b></td>';
-            if (commit.status.indexOf('closed') === -1) {
-                html += '<td><a href="#" class="anc-honor">Honor</a></td>'
-                      + '<td><a href="#" class="anc-cancel">Cancel</a></td>';
-            } else if (commit.status.indexOf('cancelled') > -1) {
+                 + '<td><b>Transaction ID</b></td><td><b>' + pr.txid + '</b></td>';
+            if (pr.status.indexOf('closed') === -1) {
+                html += '<td><a href="#" class="anc-merge">Merge</a></td>'
+                      + '<td><a href="#" class="anc-cancel">Close</a></td>';
+            } else if (pr.status.indexOf('cancelled') > -1) {
                 html += '<td><a href="#" class="anc-reopen">Reopen</a></td>';
             }
             html += '</tr><tr><td colspan="' + numCols + '">'
                   + '<ul class="list-group"></ul>'
                   + '</td></tr>';
             self.after(html);
-            addCommitActionListeners(commit);
-            buildUlForCompare(_viewCommitsList.find('ul'), commit.appId.branch, cubeNames, {compare:true, html:true, json:true});
+            addPullRequestActionListeners(pr);
+            buildUlForCompare(_viewPullRequestsList.find('ul'), pr.appId.branch, cubeNames, {compare:true, html:true, json:true});
         }
     }
 
-    function addCommitActionListeners(commit) {
-        _viewCommitsList.find('a.anc-honor').on('click', function() {
-            var appId = appIdFrom(commit.app, commit.version, commit.status, commit.branch);
-            var result = call(CONTROLLER + CONTROLLER_METHOD.HONOR_COMMIT, [commit.txid]);
-            handleCommitResult(appId, result);
-            viewCommits(true);
+    function addPullRequestActionListeners(pr) {
+        _viewPullRequestsList.find('a.anc-merge').on('click', function() {
+            var appId = appIdFrom(pr.app, pr.version, pr.status, pr.branch);
+            var result = call(CONTROLLER + CONTROLLER_METHOD.MERGE_PULL_REQUEST, [pr.txid]);
+            handlePullRequestResult(appId, result);
+            viewPullRequests(true);
         });
-        _viewCommitsList.find('a.anc-cancel').on('click', function() {
-            var result = call(CONTROLLER + CONTROLLER_METHOD.CANCEL_COMMIT, [commit.txid]);
+        _viewPullRequestsList.find('a.anc-cancel').on('click', function() {
+            var result = call(CONTROLLER + CONTROLLER_METHOD.CANCEL_PULL_REQUEST, [pr.txid]);
             if (result.status) {
-                viewCommits(true);
+                viewPullRequests(true);
             } else {
                 showNote(result.data, 'Error');
             }
         });
-        _viewCommitsList.find('a.anc-reopen').on('click', function() {
-            var result = call(CONTROLLER + CONTROLLER_METHOD.REOPEN_COMMIT, [commit.txid]);
+        _viewPullRequestsList.find('a.anc-reopen').on('click', function() {
+            var result = call(CONTROLLER + CONTROLLER_METHOD.REOPEN_PULL_REQUEST, [pr.txid]);
             if (result.status) {
-                viewCommits(true);
+                viewPullRequests(true);
             } else {
                 showNote(result.data, 'Error');
             }
@@ -4085,7 +4085,7 @@ var NCE = (function ($) {
                     appId: null,
                     cubeName: change.name,
                     canEdit: false,
-                    cantEditReason: 'Commit request is view-only.'
+                    cantEditReason: 'Pull request is view-only.'
                 };
                 diffCubeRevs(change.id, change.head, diffOptions);
             }
@@ -4374,7 +4374,7 @@ var NCE = (function ($) {
             showNote('No changes selected!', 'Error', TWO_SECOND_TIMEOUT);
             return;
         }
-        result = call(CONTROLLER + CONTROLLER_METHOD.GENERATE_COMMIT_LINK, [getAppId(), changes]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.GENERATE_PULL_REQUEST_LINK, [getAppId(), changes]);
         if (result.status) {
             _pullRequestLink.add(_commitOk).attr('disabled', '');
             txid = result.data;
@@ -4390,7 +4390,7 @@ var NCE = (function ($) {
 
     function pullRequestLinkClick(txid) {
         closeOpenModal();
-        viewCommits(true, txid);
+        viewPullRequests(true, txid);
     }
 
     function commitOk() {
@@ -4411,11 +4411,11 @@ var NCE = (function ($) {
                 dtos = changedDtos;
             }
             result = call(CONTROLLER + method, [appId, dtos]);
-            handleCommitResult(appId, result);
+            handlePullRequestResult(appId, result);
         }, PROGRESS_DELAY);
     }
 
-    function handleCommitResult(appId, result) {
+    function handlePullRequestResult(appId, result) {
         clearNote();
         if (!result.status) {
             handleUpdateReturnValues(appId, result.exception.errors, false, false);

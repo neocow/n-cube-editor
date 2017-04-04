@@ -72,7 +72,7 @@
             <li class="dropdown">
                 <a id="DataMenu" href="#" class="dropdown-toggle" data-toggle="dropdown">Data <b class="caret"></b></a>
                 <ul class="dropdown-menu">
-                    <li><a id="view-commits" href="#">View Pull Requests</a></li>
+                    <li><a id="view-pull-requests" href="#">View Pull Requests</a></li>
                     <li><a id="clearStorage" href="#">Clear Local Storage</a></li>
                 </ul>
             </li>
@@ -325,44 +325,44 @@
     </div>
 </div>
 
-<!-- View Commits Modal -->
-<div id="view-commits-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="commitRollbackLabel"
+<!-- View pull-requests Modal -->
+<div id="view-pull-requests-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="commitRollbackLabel"
      aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="view-commits-label" class="modal-title">NCube Pull Requests</h3>
+                <h3 id="view-pull-requests-label" class="modal-title">NCube Pull Requests</h3>
             </div>
             <div class="modal-body" style="overflow: auto;">
-                <input type="text" id="view-commits-search-text" placeholder="Transaction ID" />
-                <button id="view-commits-search-btn" class="btn btn-sm btn-primary">Find</button>
-                <button id="view-commits-search-clear" class="btn btn-sm btn-default">Clear</button>
-                <table class="view-commits-display">
+                <input type="text" id="view-pull-requests-search-text" placeholder="Transaction ID" />
+                <button id="view-pull-requests-search-btn" class="btn btn-sm btn-primary">Find</button>
+                <button id="view-pull-requests-search-clear" class="btn btn-sm btn-default">Clear</button>
+                <table class="view-pull-requests-display">
                     <tr>
-                        <th class="view-commits-app">App</th>
-                        <th class="view-commits-version">Version</th>
-                        <th class="view-commits-branch">Branch</th>
-                        <th class="view-commits-status">Status</th>
-                        <th class="view-commits-requester">Requester</th>
-                        <th class="view-commits-request-date">Date Requested</th>
-                        <th class="view-commits-committer">Action By</th>
-                        <th class="view-commits-commit-date">Action Date</th>
-                        <th class="view-commits-pr">PR ID</th>
+                        <th class="view-pull-requests-app">App</th>
+                        <th class="view-pull-requests-version">Version</th>
+                        <th class="view-pull-requests-branch">Branch</th>
+                        <th class="view-pull-requests-status">Status</th>
+                        <th class="view-pull-requests-requester">Requester</th>
+                        <th class="view-pull-requests-request-date">Date Requested</th>
+                        <th class="view-pull-requests-committer">Action By</th>
+                        <th class="view-pull-requests-commit-date">Action Date</th>
+                        <th class="view-pull-requests-pr">PR ID</th>
                     </tr>
                     <tr>
-                        <td class="view-commits-app"><select id="view-commits-app"></select></td>
-                        <td class="view-commits-version"><select id="view-commits-version"></select></td>
-                        <td class="view-commits-branch"><select id="view-commits-branch"></select></td>
-                        <td class="view-commits-status"><select id="view-commits-status"></select></td>
-                        <td class="view-commits-requester"><select id="view-commits-request-user"></select></td>
-                        <td class="view-commits-request-date"><select id="view-commits-request-date"></select></td>
-                        <td class="view-commits-committer"><select id="view-commits-commit-user"></select></td>
-                        <td class="view-commits-commit-date"><select id="view-commits-commit-date"></select></td>
-                        <td class="view-commits-pr"><select id="view-commits-repo"></select></td>
+                        <td class="view-pull-requests-app"><select id="view-pull-requests-app"></select></td>
+                        <td class="view-pull-requests-version"><select id="view-pull-requests-version"></select></td>
+                        <td class="view-pull-requests-branch"><select id="view-pull-requests-branch"></select></td>
+                        <td class="view-pull-requests-status"><select id="view-pull-requests-status"></select></td>
+                        <td class="view-pull-requests-requester"><select id="view-pull-requests-request-user"></select></td>
+                        <td class="view-pull-requests-request-date"><select id="view-pull-requests-request-date"></select></td>
+                        <td class="view-pull-requests-committer"><select id="view-pull-requests-commit-user"></select></td>
+                        <td class="view-pull-requests-commit-date"><select id="view-pull-requests-commit-date"></select></td>
+                        <td class="view-pull-requests-pr"><select id="view-pull-requests-repo"></select></td>
                     </tr>
                 </table>
-                <table id="view-commits-list" class="view-commits-display">
+                <table id="view-pull-requests-list" class="view-pull-requests-display">
                 </table>
             </div>
             <div class="modal-footer">
@@ -604,10 +604,10 @@
                     </tr>
                     <tr class="batchUpdateAxisReferencesNewAxisSelect">
                         <td colspan="3"></td>
-                        <td  class="view-commits-app"><select id="batchUpdateAxisReferencesApp"></select></td>
-                        <td  class="view-commits-app"><select id="batchUpdateAxisReferencesVersion"></select></td>
-                        <td  class="view-commits-app"><select id="batchUpdateAxisReferencesCubeName"></select></td>
-                        <td  class="view-commits-app"><select id="batchUpdateAxisReferencesAxisName"></select></td>
+                        <td  class="view-pull-requests-app"><select id="batchUpdateAxisReferencesApp"></select></td>
+                        <td  class="view-pull-requests-app"><select id="batchUpdateAxisReferencesVersion"></select></td>
+                        <td  class="view-pull-requests-app"><select id="batchUpdateAxisReferencesCubeName"></select></td>
+                        <td  class="view-pull-requests-app"><select id="batchUpdateAxisReferencesAxisName"></select></td>
                     </tr>
                     <tr>
                         <th></th>
