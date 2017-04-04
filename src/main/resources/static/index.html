@@ -16,6 +16,7 @@
     <link href="css/bootstrap-select.min.css" rel="stylesheet"/>
     <link href="css/bootstrap-toggle.css" rel="stylesheet"/>
     <link href="css/diffview.css" rel="stylesheet"/>
+    <link href="css/form-builder.css" rel="stylesheet"/>
     <link href="css/common.css" rel="stylesheet"/>
     <link href="css/index.css" rel="stylesheet"/>
     <link rel="shortcut icon" href="favicon.ico?v2">
@@ -419,57 +420,6 @@
                 <button class="btn btn-danger btn-sm pull-left accept-theirs" aria-hidden="true">Accept Theirs</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
                 <button id="branchCompareUpdateOk" class="btn btn-primary btn-sm">Update</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Select or Create Branch Modal -->
-<div id="selectBranchModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="chooseBranchLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content modal-filter">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="chooseBranchLabel" class="modal-title">Select or Create Branch</h3>
-            </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
-
-                <form role="form">
-                    <div class="well well-sm">
-                        <span class="help-block">Before a change can be made, a <b>branch</b> must selected or created.</span>
-                    </div>
-                </form>
-
-                <form role="form">
-                    <div class="form-group">
-                        <div id="branchNameWarning" class="alert alert-warning alert-dismissible" role="alert">
-                            <button type="button" class="close" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                            Name must contain only a-z, A-Z, 0-9, _ (underscope), - (dash), or . (dot). Cannot be 'HEAD'.
-                        </div>
-                        <label for="newBranchName">New Branch Name</label>
-                        <div class="input-group">
-                            <input id="newBranchName" type="text" class="form-control">
-                            <span class="input-group-btn">
-                                <button id="createBranch" class="btn btn-default" type="button">Create</button>
-                            </span>
-                        </div>
-                    </div>
-                </form>
-
-                <form role="form">
-                    <div class="form-group">
-                        <label for="branchList">Select Existing Branch:</label>
-                        <ul id="branchList" class="list-group">
-                        </ul>
-                    </div>
-                </form>
-
-            </div>
-            <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
             </div>
         </div>
     </div>

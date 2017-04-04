@@ -208,7 +208,9 @@ var FormBuilder = (function ($) {
         };
 
         if (!_options.readonly) {
-            buttons.save = '<button class="btn btn-primary btn-sm form-builder-save">' + _options.saveButtonText + '</button>';
+            if (_options.afterSave) {
+                buttons.save = '<button class="btn btn-primary btn-sm form-builder-save">' + _options.saveButtonText + '</button>';
+            }
             if (_options.displayType !== DISPLAY_TYPE.FORM) {
                 if (_options.hasSelectAllNone) {
                     buttons.selectAll = '<button class="btn btn-info btn-sm pull-left form-builder-select-all" aria-hidden="true">Select All</button>';
@@ -388,6 +390,7 @@ var FormBuilder = (function ($) {
     }
 
     function buildFormInput(formInput, readonlyOverride) {
+        var control;
         var id = ID_PREFIX.INPUT + formInput.name;
         var label = formInput.label || '';
         var readonly = readonlyOverride || formInput.readonly;
@@ -403,26 +406,40 @@ var FormBuilder = (function ($) {
         if (formInput.layout === INPUT_LAYOUT.TABLE) {
             switch (formInput.type) {
                 case INPUT_TYPE.SELECT:
-                    return createFormTableDisplayDefaultSelectInput(id, label, selectOptions, readonly, initVal);
+                    control = createFormTableDisplayDefaultSelectInput(id, label, selectOptions, readonly, initVal);
+                    break;
                 default:
-                    return createFormTableDisplayTextInput(id, label, readonly, initVal);
+                    control = createFormTableDisplayTextInput(id, label, readonly, initVal);
+                    break;
             }
+            return control;
         }
 
         switch (formInput.type) {
             case INPUT_TYPE.CHECKBOX:
-                return createFormCheckboxInput(id, label, readonly, initVal);
+                control = createFormCheckboxInput(id, label, readonly, initVal);
+                break;
             case INPUT_TYPE.SELECT:
-                return createFormDefaultDisplaySelectInput(id, label, selectOptions, readonly, initVal);
+                control = createFormDefaultDisplaySelectInput(id, label, selectOptions, readonly, initVal);
+                break;
             case INPUT_TYPE.TABLE:
-                return $('<div id="' + id + '" style="max-height:300px; overflow-y:auto;"/>').append(buildTable(initVal, formInput));
+                control = $('<div id="' + id + '" style="max-height:300px; overflow-y:auto;"/>').append(buildTable(initVal, formInput));
+                break;
             case INPUT_TYPE.TEXT_SELECT:
-                return createFormTextSelectInput(id, label, selectOptions, readonly, initVal);
+                control = createFormTextSelectInput(id, label, selectOptions, readonly, initVal);
+                break;
             case INPUT_TYPE.READONLY:
-                return $('<span id="' + id + '">' + label + '</span>');
+                control = $('<span id="' + id + '">' + label + '</span>');
+                break;
             default:
-                return createFormDefaultTextInput(id, label, readonly, initVal);
+                control = createFormDefaultTextInput(id, label, readonly, initVal);
+                if (typeof formInput.buttonClick === 'function') {
+                    control.find('input').parent().append('<span class="input-group-btn"><button id="' + id + '-btn' + '" class="btn btn-default" type="button">' + formInput.buttonLabel + '</button></span>');
+                    control.find('button').on('click', formInput.buttonClick);
+                }
+                break;
         }
+        return control;
     }
 
     function createFormTableDisplayDefaultSelectInput(id, label, opts, readonly, initVal) {
@@ -471,8 +488,8 @@ var FormBuilder = (function ($) {
     // req styles for label and input
     function createFormTextInput(id, label, readonly, initVal, styles) {
         var inputGroup = $('<label for="' + id + '" style="' + styles.label + '">' + label + ':</label>'
-            + '<input id="' + id + '" type="text" class="form-control" style="' + styles.input + '"'
-            + (readonly ? ' readonly' : '') + '>');
+            + '<div class="input-group"><input id="' + id + '" type="text" class="form-control" style="' + styles.input + '"'
+            + (readonly ? ' readonly' : '') + '></div>');
         inputGroup.last().val(initVal);
         return inputGroup;
     }
@@ -638,6 +655,9 @@ var FormBuilder = (function ($) {
                 break;
             case INPUT_TYPE.LINK:
                 inputElement = $('<a class="' + inputClass + '" href="#">' + dataVal + '</a>');
+                break;
+            case INPUT_TYPE.BUTTON:
+                inputElement = $('<a href="#"><kbd>' + dataVal + '</kbd></a>');
                 break;
         }
         return inputElement;
@@ -890,6 +910,15 @@ var FormBuilder = (function ($) {
         $(queryStr).filter(':visible').not('.exclude').prop('checked', state).change();
     }
 
+    function showAlert(text) {
+        var warning = $('<div id="branchNameWarning" class="alert alert-warning alert-dismissible" role="alert">'
+                    + '<button type="button" class="close" aria-label="Close">'
+                    + '<span aria-hidden="true">&times;</span></button>'
+                    + text + '</div>');
+        warning.find('button').on('click', function() { $(this).parent().remove(); });
+        _modal.find('.modal-body').prepend(warning);
+    }
+
     return {
         closeBuilderModal: closeBuilderModal,
         findElementByKey: findElementByKey,
@@ -899,6 +928,7 @@ var FormBuilder = (function ($) {
         openBuilderModal: openBuilderModal,
         populateSelect: populateSelect,
         populateTextSelect: populateTextSelect,
+        showAlert: showAlert,
         toggle: toggle,
         BOOTSTRAP_TYPE: BOOTSTRAP_TYPE,
         DISPLAY_TYPE: DISPLAY_TYPE,

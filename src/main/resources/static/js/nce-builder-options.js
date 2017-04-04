@@ -865,6 +865,57 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  onCreate
+     *  branchNames
+     *  onBranchClick
+     */
+    function selectBranch(opts) {
+        return {
+            title: 'Select or Create Branch',
+            instructionsTitle: '',
+            instructionsText: 'Before a change can be made, a <b>branch</b> must be selected or created.',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            onClose: opts.onClose,
+            hasFilter: true,
+            formInputs: {
+                name: {
+                    label: 'New branch name',
+                    buttonLabel: 'Create',
+                    buttonClick: function() {
+                        opts.onCreate(FormBuilder.getInputValue('name'));
+                    }
+                },
+                selectBranchSection: {
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    label: 'Select existing branch',
+                    sectionType: FormBuilder.BOOTSTRAP_TYPE.PRIMARY,
+                    formInputs: {
+                        branchList: {
+                            type: FormBuilder.INPUT_TYPE.TABLE,
+                            css: {},
+                            data: opts.branchNames,
+                            columns: {
+                                branchName: {
+                                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                                    css: {},
+                                    listeners: {
+                                        click: function(e) {
+                                            opts.onBranchClick(e.target.textContent);
+                                            FormBuilder.closeBuilderModal();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -876,6 +927,7 @@ var NCEBuilderOptions = (function () {
         updateAxis: updateAxis,
         outboundRefs: outboundRefs,
         requiredScope: requiredScope,
-        globalComparator: globalComparator
+        globalComparator: globalComparator,
+        selectBranch: selectBranch
     };
 })(jQuery);
