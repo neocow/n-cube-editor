@@ -490,7 +490,7 @@ var FormBuilder = (function ($) {
         var inputGroup = $('<label for="' + id + '" style="' + styles.label + '">' + label + ':</label>'
             + '<div class="input-group"><input id="' + id + '" type="text" class="form-control" style="' + styles.input + '"'
             + (readonly ? ' readonly' : '') + '></div>');
-        inputGroup.last().val(initVal);
+        inputGroup.find('input').val(initVal);
         return inputGroup;
     }
 
