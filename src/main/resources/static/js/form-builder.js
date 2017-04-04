@@ -390,7 +390,7 @@ var FormBuilder = (function ($) {
     }
 
     function buildFormInput(formInput, readonlyOverride) {
-        var control;
+        var control, group;
         var id = ID_PREFIX.INPUT + formInput.name;
         var label = formInput.label || '';
         var readonly = readonlyOverride || formInput.readonly;
@@ -432,8 +432,9 @@ var FormBuilder = (function ($) {
                 control = $('<span id="' + id + '">' + label + '</span>');
                 break;
             default:
-                control = createFormDefaultTextInput(id, label, readonly, initVal);
-                if (typeof formInput.buttonClick === 'function') {
+                group = typeof formInput.buttonClick === 'function';
+                control = createFormDefaultTextInput(id, label, readonly, initVal, group);
+                if (group) {
                     control.find('input').parent().append('<span class="input-group-btn"><button id="' + id + '-btn' + '" class="btn btn-default" type="button">' + formInput.buttonLabel + '</button></span>');
                     control.find('button').on('click', formInput.buttonClick);
                 }
@@ -477,20 +478,27 @@ var FormBuilder = (function ($) {
         return inputGroup;
     }
 
-    function createFormTableDisplayTextInput(id, label, readonly, initVal) {
-        return createFormTextInput(id, label, readonly, initVal, {label:'width:20%;', input:'display:inline-block;width:77%;'});
+    function createFormTableDisplayTextInput(id, label, readonly, initVal, group) {
+        return createFormTextInput(id, label, readonly, initVal, group, {label:'width:20%;', input:'display:inline-block;width:77%;'});
     }
 
-    function createFormDefaultTextInput(id, label, readonly, initVal) {
-        return createFormTextInput(id, label, readonly, initVal, {label:'', input:''});
+    function createFormDefaultTextInput(id, label, readonly, initVal, group) {
+        return createFormTextInput(id, label, readonly, initVal, group, {label:'', input:''});
     }
 
     // req styles for label and input
-    function createFormTextInput(id, label, readonly, initVal, styles) {
-        var inputGroup = $('<label for="' + id + '" style="' + styles.label + '">' + label + ':</label>'
-            + '<div class="input-group"><input id="' + id + '" type="text" class="form-control" style="' + styles.input + '"'
-            + (readonly ? ' readonly' : '') + '></div>');
-        inputGroup.find('input').val(initVal);
+    function createFormTextInput(id, label, readonly, initVal, group, styles) {
+        var groupDiv;
+        var inputGroup = $('<label for="' + id + '" style="' + styles.label + '">' + label + ':</label>');
+        var inputElement = $('<input id="' + id + '" type="text" class="form-control" style="' + styles.input + '"' + (readonly ? ' readonly' : '') + '>');
+        inputElement.val(initVal);
+        if (group) {
+            groupDiv = $('<div class="input-group">');
+            inputGroup.append(groupDiv);
+            groupDiv.append(inputElement);
+        } else {
+            inputGroup = inputGroup.add(inputElement);
+        }
         return inputGroup;
     }
 
