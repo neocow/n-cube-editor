@@ -139,11 +139,11 @@ var NCubeEditor2 = (function ($) {
 
             $(document).on('keydown', onWindowKeyDown);
 
-            $(document).on('show.bs.modal', function() {
+            $(document).on('shown.bs.modal', function() {
                 nce.freezePage(true);
             });
 
-            $(document).on('hide.bs.modal', function() {
+            $(document).on('hidden.bs.modal', function() {
                 nce.freezePage(false);
             });
 

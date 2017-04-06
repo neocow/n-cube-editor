@@ -217,6 +217,13 @@ var DELTA = {
     }
 };
 
+var PULL_REQUEST_STATUS = {
+    CLOSED_CANCELLED: 'closed cancelled',
+    CLOSED_COMPLETE: 'closed complete',
+    OBSOLETE: 'obsolete',
+    OPEN: 'open'
+};
+
 var CHANGETYPE = {
     CREATED: {CODE: 'C', DISPLAY_ORDER: 0, CSS_CLASS: 'cube-added', LABEL: 'Added Cubes'},
     RESTORED: {CODE: 'R', DISPLAY_ORDER: 1, CSS_CLASS: 'cube-restored', LABEL: 'Restored Cubes'},
