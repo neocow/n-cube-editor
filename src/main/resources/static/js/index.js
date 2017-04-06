@@ -3092,7 +3092,7 @@ var NCE = (function ($) {
             return;
         }
 
-        result = call(CONTROLLER + CONTROLLER_METHOD.PROMOTE_REVISION, [getSelectedTabAppId(), revs.cubeIds[0]]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.PROMOTE_REVISION, [revs.cubeIds[0]]);
         if (result.status) {
             loadCube();
             revisionHistoryOk();
