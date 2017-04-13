@@ -4061,7 +4061,7 @@ var NCE = (function ($) {
                     canEdit: false,
                     cantEditReason: 'Pull request is view-only.'
                 };
-                diffCubeRevs(change.id, change.head, diffOptions);
+                diffCubeRevs(change.head, change.id, diffOptions);
             }
         });
         addJsonHtmlListeners(ul);
