@@ -317,14 +317,10 @@ function getStorageKey(nce, prefix) {
     return prefix + ':' + nce.getSelectedTabAppId().app.toLowerCase() + ':' + nce.getSelectedCubeName().toLowerCase();
 }
 
-function saveOrDeleteValue(obj, storageKey)
-{
-    if (obj && (typeof obj !== OBJECT || Object.keys(obj).length > 0))
-    {
+function saveOrDeleteValue(obj, storageKey) {
+    if (obj && (typeof obj !== OBJECT || Object.keys(obj).length)) {
         localStorage[storageKey] = JSON.stringify(obj);
-    }
-    else
-    {
+    } else {
         delete localStorage[storageKey];
     }
 }
