@@ -3700,10 +3700,10 @@ var NCE = (function ($) {
             cubeNames = pr.cubeNames['@items'];
             html = '<tr><td colspan="' + (numCols - 5) + '"></td>'
                  + '<td><b>Transaction ID</b></td><td><b>' + pr.txid + '</b></td>';
-            if (pr.status.indexOf('closed') === -1) {
+            if (pr.status === PULL_REQUEST_STATUS.OPEN) {
                 html += '<td><a href="#" class="anc-merge">Merge</a></td>'
                       + '<td><a href="#" class="anc-cancel">Close</a></td>';
-            } else if (pr.status.indexOf('cancelled') > -1) {
+            } else if (pr.status !== PULL_REQUEST_STATUS.OBSOLETE) {
                 html += '<td><a href="#" class="anc-reopen">Reopen</a></td>';
             }
             html += '</tr><tr><td colspan="' + numCols + '">'
@@ -4130,7 +4130,7 @@ var NCE = (function ($) {
         return 0;
     }
 
-    function handleUpdateReturnValues(appId, map, isUpdate, success) {
+    function handleUpdateReturnValues(appId, map, isUpdate, success, message) {
         var note, updateMap, addMap, deleteMap, rejectMap, fastforwardMap, restoreMap,
             updates, adds, deletes, rejects, fastforwards, restores;
         updateMap = map['updates'];
@@ -4174,6 +4174,9 @@ var NCE = (function ($) {
         }
         if (rejects) {
             note += getUpdateNote(appId, rejectMap['@items'], 'Rejected cube names', 'red', false);
+        }
+        if (message !== undefined) {
+            note += '<hr class="hr-small"/>' + message;
         }
         showNote(note, success ? 'Success' : 'Failure');
     }
@@ -4392,7 +4395,7 @@ var NCE = (function ($) {
     function handlePullRequestResult(appId, result) {
         clearNote();
         if (!result.status) {
-            handleUpdateReturnValues(appId, result.exception.errors, false, false);
+            handleUpdateReturnValues(appId, {}, false, false, result.exception.detailMessage);
             return;
         }
 
