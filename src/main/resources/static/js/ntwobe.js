@@ -4387,7 +4387,8 @@ var NCubeEditor2 = (function ($) {
 
         opts = {
             appSelectList: nce.loadAppNames(),
-            populateVersionFunc: nce.getAppVersions,
+            populateVersionFunc: nce.loadVersions,
+            populateBranchFunc: nce.getBranchNamesByAppId,
             populateCubeFunc: nce.getCubeListForApp,
             populateAxisFunc: getAxesFromCube,
             populateMethodFunc: getMethodsFromTransformCube,
@@ -4398,7 +4399,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function addAxisOk(data) {
-        var params, refAppId, transformAppId, result, axisOrderMetaProp;
+        var params, refAppId, transformAppId, result, axisOrderMetaProp, splitVer;
         var axisName = data.name;
         var appId = nce.getSelectedTabAppId();
         if (!checkCubeUpdatePermissions(axisName)) {
@@ -4407,9 +4408,11 @@ var NCubeEditor2 = (function ($) {
         }
 
         if (data.isRef) {
-            refAppId = appIdFrom(data.refApp, data.refVer, STATUS.RELEASE, 'HEAD');
+            splitVer = data.refVer.split('-');
+            refAppId = appIdFrom(data.refApp, splitVer[0], splitVer[1], data.refBranch);
             if (data.hasTransform) {
-                transformAppId = appIdFrom(data.transApp, data.transVer, STATUS.RELEASE, 'HEAD');
+                splitVer = data.transVer.split('-');
+                transformAppId = appIdFrom(data.transApp, splitVer[0], splitVer[1], data.transBranch);
             }
             params = [refAppId, data.refCube, data.refAxis, transformAppId, data.transCube];
         } else {
