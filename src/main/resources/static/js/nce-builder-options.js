@@ -282,6 +282,7 @@ var NCEBuilderOptions = (function () {
                             listeners: {
                                 change: function() {
                                     FormBuilder.findElementByKey('refVer').trigger('populate');
+                                    FormBuilder.findElementByKey('refBranch').trigger('populate');
                                     FormBuilder.findElementByKey('refCube').trigger('populate');
                                     FormBuilder.findElementByKey('refAxis').trigger('populate');
                                 }
@@ -293,13 +294,35 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
                                 change: function() {
+                                    FormBuilder.findElementByKey('refBranch').trigger('populate');
                                     FormBuilder.findElementByKey('refCube').trigger('populate');
                                     FormBuilder.findElementByKey('refAxis').trigger('populate');
                                 },
                                 populate: function() {
                                     var app = FormBuilder.getInputValue('refApp');
-                                    var versions = app ? opts.populateVersionFunc(app, STATUS.RELEASE) : null;
+                                    var versions = app ? opts.populateVersionFunc(app) : null;
                                     FormBuilder.populateSelect($(this), versions);
+                                }
+                            }
+                        },
+                        refBranch: {
+                            label: 'Branch',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findElementByKey('refCube').trigger('populate');
+                                    FormBuilder.findElementByKey('refAxis').trigger('populate');
+                                },
+                                populate: function() {
+                                    var branches, splitVer;
+                                    var app = FormBuilder.getInputValue('refApp');
+                                    var version = FormBuilder.getInputValue('refVer');
+                                    if (app && version) {
+                                        splitVer = version.split('-');
+                                        branches = opts.populateBranchFunc(appIdFrom(app, splitVer[0], splitVer[1], 'HEAD'));
+                                    }
+                                    FormBuilder.populateSelect($(this), branches);
                                 }
                             }
                         },
@@ -312,11 +335,13 @@ var NCEBuilderOptions = (function () {
                                     FormBuilder.findElementByKey('refAxis').trigger('populate');
                                 },
                                 populate: function() {
-                                    var cubes;
+                                    var cubes, splitVer;
                                     var app = FormBuilder.getInputValue('refApp');
                                     var version = FormBuilder.getInputValue('refVer');
-                                    if (app && version) {
-                                        cubes = opts.populateCubeFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'));
+                                    var branch = FormBuilder.getInputValue('refBranch');
+                                    if (app && version && branch) {
+                                        splitVer = version.split('-');
+                                        cubes = opts.populateCubeFunc(appIdFrom(app, splitVer[0], splitVer[1], branch));
                                     }
                                     FormBuilder.populateSelect($(this), cubes);
                                 }
@@ -328,23 +353,27 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
                                 change: function() {
-                                    var axis;
+                                    var axis, splitVer;
                                     var app = FormBuilder.getInputValue('refApp');
                                     var version = FormBuilder.getInputValue('refVer');
+                                    var branch = FormBuilder.getInputValue('refBranch');
                                     var cube = FormBuilder.getInputValue('refCube');
-                                    if (app && version && cube) {
-                                        axis = opts.populateAxisFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'), cube, $(this).val());
+                                    if (app && version && branch && cube) {
+                                        splitVer = version.split('-');
+                                        axis = opts.populateAxisFunc(appIdFrom(app, splitVer[0], splitVer[1], branch), cube, $(this).val());
                                         FormBuilder.setInputValue('type', axis.type);
                                         FormBuilder.setInputValue('valueType', axis.valueType);
                                     }
                                 },
                                 populate: function() {
-                                    var axisNames;
+                                    var axisNames, splitVer;
                                     var app = FormBuilder.getInputValue('refApp');
                                     var version = FormBuilder.getInputValue('refVer');
+                                    var branch = FormBuilder.getInputValue('refBranch');
                                     var cube = FormBuilder.getInputValue('refCube');
-                                    if (app && version && cube) {
-                                        axisNames = opts.populateAxisFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'), cube);
+                                    if (app && version && branch && cube) {
+                                        splitVer = version.split('-');
+                                        axisNames = opts.populateAxisFunc(appIdFrom(app, splitVer[0], splitVer[1], branch), cube);
                                     }
                                     FormBuilder.populateSelect($(this), axisNames);
                                 }
@@ -375,6 +404,7 @@ var NCEBuilderOptions = (function () {
                             listeners: {
                                 change: function() {
                                     FormBuilder.findElementByKey('transVer').trigger('populate');
+                                    FormBuilder.findElementByKey('transBranch').trigger('populate');
                                     FormBuilder.findElementByKey('transCube').trigger('populate');
                                     FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 }
@@ -386,13 +416,35 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
                                 change: function() {
+                                    FormBuilder.findElementByKey('transBranch').trigger('populate');
                                     FormBuilder.findElementByKey('transCube').trigger('populate');
                                     FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 },
                                 populate: function() {
                                     var app = FormBuilder.getInputValue('transApp');
-                                    var versions = app ? opts.populateVersionFunc(app, STATUS.RELEASE) : null;
+                                    var versions = app ? opts.populateVersionFunc(app) : null;
                                     FormBuilder.populateSelect($(this), versions);
+                                }
+                            }
+                        },
+                        transBranch: {
+                            label: 'Branch',
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findElementByKey('transCube').trigger('populate');
+                                    FormBuilder.findElementByKey('transMethod').trigger('populate');
+                                },
+                                populate: function() {
+                                    var branches, splitVer;
+                                    var app = FormBuilder.getInputValue('transApp');
+                                    var version = FormBuilder.getInputValue('transVer');
+                                    if (app && version) {
+                                        splitVer = version.split('-');
+                                        branches = opts.populateBranchFunc(appIdFrom(app, splitVer[0], splitVer[1], 'HEAD'))
+                                    }
+                                    FormBuilder.populateSelect($(this), branches);
                                 }
                             }
                         },
@@ -405,11 +457,13 @@ var NCEBuilderOptions = (function () {
                                     FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 },
                                 populate: function() {
-                                    var cubes;
+                                    var cubes, splitVer;
                                     var app = FormBuilder.getInputValue('transApp');
                                     var version = FormBuilder.getInputValue('transVer');
-                                    if (app && version) {
-                                        cubes = opts.populateCubeFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'));
+                                    var branch = FormBuilder.getInputValue('transBranch');
+                                    if (app && version && branch) {
+                                        splitVer = version.split('-');
+                                        cubes = opts.populateCubeFunc(appIdFrom(app, splitVer[0], splitVer[1], branch));
                                     }
                                     FormBuilder.populateSelect($(this), cubes);
                                 }
@@ -421,12 +475,14 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
                                 populate: function() {
-                                    var methods;
+                                    var methods, splitVer;
                                     var app = FormBuilder.getInputValue('transApp');
                                     var version = FormBuilder.getInputValue('transVer');
+                                    var branch = FormBuilder.getInputValue('transBranch');
                                     var cube = FormBuilder.getInputValue('transCube');
-                                    if (app && version && cube) {
-                                        methods = opts.populateMethodFunc(appIdFrom(app, version, STATUS.RELEASE, 'HEAD'), cube);
+                                    if (app && version && branch && cube) {
+                                        splitVer = version.split('-');
+                                        methods = opts.populateMethodFunc(appIdFrom(app, splitVer[0], splitVer[1], branch), cube);
                                     }
                                     FormBuilder.populateSelect($(this), methods);
                                 }
@@ -518,7 +574,12 @@ var NCEBuilderOptions = (function () {
                         refVer: {
                             label: 'Version',
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
-                            data: metaProps.referenceVersion
+                            data: metaProps.referenceVersion + '-' + metaProps.referenceStatus
+                        },
+                        refBranch: {
+                            label: 'Branch',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            data: metaProps.referenceBranch
                         },
                         refCube: {
                             label: 'Cube',
@@ -550,7 +611,14 @@ var NCEBuilderOptions = (function () {
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             readonly: true,
                             hidden: !metaProps.transformApp,
-                            data: metaProps.transformVersion
+                            data: metaProps.transformVersion + '-' + metaProps.transformStatus
+                        },
+                        transBranch: {
+                            label: 'Branch',
+                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
+                            readonly: true,
+                            hidden: !metaProps.transformApp,
+                            data: metaProps.transformBranch
                         },
                         transCube: {
                             label: 'Cube',
