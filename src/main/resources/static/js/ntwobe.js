@@ -4339,7 +4339,7 @@ var NCubeEditor2 = (function ($) {
 
     function getAxesFromCube(appId, cubeName, axisName) {
         var axisNames, results, i, len, axis;
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:'json'}], {noResolveRefs:true});
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:JSON_MODE.INDEX_NOCELLS}], {noResolveRefs:true});
         if (!result.status) {
             nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
             return {};
@@ -4358,7 +4358,7 @@ var NCubeEditor2 = (function ($) {
 
     function getMethodsFromTransformCube(appId, cubeName) {
         var methods, results, i, len, axis, columns, c, cLen;
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:'json'}], {noResolveRefs:true});
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:JSON_MODE.INDEX_NOCELLS}], {noResolveRefs:true});
         if (!result.status) {
             nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
             return;
