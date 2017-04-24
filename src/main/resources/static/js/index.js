@@ -1946,7 +1946,7 @@ var NCE = (function ($) {
         if (cubeName === '') {
             _batchUpdateAxisReferencesAxisName.empty();
         } else {
-            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), cubeName, {mode:'json'}];
+            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), cubeName, {mode:JSON_MODE.INDEX_NOCELLS}];
             axisOrMethod = isBatchUpdateAxisReferencesDestinationToggled() ? POPULATE_SELECT_FROM_CUBE.AXIS : POPULATE_SELECT_FROM_CUBE.METHOD;
             populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, axisOrMethod);
         }
