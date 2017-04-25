@@ -1293,7 +1293,7 @@ var NCE = (function ($) {
 
     function onMenuExpressionSave(exp, appId, data) {
         var viewData, viewResult;
-        var controllerResult = exec(exp.cube + '.' + exp.method, [appId, data]);
+        var controllerResult = exec([appId, exp.cube, exp.method, data]);
         if (!controllerResult.status) {
             showNote('Unable to perform action: ' + controllerResult.data, 'Error!');
             return;

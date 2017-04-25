@@ -122,10 +122,8 @@ function buildJsonArgs(args)
     return JSON.stringify(args);
 }
 
-function exec(target, args, params)
-{
-    args.push(target);
-    return call("ncubeController.execute", args, params);
+function exec(args, params) {
+    return call(CONTROLLER + CONTROLLER_METHOD.EXECUTE, args, params);
 }
 
 /**
