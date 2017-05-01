@@ -32,6 +32,13 @@ var NCubeJsonEditor = (function ($) {
             }
         }
         scrollToSavedPosition();
+        $(document).on('keydown', function(e) {
+            if (e.keyCode === KEY_CODES.S && (e.metaKey || e.ctrlKey)) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                save();
+            }
+        })
     }
 
     function scrollToSavedPosition() {
@@ -44,42 +51,37 @@ var NCubeJsonEditor = (function ($) {
     }
 
     function addSaveButton() {
-        var editCtrl = $('#jsoneditor');
-        var menu = editCtrl.find('.jsoneditor-menu');
-        var save = $("<button/>").attr({
-            id: 'saveButton',
-            style: 'background-image:none;width:64px',
-            title: 'Save changes'
-        });
-        menu.append(save);           // Add 'Save' button to toolbar
+        var menu = $('#jsoneditor').find('.jsoneditor-menu');
+        menu.append('<button id="saveButton" style="background-image:none;width:64px" title="Save changes"/>');
         menu.find('a').remove();
 
         // Attach listener
-        $('#saveButton').click(function () {
-            var result;
-            var selectedTabAppId = nce.getSelectedTabAppId();
-            nce.clearNote();
-            if (selectedTabAppId.branch === 'HEAD') {
-                nce.selectBranch();
-                return;
-            }
-
-            clearDirtyStatus();
-            updateDirtyStatus();
-            result = nce.call(CONTROLLER + CONTROLLER_METHOD.SAVE_JSON, [selectedTabAppId, _editor.getText()]);
-            if (result.status) {
-                nce.updateCubeLeftHandChangedStatus(nce.getSelectedCubeName(), CHANGETYPE.UPDATED);
-            } else {
-                nce.showNote('Error saving JSON n-cube:<hr class="hr-small"/>' + result.data);
-            }
+        $('#saveButton').on('click', function () {
+            save();
         });
     }
 
-    function isDirty() {
-        if (_editor.aceEditor) {
-            return !_editor.aceEditor.getSession().getUndoManager().isClean();
+    function save() {
+        var result;
+        var selectedTabAppId = nce.getSelectedTabAppId();
+        nce.clearNote();
+        if (selectedTabAppId.branch === 'HEAD') {
+            nce.selectBranch();
+            return;
         }
-        return false;
+
+        clearDirtyStatus();
+        updateDirtyStatus();
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.SAVE_JSON, [selectedTabAppId, _editor.getText()]);
+        if (result.status) {
+            nce.updateCubeLeftHandChangedStatus(nce.getSelectedCubeName(), CHANGETYPE.UPDATED);
+        } else {
+            nce.showNote('Error saving JSON n-cube:<hr class="hr-small"/>' + result.data);
+        }
+    }
+
+    function isDirty() {
+        return _editor.aceEditor ? !_editor.aceEditor.getSession().getUndoManager().isClean() : false;
     }
 
     function clearDirtyStatus() {
