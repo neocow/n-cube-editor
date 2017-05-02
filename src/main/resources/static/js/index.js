@@ -1380,6 +1380,7 @@ var NCE = (function ($) {
     function buildAppState() {
         return {
             call: call,
+            annotateCell: annotateCell,
             clearNote: clearNote,
             clearNotes: clearNotes,
             displayMap: displayMap,
@@ -2931,6 +2932,16 @@ var NCE = (function ($) {
         _revisionHistoryLabel[0].textContent = 'Revision History for ' + _selectedCubeName;
         showNote('Loading...', null, null, NOTE_CLASS.PROCESS_DURATION);
         call(CONTROLLER + CONTROLLER_METHOD.GET_REVISION_HISTORY, [appId, _selectedCubeName, ignoreVersion], {callback:function(result) {
+            revisionHistoryCallback(appId, ignoreVersion, result);
+        }});
+    }
+
+    function annotateCell(cellId, ignoreVersion) {
+        var appId = getSelectedTabAppId();
+        _revisionHistoryList.empty();
+        _revisionHistoryLabel[0].textContent = 'Cell Revision History';
+        showNote('Loading...', null, null, NOTE_CLASS.PROCESS_DURATION);
+        call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_ANNOTATION, [appId, _selectedCubeName, cellId, ignoreVersion], {callback:function(result) {
             revisionHistoryCallback(appId, ignoreVersion, result);
         }});
     }

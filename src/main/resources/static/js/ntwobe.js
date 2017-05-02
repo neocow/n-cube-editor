@@ -34,6 +34,7 @@ var NCubeEditor2 = (function ($) {
     var _editCellCache = null;
     var _editCellCancel = null;
     var _editCellClear = null;
+    var _editCellAnnotate = null;
     var _editCellRadioURL = null;
     var _editColumnModal = null;
     var _editColInstTitle = null;
@@ -89,6 +90,7 @@ var NCubeEditor2 = (function ($) {
             _editCellCache = $('#editCellCache');
             _editCellCancel = $('#editCellCancel');
             _editCellClear = $('#editCellClear');
+            _editCellAnnotate = $('#editCellAnnotate');
             _editCellRadioURL = $('#editCellRadioURL');
             _editColumnModal = $('#editColumnsModal');
             _editColInstTitle = $('#editColInstTitle');
@@ -3354,6 +3356,9 @@ var NCubeEditor2 = (function ($) {
 
     function addEditCellListeners() {
         _editCellClear.on('click', editCellClear);
+        _editCellAnnotate.on('click', function() {
+            nce.annotateCell(_cellId, nce.getSelectedTabAppId().branch === 'HEAD');
+        });
         _editCellCancel.on('click', editCellClose);
         $('#editCellOk').on('click', function() {
             editCellOK();

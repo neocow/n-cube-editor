@@ -275,6 +275,7 @@ var CONTROLLER_METHOD = {
     GET_BRANCH_CHANGES_FOR_MY_BRANCH: 'getBranchChangesForMyBranch',
     GET_HEAD_CHANGES_FOR_BRANCH: 'getHeadChangesForBranch',
     GET_BRANCHES: 'getBranches',
+    GET_CELL_ANNOTATION: 'getCellAnnotation',
     GET_CELL_NO_EXECUTE: 'getCellNoExecute',
     GET_CELL_NO_EXECUTE_BY_COORDINATE: 'getCellNoExecuteByCoordinate',
     GET_CELLS_NO_EXECUTE: 'getCellsNoExecute',
