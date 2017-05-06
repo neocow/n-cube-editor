@@ -168,6 +168,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${version.springboot}</version>
+                <configuration>
+                    <executable>true</executable>
+                </configuration>
             </plugin>
 
         </plugins>
