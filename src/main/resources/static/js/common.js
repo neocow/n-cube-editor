@@ -478,8 +478,9 @@ function popoutAceEditor(opts) {
         w.aceEditor.setValue(opts.value);
         $(w.document.body).find('#save').on('click', function() {
             opts.onSave(w.aceEditor.getValue());
+            w.close();
         });
-    }, 100);
+    }, 250);
 }
 
 (function($) {
