@@ -440,6 +440,48 @@ function getDeletedRecordsSearchOptions() {
     return opts;
 }
 
+/*
+ * Options:
+ *  value
+ *  onSave
+ */
+function popoutAceEditor(opts) {
+    var w = window.open();
+    w.document.write('<html><head>');
+    $.ajax({
+        async: false,
+        type: 'GET',
+        url: 'css/bootstrap.min.css',
+        success: function(data) {
+            w.document.write('<style id="popout-bootstrap">' + data + '</style>');
+        }
+    });
+    $.ajax({
+        async: false,
+        type: 'GET',
+        url: 'css/ace-popout.css',
+        success: function(data) {
+            w.document.write('<style id="popout-ace-popout">' + data + '</style>');
+        }
+    });
+    w.document.write('</head><body>');
+    $.ajax({
+        async: false,
+        type: 'GET',
+        url: 'html/ace-popout.html',
+        success: function(data) {
+            w.document.write(data);
+        }
+    });
+    w.document.write('</body></html>');
+    delay(function() {
+        w.aceEditor.setValue(opts.value);
+        $(w.document.body).find('#save').on('click', function() {
+            opts.onSave(w.aceEditor.getValue());
+        });
+    }, 100);
+}
+
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();

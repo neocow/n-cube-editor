@@ -3027,9 +3027,19 @@ var NCubeEditor2 = (function ($) {
             type: metaPropertyOptions.objectType,
             readonly: metaPropertyOptions.readonly,
             afterSave: function () { metaPropertiesSave(metaProperties, metaPropertyOptions); },
-            onClose: removeHotBeforeKeyDown
+            onClose: removeHotBeforeKeyDown,
+            onPopOut: metaPropertiesPopOut
         };
         FormBuilder.openBuilderModal(NCEBuilderOptions.metaProperties(opts), metaProperties);
+    }
+
+    function metaPropertiesPopOut(el) {
+        popoutAceEditor({
+            value: el.val(),
+            onSave: function(newVal) {
+                el.val(newVal);
+            }
+        })
     }
 
     function metaPropertiesSave(metaProperties, metaPropertyOptions) {
