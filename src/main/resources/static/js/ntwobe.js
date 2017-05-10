@@ -36,6 +36,7 @@ var NCubeEditor2 = (function ($) {
     var _editCellClear = null;
     var _editCellAnnotate = null;
     var _editCellRadioURL = null;
+    var _editCellPopout = null;
     var _editColumnModal = null;
     var _editColInstTitle = null;
     var _editColInstructions = null;
@@ -92,6 +93,7 @@ var NCubeEditor2 = (function ($) {
             _editCellClear = $('#editCellClear');
             _editCellAnnotate = $('#editCellAnnotate');
             _editCellRadioURL = $('#editCellRadioURL');
+            _editCellPopout = $('#editCellPopout');
             _editColumnModal = $('#editColumnsModal');
             _editColInstTitle = $('#editColInstTitle');
             _editColInstructions = $('#editColInstructions');
@@ -3445,6 +3447,17 @@ var NCubeEditor2 = (function ($) {
         });
         $('#editCellDown').on('click', function() {
             moveCellEditor(KEY_CODES.ARROW_DOWN);
+        });
+
+        _editCellPopout.on('click', function(e) {
+            e.preventDefault();
+            popoutAceEditor({
+                value: _editCellValue.val(),
+                onSave: function(newVal) {
+                    _editCellValue.val(newVal);
+                    _isCellDirty = true;
+                }
+            })
         });
     }
     

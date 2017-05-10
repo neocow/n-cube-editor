@@ -446,8 +446,12 @@ function getDeletedRecordsSearchOptions() {
  *  onSave
  */
 function popoutAceEditor(opts) {
+    var saveFunc = function(editor) {
+        opts.onSave(editor.getValue());
+        w.close();
+    };
     var w = window.open();
-    w.document.write('<html><head>');
+    w.document.write('<html><head><title>NCE Text Editor</title>');
     $.ajax({
         async: false,
         type: 'GET',
@@ -476,9 +480,17 @@ function popoutAceEditor(opts) {
     w.document.write('</body></html>');
     delay(function() {
         w.aceEditor.setValue(opts.value);
+
+        w.aceEditor.commands.addCommand({
+            name: 'saveCommand',
+            bindKey: { win: 'Ctrl-S', mac: 'Command-S' },
+            exec: function(editor) {
+                saveFunc(editor);
+            }
+        });
+
         $(w.document.body).find('#save').on('click', function() {
-            opts.onSave(w.aceEditor.getValue());
-            w.close();
+            saveFunc(w.aceEditor);
         });
     }, 250);
 }
