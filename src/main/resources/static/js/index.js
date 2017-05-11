@@ -1321,7 +1321,7 @@ var NCE = (function ($) {
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             obj = data[key];
-            if (typeof obj === OBJECT) {
+            if (obj !== null && typeof obj === OBJECT) {
                 if (obj.hasOwnProperty('@items')) {
                     data[key] = obj['@items'];
                 } else {

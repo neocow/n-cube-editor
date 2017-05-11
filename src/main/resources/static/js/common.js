@@ -479,6 +479,10 @@ function popoutAceEditor(opts) {
     });
     w.document.write('</body></html>');
     delay(function() {
+        if (opts.readonly) {
+            w.aceEditor.setReadOnly(true);
+        }
+
         w.aceEditor.setValue(opts.value);
 
         w.aceEditor.commands.addCommand({
