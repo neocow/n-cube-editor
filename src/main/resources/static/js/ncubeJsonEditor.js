@@ -1,64 +1,48 @@
-/**
- * JSON Editor
- *     Edit n-cubes in JSON format
- *
- * @author John DeRegnaucourt
- */
-
 var NCubeJsonEditor = (function ($) {
     var nce = null;
     var _editor = null;
+    var _saveBtn = null;
 
     function init(info) {
-        var container, options;
+        var JsonMode;
         // Create JSON Editor (http://jsoneditoronline.org/downloads/)
         if (!nce) {
             nce = info;
-            container = document.getElementById('jsoneditor');
-            options = {
-                mode: 'code',
-                onChange: function () {
-                    updateDirtyStatus();
+            JsonMode = ace.require('ace/mode/json').Mode;
+            _editor = ace.edit('editor');
+            _editor.$blockScrolling = Infinity;
+            _editor.renderer.setShowPrintMargin(false);
+            _editor.session.setMode(new JsonMode);
+
+            _editor.on('change', function() {
+                updateDirtyStatus();
+            });
+
+            _editor.session.on('changeScrollTop', function(scrollTop) {
+                saveViewPosition(scrollTop);
+            });
+
+            _editor.commands.addCommand({
+                name: 'saveCommand',
+                bindKey: { win: 'Ctrl-S', mac: 'Command-S' },
+                exec: function(editor) {
+                    save();
                 }
-            };
-
-            _editor = new JSONEditor(container, options);
-            addSaveButton();
-
-            if (_editor.aceEditor) {
-                _editor.aceEditor.session.on('changeScrollTop', function(scrollTop) {
-                    saveViewPosition(scrollTop);
-                });
-            }
+            });
         }
-        scrollToSavedPosition();
-        $(document).on('keydown', function(e) {
-            if (e.keyCode === KEY_CODES.S && (e.metaKey || e.ctrlKey)) {
-                e.stopImmediatePropagation();
-                e.preventDefault();
-                save();
-            }
-        })
+        _saveBtn = $('#saveButton');
+        _saveBtn.on('click', function () {
+            save();
+        });
     }
 
     function scrollToSavedPosition() {
         var pos = nce.getViewPosition() || 0;
-        _editor.aceEditor.session.setScrollTop(pos);
+        _editor.session.setScrollTop(pos);
     }
 
     function saveViewPosition(scrollInfo) {
         nce.saveViewPosition(scrollInfo);
-    }
-
-    function addSaveButton() {
-        var menu = $('#jsoneditor').find('.jsoneditor-menu');
-        menu.append('<button id="saveButton" style="background-image:none;width:64px" title="Save changes"/>');
-        menu.find('a').remove();
-
-        // Attach listener
-        $('#saveButton').on('click', function () {
-            save();
-        });
     }
 
     function save() {
@@ -71,8 +55,7 @@ var NCubeJsonEditor = (function ($) {
         }
 
         clearDirtyStatus();
-        updateDirtyStatus();
-        result = nce.call(CONTROLLER + CONTROLLER_METHOD.SAVE_JSON, [selectedTabAppId, _editor.getText()]);
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.SAVE_JSON, [selectedTabAppId, _editor.getValue()]);
         if (result.status) {
             nce.updateCubeLeftHandChangedStatus(nce.getSelectedCubeName(), CHANGETYPE.UPDATED);
         } else {
@@ -81,46 +64,45 @@ var NCubeJsonEditor = (function ($) {
     }
 
     function isDirty() {
-        return _editor.aceEditor ? !_editor.aceEditor.getSession().getUndoManager().isClean() : false;
+        return _editor ? !_editor.getSession().getUndoManager().isClean() : false;
     }
 
     function clearDirtyStatus() {
         var undoMgr;
-        if (_editor.aceEditor) {
-            undoMgr = _editor.aceEditor.getSession().getUndoManager();
+        if (_editor) {
+            undoMgr = _editor.getSession().getUndoManager();
             undoMgr.reset();
             undoMgr.markClean();
         }
+        updateDirtyStatus();
     }
 
     function updateDirtyStatus() {
         var dirty, text;
-        var saveButton = $('#saveButton');
-        if (!saveButton.length) {
-            return;
-        }
         dirty = isDirty();
-        saveButton.prop('disabled', !dirty);
-        text = dirty ? 'Save*' : 'Save';
-        saveButton.html(text);
+        _saveBtn.prop('disabled', !dirty);
+        _saveBtn.html(dirty ? 'Save*' : 'Save');
     }
 
     function load() {
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:JSON_MODE.JSON}], {noResolveRefs:true});
+        var oldScroll;
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:JSON_MODE.PRETTY}], {noResolveRefs:true});
         if (result.status) {
             try {
-                _editor.setText(result.data);
-                _editor.format();
+                //oldScroll = nce.getViewPosition();
+                _editor.setValue(result.data);
+                _editor.clearSelection();
+                //_editor.session.setScrollTop
+                scrollToSavedPosition();
             } catch (e) {
                 nce.showNote('JSON content too large for the JSON Text Editor.  Capture the JSON from the "Revision History" option.');
                 console.log(e);
             }
         } else {
-            _editor.setText("Unable to load '" + nce.getSelectedCubeName() + "'. " + result.data);
+            _editor.setValue("Unable to load '" + nce.getSelectedCubeName() + "'. " + result.data);
         }
 
         clearDirtyStatus();
-        updateDirtyStatus();
     }
 
     function handleCubeSelected() {

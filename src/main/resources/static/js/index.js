@@ -438,13 +438,13 @@ var NCE = (function ($) {
     }
 
     function saveViewPosition(position) {
-        var savedPos = getOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION);
+        var savedPos = getOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION) || {};
         savedPos[getActiveTabViewType()] = position;
         saveOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION, savedPos);
     }
 
     function getViewPosition() {
-        return getOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION)[getActiveTabViewType()];
+        return (getOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION) || {})[getActiveTabViewType()];
     }
 
     function saveFilterOutBlankRows(shouldFilterOutBlankRows) {
