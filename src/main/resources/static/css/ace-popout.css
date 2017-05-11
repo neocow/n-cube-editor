@@ -1,0 +1,32 @@
+#editor {
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 45px);
+    overflow: hidden;
+}
+
+#top-bar {
+    color: #F0F0F0;
+    background-color: cornflowerblue;
+    padding: 5px 5px 10px 5px;
+    height: 45px;
+}
+
+#top-bar button {
+    background-color: cornflowerblue;
+    margin-right: 5px;
+}
+
+#top-bar button:hover {
+    border: 1px solid #F0F0F0;
+    color: inherit;
+}
+
+#top-bar select {
+    color: black;
+    margin-right: 5px;
+}
+
+#top-bar label {
+    font-weight: 100;
+}

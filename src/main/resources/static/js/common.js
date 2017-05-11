@@ -440,6 +440,66 @@ function getDeletedRecordsSearchOptions() {
     return opts;
 }
 
+/*
+ * Options:
+ *  value
+ *  onSave
+ */
+function popoutAceEditor(opts) {
+    var saveFunc = function(editor) {
+        opts.onSave(editor.getValue());
+        w.close();
+    };
+    var w = window.open();
+    w.document.write('<html><head><title>NCE Text Editor</title>');
+    $.ajax({
+        async: false,
+        type: 'GET',
+        url: 'css/bootstrap.min.css',
+        success: function(data) {
+            w.document.write('<style id="popout-bootstrap">' + data + '</style>');
+        }
+    });
+    $.ajax({
+        async: false,
+        type: 'GET',
+        url: 'css/ace-popout.css',
+        success: function(data) {
+            w.document.write('<style id="popout-ace-popout">' + data + '</style>');
+        }
+    });
+    w.document.write('</head><body>');
+    $.ajax({
+        async: false,
+        type: 'GET',
+        url: 'html/ace-popout.html',
+        success: function(data) {
+            w.document.write(data);
+        }
+    });
+    w.document.write('</body></html>');
+    delay(function() {
+        if (opts.readonly) {
+            w.aceEditor.setReadOnly(true);
+        }
+
+        w.aceEditor.setValue(opts.value);
+
+        w.aceEditor.commands.addCommand({
+            name: 'saveCommand',
+            bindKey: { win: 'Ctrl-S', mac: 'Command-S' },
+            exec: function(editor) {
+                saveFunc(editor);
+            }
+        });
+
+        $(w.document.body).find('#save').on('click', function() {
+            saveFunc(w.aceEditor);
+        });
+    }, 250);
+    return w;
+}
+
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();

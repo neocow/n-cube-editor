@@ -36,6 +36,7 @@ var NCubeEditor2 = (function ($) {
     var _editCellClear = null;
     var _editCellAnnotate = null;
     var _editCellRadioURL = null;
+    var _editCellPopout = null;
     var _editColumnModal = null;
     var _editColInstTitle = null;
     var _editColInstructions = null;
@@ -92,6 +93,7 @@ var NCubeEditor2 = (function ($) {
             _editCellClear = $('#editCellClear');
             _editCellAnnotate = $('#editCellAnnotate');
             _editCellRadioURL = $('#editCellRadioURL');
+            _editCellPopout = $('#editCellPopout');
             _editColumnModal = $('#editColumnsModal');
             _editColInstTitle = $('#editColInstTitle');
             _editColInstructions = $('#editColInstructions');
@@ -2276,8 +2278,17 @@ var NCubeEditor2 = (function ($) {
             } else {
                 result = nce.call(CONTROLLER + CONTROLLER_METHOD.RESOLVE_RELATIVE_URL, [nce.getSelectedTabAppId(), link], {noResolveRefs:true});
                 if (result.status && result.data) {
-                    link = result.data;
-                    window.open(link);
+                    $.ajax({
+                        async: false,
+                        type: 'GET',
+                        url: result.data,
+                        success: function (data) {
+                            popoutAceEditor({
+                                value: data,
+                                readonly: true
+                            });
+                        }
+                    });
                 } else {
                     msg = result.data ? result.data : 'Unable to resolve relative URL against entries in sys.classpath';
                     nce.showNote('Unable to open ' + link + ':<hr class="hr-small"/>' + msg);
@@ -3027,9 +3038,19 @@ var NCubeEditor2 = (function ($) {
             type: metaPropertyOptions.objectType,
             readonly: metaPropertyOptions.readonly,
             afterSave: function () { metaPropertiesSave(metaProperties, metaPropertyOptions); },
-            onClose: removeHotBeforeKeyDown
+            onClose: removeHotBeforeKeyDown,
+            onPopOut: metaPropertiesPopOut
         };
         FormBuilder.openBuilderModal(NCEBuilderOptions.metaProperties(opts), metaProperties);
+    }
+
+    function metaPropertiesPopOut(el) {
+        popoutAceEditor({
+            value: el.val(),
+            onSave: function(newVal) {
+                el.val(newVal);
+            }
+        })
     }
 
     function metaPropertiesSave(metaProperties, metaPropertyOptions) {
@@ -3435,6 +3456,17 @@ var NCubeEditor2 = (function ($) {
         });
         $('#editCellDown').on('click', function() {
             moveCellEditor(KEY_CODES.ARROW_DOWN);
+        });
+
+        _editCellPopout.on('click', function(e) {
+            e.preventDefault();
+            popoutAceEditor({
+                value: _editCellValue.val(),
+                onSave: function(newVal) {
+                    _editCellValue.val(newVal);
+                    _isCellDirty = true;
+                }
+            })
         });
     }
     

@@ -88,6 +88,17 @@ var NCEBuilderOptions = (function () {
                 value: {
                     heading: 'Value',
                     type: FormBuilder.INPUT_TYPE.TEXT
+                },
+                popout: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    css: {},
+                    default: 'Pop Out',
+                    listeners: {
+                        click: function(e) {
+                            e.preventDefault();
+                            opts.onPopOut($(e.target).closest('tr').find('.value'));
+                        }
+                    }
                 }
             }
         };

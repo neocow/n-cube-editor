@@ -1321,7 +1321,7 @@ var NCE = (function ($) {
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             obj = data[key];
-            if (typeof obj === OBJECT) {
+            if (obj !== null && typeof obj === OBJECT) {
                 if (obj.hasOwnProperty('@items')) {
                     data[key] = obj['@items'];
                 } else {
@@ -3006,30 +3006,34 @@ var NCE = (function ($) {
     
     function addJsonHtmlListeners(ul) {
         ul.find('a.anc-html').on('click', function () {
-            onJsonHtmlViewClick($(this), false);
+            onHtmlViewClick($(this));
         });
         ul.find('a.anc-json').on('click', function () {
-            onJsonHtmlViewClick($(this), true);
+            onJsonViewClick($(this));
         });
     }
 
-    function onJsonHtmlViewClick(el, isJson) {
-        var title, oldWindow, result, suffix, format;
-        suffix = isJson ? '.json' : '.html';
-        format = isJson ? JSON_MODE.PRETTY : JSON_MODE.HTML;
-        title = el.data('cube-name') + '.rev.' + el.data('rev-id');
-        oldWindow = window.open('', title + suffix);
-        result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), el.data('cube-id'), format], {noResolveRefs:true});
+    function onHtmlViewClick(el) {
+        var suffix = '.html';
+        var title = el.data('cube-name') + '.rev.' + el.data('rev-id');
+        var oldWindow = window.open('', title + suffix);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), el.data('cube-id'), JSON_MODE.HTML], {noResolveRefs:true});
         if (result.status) {
             oldWindow.document.removeChild(oldWindow.document.documentElement);
-            if (isJson) {
-                oldWindow.document.write('<html><pre>');
-            }
             oldWindow.document.write(result.data);
-            if (isJson) {
-                oldWindow.document.write('</pre></html>');
-            }
             oldWindow.document.title = title + suffix;
+        }
+    }
+
+    function onJsonViewClick(el) {
+        var w;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), el.data('cube-id'), JSON_MODE.PRETTY], {noResolveRefs:true});
+        if (result.status) {
+            w = popoutAceEditor({
+                value: result.data,
+                readonly: true
+            });
+            w.document.title = el.data('cube-name') + '.rev.' + el.data('rev-id') + '.json';
         }
     }
 

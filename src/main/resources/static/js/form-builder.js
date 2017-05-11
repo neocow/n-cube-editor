@@ -619,12 +619,12 @@ var FormBuilder = (function ($) {
         for (c = 0, cLen = columnKeys.length; c < cLen; c++) {
             key = columnKeys[c];
             column = columns[key];
+            dataVal = undefined;
             if (dataRow) {
                 dataVal = typeof dataRow === 'object' ? dataRow[key] : dataRow;
-            } else if (column.hasOwnProperty('default')) {
-                dataVal = column.default;
-            } else {
-                dataVal = null;
+            }
+            if (dataVal === undefined) {
+                dataVal = column.hasOwnProperty('default') ? column.default : null;
             }
 
             inputElement = getDataRowInput(column, dataVal);
