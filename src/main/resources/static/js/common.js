@@ -497,6 +497,7 @@ function popoutAceEditor(opts) {
             saveFunc(w.aceEditor);
         });
     }, 250);
+    return w;
 }
 
 (function($) {
