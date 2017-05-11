@@ -85,14 +85,11 @@ var NCubeJsonEditor = (function ($) {
     }
 
     function load() {
-        var oldScroll;
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), {mode:JSON_MODE.PRETTY}], {noResolveRefs:true});
         if (result.status) {
             try {
-                //oldScroll = nce.getViewPosition();
                 _editor.setValue(result.data);
                 _editor.clearSelection();
-                //_editor.session.setScrollTop
                 scrollToSavedPosition();
             } catch (e) {
                 nce.showNote('JSON content too large for the JSON Text Editor.  Capture the JSON from the "Revision History" option.');

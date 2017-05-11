@@ -484,6 +484,7 @@ function popoutAceEditor(opts) {
         }
 
         w.aceEditor.setValue(opts.value);
+        w.aceEditor.clearSelection();
 
         w.aceEditor.commands.addCommand({
             name: 'saveCommand',
