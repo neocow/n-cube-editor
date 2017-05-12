@@ -89,18 +89,15 @@ var NCE = (function ($) {
     var _createSnapshotMenu = $('#createSnapshotMenu');
     var _lockUnlockAppMenu = $('#lockUnlockAppMenu');
     var _getAppLockedByMenu = $('#getAppLockedByMenu');
-    var _releaseCubesVersion = $('#releaseCubesVersion');
     var _branchMenu = $('#BranchMenu');
     var _branchCommit = $('#branchCommit');
     var _commitRollbackList = $('#commitRollbackList');
     var _branchQuickSelectHeader = $('#branchQuickSelectHeader');
     var _clearCache = $('#clearCache');
-    var _releaseCubesProgressBar = $('#releaseCubesProgressBar');
-    var _releaseCubesProgressInfo = $('#releaseCubesProgressInfo');
-    var _releaseCubesOk = $('#releaseCubesOk');
+    var _releaseCubesNewVersion = null;
     var _releaseCubesProgressPct = null;
     var _releaseCubesProgressText = null;
-    var isReleasePending = false;
+    var _isReleasePending = false;
     var _branchCompareUpdateOk = $('#branchCompareUpdateOk');
     var _branchCompareUpdateMenu = $('#branchCompareUpdate');
     var _branchCompareUpdateList = $('#branchCompareUpdateList');
@@ -134,7 +131,6 @@ var NCE = (function ($) {
     //  modal dialogs
     var _commitModal = $('#commitRollbackModal');
     var _diffModal = $('#diffOutputModal');
-    var _releaseCubesModal = $('#releaseCubesModal');
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
@@ -1692,10 +1688,7 @@ var NCE = (function ($) {
         $('#revisionHistoryOk').click(function () {
             revisionHistoryOk();
         });
-        _releaseCubesOk.click(function () {
-            releaseCubesOk();
-        });
-        
+
         addSystemMenuListeners();
         addBranchListeners();
         addSelectAllNoneListeners();
@@ -1799,18 +1792,6 @@ var NCE = (function ($) {
         });
         $('#clearRevSelection').click(function() {
             clearRevSelection();
-        });
-        $('#releaseCubesVersionMajor').click(function(e) {
-            e.preventDefault();
-            _releaseCubesVersion.val(_selectedVersion, getNextVersion(VERSION.MAJOR));
-        });
-        $('#releaseCubesVersionMinor').click(function(e) {
-            e.preventDefault();
-            _releaseCubesVersion.val(_selectedVersion, getNextVersion(VERSION.MINOR));
-        });
-        $('#releaseCubesVersionPatch').click(function(e) {
-            e.preventDefault();
-            _releaseCubesVersion.val(_selectedVersion, getNextVersion(VERSION.PATCH));
         });
     }
 
@@ -3248,19 +3229,27 @@ var NCE = (function ($) {
     //////////////////////////////////////////   BEGIN RELEASE PROCESS   ///////////////////////////////////////////////
 
     function releaseCubes() {
-        if (!isReleasePending) {
+        var opts;
+        if (!_isReleasePending) {
             if (_selectedBranch !== head) {
                 showNote('HEAD branch must be selected to release a version.');
                 return;
             }
 
-            $('#releaseCubesLabel')[0].textContent = 'Release ' + _selectedApp + ' ' + _selectedVersion + ' SNAPSHOT ?';
-            $('#releaseCubesAppName').val(_selectedApp);
-            _releaseCubesVersion.val('');
+            _releaseCubesNewVersion = '';
             setReleaseCubesProgress(0, 'Ready to release');
-            updateProgressUi();
         }
-        _releaseCubesModal.modal();
+        opts = {
+            app: _selectedApp,
+            version: _selectedVersion,
+            initProgress: _releaseCubesProgressPct,
+            initProgressInfo: _releaseCubesProgressText,
+            newVersion: _releaseCubesNewVersion,
+            afterSave: releaseCubesOk,
+            onClose: stopUpdateProgressUi,
+            readonly: _isReleasePending
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.releaseVersion(opts));
     }
 
     function setReleaseCubesProgress(progress, msg, shouldStopUpdateProgressUi) {
@@ -3272,30 +3261,28 @@ var NCE = (function ($) {
     }
 
     function updateProgressUi() {
-        var progPct = _releaseCubesProgressPct + '%';
-        _releaseCubesProgressInfo.html(_releaseCubesProgressText);
-        _releaseCubesProgressBar.css('width', progPct).attr('aria-valuenow', _releaseCubesProgressPct).text(progPct);
+        NCEBuilderOptions.releaseVersion({}).updateProgress(_releaseCubesProgressPct, _releaseCubesProgressText);
     }
 
     function stopUpdateProgressUi() {
         clearInterval(updateProgressUi);
-        setTimeout(updateProgressUi, 0);
-        isReleasePending = false;
+        updateProgressUi();
+        _isReleasePending = false;
     }
 
-    function releaseCubesOk() {
-        var newSnapVer = _releaseCubesVersion.val();
+    function releaseCubesOk(data) {
+        _releaseCubesNewVersion = data.newVersion;
 
         setInterval(updateProgressUi, ONE_SECOND_TIMEOUT);
-        if (!newSnapVer) {
+        if (!_releaseCubesNewVersion) {
             setReleaseCubesProgress(0, 'No version set.', true);
             return;
         }
 
-        isReleasePending = true;
-        _releaseCubesOk.hide();
+        _isReleasePending = true;
+        NCEBuilderOptions.releaseVersion({}).toggleReleaseButton(false);
         setReleaseCubesProgress(0, 'Locking app...');
-        lockAppForRelease(getAppId(), newSnapVer);
+        lockAppForRelease(getAppId(), _releaseCubesNewVersion);
     }
 
     function lockAppForRelease(appId, newSnapVer) {

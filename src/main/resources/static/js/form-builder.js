@@ -44,6 +44,7 @@ var FormBuilder = (function ($) {
         BUTTON: 'button',
         CHECKBOX: 'checkbox',
         LINK: 'link',
+        PROGRESS: 'progress',
         READONLY: 'readonly',
         SECTION: 'section',
         SELECT: 'select',
@@ -435,6 +436,10 @@ var FormBuilder = (function ($) {
             case INPUT_TYPE.BUTTON:
                 control = $('<button id="' + id + '" class="btn ' + formInput.buttonClass + '">' + label + '</button>');
                 break;
+            case INPUT_TYPE.PROGRESS:
+                control = $('<div class="progress"><div id="' + id + '" class="progress-bar ' + formInput.progressClass + '" role="progressbar" aria-valuenow="' +
+                    (initVal === '' ? '0' : initVal) + '" aria-valuemin="0" aria-valuemax="100"></div></div>');
+                break;
             default:
                 group = typeof formInput.buttonClick === 'function';
                 control = createFormTextInput({id:id, label:label, readonly:readonly, initVal:initVal, group:group, placeholder:placeholder});
@@ -779,7 +784,13 @@ var FormBuilder = (function ($) {
     function setInputValue(key, value) {
         var el = findElementByKey(key);
         if (el.length) {
-            el.val(value);
+            if (el.hasClass('progress-bar')) {
+                el.css('width', value + '%').attr('aria-valuenow', value).text(value + '%');
+            } else if (el.is('span')) {
+                el.html(value);
+            } else {
+                el.val(value);
+            }
         }
     }
 
