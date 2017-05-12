@@ -995,6 +995,72 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  app
+     *  version
+     */
+    function createSnapshotFromRelease(opts) {
+        var setNextVer = function(e, versionPart) {
+            var nextVersion = getNextVersion(opts.version, versionPart);
+            FormBuilder.setInputValue('newVersion', nextVersion);
+            e.preventDefault();
+        };
+        return {
+            title: 'Copy ' + opts.app + ' ' + opts.version + '-RELEASE',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Create',
+            formInputs: {
+                questionLabel: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'What kind of version is this?'
+                },
+                major: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Major',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.MAJOR);
+                        }
+                    }
+                },
+                minor: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Minor',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.MINOR);
+                        }
+                    }
+                },
+                patch: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Patch',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.PATCH);
+                        }
+                    }
+                },
+                newVersion: {
+                    label: 'New SNAPSHOT version',
+                    readonly: true,
+                    placeholder: 'Version number major.minor.patch'
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -1007,6 +1073,7 @@ var NCEBuilderOptions = (function () {
         outboundRefs: outboundRefs,
         requiredScope: requiredScope,
         globalComparator: globalComparator,
-        selectBranch: selectBranch
+        selectBranch: selectBranch,
+        createSnapshotFromRelease: createSnapshotFromRelease
     };
 })(jQuery);

@@ -393,6 +393,7 @@ var FormBuilder = (function ($) {
         var control, group;
         var id = ID_PREFIX.INPUT + formInput.name;
         var label = formInput.label || '';
+        var placeholder = formInput.placeholder || '';
         var readonly = readonlyOverride || formInput.readonly;
         var selectOptions = formInput.selectOptions;
         var initVal = '';
@@ -409,7 +410,7 @@ var FormBuilder = (function ($) {
                     control = createFormTableDisplayDefaultSelectInput(id, label, selectOptions, readonly, initVal);
                     break;
                 default:
-                    control = createFormTableDisplayTextInput(id, label, readonly, initVal);
+                    control = createFormTableDisplayTextInput({id:id, label:label, readonly:readonly, initVal:initVal, placeholder:placeholder});
                     break;
             }
             return control;
@@ -431,9 +432,12 @@ var FormBuilder = (function ($) {
             case INPUT_TYPE.READONLY:
                 control = $('<span id="' + id + '">' + label + '</span>');
                 break;
+            case INPUT_TYPE.BUTTON:
+                control = $('<button id="' + id + '" class="btn ' + formInput.buttonClass + '">' + label + '</button>');
+                break;
             default:
                 group = typeof formInput.buttonClick === 'function';
-                control = createFormDefaultTextInput(id, label, readonly, initVal, group);
+                control = createFormTextInput({id:id, label:label, readonly:readonly, initVal:initVal, group:group, placeholder:placeholder});
                 if (group) {
                     control.find('input').parent().append('<span class="input-group-btn"><button id="' + id + '-btn' + '" class="btn btn-default" type="button">' + formInput.buttonLabel + '</button></span>');
                     control.find('button').on('click', formInput.buttonClick);
@@ -478,21 +482,34 @@ var FormBuilder = (function ($) {
         return inputGroup;
     }
 
-    function createFormTableDisplayTextInput(id, label, readonly, initVal, group) {
-        return createFormTextInput(id, label, readonly, initVal, group, {label:'width:20%;', input:'display:inline-block;width:77%;'});
+    function createFormTableDisplayTextInput(opts) {
+        opts.styles = {label:'width:20%;', input:'display:inline-block;width:77%;'};
+        return createFormTextInput(opts);
     }
 
-    function createFormDefaultTextInput(id, label, readonly, initVal, group) {
-        return createFormTextInput(id, label, readonly, initVal, group, {label:'', input:''});
-    }
-
-    // req styles for label and input
-    function createFormTextInput(id, label, readonly, initVal, group, styles) {
-        var groupDiv;
-        var inputGroup = $('<label for="' + id + '" style="' + styles.label + '">' + label + ':</label>');
-        var inputElement = $('<input id="' + id + '" type="text" class="form-control" style="' + styles.input + '"' + (readonly ? ' readonly' : '') + '>');
-        inputElement.val(initVal);
-        if (group) {
+    /*
+     *  id
+     *  label
+     *  readonly
+     *  initVal
+     *  placeholder
+     *  group
+     *  styles
+     *      label
+     *      input
+     */
+    function createFormTextInput(opts) {
+        var groupDiv, inputGroup, inputElement;
+        if (!opts.hasOwnProperty('styles')) {
+            opts.styles = {label: '', input: '' };
+        }
+        inputGroup = $('<label for="' + opts.id + '" style="' + opts.styles.label + '">' + opts.label + ':</label>');
+        inputElement = $('<input id="' + opts.id + '" type="text" class="form-control"' +
+            ' style="' + opts.styles.input + '"' +
+            (opts.readonly ? ' readonly' : '') +
+            ' placeholder="' + opts.placeholder + '">');
+        inputElement.val(opts.initVal);
+        if (opts.group) {
             groupDiv = $('<div class="input-group">');
             inputGroup.append(groupDiv);
             groupDiv.append(inputElement);
@@ -505,7 +522,7 @@ var FormBuilder = (function ($) {
     function addListenersToControl(control, listeners) {
         var i, len, key;
         var keys = Object.keys(listeners);
-        var input = control.find('input,select,a');
+        var input = control.find('input,select,a,button');
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             input.on(key, listeners[key]);

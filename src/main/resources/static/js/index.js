@@ -107,8 +107,6 @@ var NCE = (function ($) {
     var _deleteCubeList = $('#deleteCubeList');
     var _deletedCubeList = $('#deletedCubeList');
     var _deleteCubeLabel = $('#deleteCubeLabel');
-    var _createSnapshotLabel = $('#createSnapshotLabel');
-    var _createSnapshotVersion = $('#createSnapshotVersion');
     var _revisionHistoryList = $('#revisionHistoryList');
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
     var _diffModalMerge = $('#diffModalMerge');
@@ -138,7 +136,6 @@ var NCE = (function ($) {
     var _diffModal = $('#diffOutputModal');
     var _releaseCubesModal = $('#releaseCubesModal');
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
-    var _createSnapshotModal = $('#createSnapshotModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
@@ -1788,9 +1785,6 @@ var NCE = (function ($) {
         $('#changeVerOk').on('click', function () {
             setTimeout(changeVersionOk, PROGRESS_DELAY);
         });
-        $('#createSnapshotOk').on('click', function() {
-            createSnapshotFromReleaseOk();
-        });
         $('#clearStorage').click(function() {
             clearStorage();
         });
@@ -1811,27 +1805,15 @@ var NCE = (function ($) {
         });
         $('#releaseCubesVersionMajor').click(function(e) {
             e.preventDefault();
-            _releaseCubesVersion.val(getNextVersion(VERSION.MAJOR));
+            _releaseCubesVersion.val(_selectedVersion, getNextVersion(VERSION.MAJOR));
         });
         $('#releaseCubesVersionMinor').click(function(e) {
             e.preventDefault();
-            _releaseCubesVersion.val(getNextVersion(VERSION.MINOR));
+            _releaseCubesVersion.val(_selectedVersion, getNextVersion(VERSION.MINOR));
         });
         $('#releaseCubesVersionPatch').click(function(e) {
             e.preventDefault();
-            _releaseCubesVersion.val(getNextVersion(VERSION.PATCH));
-        });
-        $('#createSnapshotVersionMajor').click(function(e) {
-            e.preventDefault();
-            _createSnapshotVersion.val(getNextVersion(VERSION.MAJOR));
-        });
-        $('#createSnapshotVersionMinor').click(function(e) {
-            e.preventDefault();
-            _createSnapshotVersion.val(getNextVersion(VERSION.MINOR));
-        });
-        $('#createSnapshotVersionPatch').click(function(e) {
-            e.preventDefault();
-            _createSnapshotVersion.val(getNextVersion(VERSION.PATCH));
+            _releaseCubesVersion.val(_selectedVersion, getNextVersion(VERSION.PATCH));
         });
     }
 
@@ -1904,16 +1886,6 @@ var NCE = (function ($) {
         } else {
             showNote('Unable to load cubes for compare!', 'Global Comparator Error', TWO_SECOND_TIMEOUT);
         }
-    }
-
-    function getNextVersion(partChanged) {
-        var i, len;
-        var version = _selectedVersion.split('.');
-        version[partChanged] = parseInt(version[partChanged]) + 1;
-        for (i = partChanged + 1, len = version.length; i < len; i++) {
-            version[i] = 0;
-        }
-        return version.join('.')
     }
 
     function batchUpdateAxisReferencesAppChanged() {
@@ -3470,30 +3442,28 @@ var NCE = (function ($) {
     }
 
     function createSnapshotFromRelease() {
+        var opts;
         if (_selectedStatus !== STATUS.RELEASE) {
             showNote('Must select a released version to copy.');
             return;
         }
-        _createSnapshotLabel[0].textContent = 'Copy ' + _selectedApp + ' ' + _selectedVersion + '-RELEASE';
-        _createSnapshotModal.modal();
+        opts = {
+            app: _selectedApp,
+            version: _selectedVersion,
+            afterSave: createSnapshotFromReleaseOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.createSnapshotFromRelease(opts));
     }
 
-    function createSnapshotFromReleaseOk() {
-        var result;
-        var origAppId = getAppId();
-        var copyAppId = getAppId();
-        var newSnapVer = _createSnapshotVersion.val();
-        copyAppId.version = newSnapVer;
-        copyAppId.status = STATUS.SNAPSHOT;
-        
-        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId]);
+    function createSnapshotFromReleaseOk(data) {
+        var copyAppId = appIdFrom(_selectedApp, data.newVersion, STATUS.SNAPSHOT, head);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [getAppId(), copyAppId]);
         if (!result.status) {
             showNote('Error creating new SNAPSHOT:<hr class="hr-small"/>' + result.data);
             return;
         }
 
-        _createSnapshotModal.modal('hide');
-        saveSelectedVersion(newSnapVer);
+        saveSelectedVersion(data.newVersion);
         saveSelectedStatus(STATUS.SNAPSHOT);
         loadVersionListView();
         loadNCubes();
