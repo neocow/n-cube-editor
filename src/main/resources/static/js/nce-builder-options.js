@@ -1061,6 +1061,28 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  app
+     *  version
+     */
+    function changeSnapshotVersion(opts) {
+        return {
+            title: 'Change ' + opts.app + ' ' + opts.version,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Change',
+            formInputs: {
+                newVersion: {
+                    label: 'Change to',
+                    placeholder: 'Version number major.minor.patch'
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -1074,6 +1096,7 @@ var NCEBuilderOptions = (function () {
         requiredScope: requiredScope,
         globalComparator: globalComparator,
         selectBranch: selectBranch,
-        createSnapshotFromRelease: createSnapshotFromRelease
+        createSnapshotFromRelease: createSnapshotFromRelease,
+        changeSnapshotVersion: changeSnapshotVersion
     };
 })(jQuery);

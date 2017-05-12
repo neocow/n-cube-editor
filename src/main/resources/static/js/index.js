@@ -1782,9 +1782,6 @@ var NCE = (function ($) {
     }
     
     function addSystemMenuListeners() {
-        $('#changeVerOk').on('click', function () {
-            setTimeout(changeVersionOk, PROGRESS_DELAY);
-        });
         $('#clearStorage').click(function() {
             clearStorage();
         });
@@ -3416,29 +3413,33 @@ var NCE = (function ($) {
     ///////////////////////////////////////////   END RELEASE PROCESS   ////////////////////////////////////////////////
 
     function changeVersion() {
-        if (!ensureModifiable('Version cannot be changed.')) {
+        var opts;
+        if (_selectedStatus !== STATUS.SNAPSHOT) {
+            showNote('Only a SNAPSHOT version can be modified.');
             return;
         }
 
-        $('#changeVerLabel')[0].textContent = 'Change ' + _selectedApp + ' ' + _selectedVersion + ' ?';
-        $('#changeVerModal').modal();
+        opts = {
+            app: _selectedApp,
+            version: _selectedVersion,
+            afterSave: changeVersionOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.changeSnapshotVersion(opts));
     }
 
-    function changeVersionOk() {
-        var newSnapVer, result;
-        $('#changeVerModal').modal('hide');
-        newSnapVer = $('#changeVerValue').val();
-        result = call(CONTROLLER + CONTROLLER_METHOD.CHANGE_VERSION_VALUE, [getAppId(), newSnapVer]);
-        if (result.status) {
-            updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
-            saveSelectedVersion(newSnapVer);
-            loadVersionListView();
-            loadNCubes();
-            loadCube();
-            runSearch();
-        } else {
+    function changeVersionOk(data) {
+        var newSnapVer = data.newVersion;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.CHANGE_VERSION_VALUE, [getAppId(), newSnapVer]);
+        if (!result.status) {
             showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
+            return;
         }
+        updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
+        saveSelectedVersion(newSnapVer);
+        loadVersionListView();
+        loadNCubes();
+        loadCube();
+        runSearch();
     }
 
     function createSnapshotFromRelease() {
@@ -3534,7 +3535,7 @@ var NCE = (function ($) {
             showNote(operation + ' No application information detected.');
             return false;
         }
-        if (appId.status === "RELEASE") {
+        if (appId.status === STATUS.RELEASE) {
             showNote(operation + ' Only a SNAPSHOT version can be modified.');
             return false;
         }
@@ -5032,12 +5033,12 @@ var NCE = (function ($) {
     }
 
     function getSelectedTabAppId() {
-        return {
+        return _selectedCubeInfo.length ? {
             'app': _selectedCubeInfo[CUBE_INFO.APP],
             'version': _selectedCubeInfo[CUBE_INFO.VERSION],
             'status': _selectedCubeInfo[CUBE_INFO.STATUS],
             'branch': _selectedCubeInfo[CUBE_INFO.BRANCH]
-        };
+        } : null;
     }
 
     function getSelectedCubeName() {
