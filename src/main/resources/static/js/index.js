@@ -89,26 +89,21 @@ var NCE = (function ($) {
     var _createSnapshotMenu = $('#createSnapshotMenu');
     var _lockUnlockAppMenu = $('#lockUnlockAppMenu');
     var _getAppLockedByMenu = $('#getAppLockedByMenu');
-    var _releaseCubesVersion = $('#releaseCubesVersion');
     var _branchMenu = $('#BranchMenu');
     var _branchCommit = $('#branchCommit');
     var _commitRollbackList = $('#commitRollbackList');
     var _branchQuickSelectHeader = $('#branchQuickSelectHeader');
     var _clearCache = $('#clearCache');
-    var _releaseCubesProgressBar = $('#releaseCubesProgressBar');
-    var _releaseCubesProgressInfo = $('#releaseCubesProgressInfo');
-    var _releaseCubesOk = $('#releaseCubesOk');
+    var _releaseCubesNewVersion = null;
     var _releaseCubesProgressPct = null;
     var _releaseCubesProgressText = null;
-    var isReleasePending = false;
+    var _isReleasePending = false;
     var _branchCompareUpdateOk = $('#branchCompareUpdateOk');
     var _branchCompareUpdateMenu = $('#branchCompareUpdate');
     var _branchCompareUpdateList = $('#branchCompareUpdateList');
     var _deleteCubeList = $('#deleteCubeList');
     var _deletedCubeList = $('#deletedCubeList');
     var _deleteCubeLabel = $('#deleteCubeLabel');
-    var _createSnapshotLabel = $('#createSnapshotLabel');
-    var _createSnapshotVersion = $('#createSnapshotVersion');
     var _revisionHistoryList = $('#revisionHistoryList');
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
     var _diffModalMerge = $('#diffModalMerge');
@@ -136,9 +131,7 @@ var NCE = (function ($) {
     //  modal dialogs
     var _commitModal = $('#commitRollbackModal');
     var _diffModal = $('#diffOutputModal');
-    var _releaseCubesModal = $('#releaseCubesModal');
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
-    var _createSnapshotModal = $('#createSnapshotModal');
     var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
@@ -1695,10 +1688,7 @@ var NCE = (function ($) {
         $('#revisionHistoryOk').click(function () {
             revisionHistoryOk();
         });
-        _releaseCubesOk.click(function () {
-            releaseCubesOk();
-        });
-        
+
         addSystemMenuListeners();
         addBranchListeners();
         addSelectAllNoneListeners();
@@ -1785,12 +1775,6 @@ var NCE = (function ($) {
     }
     
     function addSystemMenuListeners() {
-        $('#changeVerOk').on('click', function () {
-            setTimeout(changeVersionOk, PROGRESS_DELAY);
-        });
-        $('#createSnapshotOk').on('click', function() {
-            createSnapshotFromReleaseOk();
-        });
         $('#clearStorage').click(function() {
             clearStorage();
         });
@@ -1808,30 +1792,6 @@ var NCE = (function ($) {
         });
         $('#clearRevSelection').click(function() {
             clearRevSelection();
-        });
-        $('#releaseCubesVersionMajor').click(function(e) {
-            e.preventDefault();
-            _releaseCubesVersion.val(getNextVersion(VERSION.MAJOR));
-        });
-        $('#releaseCubesVersionMinor').click(function(e) {
-            e.preventDefault();
-            _releaseCubesVersion.val(getNextVersion(VERSION.MINOR));
-        });
-        $('#releaseCubesVersionPatch').click(function(e) {
-            e.preventDefault();
-            _releaseCubesVersion.val(getNextVersion(VERSION.PATCH));
-        });
-        $('#createSnapshotVersionMajor').click(function(e) {
-            e.preventDefault();
-            _createSnapshotVersion.val(getNextVersion(VERSION.MAJOR));
-        });
-        $('#createSnapshotVersionMinor').click(function(e) {
-            e.preventDefault();
-            _createSnapshotVersion.val(getNextVersion(VERSION.MINOR));
-        });
-        $('#createSnapshotVersionPatch').click(function(e) {
-            e.preventDefault();
-            _createSnapshotVersion.val(getNextVersion(VERSION.PATCH));
         });
     }
 
@@ -1904,16 +1864,6 @@ var NCE = (function ($) {
         } else {
             showNote('Unable to load cubes for compare!', 'Global Comparator Error', TWO_SECOND_TIMEOUT);
         }
-    }
-
-    function getNextVersion(partChanged) {
-        var i, len;
-        var version = _selectedVersion.split('.');
-        version[partChanged] = parseInt(version[partChanged]) + 1;
-        for (i = partChanged + 1, len = version.length; i < len; i++) {
-            version[i] = 0;
-        }
-        return version.join('.')
     }
 
     function batchUpdateAxisReferencesAppChanged() {
@@ -3279,19 +3229,27 @@ var NCE = (function ($) {
     //////////////////////////////////////////   BEGIN RELEASE PROCESS   ///////////////////////////////////////////////
 
     function releaseCubes() {
-        if (!isReleasePending) {
+        var opts;
+        if (!_isReleasePending) {
             if (_selectedBranch !== head) {
                 showNote('HEAD branch must be selected to release a version.');
                 return;
             }
 
-            $('#releaseCubesLabel')[0].textContent = 'Release ' + _selectedApp + ' ' + _selectedVersion + ' SNAPSHOT ?';
-            $('#releaseCubesAppName').val(_selectedApp);
-            _releaseCubesVersion.val('');
+            _releaseCubesNewVersion = '';
             setReleaseCubesProgress(0, 'Ready to release');
-            updateProgressUi();
         }
-        _releaseCubesModal.modal();
+        opts = {
+            app: _selectedApp,
+            version: _selectedVersion,
+            initProgress: _releaseCubesProgressPct,
+            initProgressInfo: _releaseCubesProgressText,
+            newVersion: _releaseCubesNewVersion,
+            afterSave: releaseCubesOk,
+            onClose: stopUpdateProgressUi,
+            readonly: _isReleasePending
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.releaseVersion(opts));
     }
 
     function setReleaseCubesProgress(progress, msg, shouldStopUpdateProgressUi) {
@@ -3303,30 +3261,28 @@ var NCE = (function ($) {
     }
 
     function updateProgressUi() {
-        var progPct = _releaseCubesProgressPct + '%';
-        _releaseCubesProgressInfo.html(_releaseCubesProgressText);
-        _releaseCubesProgressBar.css('width', progPct).attr('aria-valuenow', _releaseCubesProgressPct).text(progPct);
+        NCEBuilderOptions.releaseVersion({}).updateProgress(_releaseCubesProgressPct, _releaseCubesProgressText);
     }
 
     function stopUpdateProgressUi() {
         clearInterval(updateProgressUi);
-        setTimeout(updateProgressUi, 0);
-        isReleasePending = false;
+        updateProgressUi();
+        _isReleasePending = false;
     }
 
-    function releaseCubesOk() {
-        var newSnapVer = _releaseCubesVersion.val();
+    function releaseCubesOk(data) {
+        _releaseCubesNewVersion = data.newVersion;
 
         setInterval(updateProgressUi, ONE_SECOND_TIMEOUT);
-        if (!newSnapVer) {
+        if (!_releaseCubesNewVersion) {
             setReleaseCubesProgress(0, 'No version set.', true);
             return;
         }
 
-        isReleasePending = true;
-        _releaseCubesOk.hide();
+        _isReleasePending = true;
+        NCEBuilderOptions.releaseVersion({}).toggleReleaseButton(false);
         setReleaseCubesProgress(0, 'Locking app...');
-        lockAppForRelease(getAppId(), newSnapVer);
+        lockAppForRelease(getAppId(), _releaseCubesNewVersion);
     }
 
     function lockAppForRelease(appId, newSnapVer) {
@@ -3444,56 +3400,58 @@ var NCE = (function ($) {
     ///////////////////////////////////////////   END RELEASE PROCESS   ////////////////////////////////////////////////
 
     function changeVersion() {
-        if (!ensureModifiable('Version cannot be changed.')) {
+        var opts;
+        if (_selectedStatus !== STATUS.SNAPSHOT) {
+            showNote('Only a SNAPSHOT version can be modified.');
             return;
         }
 
-        $('#changeVerLabel')[0].textContent = 'Change ' + _selectedApp + ' ' + _selectedVersion + ' ?';
-        $('#changeVerModal').modal();
+        opts = {
+            app: _selectedApp,
+            version: _selectedVersion,
+            afterSave: changeVersionOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.changeSnapshotVersion(opts));
     }
 
-    function changeVersionOk() {
-        var newSnapVer, result;
-        $('#changeVerModal').modal('hide');
-        newSnapVer = $('#changeVerValue').val();
-        result = call(CONTROLLER + CONTROLLER_METHOD.CHANGE_VERSION_VALUE, [getAppId(), newSnapVer]);
-        if (result.status) {
-            updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
-            saveSelectedVersion(newSnapVer);
-            loadVersionListView();
-            loadNCubes();
-            loadCube();
-            runSearch();
-        } else {
+    function changeVersionOk(data) {
+        var newSnapVer = data.newVersion;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.CHANGE_VERSION_VALUE, [getAppId(), newSnapVer]);
+        if (!result.status) {
             showNote("Unable to change SNAPSHOT version to value '" + newSnapVer + "':<hr class=\"hr-small\"/>" + result.data);
+            return;
         }
+        updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
+        saveSelectedVersion(newSnapVer);
+        loadVersionListView();
+        loadNCubes();
+        loadCube();
+        runSearch();
     }
 
     function createSnapshotFromRelease() {
+        var opts;
         if (_selectedStatus !== STATUS.RELEASE) {
             showNote('Must select a released version to copy.');
             return;
         }
-        _createSnapshotLabel[0].textContent = 'Copy ' + _selectedApp + ' ' + _selectedVersion + '-RELEASE';
-        _createSnapshotModal.modal();
+        opts = {
+            app: _selectedApp,
+            version: _selectedVersion,
+            afterSave: createSnapshotFromReleaseOk
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.createSnapshotFromRelease(opts));
     }
 
-    function createSnapshotFromReleaseOk() {
-        var result;
-        var origAppId = getAppId();
-        var copyAppId = getAppId();
-        var newSnapVer = _createSnapshotVersion.val();
-        copyAppId.version = newSnapVer;
-        copyAppId.status = STATUS.SNAPSHOT;
-        
-        result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [origAppId, copyAppId]);
+    function createSnapshotFromReleaseOk(data) {
+        var copyAppId = appIdFrom(_selectedApp, data.newVersion, STATUS.SNAPSHOT, head);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.COPY_BRANCH, [getAppId(), copyAppId]);
         if (!result.status) {
             showNote('Error creating new SNAPSHOT:<hr class="hr-small"/>' + result.data);
             return;
         }
 
-        _createSnapshotModal.modal('hide');
-        saveSelectedVersion(newSnapVer);
+        saveSelectedVersion(data.newVersion);
         saveSelectedStatus(STATUS.SNAPSHOT);
         loadVersionListView();
         loadNCubes();
@@ -3564,7 +3522,7 @@ var NCE = (function ($) {
             showNote(operation + ' No application information detected.');
             return false;
         }
-        if (appId.status === "RELEASE") {
+        if (appId.status === STATUS.RELEASE) {
             showNote(operation + ' Only a SNAPSHOT version can be modified.');
             return false;
         }
@@ -5062,12 +5020,12 @@ var NCE = (function ($) {
     }
 
     function getSelectedTabAppId() {
-        return {
+        return _selectedCubeInfo.length ? {
             'app': _selectedCubeInfo[CUBE_INFO.APP],
             'version': _selectedCubeInfo[CUBE_INFO.VERSION],
             'status': _selectedCubeInfo[CUBE_INFO.STATUS],
             'branch': _selectedCubeInfo[CUBE_INFO.BRANCH]
-        };
+        } : null;
     }
 
     function getSelectedCubeName() {

@@ -500,6 +500,16 @@ function popoutAceEditor(opts) {
     return w;
 }
 
+function getNextVersion(currentVersion, partChanged) {
+    var i, len;
+    var version = currentVersion.split('.');
+    version[partChanged] = parseInt(version[partChanged]) + 1;
+    for (i = partChanged + 1, len = version.length; i < len; i++) {
+        version[i] = 0;
+    }
+    return version.join('.')
+}
+
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();

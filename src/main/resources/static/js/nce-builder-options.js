@@ -995,6 +995,181 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  app
+     *  version
+     */
+    function createSnapshotFromRelease(opts) {
+        var setNextVer = function(e, versionPart) {
+            var nextVersion = getNextVersion(opts.version, versionPart);
+            FormBuilder.setInputValue('newVersion', nextVersion);
+            e.preventDefault();
+        };
+        return {
+            title: 'Copy ' + opts.app + ' ' + opts.version + '-' + STATUS.RELEASE,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Create',
+            formInputs: {
+                questionLabel: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'What kind of version is this?'
+                },
+                major: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Major',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.MAJOR);
+                        }
+                    }
+                },
+                minor: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Minor',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.MINOR);
+                        }
+                    }
+                },
+                patch: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Patch',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.PATCH);
+                        }
+                    }
+                },
+                newVersion: {
+                    label: 'New SNAPSHOT version',
+                    readonly: true,
+                    placeholder: 'Version number major.minor.patch'
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  app
+     *  version
+     *  initProgress
+     *  initProgressInfo
+     *  optional - newVersion
+     */
+    function releaseVersion(opts) {
+        var setNextVer = function(e, versionPart) {
+            var nextVersion = getNextVersion(opts.version, versionPart);
+            FormBuilder.setInputValue('newVersion', nextVersion);
+            e.preventDefault();
+        };
+        return {
+            updateProgress: function(progress, msg) {
+                FormBuilder.setInputValue('progressBar', progress);
+                FormBuilder.setInputValue('progressInfo', msg);
+            },
+            toggleReleaseButton: function(state) {
+                $('.form-builder-save').toggle(state);
+            },
+            title: 'Release ' + opts.app + ' ' + opts.version + '-' + STATUS.SNAPSHOT,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Release',
+            closeAfterSave: false,
+            formInputs: {
+                questionLabel: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'What kind of version is this?'
+                },
+                major: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Major',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.MAJOR);
+                        }
+                    }
+                },
+                minor: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Minor',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.MINOR);
+                        }
+                    }
+                },
+                patch: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: 'btn-primary',
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Patch',
+                    listeners: {
+                        click: function(e) {
+                            setNextVer(e, VERSION.PATCH);
+                        }
+                    }
+                },
+                newVersion: {
+                    label: 'New SNAPSHOT version',
+                    readonly: true,
+                    placeholder: 'Version number major.minor.patch',
+                    data: opts.newVersion
+                },
+                progressBar: {
+                    type: FormBuilder.INPUT_TYPE.PROGRESS,
+                    progressClass: 'progress-bar-striped',
+                    data: opts.initProgress
+                },
+                progressInfo: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    label: opts.initProgressInfo
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  app
+     *  version
+     */
+    function changeSnapshotVersion(opts) {
+        return {
+            title: 'Change ' + opts.app + ' ' + opts.version,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Change',
+            formInputs: {
+                newVersion: {
+                    label: 'Change to',
+                    placeholder: 'Version number major.minor.patch'
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -1007,6 +1182,9 @@ var NCEBuilderOptions = (function () {
         outboundRefs: outboundRefs,
         requiredScope: requiredScope,
         globalComparator: globalComparator,
-        selectBranch: selectBranch
+        selectBranch: selectBranch,
+        createSnapshotFromRelease: createSnapshotFromRelease,
+        changeSnapshotVersion: changeSnapshotVersion,
+        releaseVersion: releaseVersion
     };
 })(jQuery);
