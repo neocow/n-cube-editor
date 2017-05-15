@@ -265,7 +265,7 @@ var CONTROLLER_METHOD = {
     EXECUTE: 'execute',
     FETCH_JSON_BRANCH_DIFFS: 'fetchJsonBranchDiffs',
     FETCH_JSON_REV_DIFFS: 'fetchJsonRevDiffs',
-    GENERATE_PULL_REQUEST_LINK: 'generatePullRequestLink',
+    GENERATE_PULL_REQUEST_LINK: 'generatePullRequestHash',
     GET_APP_LOCKED_BY: 'getAppLockedBy',
     GET_APP_NAMES: 'getAppNames',
     GET_APP_VERSIONS: 'getAppVersions',
