@@ -69,3 +69,10 @@
 .gritter-item dl {
     margin-bottom: 0;
 }
+
+.gritter-item dl dt:hover {
+    overflow: visible;
+    position: absolute;
+    width: auto;
+    background-color: black;
+}
