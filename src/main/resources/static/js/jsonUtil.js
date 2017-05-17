@@ -7,9 +7,6 @@
  * @author John DeRegnaucourt
  */
 
-var _impersonation = '';
-var _impAppId = '';
-
 function resolveRefs(jObj)
 {
     if (!jObj)
@@ -164,12 +161,6 @@ function call(target, args, params) {
     {
         params.noResolveRefs = false;
     }
-    if (params.hasOwnProperty('fakeuser')) {
-        _impersonation = params.fakeuser;
-    }
-    if (params.hasOwnProperty('appid')) {
-        _impAppId = params.appid;
-    }
     async = params.hasOwnProperty('callback');
     url = buildJsonCmdUrl(target);
     
@@ -185,10 +176,6 @@ function call(target, args, params) {
     $.ajax({
         type : "POST",
         url : url,
-        headers: {
-            'fakeuser': _impersonation,
-            'appid': _impAppId
-        },
         async : async,
         cache : false,
         data : json,

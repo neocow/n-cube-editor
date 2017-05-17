@@ -25,7 +25,6 @@ var NCE = (function ($) {
     var _savedCall = null;
     var _searchThread;
     var _heartBeatThread;
-    var _impersonationApp = null;
     var _cubeList = {};
     var _openCubes = localStorage[OPEN_CUBES];
     var _visitedBranches = localStorage[VISITED_BRANCHES];
@@ -2129,74 +2128,6 @@ var NCE = (function ($) {
         enableDisableMenuButton(_lockUnlockAppMenu, isAppAdmin, lockUnlockApp);
     }
 
-    function showHideImpersonation(isAdmin) {
-        var html, ul;
-        ul = _serverMenu.parent().find('ul');
-        if (isAdmin || (_impersonationApp && _impersonationApp.app === getAppId().app)) {
-            if (!ul.find('#impersonate').length) {
-                html = '<li class="show-admin-only"><a id="impersonate" href="#">Impersonate User</a></a></li>';
-                ul.append(html);
-                ul.find('#impersonate').on('click', function(e) {
-                    var parent, inputs, newNameInput, anc, html;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    anc = $(this);
-                    parent = anc.parent();
-                    inputs = parent.find('input');
-                    if (inputs.length) {
-                        inputs.remove();
-                        parent.find('button, br').remove();
-                    } else {
-                        newNameInput = $('<input/>')
-                            .prop({type:'text', id:'impersonate-text'})
-                            .addClass('form-control')
-                            .click(function (ie) {
-                                ie.preventDefault();
-                                ie.stopPropagation();
-                            })
-                            .keyup(function (ie) {
-                                if (ie.keyCode === KEY_CODES.ENTER) {
-                                    onImpersonateSubmit();
-                                }
-                            });
-                        parent.append(newNameInput);
-                        html = '<br/>';
-                        html += '<button class="btn btn-primary btn-xs btn-menu-confirm">Confirm</button>';
-                        html += '<button class="btn btn-danger btn-xs">Cancel</button>';
-                        anc.append(html);
-                        anc.find('button.btn-menu-confirm').on('click', function () {
-                            onImpersonateSubmit();
-                        });
-                        newNameInput[0].focus();
-                    }
-                });
-            }
-        } else {
-            ul.find('.show-admin-only').remove();
-            if (_impersonationApp) {
-                impersonate(null);
-            }
-        }
-    }
-
-    function onImpersonateSubmit() {
-        var user = $('#impersonate-text').val();
-        closeTab(_serverMenu.parent());
-        delay(function() { impersonate(user); }, 1);
-    }
-
-    function impersonate(user) {
-        var appId = getAppId();
-        var result = call(CONTROLLER + CONTROLLER_METHOD.HEARTBEAT, [{}], { fakeuser: user || '', appid: getTextAppId(appId) });
-        if (result.status) {
-            _impersonationApp = user !== undefined && user !== null && user !== '' ? appId : null;
-            showNote('Impersonating user: ' + user, null, TWO_SECOND_TIMEOUT, NOTE_CLASS.SYS_META);
-            handleAppPermissions();
-        } else {
-            showNote(result.data, 'Unable to impersonate...', null, NOTE_CLASS.SYS_META);
-        }
-    }
-
     function handleAppPermissions() {
         var isAppAdmin = checkIsAppAdmin();
         var canReleaseApp = checkAppPermission(PERMISSION_ACTION.RELEASE);
@@ -2206,7 +2137,6 @@ var NCE = (function ($) {
         enableDisableCommitBranch(canCommitOnApp);
         enableDisableMenuButton(_clearCache, isAppAdmin || head !== getAppId().branch, clearCache);
         enableDisableLockMenu(isAppAdmin);
-        showHideImpersonation(isAppAdmin);
     }
     
     function buildBranchUpdateMenu() {
