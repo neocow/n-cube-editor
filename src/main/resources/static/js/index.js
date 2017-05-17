@@ -25,7 +25,6 @@ var NCE = (function ($) {
     var _savedCall = null;
     var _searchThread;
     var _heartBeatThread;
-    var _impersonationApp = null;
     var _cubeList = {};
     var _openCubes = localStorage[OPEN_CUBES];
     var _visitedBranches = localStorage[VISITED_BRANCHES];
