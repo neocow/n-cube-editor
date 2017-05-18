@@ -4379,16 +4379,17 @@ var NCubeEditor2 = (function ($) {
     // =============================================== Begin Axis Editing ==============================================
 
     function getAxesFromCube(appId, cubeName, axisName) {
-        var axisNames, results, i, len, axis;
+        var axisNames, axes, i, len, axis, axisKeys;
         var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:JSON_MODE.INDEX_NOCELLS}], {noResolveRefs:true});
         if (!result.status) {
             nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
             return {};
         }
         axisNames = [];
-        results = JSON.parse(result.data).axes;
-        for (i = 0, len = results.length; i < len; i++) {
-            axis = results[i];
+        axes = JSON.parse(result.data).axes;
+        axisKeys = Object.keys(axes);
+        for (i = 0, len = axisKeys.length; i < len; i++) {
+            axis = axes[axisKeys[i]];
             if (axis.name === axisName) {
                 return axis;
             }
