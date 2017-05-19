@@ -68,12 +68,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.2.RELEASE</version>
+        <version>1.5.3.RELEASE</version>
     </parent>
 
     <properties>
-        <version.ncube>4.0.4</version.ncube>
-        <version.springboot>1.5.2.RELEASE</version.springboot>
+        <version.ncube>4.0.5</version.ncube>
+        <version.springboot>1.5.3.RELEASE</version.springboot>
         <version.plugin.maven-compiler>3.6.1</version.plugin.maven-compiler>
         <version.plugin.gmavenplus>1.5</version.plugin.gmavenplus>
         <version.plugin.nexus>1.6.7</version.plugin.nexus>
