@@ -1291,10 +1291,9 @@ var NCEBuilderOptions = (function () {
 
         var table = ret.formInputs.refAxTable.columns;
         var updateRow = ret.formInputs.updateRow.columns;
-        var prefix, tableHeading;
+        var prefix;
         if (opts.isTransform) {
             prefix = 'transform';
-            tableHeading = 'Transform';
             ret.footerButtons = {
                 breakTransform: {
                     buttonClass: 'btn-primary',
@@ -1307,7 +1306,6 @@ var NCEBuilderOptions = (function () {
             };
         } else {
             prefix = 'dest';
-            tableHeading = 'Ref';
             updateRow.axisLabel = {
                 type: FormBuilder.INPUT_TYPE.READONLY,
                 css: { width: '5%', overflow:'hidden', 'text-overflow':'ellipsis' }
@@ -1333,7 +1331,7 @@ var NCEBuilderOptions = (function () {
         }
 
         table[prefix + 'App'] = {
-            heading: tableHeading + ' App',
+            heading: 'App',
             type: FormBuilder.INPUT_TYPE.READONLY,
             css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
         };
