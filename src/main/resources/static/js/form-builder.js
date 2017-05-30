@@ -441,7 +441,7 @@ var FormBuilder = (function ($) {
                 control = createFormDefaultDisplaySelectInput(id, label, selectOptions, readonly, initVal);
                 break;
             case INPUT_TYPE.TABLE:
-                control = $('<div id="' + id + '" style="max-height:300px; overflow-y:auto;"/>').append(buildTable(initVal, formInput));
+                control = $('<div id="' + id + '"/>').append(buildTable(initVal, formInput));
                 break;
             case INPUT_TYPE.TEXT_SELECT:
                 control = createFormTextSelectInput(id, label, selectOptions, readonly, initVal);
@@ -595,13 +595,14 @@ var FormBuilder = (function ($) {
     function buildTable(data, tableOpts) {
         var columns, columnKeys, headingRow, c, cLen, column, header, key;
         var style = tableOpts.css || { margin: '0 auto' };
-        var table = $('<table/>').css(style);
+        var headerTable = $('<table/>').css(style);
+        var dataTable= $('<table/>').css(style);
 
         columns = tableOpts.columns;
         columnKeys = Object.keys(columns);
         tableOpts.columnKeys = columnKeys;
         headingRow = $('<tr/>');
-        table.append(headingRow);
+        headerTable.append(headingRow);
         for (c = 0, cLen = columnKeys.length; c < cLen; c++) {
             key = columnKeys[c];
             column = columns[key];
@@ -609,13 +610,13 @@ var FormBuilder = (function ($) {
             header = $('<th/>').html(column.heading).css(column.css || TD_CSS);
             if (column.sortable) {
                 header.on('click', function() {
-                    sortTable($(this).closest('table'), this, tableOpts);
+                    sortTable(dataTable, this, tableOpts);
                 });
             }
             headingRow.append(header);
         }
-        createTableRows(table, data, tableOpts);
-        return table;
+        createTableRows(dataTable, data, tableOpts);
+        return $('<div/>').append(headerTable).append($('<div style="max-height:300px; overflow-y:auto;"/>').append(dataTable));
     }
 
     function sortTable(table, header, tableOpts) {

@@ -1147,10 +1147,11 @@ var NCEBuilderOptions = (function () {
      *  populateCubeFunc
      */
     function referenceAxisUpdater(opts) {
+        var heading = opts.isTransform ? 'Transform' : 'Destination';
         var ret = {
-            title: 'Reference Axis Batch Updater - Destination',
-            instructionsTitle: 'Instructions - Update Reference Axis Destination',
-            instructionsText: 'Update the reference axis destination properties of checked reference axes. Only selected fields will change, blank fields will not be changed.',
+            title: 'Reference Axis Batch Updater - ' + heading,
+            instructionsTitle: 'Instructions - Update Reference Axis ' + heading,
+            instructionsText: 'Update the reference axis ' + heading.toLowerCase() + ' properties of checked reference axes. Only selected fields will change, blank fields will not be changed.',
             displayType: FormBuilder.DISPLAY_TYPE.FORM,
             size: FormBuilder.MODAL_SIZE.XL,
             hasFilter: true,
@@ -1266,7 +1267,7 @@ var NCEBuilderOptions = (function () {
                 },
                 refAxTable: {
                     type: FormBuilder.INPUT_TYPE.TABLE,
-                    css: {margin: '0 auto', width: '95%', 'table-layout':'fixed'},
+                    css: {margin: '0', width: '100%', 'table-layout':'fixed'},
                     data: opts.refAxList,
                     columns: {
                         isApplied: {
