@@ -1266,23 +1266,23 @@ var NCEBuilderOptions = (function () {
                 },
                 refAxTable: {
                     type: FormBuilder.INPUT_TYPE.TABLE,
-                    css: {margin: '0 auto', width: '95%'},
+                    css: {margin: '0 auto', width: '95%', 'table-layout':'fixed'},
                     data: opts.refAxList,
                     columns: {
                         isApplied: {
                             heading: 'Apply',
                             type: FormBuilder.INPUT_TYPE.CHECKBOX,
-                            css: {width: '9%'}
+                            css: {width: '4%', overflow:'hidden', 'text-overflow':'ellipsis'}
                         },
                         srcCubeName: {
                             heading: 'Source Cube',
                             type: FormBuilder.INPUT_TYPE.READONLY,
-                            css: {width: '13%'}
+                            css: {width: '32%', overflow:'hidden', 'text-overflow':'ellipsis', 'background-color':'white'}
                         },
                         srcAxisName: {
                             heading: 'Source Axis',
                             type: FormBuilder.INPUT_TYPE.READONLY,
-                            css: {width: '13%'}
+                            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
                         }
                     }
                 }
@@ -1310,7 +1310,7 @@ var NCEBuilderOptions = (function () {
             tableHeading = 'Ref';
             updateRow.axisLabel = {
                 type: FormBuilder.INPUT_TYPE.READONLY,
-                css: { width: '5%' }
+                css: { width: '5%', overflow:'hidden', 'text-overflow':'ellipsis' }
             };
             updateRow.updateAxis = {
                 type: FormBuilder.INPUT_TYPE.SELECT,
@@ -1335,28 +1335,28 @@ var NCEBuilderOptions = (function () {
         table[prefix + 'App'] = {
             heading: tableHeading + ' App',
             type: FormBuilder.INPUT_TYPE.READONLY,
-            css: {width: '13%'}
+            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
         };
         table[prefix + 'Version'] = {
             heading: 'Version',
             type: FormBuilder.INPUT_TYPE.READONLY,
-            css: {width: '13%'}
+            css: {width: '5%', overflow:'hidden', 'text-overflow':'ellipsis'}
         };
         table[prefix + 'Branch'] = {
             heading: 'Branch',
             type: FormBuilder.INPUT_TYPE.READONLY,
-            css: {width: '13%'}
+            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
         };
         table[prefix + 'CubeName'] = {
             heading: 'Cube',
             type: FormBuilder.INPUT_TYPE.READONLY,
-            css: {width: '13%'}
+            css: {width: '16%', overflow:'hidden', 'text-overflow':'ellipsis'}
         };
         if (!opts.isTransform) {
             table.destAxisName = {
                 heading: 'Axis',
                 type: FormBuilder.INPUT_TYPE.READONLY,
-                css: {width: '13%'}
+                css: {width: '13%', overflow:'hidden', 'text-overflow':'ellipsis'}
             };
         }
 
