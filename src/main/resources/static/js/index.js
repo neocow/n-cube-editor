@@ -71,18 +71,6 @@ var NCE = (function ($) {
     var _appMenu = $('#AppMenu');
     var _versionMenu = $('#VersionMenu');
     var _serverMenu = $('#server-menu');
-    var _batchUpdateAxisReferencesTable = $('#batchUpdateAxisReferencesTable');
-    var _batchUpdateAxisReferencesUpdate = $('#batchUpdateAxisReferencesUpdate');
-    var _batchUpdateAxisReferencesToggle = $('#batchUpdateAxisReferencesToggle');
-    var _batchUpdateAxisReferencesRemoveTransform = $('#batchUpdateAxisReferencesRemoveTransform');
-    var _batchUpdateAxisReferencesData = [];
-    var _batchUpdateAxisReferencesApp = $('#batchUpdateAxisReferencesApp');
-    var _batchUpdateAxisReferencesVersion = $('#batchUpdateAxisReferencesVersion');
-    var _batchUpdateAxisReferencesCubeName = $('#batchUpdateAxisReferencesCubeName');
-    var _batchUpdateAxisReferencesAxisName = $('#batchUpdateAxisReferencesAxisName');
-    var _batchUpdateAxisReferencesCurrAxisHeader = $('#batchUpdateAxisReferencesCurrAxisHeader');
-    var _batchUpdateAxisReferencesNewAxisHeader = $('#batchUpdateAxisReferencesNewAxisHeader');
-    var _batchUpdateAxisReferencesAxisMethodNameColumnHeader = $('#batchUpdateAxisReferencesAxisMethodNameColumnHeader');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
     var _createSnapshotMenu = $('#createSnapshotMenu');
@@ -131,7 +119,6 @@ var NCE = (function ($) {
     var _commitModal = $('#commitRollbackModal');
     var _diffModal = $('#diffOutputModal');
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
-    var _batchUpdateAxisReferencesModal = $('#batchUpdateAxisReferencesModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
     var _deleteCubeModal = $('#deleteCubeModal');
@@ -941,7 +928,7 @@ var NCE = (function ($) {
             rightAppId: appId,
             rightCube: _selectedCubeName,
             appSelectList: loadAppNames(),
-            populateVersionFunc: loadVersions,
+            populateVersionFunc: getVersions,
             populateBranchFunc: getBranchNamesByAppId,
             populateCubeFunc: getCubeListForApp,
             afterSave: globalComparatorCompare
@@ -1381,6 +1368,7 @@ var NCE = (function ($) {
             exec: exec,
             getAppId: getAppId,
             getAppVersions: getAppVersions,
+            getAxesFromCube: getAxesFromCube,
             getBranchNamesByAppId: getBranchNamesByAppId,
             getCubeListForApp: getCubeListForApp,
             getSelectedTabAppId: getSelectedTabAppId,
@@ -1403,7 +1391,7 @@ var NCE = (function ($) {
             updateNote: updateNote,
             loadNCubes: loadNCubes,
             loadNCubeListView: loadNCubeListView,
-            loadVersions: loadVersions,
+            getVersions: getVersions,
             runSearch: runSearch,
             saveViewPosition: saveViewPosition,
             getViewPosition: getViewPosition,
@@ -1663,29 +1651,38 @@ var NCE = (function ($) {
             closeChildMenu();
         });
 
-        $('#newCubeMenu').click(function () {
+        $('#globalComparatorMenu').on('click', function() {
+            openGlobalComparator();
+        });
+        $('#newCubeMenu').on('click', function () {
             newCube();
         });
-        $('#newCubeSave').click(function () {
+        $('#newCubeSave').on('click', function () {
             newCubeSave();
         });
-        $('#dupeCubeCopy').click(function () {
+        $('#dupeCubeCopy').on('click', function () {
             dupeCubeCopy();
         });
-        $('#deleteCubeMenu').click(function () {
+        $('#deleteCubeMenu').on('click', function () {
             deleteCube();
         });
-        $('#deleteCubeOk').click(function () {
+        $('#deleteCubeOk').on('click', function () {
             deleteCubeOk();
         });
-        $('#restoreCubeMenu').click(function () {
+        $('#restoreCubeMenu').on('click', function () {
             restoreCube();
         });
-        $('#restoreCubeOk').click(function () {
+        $('#restoreCubeOk').on('click', function () {
             restoreCubeOk();
         });
-        $('#revisionHistoryOk').click(function () {
+        $('#revisionHistoryOk').on('click', function () {
             revisionHistoryOk();
+        });
+        $('#batchUpdateAxisReferencesMenu').on('click', function() {
+            batchUpdateAxisReferencesOpen(false);
+        });
+        $('#batchUpdateAxisReferenceTransformsMenu').on('click', function() {
+            batchUpdateAxisReferencesOpen(true);
         });
 
         addSystemMenuListeners();
@@ -1822,14 +1819,14 @@ var NCE = (function ($) {
 
     function globalComparatorCompare(data) {
         var leftDto, rightDto, leftResult, rightResult, title, leftVerSplit, rightVerSplit;
-        var leftApp = data.leftApp;
-        var rightApp = data.rightApp;
-        var leftVersion = data.leftVersion;
-        var rightVersion = data.rightVersion;
-        var leftBranch = data.leftBranch;
-        var rightBranch = data.rightBranch;
-        var leftCube = data.leftCube;
-        var rightCube = data.rightCube;
+        var leftApp = data.leftApp[0];
+        var rightApp = data.rightApp[0];
+        var leftVersion = data.leftVersion[0];
+        var rightVersion = data.rightVersion[0];
+        var leftBranch = data.leftBranch[0];
+        var rightBranch = data.rightBranch[0];
+        var leftCube = data.leftCube[0];
+        var rightCube = data.rightCube[0];
 
         if (rightApp && rightVersion && rightBranch && rightCube) {
             rightVerSplit = rightVersion.split('-');
@@ -1865,160 +1862,88 @@ var NCE = (function ($) {
         }
     }
 
-    function batchUpdateAxisReferencesAppChanged() {
-        var params, appVal;
-        appVal = _batchUpdateAxisReferencesApp.val();
-        _batchUpdateAxisReferencesCubeName.empty();
-        _batchUpdateAxisReferencesAxisName.empty();
-        if (appVal === '') {
-            _batchUpdateAxisReferencesVersion.empty();
-        } else {
-            params = [appVal, STATUS.RELEASE];
-            populateSelect(buildAppState(), _batchUpdateAxisReferencesVersion, CONTROLLER_METHOD.GET_APP_VERSIONS, params, null, true);
-        }
-    }
-
-    function batchUpdateAxisReferencesVersionChanged() {
-        var params, verVal;
-        verVal = _batchUpdateAxisReferencesVersion.val();
-        _batchUpdateAxisReferencesAxisName.empty();
-        if (verVal === '') {
-            _batchUpdateAxisReferencesCubeName.empty();
-        } else {
-            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), verVal, STATUS.RELEASE, head), '*', null, getDefaultSearchOptions()];
-            populateSelect(buildAppState(), _batchUpdateAxisReferencesCubeName, CONTROLLER_METHOD.SEARCH, params, null, true);
-        }
-    }
-
-    function batchUpdateAxisReferencesCubeNameChanged() {
-        var params, axisOrMethod, cubeName;
-        cubeName = _batchUpdateAxisReferencesCubeName.val();
-        if (cubeName === '') {
-            _batchUpdateAxisReferencesAxisName.empty();
-        } else {
-            params = [appIdFrom(_batchUpdateAxisReferencesApp.val(), _batchUpdateAxisReferencesVersion.val(), STATUS.RELEASE, head), cubeName, {mode:JSON_MODE.INDEX_NOCELLS}];
-            axisOrMethod = isBatchUpdateAxisReferencesDestinationToggled() ? POPULATE_SELECT_FROM_CUBE.AXIS : POPULATE_SELECT_FROM_CUBE.METHOD;
-            populateSelectFromCube(buildAppState(), _batchUpdateAxisReferencesAxisName, params, axisOrMethod);
-        }
-    }
-
-    function batchUpdateAxisReferencesOpen() {
-        _batchUpdateAxisReferencesData = null;
-        _batchUpdateAxisReferencesData = [];
-        $('#batchUpdateAxisReferencesInstTitle')[0].innerHTML = 'Instructions - Batch Update Axis References';
-        $('#batchUpdateAxisReferencesInstructions')[0].innerHTML = 'Update the reference axis properties of the checked axes. Updating will only update the rows you have selected. You can toggle between destination and transformation properties';
-
-        populateSelect(buildAppState(), _batchUpdateAxisReferencesApp, CONTROLLER_METHOD.GET_APP_NAMES, [], null, true);
-
+    function batchUpdateAxisReferencesOpen(isTransform) {
         showNote('Finding all reference axes, please wait...');
         setTimeout(function() {
+            var opts;
             var result = call(CONTROLLER + CONTROLLER_METHOD.GET_REFERENCE_AXES, [getAppId()]);
             clearNote();
             if (!result.status) {
                 showNote('Unable to load reference axes:<hr class="hr-small"/>' + result.data);
                 return;
             }
-
-            _batchUpdateAxisReferencesData = null;
-            _batchUpdateAxisReferencesData = result.data;
-            buildBatchUpdateAxisReferencesTable();
-            enableDisableBatchUpdate();
-            _batchUpdateAxisReferencesModal.modal();
+            opts = {
+                refAxList: result.data,
+                appSelectList: loadAppNames(),
+                populateVersionFunc: getVersions,
+                populateBranchFunc: getBranchNamesByAppId,
+                populateCubeFunc: getCubeListForApp,
+                populateAxisFunc: getAxesFromCube,
+                afterSave: batchUpdateAxisReferencesUpdate,
+                readonly: _selectedBranch === head || !checkAppPermission(PERMISSION_ACTION.UPDATE),
+                isTransform: isTransform
+            };
+            FormBuilder.openBuilderModal(NCEBuilderOptions.referenceAxisUpdater(opts));
         },1);
     }
 
-    function enableDisableBatchUpdate() {
-        _batchUpdateAxisReferencesUpdate.toggle(_selectedBranch !== head && checkAppPermission(PERMISSION_ACTION.UPDATE));
-    }
-
-    function findBatchUpdateAxisReferencesRows() {
-        return _batchUpdateAxisReferencesTable.find('.batch-update-axis-references-entry');
-    }
-
-    function isBatchUpdateAxisReferencesDestinationToggled() {
-        return _batchUpdateAxisReferencesToggle[0].checked;
-    }
-
-    function buildBatchUpdateAxisReferencesTable() {
-        var i, len, isDest, refAxData, html, app, version, cube, axis, axisHeader, prefix, axisMethodText;
-        findBatchUpdateAxisReferencesRows().remove();
-        isDest = isBatchUpdateAxisReferencesDestinationToggled();
-        _batchUpdateAxisReferencesRemoveTransform.toggle(!isDest);
-        axisHeader = isDest ? 'Destination' : 'Transform';
-        prefix = isDest ? 'dest' : 'transform';
-        axisMethodText = isDest ? 'Axis' : 'Method';
-        _batchUpdateAxisReferencesCurrAxisHeader[0].innerHTML = 'Current ' + axisHeader + ' Axis';
-        _batchUpdateAxisReferencesNewAxisHeader[0].innerHTML = 'New ' + axisHeader + ' Axis';
-        _batchUpdateAxisReferencesAxisMethodNameColumnHeader[0].innerHTML = axisMethodText + ' Name';
-
-        html = '';
-        for (i = 0, len = _batchUpdateAxisReferencesData.length; i < len; i++) {
-            refAxData = _batchUpdateAxisReferencesData[i];
-            app = refAxData[prefix + 'App'];
-            version = refAxData[prefix + 'Version'];
-            cube = refAxData[prefix + 'CubeName'];
-            axis = refAxData[prefix + axisMethodText + 'Name'];
-
-            html += '<tr class="batch-update-axis-references-entry">'
-                  + '<td><input type="checkbox" class="isSelected" /></td>'
-                  + '<td>' + refAxData.srcCubeName + '</td>'
-                  + '<td>' + refAxData.srcAxisName + '</td>'
-                  + '<td class="app">' + (app || '') + '</td>'
-                  + '<td class="version">' + (version || '') + '</td>'
-                  + '<td class="cubeName">' + (cube || '') + '</td>'
-                  + '<td class="axisName">' + (axis || '') + '</td>'
-                  + '</tr>';
-        }
-        _batchUpdateAxisReferencesTable.append(html);
-    }
-
-    function getUpdateReferenceAxes(removeTransform) {
-        var checkedIdx, checkedLen, refAxIdx, refAx;
+    function updateRefAxData(data) {
+        var i, len, refAx, updateVersion, updateStatus;
         var refAxes = [];
-        var allRows = findBatchUpdateAxisReferencesRows();
-        var checked = allRows.has('input:checked');
-        var newAppVal = _batchUpdateAxisReferencesApp.val();
-        var newVersionVal = _batchUpdateAxisReferencesVersion.val();
-        var newCubeNameVal = _batchUpdateAxisReferencesCubeName.val();
-        var newAxisNameVal = _batchUpdateAxisReferencesAxisName.val();
-        var propPrefix = isBatchUpdateAxisReferencesDestinationToggled() ? 'dest' : 'transform';
-        var appProp = propPrefix + 'App';
-        var versionProp = propPrefix + 'Version';
-        var cubeNameProp = propPrefix + 'CubeName';
-        var axisNameProp = propPrefix + 'AxisName';
+        var prefix = data.isTransform ? 'transform' : 'dest';
+        var refAxList = data.refAxList;
+        var updateApp = data.updateApp[0];
+        var verSplit = data.updateVersion[0];
+        var updateBranch = data.updateBranch[0];
+        var updateCube = data.updateCube[0];
+        var updateAxis = data.updateAxis ? data.updateAxis[0] : null;
+        if (verSplit) {
+            verSplit = verSplit.split('-');
+            updateVersion = verSplit[0];
+            updateStatus = verSplit[1];
+        }
 
-        for (checkedIdx = 0, checkedLen = checked.length; checkedIdx < checkedLen; checkedIdx++) {
-            refAxIdx = allRows.index(checked[checkedIdx]);
-            refAx = null;
-            refAx = _batchUpdateAxisReferencesData[refAxIdx];
-            if (removeTransform) {
-                refAx[appProp] = null;
-                refAx[versionProp] = null;
-                refAx[cubeNameProp] = null;
-                refAx[axisNameProp] = null;
-            } else if (newAppVal !== '') {
-                refAx[appProp] = newAppVal;
-                if (newVersionVal !== '') {
-                    refAx[versionProp] = newVersionVal;
-                    if (newCubeNameVal !== '') {
-                        refAx[cubeNameProp] = newCubeNameVal;
-                        if (newAxisNameVal !== '') {
-                            refAx[axisNameProp] = newAxisNameVal;
+        for (i = 0, len = refAxList.length; i < len; i++) {
+            if (data.isApplied[i]) {
+                refAx = refAxList[i];
+                if (data.breakTransform) {
+                    refAx.transformApp = null;
+                    refAx.transformVersion = null;
+                    refAx.transformStatus = null;
+                    refAx.transformBranch = null;
+                    refAx.transformCubeName = null;
+                } else {
+                    refAx[prefix + 'App'] = updateApp;
+                    if (verSplit) {
+                        refAx[prefix + 'Version'] = updateVersion;
+                        refAx[prefix + 'Status'] = updateStatus;
+                        if (updateBranch) {
+                            refAx[prefix + 'Branch'] = updateBranch;
+                            if (updateCube) {
+                                refAx[prefix + 'CubeName'] = updateCube;
+                                if (updateAxis) {
+                                    refAx.destAxisName = updateAxis;
+                                }
+                            }
                         }
                     }
                 }
+                refAxes.push(refAx);
             }
-            refAxes.push(refAx);
         }
         return refAxes;
     }
 
-    function batchUpdateAxisReferencesUpdate(removeTransform) {
-        var result, len;
-        var refAxes = getUpdateReferenceAxes(removeTransform);
-        len = refAxes.length;
+    function batchUpdateAxisReferencesUpdate(data) {
+        var result, refAxes, refAxLen;
         clearNote();
-        if (!len) {
+        if (!data.updateApp[0] && !data.breakTransform) {
+            showNote('No dropdown values selected!', null, TWO_SECOND_TIMEOUT);
+            return;
+        }
+        refAxes = updateRefAxData(data);
+        refAxLen = refAxes.length;
+        if (!refAxLen) {
             showNote('No reference axes selected!', null, TWO_SECOND_TIMEOUT);
             return;
         }
@@ -2027,42 +1952,9 @@ var NCE = (function ($) {
             showNote('Unable to update reference axes:<hr class="hr-small"/>' + result.data);
             return;
         }
-        showNote(len + ' ' + (len === 1 ? 'axis' : 'axes') + ' updated', '', TWO_SECOND_TIMEOUT);
-        updateBatchReferenceAxisList(removeTransform);
-        selectNone();
+        showNote(refAxLen + ' ' + (refAxLen === 1 ? 'axis' : 'axes') + ' updated', '', TWO_SECOND_TIMEOUT);
         buildTabs(true);
-    }
-
-    function updateBatchReferenceAxisList(removeTransform) {
-        var checkedIdx, checkedLen, row;
-        var allRows = findBatchUpdateAxisReferencesRows();
-        var checked = allRows.has('input:checked');
-        var newAppVal = _batchUpdateAxisReferencesApp.val();
-        var newVersionVal = _batchUpdateAxisReferencesVersion.val();
-        var newCubeNameVal = _batchUpdateAxisReferencesCubeName.val();
-        var newAxisNameVal = _batchUpdateAxisReferencesAxisName.val();
-
-        for (checkedIdx = 0, checkedLen = checked.length; checkedIdx < checkedLen; checkedIdx++) {
-            row = null;
-            row = $(checked[checkedIdx]);
-            if (removeTransform) {
-                row.find('td.app')[0].innerHTML = '';
-                row.find('td.version')[0].innerHTML = '';
-                row.find('td.cubeName')[0].innerHTML = '';
-                row.find('td.axisName')[0].innerHTML = '';
-            } else if (newAppVal !== '') {
-                row.find('td.app')[0].innerHTML = newAppVal;
-                if (newVersionVal !== '') {
-                    row.find('td.version')[0].innerHTML = newVersionVal;
-                    if (newCubeNameVal !== '') {
-                        row.find('td.cubeName')[0].innerHTML = newCubeNameVal;
-                        if (newAxisNameVal !== '') {
-                            row.find('td.axisName')[0].innerHTML = newAxisNameVal;
-                        }
-                    }
-                }
-            }
-        }
+        batchUpdateAxisReferencesOpen(data.isTransform);
     }
 
     function checkPermissions(appId, resource, action) {
@@ -2529,8 +2421,8 @@ var NCE = (function ($) {
         return nameToChk in _cubeList;
     }
 
-    function loadVersions(app) {
-        var result, arr, versions;
+    function getVersions(app) {
+        var result;
         app = app || _selectedApp;
         if (!app) {
             showNote('Unable to load versions, no n-cube App selected.');
@@ -2538,13 +2430,16 @@ var NCE = (function ($) {
         }
         result = call(CONTROLLER + CONTROLLER_METHOD.GET_VERSIONS, [app]);
         if (result.status) {
-            versions = result.data;
-        } else {
-            showNote('Unable to load versions:<hr class="hr-small"/>' + result.data);
-            return;
+            return result.data;
         }
-        
-        if (!_selectedVersion || !doesVersionExist(versions, _selectedVersion, _selectedStatus)) {
+        showNote('Unable to load versions:<hr class="hr-small"/>' + result.data);
+    }
+
+    function loadVersions(app) {
+        var arr;
+        var versions = getVersions(app);
+
+        if (versions && !_selectedVersion || !doesVersionExist(versions, _selectedVersion, _selectedStatus)) {
             if (versions.length) {
                 arr = versions[0].split('-');
             }
@@ -3754,34 +3649,6 @@ var NCE = (function ($) {
         $('button.accept-theirs').on('click', function() {
             acceptMineTheirs($(this).closest('.modal').find('ul'), false);
         });
-        addBatchUpdateRefAxesListeners();
-    }
-
-    function addBatchUpdateRefAxesListeners() {
-        $('#batchUpdateAxisReferencesMenu').on('click', function() {
-            batchUpdateAxisReferencesOpen();
-        });
-        _batchUpdateAxisReferencesUpdate.on('click', function() {
-            batchUpdateAxisReferencesUpdate();
-        });
-        _batchUpdateAxisReferencesRemoveTransform.on('click', function() {
-            batchUpdateAxisReferencesUpdate(true);
-        });
-        _batchUpdateAxisReferencesToggle.on('change', function() {
-            buildBatchUpdateAxisReferencesTable();
-            if (_batchUpdateAxisReferencesCubeName.val()) {
-                batchUpdateAxisReferencesCubeNameChanged();
-            }
-        });
-        _batchUpdateAxisReferencesApp.on('change', function() {
-            batchUpdateAxisReferencesAppChanged();
-        });
-        _batchUpdateAxisReferencesVersion.on('change', function() {
-            batchUpdateAxisReferencesVersionChanged();
-        });
-        _batchUpdateAxisReferencesCubeName.on('change', function() {
-            batchUpdateAxisReferencesCubeNameChanged();
-        });
     }
 
     function showActiveBranch() {
@@ -3825,6 +3692,26 @@ var NCE = (function ($) {
             cubes.push(results[i].name);
         }
         return cubes;
+    }
+
+    function getAxesFromCube(appId, cubeName, axisName) {
+        var axisNames, axes, i, len, axis, axisKeys;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:JSON_MODE.INDEX_NOCELLS}], {noResolveRefs:true});
+        if (!result.status) {
+            showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
+            return {};
+        }
+        axisNames = [];
+        axes = JSON.parse(result.data).axes;
+        axisKeys = Object.keys(axes);
+        for (i = 0, len = axisKeys.length; i < len; i++) {
+            axis = axes[axisKeys[i]];
+            if (axis.name === axisName) {
+                return axis;
+            }
+            axisNames.push(axis.name);
+        }
+        return axisNames;
     }
 
     function selectBranch() {

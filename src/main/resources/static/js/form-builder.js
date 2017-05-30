@@ -122,6 +122,10 @@ var FormBuilder = (function ($) {
         }
     }
 
+    function setDataValue(key, val) {
+        _data[key] = val;
+    }
+
     function setDefaultOptions() {
         if (!_options.hasOwnProperty('size')) {
             _options.size = MODAL_SIZE.MEDIUM;
@@ -198,46 +202,58 @@ var FormBuilder = (function ($) {
     }
 
     function buildModalFooter() {
-        var html, footer;
-        var buttons = {
-            add: '',
-            cancel: '<button class="btn btn-default btn-sm form-builder-cancel">' + _options.closeButtonText + '</button>',
-            clear: '',
-            save: '',
-            selectAll: '',
-            selectNone: ''
-        };
+        var html, footer, i, len;
+        var buttons = [];
 
         if (!_options.readonly) {
-            if (_options.afterSave) {
-                buttons.save = '<button class="btn btn-primary btn-sm form-builder-save">' + _options.saveButtonText + '</button>';
+            if (_options.hasSelectAllNone) {
+                buttons.push('<button class="btn btn-info btn-sm pull-left form-builder-select-all" aria-hidden="true">Select All</button>');
+                buttons.push('<button class="btn btn-info btn-sm pull-left form-builder-select-none" aria-hidden="true">Select None</button>');
             }
-            if (_options.displayType !== DISPLAY_TYPE.FORM) {
-                if (_options.hasSelectAllNone) {
-                    buttons.selectAll = '<button class="btn btn-info btn-sm pull-left form-builder-select-all" aria-hidden="true">Select All</button>';
-                    buttons.selectNone = '<button class="btn btn-info btn-sm pull-left form-builder-select-none" aria-hidden="true">Select None</button>';
-                }
-                if (_options.canAddRemoveRows) {
-                    buttons.add = '<button class="btn btn-success btn-sm form-builder-add">Add New</button>';
-                    buttons.clear = '<button class="btn btn-danger btn-sm form-builder-clear">Clear</button>';
-                }
+            if (_options.displayType !== DISPLAY_TYPE.FORM && _options.canAddRemoveRows) {
+                buttons.push('<button class="btn btn-success btn-sm form-builder-add">Add New</button>');
+                buttons.push('<button class="btn btn-danger btn-sm form-builder-clear">Clear</button>');
+            }
+            if (_options.afterSave) {
+                buttons.push('<button class="btn btn-primary btn-sm form-builder-save">' + _options.saveButtonText + '</button>');
             }
         }
+        buttons.splice(buttons.length - 2, 0, '<button class="btn btn-default btn-sm form-builder-cancel">' + _options.closeButtonText + '</button>');
 
-        html = '<div class="modal-footer">'
-             + buttons.selectAll + buttons.selectNone
-             + buttons.add + buttons.clear + buttons.cancel + buttons.save
-             + '</div>';
+        html = '<div class="modal-footer">';
+        for (i = 0, len = buttons.length; i < len; i++) {
+            html += buttons[i];
+        }
+        html += '</div>';
 
         footer = $(html);
         footer.find('.form-builder-select-all').on('click', function() { checkAll(true, 'input[type="checkbox"]'); });
         footer.find('.form-builder-select-none').on('click', function() { checkAll(false, 'input[type="checkbox"]'); });
         footer.find('.form-builder-add').on('click', function() { addTableRowForTableTypeBuilder(); });
-        footer.find('.form-builder-clear').on('click', function() { clearTableRows() });
-        footer.find('.form-builder-cancel').on('click', function() { closeBuilderModal() });
-        footer.find('.form-builder-save').on('click', function() { closeBuilderModal(true) });
+        footer.find('.form-builder-clear').on('click', function() { clearTableRows(); });
+        footer.find('.form-builder-cancel').on('click', function() { closeBuilderModal(); });
+        footer.find('.form-builder-save').on('click', function() { closeBuilderModal(true); });
 
+        if (_options.hasOwnProperty('footerButtons')) {
+            buildCustomFooterButtons(footer);
+        }
         return footer;
+    }
+
+    function buildCustomFooterButtons(footer) {
+        var i, len, button, html, btnOpt, key;
+        var btnOpts = _options.footerButtons;
+        var keys = Object.keys(btnOpts);
+        var cancelButton = footer.find('.form-builder-cancel');
+
+        for (i = 0, len = keys.length; i < len; i++) {
+            key = keys[i];
+            btnOpt = btnOpts[key];
+            html = '<button class="btn ' + btnOpt.buttonClass +' btn-sm form-builder-' + key + '">' + btnOpt.label + '</button>';
+            button = $(html);
+            button.on('click', btnOpt.action);
+            cancelButton.before(button);
+        }
     }
 
     function buildModalContent() {
@@ -674,7 +690,7 @@ var FormBuilder = (function ($) {
                 inputElement = $('<input class="' + inputClass + '"/>').prop({type:'checkbox', checked:dataVal});
                 break;
             case INPUT_TYPE.READONLY:
-                inputElement = $('<span class="' + inputClass + '">' + dataVal + '</span>');
+                inputElement = $('<span class="' + inputClass + '">' + (dataVal || '') + '</span>');
                 break;
             case INPUT_TYPE.SELECT:
                 inputElement = $('<select class="' + inputClass + '" style="width:100%;max-width:95%;"/>');
@@ -717,6 +733,7 @@ var FormBuilder = (function ($) {
     function copyFormDataToModel(formInputs) {
         var i, len, key, input, inputOpts, val;
         var keys = Object.keys(formInputs);
+
         for (i = 0, len = keys.length; i < len; i++) {
             key = keys[i];
             input = $('#' + ID_PREFIX.INPUT + key);
@@ -741,11 +758,23 @@ var FormBuilder = (function ($) {
     }
 
     function copyFormTableDataToModel(columns) {
-        var i, len, key;
+        var i, len, key, els, el, e, eLen, val;
         var columnKeys = Object.keys(columns);
         for (i = 0, len = columnKeys.length; i < len; i++) {
             key = columnKeys[i];
-            _data[key] = findTableElementsByKey(key).val();
+            _data[key] = [];
+            els = findTableElementsByKey(key);
+            for (e = 0, eLen = els.length; e < eLen; e++) {
+                el = $(els[e]);
+                if (el.is('span')) {
+                    val = el[0].textContent;
+                } else if (el.is(':checkbox')) {
+                    val = el[0].checked;
+                } else {
+                    val = el.val();
+                }
+                _data[key].push(val);
+            }
         }
     }
 
@@ -966,6 +995,7 @@ var FormBuilder = (function ($) {
         populateTextSelect: populateTextSelect,
         showAlert: showAlert,
         toggle: toggle,
+        setDataValue: setDataValue,
         BOOTSTRAP_TYPE: BOOTSTRAP_TYPE,
         DISPLAY_TYPE: DISPLAY_TYPE,
         ID_PREFIX: ID_PREFIX,
