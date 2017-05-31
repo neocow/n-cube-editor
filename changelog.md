@@ -1,17 +1,18 @@
 ### Revision History
-* 0.9.0-SNAPSHOT
+* 0.9.0
   * Updated Spring Boot version to 1.5.3
   * Removed logback-spring.xml. Control logging via application.properties
   * Added "annotate" to cell editor modal to see change history
   * Converted project to be a Spring Boot app
-* 0.8.0-SNAPSHOT
+  * Changed confusing UI around batch reference axis update.
+* 0.8.0
   * Added getCube() to public API and allow it to "fail" silently so null can be returned.
   * Enhancement: Option of thin copy of branch. This only copies branch tip with an underlying layer of HEAD matching branch tip SHA1.
   * Enhancement: Quick change between edit cells using arrow keys, WSAD, or arrow buttons on edit cell modal.
   * Bug fix: Current view unnecessarily reloading data.
-* 0.6.0-SNAPSHOT
+* 0.6.0
   * Massive improvement in version control support
-* 0.5.0-SNAPSHOT
+* 0.5.0
   * Enhancement: Scope-build on Visualizer page.  Allows user to set up input Map to be used for Visualizer display.
   * Enhancement: Visualize n-cube as connected network (graphs)
   * Enhancement: Reference Axis support.  Cube axes can now point to 'reference' or 'definitional axes' so that if the referred to axis is modified, so to is the referring axis (data is not duplicated).

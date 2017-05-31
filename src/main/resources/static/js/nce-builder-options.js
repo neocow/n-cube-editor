@@ -255,7 +255,6 @@ var NCEBuilderOptions = (function () {
      *  populateVersionFunc
      *  populateCubeFunc
      *  populateAxisFunc
-     *  populateMethodFunc
      */
     function addAxis(opts) {
         return {
@@ -417,7 +416,6 @@ var NCEBuilderOptions = (function () {
                                     FormBuilder.findElementByKey('transVer').trigger('populate');
                                     FormBuilder.findElementByKey('transBranch').trigger('populate');
                                     FormBuilder.findElementByKey('transCube').trigger('populate');
-                                    FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 }
                             }
                         },
@@ -429,7 +427,6 @@ var NCEBuilderOptions = (function () {
                                 change: function() {
                                     FormBuilder.findElementByKey('transBranch').trigger('populate');
                                     FormBuilder.findElementByKey('transCube').trigger('populate');
-                                    FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 },
                                 populate: function() {
                                     var app = FormBuilder.getInputValue('transApp');
@@ -445,7 +442,6 @@ var NCEBuilderOptions = (function () {
                             listeners: {
                                 change: function() {
                                     FormBuilder.findElementByKey('transCube').trigger('populate');
-                                    FormBuilder.findElementByKey('transMethod').trigger('populate');
                                 },
                                 populate: function() {
                                     var branches, splitVer;
@@ -464,9 +460,6 @@ var NCEBuilderOptions = (function () {
                             type: FormBuilder.INPUT_TYPE.SELECT,
                             layout: FormBuilder.INPUT_LAYOUT.TABLE,
                             listeners: {
-                                change: function() {
-                                    FormBuilder.findElementByKey('transMethod').trigger('populate');
-                                },
                                 populate: function() {
                                     var cubes, splitVer;
                                     var app = FormBuilder.getInputValue('transApp');
@@ -477,25 +470,6 @@ var NCEBuilderOptions = (function () {
                                         cubes = opts.populateCubeFunc(appIdFrom(app, splitVer[0], splitVer[1], branch));
                                     }
                                     FormBuilder.populateSelect($(this), cubes);
-                                }
-                            }
-                        },
-                        transMethod: {
-                            label: 'Method',
-                            type: FormBuilder.INPUT_TYPE.SELECT,
-                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
-                            listeners: {
-                                populate: function() {
-                                    var methods, splitVer;
-                                    var app = FormBuilder.getInputValue('transApp');
-                                    var version = FormBuilder.getInputValue('transVer');
-                                    var branch = FormBuilder.getInputValue('transBranch');
-                                    var cube = FormBuilder.getInputValue('transCube');
-                                    if (app && version && branch && cube) {
-                                        splitVer = version.split('-');
-                                        methods = opts.populateMethodFunc(appIdFrom(app, splitVer[0], splitVer[1], branch), cube);
-                                    }
-                                    FormBuilder.populateSelect($(this), methods);
                                 }
                             }
                         }
@@ -637,13 +611,6 @@ var NCEBuilderOptions = (function () {
                             readonly: true,
                             hidden: !metaProps.transformApp,
                             data: metaProps.transformCubeName
-                        },
-                        transMeth: {
-                            label: 'Method',
-                            layout: FormBuilder.INPUT_LAYOUT.TABLE,
-                            readonly: true,
-                            hidden: !metaProps.transformApp,
-                            data: metaProps.transformMethodName
                         }
                     }
                 },
@@ -1170,6 +1137,231 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  refAxList
+     *  isTransform
+     *  appSelectList
+     *  populateVersionFunc
+     *  populateBranchFunc
+     *  populateCubeFunc
+     */
+    function referenceAxisUpdater(opts) {
+        var heading = opts.isTransform ? 'Transform' : 'Destination';
+        var ret = {
+            title: 'Reference Axis Batch Updater - ' + heading,
+            instructionsTitle: 'Instructions - Update Reference Axis ' + heading,
+            instructionsText: 'Update the reference axis ' + heading.toLowerCase() + ' properties of checked reference axes. Only selected fields will change, blank fields will not be changed.',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            size: FormBuilder.MODAL_SIZE.XL,
+            hasFilter: true,
+            hasSelectAllNone: true,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            data: {
+                refAxList: opts.refAxList,
+                isTransform: opts.isTransform
+            },
+            closeAfterSave: false,
+            saveButtonText: 'Update',
+            closeButtonText: 'Close',
+            formInputs: {
+                updateRow: {
+                    type: FormBuilder.INPUT_TYPE.TABLE,
+                    css: { margin: '0 auto', width: '90%'},
+                    data: [{
+                        appLabel: 'App',
+                        versionLabel: 'Version',
+                        branchLabel: 'Branch',
+                        cubeLabel: 'Cube',
+                        axisLabel: 'Axis'
+                    }],
+                    columns: {
+                        appLabel: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: { width: '5%' }
+                        },
+                        updateApp: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            selectOptions: opts.appSelectList,
+                            css: { width: '15%' },
+                            listeners: {
+                                load: function() { $(this).trigger('change'); },
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('updateVersion').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('updateBranch').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('updateCube').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('updateAxis').trigger('populate');
+                                }
+                            }
+                        },
+                        versionLabel: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: { width: '5%' }
+                        },
+                        updateVersion: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            css: { width: '15%' },
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('updateBranch').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('updateCube').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('updateAxis').trigger('populate');
+                                },
+                                populate: function() {
+                                    var app = FormBuilder.findTableElementsByKey('updateApp').val();
+                                    var versions = app ? opts.populateVersionFunc(app) : null;
+                                    FormBuilder.populateSelect($(this), versions);
+                                }
+                            }
+                        },
+                        branchLabel: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: { width: '5%' }
+                        },
+                        updateBranch: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            css: { width: '15%' },
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('updateCube').trigger('populate');
+                                    FormBuilder.findTableElementsByKey('updateAxis').trigger('populate');
+                                },
+                                populate: function() {
+                                    var branches, splitVer;
+                                    var app = FormBuilder.findTableElementsByKey('updateApp').val();
+                                    var version = FormBuilder.findTableElementsByKey('updateVersion').val();
+                                    if (app && version) {
+                                        splitVer = version.split('-');
+                                        branches = opts.populateBranchFunc(appIdFrom(app, splitVer[0], splitVer[1], 'HEAD'));
+                                    }
+                                    FormBuilder.populateSelect($(this), branches);
+                                }
+                            }
+                        },
+                        cubeLabel: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: { width: '5%' }
+                        },
+                        updateCube: {
+                            type: FormBuilder.INPUT_TYPE.SELECT,
+                            css: { width: '15%' },
+                            listeners: {
+                                change: function() {
+                                    FormBuilder.findTableElementsByKey('updateAxis').trigger('populate');
+                                },
+                                populate: function() {
+                                    var cubes;
+                                    var app = FormBuilder.findTableElementsByKey('updateApp').val();
+                                    var version = FormBuilder.findTableElementsByKey('updateVersion').val();
+                                    var branch = FormBuilder.findTableElementsByKey('updateBranch').val();
+                                    var verstat = version ? version.split('-') : version;
+                                    if (app && verstat && branch) {
+                                        cubes = opts.populateCubeFunc(appIdFrom(app, verstat[0], verstat[1], branch));
+                                    }
+                                    FormBuilder.populateSelect($(this), cubes);
+                                }
+                            }
+                        }
+                    }
+                },
+                refAxTable: {
+                    type: FormBuilder.INPUT_TYPE.TABLE,
+                    css: {margin: '0', width: '100%', 'table-layout':'fixed'},
+                    data: opts.refAxList,
+                    columns: {
+                        isApplied: {
+                            heading: 'Apply',
+                            type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                            css: {width: '4%', overflow:'hidden', 'text-overflow':'ellipsis'}
+                        },
+                        srcCubeName: {
+                            heading: 'Source Cube',
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: {width: '32%', overflow:'hidden', 'text-overflow':'ellipsis', 'background-color':'white'}
+                        },
+                        srcAxisName: {
+                            heading: 'Source Axis',
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
+                        }
+                    }
+                }
+            }
+        };
+
+        var table = ret.formInputs.refAxTable.columns;
+        var updateRow = ret.formInputs.updateRow.columns;
+        var prefix;
+        if (opts.isTransform) {
+            prefix = 'transform';
+            ret.footerButtons = {
+                breakTransform: {
+                    buttonClass: 'btn-primary',
+                    label: 'Break Transform',
+                    action: function() {
+                        FormBuilder.setDataValue('breakTransform', true);
+                        FormBuilder.closeBuilderModal(true);
+                    }
+                }
+            };
+        } else {
+            prefix = 'dest';
+            updateRow.axisLabel = {
+                type: FormBuilder.INPUT_TYPE.READONLY,
+                css: { width: '5%', overflow:'hidden', 'text-overflow':'ellipsis' }
+            };
+            updateRow.updateAxis = {
+                type: FormBuilder.INPUT_TYPE.SELECT,
+                css: { width: '15%' },
+                listeners: {
+                    populate: function() {
+                        var axisNames, splitVer;
+                        var app = FormBuilder.findTableElementsByKey('updateApp').val();
+                        var version = FormBuilder.findTableElementsByKey('updateVersion').val();
+                        var branch = FormBuilder.findTableElementsByKey('updateBranch').val();
+                        var cube = FormBuilder.findTableElementsByKey('updateCube').val();
+                        if (app && version && branch && cube) {
+                            splitVer = version.split('-');
+                            axisNames = opts.populateAxisFunc(appIdFrom(app, splitVer[0], splitVer[1], branch), cube);
+                        }
+                        FormBuilder.populateSelect($(this), axisNames);
+                    }
+                }
+            };
+        }
+
+        table[prefix + 'App'] = {
+            heading: 'App',
+            type: FormBuilder.INPUT_TYPE.READONLY,
+            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
+        };
+        table[prefix + 'Version'] = {
+            heading: 'Version',
+            type: FormBuilder.INPUT_TYPE.READONLY,
+            css: {width: '5%', overflow:'hidden', 'text-overflow':'ellipsis'}
+        };
+        table[prefix + 'Branch'] = {
+            heading: 'Branch',
+            type: FormBuilder.INPUT_TYPE.READONLY,
+            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
+        };
+        table[prefix + 'CubeName'] = {
+            heading: 'Cube',
+            type: FormBuilder.INPUT_TYPE.READONLY,
+            css: {width: '16%', overflow:'hidden', 'text-overflow':'ellipsis'}
+        };
+        if (!opts.isTransform) {
+            table.destAxisName = {
+                heading: 'Axis',
+                type: FormBuilder.INPUT_TYPE.READONLY,
+                css: {width: '13%', overflow:'hidden', 'text-overflow':'ellipsis'}
+            };
+        }
+
+        return ret;
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -1185,6 +1377,7 @@ var NCEBuilderOptions = (function () {
         selectBranch: selectBranch,
         createSnapshotFromRelease: createSnapshotFromRelease,
         changeSnapshotVersion: changeSnapshotVersion,
-        releaseVersion: releaseVersion
+        releaseVersion: releaseVersion,
+        referenceAxisUpdater: referenceAxisUpdater
     };
 })(jQuery);

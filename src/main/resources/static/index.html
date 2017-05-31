@@ -149,7 +149,8 @@
                     <li><a href="#" id="deleteCubeMenu">Delete...</a></li>
                     <li><a href="#" id="restoreCubeMenu">Restore...</a></li>
                     <li class="divider"></li>
-                    <li><a href="#" id="batchUpdateAxisReferencesMenu">Batch Update Reference Axes...</a></li>
+                    <li><a href="#" id="batchUpdateAxisReferencesMenu">Update Reference Axes...</a></li>
+                    <li><a href="#" id="batchUpdateAxisReferenceTransformsMenu">Update Reference Axis Transforms...</a></li>
                     <li><a href="#" id="globalComparatorMenu">Compare Any Two Cubes...</a></li>
                 </ul>
             </div>
@@ -391,7 +392,7 @@
                 <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
                 <button class="btn btn-danger btn-sm pull-left accept-mine" aria-hidden="true">Accept Mine</button>
                 <button class="btn btn-danger btn-sm pull-left accept-theirs" aria-hidden="true">Accept Theirs</button>
-                <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
                 <button id="pull-link" class="btn btn-info btn-sm">Generate Pull Request Link</button>
                 <button id="commitOk" class="btn btn-primary btn-sm">Commit</button>
                 <button id="rollbackOk" class="btn btn-primary btn-sm">Rollback</button>
@@ -420,70 +421,6 @@
                 <button class="btn btn-danger btn-sm pull-left accept-theirs" aria-hidden="true">Accept Theirs</button>
                 <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
                 <button id="branchCompareUpdateOk" class="btn btn-primary btn-sm">Update</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Batch Update Axis References Modal -->
-<div id="batchUpdateAxisReferencesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="batchUpdateAxisReferencesLabel"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content modal-filter">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="batchUpdateAxisReferencesLabel" class="modal-title">Batch Update Axis References</h3>
-            </div>
-            <div class="modal-body" style="overflow: auto;height:450px">
-                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-                    <div class="panel panel-default">
-                        <div class="panel-heading" role="tab" id="batchUpdateAxisReferencesHeading">
-                            <h4 class="panel-title">
-                                <a id="batchUpdateAxisReferencesInstTitle" data-toggle="collapse" data-parent="#accordion" href="#batchUpdateAxisReferencesCollapse"
-                                   aria-expanded="true" aria-controls="batchUpdateAxisReferencesCollapse">Instructions</a>
-                            </h4>
-                        </div>
-                        <div id="batchUpdateAxisReferencesCollapse" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="batchUpdateAxisReferencesHeading">
-                            <div id="batchUpdateAxisReferencesInstructions" class="panel-body"></div>
-                        </div>
-                    </div>
-                </div>
-                <table id="batchUpdateAxisReferencesTable">
-                    <tr>
-                        <th colspan="3"></th>
-                        <th colspan="4" id="batchUpdateAxisReferencesNewAxisHeader"></th>
-                    </tr>
-                    <tr class="batchUpdateAxisReferencesNewAxisSelect">
-                        <td colspan="3"></td>
-                        <td  class="view-pull-requests-app"><select id="batchUpdateAxisReferencesApp"></select></td>
-                        <td  class="view-pull-requests-app"><select id="batchUpdateAxisReferencesVersion"></select></td>
-                        <td  class="view-pull-requests-app"><select id="batchUpdateAxisReferencesCubeName"></select></td>
-                        <td  class="view-pull-requests-app"><select id="batchUpdateAxisReferencesAxisName"></select></td>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th colspan="2">Source Axis</th>
-                        <th colspan="4" id="batchUpdateAxisReferencesCurrAxisHeader"></th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th>Cube Name</th>
-                        <th>Axis Name</th>
-                        <th>Application</th>
-                        <th>Version</th>
-                        <th>Cube Name</th>
-                        <th id="batchUpdateAxisReferencesAxisMethodNameColumnHeader"></th>
-                    </tr>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-info btn-sm pull-left select-all" aria-hidden="true">Select All</button>
-                <button class="btn btn-info btn-sm pull-left select-none" aria-hidden="true">Select None</button>
-                <button id="batchUpdateAxisReferencesRemoveTransform" class="btn btn-primary btn-sm">Remove Transform</button>
-                <input id="batchUpdateAxisReferencesToggle" type="checkbox" checked data-toggle="toggle" data-width="150"
-                       data-on="Destination Axis" data-off="Transform Axis" data-onstyle="primary" data-offstyle="primary" />
-                <button id="batchUpdateAxisReferencesUpdate" class="btn btn-primary btn-sm">Update Selected References</button>
-                <button class="btn btn-sm" data-dismiss="modal" aria-hidden="true">Close</button>
             </div>
         </div>
     </div>

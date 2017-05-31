@@ -4378,48 +4378,6 @@ var NCubeEditor2 = (function ($) {
 
     // =============================================== Begin Axis Editing ==============================================
 
-    function getAxesFromCube(appId, cubeName, axisName) {
-        var axisNames, axes, i, len, axis, axisKeys;
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:JSON_MODE.INDEX_NOCELLS}], {noResolveRefs:true});
-        if (!result.status) {
-            nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
-            return {};
-        }
-        axisNames = [];
-        axes = JSON.parse(result.data).axes;
-        axisKeys = Object.keys(axes);
-        for (i = 0, len = axisKeys.length; i < len; i++) {
-            axis = axes[axisKeys[i]];
-            if (axis.name === axisName) {
-                return axis;
-            }
-            axisNames.push(axis.name);
-        }
-        return axisNames;
-    }
-
-    function getMethodsFromTransformCube(appId, cubeName) {
-        var methods, results, i, len, axis, columns, c, cLen;
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_JSON, [appId, cubeName, {mode:JSON_MODE.INDEX_NOCELLS}], {noResolveRefs:true});
-        if (!result.status) {
-            nce.showNote('Error getting cube data:<hr class="hr-small"/>' + result.data);
-            return;
-        }
-        methods = [];
-        results = JSON.parse(result.data).axes;
-        for (i = 0, len = results.length; i < len; i++) {
-            axis = results[i];
-            if (['method','methods'].indexOf(axis.name) > -1) {
-                columns = axis.columns;
-                for (c = 0, cLen = columns.length; c < cLen; c++) {
-                    methods.push(columns[c].value);
-                }
-                break;
-            }
-        }
-        return methods;
-    }
-
     function addAxis() {
         var opts;
         if (!checkCubeUpdatePermissions('*')) {
@@ -4429,11 +4387,10 @@ var NCubeEditor2 = (function ($) {
 
         opts = {
             appSelectList: nce.loadAppNames(),
-            populateVersionFunc: nce.loadVersions,
+            populateVersionFunc: nce.getVersions,
             populateBranchFunc: nce.getBranchNamesByAppId,
             populateCubeFunc: nce.getCubeListForApp,
-            populateAxisFunc: getAxesFromCube,
-            populateMethodFunc: getMethodsFromTransformCube,
+            populateAxisFunc: nce.getAxesFromCube,
             afterSave: addAxisOk,
             onClose: removeHotBeforeKeyDown
         };
