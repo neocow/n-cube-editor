@@ -89,6 +89,8 @@ var FormBuilder = (function ($) {
         SECTION: 'form-builder-section-'
     };
 
+    var Filter = {};
+
     // elements;
     var _modal = null;
 
@@ -649,6 +651,9 @@ var FormBuilder = (function ($) {
 
         table.find('tr').remove();
         createTableRows(table, data, tableOpts);
+        if (typeof Filter.filter === 'function') {
+            Filter.filter();
+        }
     }
 
     function createTableRows(table, data, tableOpts) {
@@ -890,7 +895,6 @@ var FormBuilder = (function ($) {
         input = $('<input/>');
 
         function refreshItems() {
-            input.val('');
             input.focus();
             items = contentDiv.find('.modal-body').find('li,tr');
             if (items.find('input[type="checkbox"]').length) {
@@ -924,34 +928,7 @@ var FormBuilder = (function ($) {
         input.css({'width':'100%'});
         input.on('keyup', function(e) {
             delay(function() {
-                var query = input.val().toLowerCase();
-                if (query === '') {
-                    items.show();
-                } else {
-                    items.hide();
-                    items.filter(function () {
-                        var el, cb, tds, td;
-                        var item = $(this);
-                        if (item.is('li')) {
-                            el = item;
-                            cb = item.find('input[type="checkbox"]');
-                            if (cb.length) {
-                                el = cb.parent();
-                            }
-                            return el[0].textContent.toLowerCase().indexOf(query) > -1;
-                        }
-                        if (item.is('tr')) {
-                            tds = item.find('td').filter(function() {
-                                td = $(this);
-                                if (td.find('input[type="checkbox"]').length) {
-                                    return false;
-                                }
-                                return td[0].textContent.toLowerCase().indexOf(query) > -1;
-                            });
-                            return tds.length;
-                        }
-                    }).show();
-                }
+                Filter.filter();
             }, e.keyCode === KEY_CODES.ENTER ? 0 : PROGRESS_DELAY);
         });
 
@@ -964,6 +941,38 @@ var FormBuilder = (function ($) {
         contentDiv.on('show', function() {
             refreshItems();
         });
+
+        Filter.filter = function() {
+            var query = input.val().toLowerCase();
+            refreshItems();
+            if (query === '') {
+                items.show();
+            } else {
+                items.hide();
+                items.filter(function () {
+                    var el, cb, tds, td;
+                    var item = $(this);
+                    if (item.is('li')) {
+                        el = item;
+                        cb = item.find('input[type="checkbox"]');
+                        if (cb.length) {
+                            el = cb.parent();
+                        }
+                        return el[0].textContent.toLowerCase().indexOf(query) > -1;
+                    }
+                    if (item.is('tr')) {
+                        tds = item.find('td').filter(function() {
+                            td = $(this);
+                            if (td.find('input[type="checkbox"]').length) {
+                                return false;
+                            }
+                            return td[0].textContent.toLowerCase().indexOf(query) > -1;
+                        });
+                        return tds.length;
+                    }
+                }).show();
+            }
+        }
 
         // run on init
         refreshItems();
