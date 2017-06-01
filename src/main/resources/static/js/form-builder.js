@@ -972,7 +972,7 @@ var FormBuilder = (function ($) {
                     }
                 }).show();
             }
-        }
+        };
 
         // run on init
         refreshItems();
