@@ -1280,37 +1280,43 @@ var NCEBuilderOptions = (function () {
 
             columns.srcCubeName = {
                 heading: 'Source Cube',
-                    type: FormBuilder.INPUT_TYPE.READONLY,
-                    css: {width: '32%', overflow:'hidden', 'text-overflow':'ellipsis', 'background-color':'white'}
+                type: FormBuilder.INPUT_TYPE.READONLY,
+                sortable: true,
+                css: {width: '32%', overflow:'hidden', 'text-overflow':'ellipsis', 'background-color':'white'}
             };
 
             columns.srcAxisName = {
                 heading: 'Source Axis',
                 type: FormBuilder.INPUT_TYPE.READONLY,
+                sortable: true,
                 css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
             };
 
             columns[prefix + 'App'] = {
                 heading: 'App',
                 type: FormBuilder.INPUT_TYPE.READONLY,
+                sortable: true,
                 css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
             };
 
             columns[prefix + 'Version'] = {
                 heading: 'Version',
                 type: FormBuilder.INPUT_TYPE.READONLY,
+                sortable: true,
                 css: {width: '5%', overflow:'hidden', 'text-overflow':'ellipsis'}
             };
 
             columns[prefix + 'Branch'] = {
                 heading: 'Branch',
                 type: FormBuilder.INPUT_TYPE.READONLY,
+                sortable: true,
                 css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
             };
 
             columns[prefix + 'CubeName'] = {
                 heading: 'Cube',
                 type: FormBuilder.INPUT_TYPE.READONLY,
+                sortable: true,
                 css: {width: '16%', overflow:'hidden', 'text-overflow':'ellipsis'}
             };
 
@@ -1318,6 +1324,7 @@ var NCEBuilderOptions = (function () {
                 columns.destAxisName = {
                     heading: 'Axis',
                     type: FormBuilder.INPUT_TYPE.READONLY,
+                    sortable: true,
                     css: {width: '13%', overflow:'hidden', 'text-overflow':'ellipsis'}
                 };
             }
