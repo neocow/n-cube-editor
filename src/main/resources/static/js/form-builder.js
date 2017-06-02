@@ -89,6 +89,8 @@ var FormBuilder = (function ($) {
         SECTION: 'form-builder-section-'
     };
 
+    var Filter = {};
+
     // elements;
     var _modal = null;
 
@@ -610,7 +612,7 @@ var FormBuilder = (function ($) {
             header = $('<th/>').html(column.heading).css(column.css || TD_CSS);
             if (column.sortable) {
                 header.on('click', function() {
-                    sortTable(dataTable, this, tableOpts);
+                    sortTable(dataTable, data, this, tableOpts);
                 });
             }
             headingRow.append(header);
@@ -619,13 +621,39 @@ var FormBuilder = (function ($) {
         return $('<div/>').append(headerTable).append($('<div style="max-height:300px; overflow-y:auto;"/>').append(dataTable));
     }
 
-    function sortTable(table, header, tableOpts) {
+    function sortTable(table, data, sortHeader, tableOpts) {
         // TODO - NEEDS FLESHED OUT
-        // var idx = table.find('th').index(header);
-        // var key = tableOpts.columnKeys[idx];
-        // _data.sort(function(a, b) {
-        //     return a[key] - b[key];
-        // });
+        var asc;
+        var headers = table.parent().parent().find('th');
+        var curIdx = headers.index(sortHeader);
+        var span = headers.find('span');
+        var prevIdx = headers.index(span.parent());
+        var key = tableOpts.columnKeys[curIdx];
+
+        if (curIdx === prevIdx && span.hasClass('glyphicon-triangle-top')) {
+            asc = false;
+            span.removeClass('glyphicon-triangle-top').addClass('glyphicon-triangle-bottom');
+        } else {
+            asc = true;
+            span.remove();
+            $(sortHeader).prepend('<span class="glyphicon glyphicon-triangle-top"></span>');
+        }
+
+        data.sort(function(a, b) {
+            var aVal = a[key];
+            var bVal = b[key];
+            if (isNaN(aVal) || isNaN(bVal)) {
+                return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            } else {
+                return asc ? aVal - bVal : bVal - aVal;
+            }
+        });
+
+        table.find('tr').remove();
+        createTableRows(table, data, tableOpts);
+        if (typeof Filter.filter === 'function') {
+            Filter.filter();
+        }
     }
 
     function createTableRows(table, data, tableOpts) {
@@ -867,7 +895,6 @@ var FormBuilder = (function ($) {
         input = $('<input/>');
 
         function refreshItems() {
-            input.val('');
             input.focus();
             items = contentDiv.find('.modal-body').find('li,tr');
             if (items.find('input[type="checkbox"]').length) {
@@ -901,34 +928,7 @@ var FormBuilder = (function ($) {
         input.css({'width':'100%'});
         input.on('keyup', function(e) {
             delay(function() {
-                var query = input.val().toLowerCase();
-                if (query === '') {
-                    items.show();
-                } else {
-                    items.hide();
-                    items.filter(function () {
-                        var el, cb, tds, td;
-                        var item = $(this);
-                        if (item.is('li')) {
-                            el = item;
-                            cb = item.find('input[type="checkbox"]');
-                            if (cb.length) {
-                                el = cb.parent();
-                            }
-                            return el[0].textContent.toLowerCase().indexOf(query) > -1;
-                        }
-                        if (item.is('tr')) {
-                            tds = item.find('td').filter(function() {
-                                td = $(this);
-                                if (td.find('input[type="checkbox"]').length) {
-                                    return false;
-                                }
-                                return td[0].textContent.toLowerCase().indexOf(query) > -1;
-                            });
-                            return tds.length;
-                        }
-                    }).show();
-                }
+                Filter.filter();
             }, e.keyCode === KEY_CODES.ENTER ? 0 : PROGRESS_DELAY);
         });
 
@@ -941,6 +941,38 @@ var FormBuilder = (function ($) {
         contentDiv.on('show', function() {
             refreshItems();
         });
+
+        Filter.filter = function() {
+            var query = input.val().toLowerCase();
+            refreshItems();
+            if (query === '') {
+                items.show();
+            } else {
+                items.hide();
+                items.filter(function () {
+                    var el, cb, tds, td;
+                    var item = $(this);
+                    if (item.is('li')) {
+                        el = item;
+                        cb = item.find('input[type="checkbox"]');
+                        if (cb.length) {
+                            el = cb.parent();
+                        }
+                        return el[0].textContent.toLowerCase().indexOf(query) > -1;
+                    }
+                    if (item.is('tr')) {
+                        tds = item.find('td').filter(function() {
+                            td = $(this);
+                            if (td.find('input[type="checkbox"]').length) {
+                                return false;
+                            }
+                            return td[0].textContent.toLowerCase().indexOf(query) > -1;
+                        });
+                        return tds.length;
+                    }
+                }).show();
+            }
+        };
 
         // run on init
         refreshItems();

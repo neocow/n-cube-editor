@@ -6,6 +6,20 @@ var NCEBuilderOptions = (function () {
      * onClose      - callback to fire when the modal closes (fires after save if saved)
      */
 
+    // begin private
+    function populateTableElement(key) {
+        populateElement(FormBuilder.findTableElementsByKey(key));
+    }
+
+    function populateFormElement(key) {
+        populateElement(FormBuilder.findElementByKey(key).trigger('populate'));
+    }
+
+    function populateElement(el) {
+        el.trigger('populate');
+    }
+    // end private
+
     /*
      * additional required options:
      *  columnSelectList
@@ -1147,8 +1161,169 @@ var NCEBuilderOptions = (function () {
      *  populateCubeFunc
      */
     function referenceAxisUpdater(opts) {
+        function getUpdateRowColumns() {
+            function populateAxis() {
+                populateTableElement('updateAxis');
+            }
+
+            function populateCube() {
+                populateTableElement('updateCube');
+                populateAxis();
+            }
+
+            function populateBranch() {
+                populateTableElement('updateBranch');
+                populateCube();
+            }
+
+            function populateVersion() {
+                populateTableElement('updateVersion');
+                populateBranch();
+            }
+
+            function getUpdateRowValue(key) {
+                return FormBuilder.findTableElementsByKey(key).val();
+            }
+
+            function getUpdateApp() {
+                return getUpdateRowValue('updateApp');
+            }
+
+            function getUpdateVersionStatus() {
+                var version = getUpdateRowValue('updateVersion');
+                return version ? version.split('-') : null;
+            }
+
+            function getUpdateBranch() {
+                return getUpdateRowValue('updateBranch');
+            }
+
+            function getLabelColumnSpec() {
+                return {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: { width: '5%' }
+                };
+            }
+
+            function getSelectColumnSpec() {
+                return {
+                    type: FormBuilder.INPUT_TYPE.SELECT,
+                    css: { width: '15%' }
+                };
+            }
+
+            var columns = {};
+
+            columns.appLabel = getLabelColumnSpec();
+            columns.updateApp = getSelectColumnSpec();
+            columns.updateApp.selectOptions = opts.appSelectList;
+            columns.updateApp.listeners = {
+                load: function() { $(this).trigger('change'); },
+                change: function() { populateVersion(); }
+            };
+
+            columns.versionLabel = getLabelColumnSpec();
+            columns.updateVersion = getSelectColumnSpec();
+            columns.updateVersion.listeners = {
+                change: function() { populateBranch(); },
+                populate: function() {
+                    var app = getUpdateApp();
+                    var versions = app ? opts.populateVersionFunc(app) : null;
+                    FormBuilder.populateSelect($(this), versions);
+                }
+            };
+
+            columns.branchLabel = getLabelColumnSpec();
+            columns.updateBranch = getSelectColumnSpec();
+            columns.updateBranch.listeners = {
+                change: function() { populateCube(); },
+                populate: function() {
+                    var app = getUpdateApp();
+                    var verstat = getUpdateVersionStatus();
+                    var branches = (app && verstat) ? opts.populateBranchFunc(appIdFrom(app, verstat[0], verstat[1], 'HEAD')) : null;
+                    FormBuilder.populateSelect($(this), branches);
+                }
+            };
+
+            columns.cubeLabel = getLabelColumnSpec();
+            columns.updateCube = getSelectColumnSpec();
+            columns.updateCube.listeners = {
+                change: function() { populateAxis(); },
+                populate: function() {
+                    var app = getUpdateApp();
+                    var verstat = getUpdateVersionStatus();
+                    var branch = getUpdateBranch();
+                    var cubes = (app && verstat && branch) ? opts.populateCubeFunc(appIdFrom(app, verstat[0], verstat[1], branch)) : null;
+                    FormBuilder.populateSelect($(this), cubes);
+                }
+            };
+
+            if (!opts.isTransform) {
+                columns.axisLabel = getLabelColumnSpec();
+                columns.updateAxis = getSelectColumnSpec();
+                columns.updateAxis.listeners = {
+                    populate: function () {
+                        var app = getUpdateApp();
+                        var verstat = getUpdateVersionStatus();
+                        var branch = getUpdateBranch();
+                        var cube = getUpdateRowValue('updateCube');
+                        var axisNames = (app && verstat && branch && cube) ? opts.populateAxisFunc(appIdFrom(app, verstat[0], verstat[1], branch), cube) : null;
+                        FormBuilder.populateSelect($(this), axisNames);
+                    }
+                };
+            }
+
+            return columns;
+        }
+
+        function getRefAxTableColumns() {
+            function getSortableReadonlyColumnSpec(heading, width) {
+                return {
+                    heading: heading,
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    sortable: true,
+                    css: {width: width, overflow: 'hidden', 'text-overflow': 'ellipsis'}
+                }
+            }
+
+            var prefix = opts.isTransform ? 'transform' : 'dest';
+            var columns = {};
+
+            columns.isApplied = {
+                heading: 'Apply',
+                type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                css: {width: '4%', overflow:'hidden', 'text-overflow':'ellipsis'}
+            };
+
+            columns.srcCubeName = getSortableReadonlyColumnSpec('Source Cube', '32%');
+            columns.srcAxisName = getSortableReadonlyColumnSpec('Source Axis', '32%');
+            columns[prefix + 'App'] = getSortableReadonlyColumnSpec('App', '10%');
+            columns[prefix + 'Version'] = getSortableReadonlyColumnSpec('Version', '5%');
+            columns[prefix + 'Branch'] = getSortableReadonlyColumnSpec('Branch', '10%');
+            columns[prefix + 'CubeName'] = getSortableReadonlyColumnSpec('Cube', '16%');
+
+            if (!opts.isTransform) {
+                columns.destAxisName = getSortableReadonlyColumnSpec('Axis', '13%');
+            }
+
+            return columns;
+        }
+
+        function getFooterButtons() {
+            return opts.isTransform ? {
+                breakTransform: {
+                    buttonClass: 'btn-primary',
+                    label: 'Break Transform',
+                    action: function() {
+                        FormBuilder.setDataValue('breakTransform', true);
+                        FormBuilder.closeBuilderModal(true);
+                    }
+                }
+            } : {};
+        }
+
         var heading = opts.isTransform ? 'Transform' : 'Destination';
-        var ret = {
+        return {
             title: 'Reference Axis Batch Updater - ' + heading,
             instructionsTitle: 'Instructions - Update Reference Axis ' + heading,
             instructionsText: 'Update the reference axis ' + heading.toLowerCase() + ' properties of checked reference axes. Only selected fields will change, blank fields will not be changed.',
@@ -1165,6 +1340,7 @@ var NCEBuilderOptions = (function () {
             closeAfterSave: false,
             saveButtonText: 'Update',
             closeButtonText: 'Close',
+            footerButtons: getFooterButtons(),
             formInputs: {
                 updateRow: {
                     type: FormBuilder.INPUT_TYPE.TABLE,
@@ -1176,190 +1352,16 @@ var NCEBuilderOptions = (function () {
                         cubeLabel: 'Cube',
                         axisLabel: 'Axis'
                     }],
-                    columns: {
-                        appLabel: {
-                            type: FormBuilder.INPUT_TYPE.READONLY,
-                            css: { width: '5%' }
-                        },
-                        updateApp: {
-                            type: FormBuilder.INPUT_TYPE.SELECT,
-                            selectOptions: opts.appSelectList,
-                            css: { width: '15%' },
-                            listeners: {
-                                load: function() { $(this).trigger('change'); },
-                                change: function() {
-                                    FormBuilder.findTableElementsByKey('updateVersion').trigger('populate');
-                                    FormBuilder.findTableElementsByKey('updateBranch').trigger('populate');
-                                    FormBuilder.findTableElementsByKey('updateCube').trigger('populate');
-                                    FormBuilder.findTableElementsByKey('updateAxis').trigger('populate');
-                                }
-                            }
-                        },
-                        versionLabel: {
-                            type: FormBuilder.INPUT_TYPE.READONLY,
-                            css: { width: '5%' }
-                        },
-                        updateVersion: {
-                            type: FormBuilder.INPUT_TYPE.SELECT,
-                            css: { width: '15%' },
-                            listeners: {
-                                change: function() {
-                                    FormBuilder.findTableElementsByKey('updateBranch').trigger('populate');
-                                    FormBuilder.findTableElementsByKey('updateCube').trigger('populate');
-                                    FormBuilder.findTableElementsByKey('updateAxis').trigger('populate');
-                                },
-                                populate: function() {
-                                    var app = FormBuilder.findTableElementsByKey('updateApp').val();
-                                    var versions = app ? opts.populateVersionFunc(app) : null;
-                                    FormBuilder.populateSelect($(this), versions);
-                                }
-                            }
-                        },
-                        branchLabel: {
-                            type: FormBuilder.INPUT_TYPE.READONLY,
-                            css: { width: '5%' }
-                        },
-                        updateBranch: {
-                            type: FormBuilder.INPUT_TYPE.SELECT,
-                            css: { width: '15%' },
-                            listeners: {
-                                change: function() {
-                                    FormBuilder.findTableElementsByKey('updateCube').trigger('populate');
-                                    FormBuilder.findTableElementsByKey('updateAxis').trigger('populate');
-                                },
-                                populate: function() {
-                                    var branches, splitVer;
-                                    var app = FormBuilder.findTableElementsByKey('updateApp').val();
-                                    var version = FormBuilder.findTableElementsByKey('updateVersion').val();
-                                    if (app && version) {
-                                        splitVer = version.split('-');
-                                        branches = opts.populateBranchFunc(appIdFrom(app, splitVer[0], splitVer[1], 'HEAD'));
-                                    }
-                                    FormBuilder.populateSelect($(this), branches);
-                                }
-                            }
-                        },
-                        cubeLabel: {
-                            type: FormBuilder.INPUT_TYPE.READONLY,
-                            css: { width: '5%' }
-                        },
-                        updateCube: {
-                            type: FormBuilder.INPUT_TYPE.SELECT,
-                            css: { width: '15%' },
-                            listeners: {
-                                change: function() {
-                                    FormBuilder.findTableElementsByKey('updateAxis').trigger('populate');
-                                },
-                                populate: function() {
-                                    var cubes;
-                                    var app = FormBuilder.findTableElementsByKey('updateApp').val();
-                                    var version = FormBuilder.findTableElementsByKey('updateVersion').val();
-                                    var branch = FormBuilder.findTableElementsByKey('updateBranch').val();
-                                    var verstat = version ? version.split('-') : version;
-                                    if (app && verstat && branch) {
-                                        cubes = opts.populateCubeFunc(appIdFrom(app, verstat[0], verstat[1], branch));
-                                    }
-                                    FormBuilder.populateSelect($(this), cubes);
-                                }
-                            }
-                        }
-                    }
+                    columns: getUpdateRowColumns()
                 },
                 refAxTable: {
                     type: FormBuilder.INPUT_TYPE.TABLE,
                     css: {margin: '0', width: '100%', 'table-layout':'fixed'},
                     data: opts.refAxList,
-                    columns: {
-                        isApplied: {
-                            heading: 'Apply',
-                            type: FormBuilder.INPUT_TYPE.CHECKBOX,
-                            css: {width: '4%', overflow:'hidden', 'text-overflow':'ellipsis'}
-                        },
-                        srcCubeName: {
-                            heading: 'Source Cube',
-                            type: FormBuilder.INPUT_TYPE.READONLY,
-                            css: {width: '32%', overflow:'hidden', 'text-overflow':'ellipsis', 'background-color':'white'}
-                        },
-                        srcAxisName: {
-                            heading: 'Source Axis',
-                            type: FormBuilder.INPUT_TYPE.READONLY,
-                            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
-                        }
-                    }
+                    columns: getRefAxTableColumns()
                 }
             }
         };
-
-        var table = ret.formInputs.refAxTable.columns;
-        var updateRow = ret.formInputs.updateRow.columns;
-        var prefix;
-        if (opts.isTransform) {
-            prefix = 'transform';
-            ret.footerButtons = {
-                breakTransform: {
-                    buttonClass: 'btn-primary',
-                    label: 'Break Transform',
-                    action: function() {
-                        FormBuilder.setDataValue('breakTransform', true);
-                        FormBuilder.closeBuilderModal(true);
-                    }
-                }
-            };
-        } else {
-            prefix = 'dest';
-            updateRow.axisLabel = {
-                type: FormBuilder.INPUT_TYPE.READONLY,
-                css: { width: '5%', overflow:'hidden', 'text-overflow':'ellipsis' }
-            };
-            updateRow.updateAxis = {
-                type: FormBuilder.INPUT_TYPE.SELECT,
-                css: { width: '15%' },
-                listeners: {
-                    populate: function() {
-                        var axisNames, splitVer;
-                        var app = FormBuilder.findTableElementsByKey('updateApp').val();
-                        var version = FormBuilder.findTableElementsByKey('updateVersion').val();
-                        var branch = FormBuilder.findTableElementsByKey('updateBranch').val();
-                        var cube = FormBuilder.findTableElementsByKey('updateCube').val();
-                        if (app && version && branch && cube) {
-                            splitVer = version.split('-');
-                            axisNames = opts.populateAxisFunc(appIdFrom(app, splitVer[0], splitVer[1], branch), cube);
-                        }
-                        FormBuilder.populateSelect($(this), axisNames);
-                    }
-                }
-            };
-        }
-
-        table[prefix + 'App'] = {
-            heading: 'App',
-            type: FormBuilder.INPUT_TYPE.READONLY,
-            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
-        };
-        table[prefix + 'Version'] = {
-            heading: 'Version',
-            type: FormBuilder.INPUT_TYPE.READONLY,
-            css: {width: '5%', overflow:'hidden', 'text-overflow':'ellipsis'}
-        };
-        table[prefix + 'Branch'] = {
-            heading: 'Branch',
-            type: FormBuilder.INPUT_TYPE.READONLY,
-            css: {width: '10%', overflow:'hidden', 'text-overflow':'ellipsis'}
-        };
-        table[prefix + 'CubeName'] = {
-            heading: 'Cube',
-            type: FormBuilder.INPUT_TYPE.READONLY,
-            css: {width: '16%', overflow:'hidden', 'text-overflow':'ellipsis'}
-        };
-        if (!opts.isTransform) {
-            table.destAxisName = {
-                heading: 'Axis',
-                type: FormBuilder.INPUT_TYPE.READONLY,
-                css: {width: '13%', overflow:'hidden', 'text-overflow':'ellipsis'}
-            };
-        }
-
-        return ret;
     }
 
     return {
