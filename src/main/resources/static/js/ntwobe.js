@@ -656,7 +656,7 @@ var NCubeEditor2 = (function ($) {
 
         queryLower = query.toLowerCase();
         multiplier = 1;
-        rowSpacing = numRows - 2;
+        rowSpacing = numRows - ROW_OFFSET;
         rowSpacingHelper = [];
 
         isHorizAxis = function(axisNum) {
@@ -872,7 +872,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getRowHeader(row, col) {
-        var rowNum = row - 2;
+        var rowNum = row - ROW_OFFSET;
         if (rowNum < 0 || col < 0 || col > axes.length) {
             return;
         }
@@ -902,7 +902,7 @@ var NCubeEditor2 = (function ($) {
         var axisNum, tempAxis, colCount, columnNumberToGet;
         var axis = axes[col];
         var colLen = getColumnLength(axis);
-        var repeatRowCount = (numRows - 2) / colLen;
+        var repeatRowCount = (numRows - ROW_OFFSET) / colLen;
 
         for (axisNum = 0; axisNum < col; axisNum++) {
             tempAxis = axes[axisNum];
@@ -2135,7 +2135,7 @@ var NCubeEditor2 = (function ($) {
 
     function getCalculatedColumnDefault(row, col) {
         var column, columnDefault, tempColumnDefault, i;
-        column = getColumnHeader(colOffset ? col : row - 2);
+        column = getColumnHeader(colOffset ? col : row - ROW_OFFSET);
         columnDefault = getColumnDefault(column);
 
         for (i = 0; i < colOffset; i++) {
@@ -3095,47 +3095,48 @@ var NCubeEditor2 = (function ($) {
     }
 
     function excelCutCopy(isCut) {
-        var clipData, range, cells, row, col, content, cellId, result;
+        var clipData, cellRange, cells, row, col, content, cellId, result;
         if (isCut && !nce.ensureModifiable('Cannot cut / copy cells.')) {
             return;
         }
 
-        clipData = '';
-        range = getSelectedCellRange();
-        cells = [];
+        cellRange = getSelectedCellRange();
+        clipData = clipData = copyHeaders(cellRange);
+        if (!clipData) {
+            cells = [];
+            for (row = cellRange.startRow; row <= cellRange.endRow; row++) {
+                for (col = cellRange.startCol; col <= cellRange.endCol; col++) {
+                    content = getTableTextCellValue(row, col);
+                    cellId = getCellId(row, col);
+                    if (cellId) {
+                        cells.push(cellId.split('_'));
+                    }
 
-        for (row = range.startRow; row <= range.endRow; row++) {
-            for (col = range.startCol; col <= range.endCol; col++) {
-                content = getTableTextCellValue(row, col);
-                cellId = getCellId(row, col);
-                if (cellId) {
-                    cells.push(cellId.split('_'));
-                }
+                    if (content.indexOf('\n') > -1) {
+                        // Must quote if newline (and double any quotes inside)
+                        clipData += '"' + content.replace(/"/g, '""') + '"';
+                    } else {
+                        clipData += content;
+                    }
 
-                if (content.indexOf('\n') > -1) {
-                    // Must quote if newline (and double any quotes inside)
-                    clipData += '"' + content.replace(/"/g, '""') + '"';
-                } else {
-                    clipData += content;
+                    if (col < cellRange.endCol) {
+                        // Only add tab on last - 1 (otherwise paste will overwrite data in next column)
+                        clipData += '\t';
+                    }
                 }
-
-                if (col < range.endCol) {
-                    // Only add tab on last - 1 (otherwise paste will overwrite data in next column)
-                    clipData += '\t';
-                }
+                cells.push(null);
+                clipData += '\n';
             }
-            cells.push(null);
-            clipData += '\n';
-        }
-        cells.splice(cells.length - 1, 1);
+            cells.splice(cells.length - 1, 1);
 
-        if (isCut) {
-            result = nce.call(CONTROLLER + CONTROLLER_METHOD.COPY_CELLS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, true]);
-            if (!result.status) {
-                nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
-                return;
+            if (isCut) {
+                result = nce.call(CONTROLLER + CONTROLLER_METHOD.COPY_CELLS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), cells, true]);
+                if (!result.status) {
+                    nce.showNote('Error copying/cutting cells:<hr class="hr-small"/>' + result.data);
+                    return;
+                }
+                reload();
             }
-            reload();
         }
 
         _clipboard.val(clipData);
@@ -3144,22 +3145,73 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editCutCopy(isCut) {
-        var clipData;
+        var clipData, cellRange, i, len, columns;
         if (isCut && !nce.ensureModifiable('Cannot cut / copy cells.')) {
             return;
         }
 
-        clipData = nceCutCopyData(getSelectedCellRange(), isCut);
+        cellRange = getSelectedCellRange();
+        clipData = copyHeaders(cellRange);
         if (!clipData) {
-            return;
+            clipData = nceCutCopyData(cellRange, isCut);
+            if (!clipData) {
+                return;
+            }
+            if (isCut) {
+                reload();
+            }
         }
 
-        if (isCut) {
-            reload();
-        }
         _clipboard.val(clipData);
         _clipboard.focusin();
         _clipboard.select();
+    }
+
+    function copyHeaders(cellRange) {
+        function getColumnValues(axisNum, rangeStart, rangeEnd) {
+            var i, len;
+            var vals = '';
+            var axis = axes[axisNum];
+            var columnNames = axisColumnMap[axis.name];
+            for (i = rangeStart, len = rangeEnd; i <= len; i++) {
+                if (vals) {
+                    vals += '\n';
+                }
+                vals += axis.columns[columnNames[i]].value;
+            }
+            return vals;
+        }
+
+        function getAxisNames(axisNumStart, axisNumEnd) {
+            var i, len;
+            var vals = '';
+            for (i = axisNumStart, len = axisNumEnd; i <= len; i++) {
+                if (vals) {
+                    vals += '\n';
+                }
+                vals += axes[i].name;
+            }
+            return vals;
+        }
+
+        var clipData;
+        if (!cellRange.startRow && !cellRange.endRow) {
+            if (!cellRange.startCol && !cellRange.endCol) {
+                clipData = cubeName;
+            } else if (cellRange.startCol && cellRange.endCol) {
+                clipData = axes[colOffset].name;
+            }
+        } else if (cellRange.startRow === 1 && cellRange.endRow === 1) {
+            if (cellRange.startCol < colOffset && cellRange.endCol < colOffset) {
+                clipData = getAxisNames(cellRange.startCol, cellRange.endCol);
+            } else if (cellRange.startCol >= colOffset && cellRange.endCol >= colOffset) {
+                clipData = getColumnValues(colOffset, cellRange.startCol - colOffset, cellRange.endCol - colOffset);
+            }
+        }
+        else if (cellRange.startCol < colOffset && cellRange.startCol === cellRange.endCol) {
+            clipData = getColumnValues(cellRange.startCol, cellRange.startRow - ROW_OFFSET, cellRange.endRow - ROW_OFFSET);
+        }
+        return clipData;
     }
 
     function nceCutCopyData(range, isCut) {
