@@ -310,6 +310,7 @@ var CONTROLLER_METHOD = {
     RESTORE_CUBES: 'restoreCubes',
     ROLLBACK_BRANCH: 'rollbackBranch',
     SAVE_JSON: 'saveJson',
+    SAVE_TESTS: 'saveTests',
     SEARCH: 'search',
     UPDATE_AXIS: 'updateAxis',
     UPDATE_AXIS_COLUMNS: 'updateAxisColumns',

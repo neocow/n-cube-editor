@@ -195,6 +195,10 @@ var TestEditor = (function ($) {
                 e.preventDefault();
                 deleteAllTestsOk();
             });
+
+            _selectedTestName.on('click', function(e) {
+
+            });
         }
     }
 
@@ -628,43 +632,21 @@ var TestEditor = (function ($) {
         saveAllTests(false);
     };
 
-    var addNewParameter = function()
-    {
-        var id = 'newInput';
-
+    function addNewParameter() {
         // check to see if parameter already exists in parameter-key of #testAssertions .form-group
-        var param = buildParameter(id, 'string', false, '', true, false, deleteParameter);
-
-        if (_testParameters.find('.form-group').length > 0)
-        {
-            param.insertAfter('#testParameters .form-group:last');
-        }
-        else
-        {
-            _testParameters.append(param);
-        }
-
+        var param = buildParameter('newInput', 'string', false, '', true, false, deleteParameter);
+        _testParameters.append(param);
         saveAllTests(false);
-
         param.find('.control-label').click();
-    };
+    }
 
-    var addNewAssertion = function()
+    function addNewAssertion()
     {
         var count = _testAssertions.find('.form-group').length;
         var param = buildParameter(count+1, "exp", false, 'output.return', false, true, deleteAssertion);
-
-        if (count > 0)
-        {
-            param.insertAfter('#testAssertions .form-group:last');
-        }
-        else
-        {
-            _testAssertions.append(param);
-        }
-
+        _testAssertions.append(param);
         saveAllTests(false);
-    };
+    }
 
     var runCurrentTest = function()
     {
@@ -723,198 +705,136 @@ var TestEditor = (function ($) {
         }
     };
 
-    var saveAllTests = function(modelIsUpToDate)
-    {
-        if (!nce.ensureModifiable("Unable to save all tests."))
-        {
+    var saveAllTests = function(modelIsUpToDate) {
+        var test, result;
+        if (!nce.ensureModifiable("Unable to save all tests.")) {
             return;
         }
 
-        if (_testData == null)
-        {
+        if (!_testData) {
             nce.showNote('No test selected.  There are no tests to save.');
             return;
         }
 
-        if (!modelIsUpToDate)
-        {
-            var test = getActiveTest();
-
-            //  If a test is currently selected
-            if (test != null) {
+        if (!modelIsUpToDate) {
+            test = getActiveTest();
+            if (test) { //  If a test is currently selected
                 //  locate test in list to add it in...and add it before saving.
                 _testData[_testSelectionAnchor] = test;
             }
         }
 
-        var result = nce.call("ncubeController.saveTests", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _testData]);
-
-        if (!result.status)
-        {
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.SAVE_TESTS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), _testData]);
+        if (!result.status) {
             nce.showNote("Unable to save tests:<hr class=\"hr-small\"/>" + result.data);
         }
     };
 
-    var getActiveTest = function()
-    {
-        var test = {};
+    function getActiveTest() {
         var name = getSelectedTestName();
+        return name ? {
+            '@type': 'com.cedarsoftware.ncube.NCubeTest',
+            name: name,
+            coord: retrieveParameters(),
+            expected: retrieveAssertions()
+        } : null;
+    }
 
-        if (name == null)
-        {
-            return null;
-        }
-
-        test["name"] = name;
-        test["@type"] = "com.cedarsoftware.ncube.NCubeTest";
-        test["coord"] = retrieveParameters();
-        test["expected"] = retrieveAssertions();
-        return test;
-    };
-
-    var retrieveParameters = function()
-    {
+    function retrieveParameters() {
+        var i, len, v;
         var parameters = _testParameters.find("> div[parameter-id]");
         var coord = {};
 
-        $.each(parameters, function (index, value)
-        {
-            var v = $(value);
+        for (i = 0, len = parameters.length; i < len; i++) {
+            v = $(parameters[i]);
             coord[v.attr("parameter-id")] = retrieveCellInfo(v, true);
-        });
-
+        }
         return coord;
-    };
+    }
 
-    var retrieveAssertions = function()
-    {
+    function retrieveAssertions() {
+        var i, len;
         var assertions = _testAssertions.find('> div[parameter-id]');
-        var array = new Array(assertions.length);
+        var array = [];
 
-        $.each(assertions, function(index, value) {
-            array[index] = retrieveCellInfo($(value), false);
-        });
-
+        for (i = 0, len = assertions.length; i < len; i++) {
+            array.push(retrieveCellInfo($(assertions[i]), false));
+        }
         return array;
-    };
+    }
 
-    var retrieveCellInfo = function(group, hasSelector)
-    {
-        var cell = {"@type":"com.cedarsoftware.ncube.CellInfo"};
+    function retrieveCellInfo(group, hasSelector) {
+        return {
+            '@type': 'com.cedarsoftware.ncube.CellInfo',
+            value: group.find('input').val(),
+            isUrl: group.find('button[value]').text() !== 'Value',
+            dataType: hasSelector ? group.find('select').val() : 'exp'
+        };
+    }
 
-        cell["value"] = group.find('input').val();
-        cell["isUrl"] = group.find('button[value]').text() != "Value";
-
-        if (hasSelector)
-        {
-            cell["dataType"] = group.find('select').val();
-        }
-        else
-        {
-            cell["dataType"] = "exp";
-        }
-
-        return cell;
-    };
-
-    var showTestResult = function(success, message)
-    {
+    function showTestResult(success, message) {
         _testResultsDiv.hide();
-        var testResults = $('#testResults');
-        testResults.empty();
         setOutputHeaderColor(success);
-        testResults.html(message);
-        _testResultsDiv.fadeIn("fast");
+        _testResults.html(message);
+        _testResultsDiv.fadeIn('fast');
         storeTestOutput();
-    };
+    }
 
-    var setOutputHeaderColor = function(success)
-    {
-        if (success === true)
-        {
-            _testResultsDiv.addClass("panel-success");
-            _testResultsDiv.removeClass("panel-danger");
+    function setOutputHeaderColor(success) {
+        var suc = 'panel-success';
+        var dang = 'panel-danger';
+        if (success) {
+            _testResultsDiv.addClass(suc).removeClass(dang);
+        } else if (success === false) {
+            _testResultsDiv.addClass(dang).removeClass(suc);
+        } else {
+            _testResultsDiv.removeClass(suc + ' ' + dang);
         }
-        else if (success === false)
-        {
-            _testResultsDiv.addClass("panel-danger");
-            _testResultsDiv.removeClass("panel-success");
-        }
-        else
-        {
-            _testResultsDiv.removeClass("panel-success");
-            _testResultsDiv.removeClass("panel-danger");
-        }
-    };
+    }
 
-    var getSelectedTestName = function()
-    {
+    function getSelectedTestName() {
         return _selectedTestName.html();
-    };
+    }
 
-    var getTestKey = function()
-    {
+    function getTestKey() {
         return nce.getSelectedCubeInfoKey() + TAB_SEPARATOR + getSelectedTestName();
-    };
+    }
 
-    var loadTestOutput = function()
-    {
+    function loadTestOutput() {
+        var testOutput, html;
         var testOutputStr = sessionStorage[TEST_RESULTS];
-        if (hasTests() && testOutputStr)
-        {
+        if (hasTests() && testOutputStr) {
             _testResultsDiv.fadeIn('fast');
-            var testOutput = JSON.parse(testOutputStr);
-            var html = testOutput[getTestKey()];
-            if (html)
-            {
-                setOutputHeaderColor(html.indexOf('Could not run test:') == -1);
-                _testResultsDiv[0].innerHTML = html;
-            }
-            else
-            {
-                setOutputHeaderColor(null);
-                $('#testResults')[0].innerHTML = 'No prior test results';
-            }
+            testOutput = JSON.parse(testOutputStr);
+            html = testOutput[getTestKey()];
+            setOutputHeaderColor(html ? html.indexOf('Could not run test:') === -1 : null);
+            _testResultsDiv[0].innerHTML = html ? html : 'No prior test results';
         }
-    };
+    }
 
-    var storeTestOutput = function()
-    {
+    function storeTestOutput() {
         var s = sessionStorage[TEST_RESULTS];
-        var testOutput = {};
-        if (s)
-        {
-            testOutput = JSON.parse(s)
-        }
+        var testOutput = s ? JSON.parse(s) : {};
         testOutput[getTestKey()] = _testResultsDiv[0].innerHTML;
         sessionStorage[TEST_RESULTS] = JSON.stringify(testOutput);
-    };
+    }
 
-    var clearTestSelection = function()
-    {
-        getSelectedTestList().each(function (index, elem)
-        {
-            $(elem).removeClass("selected");
-        });
+    function clearTestSelection() {
+        getSelectedTestList().removeClass('selected');
         enableTestItems();
-    };
+    }
 
-    var findTestByName = function(name)
-    {
-        if (_testData == null)
-        {
-            return null;
-        }
-
-        for (var i=0; i<_testData.length; i++)
-        {
-            if (name == _testData[i]["name"])
-            {
-                return _testData[i];
+    function findTestByName(name) {
+        var i, len, test;
+        if (_testData) {
+            for (i = 0, len = _testData.length; i < len; i++) {
+                test = _testData[i];
+                if (test.name === name) {
+                    return test;
+                }
             }
         }
-        return null;
-    };
+    }
 
     var createNewTestMenu = function()
     {
