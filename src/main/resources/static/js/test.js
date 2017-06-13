@@ -18,8 +18,7 @@
  *         limitations under the License.
  */
 
-var TestEditor = (function ($)
-{
+var TestEditor = (function ($) {
     var nce = null;
     var _testData = null;
     var _testSelectionAnchor = -1;
@@ -36,15 +35,21 @@ var TestEditor = (function ($)
     var _testLayoutCenter = null;
     var _testParameters = null;
     var _testAssertions = null;
+    var _testResults = null;
+
+    var _testParametersDiv = null;
+    var _testAssertionsDiv = null;
+    var _testNameDiv = null;
+    var _testButtonGroupDiv = null;
+
     var _padding = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
 
-    var init = function(info)
-    {
-        if (!nce)
-        {   // One-time initialization code.
+    function init(info) {
+        var secondaryLayout;
+        if (!nce) {   // One-time initialization code.
             nce = info;
 
-            var secondaryLayout = $('#testBody').layout({
+            secondaryLayout = $('#testBody').layout({
                 name: "secondaryLayout"
                 ,   closable:					true	// pane can open & close
                 ,	resizable:					true	// when open, pane can be resized
@@ -76,6 +81,13 @@ var TestEditor = (function ($)
             _testParameters = $('#testParameters');
             _testAssertions = $('#testAssertions');
             _selectedTestName = $('#selectedTestName');
+            _testResults = $('#testResults');
+
+            _testParametersDiv = $('#testParametersDiv');
+            _testAssertionsDiv = $('#testAssertionsDiv');
+            _testNameDiv = $('#testNameDiv');
+            _testButtonGroupDiv = $('#testButtonGroupDiv');
+
             secondaryLayout.resizeAll();
 
             $('#renameTestOk').click(function (e)
@@ -184,7 +196,7 @@ var TestEditor = (function ($)
                 deleteAllTestsOk();
             });
         }
-    };
+    }
 
     var loadTestListView = function(funcName, genTests)
     {
@@ -277,24 +289,23 @@ var TestEditor = (function ($)
         }
     };
 
-    var clearTestView = function()
-    {
-        $('#testParametersDiv').hide();
-        $('#testAssertionsDiv').hide();
-        $('#testNameDiv').hide();
-        $('#testButtonGroupDiv').hide();
-        _testResultsDiv.hide();
+    function clearTestView() {
+        _testParametersDiv
+            .add(_testAssertionsDiv)
+            .add(_testNameDiv)
+            .add(_testButtonGroupDiv)
+            .add(_testResultsDiv).hide();
 
-        _testParameters.empty();
-        _testAssertions.empty();
-        $('#testResults').empty();
-    };
+        _testParameters
+            .add(_testAssertions)
+            .add(_testResults).empty();
+    }
 
     var loadTestView = function()
     {
         clearTestView();
 
-        if (!_testData || _testData.length == 0 || _testSelectionAnchor >= _testData.length || _testSelectionAnchor < 0)
+        if (!_testData || !_testData.length || _testSelectionAnchor >= _testData.length || _testSelectionAnchor < 0)
         {
             _testSelectionAnchor = -1;
             return;
@@ -340,10 +351,10 @@ var TestEditor = (function ($)
             nce.showNote('Unable to load test view:<hr class="hr-small"/>' + e.message);
         }
 
-        $('#testParametersDiv').fadeIn('fast');
-        $('#testAssertionsDiv').fadeIn('fast');
-        $('#testNameDiv').fadeIn('fast');
-        $('#testButtonGroupDiv').fadeIn('fast');
+        _testParametersDiv
+            .add(_testAssertionsDiv)
+            .add(_testNameDiv)
+            .add(_testButtonGroupDiv).fadeIn('fast');
     };
 
     var buildParameter = function(labelText, type, isUrl, value, hasSelector, isRenumberable, deleteFunc)
@@ -583,6 +594,7 @@ var TestEditor = (function ($)
 
     function validateTestName(name) {
         var nameRegex = /^([A-Za-z0-9.-]{3,64})$/g;
+        nce.clearNote();
 
         if (!nameRegex.test(name)) {
             nce.showNote('Test name is invalid. Test names can only contain letters, numbers, ., and -.');
@@ -599,7 +611,6 @@ var TestEditor = (function ($)
 
     var renameTestOk = function() {
         var newName = $('#renameTestNewName').val().trim();
-        nce.clearNote();
 
         if (!validateTestName(newName)) {
             return;
@@ -1044,50 +1055,29 @@ var TestEditor = (function ($)
         };
     }
 
-    var createTypeSelector = function(typeStr, url)
-    {
-        if (typeStr == null)
-        {
-            typeStr = 'string';
-        }
+    function createTypeSelector(typeStr, url) {
         var selector = $("<select/>").attr({'class': 'selectpicker show-tick show-menu-arrow', 'data-width':'auto', 'data-style': 'btn-default'});
-        return fillTypeSelector(selector, typeStr, url);
-    };
+        return fillTypeSelector(selector, typeStr || 'string', url);
+    }
 
-    var fillTypeSelector = function(selector, typeStr, url)
-    {
-        if (selector == null)
-        {
+    function fillTypeSelector(selector, typeStr, url) {
+        var options, i, len, item, opt;
+        if (!selector) {
             return;
         }
         selector.empty();
 
-        var options = null;
-
-        if (url)
-        {
-            options = $('#datatypes-url').find('option');
-        }
-        else
-        {
-            options = $('#datatypes-value').find('option');
-        }
-
-        $.each(options, function (i, value)
-        {
-            var item = $(value);
-            var opt = $("<option/>").attr({'value': item.val()});
-            opt[0].textContent = item[0].textContent;
-
-            if (typeStr != null && typeStr == item.val())
-            {
-                opt.prop({'selected' : true});
-            }
+        options = $('#datatypes-' + (url ? 'url' : 'value')).find('option');
+        for (i = 0, len =  options.length; i < len; i++) {
+            item = $(options[i]);
+            opt = $('<option/>').val(item.val());
+            opt.text = item.text;
             selector.append(opt);
-        });
+        }
 
+        selector.val(typeStr);
         return selector;
-    };
+    }
 
     var leftPad = function(str, length)
     {
