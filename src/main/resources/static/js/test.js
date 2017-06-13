@@ -115,108 +115,71 @@ var TestEditor = (function ($)
             });
 
             _renameTestModal.on( 'keypress', function( e ) {
-                if( e.keyCode === 13 ) {
+                if( e.keyCode === KEY_CODES.ENTER ) {
                     e.preventDefault();
                     $('#renameTestOk').click();
                 }
             });
 
             _deleteParameterModal.on( 'keypress', function( e ) {
-                if( e.keyCode === 13 ) {
+                if( e.keyCode === KEY_CODES.ENTER ) {
                     e.preventDefault();
                     $('#deleteParameterOk').click();
                 }
             });
 
             _duplicateTestModal.on( 'keypress', function( e ) {
-                if( e.keyCode === 13 ) {
+                if( e.keyCode === KEY_CODES.ENTER ) {
                     e.preventDefault();
                     $('#duplicateCurrentTestOk').click();
                 }
             });
 
             _deleteTestModal.on( 'keypress', function( e ) {
-                if( e.keyCode === 13 ) {
+                if( e.keyCode === KEY_CODES.ENTER ) {
                     e.preventDefault();
                     $('#deleteTestOk').click();
                 }
             });
 
             _createNewTestModal.on( 'keypress', function( e ) {
-                if( e.keyCode === 13 ) {
+                if( e.keyCode === KEY_CODES.ENTER ) {
                     e.preventDefault();
                     $('#addParameterOk').click();
                 }
             });
 
-            $('#runCurrentTestMenu').click(function (e)
-            {
+            $('#runTestButton').click(function (e) {
                 e.preventDefault();
                 runCurrentTest();
             });
 
-            $('#runTestButton').click(function (e)
-            {
-                e.preventDefault();
-                runCurrentTest();
-            });
-
-            $('#runTestMenu').click(function (e)
-            {
-                e.preventDefault();
-                runCurrentTest();
-            });
-
-            $('#renameCurrentTestMenu').click(function (e)
-            {
-                e.preventDefault();
-                renameCurrentTestMenu();
-            });
-
-            $('#deleteCurrentTestMenu').click(function (e)
-            {
-                e.preventDefault();
-                deleteCurrentTestMenu();
-            });
-
-            $('#deleteTestOk').click(function (e)
-            {
+            $('#deleteTestOk').click(function (e) {
                 deleteTestOk();
                 e.preventDefault();
             });
 
-            $('#createNewTestMenu').click(function (e)
-            {
+            $('#createNewTestMenu').click(function (e) {
                 e.preventDefault();
                 createNewTestMenu();
             });
 
-            $('#createNewTestOk').click(function (e)
-            {
+            $('#createNewTestOk').click(function (e) {
                 e.preventDefault();
                 createNewTestOk();
             });
 
-            $('#duplicateCurrentTestMenu').click(function (e)
-            {
-                e.preventDefault();
-                duplicateCurrentTestMenu();
-            });
-
-            $("#duplicateCurrentTestOk").click(function (e)
-            {
+            $("#duplicateCurrentTestOk").click(function (e) {
                 e.preventDefault();
                 duplicateCurrentTestOk();
             });
 
-            $('#deleteAllTestsMenu').click(function (e)
-            {
+            $('#deleteAllTestsMenu').click(function (e) {
                 e.preventDefault();
                 deleteAllTestsMenu();
             });
 
-            $('#deleteAllTestsOk').click(function (e)
-            {
+            $('#deleteAllTestsOk').click(function (e) {
                 e.preventDefault();
                 deleteAllTestsOk();
             });
@@ -262,10 +225,9 @@ var TestEditor = (function ($)
         }
     };
 
-    var hasTests = function()
-    {
-        return _testData != null && _testData.length > 0;
-    };
+    function hasTests() {
+        return _testData && _testData.length;
+    }
 
     var refreshTestList = function()
     {
@@ -552,59 +514,30 @@ var TestEditor = (function ($)
         saveAllTests(false);
     };
 
-    var enableTestItems = function()
-    {
-        var count = getSelectedTestList().length;
+    function enableTestItems() {
+        var enabled = getSelectedTestList().length === 1;
 
-        $("#renameCurrentTestMenu").parent().toggleClass('disabled', count != 1);
-        $("#runCurrentTestMenu").parent().toggleClass('disabled', count != 1);
-        $("#duplicateCurrentTestMenu").parent().toggleClass('disabled', count != 1);
-        $("#deleteCurrentTestMenu").parent().toggleClass('disabled', count != 1);
+        enableDisableMenuButton($("#renameCurrentTestMenu"), enabled, renameCurrentTestMenu);
+        enableDisableMenuButton($("#runCurrentTestMenu"), enabled, runCurrentTest);
+        enableDisableMenuButton($("#duplicateCurrentTestMenu"), enabled, duplicateCurrentTestMenu);
+        enableDisableMenuButton($("#deleteCurrentTestMenu"), enabled, deleteCurrentTestMenu);
 
-        $("#renameTestMenu").parent().toggleClass('disabled', count != 1);
-        $("#duplicateTestMenu").parent().toggleClass('disabled', count != 1);
-        $("#runTestMenu").parent().toggleClass('disabled', count != 1);
-        $("#deleteTestMenu").parent().toggleClass('disabled', count != 1);
-
-        if (count != 1)
-        {
+        if (enabled) {
             clearTestView();
         }
-    };
+    }
 
-    var deleteCurrentTestMenu = function()
-    {
-        nce.clearNote();
-        if (!nce.getSelectedCubeName())
-        {
-            nce.showNote('No n-cube is currently selected. There are not tests to delete.');
+    function deleteCurrentTestMenu() {
+        if (!verifyTestSelected()) {
             return;
         }
-
-        var list = getSelectedTestList();
-
-        if (list.length != 1)
-        {
-            if (list.length == 0)
-            {
-                nce.showNote('No test is currently selected. Select a test to delete.');
-            }
-            else
-            {
-                nce.showNote('More than one test is selected. There can only be one test selected to delete.');
-            }
-            return;
-        }
-
-        var test = _testData[_testSelectionAnchor]["name"];
 
         $('#deleteTestTitle').html("Delete Test");
-        $('#deleteTestLabel').html("Are you sure you want to delete the test '" + test + "'?");
+        $('#deleteTestLabel').html("Are you sure you want to delete the test '" + _testData[_testSelectionAnchor].name + "'?");
         $('#deleteTestModal').modal({
             keyboard: true
         });
-
-    };
+    }
 
     var deleteTestOk = function()
     {
@@ -619,31 +552,13 @@ var TestEditor = (function ($)
         saveAllTests(true);
     };
 
-    var renameCurrentTestMenu = function()
-    {
-        nce.clearNote();
-        if (!nce.getSelectedCubeName())
-        {
-            nce.showNote('No n-cube is currently selected. Cannot rename test.');
+    function renameCurrentTestMenu() {
+        var test;
+        if (!verifyTestSelected()) {
             return;
         }
 
-        var list = getSelectedTestList();
-
-        if (list.length != 1)
-        {
-            if (list.length == 0)
-            {
-                nce.showNote('No test is currently selected. Select a test to duplicate.');
-            }
-            else
-            {
-                nce.showNote('More than one test is selected. There can only be one test selected to duplicate.');
-            }
-            return;
-        }
-
-        var test = _testData[_testSelectionAnchor]["name"];
+        test = _testData[_testSelectionAnchor].name;
 
         $('#renameTestOldName').val(test);
         $('#renameTestNewName').val('');
@@ -652,53 +567,41 @@ var TestEditor = (function ($)
         _renameTestModal.modal({
             keyboard: true
         });
-    };
+    }
 
-    var testNameAlreadyExists = function(name)
-    {
-        if (_testData == null)
-        {
-            return false;
-        }
-
-        var found = false;
-        $.each(_testData, function (index, value)
-        {
-            if (value['name'] == name)
-            {
-                found = true;
+    function testNameAlreadyExists(name) {
+        var i, len;
+        if (hasTests()) {
+            for (i = 0, len = _testData.length; i < len; i++) {
+                if (_testData[i].name === name) {
+                    return true;
+                }
             }
-        });
+        }
+        return false;
+    }
 
-        return found;
-    };
+    function validateTestName(name) {
+        var nameRegex = /^([A-Za-z0-9.-]{3,64})$/g;
 
-    var validateTestName = function(name)
-    {
-        var nameRegex = /^([A-Za-z0-9-.]{3,64})$/g;
-
-        if (!nameRegex.test(name))
-        {
-            nce.showNote("Test name is invalid. Test names can only contain letters, numbers, and, ., and -");
+        if (!nameRegex.test(name)) {
+            nce.showNote('Test name is invalid. Test names can only contain letters, numbers, ., and -.');
             return false;
         }
 
-        if (testNameAlreadyExists(name))
-        {
-            nce.showNote("There is already a test with that name.  Please rename and try again.");
+        if (testNameAlreadyExists(name)) {
+            nce.showNote('There is already a test with that name.');
             return false;
         }
 
         return true;
-    };
+    }
 
-    var renameTestOk = function()
-    {
+    var renameTestOk = function() {
+        var newName = $('#renameTestNewName').val().trim();
         nce.clearNote();
-        var newName = $('#renameTestNewName').val();
 
-        if (!validateTestName(newName))
-        {
+        if (!validateTestName(newName)) {
             return;
         }
 
@@ -709,8 +612,7 @@ var TestEditor = (function ($)
         _selectedTestName.html(newName);
 
         // change currently selected model item
-        var test = _testData[_testSelectionAnchor];
-        test["name"] = newName;
+        _testData[_testSelectionAnchor].name = newName;
 
         saveAllTests(false);
     };
@@ -1052,91 +954,72 @@ var TestEditor = (function ($)
         refreshTestList();
     };
 
-    var createNewTestOk = function()
-    {
+    function createNewTestOk() {
+        var result;
         var newName = $('#createNewTestField').val().trim();
-
-        if (findTestByName(newName) != null)
-        {
-            nce.showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
+        if (!validateTestName(newName)) {
             return;
         }
 
-        var result = nce.call("ncubeController.createNewTest", [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), newName]);
-
-        if (result.status === true)
-        {
-            if (_testData == null)
-            {
-                _testData = [];
-            }
-            _testData.push(result.data);
-            _testSelectionAnchor = _testData.length-1;
-
-            refreshTestList();
-            saveAllTests(true);
-
-            _createNewTestModal.modal('hide');
-
-            _testList.find('div.panel-body').animate({
-                scrollTop: getSelectedTestList().offset().top
-            }, 200);
+        result = nce.call(CONTROLLER + CONTROLLER_METHOD.CREATE_NEW_TEST, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), newName]);
+        if (result.status) {
+            addTestToList(result.data);
+        } else {
+            nce.showNote('Error creating new test for ' + nce.getSelectedCubeName() + ':<hr class="hr-small"/>' + result.data);
         }
-        else
-        {
-            var msg = 'Error creating new test for ' + nce.getSelectedCubeName();
-            if (result.data != null)
-            {
-                msg += (':<hr class="hr-small"/>' + result.data);
-            }
-            nce.showNote(msg);
+    }
+
+    function addTestToList(test) {
+        if (!_testData) {
+            _testData = [];
         }
-    };
+        _testData.push(test);
+        _testSelectionAnchor = _testData.length - 1;
 
-    var duplicateCurrentTestMenu = function()
-    {
-        nce.clearNote();
+        refreshTestList();
+        saveAllTests(true);
 
-        if ($('#duplicateCurrentTestMenu').parent().hasClass('disabled'))
-        {
+        _createNewTestModal.modal('hide');
+
+        _testList.find('div.panel-body').animate({
+            scrollTop: getSelectedTestList().offset().top
+        }, 200);
+    }
+
+    function duplicateCurrentTestMenu() {
+        if (!verifyTestSelected()) {
             return;
         }
 
-        if (!nce.getSelectedCubeName())
-        {
-            nce.showNote('No n-cube is currently selected. Cannot duplicate a test.');
-            return;
-        }
-
-        var list = getSelectedTestList();
-
-        if (list.length != 1)
-        {
-            if (list.length == 0)
-            {
-                nce.showNote('No test is currently selected. Select a test to duplicate.');
-            }
-            else
-            {
-                nce.showNote('More than one test is selected. There can only be one test selected to duplicate.');
-            }
-            return;
-        }
-
-        $('#duplicateTestTitle').html('Duplicate \'' + $(list[0]).text().trim() + '\' ?');
+        $('#duplicateTestTitle').html('Duplicate \'' + $(getSelectedTestList()[0]).text().trim() + '\' ?');
         $('#duplicateTestNameField').val('');
         $('#duplicateTestModal').modal();
-    };
+    }
 
-    var getSelectedTestList = function()
-    {
-        return _testListItems.find("a.selected");
-    };
+    function verifyTestSelected() {
+        nce.clearNote();
 
-    var getSelectedTestCount = function()
-    {
-        return getSelectedTestList().length;
-    };
+        if (!nce.getSelectedCubeName()) {
+            nce.showNote('No n-cube is currently selected.');
+            return false;
+        }
+
+        list = getSelectedTestList();
+        if (list.length !== 1) {
+            if (list.length) {
+                nce.showNote('More than one test is selected.');
+            } else {
+                nce.showNote('No test is currently selected.');
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    function getSelectedTestList() {
+        return _testListItems.find('a.selected');
+    }
 
     var getSelectedTestFromModel = function()
     {
@@ -1144,30 +1027,12 @@ var TestEditor = (function ($)
         return findTestByName($(list[0]).text().trim());
     };
 
-    var duplicateCurrentTestOk = function()
-    {
-        // see if name already exists in tests?
+    var duplicateCurrentTestOk = function() {
         var newName = $('#duplicateTestNameField').val().trim();
-
-        if (findTestByName(newName) != null)
-        {
-            nce.showNote('There is already a test named \'' + newName + '\'.  Please choose a new name.');
-            return;
+        if (validateTestName(newName)) {
+            $('#duplicateTestModal').modal('hide');
+            addTestToList(duplicateTest(getSelectedTestFromModel(), newName));
         }
-
-        $('#duplicateTestModal').modal('hide');
-
-        var newTest = duplicateTest(getSelectedTestFromModel(), newName);
-
-        // scroll to item we just added.
-        _testData.push(newTest);
-        _testSelectionAnchor = _testData.length-1;
-        refreshTestList();
-        saveAllTests(true);
-
-        _testList.find('div.panel-body').animate({
-            scrollTop: getSelectedTestList().offset().top
-        }, 200);
     };
 
     function duplicateTest(test, newTestName) {
@@ -1286,7 +1151,7 @@ var cubeSelected = function cubeSelected()
     TestEditor.handleCubeSelected();
 };
 
-function onNoteEvent(e, element){};
+function onNoteEvent(e, element){}
 
 function closeChildMenu() {
     $('.open').removeClass('open');

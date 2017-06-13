@@ -436,6 +436,20 @@ function getNextVersion(currentVersion, partChanged) {
     return version.join('.')
 }
 
+function enableDisableMenuButton(el, enable, onClick) {
+    el.off('click');
+    if (enable) {
+        el.parent().removeClass('disabled');
+        el.on('click', function() { onClick(); });
+    } else {
+        el.parent().addClass('disabled');
+        el.on('click', function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        });
+    }
+}
+
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();

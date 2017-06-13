@@ -1992,20 +1992,6 @@ var NCE = (function ($) {
         _branchCommit.toggle(canCommitOnApp);
     }
 
-    function enableDisableMenuButton(el, enable, onClick) {
-        el.off('click');
-        if (enable) {
-            el.parent().removeClass('disabled');
-            el.on('click', function() { onClick(); });
-        } else {
-            el.parent().addClass('disabled');
-            el.on('click', function(e) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-            });
-        }
-    }
-
     function enableDisableLockMenu(isAppAdmin) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [getAppId()]);
         var isLocked;
