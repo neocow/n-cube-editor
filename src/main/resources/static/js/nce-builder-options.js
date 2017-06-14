@@ -1070,6 +1070,7 @@ var NCEBuilderOptions = (function () {
             afterSave: opts.afterSave,
             onClose: opts.onClose,
             saveButtonText: 'Release',
+            closeButtonText: 'Close',
             closeAfterSave: false,
             formInputs: {
                 questionLabel: {
