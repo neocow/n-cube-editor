@@ -400,7 +400,7 @@ var TestEditor = (function ($) {
         }
 
         labelGroup.find('span.glyphicon-remove').on('click', opts.deleteFunc);
-        labelGroup.find('button').on('click', function () {
+        labelGroup.find('button.param').on('click', function () {
             onUrlButtonClick(this);
         });
 
@@ -411,17 +411,17 @@ var TestEditor = (function ($) {
         return labelGroup;
     }
 
-    var renameAssertions = function()
-    {
-        $("#testAssertions").find(".form-group").each(function (index, value)
-        {
-            var v = $(value);
-            var count = index + 1;
-            v.data('parameter-id', count);
-            v.find('label.control-label').html("" + count + ".");
-            v.find('a[data-parameter-id]').data('parameter-id', count);
-        });
-    };
+    function renameAssertions() {
+        var i, len, group, count;
+        var groups = _testAssertions.find('.form-group');
+        for (i = 0, len = groups.length; i < len; i++) {
+            count = i + 1;
+            group = $(groups[i]);
+            group.data('parameter-id', count);
+            group.find('label.control-label').html("" + count + ".");
+            group.find('a[data-parameter-id]').data('parameter-id', count);
+        }
+    }
 
     function deleteParameter(e) {
         var parent = $(e.currentTarget).parent('div.form-group');
