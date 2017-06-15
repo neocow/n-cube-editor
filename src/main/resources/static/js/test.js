@@ -349,7 +349,7 @@ var TestEditor = (function ($) {
         var id = generateRandomId();
         var valId = id + '-value';
         var html = '<div class="form-group" data-parameter-id="' + opts.labelText + '" id="' + id + '">'
-                 + '<span class="control-label">' + opts.labelText + '</span>'
+                 + '<span class="control-label renameable">' + opts.labelText + '</span>'
                  + '<span class="pull-right glyphicon glyphicon-remove"></span>'
                  + '<div class="input-group input-group-sm" data-type="' + opts.type + '">'
                  + '<span class="input-group-btn"><button type="button" class="btn btn-default param">' + getUrlButtonText(opts.isUrl) + '</button></span>'
@@ -495,10 +495,10 @@ var TestEditor = (function ($) {
     }
 
     function renameTest(input, oldName) {
-        var label = $(input);
-        var newName = label.val();
+        var textbox = $(input);
+        var newName = textbox.val();
         if (newName === oldName || !validateTestName(newName)) {
-            label.html(oldName);
+            _selectedTestName.html(oldName);
             return;
         }
 
