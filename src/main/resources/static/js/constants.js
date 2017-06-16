@@ -201,6 +201,21 @@ var METAPROPERTIES = {
     ]
 };
 
+var DATA_TYPES = {
+    string: 'String',
+    long: 'Integer',
+    date: 'Date',
+    boolean: 'Boolean',
+    bigdec: 'Decimal Financial',
+    double: 'Decimal Engineering',
+    exp: 'Expression',
+    template: 'Template',
+    binary: 'Binary',
+    latlon: 'Lat/Lon',
+    point2d: '2-D Point',
+    point3d: '3-D Point'
+};
+
 var DELTA = {
     LOC: {
         AXIS: 'AXIS',
@@ -237,11 +252,6 @@ var CHANGETYPE = {
 
 var GROOVY_CLASS = {
     CELL_INFO: 'com.cedarsoftware.ncube.CellInfo'
-};
-
-var POPULATE_SELECT_FROM_CUBE = {
-    AXIS: 'axis',
-    METHOD: 'method'
 };
 
 var CONTROLLER = 'ncubeController.';
@@ -291,6 +301,7 @@ var CONTROLLER_METHOD = {
     GET_REFERENCES_FROM: 'getReferencesFrom',
     GET_REQUIRED_SCOPE: 'getRequiredScope',
     GET_REVISION_HISTORY: 'getRevisionHistory',
+    GET_TESTS: 'getTests',
     GET_VERSIONS: 'getVersions',
     HEARTBEAT: 'heartBeat',
     IS_APP_ADMIN: 'isAppAdmin',
@@ -309,7 +320,9 @@ var CONTROLLER_METHOD = {
     RESOLVE_RELATIVE_URL: 'resolveRelativeUrl',
     RESTORE_CUBES: 'restoreCubes',
     ROLLBACK_BRANCH: 'rollbackBranch',
+    RUN_TEST: 'runTest',
     SAVE_JSON: 'saveJson',
+    SAVE_TESTS: 'saveTests',
     SEARCH: 'search',
     UPDATE_AXIS: 'updateAxis',
     UPDATE_AXIS_COLUMNS: 'updateAxisColumns',
@@ -360,6 +373,8 @@ var NOTE_CLASS = {
     PROCESS_DURATION: 'process-duration',
     SYS_META: 'sysmeta'
 };
+
+var NUMBER_PADDING = ["", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000", "0000000000" ];
 
 //noinspection MagicNumberJS
 var KEY_CODES = {

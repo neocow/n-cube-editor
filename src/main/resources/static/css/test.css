@@ -118,3 +118,18 @@
     line-height: 34px;
     font-size: 24px;
 }
+
+.form-group span.glyphicon {
+    padding: 1px 3px;
+    font-size: 12px;
+    vertical-align: -4px;
+    color: cornflowerblue;
+}
+
+.form-group span.glyphicon:hover {
+    color: black;
+}
+
+.renameable:hover {
+    background-color: lavender;
+}

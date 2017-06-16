@@ -23,7 +23,7 @@
 <div id="testLayoutCenter" class="pane ui-layout-center center-bkgnd">
     <div id="testButtonGroupDiv" class="btn-group">
         <button id="runTestButton" class="btn btn-default" type="button"><span class="glyphicon glyphicon-play" style="color:green"></span>&nbsp;Run</button>
-        <span id="selectedTestName"></span>
+        <span id="selectedTestName" class="renameable"></span>
     </div>
     <div id="testParametersDiv" class="panel panel-default">
         <div class="panel-heading">
@@ -68,12 +68,10 @@
                     <span>Tests</span><span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a id="renameCurrentTestMenu">Rename Test</a></li>
-                    <li><a id="deleteCurrentTestMenu">Delete Test</a></li>
-                    <li><a id="deleteAllTestsMenu">Delete All Tests</a></li>
-                    <li class="divider"></li>
                     <li><a id="createNewTestMenu">Create Test</a></li>
                     <li><a id="duplicateCurrentTestMenu">Duplicate Test</a></li>
+                    <li><a id="deleteCurrentTestMenu">Delete Test</a></li>
+                    <li><a id="deleteAllTestsMenu">Delete All Tests</a></li>
                 </ul>
             </div>
             <span id="testCount" class="badge pull-right">4</span>
@@ -91,31 +89,6 @@
         </div>
         <div class="panel-body">
             <p>There were no tests found for this cube.  Would you like to <a id="createTestsLink" href="#">create a test</a>?</p>
-        </div>
-    </div>
-</div>
-
-<!-- Create New Test Modal -->
-<div id="createNewTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="createNewTestTitle"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="createNewTestTitle" class="modal-title">Create New Test</h3>
-            </div>
-            <div class="modal-body">
-                <form role="form">
-                    <div class="form-group">
-                        <label for="createNewTestField">New Test Name</label>
-                        <input class="form-control" type="text" id="createNewTestField" placeholder="Type New Test Name Here"/>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true">Don't create</button>
-                <button id="createNewTestOk" class="btn btn-primary">Create</button>
-            </div>
         </div>
     </div>
 </div>
@@ -206,60 +179,6 @@
         </div>
         <input type="hidden" id="deleteTestHiddenId" value="" />
     </div>
-</div>
-
-<!-- Rename Test Cube Modal -->
-<div id="renameTestModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="renameTestModal"
-     aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3 id="renameTestLabel" class="modal-title"></h3>
-            </div>
-            <div class="modal-body">
-                <form role="form">
-                    <div class="form-group">
-                        <label for="renameTestOldName">Old Test Name</label>
-                        <input id="renameTestOldName" type="text" class="form-control" readonly>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="renameTestNewName">New Test Name</label>
-                        <input class="form-control" type="text" id="renameTestNewName" placeholder="Type new name here"/>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Don't rename</button>
-                <button id="renameTestOk" class="btn btn-primary">Rename</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div>
-    <select id="datatypes-value" class="form-control">
-        <option id="dt-string" value="string">String</option>
-        <option id="dt-integer" value="long">Integer (64-bit)</option>
-        <option id="dt-date" value="date">Date</option>
-        <option id="dt-boolean" value="boolean">Boolean (true / false)</option>
-        <option id="dt-bigdecimal" value="bigdec">Decimal Financial (unlimited size)</option>
-        <option id="dt-double" value="double">Decimal Engineering (64-bit double precision)</option>
-        <option id="dt-exp" value="exp">Expression (Groovy language)</option>
-        <option id="dt-template" value="template">Template (text with tags ${ })</option>
-        <option id="dt-binary" value="binary">Binary (byte[])</option>
-        <option id="dt-latlon" value="latlon">Lat / Lon (lat, lon)</option>
-        <option id="dt-point2d" value="point2d">2D point (x, y)</option>
-        <option id="dt-point3d" value="point3d">3D point (x, y, z)</option>
-    </select>
-    <select id="datatypes-url" class="form-control" style="display:none">
-        <option id="dt-url-exp" value="exp">Expression (Groovy language)</option>
-        <option id="dt-url-method" value="method">Method (Groovy language)</option>
-        <option id="dt-url-string" value="string">String</option>
-        <option id="dt-url-binary" value="binary">Binary (byte[])</option>
-        <option id="dt-url-template" value="template">Template (text with tags ${ })</option>
-    </select>
 </div>
 
 <script src="js/jquery-2.1.4.min.js"></script>
