@@ -321,6 +321,7 @@ var CONTROLLER_METHOD = {
     RESTORE_CUBES: 'restoreCubes',
     ROLLBACK_BRANCH: 'rollbackBranch',
     RUN_TEST: 'runTest',
+    RUN_TESTS: 'runTests',
     SAVE_JSON: 'saveJson',
     SAVE_TESTS: 'saveTests',
     SEARCH: 'search',

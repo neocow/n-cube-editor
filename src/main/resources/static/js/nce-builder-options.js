@@ -1365,10 +1365,32 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     */
+    function deleteAllTests(opts) {
+        return {
+            title: 'Delete all tests?',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            size: FormBuilder.MODAL_SIZE.SMALL,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Delete',
+            formInputs: {
+                surety: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    label: 'Are you sure?'
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
         copyBranch: copyBranch,
+        deleteAllTests: deleteAllTests,
         deleteBranch: deleteBranch,
         copyCube: copyCube,
         addAxis: addAxis,
