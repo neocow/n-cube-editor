@@ -72,8 +72,9 @@
     </parent>
 
     <properties>
-        <version.ncube>4.0.5</version.ncube>
+        <version.ncube>4.0.6</version.ncube>
         <version.springboot>1.5.3.RELEASE</version.springboot>
+        <version.ojdbc>12.2.0.1</version.ojdbc>
         <version.plugin.maven-compiler>3.6.1</version.plugin.maven-compiler>
         <version.plugin.gmavenplus>1.5</version.plugin.gmavenplus>
         <version.plugin.nexus>1.6.7</version.plugin.nexus>
@@ -182,6 +183,12 @@
             <groupId>com.cedarsoftware</groupId>
             <artifactId>n-cube</artifactId>
             <version>${version.ncube}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.oracle.jdbc</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>${version.ojdbc}</version>
         </dependency>
 
     </dependencies>
