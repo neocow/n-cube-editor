@@ -1,6 +1,5 @@
 n-cube-editor
 =============
-[![Build Status](https://travis-ci.org/jdereg/n-cube-editor.svg?branch=master)](https://travis-ci.org/jdereg/n-cube-editor)
 
 n-cube-editor is a web-based GUI editor for editing and managing n-cubes.
 
