@@ -320,7 +320,6 @@ var CONTROLLER_METHOD = {
     RESOLVE_RELATIVE_URL: 'resolveRelativeUrl',
     RESTORE_CUBES: 'restoreCubes',
     ROLLBACK_BRANCH: 'rollbackBranch',
-    RUN_APP_TESTS: 'runAppTests',
     RUN_TEST: 'runTest',
     RUN_TESTS: 'runTests',
     SAVE_JSON: 'saveJson',

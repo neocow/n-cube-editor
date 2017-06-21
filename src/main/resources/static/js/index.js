@@ -1686,7 +1686,10 @@ var NCE = (function ($) {
         });
 
         _runAppTestsMenu.on('click', function() {
-            runAppTests();
+            showNote('Running tests...');
+            delay(function() {
+                runAppTests();
+            }, 1);
         });
 
         addSystemMenuListeners();
@@ -1823,7 +1826,8 @@ var NCE = (function ($) {
 
     function runAppTests() {
         var msg;
-        var result = call(CONTROLLER + CONTROLLER_METHOD.RUN_APP_TESTS, [getAppId()]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.RUN_TESTS, [getAppId()]);
+        clearNote();
         if (result.status) {
             msg = getFailedAppTestsMessage(result.data);
             showNote(msg ? ('Failed tests by cube:<br/><hr class="hr-small"/>' + msg) : 'All tests passed!');
