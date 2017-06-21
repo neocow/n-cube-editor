@@ -694,6 +694,10 @@ a.section-all:hover, a.section-none:hover {
     width: 46px;
 }
 
+.darkred {
+    color: darkred;
+}
+
 .space-grey {
     color: #a5adb0;
 }

@@ -477,7 +477,12 @@ var TestEditor = (function ($) {
         saveAllTests(true);
 
         if (result.status) {
-            testResult = runAllTests ? result.data[test.name] : result.data;
+            if (runAllTests) {
+                testResult = result.data[test.name];
+                storeAllTestOutput(result.data);
+            } else {
+                testResult = result.data;
+            }
             showTestResult(testResult['_result'], testResult['_message']);
         } else {
             showTestResult(false, 'Could not run test: ' + result.data);
@@ -579,8 +584,8 @@ var TestEditor = (function ($) {
         return _selectedTestName.html();
     }
 
-    function getTestKey() {
-        return nce.getSelectedCubeInfoKey() + TAB_SEPARATOR + getSelectedTestName();
+    function getTestKey(testName) {
+        return nce.getSelectedCubeInfoKey() + TAB_SEPARATOR + (testName || getSelectedTestName());
     }
 
     function loadTestOutput() {
@@ -595,10 +600,19 @@ var TestEditor = (function ($) {
         }
     }
 
-    function storeTestOutput() {
+    function storeAllTestOutput(results) {
+        var i, len, key;
+        var keys = Object.keys(results);
+        for (i = 0, len = keys.length; i < len; i++) {
+            key = keys[i];
+            storeTestOutput(key, results[key]['_message']);
+        }
+    }
+
+    function storeTestOutput(testName, output) {
         var s = sessionStorage[TEST_RESULTS];
         var testOutput = s ? JSON.parse(s) : {};
-        testOutput[getTestKey()] = _testResults[0].innerHTML;
+        testOutput[getTestKey(testName)] = output || _testResults[0].innerHTML;
         sessionStorage[TEST_RESULTS] = JSON.stringify(testOutput);
     }
 
