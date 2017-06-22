@@ -3454,7 +3454,7 @@ var NCE = (function ($) {
     }
 
     function buildUlForPullRequestView(isUpdate) {
-        var i, len, pullRequest;
+        var i, len, pullRequest, status, statusIdx;
         var html = '';
         var data = {
             apps: {},
@@ -3470,10 +3470,15 @@ var NCE = (function ($) {
 
         for (i = 0, len = _pullRequestData.length; i < len; i++) {
             pullRequest = _pullRequestData[i];
+            status = pullRequest.status;
+            statusIdx = status.indexOf(':');
+            if (statusIdx >= 0) {
+                status = status.substring(0, statusIdx);
+            }
             data.apps[pullRequest.appId.app] = '';
             data.versions[pullRequest.appId.version] = '';
             data.branches[pullRequest.appId.branch] = '';
-            data.statuses[pullRequest.status] = '';
+            data.statuses[status] = '';
             data.reqUsers[pullRequest.requestUser] = '';
             data.reqDates[pullRequest.requestTime.substring(0, pullRequest.requestTime.indexOf(' '))] = '';
             if (pullRequest.commitUser) {
@@ -3488,7 +3493,7 @@ var NCE = (function ($) {
                   + '<td class="view-pull-requests-app">' + pullRequest.appId.app + '</td>'
                   + '<td class="view-pull-requests-version">' + pullRequest.appId.version + '</td>'
                   + '<td class="view-pull-requests-branch">' + pullRequest.appId.branch + '</td>'
-                  + '<td class="view-pull-requests-status">' + pullRequest.status + '</td>'
+                  + '<td class="view-pull-requests-status">' + status + '</td>'
                   + '<td class="view-pull-requests-requester">' + pullRequest.requestUser + '</td>'
                   + '<td class="view-pull-requests-request-date">' + pullRequest.requestTime + '</td>'
                   + '<td class="view-pull-requests-committer">' + (pullRequest.commitUser || '') + '</td>'
