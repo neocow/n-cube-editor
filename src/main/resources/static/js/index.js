@@ -70,10 +70,10 @@ var NCE = (function ($) {
     var _tabDragIndicator = $('#tab-drag-indicator');
     var _appMenu = $('#AppMenu');
     var _versionMenu = $('#VersionMenu');
-    var _serverMenu = $('#server-menu');
     var _changeVersionMenu = $('#changeVerMenu');
     var _releaseCubesMenu = $('#releaseCubesMenu');
     var _createSnapshotMenu = $('#createSnapshotMenu');
+    var _runAppTestsMenu = $('#runAppTestsMenu');
     var _lockUnlockAppMenu = $('#lockUnlockAppMenu');
     var _getAppLockedByMenu = $('#getAppLockedByMenu');
     var _branchMenu = $('#BranchMenu');
@@ -1685,6 +1685,13 @@ var NCE = (function ($) {
             batchUpdateAxisReferencesOpen(true);
         });
 
+        _runAppTestsMenu.on('click', function() {
+            showNote('Running tests...');
+            delay(function() {
+                runAppTests();
+            }, 1);
+        });
+
         addSystemMenuListeners();
         addBranchListeners();
         addSelectAllNoneListeners();
@@ -1815,6 +1822,47 @@ var NCE = (function ($) {
                 buildMenu();
             }
         }
+    }
+
+    function runAppTests() {
+        var msg;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.RUN_TESTS, [getAppId()]);
+        clearNote();
+        if (result.status) {
+            msg = getFailedAppTestsMessage(result.data);
+            showNote(msg ? ('Failed tests by cube:<br/><hr class="hr-small"/>' + msg) : 'All tests passed!');
+        } else {
+            showNote('Tests failed to run...');
+        }
+    }
+
+    function getFailedAppTestsMessage(testData) {
+        var i, len, cubeNames, cubeName, failed;
+        var html = '';
+        delete testData['@type'];
+        cubeNames = Object.keys(testData);
+        for (i = 0, len = cubeNames.length; i < len; i++) {
+            cubeName = cubeNames[i];
+            failed = getFailedCubeTestsMessage(testData[cubeName]);
+            if (failed) {
+                html += cubeName + '<br/>' + failed + '<hr class="hr-small"/>';
+            }
+        }
+        return html;
+    }
+
+    function getFailedCubeTestsMessage(tests) {
+        var i, len, testNames, testName;
+        var html = '';
+        delete tests['@type'];
+        testNames = Object.keys(tests);
+        for (i = 0, len = testNames.length; i < len; i++) {
+            testName = testNames[i];
+            if (tests[testName]['_result'] !== true) {
+                html += '<b class="darkred">' + testName + '</b><br/>';
+            }
+        }
+        return html;
     }
 
     function globalComparatorCompare(data) {
