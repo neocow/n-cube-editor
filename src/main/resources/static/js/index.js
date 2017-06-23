@@ -2005,21 +2005,23 @@ var NCE = (function ($) {
         batchUpdateAxisReferencesOpen(data.isTransform);
     }
 
-    function checkPermissions(appId, resource, action) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.CHECK_PERMISSIONS, [appId, resource, action]);
-        if (result.status) {
-            return ensureModifiable(null, appId) && result.data;
-        }
-        showNote('Unable to check permissions:<hr class="hr-small"/>' + result.data);
-        return false;
+    function checkPermissions(appId, resource, actions) {
+        return callPermCheck(appId, resource, actions, true);
     }
 
-    function checkAppPermission(action) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.CHECK_PERMISSIONS, [getAppId(), null, action]);
+    function checkAppPermission(actions) {
+        return callPermCheck(getAppId(), null, actions, false);
+    }
+
+    function callPermCheck(appId, resource, actions, checkModifiable) {
+        var isList = typeof actions === OBJECT;
+        var result = call(CONTROLLER + CONTROLLER_METHOD.CHECK_PERMISSIONS, [appId, resource, isList ? actions : [actions]]);
         if (result.status) {
-            return result.data;
+            if (!checkModifiable || ensureModifiable(null, appId)) {
+                return isList ? result.data : result.data[actions]
+            }
         }
-        showNote('Unable to check app permissions:<hr class="hr-small"/>' + result.data);
+        showNote('Unable to check permissions:<hr class="hr-small"/>' + result.data);
     }
 
     function checkIsAppAdmin() {
@@ -2055,9 +2057,13 @@ var NCE = (function ($) {
     }
 
     function handleAppPermissions() {
+        var canReleaseApp, canCommitOnApp;
+        var permCheck = checkAppPermission([PERMISSION_ACTION.RELEASE, PERMISSION_ACTION.COMMIT]);
         var isAppAdmin = checkIsAppAdmin();
-        var canReleaseApp = checkAppPermission(PERMISSION_ACTION.RELEASE);
-        var canCommitOnApp = checkAppPermission(PERMISSION_ACTION.COMMIT);
+        if (permCheck) {
+            canReleaseApp = permCheck[PERMISSION_ACTION.RELEASE];
+            canCommitOnApp = permCheck[PERMISSION_ACTION.COMMIT];
+        }
 
         enableDisableReleaseMenu(canReleaseApp);
         enableDisableCommitBranch(canCommitOnApp);
