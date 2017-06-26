@@ -2020,8 +2020,9 @@ var NCE = (function ($) {
             if (!checkModifiable || ensureModifiable(null, appId)) {
                 return isList ? result.data : result.data[actions]
             }
+        } else {
+            showNote('Unable to check permissions:<hr class="hr-small"/>' + result.data);
         }
-        showNote('Unable to check permissions:<hr class="hr-small"/>' + result.data);
     }
 
     function checkIsAppAdmin() {
