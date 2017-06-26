@@ -2878,7 +2878,8 @@ var NCubeEditor2 = (function ($) {
     NcubeBaseEditor.prototype.finishEditing = function(restoreOriginalValue, ctrlDown, callback, forceClose) {
         if (!this.isOpened()) {
             if (forceClose) {
-                this.state = Handsontable.EditorState.EDITING; // needed to override finish editing
+                // used to be Handsontable.EditorState.EDITING
+                this.state = 'STATE_EDITING'; // needed to override finish editing
             }
             Handsontable.editors.BaseEditor.prototype.finishEditing.apply(this, arguments);
         }
