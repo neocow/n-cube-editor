@@ -4691,7 +4691,7 @@ var NCE = (function ($) {
     }
     
     function constructDeltaText(delta, isSource) {
-        if ([DELTA.LOC.NCUBE, DELTA.LOC.CELL].indexOf(delta.loc.name) > -1) {
+        if ([DELTA.LOC.NCUBE, DELTA.LOC.CELL, DELTA.LOC.TEST, DELTA.LOC.TEST_COORD, DELTA.LOC.TEST_ASSERT].indexOf(delta.loc.name) > -1) {
             return getObjectTextArray(isSource ? delta.sourceVal : delta.destVal);
         }
         if (delta.type.name === DELTA.TYPE.UPDATE) {
