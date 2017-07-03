@@ -121,6 +121,8 @@ var FormBuilder = (function ($) {
 
         if (buildNew) {
             _modal.modal();
+        } else {
+            addModalFilter();
         }
     }
 
