@@ -225,7 +225,10 @@ var DELTA = {
         COLUMN: 'COLUMN',
         COLUMN_META: 'COLUMN_META',
         NCUBE: 'NCUBE',
-        NCUBE_META: 'NCUBE_META'
+        NCUBE_META: 'NCUBE_META',
+        TEST: 'TEST',
+        TEST_ASSERT: 'TEST_ASSERT',
+        TEST_COORD: 'TEST_COORD'
     },
     TYPE: {
         ADD: 'ADD',
