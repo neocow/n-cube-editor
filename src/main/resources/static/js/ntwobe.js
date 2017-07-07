@@ -1212,7 +1212,7 @@ var NCubeEditor2 = (function ($) {
         }
 
         function hasPreviouslyNonExistingAxes(customOrder, actualAxes) {
-            var i, len, key, axis;
+            var i, len, axis;
             var keys = Object.keys(actualAxes);
             for (i = 0, len = keys.length; i < len; i++) {
                 axis = actualAxes[keys[i]];
