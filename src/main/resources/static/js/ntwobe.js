@@ -1193,25 +1193,45 @@ var NCubeEditor2 = (function ($) {
     }
 
     function setUpAxisOrder(cubeAxes) {
-        var i, len, axis, order;
-        axes = null;
-        axes = [];
-        _axisIdsInOrder = null;
-        _axisIdsInOrder = [];
-        order = getCustomAxisOrder();
-        if (order) {
-            for (i = order.length - 1; 0 <= i; i--) {
-                axis = cubeAxes[order[i]];
+        function removeNonExistingAxes(customOrder, actualAxes) {
+            var i, axis, updateCache;
+            for (i = customOrder.length - 1; 0 <= i; i--) {
+                axis = actualAxes[customOrder[i]];
                 if (axis) {
                     getColumnLength(axis);
                     axes.unshift(axis);
                     _axisIdsInOrder.unshift(axis.id);
                 } else {
-                    order.splice(i, 1);
-                    storeAxisOrder(order);
+                    customOrder.splice(i, 1);
+                    updateCache = true;
                 }
             }
+            if (updateCache) {
+                storeAxisOrder(customOrder);
+            }
+        }
+
+        function hasPreviouslyNonExistingAxes(customOrder, actualAxes) {
+            var i, len, key, axis;
+            var keys = Object.keys(actualAxes);
+            for (i = 0, len = keys.length; i < len; i++) {
+                axis = actualAxes[keys[i]];
+                if (customOrder.indexOf(axis.name.toLowerCase()) < 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        var order = getCustomAxisOrder();
+        axes = null;
+        axes = [];
+        _axisIdsInOrder = null;
+        _axisIdsInOrder = [];
+        if (order && !hasPreviouslyNonExistingAxes(order, cubeAxes)) {
+            removeNonExistingAxes(order, cubeAxes);
         } else {
+            delete localStorage[getStorageKey(nce, AXIS_ORDER)];
             determineAxisOrder(cubeAxes);
         }
     }
