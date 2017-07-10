@@ -4936,14 +4936,13 @@ var NCE = (function ($) {
 
 function frameLoaded(doc) {
     delay(function() {
-        var txidStartIdx, txidEndIdx, numChars, txid;
+        var txidStartIdx, txidEndIdx, txid;
         var url = document.URL;
         NCE.buildTabs(true);
         if (url.indexOf('viewCommit') > -1) {
             txidStartIdx = url.lastIndexOf('/') + 1;
             txidEndIdx = url.indexOf('?');
-            numChars = (txidEndIdx > -1 ? txidEndIdx : url.length) - txidStartIdx;
-            txid = url.substring(txidStartIdx, txidEndIdx);
+            txid = txidEndIdx > -1 ? url.substring(txidStartIdx, txidEndIdx) : url.substring(txidStartIdx);
             NCE.pullRequestLinkClick(txid);
         }
         window.location.href = '#';
