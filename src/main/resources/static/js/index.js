@@ -3450,14 +3450,16 @@ var NCE = (function ($) {
 
     function viewPullRequestsHideIfNotMatching(filterVal, idx) {
         var i, len, tds, td, row;
+        var hideRows = [];
         tds = _viewPullRequestsList.find('tr:visible').find('td:nth-child(' + idx + ')');
         for (i = 0, len = tds.length; i < len; i++) {
             td = tds[i];
             row = $(td).parent();
             if (td.innerHTML.indexOf(filterVal) === -1) {
-                row.hide();
+                hideRows.add(row);
             }
         }
+        hideRows.hide()
     }
 
     function buildUlForPullRequestView(isUpdate) {
