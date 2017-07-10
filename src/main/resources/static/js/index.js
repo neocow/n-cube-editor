@@ -4184,18 +4184,19 @@ var NCE = (function ($) {
 
     function generatePullRequestLink() {
         var urlPrefix, viewUrl, result, txid, html;
+        var appId = getAppId();
         var changes = getCommitChanges();
         if (!changes.length) {
             showNote('No changes selected!', 'Error', TWO_SECOND_TIMEOUT);
             return;
         }
-        result = call(CONTROLLER + CONTROLLER_METHOD.GENERATE_PULL_REQUEST_LINK, [getAppId(), changes]);
+        result = call(CONTROLLER + CONTROLLER_METHOD.GENERATE_PULL_REQUEST_LINK, [appId, changes]);
         if (result.status) {
             _pullRequestLink.add(_commitOk).attr('disabled', '');
             txid = result.data;
             urlPrefix = document.URL;
             urlPrefix = urlPrefix.substring(0, urlPrefix.lastIndexOf('/'));
-            viewUrl = urlPrefix + '/#/viewCommit/' + txid;
+            viewUrl = urlPrefix + '/#/viewCommit/' + txid + encodeURI('?app=' + appId.app + '&version=' + appId.version + '&branch=' + appId.branch);
             html = 'Pull Request View Link:<br><a href="#" onclick="NCE.pullRequestLinkClick(\'' + txid + '\');">' + viewUrl + '</a>';
             showNote(html, 'Pull Request Link', null, NOTE_CLASS.HAS_EVENT);
         } else {
@@ -4935,12 +4936,14 @@ var NCE = (function ($) {
 
 function frameLoaded(doc) {
     delay(function() {
-        var txidStartIdx, txid;
+        var txidStartIdx, txidEndIdx, numChars, txid;
         var url = document.URL;
         NCE.buildTabs(true);
         if (url.indexOf('viewCommit') > -1) {
             txidStartIdx = url.lastIndexOf('/') + 1;
-            txid = url.substring(txidStartIdx);
+            txidEndIdx = url.indexOf('?');
+            numChars = (txidEndIdx > -1 ? txidEndIdx : url.length) - txidStartIdx;
+            txid = url.substring(txidStartIdx, txidEndIdx);
             NCE.pullRequestLinkClick(txid);
         }
         window.location.href = '#';
