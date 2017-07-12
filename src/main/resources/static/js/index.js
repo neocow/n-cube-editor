@@ -3449,15 +3449,9 @@ var NCE = (function ($) {
     }
 
     function viewPullRequestsHideIfNotMatching(filterVal, idx) {
-        var i, len, tds, td, row;
-        tds = _viewPullRequestsList.find('tr:visible').find('td:nth-child(' + idx + ')');
-        for (i = 0, len = tds.length; i < len; i++) {
-            td = tds[i];
-            row = $(td).parent();
-            if (td.innerHTML.indexOf(filterVal) === -1) {
-                row.hide();
-            }
-        }
+        _viewPullRequestsList.find('tr:visible').filter(function() {
+            return $(this).find('td:nth-child(' + idx + ')')[0].innerHTML.indexOf(filterVal) === -1;
+        }).hide();
     }
 
     function buildUlForPullRequestView(isUpdate) {
