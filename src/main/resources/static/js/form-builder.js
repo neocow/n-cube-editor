@@ -807,6 +807,7 @@ var FormBuilder = (function ($) {
                 _data[key].push(val);
             }
         }
+        return _data;
     }
 
     function getDataRow(columns, columnKeys, tr) {
@@ -1031,6 +1032,7 @@ var FormBuilder = (function ($) {
         showAlert: showAlert,
         toggle: toggle,
         setDataValue: setDataValue,
+        copyFormTableDataToModel: copyFormTableDataToModel,
         BOOTSTRAP_TYPE: BOOTSTRAP_TYPE,
         DISPLAY_TYPE: DISPLAY_TYPE,
         ID_PREFIX: ID_PREFIX,

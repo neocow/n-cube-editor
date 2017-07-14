@@ -24,9 +24,6 @@ var NCubeEditor2 = (function ($) {
     var _cellId = null;
     var _tableCellId = null;
     var _columnList = null;
-    var _hideColumnsList = null;
-    var _hideColumnsAxisSelect = null;
-    var _hideColumnsModal = null;
     var _hiddenColumns = {};
     var _ghostAxes = null;
     var _editCellModal = null;
@@ -83,9 +80,6 @@ var NCubeEditor2 = (function ($) {
             nce = info;
 
             _columnList = $('#editColumnsList');
-            _hideColumnsList = $('#hideColumnsList');
-            _hideColumnsAxisSelect = $('#hideColumnsAxisSelect');
-            _hideColumnsModal = $('#hideColumnsModal');
             _editCellModal = $('#editCellModal');
             _editCellValue = $('#editCellValue');
             _editCellCache = $('#editCellCache');
@@ -125,7 +119,6 @@ var NCubeEditor2 = (function ($) {
 
             addSelectAllNoneListeners();
             addColumnEditListeners();
-            addColumnHideListeners();
             addSetUpHideListeners();
             addMoveAxesListeners();
             addEditCellListeners();
@@ -3911,29 +3904,17 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editColumns(axisName) {
-        var result, axis;
-        var appId = nce.getSelectedTabAppId();
+        var axis;
         if (!checkCubeUpdatePermissions(axisName)) {
             nce.showNote('Columns cannot be edited.');
             return false;
         }
 
-        result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [appId, cubeName, axisName]);
-        if (result.status) {
-            axis = result.data;
-            if (!axis.columns) {
-                axis.columns = [];
-            }
-            if (axis.defaultCol) {
-                // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
-                axis.columns.splice(axis.columns.length - 1, 1);
-            }
-        } else {
-            nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
+        axis = getCubeAxis(axisName);
+        if (!axis) {
             return;
         }
         editColumnInstructions(axis);
-        sortColumns(axis);
         loadColumns(axis);
         $('#editColUp, #editColDown').toggle(axis.preferredOrder === 1);
         $('#editColumnsLabel')[0].innerHTML = 'Edit ' + axisName;
@@ -4236,130 +4217,96 @@ var NCubeEditor2 = (function ($) {
 
     // =============================================== Begin Column Hiding ==========================================
 
-    function addColumnHideListeners() {
-        $('#hideColumnsCancel').on('click', function() {
-            hideColClose();
-        });
-        $('#hideColumnsSave').on('click', function() {
-            hideColSave(true);
-        });
-        _hideColumnsAxisSelect.on('change', function() {
-            hideColSave(false);
-            hideColumns($(this).val());
-        });
-    }
-
-    function hideColumns(axisName) {
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName]);
+    function getCubeAxis(axisName) {
         var axis;
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_AXIS, [nce.getSelectedTabAppId(), cubeName, axisName]);
         if (result.status) {
             axis = result.data;
             if (!axis.columns) {
                 axis.columns = [];
             }
-            if (axis.defaultCol) {   // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
+            if (axis.defaultCol) {
+                // Remove actual Default Column object (not needed, we can infer it from Axis.defaultCol field being not null)
                 axis.columns.splice(axis.columns.length - 1, 1);
             }
+            sortColumns(axis);
+            return axis;
         } else {
-            nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + nce.getSelectedCubeName() + "':<hr class=\"hr-small\"/>" + result.data);
+            nce.showNote("Could not retrieve axis: " + axisName + " for n-cube '" + cubeName + "':<hr class=\"hr-small\"/>" + result.data);
+        }
+    }
+
+    function hideColumns(axisName) {
+        var i, len, column, opts, ruleLabel, labelText, label, axisColumns, axisNames, lowerAxisName, axisHiddenData, columnData;
+        var axis = getCubeAxis(axisName);
+        if (!axis) {
             return;
         }
-        sortColumns(axis);
-        loadHiddenColumns(axis);
-        $('#hideColumnsLabel')[0].innerHTML = 'Hide ' + axisName + ' columns';
+        axisColumns = axis.columns;
 
-        if (!_hideColumnsModal.hasClass('in')) {
-            populateHideColumnsAxisSelect(axisName);
-            addHotBeforeKeyDown();
-            _hideColumnsModal.modal();
-        }
-    }
+        columnData = [];
+        lowerAxisName = axisName.toLowerCase();
+        axisHiddenData = _hiddenColumns[lowerAxisName];
 
-    function populateHideColumnsAxisSelect(axisName) {
-        var i, len;
-        var html = '';
-        for (i = 0, len = axes.length; i < len; i++) {
-            html += '<option>' + axes[i].name + '</option>';
-        }
-        
-        _hideColumnsAxisSelect.empty();
-        _hideColumnsAxisSelect.append(html);
-        _hideColumnsAxisSelect.val(axisName);
-    }
-
-    function loadHiddenColumns(axis) {
-        var axisList, lowerAxisName, defaultCol, displayOrder;
-        var insTitle = $('#hideColInstTitle');
-        var inst = $('#hideColInstructions');
-        insTitle[0].textContent = 'Instructions - Hide Column';
-        inst[0].innerHTML = "Select columns to show. Deselect columns to hide.";
-
-        axisList = axis.columns;
-        lowerAxisName = axis.name.toLowerCase();
-        defaultCol = axis.defaultCol;
-        if (defaultCol !== null) {
-            axisList.push(axis.defaultCol);
-        }
-        _hideColumnsList.empty();
-        _hideColumnsList.prop('model', axis);
-        displayOrder = 0;
-        $.each(axisList, function (key, item) {
-            var itemId, listItem, rowDiv, rowLabel, ruleLabel, labelText, label, inputBtn;
-            item.displayOrder = displayOrder++;
-            itemId = item.id;
-            listItem = $('<li/>').prop({class: "list-group-item skinny-lr no-margins"});
-            rowDiv = $('<div/>').prop({class: "container-fluid"});
-            rowLabel = $('<label/>').prop({class: "checkbox no-margins col-xs-10"});
+        for (i = 0, len = axisColumns.length; i < len; i++) {
+            column = axisColumns[i];
             ruleLabel = '';
-            if (item.metaProps !=null) {
-                ruleLabel = item.metaProps.name + ': ';
+            if (column.metaProps) {
+                ruleLabel = column.metaProps.name + ': ';
             }
-            labelText = item.value != null ? item.value : DEFAULT_TEXT;
+            labelText = column.value === null ? DEFAULT_TEXT : column.value;
             label = ruleLabel + labelText;
-            inputBtn = $('<input/>').prop({class: "commitCheck", type: "checkbox"});
-            inputBtn.attr("data-id", itemId);
-            inputBtn[0].checked = !_hiddenColumns[lowerAxisName] || !_hiddenColumns[lowerAxisName][itemId];
-            _hideColumnsList.append(listItem);
-            listItem.append(rowDiv);
-            rowDiv.append(rowLabel);
-            rowLabel.append(inputBtn);
-            rowLabel.append(label);
-        });
+            columnData.push({
+                isShown: !axisHiddenData || !axisHiddenData[column.id],
+                columnName: label,
+                columnId: column.id
+            });
+        }
+
+        axisNames = [];
+        for (i = 0, len = axes.length; i < len; i++) {
+            axisNames.push(axes[i].name);
+        }
+
+        opts = {
+            axisName: axisName,
+            axisNames: axisNames,
+            columnData: columnData,
+            onAxisChange: hideColumns,
+            afterSave: hideColSave,
+            onClose: function() {
+                removeHotBeforeKeyDown();
+                storeHiddenColumns();
+                destroyEditor();
+                reload();
+            }
+        };
+        if (!hot.hasHook('beforeKeyDown')) {
+            addHotBeforeKeyDown();
+        }
+        FormBuilder.openBuilderModal(NCEBuilderOptions.hideColumns(opts));
     }
 
-    function hideColClose() {
-        _hideColumnsModal.modal('hide');
-        removeHotBeforeKeyDown();
-    }
+    function hideColSave(data) {
+        var i, mapSize;
+        var len = data.columnId.length;
+        var lowerAxisName = data.axisName.toLowerCase();
+        var columnIdMap = {};
+        for (i = 0; i < len; i++) {
+            if (!data.isShown[i]) {
+                columnIdMap[data.columnId[i]] = true;
+            }
+        }
 
-    function hideColSave(shouldClose) {
-        var i, len, columnId;
-        var axis = _hideColumnsList.prop('model');
-        var lowerAxisName = axis.name.toLowerCase();
-        var columnIds = [];
-        $('.commitCheck:not(:checked)').each(function () {
-            var id = $(this).attr('data-id');
-            columnIds.push(id);
-        });
-        len = columnIds.length;
-        if (len === axis.columns.length) {
+        mapSize = Object.keys(columnIdMap).length;
+        if (mapSize === len) {
             nce.showNote('Please select at least one column to show.', 'Note', TWO_SECOND_TIMEOUT);
             return;
         }
-        delete _hiddenColumns[lowerAxisName];
-        if (len) {
-            _hiddenColumns[lowerAxisName] = {};
-            for (i = 0; i < len; i++) {
-                columnId = columnIds[i];
-                _hiddenColumns[lowerAxisName][columnId] = true;
-            }
-        }
-        storeHiddenColumns();
-
-        if (shouldClose) {
-            hideColClose();
-            destroyEditor();
-            reload();
+        if (mapSize) {
+            _hiddenColumns[lowerAxisName] = columnIdMap;
+        } else {
+            delete _hiddenColumns[lowerAxisName];
         }
     }
 
