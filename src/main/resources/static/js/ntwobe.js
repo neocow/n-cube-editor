@@ -3541,18 +3541,19 @@ var NCubeEditor2 = (function ($) {
     }
 
     function detectLanguage(text) {
-        var cssRegEx = new RegExp('[\\#\\.\\w\\-\\,\\s\\n\\r\\t:]+(?=\\s*\\{)', 'gi');
-        var htmlRegEx = new RegExp('<(?:br|p)[^>{]*>|</\\w+\\s*>', 'gi');
+        var cssRegEx, htmlRegEx;
         if (!text.indexOf('{')) {
             return 'json';
         }
         if (text.indexOf('function') > -1 || text.indexOf('var') > -1) {
             return 'javascript';
         }
-        if (htmlRegEx.exec(text)) {
+        htmlRegEx = new RegExp('<(?:br|p)[^>{]*>|</\\w+\\s*>', 'gi');
+        if (htmlRegEx.test(text)) {
             return 'html';
         }
-        if (cssRegEx.exec(text)) {
+        cssRegEx = new RegExp('[\\#\\.\\w\\-\\,\\s\\n\\r\\t:]+(?=\\s*\\{)', 'gi');
+        if (cssRegEx.test(text)) {
             return 'css';
         }
         return 'text';
