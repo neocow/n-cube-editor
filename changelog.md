@@ -5,6 +5,7 @@
   * Added "annotate" to cell editor modal to see change history
   * Converted project to be a Spring Boot app
   * Changed confusing UI around batch reference axis update.
+  * Updated HandsonTable version to 0.33.0.
 * 0.8.0
   * Added getCube() to public API and allow it to "fail" silently so null can be returned.
   * Enhancement: Option of thin copy of branch. This only copies branch tip with an underlying layer of HEAD matching branch tip SHA1.
