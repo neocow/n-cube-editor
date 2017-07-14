@@ -1386,6 +1386,74 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  axisName
+     *  axisNames
+     *  columnData
+     *  onAxisChange
+     */
+    function hideColumns(opts) {
+        var columnListColumns = {
+            isShown: {
+                type: FormBuilder.INPUT_TYPE.CHECKBOX
+            },
+            columnName: {
+                type: FormBuilder.INPUT_TYPE.READONLY,
+                css: {}
+            },
+            columnId: {
+                type: FormBuilder.INPUT_TYPE.READONLY,
+                css: { display: 'none' }
+            }
+        };
+        return {
+            title: 'Hide columns for ' + opts.axisName,
+            instructionsTitle: 'Instructions - Hide Column',
+            instructionsText: 'Select columns to show. Deselect columns to hide.',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: false,
+            onClose: opts.onClose,
+            hasFilter: true,
+            hasSelectAllNone: true,
+            saveButtonText: 'Apply',
+            afterSave: opts.afterSave,
+            formInputs: {
+                axisLabel: {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: 'Change Axis:'
+                },
+                axisName: {
+                    type: FormBuilder.INPUT_TYPE.SELECT,
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    selectOptions: opts.axisNames,
+                    default: opts.axisName,
+                    listeners: {
+                        change: function() {
+                            var data = FormBuilder.copyFormTableDataToModel(columnListColumns);
+                            data.axisName = opts.axisName;
+                            opts.afterSave(data);
+                            opts.onAxisChange($(this).val());
+                        }
+                    }
+                },
+                hideColumnSection: {
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    label: '',
+                    formInputs: {
+                        columnList: {
+                            type: FormBuilder.INPUT_TYPE.TABLE,
+                            css: {},
+                            data: opts.columnData,
+                            columns: columnListColumns
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -1399,6 +1467,7 @@ var NCEBuilderOptions = (function () {
         outboundRefs: outboundRefs,
         requiredScope: requiredScope,
         globalComparator: globalComparator,
+        hideColumns: hideColumns,
         selectBranch: selectBranch,
         createSnapshotFromRelease: createSnapshotFromRelease,
         changeSnapshotVersion: changeSnapshotVersion,
