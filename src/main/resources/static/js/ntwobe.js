@@ -74,6 +74,8 @@ var NCubeEditor2 = (function ($) {
     var _coordBarLeftBtn = null;
     var _coordBarText = null;
     var _utilContainerBar = null;
+    var _cssRegEx = new RegExp('[\\#\\.\\w\\-\\,\\s\\n\\r\\t:]+(?=\\s*\\{)', 'gi');
+    var _htmlRegEx = new RegExp('<(?:br|p)[^>{]*>|</\\w+\\s*>', 'gi');
 
     function init(info) {
         if (!nce) {
@@ -3525,15 +3527,35 @@ var NCubeEditor2 = (function ($) {
         });
 
         _editCellPopout.on('click', function(e) {
+            var val = _editCellValue.val();
+            var dataType = _valueDropdown.val();
+            var mode = dataType === 'exp' ? 'groovy' : detectLanguage(val);
             e.preventDefault();
             popoutAceEditor({
-                value: _editCellValue.val(),
+                value: val,
+                mode: mode,
                 onSave: function(newVal) {
                     _editCellValue.val(newVal);
                     _isCellDirty = true;
                 }
             })
         });
+    }
+
+    function detectLanguage(text) {
+        if (!text.indexOf('{')) {
+            return 'json';
+        }
+        if (text.indexOf('function') > -1 || text.indexOf('var') > -1) {
+            return 'javascript';
+        }
+        if (_htmlRegEx.test(text)) {
+            return 'html';
+        }
+        if (_cssRegEx.test(text)) {
+            return 'css';
+        }
+        return 'text';
     }
     
     function moveCellEditor(direction) {

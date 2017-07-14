@@ -404,8 +404,17 @@ function popoutAceEditor(opts) {
     });
     w.document.write('</body></html>');
     delay(function() {
+        var modeSelect, selectChangeEvent;
         if (opts.readonly) {
             w.aceEditor.setReadOnly(true);
+        }
+
+        if (opts.mode) {
+            modeSelect = w.document.getElementById('mode');
+            modeSelect.value = opts.mode;
+            selectChangeEvent = document.createEvent('HTMLEvents');
+            selectChangeEvent.initEvent('change', true, true);
+            modeSelect.dispatchEvent(selectChangeEvent);
         }
 
         w.aceEditor.setValue(opts.value);
