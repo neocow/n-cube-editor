@@ -74,6 +74,8 @@ var NCubeEditor2 = (function ($) {
     var _coordBarLeftBtn = null;
     var _coordBarText = null;
     var _utilContainerBar = null;
+    var _cssRegEx = new RegExp('[\\#\\.\\w\\-\\,\\s\\n\\r\\t:]+(?=\\s*\\{)', 'gi');
+    var _htmlRegEx = new RegExp('<(?:br|p)[^>{]*>|</\\w+\\s*>', 'gi');
 
     function init(info) {
         if (!nce) {
@@ -3541,19 +3543,16 @@ var NCubeEditor2 = (function ($) {
     }
 
     function detectLanguage(text) {
-        var cssRegEx, htmlRegEx;
         if (!text.indexOf('{')) {
             return 'json';
         }
         if (text.indexOf('function') > -1 || text.indexOf('var') > -1) {
             return 'javascript';
         }
-        htmlRegEx = new RegExp('<(?:br|p)[^>{]*>|</\\w+\\s*>', 'gi');
-        if (htmlRegEx.test(text)) {
+        if (_htmlRegEx.test(text)) {
             return 'html';
         }
-        cssRegEx = new RegExp('[\\#\\.\\w\\-\\,\\s\\n\\r\\t:]+(?=\\s*\\{)', 'gi');
-        if (cssRegEx.test(text)) {
+        if (_cssRegEx.test(text)) {
             return 'css';
         }
         return 'text';
