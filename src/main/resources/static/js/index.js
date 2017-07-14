@@ -2847,7 +2847,8 @@ var NCE = (function ($) {
         if (result.status) {
             w = popoutAceEditor({
                 value: result.data,
-                readonly: true
+                readonly: true,
+                mode: 'json'
             });
             w.document.title = el.data('cube-name') + '.rev.' + el.data('rev-id') + '.json';
         }
