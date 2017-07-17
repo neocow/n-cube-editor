@@ -4281,7 +4281,7 @@ var NCubeEditor2 = (function ($) {
                 reload();
             }
         };
-        if (!hot.hasHook('beforeKeyDown')) {
+        if (hot && !hot.hasHook('beforeKeyDown')) {
             addHotBeforeKeyDown();
         }
         FormBuilder.openBuilderModal(NCEBuilderOptions.hideColumns(opts));
