@@ -4,7 +4,7 @@
     <groupId>com.cedarsoftware</groupId>
     <artifactId>n-cube-editor</artifactId>
     <packaging>jar</packaging>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <description>NCube Front End</description>
     <url>https://github.com/jdereg/n-cube-editor</url>
 
