@@ -52,8 +52,8 @@
 
     <scm>
         <url>https://github.com/jdereg/n-cube-editor</url>
-        <connection>scm:git:git://github.com/jdereg/n-cube-editor.git</connection>
-        <developerConnection>scm:git:git@github.com:jdereg/n-cube-editor.git</developerConnection>
+        <connection>scm:git:https://github.com/jdereg/n-cube-editor</connection>
+        <developerConnection>scm:git:https://github.com/jdereg/n-cube-editor</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
