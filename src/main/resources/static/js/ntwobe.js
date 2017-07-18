@@ -4263,6 +4263,14 @@ var NCubeEditor2 = (function ($) {
             });
         }
 
+        if (axis.defaultCol !== null) {
+            columnData.push({
+                isShown: !axisHiddenData || !axisHiddenData[axis.defaultCol.id],
+                columnName: DEFAULT_TEXT,
+                columnId: axis.defaultCol.id
+            })
+        }
+
         axisNames = [];
         for (i = 0, len = axes.length; i < len; i++) {
             axisNames.push(axes[i].name);
