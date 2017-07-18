@@ -59,8 +59,6 @@ var NCubeEditor2 = (function ($) {
     var _columnIdCombinationsToShow = null;
     var _searchText = null;
     var _hotContainer = null;
-    var _setUpHideModal = null;
-    var _setUpHideList = null;
     var _moveAxesModal = null;
     var _moveAxesList = null;
     var _moveAxesLabel = null;
@@ -105,8 +103,6 @@ var NCubeEditor2 = (function ($) {
             _filterModal = $('#filterModal');
             _filterTable = $('#filterTable');
             _hotContainer = $('#hot-container');
-            _setUpHideModal = $('#setUpHideModal');
-            _setUpHideList = $('#setUpHideList');
             _moveAxesModal = $('#moveAxesModal');
             _moveAxesList = $('#moveAxesList');
             _moveAxesLabel = $('#moveAxesLabel');
@@ -121,7 +117,6 @@ var NCubeEditor2 = (function ($) {
 
             addSelectAllNoneListeners();
             addColumnEditListeners();
-            addSetUpHideListeners();
             addMoveAxesListeners();
             addEditCellListeners();
             addSearchListeners();
@@ -425,39 +420,26 @@ var NCubeEditor2 = (function ($) {
     }
 
     function setUpHide() {
-        var i, axis, axisName, btnClass;
-        var html = '';
-
-        $('#setUpHideLabel')[0].innerHTML = cubeName + ' - Viewable Area Is Too Large';
-        $('#setUpHideColInstructions')[0].innerHTML = 'Select an axis to hide columns and shrink the workable area for '
-            + 'this cube. You can hide columns on multiple axes. The viewable row limitation is set at '
-            + MAX_VISIBLE_ROWS.toLocaleString() + '. You are currently trying to view ' + numRows.toLocaleString() + ' rows.';
-
+        var i, axis, opts;
+        var axisData = [];
         for (i = 0; i < colOffset; i++) {
-            axis = null;
             axis = axes[i];
-            axisName = axis.name;
-            btnClass = _hiddenColumns.hasOwnProperty(axisName) ? 'btn-warning' : 'btn-primary';
-            html += '<li><button class="' + btnClass + '">' + axisName + '</button> ';
-            html += axis.columnLength + ' columns';
-            html += '</li>';
+            axisData.push({
+                name: axis.name,
+                buttonClass: 'btn-' + (_hiddenColumns.hasOwnProperty(axis.name.toLowerCase()) ? FormBuilder.BOOTSTRAP_TYPE.WARNING : FormBuilder.BOOTSTRAP_TYPE.PRIMARY),
+                columnLength: axis.columnLength
+            });
         }
-        _setUpHideList.empty();
-        _setUpHideList.append(html);
-        _setUpHideList.find('button').on('click', function() {
-            _setUpHideModal.modal('hide');
-            hideColumns(this.textContent);
-        });
 
-        _setUpHideModal.modal();
-    }
-
-    function addSetUpHideListeners() {
-        $('#setUpHideCancel').on('click', setUpHideCancel);
-    }
-
-    function setUpHideCancel() {
-        _setUpHideModal.modal('hide');
+        addHotBeforeKeyDown();
+        opts = {
+            cubeName: cubeName,
+            numRows: numRows,
+            axisData: axisData,
+            onAxisClick: hideColumns,
+            onClose: removeHotBeforeKeyDown
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.largeCubeHideColumns(opts));
     }
 
     function setSearchHelperText() {
