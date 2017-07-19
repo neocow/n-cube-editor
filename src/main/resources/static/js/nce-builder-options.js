@@ -1454,6 +1454,61 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  cubeName
+     *  numRows
+     *  onAxisClick
+     *  axisData - array
+     *      name
+     *      buttonClass
+     *      columnLength
+     */
+    function largeCubeHideColumns(opts) {
+        function getAxisInputs(axisData) {
+            var i, len, axisInfo, axisName;
+            var formInputs = {};
+
+            for (i = 0, len = axisData.length; i < len; i++) {
+                axisInfo = axisData[i];
+                axisName = axisInfo.name;
+                formInputs[axisName + 'Button'] = {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    buttonClass: axisInfo.buttonClass,
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: axisName,
+                    listeners: {
+                        click: function(e) {
+                            e.preventDefault();
+                            opts.onAxisClick(this.textContent);
+                        }
+                    }
+                };
+                formInputs[axisName + 'Label'] = {
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                    label: axisInfo.columnLength + ' columns'
+                };
+                formInputs[axisName + 'Newline'] = {
+                    type: FormBuilder.INPUT_TYPE.READONLY
+                };
+            }
+
+            return formInputs;
+        }
+
+        return {
+            title: opts.cubeName,
+            instructionsTitle: 'Instructions - Viewable Area Is Too Large',
+            instructionsText: 'Select an axis to hide columns and shrink the workable area for '
+                + 'this cube. You can hide columns on multiple axes. The viewable row limitation is set at '
+                + MAX_VISIBLE_ROWS.toLocaleString() + '. You are currently trying to view ' + opts.numRows.toLocaleString() + ' rows.',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            closeButtonText: 'Close',
+            formInputs: getAxisInputs(opts.axisData)
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -1468,6 +1523,7 @@ var NCEBuilderOptions = (function () {
         requiredScope: requiredScope,
         globalComparator: globalComparator,
         hideColumns: hideColumns,
+        largeCubeHideColumns: largeCubeHideColumns,
         selectBranch: selectBranch,
         createSnapshotFromRelease: createSnapshotFromRelease,
         changeSnapshotVersion: changeSnapshotVersion,

@@ -1000,11 +1000,11 @@ var FormBuilder = (function ($) {
     }
 
     function closeModal() {
+        _modal.remove();
+        _modal = null;
         if (typeof _options.onClose === FUNCTION) {
             _options.onClose();
         }
-        _modal.remove();
-        _modal = null;
     }
 
     function checkAll(state, queryStr) {
