@@ -496,7 +496,11 @@ var NCEBuilderOptions = (function () {
                     data: 'DISCRETE',
                     listeners: {
                         change: function() {
+                            var type = this.value;
                             FormBuilder.findElementByKey('valueType').trigger('populate');
+                            FormBuilder.toggle('default', type !== 'NEAREST');
+                            FormBuilder.toggle('sorted', ['RULE','NEAREST'].indexOf(type) === -1);
+                            FormBuilder.toggle('fireAll', type === 'RULE');
                         }
                     }
                 },
@@ -513,6 +517,20 @@ var NCEBuilderOptions = (function () {
                             FormBuilder.populateSelect($(this), valueTypes, initVal);
                         }
                     }
+                },
+                default: {
+                    label: 'Has Default Column',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    default: true
+                },
+                sorted: {
+                    label: 'Sorted',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX
+                },
+                fireAll: {
+                    label: 'Fire all matching (versus first matching)',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    hidden: true
                 }
             }
         };

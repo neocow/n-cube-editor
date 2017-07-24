@@ -351,11 +351,12 @@ var FormBuilder = (function ($) {
         var control, nearest;
         var formInputInfo = findFormInputByKey(_options.formInputs, formInputKey);
         var formInput = formInputInfo.current;
+        var existingControl = findInputGroup(formInput);
         formInput.hidden = forceState !== undefined && forceState !== null ? !forceState : !formInput.hidden;
 
         if (formInput.hidden) {
-            findInputGroup(formInput).remove();
-        } else {
+            existingControl.remove();
+        } else if (!existingControl.length) {
             if (formInput.type === INPUT_TYPE.SECTION) {
                 control = initSubSectionFromFormInput(formInput);
                 addToSubSection(control, buildFormSection(formInput.formInputs));

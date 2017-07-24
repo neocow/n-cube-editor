@@ -2594,7 +2594,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function checkCubeUpdatePermissions(axisName, cacheable) {
-        var canUpdate, resource, appId, cacheId;
+        var permCheck, canUpdate, resource, appId, cacheId;
         cacheId = axisName === undefined || axisName === null ? '*cube' : axisName;
         if (_permCache.hasOwnProperty(cacheId)) {
             return _permCache[cacheId];
@@ -2604,11 +2604,12 @@ var NCubeEditor2 = (function ($) {
         if (axisName !== undefined && axisName !== null) {
             resource += '/' + axisName;
         }
-        canUpdate = nce.checkPermissions(appId, resource, PERMISSION_ACTION.UPDATE);
+        permCheck = nce.checkPermissions(appId, resource, [PERMISSION_ACTION.UPDATE, PERMISSION_ACTION.COMMIT]);
+        canUpdate = permCheck[PERMISSION_ACTION.UPDATE];
         if (cacheable) {
             _permCache[cacheId] = canUpdate;
         }
-        if (canUpdate && !nce.checkPermissions(appId, resource, PERMISSION_ACTION.COMMIT) && !nce.hasBeenWarnedAboutUpdatingIfUnableToCommitCube()) {
+        if (canUpdate && !permCheck[PERMISSION_ACTION.COMMIT] && !nce.hasBeenWarnedAboutUpdatingIfUnableToCommitCube()) {
             nce.showNote('You must have someone with the correct permissions commit changes to this cube.', 'Warning!');
             nce.hasBeenWarnedAboutUpdatingIfUnableToCommitCube(true);
         }
@@ -4417,20 +4418,20 @@ var NCubeEditor2 = (function ($) {
             return;
         }
 
+        addHotBeforeKeyDown();
         opts = {
             appSelectList: nce.loadAppNames(),
             populateVersionFunc: nce.getVersions,
             populateBranchFunc: nce.getBranchNamesByAppId,
             populateCubeFunc: nce.getCubeListForApp,
             populateAxisFunc: nce.getAxesFromCube,
-            afterSave: addAxisOk,
-            onClose: removeHotBeforeKeyDown
+            afterSave: addAxisOk
         };
         FormBuilder.openBuilderModal(NCEBuilderOptions.addAxis(opts));
     }
     
     function addAxisOk(data) {
-        var params, refAppId, transformAppId, result, axisOrderMetaProp, splitVer;
+        var params, refAppId, transformAppId, result, axisOrderMetaProp, splitVer, axisOpts;
         var axisName = data.name;
         var appId = nce.getSelectedTabAppId();
         if (!checkCubeUpdatePermissions(axisName)) {
@@ -4445,9 +4446,15 @@ var NCubeEditor2 = (function ($) {
                 splitVer = data.transVer.split('-');
                 transformAppId = appIdFrom(data.transApp, splitVer[0], splitVer[1], data.transBranch);
             }
-            params = [refAppId, data.refCube, data.refAxis, transformAppId, data.transCube];
+            axisOpts = { hasDefault: data.default || false };
+            params = [refAppId, data.refCube, data.refAxis, transformAppId, data.transCube, axisOpts];
         } else {
-            params = [data.type, data.valueType];
+            axisOpts = {
+                hasDefault: data.default || false,
+                isSorted: data.sorted || false,
+                fireAll: data.fireAll || false
+            };
+            params = [data.type, data.valueType, axisOpts];
         }
 
         result = nce.call(CONTROLLER + CONTROLLER_METHOD.ADD_AXIS, [appId, cubeName, axisName].concat(params));
@@ -4465,6 +4472,7 @@ var NCubeEditor2 = (function ($) {
             clearFilters();
             markCubeModified();
             nce.loadCube();
+            editColumns(axisName);
         } else {
             nce.showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
