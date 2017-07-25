@@ -29,11 +29,12 @@ var NCubeJsonEditor = (function ($) {
                     save();
                 }
             });
+
+            _saveBtn = $('#saveButton');
+            _saveBtn.on('click', function () {
+                save();
+            });
         }
-        _saveBtn = $('#saveButton');
-        _saveBtn.on('click', function () {
-            save();
-        });
     }
 
     function scrollToSavedPosition() {
