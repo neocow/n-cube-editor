@@ -471,7 +471,7 @@ var NCubeEditor2 = (function ($) {
                 delay(function() {
                     runSearch();
                     searchDown();
-                }, PROGRESS_DELAY);
+                }, 500);
             }
         });
 
