@@ -2326,6 +2326,11 @@ var NCubeEditor2 = (function ($) {
             e.stopImmediatePropagation();
             onBreakReferenceClick(axis, $(this));
         });
+        div.find('a.anc-create-reference').on('click', function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            onCreateReferenceClick(axis);
+        });
         div.find('a.anc-update-axis').on('click', function (e) {
             e.preventDefault();
             closeAxisMenu();
@@ -2664,6 +2669,29 @@ var NCubeEditor2 = (function ($) {
         }
     }
 
+    function onCreateReferenceClick(axis) {
+        var opts = {
+
+        };
+        FormBuilder.openBuilderModal();
+    }
+
+    function createReferenceOk(data) {
+        var splitVer = data.refVer.split('-');
+        var refAppId = appIdFrom(data.refApp, splitVer[0], splitVer[1], data.refBranch);
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.CREATE_REFERENCE_FROM_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), data.axisName, refAppId, data.refCubeName]);
+        if (result.status) {
+            markCubeModified();
+            closeAxisMenu();
+            reload();
+            if (appIdsEqual(nce.getAppId(), refAppId)) {
+                nce.loadNCubes();
+            }
+        } else {
+            nce.showNote('Error creating new reference for axis ' + axis.name + ':<hr class="hr-small"/>' + result.data);
+        }
+    }
+
     function buildAxisMenuHtml(axis) {
         var axisName = axis.name;
         var isRef = axis.isRef;
@@ -2685,8 +2713,10 @@ var NCubeEditor2 = (function ($) {
             }
             html += '><a href="#" class="anc-axis-transform">Go to Axis Transform</a></li>';
             html += '<li><a href="#" class="anc-break-reference">Break Reference</a></li>';
-            html += '<li class="divider"/>';
+        } else {
+            html += '<li><a href="#" class="anc-create-reference">Add Axis Reference</a></li>';
         }
+        html += '<li class="divider"/>';
 
         html += '<li><a href="#" class="anc-update-axis">Update Axis...</a></li>';
         html += '<li><a href="#" class="anc-add-axis">Add Axis...</a></li>';

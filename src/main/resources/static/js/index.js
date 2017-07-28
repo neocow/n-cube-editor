@@ -2667,14 +2667,6 @@ var NCE = (function ($) {
         }
     }
 
-    function appIdsEqual(id1, id2) {
-        return id1 && id2
-            && id1.app     === id2.app
-            && id1.version === id2.version
-            && id1.status  === id2.status
-            && id1.branch  === id2.branch;
-    }
-
     function restoreCube() {
         var ul, result;
         if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
