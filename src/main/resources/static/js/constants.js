@@ -266,6 +266,7 @@ var CONTROLLER_METHOD = {
     CANCEL_PULL_REQUEST: 'cancelPullRequest',
     CHANGE_VERSION_VALUE: 'changeVersionValue',
     CHECK_PERMISSIONS: 'checkPermissions',
+    CHECK_PERMISSIONS_MULTIPLE: 'checkMultiplePermissions',
     CLEAR_CACHE: 'clearCache',
     COMMIT_BRANCH: 'commitBranch',
     COMMIT_CUBE: 'commitCube',

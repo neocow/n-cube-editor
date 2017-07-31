@@ -4502,7 +4502,9 @@ var NCubeEditor2 = (function ($) {
             clearFilters();
             markCubeModified();
             nce.loadCube();
-            editColumns(axisName);
+            if (!data.isRef) {
+                editColumns(axisName);
+            }
         } else {
             nce.showNote("Unable to add axis '" + axisName + "':<hr class=\"hr-small\"/>" + result.data);
         }
