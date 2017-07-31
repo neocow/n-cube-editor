@@ -2015,10 +2015,10 @@ var NCE = (function ($) {
 
     function callPermCheck(appId, resource, actions, checkModifiable) {
         var isList = typeof actions === OBJECT;
-        var result = call(CONTROLLER + CONTROLLER_METHOD.CHECK_PERMISSIONS, [appId, resource, isList ? actions : [actions]]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD[isList ? 'CHECK_PERMISSIONS_MULTIPLE' : 'CHECK_PERMISSIONS'], [appId, resource, actions]);
         if (result.status) {
             if (!checkModifiable || ensureModifiable(null, appId)) {
-                return isList ? result.data : result.data[actions]
+                return result.data;
             }
         } else {
             showNote('Unable to check permissions:<hr class="hr-small"/>' + result.data);
