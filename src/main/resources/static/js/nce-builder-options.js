@@ -1764,12 +1764,88 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  appName
+     *  onHtmlClick
+     *  onJsonClick
+     */
+    function deleteCubes(opts) {
+        function getValue(tr, key) {
+            return tr.find('.' + key)[0].textContent;
+        }
+
+        function onButtonClick(e, func) {
+            var tr = $(e.target).closest('tr');
+            var cubeName = getValue(tr, 'cubeName');
+            var cubeId = getValue(tr, 'cubeId');
+            var revId = getValue(tr, 'revId');
+            e.preventDefault();
+            func(cubeName, cubeId, revId);
+        }
+
+        return {
+            title: 'Delete Cubes from ' + opts.appName,
+            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Delete',
+            hasFilter: true,
+            hasSelectAllNone: true,
+            css: {margin: '0', width: '100%'},
+            columns: {
+                html: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    css: {width: '9%'},
+                    default: 'HTML',
+                    listeners: {
+                        click: function(e) {
+                            onButtonClick(e, opts.onHtmlClick);
+                        }
+                    }
+                },
+                json: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    css: {width: '9%'},
+                    default: 'JSON',
+                    listeners: {
+                        click: function(e) {
+                            onButtonClick(e, opts.onJsonClick);
+                        }
+                    }
+                },
+                isSelected: {
+                    heading: '',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    css: {}
+                },
+                cubeName: {
+                    heading: '',
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: {}
+                },
+                cubeId: {
+                    heading: '',
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: { display: 'none' }
+                },
+                revId: {
+                    heading: '',
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: { display: 'none' }
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
         copyBranch: copyBranch,
         deleteAllTests: deleteAllTests,
         deleteBranch: deleteBranch,
+        deleteCubes: deleteCubes,
         copyCube: copyCube,
         newCube: newCube,
         addAxis: addAxis,
