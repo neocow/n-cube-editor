@@ -5,3 +5,9 @@
 .form-builder-data-row td {
     padding: 1px;
 }
+
+.open>.form-builder-dropdown-menu:not(.has-submenu) {
+    max-height: 450px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}

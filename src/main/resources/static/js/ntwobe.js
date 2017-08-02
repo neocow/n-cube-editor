@@ -2329,7 +2329,7 @@ var NCubeEditor2 = (function ($) {
         div.find('a.anc-create-reference').on('click', function(e) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            onCreateReferenceClick(axis);
+            onCreateReferenceClick(axisName);
         });
         div.find('a.anc-update-axis').on('click', function (e) {
             e.preventDefault();
@@ -2669,26 +2669,35 @@ var NCubeEditor2 = (function ($) {
         }
     }
 
-    function onCreateReferenceClick(axis) {
+    function onCreateReferenceClick(axisName) {
         var opts = {
-
+            axisName: axisName,
+            appSelectList: nce.loadAppNames(),
+            populateVersionFunc: nce.getVersions,
+            populateBranchFunc: nce.getBranchNamesByAppId,
+            populateCubeFunc: nce.getCubeListForApp,
+            populateAxisFunc: nce.getAxesFromCube,
+            afterSave: function(data) { createReferenceOk(data, axisName); },
+            onClose: removeHotBeforeKeyDown
         };
-        FormBuilder.openBuilderModal();
+        addHotBeforeKeyDown();
+        FormBuilder.openBuilderModal(NCEBuilderOptions.createReferenceFromAxis(opts));
     }
 
-    function createReferenceOk(data) {
+    function createReferenceOk(data, axisName) {
         var splitVer = data.refVer.split('-');
         var refAppId = appIdFrom(data.refApp, splitVer[0], splitVer[1], data.refBranch);
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.CREATE_REFERENCE_FROM_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), data.axisName, refAppId, data.refCubeName]);
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.CREATE_REFERENCE_FROM_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName, refAppId, data.refCube, data.refAxis]);
         if (result.status) {
             markCubeModified();
             closeAxisMenu();
             reload();
             if (appIdsEqual(nce.getAppId(), refAppId)) {
                 nce.loadNCubes();
+                nce.runSearch();
             }
         } else {
-            nce.showNote('Error creating new reference for axis ' + axis.name + ':<hr class="hr-small"/>' + result.data);
+            nce.showNote('Error creating new reference for axis ' + axisName + ':<hr class="hr-small"/>' + result.data);
         }
     }
 
