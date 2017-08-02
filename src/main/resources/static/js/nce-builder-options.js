@@ -1717,6 +1717,53 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  appId
+     *  cubeName
+     *  appSelectList
+     *  populateVersionFunc
+     */
+    function newCube(opts) {
+        var appId = opts.appId;
+        return {
+            title: 'New n-cube',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Create',
+            formInputs: {
+                app: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'App',
+                    selectOptions: opts.appSelectList,
+                    data: appId.app,
+                    listeners: {
+                        change: function() {
+                            populateFormElement('version');
+                        }
+                    }
+                },
+                version: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'SNAPSHOT Version',
+                    data: appId.version,
+                    listeners: {
+                        populate: function() {
+                            var app = FormBuilder.getInputValue('app') || appId.app;
+                            var versions = opts.populateVersionFunc(app);
+                            FormBuilder.populateTextSelect($(this).parent(), versions);
+                        }
+                    }
+                },
+                cubeName: {
+                    label: 'New n-cube name'
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
@@ -1724,6 +1771,7 @@ var NCEBuilderOptions = (function () {
         deleteAllTests: deleteAllTests,
         deleteBranch: deleteBranch,
         copyCube: copyCube,
+        newCube: newCube,
         addAxis: addAxis,
         deleteAxis: deleteAxis,
         updateAxis: updateAxis,

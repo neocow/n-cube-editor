@@ -1657,9 +1657,6 @@ var NCE = (function ($) {
         $('#newCubeMenu').on('click', function () {
             newCube();
         });
-        $('#newCubeSave').on('click', function () {
-            newCubeSave();
-        });
         $('#dupeCubeCopy').on('click', function () {
             dupeCubeCopy();
         });
@@ -2520,48 +2517,38 @@ var NCE = (function ($) {
     }
 
     function newCube() {
+        var opts;
         if (isHeadSelected()) {
             selectBranch();
             return false;
         }
 
-        $('#newCubeAppName').val(_selectedApp);
-        $('#newCubeStatus').val('SNAPSHOT');
-        $('#newCubeVersion').val(_selectedVersion);
-        $('#newCubeName').val('');
-        buildDropDown('#newCubeAppList', '#newCubeAppName', loadAppNames(), function (app)
-        {
-            buildVersionsDropdown('#existVersionList', '#newCubeVersion', app);
-        });
-        buildVersionsDropdown('#existVersionList', '#newCubeVersion');
-        $('#newCubeModal').modal();
+        opts = {
+            appId: getAppId(),
+            appSelectList: loadAppNames(),
+            populateVersionFunc: function(app) { return getAppVersions(app, STATUS.SNAPSHOT); },
+            afterSave: newCubeSave
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.newCube(opts));
     }
 
-    function buildVersionsDropdown(listId, inputId, app, callback) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app || _selectedApp]);
-        if (result.status) {
-            buildDropDown(listId, inputId, result.data, callback);
-        } else {
-            showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
-        }
-    }
+    function newCubeSave(data) {
+        var appId, result;
+        var app = data.app;
+        var version = data.version;
+        var cubeName = data.cubeName;
 
-    function newCubeSave() {
-        var cubeName, version, appId, result;
-        $('#newCubeModal').modal('hide');
-        version = $('#newCubeVersion').val();
         if (!version) {
             showNote("Note", "Version must be x.y.z");
             return;
         }
-        cubeName = $('#newCubeName').val();
         appId = getAppId();
         appId.version = version;
-        appId.app = $('#newCubeAppName').val();
-        result = call("ncubeController.createCube", [appId, cubeName]);
+        appId.app = app;
+        result = call(CONTROLLER + CONTROLLER_METHOD.CREATE_CUBE, [appId, cubeName]);
         if (result.status) {
-            saveSelectedApp(appId.app);
-            saveSelectedVersion(appId.version);
+            saveSelectedApp(app);
+            saveSelectedVersion(version);
             addToVisitedBranchesList(appId);
             loadAppListView();
             loadVersionListView();
@@ -2574,7 +2561,6 @@ var NCE = (function ($) {
     }
 
     function deleteCube() {
-        var cubeLinks, i, len, cubeName, html;
         if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
             showNote('Need to have an application, version, and status selected first.');
             return;

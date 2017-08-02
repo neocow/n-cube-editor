@@ -86,33 +86,6 @@ function keyCount(obj) {
 }
 
 /**
- * Fill the list identified by listId, with items from the list 'list',
- * where the list is an array of Strings.  A click listener will be
- * added to each item, so that when the user clicks on an itemin the list,
- * the input identified by inputId, will be filled with the selected text,
- * and the passed in callback function will be called on the click (selection).
- */
-function buildDropDown(listId, inputId, list, callback) {
-    var ul = $(listId);
-    ul.empty();
-    $.each(list, function (key, value) {
-        var li = $('<li/>');
-        var anchor = $('<a href="#"/>');
-        anchor.html(value);
-        anchor.click(function (e)
-        {   // User clicked on a dropdown entry, copy its text to input field
-            e.preventDefault();
-            $(inputId).val(anchor.html());
-            if (callback) {
-                callback(anchor.html());
-            }
-        });
-        ul.append(li);
-        li.append(anchor);
-    });
-}
-
-/**
  * SheetClip - Spreadsheet Clipboard Parser
  * version 0.2
  *

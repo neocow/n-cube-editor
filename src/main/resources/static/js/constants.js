@@ -273,6 +273,7 @@ var CONTROLLER_METHOD = {
     COPY_BRANCH: 'copyBranch',
     COPY_CELLS: 'copyCells',
     CREATE_BRANCH: 'createBranch',
+    CREATE_CUBE: 'createCube',
     CREATE_NEW_TEST: 'createNewTest',
     CREATE_REFERENCE_FROM_AXIS: 'createReferenceFromAxis',
     DELETE_AXIS: 'deleteAxis',
