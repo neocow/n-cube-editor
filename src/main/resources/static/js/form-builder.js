@@ -158,7 +158,7 @@ var FormBuilder = (function ($) {
         var modal = $(html).on('shown.bs.modal', function() {
             makeModalDraggable();
             addModalFilter();
-            positionDropdownMenus();
+            positionDropdownMenus(_modal);
         }).on('hidden.bs.modal', function() {
             closeModal();
         });
@@ -348,7 +348,7 @@ var FormBuilder = (function ($) {
     }
 
     function toggle(formInputKey, forceState) {
-        var control, nearest;
+        var control, nearest, sectionControl;
         var formInputInfo = findFormInputByKey(_options.formInputs, formInputKey);
         var formInput = formInputInfo.current;
         var existingControl = findInputGroup(formInput);
@@ -359,9 +359,12 @@ var FormBuilder = (function ($) {
         } else if (!existingControl.length) {
             if (formInput.type === INPUT_TYPE.SECTION) {
                 control = initSubSectionFromFormInput(formInput);
-                addToSubSection(control, buildFormSection(formInput.formInputs));
+                sectionControl = buildFormSection(formInput.formInputs);
+                positionDropdownMenus(sectionControl);
+                addToSubSection(control, sectionControl);
             } else {
                 control = buildFormControl(formInput);
+                positionDropdownMenus(control);
             }
 
             if (formInputInfo.hasOwnProperty('before')) {
@@ -982,8 +985,8 @@ var FormBuilder = (function ($) {
         refreshItems();
     }
 
-    function positionDropdownMenus() {
-        _modal.find('.dropdown-toggle').on('click', function () {
+    function positionDropdownMenus(el) {
+        el.find('.dropdown-toggle').on('click', function () {
             var contentOffset;
             var button = $(this);
             var offset = button.offset();
@@ -996,7 +999,9 @@ var FormBuilder = (function ($) {
                 dropDownLeft -= contentOffset.left;
             }
 
-            button.parent().find('ul').css({position: 'fixed', top: dropDownTop + 'px', left: dropDownLeft + 'px'});
+            button.parent().find('ul')
+                .addClass('form-builder-dropdown-menu')
+                .css({position: 'fixed', top: dropDownTop + 'px', left: dropDownLeft + 'px'});
         });
     }
 

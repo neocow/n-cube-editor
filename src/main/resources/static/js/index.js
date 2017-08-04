@@ -88,9 +88,7 @@ var NCE = (function ($) {
     var _branchCompareUpdateOk = $('#branchCompareUpdateOk');
     var _branchCompareUpdateMenu = $('#branchCompareUpdate');
     var _branchCompareUpdateList = $('#branchCompareUpdateList');
-    var _deleteCubeList = $('#deleteCubeList');
     var _deletedCubeList = $('#deletedCubeList');
-    var _deleteCubeLabel = $('#deleteCubeLabel');
     var _revisionHistoryList = $('#revisionHistoryList');
     var _revisionHistoryLabel = $('#revisionHistoryLabel');
     var _diffModalMerge = $('#diffModalMerge');
@@ -121,7 +119,6 @@ var NCE = (function ($) {
     var _branchCompareUpdateModal = $('#branchCompareUpdateModal');
     var _revisionHistoryModal = $('#revisionHistoryModal');
     var _restoreCubeModal = $('#restoreCubeModal');
-    var _deleteCubeModal = $('#deleteCubeModal');
     var _viewPullRequestsModal = $('#view-pull-requests-modal');
 
     preInit();
@@ -1657,17 +1654,11 @@ var NCE = (function ($) {
         $('#newCubeMenu').on('click', function () {
             newCube();
         });
-        $('#newCubeSave').on('click', function () {
-            newCubeSave();
-        });
         $('#dupeCubeCopy').on('click', function () {
             dupeCubeCopy();
         });
         $('#deleteCubeMenu').on('click', function () {
             deleteCube();
-        });
-        $('#deleteCubeOk').on('click', function () {
-            deleteCubeOk();
         });
         $('#restoreCubeMenu').on('click', function () {
             restoreCube();
@@ -2520,48 +2511,38 @@ var NCE = (function ($) {
     }
 
     function newCube() {
+        var opts;
         if (isHeadSelected()) {
             selectBranch();
             return false;
         }
 
-        $('#newCubeAppName').val(_selectedApp);
-        $('#newCubeStatus').val('SNAPSHOT');
-        $('#newCubeVersion').val(_selectedVersion);
-        $('#newCubeName').val('');
-        buildDropDown('#newCubeAppList', '#newCubeAppName', loadAppNames(), function (app)
-        {
-            buildVersionsDropdown('#existVersionList', '#newCubeVersion', app);
-        });
-        buildVersionsDropdown('#existVersionList', '#newCubeVersion');
-        $('#newCubeModal').modal();
+        opts = {
+            appId: getAppId(),
+            appSelectList: loadAppNames(),
+            populateVersionFunc: function(app) { return getAppVersions(app, STATUS.SNAPSHOT); },
+            afterSave: newCubeSave
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.newCube(opts));
     }
 
-    function buildVersionsDropdown(listId, inputId, app, callback) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_APP_VERSIONS, [app || _selectedApp]);
-        if (result.status) {
-            buildDropDown(listId, inputId, result.data, callback);
-        } else {
-            showNote('Failed to load App versions:<hr class="hr-small"/>' + result.data);
-        }
-    }
+    function newCubeSave(data) {
+        var appId, result;
+        var app = data.app;
+        var version = data.version;
+        var cubeName = data.cubeName;
 
-    function newCubeSave() {
-        var cubeName, version, appId, result;
-        $('#newCubeModal').modal('hide');
-        version = $('#newCubeVersion').val();
         if (!version) {
             showNote("Note", "Version must be x.y.z");
             return;
         }
-        cubeName = $('#newCubeName').val();
         appId = getAppId();
         appId.version = version;
-        appId.app = $('#newCubeAppName').val();
-        result = call("ncubeController.createCube", [appId, cubeName]);
+        appId.app = app;
+        result = call(CONTROLLER + CONTROLLER_METHOD.CREATE_CUBE, [appId, cubeName]);
         if (result.status) {
-            saveSelectedApp(appId.app);
-            saveSelectedVersion(appId.version);
+            saveSelectedApp(app);
+            saveSelectedVersion(version);
             addToVisitedBranchesList(appId);
             loadAppListView();
             loadVersionListView();
@@ -2573,8 +2554,28 @@ var NCE = (function ($) {
         }
     }
 
+    function buildFbCubesListTableData(dtos) {
+        var i, len, dto, keys;
+        var tableData = [];
+        if (typeof dtos === OBJECT) {
+            keys = Object.keys(dtos);
+            len = keys.length;
+        } else {
+            len = dtos.length;
+        }
+        for (i = 0; i < len; i++) {
+            dto = keys ? dtos[keys[i]] : dtos[i];
+            tableData.push({
+                cubeName: dto.name,
+                cubeId: dto.id,
+                revId: dto.revision
+            });
+        }
+        return tableData;
+    }
+
     function deleteCube() {
-        var cubeLinks, i, len, cubeName, html;
+        var opts, tableData;
         if (!_selectedApp || !_selectedVersion || !_selectedStatus) {
             showNote('Need to have an application, version, and status selected first.');
             return;
@@ -2584,46 +2585,54 @@ var NCE = (function ($) {
             return;
         }
 
-        _deleteCubeList.empty();
-        buildUlForRestoreDelete(_deleteCubeList, _cubeList);
-        _deleteCubeLabel[0].textContent = 'Delete Cubes in ' + _selectedVersion + ', ' + _selectedStatus;
-        _deleteCubeModal.modal();
+        opts = {
+            appName: _selectedApp,
+            onHtmlClick: onHtmlViewClick,
+            onJsonClick: onJsonViewClick,
+            afterSave: deleteCubeOk
+        };
+        tableData = buildFbCubesListTableData(_cubeList);
+        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteCubes(opts), tableData);
     }
 
-    function deleteCubeOk() {
-        var i, len, checkboxes, cubesToDelete;
-        _deleteCubeModal.modal('hide');
-        checkboxes = _deleteCubeList.find(':checked');
-        cubesToDelete = [];
-        for (i = 0, len = checkboxes.length; i < len; i++) {
-            cubesToDelete.push($(checkboxes[i]).parent()[0].textContent);
+    function deleteCubeOk(data) {
+        var i, len, row;
+        var cubesToDelete = [];
+        for (i = 0, len = data.length; i < len; i++) {
+            row = data[i];
+            if (row.isSelected) {
+                cubesToDelete.push(row.cubeName);
+            }
         }
         callDelete(cubesToDelete);
     }
 
+    function removeDeletedCubeFromOpenCubes(cubeInfo, cubeName) {
+        var x, cis;
+        delete _cubeList[cubeName.toLowerCase()];
+        if (_selectedCubeName === cubeName) {
+            _selectedCubeName = null;
+            _activeTabViewType = null;
+            delete localStorage[SELECTED_CUBE];
+            delete localStorage[ACTIVE_TAB_VIEW_TYPE];
+        }
+
+        cubeInfo[CUBE_INFO.NAME] = cubeName;
+        cis = getCubeInfoKey(cubeInfo);
+        for (x = _openCubes.length - 1; x >= 0; x--) {
+            if (_openCubes[x].cubeKey.indexOf(cis) > -1) {
+                _openCubes.splice(x, 1);
+            }
+        }
+    }
+
     function callDelete(cubesToDelete) {
-        var i, len, cubeInfo, cubeName, cis, x;
+        var i, len, cubeInfo;
         var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_CUBES, [getAppId(), cubesToDelete]);
         if (result.status) {
             cubeInfo = buildCubeInfo(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch);
             for (i = 0, len = cubesToDelete.length; i < len; i++) {
-                cubeName = cubesToDelete[i];
-                delete _cubeList[cubeName.toLowerCase()];
-                if (_selectedCubeName === cubeName) {
-                    _selectedCubeName = null;
-                    _activeTabViewType = null;
-                    delete localStorage[SELECTED_CUBE];
-                    delete localStorage[ACTIVE_TAB_VIEW_TYPE];
-                }
-
-                cubeInfo[CUBE_INFO.NAME] = cubeName;
-
-                cis = getCubeInfoKey(cubeInfo);
-                for (x = _openCubes.length - 1; x >= 0; x--) {
-                    if (_openCubes[x].cubeKey.indexOf(cis) > -1) {
-                        _openCubes.splice(x, 1);
-                    }
-                }
+                removeDeletedCubeFromOpenCubes(cubeInfo, cubesToDelete[i]);
             }
             saveOpenCubeList();
             buildTabs(true);
@@ -2634,29 +2643,14 @@ var NCE = (function ($) {
     }
 
     function callDeleteFromTab(cubeToDelete) {
-        var cubeInfo, cubeName, cis, x;
+        var cubeInfo;
         var appId = getSelectedTabAppId();
         var result = call(CONTROLLER + CONTROLLER_METHOD.DELETE_CUBES, [appId, [cubeToDelete]]);
         if (result.status) {
             cubeInfo = buildCubeInfo(appId.app, appId.version, appId.status, appId.branch);
-            cubeName = cubeToDelete;
-            if (_selectedCubeName === cubeName) {
-                _selectedCubeName = null;
-                _activeTabViewType = null;
-                delete localStorage[SELECTED_CUBE];
-                delete localStorage[ACTIVE_TAB_VIEW_TYPE];
-            }
-            cubeInfo[CUBE_INFO.NAME] = cubeName;
-
-            cis = getCubeInfoKey(cubeInfo);
-            for (x = _openCubes.length - 1; x >= 0; x--) {
-                if (_openCubes[x].cubeKey.indexOf(cis) > -1) {
-                    _openCubes.splice(x, 1);
-                }
-            }
-
+            removeDeletedCubeFromOpenCubes(cubeInfo, cubeToDelete);
             if (appIdsEqual(appId, getAppId())) {
-                delete _cubeList[cubeName.toLowerCase()];
+                delete _cubeList[cubeToDelete.toLowerCase()];
                 runSearch();
             }
 
@@ -2665,14 +2659,6 @@ var NCE = (function ($) {
         } else {
             showNote("Unable to delete cubes: " + '<hr class="hr-small"/>' + result.data);
         }
-    }
-
-    function appIdsEqual(id1, id2) {
-        return id1 && id2
-            && id1.app     === id2.app
-            && id1.version === id2.version
-            && id1.status  === id2.status
-            && id1.branch  === id2.branch;
     }
 
     function restoreCube() {
@@ -2822,35 +2808,36 @@ var NCE = (function ($) {
     
     function addJsonHtmlListeners(ul) {
         ul.find('a.anc-html').on('click', function () {
-            onHtmlViewClick($(this));
+            var el = $(this);
+            onHtmlViewClick(el.data('cube-name'), el.data('cube-id'), el.data('rev-id'));
         });
         ul.find('a.anc-json').on('click', function () {
-            onJsonViewClick($(this));
+            var el = $(this);
+            onJsonViewClick(el.data('cube-name'), el.data('cube-id'), el.data('rev-id'));
         });
     }
 
-    function onHtmlViewClick(el) {
-        var suffix = '.html';
-        var title = el.data('cube-name') + '.rev.' + el.data('rev-id');
-        var oldWindow = window.open('', title + suffix);
-        var result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), el.data('cube-id'), JSON_MODE.HTML], {noResolveRefs:true});
+    function onHtmlViewClick(cubeName, cubeId, revId) {
+        var title = cubeName + '.rev.' + revId + '.html';
+        var oldWindow = window.open('', title);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), cubeId, JSON_MODE.HTML], {noResolveRefs:true});
         if (result.status) {
             oldWindow.document.removeChild(oldWindow.document.documentElement);
             oldWindow.document.write(result.data);
-            oldWindow.document.title = title + suffix;
+            oldWindow.document.title = title;
         }
     }
 
-    function onJsonViewClick(el) {
+    function onJsonViewClick(cubeName, cubeId, revId) {
         var w;
-        var result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), el.data('cube-id'), JSON_MODE.PRETTY], {noResolveRefs:true});
+        var result = call(CONTROLLER + CONTROLLER_METHOD.LOAD_CUBE_BY_ID, [getSelectedTabAppId(), cubeId, JSON_MODE.PRETTY], {noResolveRefs:true});
         if (result.status) {
             w = popoutAceEditor({
                 value: result.data,
                 readonly: true,
                 mode: 'json'
             });
-            w.document.title = el.data('cube-name') + '.rev.' + el.data('rev-id') + '.json';
+            w.document.title = cubeName + '.rev.' + revId + '.json';
         }
     }
 

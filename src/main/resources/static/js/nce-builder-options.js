@@ -12,7 +12,7 @@ var NCEBuilderOptions = (function () {
     }
 
     function populateFormElement(key) {
-        populateElement(FormBuilder.findElementByKey(key).trigger('populate'));
+        populateElement(FormBuilder.findElementByKey(key));
     }
 
     function populateElement(el) {
@@ -1527,13 +1527,327 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    /*
+     * additional required options:
+     *  axisName
+     *  appSelectList
+     *  populateVersionFunc
+     *  populateBranchFunc
+     *  populateCubeFunc
+     *  populateAxisFunc
+     */
+    function createReferenceFromAxis(opts) {
+        function buildFormInputs(exists) {
+            function populateAxis() {
+                if (exists) {
+                    populateFormElement('refAxis');
+                }
+            }
+
+            function populateCube() {
+                populateFormElement('refCube');
+                populateAxis();
+            }
+
+            function populateBranch() {
+                populateFormElement('refBranch');
+                populateCube();
+            }
+
+            function populateVersion() {
+                populateFormElement('refVer');
+                populateBranch();
+            }
+
+            function getValue(key) {
+                return FormBuilder.findElementByKey(key).val();
+            }
+
+            function getRefApp() {
+                return getValue('refApp');
+            }
+
+            function getRefVersionStatus() {
+                var version = getValue('refVer');
+                return version ? version.split('-') : null;
+            }
+
+            function getRefBranch() {
+                return getValue('refBranch');
+            }
+
+            function getInputType() {
+                return exists ? FormBuilder.INPUT_TYPE.SELECT : FormBuilder.INPUT_TYPE.TEXT_SELECT;
+            }
+
+            function getInputLayout() {
+                return exists ? FormBuilder.INPUT_LAYOUT.TABLE : FormBuilder.INPUT_LAYOUT.NEW_LINE;
+            }
+
+            function addTypeAndLayoutToInputs(formInputs) {
+                var i, len, input;
+                var keys = Object.keys(formInputs);
+                for (i = 0, len = keys.length; i < len; i++) {
+                    input = formInputs[keys[i]];
+                    input.type = getInputType();
+                    input.layout = getInputLayout();
+                }
+            }
+
+            function formBuilderPopulate(el, content) {
+                if (exists) {
+                    FormBuilder.populateSelect(el, content);
+                } else {
+                    FormBuilder.populateTextSelect(el.parent(), content);
+                }
+            }
+
+            function removeReleasesFromVersionList(versions) {
+                var i, len, version;
+                var newList = [];
+                for (i = 0, len = versions.length; i < len; i++) {
+                    version = versions[i];
+                    if (version.indexOf(STATUS.RELEASE) === -1) {
+                        newList.push(version);
+                    }
+                }
+                return newList;
+            }
+
+            var formInputs = {
+                refApp: {
+                    label: 'Application',
+                    selectOptions: opts.appSelectList,
+                    listeners: {
+                        change: populateVersion
+                    }
+                },
+                refVer: {
+                    label: 'Version',
+                    listeners: {
+                        change: populateBranch,
+                        populate: function() {
+                            var app = getRefApp();
+                            var versions = app ? opts.populateVersionFunc(app) : null;
+                            if (versions && !exists) {
+                                versions = removeReleasesFromVersionList(versions);
+                            }
+                            formBuilderPopulate($(this), versions);
+                        }
+                    }
+                },
+                refBranch: {
+                    label: 'Branch',
+                    listeners: {
+                        change: populateCube,
+                        populate: function() {
+                            var app = getRefApp();
+                            var verstat = getRefVersionStatus();
+                            var branches = (app && verstat) ? opts.populateBranchFunc(appIdFrom(app, verstat[0], verstat[1], 'HEAD')) : null;
+                            if (branches && !exists) {
+                                branches.splice(0, 1); // remove HEAD
+                            }
+                            formBuilderPopulate($(this), branches);
+                        }
+                    }
+                },
+                refCube: {
+                    label: 'Cube',
+                    listeners: {
+                        change: populateAxis,
+                        populate: function() {
+                            var app = getRefApp();
+                            var verstat = getRefVersionStatus();
+                            var branch = getRefBranch();
+                            var cubes = (app && verstat && branch) ? opts.populateCubeFunc(appIdFrom(app, verstat[0], verstat[1], branch)) : null;
+                            formBuilderPopulate($(this), cubes);
+                        }
+                    }
+                },
+                refAxis: {
+                    label: 'Axis',
+                    listeners: {
+                        populate: function() {
+                            var app = getRefApp();
+                            var verstat = getRefVersionStatus();
+                            var branch = getRefBranch();
+                            var cube = getValue('refCube');
+                            var axisNames = (app && verstat && branch && cube) ? opts.populateAxisFunc(appIdFrom(app, verstat[0], verstat[1], branch), cube) : null;
+                            formBuilderPopulate($(this), axisNames);
+                        }
+                    }
+                }
+            };
+
+            addTypeAndLayoutToInputs(formInputs);
+            return formInputs;
+        }
+
+        function buildSection(exists) {
+            return {
+                label: '',
+                type: FormBuilder.INPUT_TYPE.SECTION,
+                hidden: !exists,
+                formInputs: buildFormInputs(exists)
+            };
+        }
+
+        return {
+            title: 'Create Reference - ' + opts.axisName,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Save',
+            formInputs: {
+                isExistingRef: {
+                    label: 'Existing Reference Axis',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    default: true,
+                    listeners: {
+                        change: function() {
+                            FormBuilder.toggle('existingSection');
+                            FormBuilder.toggle('nonExistingSection');
+                        }
+                    }
+                },
+                existingSection: buildSection(true),
+                nonExistingSection: buildSection(false)
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  appId
+     *  cubeName
+     *  appSelectList
+     *  populateVersionFunc
+     */
+    function newCube(opts) {
+        var appId = opts.appId;
+        return {
+            title: 'New n-cube',
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Create',
+            formInputs: {
+                app: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'App',
+                    selectOptions: opts.appSelectList,
+                    data: appId.app,
+                    listeners: {
+                        change: function() {
+                            populateFormElement('version');
+                        }
+                    }
+                },
+                version: {
+                    type: FormBuilder.INPUT_TYPE.TEXT_SELECT,
+                    label: 'SNAPSHOT Version',
+                    data: appId.version,
+                    listeners: {
+                        populate: function() {
+                            var app = FormBuilder.getInputValue('app') || appId.app;
+                            var versions = opts.populateVersionFunc(app);
+                            FormBuilder.populateTextSelect($(this).parent(), versions);
+                        }
+                    }
+                },
+                cubeName: {
+                    label: 'New n-cube name'
+                }
+            }
+        };
+    }
+
+    /*
+     * additional required options:
+     *  appName
+     *  onHtmlClick
+     *  onJsonClick
+     */
+    function deleteCubes(opts) {
+        function getValue(tr, key) {
+            return tr.find('.' + key)[0].textContent;
+        }
+
+        function onButtonClick(e, func) {
+            var tr = $(e.target).closest('tr');
+            var cubeName = getValue(tr, 'cubeName');
+            var cubeId = getValue(tr, 'cubeId');
+            var revId = getValue(tr, 'revId');
+            e.preventDefault();
+            func(cubeName, cubeId, revId);
+        }
+
+        return {
+            title: 'Delete Cubes from ' + opts.appName,
+            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            saveButtonText: 'Delete',
+            hasFilter: true,
+            hasSelectAllNone: true,
+            css: {margin: '0', width: '100%'},
+            columns: {
+                html: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    css: {width: '9%'},
+                    default: 'HTML',
+                    listeners: {
+                        click: function(e) {
+                            onButtonClick(e, opts.onHtmlClick);
+                        }
+                    }
+                },
+                json: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    css: {width: '9%'},
+                    default: 'JSON',
+                    listeners: {
+                        click: function(e) {
+                            onButtonClick(e, opts.onJsonClick);
+                        }
+                    }
+                },
+                isSelected: {
+                    heading: '',
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    css: {}
+                },
+                cubeName: {
+                    heading: '',
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: {}
+                },
+                cubeId: {
+                    heading: '',
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: { display: 'none' }
+                },
+                revId: {
+                    heading: '',
+                    type: FormBuilder.INPUT_TYPE.READONLY,
+                    css: { display: 'none' }
+                }
+            }
+        };
+    }
+
     return {
         filterData: filterData,
         metaProperties: metaProperties,
         copyBranch: copyBranch,
         deleteAllTests: deleteAllTests,
         deleteBranch: deleteBranch,
+        deleteCubes: deleteCubes,
         copyCube: copyCube,
+        newCube: newCube,
         addAxis: addAxis,
         deleteAxis: deleteAxis,
         updateAxis: updateAxis,
@@ -1543,6 +1857,7 @@ var NCEBuilderOptions = (function () {
         hideColumns: hideColumns,
         largeCubeHideColumns: largeCubeHideColumns,
         selectBranch: selectBranch,
+        createReferenceFromAxis: createReferenceFromAxis,
         createSnapshotFromRelease: createSnapshotFromRelease,
         changeSnapshotVersion: changeSnapshotVersion,
         releaseVersion: releaseVersion,
