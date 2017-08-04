@@ -2687,7 +2687,7 @@ var NCubeEditor2 = (function ($) {
     function createReferenceOk(data, axisName) {
         var splitVer = data.refVer.split('-');
         var refAppId = appIdFrom(data.refApp, splitVer[0], splitVer[1], data.refBranch);
-        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.CREATE_REFERENCE_FROM_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName, refAppId, data.refCube, data.refAxis]);
+        var result = nce.call(CONTROLLER + CONTROLLER_METHOD.CREATE_REFERENCE_AXIS, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), axisName, refAppId, data.refCube, data.refAxis]);
         if (result.status) {
             markCubeModified();
             closeAxisMenu();

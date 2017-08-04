@@ -72,16 +72,16 @@
     </parent>
 
     <properties>
-        <version.ncube>4.0.18-SNAPSHOT</version.ncube>
-        <version.springboot>1.5.3.RELEASE</version.springboot>
+        <version.ncube>4.0.18</version.ncube>
+        <version.springboot>1.5.8.RELEASE</version.springboot>
         <version.ojdbc>12.2.0.1</version.ojdbc>
-        <version.plugin.maven-compiler>3.6.1</version.plugin.maven-compiler>
+        <version.plugin.maven-compiler>3.6.2</version.plugin.maven-compiler>
         <version.plugin.gmavenplus>1.5</version.plugin.gmavenplus>
         <version.plugin.nexus>1.6.7</version.plugin.nexus>
         <version.plugin.gpg>1.6</version.plugin.gpg>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <tomcat.version>8.5.12</tomcat.version>
+        <tomcat.version>8.5.16</tomcat.version>
         <nexusRepoUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2/</nexusRepoUrl>
         <nexusSnapshotUrl>https://oss.sonatype.org/content/repositories/snapshots/</nexusSnapshotUrl>
         <nexusReleaseRepoId>sonatype-nexus-staging</nexusReleaseRepoId>

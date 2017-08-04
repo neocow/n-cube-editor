@@ -275,7 +275,7 @@ var CONTROLLER_METHOD = {
     CREATE_BRANCH: 'createBranch',
     CREATE_CUBE: 'createCube',
     CREATE_NEW_TEST: 'createNewTest',
-    CREATE_REFERENCE_FROM_AXIS: 'createReferenceFromAxis',
+    CREATE_REFERENCE_AXIS: 'createRefAxis',
     DELETE_AXIS: 'deleteAxis',
     DELETE_BRANCH: 'deleteBranch',
     DELETE_CUBES: 'deleteCubes',
