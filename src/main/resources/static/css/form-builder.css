@@ -11,3 +11,10 @@
     overflow-y: auto;
     overflow-x: hidden;
 }
+
+.form-builder-data-table th {
+    position: sticky;
+    background: white;
+    top: 0;
+    z-index: 100;
+}
