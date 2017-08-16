@@ -3166,32 +3166,33 @@ var NCE = (function ($) {
         var branchName, i, len;
         var branchNamesWithoutHead = [];
         setReleaseCubesProgress(0, 'Updating branch names...');
-        if (newSnapVer) {
-            getBranchNames();
-            for (i = 0, len = _branchNames.length; i < len; i++) {
-                branchName = _branchNames[i];
-                if (branchName !== head) {
-                    branchNamesWithoutHead.push(branchName);
-                }
-            }
-            if (branchNamesWithoutHead.length) {
-                moveBranch(appId, newSnapVer, branchNamesWithoutHead, 0);
-                return;
+        getBranchNames();
+
+        for (i = 0, len = _branchNames.length; i < len; i++) {
+            branchName = _branchNames[i];
+            if (branchName !== head) {
+                branchNamesWithoutHead.push(branchName);
             }
         }
-        releaseVersion(appId, newSnapVer);
+        if (branchNamesWithoutHead.length) {
+            moveOrDeleteBranch(appId, newSnapVer, branchNamesWithoutHead, 0);
+        } else {
+            releaseVersion(appId, newSnapVer);
+        }
     }
 
-    function moveBranch(appId, newSnapVer, branchNames, branchIdx) {
+    function moveOrDeleteBranch(appId, newSnapVer, branchNames, branchIdx) {
+        var method = newSnapVer ? CONTROLLER_METHOD.MOVE_BRANCH : CONTROLLER_METHOD.DELETE_BRANCH;
+        var params = newSnapVer ? [appId, newSnapVer] : [appId];
         var len = branchNames.length;
         var progress = Math.round(branchIdx / (len + 1) * 100);
 
         appId.branch = branchNames[branchIdx];
         setReleaseCubesProgress(progress, 'Processing branch ' + (branchIdx + 1) + ' of ' + len + ': ' + appId.branch);
-        call(CONTROLLER + CONTROLLER_METHOD.MOVE_BRANCH, [appId, newSnapVer], {callback: function(result) {
+        call(CONTROLLER + method, params, {callback: function(result) {
             if (result.status) {
                 if (branchIdx < len - 1) {
-                    moveBranch(appId, newSnapVer, branchNames, branchIdx + 1);
+                    moveOrDeleteBranch(appId, newSnapVer, branchNames, branchIdx + 1);
                 } else {
                     releaseVersion(appId, newSnapVer);
                 }
@@ -3246,6 +3247,8 @@ var NCE = (function ($) {
                 if (newSnapVer) {
                     updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
                     saveSelectedVersion(newSnapVer);
+                } else {
+                    saveSelectedStatus(STATUS.RELEASE);
                 }
                 setReleaseCubesProgress(100, 'Success!', true);
                 loadVersionListView();
