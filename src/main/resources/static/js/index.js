@@ -3589,7 +3589,7 @@ var NCE = (function ($) {
     }
 
     function serverStats() {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.HEARTBEAT, [{}, true]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_SERVER_STATS, [true]);
         if (!result.status) {
             showNote('Unable to fetch server statistics:<hr class="hr-small"/>' + result.data);
             return;

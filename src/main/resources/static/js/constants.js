@@ -307,6 +307,7 @@ var CONTROLLER_METHOD = {
     GET_REFERENCES_FROM: 'getReferencesFrom',
     GET_REQUIRED_SCOPE: 'getRequiredScope',
     GET_REVISION_HISTORY: 'getRevisionHistory',
+    GET_SERVER_STATS: 'getServerStats',
     GET_TESTS: 'getTests',
     GET_VERSIONS: 'getVersions',
     HEARTBEAT: 'heartBeat',
