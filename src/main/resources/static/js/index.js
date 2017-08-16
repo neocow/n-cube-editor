@@ -3130,11 +3130,6 @@ var NCE = (function ($) {
         _releaseCubesNewVersion = data.newVersion;
 
         setInterval(updateProgressUi, ONE_SECOND_TIMEOUT);
-        if (!_releaseCubesNewVersion) {
-            setReleaseCubesProgress(0, 'No version set.', true);
-            return;
-        }
-
         _isReleasePending = true;
         NCEBuilderOptions.releaseVersion({}).toggleReleaseButton(false);
         setReleaseCubesProgress(0, 'Locking app...');
@@ -3143,16 +3138,15 @@ var NCE = (function ($) {
 
     function lockAppForRelease(appId, newSnapVer) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [appId]);
-        if (result.status) {
-            if (result.data) {
-                lockAppForReleaseCallback(appId, newSnapVer);
-                return;
-            }
-        } else {
+        if (!result.status){
             setReleaseCubesProgress(0, 'Error checking lock: ' + result.data, true);
             return;
         }
-        
+        if (result.data) {
+            lockAppForReleaseCallback(appId, newSnapVer);
+            return;
+        }
+
         call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, true], {callback: function(result) {
             if (result.status) {
                 setTimeout(function() {
@@ -3168,19 +3162,20 @@ var NCE = (function ($) {
         var branchName, i, len;
         var branchNamesWithoutHead = [];
         setReleaseCubesProgress(0, 'Updating branch names...');
-        getBranchNames();
-        
-        for (i = 0, len = _branchNames.length; i < len; i++) {
-            branchName = _branchNames[i];
-            if (branchName !== head) {
-                branchNamesWithoutHead.push(branchName);
+        if (newSnapVer) {
+            getBranchNames();
+            for (i = 0, len = _branchNames.length; i < len; i++) {
+                branchName = _branchNames[i];
+                if (branchName !== head) {
+                    branchNamesWithoutHead.push(branchName);
+                }
+            }
+            if (branchNamesWithoutHead.length) {
+                moveBranch(appId, newSnapVer, branchNamesWithoutHead, 0);
+                return;
             }
         }
-        if (branchNamesWithoutHead.length) {
-            moveBranch(appId, newSnapVer, branchNamesWithoutHead, 0);
-        } else {
-            releaseVersion(appId, newSnapVer);
-        }
+        releaseVersion(appId, newSnapVer);
     }
 
     function moveBranch(appId, newSnapVer, branchNames, branchIdx) {
@@ -3209,7 +3204,11 @@ var NCE = (function ($) {
         setReleaseCubesProgress(progress, 'Processing release of HEAD...');
         call(CONTROLLER + CONTROLLER_METHOD.RELEASE_VERSION, [appId, newSnapVer], {callback: function(result) {
             if (result.status) {
-                copyReleasedHeadToNewSnapshot(appId, newSnapVer, progress);
+                if (newSnapVer) {
+                    copyReleasedHeadToNewSnapshot(appId, newSnapVer, progress);
+                } else {
+                    finalizeRelease(appId, newSnapVer);
+                }
             } else {
                 setReleaseCubesProgress(progress, 'Error: ' + result.data, true);
             }
@@ -3240,9 +3239,11 @@ var NCE = (function ($) {
         setReleaseCubesProgress(100, 'Unlocking app... ');
         call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, false], {callback: function(result) {
             if (result.status) {
+                if (newSnapVer) {
+                    updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
+                    saveSelectedVersion(newSnapVer);
+                }
                 setReleaseCubesProgress(100, 'Success!', true);
-                updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
-                saveSelectedVersion(newSnapVer);
                 loadVersionListView();
                 loadNCubes();
                 loadCube();
