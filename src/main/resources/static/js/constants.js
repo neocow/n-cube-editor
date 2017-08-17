@@ -309,6 +309,7 @@ var CONTROLLER_METHOD = {
     GET_REVISION_HISTORY: 'getRevisionHistory',
     GET_TESTS: 'getTests',
     GET_VERSIONS: 'getVersions',
+    HEALTH: 'health',
     HEARTBEAT: 'heartBeat',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',

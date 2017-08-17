@@ -1409,7 +1409,11 @@ var NCE = (function ($) {
     }
 
     function updateCubeLeftHandChangedStatus(cubeName, changeType) {
-        _cubeList[cubeName.toLowerCase()].changed = true;
+        var cubeChanged = _cubeList[cubeName.toLowerCase()];
+        if(cubeChanged){
+            cubeChanged.changed = true;
+        }
+
         _listOfCubes.find('li a')
             .filter(function () { return this.innerText === cubeName; })
             .removeClass('cube-added cube-modified')
@@ -2015,6 +2019,7 @@ var NCE = (function ($) {
         } else {
             showNote('Unable to check permissions:<hr class="hr-small"/>' + result.data);
         }
+        return {};
     }
 
     function checkIsAppAdmin() {
@@ -3129,11 +3134,6 @@ var NCE = (function ($) {
         _releaseCubesNewVersion = data.newVersion;
 
         setInterval(updateProgressUi, ONE_SECOND_TIMEOUT);
-        if (!_releaseCubesNewVersion) {
-            setReleaseCubesProgress(0, 'No version set.', true);
-            return;
-        }
-
         _isReleasePending = true;
         NCEBuilderOptions.releaseVersion({}).toggleReleaseButton(false);
         setReleaseCubesProgress(0, 'Locking app...');
@@ -3142,16 +3142,15 @@ var NCE = (function ($) {
 
     function lockAppForRelease(appId, newSnapVer) {
         var result = call(CONTROLLER + CONTROLLER_METHOD.IS_APP_LOCKED, [appId]);
-        if (result.status) {
-            if (result.data) {
-                lockAppForReleaseCallback(appId, newSnapVer);
-                return;
-            }
-        } else {
+        if (!result.status){
             setReleaseCubesProgress(0, 'Error checking lock: ' + result.data, true);
             return;
         }
-        
+        if (result.data) {
+            lockAppForReleaseCallback(appId, newSnapVer);
+            return;
+        }
+
         call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, true], {callback: function(result) {
             if (result.status) {
                 setTimeout(function() {
@@ -3168,7 +3167,7 @@ var NCE = (function ($) {
         var branchNamesWithoutHead = [];
         setReleaseCubesProgress(0, 'Updating branch names...');
         getBranchNames();
-        
+
         for (i = 0, len = _branchNames.length; i < len; i++) {
             branchName = _branchNames[i];
             if (branchName !== head) {
@@ -3176,22 +3175,24 @@ var NCE = (function ($) {
             }
         }
         if (branchNamesWithoutHead.length) {
-            moveBranch(appId, newSnapVer, branchNamesWithoutHead, 0);
+            moveOrDeleteBranch(appId, newSnapVer, branchNamesWithoutHead, 0);
         } else {
             releaseVersion(appId, newSnapVer);
         }
     }
 
-    function moveBranch(appId, newSnapVer, branchNames, branchIdx) {
+    function moveOrDeleteBranch(appId, newSnapVer, branchNames, branchIdx) {
+        var method = newSnapVer ? CONTROLLER_METHOD.MOVE_BRANCH : CONTROLLER_METHOD.DELETE_BRANCH;
+        var params = newSnapVer ? [appId, newSnapVer] : [appId];
         var len = branchNames.length;
         var progress = Math.round(branchIdx / (len + 1) * 100);
 
         appId.branch = branchNames[branchIdx];
         setReleaseCubesProgress(progress, 'Processing branch ' + (branchIdx + 1) + ' of ' + len + ': ' + appId.branch);
-        call(CONTROLLER + CONTROLLER_METHOD.MOVE_BRANCH, [appId, newSnapVer], {callback: function(result) {
+        call(CONTROLLER + method, params, {callback: function(result) {
             if (result.status) {
                 if (branchIdx < len - 1) {
-                    moveBranch(appId, newSnapVer, branchNames, branchIdx + 1);
+                    moveOrDeleteBranch(appId, newSnapVer, branchNames, branchIdx + 1);
                 } else {
                     releaseVersion(appId, newSnapVer);
                 }
@@ -3208,7 +3209,11 @@ var NCE = (function ($) {
         setReleaseCubesProgress(progress, 'Processing release of HEAD...');
         call(CONTROLLER + CONTROLLER_METHOD.RELEASE_VERSION, [appId, newSnapVer], {callback: function(result) {
             if (result.status) {
-                copyReleasedHeadToNewSnapshot(appId, newSnapVer, progress);
+                if (newSnapVer) {
+                    copyReleasedHeadToNewSnapshot(appId, newSnapVer, progress);
+                } else {
+                    finalizeRelease(appId, newSnapVer);
+                }
             } else {
                 setReleaseCubesProgress(progress, 'Error: ' + result.data, true);
             }
@@ -3239,9 +3244,13 @@ var NCE = (function ($) {
         setReleaseCubesProgress(100, 'Unlocking app... ');
         call(CONTROLLER + CONTROLLER_METHOD.LOCK_APP, [appId, false], {callback: function(result) {
             if (result.status) {
+                if (newSnapVer) {
+                    updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
+                    saveSelectedVersion(newSnapVer);
+                } else {
+                    saveSelectedStatus(STATUS.RELEASE);
+                }
                 setReleaseCubesProgress(100, 'Success!', true);
-                updateCubeInfoInOpenCubeList(CUBE_INFO.VERSION, newSnapVer);
-                saveSelectedVersion(newSnapVer);
                 loadVersionListView();
                 loadNCubes();
                 loadCube();
@@ -3588,7 +3597,7 @@ var NCE = (function ($) {
     }
 
     function serverStats() {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.HEARTBEAT, [{}, true]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.HEALTH, [true]);
         if (!result.status) {
             showNote('Unable to fetch server statistics:<hr class="hr-small"/>' + result.data);
             return;
