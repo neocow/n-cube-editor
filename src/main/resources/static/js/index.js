@@ -162,6 +162,8 @@ var NCE = (function ($) {
             startWorkers();
             loadAppListView();
             loadVersionListView();
+            buildBranchUpdateMenu();
+            buildBranchQuickSelectMenu();
             showActiveBranch();
             loadNCubes();
             buildMenu();
@@ -895,6 +897,8 @@ var NCE = (function ($) {
             saveSelectedStatus(cubeInfo[CUBE_INFO.STATUS]);
             saveSelectedVersion(cubeInfo[CUBE_INFO.VERSION]);
             loadVersionListView();
+            buildBranchUpdateMenu();
+            buildBranchQuickSelectMenu();
             saveSelectedBranch(cubeInfo[CUBE_INFO.BRANCH]);
             showActiveBranch();
             loadNCubes();
@@ -908,8 +912,9 @@ var NCE = (function ($) {
 
     function addTabDropdownBranchSubDropdown(li, cubeInfo) {
         var appId = appIdFrom(cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH]);
+        var branchNames = getBranchNamesByAppId(appId);
         li.find('li.li-compare-cube').append(
-            createBranchesUl(appId, function(branchName) {
+            createBranchesUl(branchNames, function(branchName) {
                 var infoDto, leftInfoDto;
                 infoDto = getInfoDto();
                 leftInfoDto = $.extend(true, {}, infoDto);
@@ -1027,10 +1032,10 @@ var NCE = (function ($) {
         }
     }
 
-    function createBranchesUl(appId, func) {
-        var html, bnIdx, bnLen, branchesUl, branchNames;
+    function createBranchesUl(branchNames, func) {
+        var html, bnIdx, bnLen, branchesUl;//, branchNames;
 
-        branchNames = getBranchNamesByAppId(appId);
+        //branchNames = getBranchNamesByAppId(appId);
         html = '<ul class="dropdown-menu">';
         for (bnIdx = 0, bnLen = branchNames.length; bnIdx < bnLen; bnIdx++) {
             html += '<li><a href="#">';
@@ -1812,6 +1817,8 @@ var NCE = (function ($) {
                 _selectedCubeName = state.cube;
                 loadAppListView();
                 loadVersionListView();
+                buildBranchUpdateMenu();
+                buildBranchQuickSelectMenu();
                 showActiveBranch();
                 loadNCubes();
                 selectCubeByName(_selectedCubeName);
@@ -2072,14 +2079,13 @@ var NCE = (function ($) {
     function buildBranchUpdateMenu() {
         var li = _branchCompareUpdateMenu.parent();
         li.find('ul').remove();
-        li.append(createBranchesUl(getAppId(), compareUpdateBranch));
+        _branchNames = getBranchNamesByAppId(getAppId());
+        li.append(createBranchesUl(_branchNames, compareUpdateBranch));
     }
 
     function loadAppListView() {
         var ul, html, i, len, appNames;
         handleAppPermissions();
-        buildBranchUpdateMenu();
-        buildBranchQuickSelectMenu();
         html = '';
         appNames = loadAppNames();
 
@@ -2102,20 +2108,22 @@ var NCE = (function ($) {
     function onAppClick(appName) {
         saveSelectedApp(appName);
         updateAppMenuText();
-        handleAppPermissions();
+        //handleAppPermissions(); // occurs in loadAppListView below
         setVersionListLoading();
         setCubeListLoading();
 
         setTimeout(function() {   // Allow selection widget to update before loading content
             loadAppListView();
             loadVersionListView();
+            buildBranchUpdateMenu();
+            buildBranchQuickSelectMenu();
             showActiveBranch();
             loadNCubes();
             runSearch();
             buildMenu();
-            buildBranchUpdateMenu();
+           // buildBranchUpdateMenu();
             addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
-            buildBranchQuickSelectMenu();
+           // buildBranchQuickSelectMenu();
         }, PROGRESS_DELAY);
     }
     
@@ -2293,12 +2301,14 @@ var NCE = (function ($) {
 
         setTimeout(function() {
             // Allow bootstrap-selection widget to update before loading content
+            buildBranchUpdateMenu();
+            buildBranchQuickSelectMenu();
             showActiveBranch();
             loadNCubes();
             runSearch();
             buildMenu();
             addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
-            buildBranchQuickSelectMenu();
+         //  buildBranchQuickSelectMenu();
         }, PROGRESS_DELAY);
     }
 
@@ -3006,6 +3016,8 @@ var NCE = (function ($) {
             saveSelectedStatus(STATUS.SNAPSHOT);
             saveSelectedVersion(newVersion);
             loadVersionListView();
+            buildBranchUpdateMenu();
+            buildBranchQuickSelectMenu();
             saveSelectedBranch(newBranch);
             showActiveBranch();
             loadNCubes();
@@ -3166,8 +3178,8 @@ var NCE = (function ($) {
         var branchName, i, len;
         var branchNamesWithoutHead = [];
         setReleaseCubesProgress(0, 'Updating branch names...');
-        getBranchNames();
-
+       // getBranchNames();
+        _branchNames = getBranchNamesByAppId(getAppId());
         for (i = 0, len = _branchNames.length; i < len; i++) {
             branchName = _branchNames[i];
             if (branchName !== head) {
@@ -3690,7 +3702,7 @@ var NCE = (function ($) {
     }
 
     function showActiveBranch() {
-        if (getBranchNames().indexOf(_selectedBranch) > -1) {
+        if (_branchNames.indexOf(_selectedBranch) > -1) {
             addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
         } else if (_selectedBranch === head) {
             showNote('Unable to get branch list.', 'Error');
@@ -3755,7 +3767,7 @@ var NCE = (function ($) {
     function selectBranch() {
         var opts = {
             onCreate: createBranch,
-            branchNames: getBranchNames(),
+            branchNames: _branchNames,
             onBranchClick: changeBranch
         };
         FormBuilder.openBuilderModal(NCEBuilderOptions.selectBranch(opts));
@@ -3799,11 +3811,13 @@ var NCE = (function ($) {
         setTimeout(function() {
             loadAppListView();
             loadVersionListView();
+            buildBranchUpdateMenu();
+            buildBranchQuickSelectMenu();
             showActiveBranch();
             loadNCubes();
             runSearch();
             buildMenu();
-            buildBranchQuickSelectMenu();
+
             southPanelResize();
         }, PROGRESS_DELAY);
         clearNotes(NOTE_CLASS.PROCESS_DURATION);
@@ -4373,6 +4387,8 @@ var NCE = (function ($) {
         addToVisitedBranchesList(copyAppId);
         loadAppListView();
         loadVersionListView();
+        buildBranchUpdateMenu();
+        buildBranchQuickSelectMenu();
         showActiveBranch();
         loadNCubes();
         runSearch();
