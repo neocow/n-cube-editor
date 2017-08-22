@@ -1035,7 +1035,6 @@ var NCE = (function ($) {
     function createBranchesUl(branchNames, func) {
         var html, bnIdx, bnLen, branchesUl;//, branchNames;
 
-        //branchNames = getBranchNamesByAppId(appId);
         html = '<ul class="dropdown-menu">';
         for (bnIdx = 0, bnLen = branchNames.length; bnIdx < bnLen; bnIdx++) {
             html += '<li><a href="#">';
@@ -2121,9 +2120,7 @@ var NCE = (function ($) {
             loadNCubes();
             runSearch();
             buildMenu();
-           // buildBranchUpdateMenu();
             addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
-           // buildBranchQuickSelectMenu();
         }, PROGRESS_DELAY);
     }
     
@@ -2308,7 +2305,6 @@ var NCE = (function ($) {
             runSearch();
             buildMenu();
             addToVisitedBranchesList(appIdFrom(_selectedApp, _selectedVersion, _selectedStatus, _selectedBranch));
-         //  buildBranchQuickSelectMenu();
         }, PROGRESS_DELAY);
     }
 
@@ -3178,7 +3174,6 @@ var NCE = (function ($) {
         var branchName, i, len;
         var branchNamesWithoutHead = [];
         setReleaseCubesProgress(0, 'Updating branch names...');
-       // getBranchNames();
         _branchNames = getBranchNamesByAppId(getAppId());
         for (i = 0, len = _branchNames.length; i < len; i++) {
             branchName = _branchNames[i];
