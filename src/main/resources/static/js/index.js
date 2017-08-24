@@ -3762,7 +3762,7 @@ var NCE = (function ($) {
     function selectBranch() {
         var opts = {
             onCreate: createBranch,
-            branchNames: _branchNames,
+            branchNames: getBranchNames(),
             onBranchClick: changeBranch
         };
         FormBuilder.openBuilderModal(NCEBuilderOptions.selectBranch(opts));
