@@ -1,4 +1,7 @@
 ### Revision History
+* 1.0.6
+  * Consumed n-cube 4.0.24
+  * Bug fix: NCE plug-in modal title sizing issue  
 * 1.0.3
   * Consumed n-cube 4.0.22
   * Enabled Spring Boot /info endpoint to show version information
