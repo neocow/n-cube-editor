@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.0
+  * Consumed n-cube 4.1.0
 * 1.0.6
   * Consumed n-cube 4.0.24
   * Bug fix: NCE plug-in modal title sizing issue  
