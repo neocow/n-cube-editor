@@ -1,4 +1,4 @@
-n-cube-editor
+pwdn-cube-editor
 =============
 
 n-cube-editor is a web-based GUI editor for editing and managing n-cubes.
