@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.5
+  * Consumed n-cube 4.1.7
 * 1.1.4
   * Consumed n-cube 4.1.6
   * Faster retrieval of NCubes from storage server - they are now sent compressed (never expanded until being hydrated on the client.)
