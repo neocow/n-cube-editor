@@ -1477,7 +1477,7 @@ var NCE = (function ($) {
         _cubeCount[0].textContent = Object.keys(_cubeList).length;
     }
 
-    function selectCubeByName(cubeName, differentAppId, newTab) {
+    function selectCubeByName(cubeName, differentAppId, newTab, dontSaveState) {
         var cubeInfo, cis, found, i, len, oci, idx, tab;
         if (!cubeName) {
             return;
@@ -1519,7 +1519,9 @@ var NCE = (function ($) {
             cubeInfo.push(getActiveTabViewType());
             addCurrentCubeTab(null, cubeInfo);
         }
-        saveState();
+        if (!dontSaveState) {
+            saveState();
+        }
     }
 
     function hasSearchOptions(opts) {
@@ -1795,30 +1797,13 @@ var NCE = (function ($) {
 
     function onWindowPopstate(e) {
         var state = e.originalEvent.state;
-        if (state) {
-            _selectedCubeName = state.cube;
-            if (_selectedApp === state.app &&
-                _selectedVersion === state.version &&
-                _selectedStatus === state.status &&
-                _selectedBranch === state.branch)
-            {   // Make Back button WAY faster when only cube name changes - no need to reload other lists.
-                selectCubeByName(_selectedCubeName);
-            } else {
-                saveSelectedApp(state.app);
-                saveSelectedVersion(state.version);
-                saveSelectedStatus(state.status);
-                saveSelectedBranch(state.branch);
-                _selectedCubeName = state.cube;
-                loadAppListView();
-                loadVersionListView();
-                buildBranchUpdateMenu();
-                buildBranchQuickSelectMenu();
-                showActiveBranch();
-                loadNCubes();
-                selectCubeByName(_selectedCubeName);
-                buildMenu();
-            }
+        if (!state) {
+            return;
         }
+
+        document.title = state.title;
+        saveSelectedCubeName(state.cube);
+        selectCubeByName(_selectedCubeName, state.tabAppId, null, true);
     }
 
     function runAppTests() {
@@ -2240,22 +2225,24 @@ var NCE = (function ($) {
     }
 
     function saveState() {
-        var title = (_selectedApp ? _selectedApp : '') + ' - ' + (_selectedVersion ? _selectedVersion : '') + ' - ' + (_selectedStatus ? _selectedStatus : '') + ' - ' + (_selectedBranch ? _selectedBranch : '') + ' - ' + (_selectedCubeName ? _selectedCubeName : '');
-        var state = history.state;
-        document.title = title;
-        if (state && state.app == _selectedApp &&
-            state.version == _selectedVersion &&
-            state.status == _selectedStatus &&
-            state.branch == _selectedBranch &&
-            state.cube == _selectedCubeName)
-        {   // Don't save redundant selection
+        var title, state;
+        var tabAppId = getSelectedTabAppId();
+        if (!tabAppId) {
             return;
         }
-        history.pushState({app: _selectedApp,
-            version: _selectedVersion,
-            status: _selectedStatus,
-            branch: _selectedBranch,
-            cube: _selectedCubeName}, title);
+        title = [tabAppId.app || '',
+                     tabAppId.version || '',
+                     tabAppId.status || '',
+                     tabAppId.branch || '',
+                     _selectedCubeName || ''].join(' - ');
+        document.title = title;
+        state = history.state;
+        if (state && appIdsEqual(state.tabAppId, tabAppId)
+            && state.cube === _selectedCubeName) {
+                // Don't save redundant selection
+                return;
+        }
+        history.pushState({tabAppId:tabAppId, cube:_selectedCubeName, title:title}, title);
     }
 
     function loadVersionListView() {
@@ -2562,7 +2549,7 @@ var NCE = (function ($) {
     }
 
     function buildFbCubesListTableData(dtos) {
-        var i, len, dto, keys;
+        var i, len, dto, keys, changeType, displayType, prevChangeType, obj;
         var tableData = [];
         if (typeof dtos === OBJECT) {
             keys = Object.keys(dtos);
@@ -2571,12 +2558,19 @@ var NCE = (function ($) {
             len = dtos.length;
         }
         for (i = 0; i < len; i++) {
+            obj = {};
             dto = keys ? dtos[keys[i]] : dtos[i];
-            tableData.push({
-                cubeName: dto.name,
-                cubeId: dto.id,
-                revId: dto.revision
-            });
+            changeType = dto.changeType;
+            if (changeType && changeType !== prevChangeType) {
+                prevChangeType = changeType;
+                displayType = getLabelDisplayTypeForInfoDto(dto);
+                obj._sectionHeading = displayType.LABEL;
+            }
+            obj._sectionClass = (displayType || {}).CSS_CLASS;
+            obj.cubeName = dto.name;
+            obj.cubeId = dto.id;
+            obj.revision = dto.revision;
+            tableData.push(obj);
         }
         return tableData;
     }
@@ -2588,7 +2582,8 @@ var NCE = (function ($) {
         }
 
         opts = {
-            appName: _selectedApp,
+            title: 'Delete cubes from ' + _selectedApp,
+            saveButtonText: 'Delete',
             onHtmlClick: onHtmlViewClick,
             onJsonClick: onJsonViewClick,
             afterSave: function(data) {
@@ -2596,7 +2591,7 @@ var NCE = (function ($) {
             }
         };
         tableData = buildFbCubesListTableData(_cubeList);
-        FormBuilder.openBuilderModal(NCEBuilderOptions.deleteCubes(opts), tableData);
+        FormBuilder.openBuilderModal(NCEBuilderOptions.showCubeList(opts), tableData);
     }
 
     function getFbCubeListData(data) {
@@ -2667,6 +2662,7 @@ var NCE = (function ($) {
 
     function restoreCube() {
         var opts, tableData, result;
+        clearNote();
         if (!ensureModifiable('Cannot restore cubes.', getAppId())) {
             return;
         }
@@ -2678,7 +2674,8 @@ var NCE = (function ($) {
         }
 
         opts = {
-            appName: _selectedApp,
+            title: 'Restore cubes to ' + _selectedApp,
+            saveButtonText: 'Restore',
             onHtmlClick: onHtmlViewClick,
             onJsonClick: onJsonViewClick,
             afterSave: function(data) {
@@ -2686,7 +2683,7 @@ var NCE = (function ($) {
             }
         };
         tableData = buildFbCubesListTableData(result.data);
-        FormBuilder.openBuilderModal(NCEBuilderOptions.restoreCubes(opts), tableData);
+        FormBuilder.openBuilderModal(NCEBuilderOptions.showCubeList(opts), tableData);
     }
 
     function callRestore(cubesToRestore) {
@@ -4061,10 +4058,6 @@ var NCE = (function ($) {
         return html;
     }
     
-    function getJsonHtmlLabelsHtml(dto) {
-        return getHtmlLabelHtml(dto) + getJsonLabelHtml(dto);
-    }
-    
     function getJsonLabelHtml(dto) {
         var html = '<label class="json-label">';
         html += '<a href="#" class="anc-json" data-cube-id="' + dto.id + '" data-rev-id="' + dto.revision + '" data-cube-name="' + dto.name + '"><kbd>JSON</kbd></a>';
@@ -4173,8 +4166,13 @@ var NCE = (function ($) {
     }
 
     function commitOk() {
+        var changes = getCommitChanges();
+        if (!changes.length) {
+            showNote('No changes selected!', 'Error', TWO_SECOND_TIMEOUT);
+            return;
+        }
         _commitModal.modal('hide');
-        callCommit(getCommitChanges());
+        callCommit(changes);
     }
 
     function callCommit(changedDtos, appId) {
