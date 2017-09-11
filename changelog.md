@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.9
+  * Consumed n-cube 4.1.11
 * 1.1.8
   * Consumed n-cube 4.1.10 
 * 1.1.7
