@@ -2,7 +2,7 @@
 * 1.1.12
   * Consumed n-cube 4.1.14
   * Bug fix: Columns with metaProperties but not name would show `undefined` for name in hide columns modal.  
-* 1.1.11-SNAPSHOT
+* 1.1.11
   * Consumed n-cube 4.1.13
 * 1.1.10
   * Consumed n-cube 4.1.12
