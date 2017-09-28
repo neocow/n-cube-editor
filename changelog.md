@@ -1,7 +1,10 @@
 ### Revision History
+* 1.1.14
+  * Consumed n-cube 4.1.16 
 * 1.1.13
   * Enhancement: Add error map from `BranchMergeException` during pull request merge.
   * Enhancement: Add clickable cube links from column names.
+  * Consumed n-cube 4.1.15 
 * 1.1.12
   * Consumed n-cube 4.1.14
   * Bug fix: Columns with metaProperties but not name would show `undefined` for name in hide columns modal.  
