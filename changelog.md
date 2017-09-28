@@ -1,9 +1,11 @@
 ### Revision History
 * 1.1.14
   * Bug fix: Ace pop-out would not be readonly while viewing HEAD.
+  * Consumed n-cube 4.1.16
 * 1.1.13
   * Enhancement: Add error map from `BranchMergeException` during pull request merge.
-  * Enhancement: Add clickable cube links from column names.
+  * Enhancement: Add clickable cube links from column names (e.g. rule conditions).
+  * Consumed n-cube 4.1.15
 * 1.1.12
   * Consumed n-cube 4.1.14
   * Bug fix: Columns with metaProperties but not name would show `undefined` for name in hide columns modal.  
