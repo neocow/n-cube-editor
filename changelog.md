@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.16
+  * Consumed n-cube 4.1.19
 * 1.1.15
   * Enhancement: Ability to add notes to pull requests.
   * Enhancement: Pull request modal no longer refreshes on heartbeat, has button instead for performance.
