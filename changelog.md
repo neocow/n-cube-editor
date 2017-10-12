@@ -1,10 +1,12 @@
 ### Revision History
 * 1.1.18-SNAPSHOT
+  * Added date pickers to pull request modal.
   * Updated toast to show full message on pull requests errors.
   * Added dynamic table population support to form builder.
   * Added support to see revision history for cubes currently in a deleted state.
   * Changed n-cube view search to keep focus on the search field while changing table selection.
   * Bug fix: Using the server to get CDN data to prevent CORS issues.
+  * Bug fix: Dates sorted correctly for dropdowns on pull request modal.
 * 1.1.17
   * Consumed n-cube 4.1.20
 * 1.1.16

@@ -97,6 +97,8 @@ var NCE = (function ($) {
     var _rollbackOk = $('#rollbackOk');
     var _commitRollbackLabel = $('#commitRollbackLabel');
     var _viewPullRequests = $('#view-pull-requests');
+    var _viewPullRequestsDateStart = $('#view-pull-requests-date-start');
+    var _viewPullRequestsDateEnd = $('#view-pull-requests-date-end');
     var _viewPullRequestsSearchText = $('#view-pull-requests-search-text');
     var _viewPullRequestsSearchButton = $('#view-pull-requests-search-btn');
     var _viewPullRequestsSearchClear = $('#view-pull-requests-search-clear');
@@ -1706,6 +1708,9 @@ var NCE = (function ($) {
             _viewPullRequestsSearchText.val('');
         });
         _viewPullRequestsRefresh.on('click', function() {
+            pullRequestModalRefresh();
+        });
+        _viewPullRequestsDateStart.add(_viewPullRequestsDateEnd).on('change', function() {
             pullRequestModalRefresh();
         });
     }
@@ -3390,7 +3395,7 @@ var NCE = (function ($) {
     }
 
     function viewPullRequests(isUpdate, txid) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_PULL_REQUESTS, [null, null]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_PULL_REQUESTS, [_viewPullRequestsDateStart.val(), _viewPullRequestsDateEnd.val()]);
         if (result.status) {
             _pullRequestData = result.data;
             buildUlForPullRequestView(isUpdate);

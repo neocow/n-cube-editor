@@ -313,7 +313,17 @@ function populateSelectFromMap(sel, map, keepPrevVal, defVal) {
     sel.empty();
 
     options = '<option></option>';
-    keys = Object.keys(map).sort();
+    keys = Object.keys(map).sort(function(a, b) {
+        var aArr, bArr;
+        if (a.indexOf('/') > -1 && b.indexOf('/') > -1) {
+            aArr = a.split('/');
+            bArr = b.split('/');
+            return bArr[2] - aArr[2]
+                || bArr[0] - aArr[0]
+                || bArr[1] - aArr[1];
+        }
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
     for (i = 0, len = keys.length; i < len; i++) {
         options += '<option>' + keys[i] + '</option>';
     }
