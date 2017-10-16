@@ -153,7 +153,7 @@ var Visualizer = (function ($) {
 
             _findNode.on('change', function () {
                 var nodeLabel, nodeLabelLowerCase, nodes, nodeId, note, k, kLen, node, linkText, sourceDescription;
-                nodeLabel = _findNode.val();
+                nodeLabel = _findNode.val().trim();
                 if (nodeLabel) {
                     nodeLabelLowerCase = nodeLabel.toLowerCase();
                     nodes = _nodeDataSet.get({
@@ -161,7 +161,7 @@ var Visualizer = (function ($) {
                             return node.label && node.label.toLowerCase().indexOf(nodeLabelLowerCase) > -1;
                         }
                     });
-                    if (0 === nodes.length) {
+                    if (!nodes.length) {
                         _nce.showNote(nodeLabel + ' not found');
                     }
                     else if (1 === nodes.length) {
