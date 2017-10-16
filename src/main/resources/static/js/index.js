@@ -2186,7 +2186,7 @@ var NCE = (function ($) {
         var allOptions = localStorage[CUBE_SEARCH_OPTIONS];
         allOptions = allOptions ? JSON.parse(allOptions) : {};
         allOptions[getTextAppId(getAppId())] = {
-            contains: _cubeSearchContains.val(),
+            contains: _cubeSearchContains.val().trim(),
             tagsInclude: includes.length ? includes.split(',') : null,
             tagsExclude: excludes.length ? excludes.split(',') : null
         };

@@ -7,6 +7,7 @@
   * Changed n-cube view search to keep focus on the search field while changing table selection.
   * Bug fix: Using the server to get CDN data to prevent CORS issues.
   * Bug fix: Dates sorted correctly for dropdowns on pull request modal.
+  * Bug fix: Trim input fields for visualizer find node and cube contains search.
 * 1.1.17
   * Consumed n-cube 4.1.20
 * 1.1.16
