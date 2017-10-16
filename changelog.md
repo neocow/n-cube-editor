@@ -1,5 +1,6 @@
 ### Revision History
 * 1.1.18-SNAPSHOT
+  * Add axis modal now defaults to sorted columns. 
   * Added date pickers to pull request modal.
   * Updated toast to show full message on pull requests errors.
   * Added dynamic table population support to form builder.

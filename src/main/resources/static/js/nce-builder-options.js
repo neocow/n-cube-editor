@@ -526,7 +526,8 @@ var NCEBuilderOptions = (function () {
                 },
                 sorted: {
                     label: 'Sorted',
-                    type: FormBuilder.INPUT_TYPE.CHECKBOX
+                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                    default: true
                 },
                 fireAll: {
                     label: 'Fire all matching (versus first matching)',
