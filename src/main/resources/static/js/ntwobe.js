@@ -920,7 +920,7 @@ var NCubeEditor2 = (function ($) {
             }
         }
         if (val === undefined) {
-            val = '<a class="nc-anc">' + rowHeader.url + '</a>';
+            val = '<a class="nc-anc-url">' + rowHeader.url + '</a>';
         }
         if (rule !== '') {
             val = rule + '<span class="code">' + val + '</span>';
