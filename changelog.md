@@ -1,6 +1,6 @@
 ### Revision History
-* 1.1.19-SNAPSHOT
-  * --
+* 1.1.19
+  * Consumed n-cube 4.1.22
 * 1.1.18
   * Add axis modal now defaults to sorted columns. 
   * Added date pickers to pull request modal.
