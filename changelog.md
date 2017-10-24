@@ -1,4 +1,9 @@
 ### Revision History
+* 1.1.20
+  * Changed "PR ID" to "Notes" on pull request modal.
+  * Fixed display issues with pull request notes.
+  * Removed tooltip in favor of HTML native `title` attribute.
+  * Modified display of tab overflow dropdown to be more user-friendly.
 * 1.1.19
   * Consumed n-cube 4.1.22
 * 1.1.18

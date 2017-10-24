@@ -65,6 +65,7 @@ var NCE = (function ($) {
     var _menuOptions = [];
     var _menuList = $('#menuList');
     var _tabOverflow = $('#tab-overflow');
+    var _tabOverflowText = $('#tab-overflow-text');
     var _branchNames = [];
     var _draggingTabCubeInfo = null;
     var _tabDragIndicator = $('#tab-drag-indicator');
@@ -112,7 +113,7 @@ var NCE = (function ($) {
     var _viewPullRequestsRequestDate = $('#view-pull-requests-request-date');
     var _viewPullRequestsCommitUser = $('#view-pull-requests-commit-user');
     var _viewPullRequestsCommitDate = $('#view-pull-requests-commit-date');
-    var _viewPullRequestsRepo = $('#view-pull-requests-repo');
+    var _viewPullRequestsNotes = $('#view-pull-requests-notes');
     var _pullRequestData = {};
 
     //  modal dialogs
@@ -641,9 +642,10 @@ var NCE = (function ($) {
     }
 
     function addTab(cubeInfo, status) {
-        var imgSrc, x, xLen, opt, html, activeClass, cubeInfoKey;
-        cubeInfoKey = getCubeInfoKey(cubeInfo);
-        activeClass = cubeInfoKey === getCubeInfoKey(_selectedCubeInfo) ? ' active' : '';
+        var imgSrc, x, xLen, opt, html;
+        var cubeInfoKey = getCubeInfoKey(cubeInfo);
+        var titleText = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - ');
+        var activeClass = cubeInfoKey === getCubeInfoKey(_selectedCubeInfo) ? ' active' : '';
         for (x = 0, xLen = _menuOptions.length; x < xLen; x++) {
             opt = _menuOptions[x];
             if (opt.pageId === cubeInfo[CUBE_INFO.TAB_VIEW]) {
@@ -652,7 +654,7 @@ var NCE = (function ($) {
             }
         }
 
-        html = '<li class="dropdown' + activeClass + '" draggable="true" id="' + cubeInfoKey.replace(/\./g,'_') + '">';
+        html = '<li title="' + titleText + '" class="dropdown' + activeClass + '" draggable="true" id="' + cubeInfoKey.replace(/\./g,'_') + '">';
         html += '<a href="#" draggable="false" class="dropdown-toggle ncube-tab-top-level ';
         html += status + '" data-toggle="dropdown">';
         html += getTabImage(imgSrc);
@@ -669,15 +671,6 @@ var NCE = (function ($) {
         li.on('dragstart', function() {
             _draggingTabCubeInfo = cubeInfo;
         });
-        li.tooltip({
-            trigger: 'hover',
-            placement: 'auto top',
-            animate: true,
-            delay: PROGRESS_DELAY,
-            container: 'body',
-            title: cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - '),
-            template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tab-tooltip"></div></div>'
-        });
         li.on('click auxclick', function(e) {
             var self = $(this);
             var target = $(e.target);
@@ -687,7 +680,6 @@ var NCE = (function ($) {
             // only show dropdown when clicking the caret, not just the tab
             if (isClose) {
                 e.preventDefault();
-                self.tooltip('destroy');
                 removeTab(cubeInfo);
             } else {
                 if (isDropdown) { // clicking caret for dropdown
@@ -697,7 +689,7 @@ var NCE = (function ($) {
                     self.find('.ncube-tab-top-level')
                         .addClass('dropdown-toggle')
                         .attr('data-toggle', 'dropdown');
-                    $(document).one('click', function() { // prevent tooltip and dropdown from remaining on screen
+                    $(document).one('click', function() {
                         closeTab(self);
                     });
                 } else { // when clicking tab show tab, not dropdown
@@ -713,31 +705,13 @@ var NCE = (function ($) {
                 }
             }
         });
-        trimText(li.find('.tab-text')[0]);
     }
 
     function closeTab(li) {
         li.removeClass('open');
-        li.tooltip('hide');
         li.find('button').remove();
         li.find('input').remove();
         $('div.dropdown-backdrop').hide();
-    }
-
-    function trimText(el){
-        var value, len;
-        if (el.scrollWidth > el.offsetWidth) {
-            value = el.innerHTML;
-            len = value.length;
-            if (len > TAB_TRIM_TEXT) {
-                value = value.substr(len - TAB_TRIM_TEXT);
-            }
-            do {
-                value = '...' + value.substr(4);
-                el.innerHTML = value;
-            }
-            while (el.scrollWidth > el.offsetWidth);
-        }
     }
 
     function addTabDropdownList(li, cubeInfo) {
@@ -865,16 +839,13 @@ var NCE = (function ($) {
             }
         });
         li.find('a.anc-close-cube').on('click', function() {
-            li.tooltip('destroy');
             removeTab(cubeInfo);
         });
         li.find('a.anc-close-all').on('click', function() {
-            li.tooltip('destroy');
             removeAllTabs();
             switchTabPane(null);
         });
         li.find('a.anc-close-others').on('click', function() {
-            li.tooltip('destroy');
             removeAllTabs();
             addCurrentCubeTab(null, cubeInfo);
         });
@@ -1001,7 +972,7 @@ var NCE = (function ($) {
         } else {
             tabIdx = getOpenCubeIndex(cubeInfo);
             if (isCtrlKey) { // open new tab
-                li.removeClass('open').tooltip('hide');
+                li.removeClass('open');
                 addCurrentCubeTab(tabIdx, ci2, getInfoDto());
             } else { // use current tab
                 cubeInfo[CUBE_INFO.TAB_VIEW] = getActiveTabViewType();
@@ -1112,17 +1083,23 @@ var NCE = (function ($) {
     }
 
     function buildTabOverflow(maxTabs, len) {
-        var dd, largestText, i, tabText, textWidth, x, xLen, opt, button, offset, maxWidth,
-            dropdownWidth, dropDownTop, dropDownLeft;
-        $('#tab-overflow-text')[0].innerHTML = len - maxTabs;
-        dd = _tabOverflow.find('ul');
-        largestText = TAB_WIDTH;
+        var i, opt, button, offset, maxWidth, dropdownWidth, dropDownTop, dropDownLeft;
+        var dd = _tabOverflow.find('ul');
+        var largestText = TAB_WIDTH;
+        _tabOverflowText[0].innerHTML = len - maxTabs;
 
         for (i = maxTabs; i < len; i++) {
             (function() {
+                var x, xLen, imgSrc;
                 var openCube = _openCubes[i];
                 var cubeInfo = getCubeInfo(openCube.cubeKey);
-                var imgSrc;
+                var tabText = cubeInfo[CUBE_INFO.NAME];
+                var titleText = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - ');
+                var textWidth = $('<p>' + tabText + '</p>').canvasMeasureWidth(FONT_CELL) + CALC_WIDTH_TAB_OVERFLOW_MOD;
+                if (textWidth > largestText) {
+                    largestText = textWidth;
+                }
+
                 for (x = 0, xLen = _menuOptions.length; x < xLen; x++) {
                     opt = _menuOptions[x];
                     if (opt.pageId === cubeInfo[CUBE_INFO.TAB_VIEW]) {
@@ -1131,19 +1108,13 @@ var NCE = (function ($) {
                     }
                 }
 
-                tabText = cubeInfo.slice(0, CUBE_INFO.TAB_VIEW).join(' - ');
-                textWidth = $('<p>' + tabText + '</p>').canvasMeasureWidth(FONT_CELL) + CALC_WIDTH_TAB_OVERFLOW_MOD;
-                if (textWidth > largestText) {
-                    largestText = textWidth;
-                }
-
                 dd.append(
                     $('<li/>').append(
                         $('<a/>')
                             .attr('href', '#')
                             .addClass(openCube.status)
                             .html(getTabImage(imgSrc)
-                                + '<span class="dropdown-tab-text">' + tabText + '</span>'
+                                + '<span class="dropdown-tab-text" title="' + titleText + '">' + tabText + '</span>'
                                 + '<span class="glyphicon glyphicon-remove tab-close-icon" aria-hidden="true"></span>'
                             )
                             .click(function(e) {
@@ -1165,10 +1136,10 @@ var NCE = (function ($) {
         button = _tabOverflow.find('button');
         offset = button.offset();
         maxWidth = offset.left + button.outerWidth();
-        dropdownWidth = largestText < maxWidth ? largestText : maxWidth;
+        dropdownWidth = largestText < TAB_OVERFLOW_MAX_WIDTH ? largestText : TAB_OVERFLOW_MAX_WIDTH;
         dropDownTop = offset.top + button.outerHeight() + parseInt(button.css('marginTop').replace('px',''));
         dropDownLeft = maxWidth - dropdownWidth;
-        dd.css({top: dropDownTop + 'px', left: dropDownLeft + 'px', width: dropdownWidth + 'px'});
+        dd.css({top: dropDownTop, left: dropDownLeft, width: dropdownWidth});
     }
 
     function buildMenu() {
@@ -1413,7 +1384,7 @@ var NCE = (function ($) {
     }
 
     function closeParentMenu() {
-        $('.open').removeClass('open').tooltip('hide');
+        $('.open').removeClass('open');
         $('div.dropdown-backdrop').hide();
     }
 
@@ -1609,7 +1580,6 @@ var NCE = (function ($) {
     
     function onDropTab(e) {
         var posX, oldTabIdx, newTabIdx;
-        $('.tooltip').hide();
         _tabDragIndicator.hide();
         posX = e.originalEvent.x - $('#center').offset().left;
         oldTabIdx = getOpenCubeIndex(_draggingTabCubeInfo);
@@ -3436,7 +3406,7 @@ var NCE = (function ($) {
     }
 
     function buildUlForPullRequestView(isUpdate) {
-        var i, len, pullRequest, status, statusIdx;
+        var i, len, pullRequest, status, statusIdx, notesText;
         var html = '';
         var data = {
             apps: {},
@@ -3447,7 +3417,7 @@ var NCE = (function ($) {
             reqDates: {},
             comUsers: {},
             comDates: {},
-            repos: {}
+            notes: {}
         };
 
         for (i = 0, len = _pullRequestData.length; i < len; i++) {
@@ -3468,8 +3438,9 @@ var NCE = (function ($) {
                 data.comDates[pullRequest.commitTime.substring(0, pullRequest.commitTime.indexOf(' '))] = '';
             }
             if (pullRequest.prId) {
-                data.repos[pullRequest.prId.substring(0, pullRequest.prId.lastIndexOf('-'))] = '';
+                data.notes[pullRequest.prId] = '';
             }
+            notesText = pullRequest.prId || '';
 
             html += '<tr data-txid="' + pullRequest.txid + '">'
                   + '<td class="view-pull-requests-app">' + pullRequest.appId.app + '</td>'
@@ -3480,7 +3451,7 @@ var NCE = (function ($) {
                   + '<td class="view-pull-requests-request-date">' + pullRequest.requestTime + '</td>'
                   + '<td class="view-pull-requests-committer">' + (pullRequest.commitUser || '') + '</td>'
                   + '<td class="view-pull-requests-commit-date">' + (pullRequest.commitTime || '') + '</td>'
-                  + '<td class="view-pull-requests-pr">' + (pullRequest.prId || '') + '</td>'
+                  + '<td class="view-pull-requests-notes" title="' + notesText + '">' + notesText + '</td>'
                   + '</tr>';
         }
 
@@ -3498,7 +3469,7 @@ var NCE = (function ($) {
         populateSelectFromMap(_viewPullRequestsRequestDate, data.reqDates, isUpdate);
         populateSelectFromMap(_viewPullRequestsCommitUser, data.comUsers, isUpdate);
         populateSelectFromMap(_viewPullRequestsCommitDate, data.comDates, isUpdate);
-        populateSelectFromMap(_viewPullRequestsRepo, data.repos, isUpdate);
+        populateSelectFromMap(_viewPullRequestsNotes, data.notes, isUpdate);
 
         if (isUpdate) {
             viewPullRequestsFilter();

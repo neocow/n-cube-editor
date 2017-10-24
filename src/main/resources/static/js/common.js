@@ -464,10 +464,4 @@ function enableDisableMenuButton(el, enable, onClick) {
         jQuery._cachedCanvas.font = font;
         return jQuery._cachedCanvas.measureText(this[0].innerText).width;
     };
-
-    $(document).on('shown.bs.tooltip', function (e) {
-        setTimeout(function () {
-            $(e.target).tooltip('hide');
-        }, TEN_SECOND_TIMEOUT);
-    });
 })(jQuery);
