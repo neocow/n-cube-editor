@@ -20,6 +20,10 @@ body {
     width: 215px;
 }
 
+#ncube-tabs li a.ncube-tab-top-level img {
+    vertical-align: baseline;
+}
+
 #ncube-tabs li.active a.ncube-tab-top-level {
     background-color: white !important;
 }
@@ -39,6 +43,9 @@ body {
     width: 157px;
     text-align: center;
     white-space: nowrap;
+    text-overflow: ellipsis;
+    direction: rtl;
+    overflow: hidden;
 }
 
 #ncube-tabs li a.ncube-tab-top-level.out-of-sync span.tab-text {
@@ -267,11 +274,11 @@ span.selected-count {
     display: inline-block;
     width: 22px;
     position: relative;
-    top: -1px;
+    top: -5px;
 }
 
 .tab-close-icon {
-    top: 2px;
+    top: -2px;
 }
 
 .big-caret {
@@ -712,7 +719,7 @@ ul .checkbox-label {
 }
 
 #view-pull-requests-list {
-    height: calc(100% - 91px);
+    height: calc(100% - 92px);
     width: 100%;
 }
 
@@ -752,19 +759,22 @@ ul .checkbox-label {
     width: 11%;
 }
 .view-pull-requests-requester {
-    width: 11%;
+    width: 9%;
 }
 .view-pull-requests-request-date {
     width: 11%;
 }
 .view-pull-requests-committer {
-    width: 11%;
+    width: 9%;
 }
 .view-pull-requests-commit-date {
     width: 11%;
 }
-.view-pull-requests-pr {
-    width: 8%;
+.view-pull-requests-notes {
+    width: 12%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .modal-xl {
