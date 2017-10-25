@@ -3602,6 +3602,7 @@ var NCubeEditor2 = (function ($) {
             hot.selectCell(row, col);
             hot.getActiveEditor().beginEditing();
         }
+        _editCellValue.focus();
     }
 
     function editCell() {
