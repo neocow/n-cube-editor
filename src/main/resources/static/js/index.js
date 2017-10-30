@@ -1200,25 +1200,28 @@ var NCE = (function ($) {
 
     function buildMenuExpressionListeners(navMenu) {
         _menuList.find('[data-heading]').on('click', function(e) {
-            var opts;
-            var anc = $(this);
-            var exp = navMenu[anc.data('heading')][this.innerHTML].expression;
-            var appId = appIdFrom(exp.app, exp.version, exp.status, exp.branch);
-            var result = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, exp.cube, {method:exp.method, component:'model'}]);
+            var exp = navMenu[$(this).data('heading')][this.textContent].expression;
             e.preventDefault();
-            if (!result.status) {
-                showNote('Unable to initialize plugin.', 'Error', TWO_SECOND_TIMEOUT);
-                return;
-            }
-            // yes, eval is evil. i'm sorry.
-            opts = eval(result.data.value);
-            opts.afterSave = function(data) {
-                data.component = 'controller';
-                data.appId = getAppId();
-                onMenuExpressionSave(exp, appId, data);
-            };
-            FormBuilder.openBuilderModal(opts);
+            initializePlugin(exp);
         });
+    }
+
+    function initializePlugin(menuExp, opts, data) {
+        var appId = appIdFrom(menuExp.app, menuExp.version, menuExp.status, menuExp.branch);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_CELL_NO_EXECUTE_BY_COORDINATE, [appId, menuExp.cube, {method:menuExp.method, component:'model'}]);
+        if (!result.status) {
+            showNote(result.data, 'Unable to initialize plugin', TWO_SECOND_TIMEOUT);
+            return;
+        }
+        // yes, eval is evil. i'm sorry.
+        opts = getViewOptions(result.data.value, opts, data);
+        opts.afterSave = function(viewData) {
+            viewData.component = 'controller';
+            viewData.appId = getAppId();
+            viewData._menuExpression = menuExp;
+            onMenuExpressionSave(menuExp, appId, viewData);
+        };
+        FormBuilder.openBuilderModal(opts);
     }
 
     function onMenuExpressionSave(exp, appId, data) {
@@ -1332,6 +1335,7 @@ var NCE = (function ($) {
             getSelectedStatus: getSelectedStatus,
             getSelectedBranch: getSelectedBranch,
             getSelectedCubeInfoKey: getSelectedCubeInfoKey,
+            initializePlugin: initializePlugin,
             isHeadSelected: isHeadSelected,
             loadAppNames: loadAppNames,
             loadCube: loadCube,
