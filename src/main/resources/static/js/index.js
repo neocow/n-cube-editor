@@ -282,15 +282,7 @@ var NCE = (function ($) {
     }
 
     function southPanelToggle(open) {
-        var addClass, removeClass;
-        if (open) {
-            addClass = 'glyphicon-collapse-down';
-            removeClass = 'glyphicon-collapse-up';
-        } else {
-            addClass = 'glyphicon-collapse-up';
-            removeClass = 'glyphicon-collapse-down';
-        }
-        $('#south-toggler').removeClass(removeClass).addClass(addClass);
+        $('#south-toggler').toggleClass('glyphicon-collapse-down', open).toggleClass('glyphicon-collapse-up', !open);
         delay(southPanelResize, 1);
     }
     
@@ -1009,7 +1001,7 @@ var NCE = (function ($) {
 
     function switchTabPane(pageId) {
         var iframeId, frame, cw;
-        $('.tab-pane').removeClass('active');
+        $('.tab-pane.active').removeClass('active');
         if (pageId) {
             $('#' + pageId).addClass('active');
             iframeId = 'iframe_' + pageId;
@@ -1431,6 +1423,7 @@ var NCE = (function ($) {
         _cubeSearchContains.val('');
         _cubeSearchTagsInclude.val('');
         _cubeSearchTagsExclude.val('');
+        _cubeSearchOptionsBtn.removeClass('btn-info');
         saveCubeSearchOptions();
         loadNCubeListView();
         setListSelectedStatus(_selectedCubeName, '#ncube-list');
@@ -1485,9 +1478,9 @@ var NCE = (function ($) {
     }
 
     function hasSearchOptions(opts) {
-        return (opts.contains && opts.contains.length)
+        return !!((opts.contains && opts.contains.length)
             || (opts.tagsInclude && opts.tagsInclude.length)
-            || (opts.tagsExclude && opts.tagsExclude.length);
+            || (opts.tagsExclude && opts.tagsExclude.length));
     }
     
     function runSearch() {
@@ -1718,23 +1711,12 @@ var NCE = (function ($) {
         });
 
         _cubeSearchOptionsBtn.on('click', function() {
-            var newHeight, removeClass, addClass;
             var prevHeight = _cubeListDiv.height();
             var isVisible = _cubeSearchOptionsDiv.is(':visible');
-
-            if (isVisible) {
-                newHeight = prevHeight + CUBE_OPTIONS_OFFSET;
-                removeClass = GLYPHICONS.OPTION_VERTICAL;
-                addClass = GLYPHICONS.OPTION_HORIZONTAL;
-            } else {
-                newHeight = prevHeight - CUBE_OPTIONS_OFFSET;
-                removeClass = GLYPHICONS.OPTION_HORIZONTAL;
-                addClass = GLYPHICONS.OPTION_VERTICAL;
-            }
-
+            var newHeight = isVisible ? (prevHeight + CUBE_OPTIONS_OFFSET) : (prevHeight - CUBE_OPTIONS_OFFSET);
             _cubeListDiv.height(newHeight);
-            _cubeSearchOptionsIcon.removeClass(removeClass).addClass(addClass);
-            _cubeSearchOptionsDiv.toggle();
+            _cubeSearchOptionsIcon.toggleClass(GLYPHICONS.OPTION_HORIZONTAL, isVisible).toggleClass(GLYPHICONS.OPTION_VERTICAL, !isVisible);
+            _cubeSearchOptionsDiv.toggle(!isVisible);
             saveCubeSearchOptionsShown(!isVisible);
         });
     }
@@ -2180,11 +2162,7 @@ var NCE = (function ($) {
         _cubeSearchContains.val(opts.contains);
         _cubeSearchTagsInclude.val(opts.tagsInclude ? opts.tagsInclude.join(',') : null);
         _cubeSearchTagsExclude.val(opts.tagsExclude ? opts.tagsExclude.join(',') : null);
-        if (hasSearchOptions(opts)) {
-            _cubeSearchOptionsBtn.addClass('btn-info');
-        } else {
-            _cubeSearchOptionsBtn.removeClass('btn-info');
-        }
+        _cubeSearchOptionsBtn.toggleClass('btn-info', hasSearchOptions(opts));
         return opts;
     }
 
@@ -2294,7 +2272,7 @@ var NCE = (function ($) {
         _listOfModifiedCubes.empty();
         _listOfModifiedCubes.append(_listOfCubes.find('li').has('a.cube-added, a.cube-modified').clone());
         _listOfModifiedCubes.find('a').on('click', function() { selectCubeByName($(this).data('itemname')); });
-        _listOfModifiedCubes.find('a.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
+        _listOfModifiedCubes.find('a.ncube-selected').toggleClass('ncube-selected ncube-notselected');
     }
 
     function buildCubeListItem(loName, infoDto, filter, isNotHead) {
@@ -2356,7 +2334,7 @@ var NCE = (function ($) {
     function setListSelectedStatus(itemName, listId) {
         var items, loItemName;
         items = $(listId).find('li a');
-        items.filter('.ncube-selected').removeClass('ncube-selected').addClass('ncube-notselected');
+        items.filter('.ncube-selected').toggleClass('ncube-selected ncube-notselected');
         if (itemName === null || itemName === undefined) {
             return;
         }
@@ -2371,7 +2349,7 @@ var NCE = (function ($) {
                 return true;
             }
             return false;
-        }).removeClass('ncube-notselected').addClass('ncube-selected');
+        }).toggleClass('ncube-selected ncube-notselected');
     }
 
     /**
@@ -3859,14 +3837,10 @@ var NCE = (function ($) {
     }
     
     function expandCollapseChangeTypeClick(el) {
-        var lis, i, len, show, prefix, plus, minus, span;
-        prefix = 'glyphicon-';
-        plus = 'plus';
-        minus = 'minus';
-        lis = getChangeTypeListItems(el).closest('li');
-        span = el.parent().find('span.glyphicon');
-        show = span.hasClass(prefix + plus);
-        span.removeClass(prefix + (show ? plus : minus)).addClass(prefix + (show ? minus : plus));
+        var lis = getChangeTypeListItems(el).closest('li');
+        var span = el.parent().find('span.glyphicon');
+        var show = span.hasClass('glyphicon-plus');
+        span.toggleClass('glyphicon-plus', !show).toggleClass('glyphicon-minus', show);
         lis.toggle(show);
     }
     
