@@ -1,5 +1,9 @@
 ### Revision History
 * 1.1.20
+  * FormBuilder enhancement: Allow `Back` button on plugins to restart the plugin with previously entered values.
+  * FormBuilder enhancement: Use title on readonly table elements to allow hidden overflow and hover for full text (saves space).
+  * FormBuilder bug fix: Could not change modal size when reusing FormBuilder instance. 
+  * FormBuilder bug fix: Sortable headers were broken.
   * Changed "PR ID" to "Notes" on pull request modal.
   * Fixed display issues with pull request notes.
   * Removed tooltip in favor of HTML native `title` attribute.

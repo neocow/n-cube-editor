@@ -123,6 +123,7 @@ var FormBuilder = (function ($) {
         if (buildNew) {
             _modal.modal();
         } else {
+            _modal.find('.modal-dialog').toggleClass(Object.keys(MODAL_SIZE).join(' '), false).addClass(_options.size);
             addModalFilter();
         }
     }
@@ -672,7 +673,7 @@ var FormBuilder = (function ($) {
             }
         });
 
-        table.find('tr').remove();
+        table.find('tr.' + TR_CLASS).remove();
         createTableRows(table, data, tableOpts);
         if (typeof Filter.filter === 'function') {
             Filter.filter();
@@ -765,12 +766,9 @@ var FormBuilder = (function ($) {
     }
 
     function expandCollapseTableSectionClick(el) {
-        var prefix = 'glyphicon-';
-        var plus = 'plus';
-        var minus = 'minus';
         var span = el.parent().find('span.glyphicon');
-        var show = span.hasClass(prefix + plus);
-        span.removeClass(prefix + (show ? plus : minus)).addClass(prefix + (show ? minus : plus));
+        var show = span.hasClass('glyphicon-plus');
+        span.toggleClass('glyphicon-plus', !show).toggleClass('glyphicon-minus', show);
         getTableSectionRows(el).toggle(show);
     }
 
@@ -795,14 +793,15 @@ var FormBuilder = (function ($) {
     }
 
     function getDataRowInput(column, dataVal) {
-        var inputElement;
+        var inputElement, throwaway;
         var inputClass = ID_PREFIX.INPUT + column.name;
         switch (column.type) {
             case INPUT_TYPE.CHECKBOX:
                 inputElement = $('<input class="' + inputClass + '"/>').prop({type:'checkbox', checked:dataVal});
                 break;
             case INPUT_TYPE.READONLY:
-                inputElement = $('<span class="' + inputClass + '">' + (dataVal || '') + '</span>');
+                throwaway = $('<div/>').text(dataVal || '');
+                inputElement = $('<span title="' + throwaway.html() + '" class="' + inputClass + '">' + (dataVal || '') + '</span>');
                 break;
             case INPUT_TYPE.SELECT:
                 inputElement = $('<select class="' + inputClass + '" style="width:100%;max-width:95%;"/>');
