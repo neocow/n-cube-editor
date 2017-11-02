@@ -9,6 +9,7 @@
   * Removed tooltip in favor of HTML native `title` attribute.
   * Modified display of tab overflow dropdown to be more user-friendly.
   * Made cell value text selected when moving cells while editing.
+  * Consumed n-cube 4.1.23
 * 1.1.19
   * Consumed n-cube 4.1.22
 * 1.1.18
