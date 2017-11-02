@@ -3602,6 +3602,7 @@ var NCubeEditor2 = (function ($) {
             hot.selectCell(row, col);
             hot.getActiveEditor().beginEditing();
         }
+        _editCellValue.focus();
     }
 
     function editCell() {
@@ -3758,28 +3759,13 @@ var NCubeEditor2 = (function ($) {
     }
 
     function enabledDisableCheckBoxes() {
-        var isUrl = _editCellRadioURL.find('input')[0].checked;
-        var selDataType = isUrl ? _urlDropdown.val() : _valueDropdown.val();
-        var urlEnabled = URL_ENABLED_LIST.indexOf(selDataType) > -1;
-        var cacheEnabled = CACHE_ENABLED_LIST.indexOf(selDataType) > -1;
-
-        // Enable / Disable [x] URL
-        _editCellRadioURL.find('input').prop("disabled", !urlEnabled);
-
-        if (urlEnabled) {
-            _editCellRadioURL.removeClass('disabled');
-        } else {
-            _editCellRadioURL.addClass('disabled');
+        function toggleCheckDisable(el, enabledList, dataType) {
+            var disabled = enabledList.indexOf(dataType) === -1;
+            el.toggleClass('disabled', disabled).find('input').prop('disabled', disabled);
         }
-
-        // Enable / Disable [x] Cache
-        _editCellCache.find('input').prop('disabled', !cacheEnabled);
-
-        if (cacheEnabled) {
-            _editCellCache.removeClass('disabled');
-        } else {
-            _editCellCache.addClass('disabled');
-        }
+        var selDataType = _editCellRadioURL.find('input')[0].checked ? _urlDropdown.val() : _valueDropdown.val();
+        toggleCheckDisable(_editCellRadioURL, URL_ENABLED_LIST, selDataType);
+        toggleCheckDisable(_editCellCache, CACHE_ENABLED_LIST, selDataType);
     }
 
     // =============================================== End Cell Editing ================================================

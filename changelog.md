@@ -1,6 +1,14 @@
 ### Revision History
 * 1.1.20
-  * Consumed n-cube 4.1.23
+  * FormBuilder enhancement: Allow `Back` button on plugins to restart the plugin with previously entered values.
+  * FormBuilder enhancement: Use title on readonly table elements to allow hidden overflow and hover for full text (saves space).
+  * FormBuilder bug fix: Could not change modal size when reusing FormBuilder instance. 
+  * FormBuilder bug fix: Sortable headers were broken.
+  * Changed "PR ID" to "Notes" on pull request modal.
+  * Fixed display issues with pull request notes.
+  * Removed tooltip in favor of HTML native `title` attribute.
+  * Modified display of tab overflow dropdown to be more user-friendly.
+  * Made cell value text selected when moving cells while editing.
 * 1.1.19
   * Consumed n-cube 4.1.22
 * 1.1.18
