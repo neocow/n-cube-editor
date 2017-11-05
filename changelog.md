@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.21
+  * Consumed n-cube 4.1.24
 * 1.1.20
   * FormBuilder enhancement: Allow `Back` button on plugins to restart the plugin with previously entered values.
   * FormBuilder enhancement: Use title on readonly table elements to allow hidden overflow and hover for full text (saves space).
