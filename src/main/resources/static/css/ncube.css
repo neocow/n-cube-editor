@@ -206,6 +206,7 @@ ul#setUpHideList li {
     padding: 2px 5px;
 }
 
+#hot-container > div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(1) > th,
 #hot-container > div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(2) > th {
     font-size: x-small;
     white-space: normal;
