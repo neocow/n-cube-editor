@@ -233,8 +233,8 @@ var FormBuilder = (function ($) {
         html += '</div>';
 
         footer = $(html);
-        footer.find('.form-builder-select-all').on('click', function() { checkAll(true, 'input[type="checkbox"]'); });
-        footer.find('.form-builder-select-none').on('click', function() { checkAll(false, 'input[type="checkbox"]'); });
+        footer.find('.form-builder-select-all').on('click', function() { selectAll(); });
+        footer.find('.form-builder-select-none').on('click', function() { selectNone(); });
         footer.find('.form-builder-add').on('click', function() { addTableRowForTableTypeBuilder(); });
         footer.find('.form-builder-clear').on('click', function() { clearTableRows(); });
         footer.find('.form-builder-cancel').on('click', function() { closeBuilderModal(); });
@@ -451,7 +451,7 @@ var FormBuilder = (function ($) {
                 control = createFormDefaultDisplaySelectInput(id, label, selectOptions, readonly, initVal);
                 break;
             case INPUT_TYPE.TABLE:
-                control = $('<div id="' + id + '"/>').append(buildTable(initVal, formInput));
+                control = buildFormTable(id, initVal, formInput);
                 break;
             case INPUT_TYPE.TEXT_SELECT:
                 control = createFormTextSelectInput(id, label, selectOptions, readonly, initVal);
@@ -607,6 +607,37 @@ var FormBuilder = (function ($) {
         var tableOpts = findOptionsFormElement(key);
         parent.empty();
         parent.append(buildTable(data, tableOpts));
+    }
+
+    function buildFormTable(id, data, tableOpts) {
+        var wrapper, addBtn, clearBtn;
+        var table = buildTable(data, tableOpts);
+        var selectAllBtn = $('<button class="btn btn-info btn-sm form-builder-select-all" aria-hidden="true">Select All</button>');
+        var selectNoneBtn = $('<button class="btn btn-info btn-sm form-builder-select-none" aria-hidden="true">Select None</button>');
+        selectAllBtn.on('click', function(e) {
+            e.preventDefault();
+            selectAll(id);
+        });
+        selectNoneBtn.on('click', function(e) {
+            e.preventDefault();
+            selectNone(id);
+        });
+
+        if (tableOpts.canAddRemoveRows) {
+            addBtn = $('<button class="btn btn-success btn-sm form-builder-add">Add New</button>');
+            clearBtn = $('<button class="btn btn-danger btn-sm form-builder-clear">Clear</button>');
+            addBtn.on('click', function(e) {
+                e.preventDefault();
+                addTableRow(table.find('table'), null, tableOpts)
+            });
+            clearBtn.on('click', function(e) {
+                e.preventDefault();
+                clearTableRows(id);
+            });
+        }
+
+        wrapper = $('<div id="' + id + '" class="form-builder-input-table"/>').append(selectAllBtn, selectNoneBtn, addBtn, clearBtn, table);
+        return wrapper;
     }
 
     function buildTable(data, tableOpts) {
@@ -820,12 +851,13 @@ var FormBuilder = (function ($) {
         return inputElement;
     }
 
-    function clearTableRows() {
-        findTableRows().remove();
+    function clearTableRows(id) {
+        findTableRows(id).remove();
     }
 
-    function findTableRows() {
-        return _modal.find('tr.' + TR_CLASS);
+    function findTableRows(id) {
+        var wrapper = id ? $('#' + id) : _modal;
+        return wrapper.find('tr.' + TR_CLASS);
     }
 
     function copyTableDataToModel() {
@@ -919,6 +951,9 @@ var FormBuilder = (function ($) {
     function getInputValue(key) {
         var el = findElementByKey(key);
         if (el.length) {
+            if (el.is('[type=checkbox]')) {
+                return el[0].checked;
+            }
             return el.val();
         }
     }
@@ -1092,6 +1127,16 @@ var FormBuilder = (function ($) {
 
     function checkAll(state, queryStr) {
         $(queryStr).filter(':visible').not('.exclude').prop('checked', state).change();
+    }
+
+    function selectAll(id) {
+        var tableKey = id ? '#' + id + ' ' : '';
+        checkAll(true, tableKey + 'input[type="checkbox"]');
+    }
+
+    function selectNone(id) {
+        var tableKey = id ? '#' + id + ' ' : '';
+        checkAll(false, tableKey + 'input[type="checkbox"]');
     }
 
     function showAlert(text) {

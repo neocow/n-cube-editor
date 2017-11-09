@@ -23,43 +23,90 @@ var NCEBuilderOptions = (function () {
     /*
      * additional required options:
      *  columnSelectList
+     *  filterBlankRows
+     *  filters
+     *  filterText
+     *  populateFilterTextFunc
      */
     function filterData(opts) {
+        function onChangeListener() {
+            populateFormElement('filterText');
+        }
+
+        var filterTableColumns = {
+            isApplied: {
+                heading: 'Apply',
+                type: FormBuilder.INPUT_TYPE.CHECKBOX,
+                default: true,
+                listeners: {
+                    change: onChangeListener
+                }
+            },
+            column: {
+                heading: 'Column',
+                type: FormBuilder.INPUT_TYPE.SELECT,
+                selectOptions: opts.columnSelectList,
+                listeners: {
+                    change: onChangeListener
+                }
+            },
+            comparator: {
+                heading: 'Comparator',
+                type: FormBuilder.INPUT_TYPE.SELECT,
+                selectOptions: FILTER_COMPARATOR_LIST,
+                default: FILTER_COMPARATOR_LIST[0],
+                listeners: {
+                    change: onChangeListener
+                }
+            },
+            expressionValue: {
+                heading: 'Comparison Value',
+                type: FormBuilder.INPUT_TYPE.TEXT,
+                listeners: {
+                    change: onChangeListener
+                }
+            }
+        };
+
         return {
             title: 'Filter Data',
             instructionsTitle: 'Instructions - Filter Data',
             instructionsText: 'Select filters to apply to cell data for ncube.',
-            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
             size: FormBuilder.MODAL_SIZE.LARGE,
-            canAddRemoveRows: true,
             readonly: opts.readonly,
             afterSave: opts.afterSave,
             onClose: opts.onClose,
-            columns: {
-                isApplied: {
-                    heading: 'Apply',
+            formInputs: {
+                filterText: {
+                    label: 'Filter where clause',
+                    data: opts.filterText,
+                    default: 'Map input ->',
+                    listeners: {
+                        populate: function() {
+                            var ths = $(this);
+                            var filterBlankRows = FormBuilder.getInputValue('filterBlankRows');
+                            var filterData = FormBuilder.copyFormTableDataToModel(filterTableColumns);
+                            var filterText = ths.val();
+                            var funcText = opts.populateFilterTextFunc(filterText, filterBlankRows, filterData);
+                            ths.val(funcText);
+                        }
+                    }
+                },
+                filterBlankRows: {
                     type: FormBuilder.INPUT_TYPE.CHECKBOX,
-                    default: true
+                    label: 'Filter out blank rows',
+                    data: opts.filterBlankRows,
+                    listeners: {
+                        change: onChangeListener
+                    }
                 },
-                column: {
-                    heading: 'Column',
-                    type: FormBuilder.INPUT_TYPE.SELECT,
-                    selectOptions: opts.columnSelectList
-                },
-                comparator: {
-                    heading: 'Comparator',
-                    type: FormBuilder.INPUT_TYPE.SELECT,
-                    selectOptions: FILTER_COMPARATOR_LIST,
-                    default: FILTER_COMPARATOR_LIST[0]
-                },
-                expressionValue: {
-                    heading: 'Comparison Value',
-                    type: FormBuilder.INPUT_TYPE.TEXT
-                },
-                isIncludeAll: {
-                    heading: 'Include Empty Cells',
-                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
-                    default: true
+                filterTable: {
+                    type: FormBuilder.INPUT_TYPE.TABLE,
+                    css: {},
+                    data: opts.filters,
+                    canAddRemoveRows: true,
+                    columns: filterTableColumns
                 }
             }
         };

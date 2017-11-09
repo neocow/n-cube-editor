@@ -54,9 +54,7 @@ var NCubeEditor2 = (function ($) {
     var _firstRenderedCol = null;
     var _defaultCellText = null;
     var _topAxisBtn = null;
-    var _filterModal = null;
     var _filters = null;
-    var _filterTable = null;
     var _columnIdCombinationsToShow = null;
     var _searchText = null;
     var _hotContainer = null;
@@ -98,8 +96,6 @@ var NCubeEditor2 = (function ($) {
             _ncubeContent = $('#ncube-content');
             _ncubeHtmlError = $('#ncube-error');
             _topAxisBtn = $('#topAxisBtn');
-            _filterModal = $('#filterModal');
-            _filterTable = $('#filterTable');
             _hotContainer = $('#hot-container');
             _moveAxesModal = $('#moveAxesModal');
             _moveAxesList = $('#moveAxesList');
@@ -3870,24 +3866,46 @@ var NCubeEditor2 = (function ($) {
 
     // ============================================== Begin Filtering ==================================================
 
-    function filterOpen() {
-        var i, len, colId, opts;
-        var columnSelectList = [];
-        var columns = axes[colOffset].columns;
+    function getAxisColumnValues(axis) {
+        var i, len;
+        var columnValues = [];
+        var columns = axis.columns;
         var columnKeys = Object.keys(columns);
         for (i = 0, len = columnKeys.length; i < len; i++) {
-            colId = columnKeys[i];
-            columnSelectList.push({key:colId, value:columns[colId].value});
+            columnValues.push(columns[columnKeys[i]].value);
         }
+    }
 
+    function filterOpen() {
+        var columnSelectList = getAxisColumnValues(axes[colOffset]);
         addHotBeforeKeyDown();
         opts = {
             columnSelectList: columnSelectList,
-            readonly: nce.getFilterOutBlankRows(),
+            filterBlankRows: nce.getFilterOutBlankRows(),
+            filters: _filters,
+            populateFilterTextFunc: generateFilterWhereClause,
             afterSave: function() { saveFilters(); reload(); removeHotBeforeKeyDown(); },
             onClose: removeHotBeforeKeyDown
         };
-        FormBuilder.openBuilderModal(NCEBuilderOptions.filterData(opts), _filters);
+        FormBuilder.openBuilderModal(NCEBuilderOptions.filterData(opts));
+    }
+
+    function generateFilterWhereClause(filterText, filterBlankRows, filterData) {
+        var i, len;
+        var conditions = filterBlankRows ? generateBlankRowConditions() : [];
+        for (i = 0, len = filterData.isApplied.length; i < len; i++) {
+
+        }
+    }
+
+    function generateBlankRowConditions() {
+        var i, len;
+        var conditions = [];
+        var columnValues = getAxisColumnValues(axes[colOffset]);
+        for (i = 0, len = columnValues.length; i < len; i++) {
+            conditions.push('input["' + columnValues[i] + '"] != null')
+        }
+        return conditions;
     }
 
     // =============================================== End Filtering ===================================================
