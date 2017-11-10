@@ -7,6 +7,7 @@
  *      closeButtonText     - text of close button; default 'Cancel'
  *      afterSave           - callback fires upon clicking save button
  *      onClose             - callback fires whenever modal closes (save or otherwise)
+ *      onOpen              - callback fires when modal opens
  *      closeAfterSave      - should the modal close or stay open after saving; default TRUE
  *      readonly            - should the user be able to edit or only view; default FALSE
  *      displayType         - type of display (table, list, form); use constant DISPLAY_TYPE
@@ -122,6 +123,9 @@ var FormBuilder = (function ($) {
 
         if (buildNew) {
             _modal.modal();
+            if (typeof _options.onOpen === FUNCTION) {
+                _options.onOpen();
+            }
         } else {
             _modal.find('.modal-dialog').toggleClass(Object.keys(MODAL_SIZE).join(' '), false).addClass(_options.size);
             addModalFilter();

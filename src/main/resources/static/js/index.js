@@ -313,8 +313,7 @@ var NCE = (function ($) {
             position: {},
             numFrozenCols: null,
             searchQuery: null,
-            infoDto: dto ||_cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()],
-            filterOutBlankRows: false
+            infoDto: dto ||_cubeList[cubeInfo[CUBE_INFO.NAME].toLowerCase()]
         };
         if (insertIdx > -1) {
             _openCubes.splice(insertIdx, 0, newOpenCube);
@@ -417,14 +416,6 @@ var NCE = (function ($) {
 
     function getViewPosition() {
         return (getOpenCubeInfoValue(SAVED_INFO.VIEW_POSITION) || {})[getActiveTabViewType()];
-    }
-
-    function saveFilterOutBlankRows(shouldFilterOutBlankRows) {
-        saveOpenCubeInfoValue(SAVED_INFO.FILTER_OUT_BLANK_ROWS, shouldFilterOutBlankRows);
-    }
-
-    function getFilterOutBlankRows() {
-        return getOpenCubeInfoValue(SAVED_INFO.FILTER_OUT_BLANK_ROWS);
     }
 
     function saveNumFrozenCols(num) {
@@ -1354,8 +1345,6 @@ var NCE = (function ($) {
             saveNumFrozenCols: saveNumFrozenCols,
             getSearchQuery: getSearchQuery,
             saveSearchQuery: saveSearchQuery,
-            getFilterOutBlankRows: getFilterOutBlankRows,
-            saveFilterOutBlankRows: saveFilterOutBlankRows,
             getShouldLoadAllForSearch: getShouldLoadAllForSearch,
             saveShouldLoadAllForSearch: saveShouldLoadAllForSearch,
             checkPermissions: checkPermissions,

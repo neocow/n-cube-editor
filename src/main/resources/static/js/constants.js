@@ -140,7 +140,6 @@ var REGEX_ANY_TAG = /(<([^>]+)>)/ig;
 var REGEX_HR_TAG = /(<hr([^>]+)>)/ig;
 
 var SAVED_INFO = {
-    FILTER_OUT_BLANK_ROWS: 'filterOutBlankRows',
     INFO_DTO: 'infoDto',
     NUMBER_OF_FROZEN_COLUMNS: 'numFrozenCols',
     SCOPE: 'scope',
@@ -173,7 +172,7 @@ var AXIS_TYPE_LIST = {
 var URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
-var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
+var FILTER_COMPARATOR_LIST = ['=','!=','>', '>=','<', '<=', 'contains','excludes'];
 var DELTA_IGNORE_LIST = ['@id', '@type', 'cache', 'hasBeenCached', 'hash'];
 var METAPROPERTIES = {
     COLUMN_BLACKLIST: ['value','url','type','id','name'],

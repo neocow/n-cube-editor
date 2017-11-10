@@ -39,7 +39,9 @@ var NCEBuilderOptions = (function () {
                 type: FormBuilder.INPUT_TYPE.CHECKBOX,
                 default: true,
                 listeners: {
-                    change: onChangeListener
+                    change: onChangeListener,
+                    remove: onChangeListener,
+                    populate: onChangeListener
                 }
             },
             column: {
