@@ -42,7 +42,23 @@ var NCEBuilderOptions = (function () {
         return {
             title: 'Filter Data',
             instructionsTitle: 'Instructions - Filter Data',
-            instructionsText: 'Select filters to apply to cell data for ncube.',
+            instructionsText: 
+            "Filter text: Written as condition in terms of the columns on the top axis." +
+            " Example: { Map input -> (input.state == 'TX' || input.state == 'OH') && (input.attribute == 'fuzzy')}." +
+            " This will only return rows where this condition is true ('state' and 'attribute' are two column values from" +
+            " the axis). The values for each row in the rowAxis is bound to the where expression for each row.  If" +
+            " the row passes the 'where' condition, it is included in the output." +
+            "Columns to Search: Reduces the number of columns bound for use in the where clause.  If not" +
+            " specified, all columns on the colAxisName can be used.  For example, if you had an axis named 'attribute', and it" +
+            " has 10 columns on it, you could list just two (2) of the columns here, and only those columns would be placed into" +
+            " values accessible to the where clause via input.xxx == 'someValue'.  The mapReduce() API runs faster when fewer" +
+            " columns are included in the columnsToSearch." +
+            "Columns to Return: Indicates which columns to return.  If not specified, the entire 'row' is" +
+            " returned.  For example, if you had an axis named 'attribute', and it has 10 columns on it, you could list just" +
+            " two (2) of the columns here, in the returned Map of rows, only these two columns will be in the returned Map." +
+            " The columnsToSearch and columnsToReturn can be completely different, overlap, or not be specified.  This param" +
+            " is similar to the 'Select List' portion of the SQL SELECT statement.  It essentially defaults to '*', but you" +
+            " can have it return less column/value pairs in the returned Map if you add only the columns you want returned here",
             displayType: FormBuilder.DISPLAY_TYPE.FORM,
             size: FormBuilder.MODAL_SIZE.LARGE,
             readonly: opts.readonly,
