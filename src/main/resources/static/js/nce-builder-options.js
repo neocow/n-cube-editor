@@ -23,52 +23,21 @@ var NCEBuilderOptions = (function () {
     /*
      * additional required options:
      *  columnSelectList
-     *  filterBlankRows
-     *  filters
      *  filterText
-     *  populateFilterTextFunc
+     *  mapReduceColumns
      */
     function filterData(opts) {
-        function onChangeListener() {
-            populateFormElement('filterText');
+        function generateBlankRowConditions() {
+            var i, len;
+            var conditions = [];
+            var columns = opts.columnSelectList;
+            for (i = 0, len = columns.length; i < len; i++) {
+                conditions.push("input['" + columns[i] + "'] != null");
+            }
+            return conditions.join(' || ');
         }
 
-        var filterTableColumns = {
-            isApplied: {
-                heading: 'Apply',
-                type: FormBuilder.INPUT_TYPE.CHECKBOX,
-                default: true,
-                listeners: {
-                    change: onChangeListener,
-                    remove: onChangeListener,
-                    populate: onChangeListener
-                }
-            },
-            column: {
-                heading: 'Column',
-                type: FormBuilder.INPUT_TYPE.SELECT,
-                selectOptions: opts.columnSelectList,
-                listeners: {
-                    change: onChangeListener
-                }
-            },
-            comparator: {
-                heading: 'Comparator',
-                type: FormBuilder.INPUT_TYPE.SELECT,
-                selectOptions: FILTER_COMPARATOR_LIST,
-                default: FILTER_COMPARATOR_LIST[0],
-                listeners: {
-                    change: onChangeListener
-                }
-            },
-            expressionValue: {
-                heading: 'Comparison Value',
-                type: FormBuilder.INPUT_TYPE.TEXT,
-                listeners: {
-                    change: onChangeListener
-                }
-            }
-        };
+        var defaultText = 'Map input -> ';
 
         return {
             title: 'Filter Data',
@@ -80,35 +49,39 @@ var NCEBuilderOptions = (function () {
             afterSave: opts.afterSave,
             onClose: opts.onClose,
             formInputs: {
-                filterText: {
-                    label: 'Filter where clause',
-                    data: opts.filterText,
-                    default: 'Map input ->',
+                filterBlankRows: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    label: 'Hide blank rows',
                     listeners: {
-                        populate: function() {
-                            var ths = $(this);
-                            var filterBlankRows = FormBuilder.getInputValue('filterBlankRows');
-                            var filterData = FormBuilder.copyFormTableDataToModel(filterTableColumns);
-                            var filterText = ths.val();
-                            var funcText = opts.populateFilterTextFunc(filterText, filterBlankRows, filterData);
-                            ths.val(funcText);
+                        click: function(e) {
+                            var text = defaultText + generateBlankRowConditions();
+                            FormBuilder.setInputValue('filterText', text);
+                            e.preventDefault();
                         }
                     }
                 },
-                filterBlankRows: {
-                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
-                    label: 'Filter out blank rows',
-                    data: opts.filterBlankRows,
-                    listeners: {
-                        change: onChangeListener
-                    }
+                filterText: {
+                    label: 'Filter where clause',
+                    data: opts.filterText || null,
+                    default: defaultText
                 },
                 filterTable: {
                     type: FormBuilder.INPUT_TYPE.TABLE,
                     css: {},
-                    data: opts.filters,
-                    canAddRemoveRows: true,
-                    columns: filterTableColumns
+                    data: opts.mapReduceColumns,
+                    columns: {
+                        columnName: {
+                            type: FormBuilder.INPUT_TYPE.READONLY
+                        },
+                        columnsToSearch: {
+                            heading: 'Columns to Search',
+                            type: FormBuilder.INPUT_TYPE.CHECKBOX
+                        },
+                        columnsToReturn: {
+                            heading: 'Columns to Return',
+                            type: FormBuilder.INPUT_TYPE.CHECKBOX
+                        }
+                    }
                 }
             }
         };

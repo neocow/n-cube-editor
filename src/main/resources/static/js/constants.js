@@ -172,7 +172,6 @@ var AXIS_TYPE_LIST = {
 var URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
-var FILTER_COMPARATOR_LIST = ['=','!=','>', '>=','<', '<=', 'contains','excludes'];
 var DELTA_IGNORE_LIST = ['@id', '@type', 'cache', 'hasBeenCached', 'hash'];
 var METAPROPERTIES = {
     COLUMN_BLACKLIST: ['value','url','type','id','name'],
@@ -316,6 +315,7 @@ var CONTROLLER_METHOD = {
     GET_VERSIONS: 'getVersions',
     HEALTH: 'health',
     HEARTBEAT: 'heartBeat',
+    HYPER_MAP_REDUCE: 'hyperMapReduce',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     IS_CUBE_CURRENT: 'isCubeUpToDate',

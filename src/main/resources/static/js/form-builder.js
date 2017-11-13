@@ -614,18 +614,21 @@ var FormBuilder = (function ($) {
     }
 
     function buildFormTable(id, data, tableOpts) {
-        var wrapper, addBtn, clearBtn;
+        var wrapper, addBtn, clearBtn, selectAllBtn, selectNoneBtn;
         var table = buildTable(data, tableOpts);
-        var selectAllBtn = $('<button class="btn btn-info btn-sm form-builder-select-all" aria-hidden="true">Select All</button>');
-        var selectNoneBtn = $('<button class="btn btn-info btn-sm form-builder-select-none" aria-hidden="true">Select None</button>');
-        selectAllBtn.on('click', function(e) {
-            e.preventDefault();
-            selectAll(id);
-        });
-        selectNoneBtn.on('click', function(e) {
-            e.preventDefault();
-            selectNone(id);
-        });
+
+        if (tableOpts.hasSelectAllNone) {
+            selectAllBtn = $('<button class="btn btn-info btn-sm form-builder-select-all" aria-hidden="true">Select All</button>');
+            selectNoneBtn = $('<button class="btn btn-info btn-sm form-builder-select-none" aria-hidden="true">Select None</button>');
+            selectAllBtn.on('click', function (e) {
+                e.preventDefault();
+                selectAll(id);
+            });
+            selectNoneBtn.on('click', function (e) {
+                e.preventDefault();
+                selectNone(id);
+            });
+        }
 
         if (tableOpts.canAddRemoveRows) {
             addBtn = $('<button class="btn btn-success btn-sm form-builder-add">Add New</button>');

@@ -1,5 +1,6 @@
 ### Revision History
 * 1.1.23-SNAPSHOT
+  * Change NCube-view filtering to utilize `NCube.mapReduce`.
   * Implemented values mode on the front end to utilize new `getCells` API.
 * 1.1.22
   * Consumed n-cube 4.1.25
