@@ -1872,7 +1872,40 @@ var NCEBuilderOptions = (function () {
         };
     }
 
+    function additionalScope(opts) {
+        return {
+            title: 'Scoping - ' + opts.cubeName,
+            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            canAddRemoveRows: true,
+            readonly: opts.readonly,
+            afterSave: opts.afterSave,
+            onClose: opts.onClose,
+            columns: {
+                key: {
+                    heading: 'Key',
+                    type: FormBuilder.INPUT_TYPE.TEXT
+                },
+                value: {
+                    heading: 'Value',
+                    type: FormBuilder.INPUT_TYPE.TEXT
+                },
+                popout: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    css: {},
+                    default: 'Pop Out',
+                    listeners: {
+                        click: function(e) {
+                            e.preventDefault();
+                            opts.onPopOut($(e.target).closest('tr').find('.value'));
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     return {
+        additionalScope: additionalScope,
         filterData: filterData,
         metaProperties: metaProperties,
         copyBranch: copyBranch,

@@ -47,6 +47,8 @@ var MAIN_SPLITTER_DEFAULTS = {
 var TAB_TRIM_TEXT = 30;
 var CUBE_OPTIONS_OFFSET = 90;
 
+var VIEW_FORMULAS = 0;
+var VIEW_VALUES = 1;
 var CLIP_NCE = '~NCE~';
 var CLIP_EXCEL = 'EXCEL';
 var TAB_SEPARATOR = '~';
@@ -141,6 +143,7 @@ var SAVED_INFO = {
     FILTER_OUT_BLANK_ROWS: 'filterOutBlankRows',
     INFO_DTO: 'infoDto',
     NUMBER_OF_FROZEN_COLUMNS: 'numFrozenCols',
+    SCOPE: 'scope',
     SEARCH_QUERY: 'searchQuery',
     SHOULD_LOAD_ALL_FOR_SEARCH: 'shouldLoadAllForSearch',
     VIEW_POSITION: 'position',
@@ -297,6 +300,7 @@ var CONTROLLER_METHOD = {
     GET_CELL_ANNOTATION: 'getCellAnnotation',
     GET_CELL_NO_EXECUTE: 'getCellNoExecute',
     GET_CELL_NO_EXECUTE_BY_COORDINATE: 'getCellNoExecuteByCoordinate',
+    GET_CELLS: 'getCells',
     GET_CELLS_NO_EXECUTE: 'getCellsNoExecute',
     GET_COLUMN_METAPROPERTIES: 'getColumnMetaProperties',
     GET_CUBE_METAPROPERTIES: 'getCubeMetaProperties',
@@ -425,6 +429,7 @@ var KEY_CODES = {
     D: 68,
     F: 70,
     K: 75,
+    Q: 81,
     S: 83,
     V: 86,
     W: 87,

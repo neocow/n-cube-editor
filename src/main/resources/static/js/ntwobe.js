@@ -43,6 +43,7 @@ var NCubeEditor2 = (function ($) {
     var _clipboard = null;
     var _editColClipboard = null;
     var _clipFormat = CLIP_NCE;
+    var _viewMode = VIEW_FORMULAS;
     var _searchField = null;
     var _searchInfo = null;
     var _searchCoords = null;
@@ -178,6 +179,9 @@ var NCubeEditor2 = (function ($) {
                     case KEY_CODES.V:
                         editPaste();
                         break;
+                    case KEY_CODES.Q:
+                        toggleViewMode(e);
+                        break;
                 }
             } else {
                 if (keyCode === KEY_CODES.DELETE) {
@@ -229,6 +233,16 @@ var NCubeEditor2 = (function ($) {
         }
         _clipFormat = CLIP_NCE === _clipFormat ? CLIP_EXCEL : CLIP_NCE;
         render();
+    }
+
+    function toggleViewMode(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        data.cells = null;
+        data.cells = {};
+        _viewMode = _viewMode === VIEW_FORMULAS ? VIEW_VALUES : VIEW_FORMULAS;
+        reload();
     }
 
     function setUtilityBarDisplay() {
@@ -308,6 +322,7 @@ var NCubeEditor2 = (function ($) {
             editor = null;
         }
         removeClipFormatToggleListener();
+        removeViewModeToggleListener();
         removeButtonDropdownLocationListeners();
         removeCellListeners();
         hot.destroy();
@@ -345,6 +360,7 @@ var NCubeEditor2 = (function ($) {
         }
         selectSavedOrDefaultCell();
         setClipFormatToggleListener();
+        setViewModeToggleListener();
         _searchField.val(nce.getSearchQuery() || '');
         _searchText = '';
         runSearch();
@@ -376,17 +392,79 @@ var NCubeEditor2 = (function ($) {
                 }
             }
         }
-        
+
         if (ids.length) {
-            result = nce.call(CONTROLLER + CONTROLLER_METHOD.GET_CELLS_NO_EXECUTE, [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), ids], {noResolveRefs:false});
-            if (result.status) {
-                addCellsToData(result.data);
-                setUpColumnWidths(false, start, end);
-                runSearch(true);
-            } else {
-                nce.showNote('Error getting cells:' + result.data);
-            }
+            callGetCells(ids, start, end);
         }
+    }
+
+    function callGetCells(ids, start, end) {
+        var result, method, params, scope;
+        if (!ids.length) return;
+
+        method = _viewMode === VIEW_VALUES ? CONTROLLER_METHOD.GET_CELLS : CONTROLLER_METHOD.GET_CELLS_NO_EXECUTE;
+        params = [nce.getSelectedTabAppId(), nce.getSelectedCubeName(), ids];
+        if (_viewMode === VIEW_VALUES) {
+            scope = getSavedScope();
+            if (!scope) {
+                openScopeBuilder();
+                return;
+            }
+            params.push(scope);
+        }
+
+        result = nce.call(CONTROLLER + method, params, {noResolveRefs:false});
+        if (result.status) {
+            addCellsToData(result.data);
+            setUpColumnWidths(false, start, end);
+            runSearch(true);
+        } else {
+            nce.showNote('Error getting cells:' + result.data);
+        }
+    }
+
+    function openScopeBuilder() {
+        var opts, i, len, key;
+        var scope = getSavedScope() || {};
+        var keys = Object.keys(scope);
+        var rows = [];
+        for (i = 0, len = keys.length; i < len; i++) {
+            key = keys[i];
+            rows.push({key: key, value: scope[key]});
+        }
+
+        addHotBeforeKeyDown();
+        opts = {
+            cubeName: cubeName,
+            afterSave: function () {
+                saveScopeData(rows);
+            },
+            onClose: function() {
+                removeHotBeforeKeyDown();
+                loadCellRows();
+            },
+            onPopOut: metaPropertiesPopOut
+        };
+        FormBuilder.openBuilderModal(NCEBuilderOptions.additionalScope(opts), rows);
+    }
+
+    function saveScopeData(data) {
+        var row, i, len;
+        var scope = {};
+        for (i = 0, len = data.length; i < len; i++) {
+            row = data[i];
+            scope[row.key] = row.value;
+        }
+        saveScope(scope)
+    }
+
+    function getSavedScope() {
+        var scope = localStorage[getStorageKey(nce, SCOPE)];
+        return scope ? JSON.parse(scope) : null;
+    }
+
+    function saveScope(scope) {
+        saveOrDeleteValue(scope, getStorageKey(nce, SCOPE));
     }
     
     function addCellsToData(cells) {
@@ -1739,15 +1817,19 @@ var NCubeEditor2 = (function ($) {
     }
 
     function calcRowHeader(index) {
-        var text;
+        var text, glyph, isValuesMode;
         if (index > 1) {
             return index - 1;
         }
-        if (!index) {
-            return '';
+        if (index) {
+            text = _clipFormat === CLIP_NCE ? NBSP + 'NCE' + NBSP : 'Excel';
+            glyph = 'copy';
+        } else {
+            isValuesMode = _viewMode === VIEW_VALUES;
+            text = isValuesMode ? 'Values' : 'Formulas';
+            glyph = isValuesMode ? 'eye-open' : 'eye-close';
         }
-        text = _clipFormat === CLIP_NCE ? NBSP + 'NCE' + NBSP : 'Excel';
-        return '<span class="glyphicon glyphicon-copy" style="font-size:13px"></span>' + NBSP + text;
+        return '<span class="glyphicon glyphicon-' + glyph + '" style="font-size:13px"></span>' + NBSP + text;
     }
 
     function setFrozenColumns(numFixed) {
@@ -1911,6 +1993,16 @@ var NCubeEditor2 = (function ($) {
             }
         }
         _topAxisBtn.css({left: newWidth});
+    }
+
+    function setViewModeToggleListener() {
+        _hotContainer.find('div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(1) > th').on('click', function(e) {
+            toggleViewMode(e);
+        });
+    }
+
+    function removeViewModeToggleListener() {
+        _hotContainer.find('div.ht_clone_top_left_corner.handsontable > div > div > div > table > tbody > tr:nth-child(1) > th').off('click');
     }
 
     function setClipFormatToggleListener() {
@@ -2350,6 +2442,11 @@ var NCubeEditor2 = (function ($) {
             closeAxisMenu();
             editColumns(axisName);
         });
+        div.find('a.anc-set-scope').on('click', function (e) {
+            e.preventDefault();
+            closeAxisMenu();
+            openScopeBuilder();
+        });
         div.find('a.anc-filter-data').on('click', function (e) {
             e.preventDefault();
             closeAxisMenu();
@@ -2731,6 +2828,7 @@ var NCubeEditor2 = (function ($) {
         html += '<li class="divider"/>';
 
         if (isTopAxis && axes.length > 1) {
+            html += '<li><a href="#" class="anc-set-scope">Set Values Scope...</a></li>';
             html += '<li><a href="#" class="anc-filter-data">Filter Data...</a></li>';
             html += '<li><a href="#" class="anc-filter-blank-rows">Filter Out Blank Rows</a></li>';
             html += '<li';
