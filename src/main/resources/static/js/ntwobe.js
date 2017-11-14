@@ -105,6 +105,7 @@ var NCubeEditor2 = (function ($) {
             _coordBarText = $('#coordinate-bar-text');
             _utilContainerBar = $('#util-container-bar');
 
+            initAllListeners();
             addModalFilters();
             modalsDraggable(true);
 
@@ -127,7 +128,7 @@ var NCubeEditor2 = (function ($) {
             });
         }
 
-        initAllListeners();
+        setCoordinateBarListeners();
         buildCubeMap();
         setUtilityBarDisplay();
     }
@@ -139,7 +140,6 @@ var NCubeEditor2 = (function ($) {
         addMoveAxesListeners();
         addEditCellListeners();
         addSearchListeners();
-        setCoordinateBarListeners();
     }
     
     function onWindowKeyDown(e) {
@@ -3940,27 +3940,25 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editColAdd(addedColVals, addedAtIndex) {
-        var input, loc, axis, newCol, html, i, len, addedColVal, c, cLen;
-        input = $('.editColCheckBox');
-        loc = addedAtIndex;
-        if (loc === undefined || loc === null) {
-            loc = -1;
+        function getAddLocation(input) {
             for (i = 0, len = input.length; i < len; i++) {
                 if (input[i].checked) {
-                    loc = i;
-                    break;
+                    return i;
                 }
             }
+            return -1;
         }
-        axis = _columnList.prop('model');
-        html = '';
+        var newCol, i, len, addedColVal, c, cLen;
+        var html = '';
+        var axis = _columnList.prop('model');
+        var input = $('.editColCheckBox');
+        var loc = notNullOrUndefined(addedAtIndex) ? addedAtIndex : getAddLocation(input);
 
         for (c = 0, cLen = addedColVals.length; c < cLen; c++){
             addedColVal = addedColVals[c];
             if (addedColVal === '') {
                 continue; // blank row from excel copy
             }
-            newCol = null;
             newCol = {
                 '@type': 'com.cedarsoftware.ncube.Column',
                 'value': addedColVal === undefined || addedColVal === null ? 'newValue' : addedColVal,
