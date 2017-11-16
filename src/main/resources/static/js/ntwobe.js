@@ -14,8 +14,8 @@ var NCubeEditor2 = (function ($) {
     var _colOffset = null;
     var _data = null;
     var _prefixes = null;
-    var cubeMap = null;
-    var cubeMapRegex = null;
+    var _cubeMap = null;
+    var _cubeMapRegex = null;
     var _axisColumnMap = null;
     var _expressionLinks = {};
     var _textDims = {};
@@ -259,18 +259,18 @@ var NCubeEditor2 = (function ($) {
         // Build cube list names string for pattern matching
         var cubeMapKeys, key, cmIdx, cmLen, i, len;
         var s = '';
-        _prefixes = ['rpm.class.', 'rpm.enum.', ''];
-        cubeMap = null;
-        cubeMap = _nce.getCubeMap();
-        cubeMapKeys = Object.keys(cubeMap);
+        _prefixes = null;
+        _prefixes = ['rpm.class.', 'rpm.enum.']; // TODO make this configurable
+        _cubeMap = null;
+        _cubeMap = _nce.getCubeMap();
+        cubeMapKeys = Object.keys(_cubeMap);
         for (cmIdx = 0, cmLen = cubeMapKeys.length; cmIdx < cmLen; cmIdx++) {
-            key = null;
             key = cubeMapKeys[cmIdx];
             if (key.length > 2)
             {   // 1. Only support n-cube names with 3 or more characters in them (too many false replaces will occur otherwise)
                 // 2. Chop off accepted prefixes.
                 for (i = 0, len = _prefixes.length; i < len; i++) {
-                    if (key.indexOf(_prefixes[i]) === 0) {
+                    if (!key.indexOf(_prefixes[i])) {
                         key = key.replace(_prefixes[i], '');
                         break;
                     }
@@ -286,8 +286,8 @@ var NCubeEditor2 = (function ($) {
             s = s.substring(0, s.length - 1);
         }
         s = '\\b(' + s + ')\\b';
-        cubeMapRegex = null;
-        cubeMapRegex = new RegExp(s, 'gi');
+        _cubeMapRegex = null;
+        _cubeMapRegex = new RegExp(s, 'gi');
     }
     
     function markCubeModified() {
@@ -367,7 +367,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function shouldLoadAllCells() {
-        return getShouldLoadAllForSearch() || getSavedFilterText().length;
+        return getShouldLoadAllForSearch() || getSavedFilterText();
     }
 
     function loadCellRows() {
@@ -708,10 +708,10 @@ var NCubeEditor2 = (function ($) {
                 addToSearchCoords(1, _colOffset + colNum);
                 return;
             }
-            if (!getSavedFilterText().length) {
+            if (!hasFilteredData()) {
                 rowIdx = colNum * rowSpacing;
                 for (m = 0; m < multiplier; m++) {
-                    addToSearchCoords(rowIdx + 2, axisNum);
+                    addToSearchCoords(rowIdx + ROW_OFFSET, axisNum);
                     rowIdx += rowSpacing * colLen;
                 }
                 return;
@@ -734,7 +734,7 @@ var NCubeEditor2 = (function ($) {
                         }
                     }
                     if (add) {
-                        addToSearchCoords(cIdx + 2, axisNum);
+                        addToSearchCoords(cIdx + ROW_OFFSET, axisNum);
                     }
                 }
             }
@@ -785,7 +785,7 @@ var NCubeEditor2 = (function ($) {
                 colIds = cellId.split('_');
                 r = 0;
                 c = 0;
-                if (!getSavedFilterText().length) {
+                if (!hasFilteredData()) {
                     for (colIdNum = 0, colIdLen = colIds.length; colIdNum < colIdLen; colIdNum++) {
                         curColId = colIds[colIdNum];
                         curHelperObj = rowSpacingHelper[colIdNum];
@@ -797,7 +797,7 @@ var NCubeEditor2 = (function ($) {
                             r += curColNum * curHelperObj.rowSpacing;
                         }
                     }
-                    addToSearchCoords(r + 2, c + (_colOffset || 1));
+                    addToSearchCoords(r + ROW_OFFSET, c + (_colOffset || 1));
                 } else {
                     topAxis = _axes[_colOffset];
                     topAxisId = topAxis.id;
@@ -808,7 +808,7 @@ var NCubeEditor2 = (function ($) {
                             colIdCombo = colIds.join('_');
                             r = _columnIdCombinationsToShow.indexOf(colIdCombo);
                             if (r > -1) {
-                                addToSearchCoords(r + 2, c + (_colOffset || 1));
+                                addToSearchCoords(r + ROW_OFFSET, c + (_colOffset || 1));
                             }
                             break;
                         }
@@ -893,8 +893,16 @@ var NCubeEditor2 = (function ($) {
     }
 
     function getColumnHeader(col) {
-        var colHeader = getAxisColumn(_axes[_colOffset], col - _colOffset);
-        return colHeader ? colHeader : {id:'', value:''};
+        var column;
+        var axis = _axes[_colOffset];
+        var colNum = col - _colOffset;
+        var columnsToReturn = getSavedFilterInfo().columnsToReturn;
+        if (columnsToReturn.length) {
+            column = getAxisColumnByValue(axis.name, columnsToReturn[colNum]);
+        } else {
+            column = getAxisColumn(axis, colNum);
+        }
+        return column || {id:'', value:''};
     }
 
     function getColumnHeaderValue(col) {
@@ -915,13 +923,13 @@ var NCubeEditor2 = (function ($) {
         if (rowNum < 0 || col < 0 || col > _axes.length) {
             return;
         }
-        return getSavedFilterText().length ? getFilteredRowHeader(col, rowNum) : getUnFilteredRowHeader(col, rowNum);
+        return hasFilteredData() ? getFilteredRowHeader(col, rowNum) : getUnFilteredRowHeader(col, rowNum);
     }
 
     function getFilteredRowHeader(col, rowNum) {
-        var ids, idx, idLen, result, curId, column, axis;
-        axis = _axes[col];
-        ids = _columnIdCombinationsToShow[rowNum];
+        var idx, idLen, result, curId, column;
+        var axis = _axes[col];
+        var ids = _columnIdCombinationsToShow[rowNum];
         if (ids) {
             ids = ids.split('_');
             for (idx = 0, idLen = ids.length; idx < idLen; idx++) {
@@ -1259,8 +1267,9 @@ var NCubeEditor2 = (function ($) {
     }
 
     function setUpDataTable() {
-        var horizAxis, colLen, axisNum, axis;
+        var horizAxis, axisNum, axis;
         var totalRows = 1;
+        var savedFilterInfo = getSavedFilterInfo();
         _cubeName = _data.ncube;
         _colOffset = _axes.length - 1;
         _columnIdCombinationsToShow = null;
@@ -1269,31 +1278,26 @@ var NCubeEditor2 = (function ($) {
         if (_axes.length === 1) {
             axis = _axes[0];
             _numColumns = 2;
-            _numRows = getColumnLength(axis) + 2;
+            _numRows = getColumnLength(axis) + ROW_OFFSET;
             return;
         }
 
         horizAxis = _axes[_colOffset];
         _numColumns = _colOffset;
-        colLen = getColumnLength(horizAxis);
-        if (!colLen) {
-            _numColumns++;
-        }
-        _numColumns += colLen;
+        _numColumns += savedFilterInfo.columnsToReturn.length || getColumnLength(horizAxis) || 1;
 
-        if (getSavedFilterText().length) {
+        if (savedFilterInfo.text) {
             setUpColumnCombinationsToShowFromFilter();
-        } else {
-            for (axisNum = 0; axisNum < _colOffset; axisNum++) {
-                totalRows *= getColumnLength(_axes[axisNum]);
-            }
         }
-        _numRows = (_columnIdCombinationsToShow.length ? _columnIdCombinationsToShow.length : totalRows) + 2;
+        for (axisNum = 0; axisNum < _colOffset; axisNum++) {
+            totalRows *= getColumnLength(_axes[axisNum]);
+        }
+        _numRows = Math.min(_columnIdCombinationsToShow.length || totalRows, totalRows) + ROW_OFFSET;
     }
 
     function setUpColumnCombinationsToShowFromFilter() {
         function getColumnIdCombinationFromRow(row) {
-            var i, axis, axisName, columnValue, colId;
+            var i, axis, axisName, column, columnValue, colId;
             var combo = [];
             for (i = 0; i < _colOffset; i++) {
                 axis = _axes[i];
@@ -1306,8 +1310,13 @@ var NCubeEditor2 = (function ($) {
                     if (columnIdMap[axisName].hasOwnProperty(columnValue)) {
                         colId = columnIdMap[axisName][columnValue];
                     } else {
-                        colId = getAxisColumnByValue(axisName, columnValue).id;
-                        columnIdMap[axisName][columnValue] = colId;
+                        column = getAxisColumnByValue(axisName, columnValue);
+                        if (column) {
+                            colId = column.id;
+                            columnIdMap[axisName][columnValue] = colId;
+                        } else {
+                            return;
+                        }
                     }
                 } else {
                     colId = getAxisDefault(axis).id;
@@ -1321,6 +1330,7 @@ var NCubeEditor2 = (function ($) {
         var columnIdMap = {};
         var mapReduceResult = callMapReduce();
         if (!mapReduceResult || !mapReduceResult.hasOwnProperty('@keys')) {
+            _nce.showNote('Filter did not return any results. Showing all data.', 'Note', TEN_SECOND_TIMEOUT);
             return;
         }
 
@@ -1329,7 +1339,9 @@ var NCubeEditor2 = (function ($) {
         for (i = 0, len = rowKeys.length; i < len; i++) {
             row = mapReduceColumnCombos[rowKeys[i]];
             curCombo = getColumnIdCombinationFromRow(row);
-            _columnIdCombinationsToShow.push(curCombo);
+            if (curCombo) {
+                _columnIdCombinationsToShow.push(curCombo);
+            }
         }
         _columnIdCombinationsToShow.sort();
     }
@@ -1611,23 +1623,26 @@ var NCubeEditor2 = (function ($) {
     }
     
     function buildHeightArrayForRange(heights, start, end) {
-        var headerInfo, rowId, r, i;
+        function calcRowId(r) {
+            var i;
+            var headerInfo = [];
+            for (i = 0; i < _colOffset; i++) {
+                headerInfo.push(getRowHeaderId(r, i));
+            }
+            headerInfo.sort();
+            return headerInfo.join('_');
+        }
+        var r, height;
         var savedHeights = getSavedRowHeights();
         for (r = start; r < end; r++) {
-            if (savedHeights.hasOwnProperty(r)) {
-                _rowHeights.push(savedHeights[r]);
-            } else if (r < 2) {
-                _rowHeights.push(33);
+            if (r < ROW_OFFSET) {
+                height = 33;
+            } else if (savedHeights.hasOwnProperty(r)) {
+                height = savedHeights[r];
             } else {
-                headerInfo = [];
-                for (i = 0; i < _colOffset; i++) {
-                    headerInfo.push(getRowHeaderId(r, i));
-                }
-                headerInfo.sort();
-                rowId = headerInfo.join('_');
-                headerInfo = null;
-                _rowHeights.push(heights[rowId] || MIN_ROW_HEIGHT);
+                height = heights[calcRowId(r)] || MIN_ROW_HEIGHT;
             }
+            _rowHeights.push(height);
         }
     }
 
@@ -2018,7 +2033,7 @@ var NCubeEditor2 = (function ($) {
         var headerVal;
         var rowHeader = getRowHeader(row, col);
         var axis = _axes[col];
-        if (row > 2 && getColumnLength(axis) > 1  && col < _colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (!col || (col && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
+        if (row > ROW_OFFSET && getColumnLength(axis) > 1  && col < _colOffset - 1 && rowHeader.id === getRowHeader(row - 1, col).id && (!col || (col && getRowHeader(row, col - 1) === getRowHeader(row - 1, col - 1)))) {
             td.style.borderTop = NONE;
         } else {
             headerVal = getRowHeaderValue(axis, rowHeader);
@@ -2184,7 +2199,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function addCubeLinksToString(str) {
-        return str.replace(cubeMapRegex, function (matched) {
+        return str.replace(_cubeMapRegex, function (matched) {
             return '<a class="nc-anc-cube">' + matched + '</a>';
         });
     }
@@ -2229,7 +2244,7 @@ var NCubeEditor2 = (function ($) {
         var i, len, fullName;
         for (i = 0, len = _prefixes.length; i < len; i++) {
             fullName = _prefixes[i] + cubeName;
-            if (cubeMap[fullName]) {
+            if (_cubeMap[fullName]) {
                 _nce.selectCubeByName(_nce.getProperCubeName(fullName));
                 return;
             }
@@ -2684,7 +2699,7 @@ var NCubeEditor2 = (function ($) {
             html += '<li><a href="#" class="anc-set-scope">Set Values Scope...</a></li>';
             html += '<li><a href="#" class="anc-filter-data">Filter Data...</a></li>';
             html += '<li';
-            if (!getSavedFilterText().length) {
+            if (!getSavedFilterText()) {
                 html += ' class="disabled"';
             }
             html += '><a href="#" class="anc-clear-filters">Clear Filters</a></li>';
@@ -2790,24 +2805,25 @@ var NCubeEditor2 = (function ($) {
     // ==================================== Begin Custom HOT Editors ===================================================
 
     function destroyEditor() {
+        var searchQuery, curCell, i, len, curRow, curCol, prevIdx, curSearchCoord;
         if (!_hot) {
             return;
         }
         if (_hot.getActiveEditor()) {
             _hot.getActiveEditor().finishEditing(null, null, null, true);
         }
-        var searchQuery = _searchField.val();
+        searchQuery = _searchField.val();
         if (searchQuery !== null && searchQuery.length) {
-            var curCell = getSelectedCellRange();
+            curCell = getSelectedCellRange();
             if (curCell) {
-                var curRow = curCell.startRow;
-                var curCol = curCell.startCol;
-                var prevIdx = _currentSearchResultIndex;
+                curRow = curCell.startRow;
+                curCol = curCell.startCol;
+                prevIdx = _currentSearchResultIndex;
                 searchCubeData(searchQuery, true);
                 _currentSearchResultIndex = prevIdx;
 
-                for (var i = 0, len = _searchCoords.length; i < len; i++) {
-                    var curSearchCoord = getSearchResult(i);
+                for (i = 0, len = _searchCoords.length; i < len; i++) {
+                    curSearchCoord = getSearchResult(i);
                     if (curRow === curSearchCoord.row && curCol === curSearchCoord.col) {
                         _currentSearchResultIndex = i;
                         break;
@@ -3749,8 +3765,10 @@ var NCubeEditor2 = (function ($) {
         }
 
         var savedData = getSavedFilterInfo();
-        var columnSelectList = getAxisColumnValues(_axes[_colOffset]);
+        var axis = _axes[_colOffset];
+        var columnSelectList = getAxisColumnValues(axis);
         var opts = {
+            axisType: axis.valueType,
             columnSelectList: columnSelectList,
             filterText: savedData.text,
             mapReduceColumns: generateFilterColumnData(columnSelectList, savedData),
@@ -4323,12 +4341,16 @@ var NCubeEditor2 = (function ($) {
         }
     }
 
+    function hasFilteredData() {
+        return _columnIdCombinationsToShow.length && getSavedFilterText();
+    }
+
     function getSavedFilterText() {
         return getSavedFilterInfo().text || '';
     }
 
     function getSavedFilterInfo() {
-        return parseFromLocalStorage(FILTERS) || {};
+        return parseFromLocalStorage(FILTERS) || {text:'', columnsToSearch:[], columnsToReturn:[]};
     }
 
     function saveFilterInfo(filterInfo) {

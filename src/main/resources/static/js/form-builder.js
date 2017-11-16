@@ -26,6 +26,7 @@
  *          css             - optional css for column
  *      formInputs          - input values to use in form view
  *          collapsible     - used to collapse sections; default FALSE
+ *          collapsed       - section starts collapsed; default FALSE
  *          sectionType     - bootstrap type style of section; use constant BOOTSTRAP_TYPE
  *          type            - type of input; use constant INPUT_TYPE; default TEXT
  *          default         - if input has a desired default value
@@ -315,7 +316,7 @@ var FormBuilder = (function ($) {
         return section;
     }
 
-    function initSubSection(id, title, body, type, collapsible) {
+    function initSubSection(id, title, body, type, collapsible, collapsed) {
         var sectionId = ID_PREFIX.SECTION + id;
         var collapseId = ID_PREFIX.COLLAPSE + id;
         var panelType = type || BOOTSTRAP_TYPE.DEFAULT;
@@ -323,13 +324,14 @@ var FormBuilder = (function ($) {
             + '<div class="panel panel-' + panelType + '">'
             + '<div class="panel-heading"><h4 class="panel-title">'
             + (collapsible ? ('<a data-toggle="collapse" href="#' + collapseId + '">' + title + '</a>') : title)
-            + '</h4></div><div id="' + collapseId + '" class="panel-collapse collapse in">'
+            + '</h4></div><div id="' + collapseId + '" class="panel-collapse collapse'
+            + (collapsed ? '' : ' in') + '">'
             + '<div class="panel-body">' + (body || '') + '</div></div></div></div></div>';
         return $(html);
     }
     
     function initSubSectionFromFormInput(formInput) {
-        return initSubSection(formInput.name, formInput.label, formInput.data, formInput.sectionType, formInput.collapsible);
+        return initSubSection(formInput.name, formInput.label, formInput.data, formInput.sectionType, formInput.collapsible, formInput.collapsed);
     }
     
     function addToSubSection(section, toAdd) {

@@ -22,17 +22,32 @@ var NCEBuilderOptions = (function () {
 
     /*
      * additional required options:
+     *  axisType
      *  columnSelectList
      *  filterText
      *  mapReduceColumns
      */
     function filterData(opts) {
+        function getInputTextForAxisType(val) {
+            switch (opts.axisType) {
+                case 'LONG':
+                    return val + 'L';
+                case 'BIG_DECIMAL':
+                    return 'BigDecimal.valueOf(' + val + ')';
+                case 'DOUBLE':
+                    return val + 'D';
+                case 'DATE':
+                    return 'Date.parse(\'yyyy-MM-dd\',\'' + val + '\')';
+                default:
+                    return '\'' + val + '\'';
+            }
+        }
         function generateBlankRowConditions() {
             var i, len;
             var conditions = [];
             var columns = opts.columnSelectList;
             for (i = 0, len = columns.length; i < len; i++) {
-                conditions.push("input['" + columns[i] + "'] != null");
+                conditions.push("input[" + getInputTextForAxisType(columns[i]) + "] != null");
             }
             return conditions.join(' || ');
         }
@@ -41,30 +56,64 @@ var NCEBuilderOptions = (function () {
 
         return {
             title: 'Filter Data',
-            instructionsTitle: 'Instructions - Filter Data',
-            instructionsText: 
-            "Filter text: Written as condition in terms of the columns on the top axis." +
-            " Example: { Map input -> (input.state == 'TX' || input.state == 'OH') && (input.attribute == 'fuzzy')}." +
-            " This will only return rows where this condition is true ('state' and 'attribute' are two column values from" +
-            " the axis). The values for each row in the rowAxis is bound to the where expression for each row.  If" +
-            " the row passes the 'where' condition, it is included in the output." +
-            "Columns to Search: Reduces the number of columns bound for use in the where clause.  If not" +
-            " specified, all columns on the colAxisName can be used.  For example, if you had an axis named 'attribute', and it" +
-            " has 10 columns on it, you could list just two (2) of the columns here, and only those columns would be placed into" +
-            " values accessible to the where clause via input.xxx == 'someValue'.  The mapReduce() API runs faster when fewer" +
-            " columns are included in the columnsToSearch." +
-            "Columns to Return: Indicates which columns to return.  If not specified, the entire 'row' is" +
-            " returned.  For example, if you had an axis named 'attribute', and it has 10 columns on it, you could list just" +
-            " two (2) of the columns here, in the returned Map of rows, only these two columns will be in the returned Map." +
-            " The columnsToSearch and columnsToReturn can be completely different, overlap, or not be specified.  This param" +
-            " is similar to the 'Select List' portion of the SQL SELECT statement.  It essentially defaults to '*', but you" +
-            " can have it return less column/value pairs in the returned Map if you add only the columns you want returned here",
             displayType: FormBuilder.DISPLAY_TYPE.FORM,
             size: FormBuilder.MODAL_SIZE.LARGE,
             readonly: opts.readonly,
             afterSave: opts.afterSave,
             onClose: opts.onClose,
             formInputs: {
+                filterHelpSection: {
+                    label: 'Filter Text Definition',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    sectionType: FormBuilder.BOOTSTRAP_TYPE.INFO,
+                    collapsible: true,
+                    collapsed: true,
+                    formInputs: {
+                        filterHelp: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            label: "Written as condition in terms of the columns on the top axis." +
+                            " Example: { Map input -> (input.state == 'TX' || input.state == 'OH') && (input.attribute == 'fuzzy')}." +
+                            " This will only return rows where this condition is true ('state' and 'attribute' are two column values from" +
+                            " the axis). The values for each row in the rowAxis is bound to the where expression for each row.  If" +
+                            " the row passes the 'where' condition, it is included in the output."
+                        }
+                    }
+                },
+                searchHelpSection: {
+                    label: 'Columns to Search Definition',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    sectionType: FormBuilder.BOOTSTRAP_TYPE.INFO,
+                    collapsible: true,
+                    collapsed: true,
+                    formInputs: {
+                        searchHelp: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            label: "Reduces the number of columns bound for use in the where clause.  If not" +
+                            " specified, all columns on the colAxisName can be used.  For example, if you had an axis named 'attribute', and it" +
+                            " has 10 columns on it, you could list just two (2) of the columns here, and only those columns would be placed into" +
+                            " values accessible to the where clause via input.xxx == 'someValue'.  The mapReduce() API runs faster when fewer" +
+                            " columns are included in the columnsToSearch."
+                        }
+                    }
+                },
+                returnHelpSection: {
+                    label: 'Columns to Return Definition',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    sectionType: FormBuilder.BOOTSTRAP_TYPE.INFO,
+                    collapsible: true,
+                    collapsed: true,
+                    formInputs: {
+                        returnHelp: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            label: "Indicates which columns to return.  If not specified, the entire 'row' is" +
+                            " returned.  For example, if you had an axis named 'attribute', and it has 10 columns on it, you could list just" +
+                            " two (2) of the columns here, in the returned Map of rows, only these two columns will be in the returned Map." +
+                            " The columnsToSearch and columnsToReturn can be completely different, overlap, or not be specified.  This param" +
+                            " is similar to the 'Select List' portion of the SQL SELECT statement.  It essentially defaults to '*', but you" +
+                            " can have it return less column/value pairs in the returned Map if you add only the columns you want returned here."
+                        }
+                    }
+                },
                 filterBlankRows: {
                     type: FormBuilder.INPUT_TYPE.BUTTON,
                     label: 'Hide blank rows',
