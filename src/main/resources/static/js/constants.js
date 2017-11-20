@@ -315,7 +315,7 @@ var CONTROLLER_METHOD = {
     GET_VERSIONS: 'getVersions',
     HEALTH: 'health',
     HEARTBEAT: 'heartBeat',
-    HYPER_MAP_REDUCE: 'hyperMapReduce',
+    MAP_REDUCE: 'mapReduce',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     IS_CUBE_CURRENT: 'isCubeUpToDate',
@@ -346,6 +346,14 @@ var CONTROLLER_METHOD = {
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
     UPDATE_REFERENCE_AXES: 'updateReferenceAxes'
+};
+
+var MAP_REDUCE_OPTIONS = {
+    COLUMNS_TO_RETURN: 'columnsToReturn',
+    COLUMNS_TO_SEARCH: 'columnsToSearch',
+    DEFAULT_VALUE: 'defaultValue',
+    INPUT: 'input',
+    OUTPUT: 'output'
 };
 
 var SEARCH_OPTIONS = {

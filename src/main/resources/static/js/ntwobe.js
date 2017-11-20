@@ -3806,10 +3806,14 @@ var NCubeEditor2 = (function ($) {
     }
 
     function callMapReduce() {
+        var result;
         var savedData = getSavedFilterInfo();
         var whereText = '{' + savedData.text + '}';
         var colAxisName = _axes[_colOffset].name;
-        var result = _nce.call(CONTROLLER + CONTROLLER_METHOD.HYPER_MAP_REDUCE, [_nce.getSelectedTabAppId(), _cubeName, colAxisName, whereText, {}, {}, savedData.columnsToSearch, savedData.columnsToReturn]);
+        var options = {};
+        options[MAP_REDUCE_OPTIONS.COLUMNS_TO_SEARCH] = savedData.columnsToSearch;
+        options[MAP_REDUCE_OPTIONS.COLUMNS_TO_RETURN] = savedData.columnsToReturn;
+        result = _nce.call(CONTROLLER + CONTROLLER_METHOD.MAP_REDUCE, [_nce.getSelectedTabAppId(), _cubeName, colAxisName, whereText, options]);
         if (result.status) {
             return result.data;
         }
