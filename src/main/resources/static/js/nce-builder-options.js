@@ -22,44 +22,131 @@ var NCEBuilderOptions = (function () {
 
     /*
      * additional required options:
+     *  axisType
      *  columnSelectList
+     *  filterText
+     *  mapReduceColumns
      */
     function filterData(opts) {
+        function getInputTextForAxisType(val) {
+            switch (opts.axisType) {
+                case 'LONG':
+                    return val + 'L';
+                case 'BIG_DECIMAL':
+                    return 'BigDecimal.valueOf(' + val + ')';
+                case 'DOUBLE':
+                    return val + 'D';
+                case 'DATE':
+                    return 'Date.parse(\'yyyy-MM-dd\',\'' + val + '\')';
+                default:
+                    return '\'' + val + '\'';
+            }
+        }
+        function generateBlankRowConditions() {
+            var i, len;
+            var conditions = [];
+            var columns = opts.columnSelectList;
+            for (i = 0, len = columns.length; i < len; i++) {
+                conditions.push("input[" + getInputTextForAxisType(columns[i]) + "] != null");
+            }
+            return conditions.join(' || ');
+        }
+
+        var defaultText = 'Map input -> ';
+
         return {
             title: 'Filter Data',
-            instructionsTitle: 'Instructions - Filter Data',
-            instructionsText: 'Select filters to apply to cell data for ncube.',
-            displayType: FormBuilder.DISPLAY_TYPE.TABLE,
+            displayType: FormBuilder.DISPLAY_TYPE.FORM,
             size: FormBuilder.MODAL_SIZE.LARGE,
-            canAddRemoveRows: true,
             readonly: opts.readonly,
             afterSave: opts.afterSave,
             onClose: opts.onClose,
-            columns: {
-                isApplied: {
-                    heading: 'Apply',
-                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
-                    default: true
+            formInputs: {
+                filterHelpSection: {
+                    label: 'Filter Text Definition',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    sectionType: FormBuilder.BOOTSTRAP_TYPE.INFO,
+                    collapsible: true,
+                    collapsed: true,
+                    formInputs: {
+                        filterHelp: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            label: "Written as condition in terms of the columns on the top axis." +
+                            " Example: { Map input -> (input.state == 'TX' || input.state == 'OH') && (input.attribute == 'fuzzy')}." +
+                            " This will only return rows where this condition is true ('state' and 'attribute' are two column values from" +
+                            " the axis). The values for each row in the rowAxis is bound to the where expression for each row.  If" +
+                            " the row passes the 'where' condition, it is included in the output."
+                        }
+                    }
                 },
-                column: {
-                    heading: 'Column',
-                    type: FormBuilder.INPUT_TYPE.SELECT,
-                    selectOptions: opts.columnSelectList
+                searchHelpSection: {
+                    label: 'Columns to Search Definition',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    sectionType: FormBuilder.BOOTSTRAP_TYPE.INFO,
+                    collapsible: true,
+                    collapsed: true,
+                    formInputs: {
+                        searchHelp: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            label: "Reduces the number of columns bound for use in the where clause.  If not" +
+                            " specified, all columns on the colAxisName can be used.  For example, if you had an axis named 'attribute', and it" +
+                            " has 10 columns on it, you could list just two (2) of the columns here, and only those columns would be placed into" +
+                            " values accessible to the where clause via input.xxx == 'someValue'.  The mapReduce() API runs faster when fewer" +
+                            " columns are included in the columnsToSearch."
+                        }
+                    }
                 },
-                comparator: {
-                    heading: 'Comparator',
-                    type: FormBuilder.INPUT_TYPE.SELECT,
-                    selectOptions: FILTER_COMPARATOR_LIST,
-                    default: FILTER_COMPARATOR_LIST[0]
+                returnHelpSection: {
+                    label: 'Columns to Return Definition',
+                    type: FormBuilder.INPUT_TYPE.SECTION,
+                    sectionType: FormBuilder.BOOTSTRAP_TYPE.INFO,
+                    collapsible: true,
+                    collapsed: true,
+                    formInputs: {
+                        returnHelp: {
+                            type: FormBuilder.INPUT_TYPE.READONLY,
+                            label: "Indicates which columns to return.  If not specified, the entire 'row' is" +
+                            " returned.  For example, if you had an axis named 'attribute', and it has 10 columns on it, you could list just" +
+                            " two (2) of the columns here, in the returned Map of rows, only these two columns will be in the returned Map." +
+                            " The columnsToSearch and columnsToReturn can be completely different, overlap, or not be specified.  This param" +
+                            " is similar to the 'Select List' portion of the SQL SELECT statement.  It essentially defaults to '*', but you" +
+                            " can have it return less column/value pairs in the returned Map if you add only the columns you want returned here."
+                        }
+                    }
                 },
-                expressionValue: {
-                    heading: 'Comparison Value',
-                    type: FormBuilder.INPUT_TYPE.TEXT
+                filterBlankRows: {
+                    type: FormBuilder.INPUT_TYPE.BUTTON,
+                    label: 'Hide blank rows',
+                    listeners: {
+                        click: function(e) {
+                            var text = defaultText + generateBlankRowConditions();
+                            FormBuilder.setInputValue('filterText', text);
+                            e.preventDefault();
+                        }
+                    }
                 },
-                isIncludeAll: {
-                    heading: 'Include Empty Cells',
-                    type: FormBuilder.INPUT_TYPE.CHECKBOX,
-                    default: true
+                filterText: {
+                    label: 'Filter where clause',
+                    data: opts.filterText || null,
+                    default: defaultText
+                },
+                filterTable: {
+                    type: FormBuilder.INPUT_TYPE.TABLE,
+                    css: {},
+                    data: opts.mapReduceColumns,
+                    columns: {
+                        columnName: {
+                            type: FormBuilder.INPUT_TYPE.READONLY
+                        },
+                        columnsToSearch: {
+                            heading: 'Columns to Search',
+                            type: FormBuilder.INPUT_TYPE.CHECKBOX
+                        },
+                        columnsToReturn: {
+                            heading: 'Columns to Return',
+                            type: FormBuilder.INPUT_TYPE.CHECKBOX
+                        }
+                    }
                 }
             }
         };

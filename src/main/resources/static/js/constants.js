@@ -140,7 +140,6 @@ var REGEX_ANY_TAG = /(<([^>]+)>)/ig;
 var REGEX_HR_TAG = /(<hr([^>]+)>)/ig;
 
 var SAVED_INFO = {
-    FILTER_OUT_BLANK_ROWS: 'filterOutBlankRows',
     INFO_DTO: 'infoDto',
     NUMBER_OF_FROZEN_COLUMNS: 'numFrozenCols',
     SCOPE: 'scope',
@@ -173,7 +172,6 @@ var AXIS_TYPE_LIST = {
 var URL_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CACHE_ENABLED_LIST = ['string', 'binary', 'exp', 'method', 'template'];
 var CODE_CELL_TYPE_LIST = ['exp', 'method'];
-var FILTER_COMPARATOR_LIST = ['=','!=','>','<','contains','excludes'];
 var DELTA_IGNORE_LIST = ['@id', '@type', 'cache', 'hasBeenCached', 'hash'];
 var METAPROPERTIES = {
     COLUMN_BLACKLIST: ['value','url','type','id','name'],
@@ -317,6 +315,7 @@ var CONTROLLER_METHOD = {
     GET_VERSIONS: 'getVersions',
     HEALTH: 'health',
     HEARTBEAT: 'heartBeat',
+    MAP_REDUCE: 'mapReduce',
     IS_APP_ADMIN: 'isAppAdmin',
     IS_APP_LOCKED: 'isAppLocked',
     IS_CUBE_CURRENT: 'isCubeUpToDate',
@@ -347,6 +346,14 @@ var CONTROLLER_METHOD = {
     UPDATE_CUBE_METAPROPERTIES: 'updateCubeMetaProperties',
     UPDATE_COLUMN_METAPROPERTIES: 'updateColumnMetaProperties',
     UPDATE_REFERENCE_AXES: 'updateReferenceAxes'
+};
+
+var MAP_REDUCE_OPTIONS = {
+    COLUMNS_TO_RETURN: 'columnsToReturn',
+    COLUMNS_TO_SEARCH: 'columnsToSearch',
+    DEFAULT_VALUE: 'defaultValue',
+    INPUT: 'input',
+    OUTPUT: 'output'
 };
 
 var SEARCH_OPTIONS = {

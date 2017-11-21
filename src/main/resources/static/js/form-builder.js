@@ -7,6 +7,7 @@
  *      closeButtonText     - text of close button; default 'Cancel'
  *      afterSave           - callback fires upon clicking save button
  *      onClose             - callback fires whenever modal closes (save or otherwise)
+ *      onOpen              - callback fires when modal opens
  *      closeAfterSave      - should the modal close or stay open after saving; default TRUE
  *      readonly            - should the user be able to edit or only view; default FALSE
  *      displayType         - type of display (table, list, form); use constant DISPLAY_TYPE
@@ -25,6 +26,7 @@
  *          css             - optional css for column
  *      formInputs          - input values to use in form view
  *          collapsible     - used to collapse sections; default FALSE
+ *          collapsed       - section starts collapsed; default FALSE
  *          sectionType     - bootstrap type style of section; use constant BOOTSTRAP_TYPE
  *          type            - type of input; use constant INPUT_TYPE; default TEXT
  *          default         - if input has a desired default value
@@ -122,6 +124,9 @@ var FormBuilder = (function ($) {
 
         if (buildNew) {
             _modal.modal();
+            if (typeof _options.onOpen === FUNCTION) {
+                _options.onOpen();
+            }
         } else {
             _modal.find('.modal-dialog').toggleClass(Object.keys(MODAL_SIZE).join(' '), false).addClass(_options.size);
             addModalFilter();
@@ -233,8 +238,8 @@ var FormBuilder = (function ($) {
         html += '</div>';
 
         footer = $(html);
-        footer.find('.form-builder-select-all').on('click', function() { checkAll(true, 'input[type="checkbox"]'); });
-        footer.find('.form-builder-select-none').on('click', function() { checkAll(false, 'input[type="checkbox"]'); });
+        footer.find('.form-builder-select-all').on('click', function() { selectAll(); });
+        footer.find('.form-builder-select-none').on('click', function() { selectNone(); });
         footer.find('.form-builder-add').on('click', function() { addTableRowForTableTypeBuilder(); });
         footer.find('.form-builder-clear').on('click', function() { clearTableRows(); });
         footer.find('.form-builder-cancel').on('click', function() { closeBuilderModal(); });
@@ -311,7 +316,7 @@ var FormBuilder = (function ($) {
         return section;
     }
 
-    function initSubSection(id, title, body, type, collapsible) {
+    function initSubSection(id, title, body, type, collapsible, collapsed) {
         var sectionId = ID_PREFIX.SECTION + id;
         var collapseId = ID_PREFIX.COLLAPSE + id;
         var panelType = type || BOOTSTRAP_TYPE.DEFAULT;
@@ -319,13 +324,14 @@ var FormBuilder = (function ($) {
             + '<div class="panel panel-' + panelType + '">'
             + '<div class="panel-heading"><h4 class="panel-title">'
             + (collapsible ? ('<a data-toggle="collapse" href="#' + collapseId + '">' + title + '</a>') : title)
-            + '</h4></div><div id="' + collapseId + '" class="panel-collapse collapse in">'
+            + '</h4></div><div id="' + collapseId + '" class="panel-collapse collapse'
+            + (collapsed ? '' : ' in') + '">'
             + '<div class="panel-body">' + (body || '') + '</div></div></div></div></div>';
         return $(html);
     }
     
     function initSubSectionFromFormInput(formInput) {
-        return initSubSection(formInput.name, formInput.label, formInput.data, formInput.sectionType, formInput.collapsible);
+        return initSubSection(formInput.name, formInput.label, formInput.data, formInput.sectionType, formInput.collapsible, formInput.collapsed);
     }
     
     function addToSubSection(section, toAdd) {
@@ -451,7 +457,7 @@ var FormBuilder = (function ($) {
                 control = createFormDefaultDisplaySelectInput(id, label, selectOptions, readonly, initVal);
                 break;
             case INPUT_TYPE.TABLE:
-                control = $('<div id="' + id + '"/>').append(buildTable(initVal, formInput));
+                control = buildFormTable(id, initVal, formInput);
                 break;
             case INPUT_TYPE.TEXT_SELECT:
                 control = createFormTextSelectInput(id, label, selectOptions, readonly, initVal);
@@ -607,6 +613,40 @@ var FormBuilder = (function ($) {
         var tableOpts = findOptionsFormElement(key);
         parent.empty();
         parent.append(buildTable(data, tableOpts));
+    }
+
+    function buildFormTable(id, data, tableOpts) {
+        var wrapper, addBtn, clearBtn, selectAllBtn, selectNoneBtn;
+        var table = buildTable(data, tableOpts);
+
+        if (tableOpts.hasSelectAllNone) {
+            selectAllBtn = $('<button class="btn btn-info btn-sm form-builder-select-all" aria-hidden="true">Select All</button>');
+            selectNoneBtn = $('<button class="btn btn-info btn-sm form-builder-select-none" aria-hidden="true">Select None</button>');
+            selectAllBtn.on('click', function (e) {
+                e.preventDefault();
+                selectAll(id);
+            });
+            selectNoneBtn.on('click', function (e) {
+                e.preventDefault();
+                selectNone(id);
+            });
+        }
+
+        if (tableOpts.canAddRemoveRows) {
+            addBtn = $('<button class="btn btn-success btn-sm form-builder-add">Add New</button>');
+            clearBtn = $('<button class="btn btn-danger btn-sm form-builder-clear">Clear</button>');
+            addBtn.on('click', function(e) {
+                e.preventDefault();
+                addTableRow(table.find('table'), null, tableOpts)
+            });
+            clearBtn.on('click', function(e) {
+                e.preventDefault();
+                clearTableRows(id);
+            });
+        }
+
+        wrapper = $('<div id="' + id + '" class="form-builder-input-table"/>').append(selectAllBtn, selectNoneBtn, addBtn, clearBtn, table);
+        return wrapper;
     }
 
     function buildTable(data, tableOpts) {
@@ -820,12 +860,13 @@ var FormBuilder = (function ($) {
         return inputElement;
     }
 
-    function clearTableRows() {
-        findTableRows().remove();
+    function clearTableRows(id) {
+        findTableRows(id).remove();
     }
 
-    function findTableRows() {
-        return _modal.find('tr.' + TR_CLASS);
+    function findTableRows(id) {
+        var wrapper = id ? $('#' + id) : _modal;
+        return wrapper.find('tr.' + TR_CLASS);
     }
 
     function copyTableDataToModel() {
@@ -919,6 +960,9 @@ var FormBuilder = (function ($) {
     function getInputValue(key) {
         var el = findElementByKey(key);
         if (el.length) {
+            if (el.is('[type=checkbox]')) {
+                return el[0].checked;
+            }
             return el.val();
         }
     }
@@ -1092,6 +1136,16 @@ var FormBuilder = (function ($) {
 
     function checkAll(state, queryStr) {
         $(queryStr).filter(':visible').not('.exclude').prop('checked', state).change();
+    }
+
+    function selectAll(id) {
+        var tableKey = id ? '#' + id + ' ' : '';
+        checkAll(true, tableKey + 'input[type="checkbox"]');
+    }
+
+    function selectNone(id) {
+        var tableKey = id ? '#' + id + ' ' : '';
+        checkAll(false, tableKey + 'input[type="checkbox"]');
     }
 
     function showAlert(text) {

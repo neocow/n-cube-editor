@@ -40,3 +40,7 @@ a.form-builder-data-section-none:hover {
     color: #999;
     text-decoration: none;
 }
+
+.form-builder-input-table .btn{
+    margin-left: 5px;
+}
