@@ -1,6 +1,6 @@
 ### Revision History
-* 1.1.24-SNAPSHOT
-  * --
+* 1.1.24
+  * Consumed n-cube 4.1.27
 * 1.1.23
   * Implemented values mode on the front end to utilize new `getCells` API.
   * Consumed n-cube 4.1.26
