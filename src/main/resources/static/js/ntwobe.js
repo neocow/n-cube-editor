@@ -285,7 +285,7 @@ var NCubeEditor2 = (function ($) {
         if (s.length) {
             s = s.substring(0, s.length - 1);
         }
-        s = '\\b(' + s + ')\\b';
+        s = '(?<![\\/])\\b(' + s + ')\\b(?![\\/])';
         _cubeMapRegex = null;
         _cubeMapRegex = new RegExp(s, 'gi');
     }
@@ -1000,7 +1000,7 @@ var NCubeEditor2 = (function ($) {
             }
         }
         if (val === undefined) {
-            val = '<a class="nc-anc-url">' + rowHeader.url + '</a>';
+            val = '<a class="nce-anc-url">' + rowHeader.url + '</a>';
         }
         if (rule !== '') {
             val = rule + '<span class="code">' + val + '</span>';
@@ -1949,7 +1949,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function removeCellListeners() {
-        _hotContainer.find('a.nc-anc').parent().empty();
+        _hotContainer.find('a.nce-anc').parent().empty();
     }
 
     function categoryRenderer(instance, td, row, col, prop, value, cellProperties) {
@@ -2072,7 +2072,7 @@ var NCubeEditor2 = (function ($) {
 
             if (cellData.url !== undefined) {
                 td.className += CLASS_HANDSON_CELL_URL;
-                td.innerHTML = '<a class="nc-anc-url">' + cellData.url + '</a>';
+                td.innerHTML = '<a class="nce-anc-url">' + cellData.url + '</a>';
                 activateLinks(td);
             } else if (cellData.value !== undefined && CODE_CELL_TYPE_LIST.indexOf(cellData.type) > -1) {
                 td.className += CLASS_HANDSON_CELL_CODE;
@@ -2099,7 +2099,7 @@ var NCubeEditor2 = (function ($) {
                 td.innerHTML = getStringFromDate(columnDefault.value);
             } else {
                 if (columnDefault.url !== undefined) {
-                    td.innerHTML = '<a class="nc-anc-url">' + columnDefault.url + '</a>';
+                    td.innerHTML = '<a class="nce-anc-url">' + columnDefault.url + '</a>';
                 } else {
                     columnDefault = createUrlAnchorsInString('' + columnDefault.value);
                     columnDefault = buildExpressionLink(columnDefault, NONE);
@@ -2116,7 +2116,7 @@ var NCubeEditor2 = (function ($) {
             activateLinks(td);
         } else if (_data.defaultCellValueUrl !== null && _data.defaultCellValueUrl !== undefined) {
             td.className += CLASS_HANDSON_CELL_DEFAULT;
-            td.innerHTML = '<a class="nc-anc-url">' + _data.defaultCellValueUrl + '</a>';
+            td.innerHTML = '<a class="nce-anc-url">' + _data.defaultCellValueUrl + '</a>';
             activateLinks(td);
         }
     }
@@ -2194,13 +2194,13 @@ var NCubeEditor2 = (function ($) {
         var ex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
         var regex = new RegExp(ex);
         return val.replace(regex, function (matched) {
-            return '<a class="nc-anc-url">' + matched + '</a>';
+            return '<a class="nce-anc-url">' + matched + '</a>';
         });
     }
 
     function addCubeLinksToString(str) {
         return str.replace(_cubeMapRegex, function (matched) {
-            return '<a class="nc-anc-cube">' + matched + '</a>';
+            return '<a class="nce-anc-cube">' + matched + '</a>';
         });
     }
     
@@ -2224,7 +2224,7 @@ var NCubeEditor2 = (function ($) {
 
         //highlight in between links
         highlighted = '';
-        while ((ancIdx = url.indexOf('<a class="nc-anc-')) > -1) {
+        while ((ancIdx = url.indexOf('<a class="nce-anc-')) > -1) {
             text = url.substring(0, ancIdx);
             endIdx = url.indexOf('</a>') + 4;
             tempHighlight = highlightLanguage ? hljs.highlight(highlightLanguage, text, true, top) : hljs.highlightAuto(text);
@@ -2270,11 +2270,11 @@ var NCubeEditor2 = (function ($) {
     }
 
     function activateLinks(element) {
-        $(element).find('a.nc-anc-cube').on('click', function (e) {
+        $(element).find('a.nce-anc-cube').on('click', function (e) {
             e.preventDefault();
             onCubeLinkClick(this.textContent.toLowerCase());
         });
-        $(element).find('a.nc-anc-url').on('click', function (e) {
+        $(element).find('a.nce-anc-url').on('click', function (e) {
             e.preventDefault();
             onUrlLinkClick(this.innerHTML);
         });
