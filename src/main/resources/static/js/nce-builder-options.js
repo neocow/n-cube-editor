@@ -1557,6 +1557,7 @@ var NCEBuilderOptions = (function () {
                         columnList: {
                             type: FormBuilder.INPUT_TYPE.TABLE,
                             css: {},
+                            maxRows: 5,
                             data: opts.columnData,
                             columns: columnListColumns
                         }

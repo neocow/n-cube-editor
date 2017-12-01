@@ -44,3 +44,14 @@ a.form-builder-data-section-none:hover {
 .form-builder-input-table .btn{
     margin-left: 5px;
 }
+
+.form-builder-table-page-number {
+    margin-left: 10px;
+}
+
+.form-builder-table-pagination {
+    text-align: center;
+    border-top: 1px solid lightgrey;
+    margin: 10px -15px -25px -15px;
+    padding-top: 5px;
+}

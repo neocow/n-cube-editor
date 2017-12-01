@@ -24,6 +24,7 @@
  *          hasFilter       - can filter on column; default FALSE
  *          sortable        - can sort on column; default FALSE
  *          css             - optional css for column
+ *          maxRows         - enter non-zero number for table pagination
  *      formInputs          - input values to use in form view
  *          collapsible     - used to collapse sections; default FALSE
  *          collapsed       - section starts collapsed; default FALSE
@@ -608,11 +609,11 @@ var FormBuilder = (function ($) {
         });
     }
 
-    function populateTable(key, data) {
+    function populateTable(key, data, tableOpts, pageNum) {
         var parent = _modal.find('#' + ID_PREFIX.INPUT + key);
-        var tableOpts = findOptionsFormElement(key);
+        tableOpts = tableOpts || findOptionsFromElement(key);
         parent.empty();
-        parent.append(buildTable(data, tableOpts));
+        parent.append(buildTable(data, tableOpts, pageNum));
     }
 
     function buildFormTable(id, data, tableOpts) {
@@ -649,8 +650,8 @@ var FormBuilder = (function ($) {
         return wrapper;
     }
 
-    function buildTable(data, tableOpts) {
-        var columns, columnKeys, headingRow, c, cLen, column, header, key, style, maxHeight, dataTable;
+    function buildTable(data, tableOpts, pageNum) {
+        var columns, columnKeys, headingRow, c, cLen, column, header, key, style, maxHeight, dataTable, wrapper;
         if (!data) {
             return;
         }
@@ -675,7 +676,7 @@ var FormBuilder = (function ($) {
             headingRow.append(header);
         }
         dataTable.append(headingRow);
-        createTableRows(dataTable, data, tableOpts);
+        createTableRows(dataTable, data, tableOpts, pageNum);
 
         if (tableOpts.canAddRemoveRows && !tableOpts.readonly) {
             headingRow.append('<th/>');
@@ -683,11 +684,54 @@ var FormBuilder = (function ($) {
 
         addTableSectionListeners(dataTable);
         addCountsToTableSectionHeaders(dataTable);
-        return $('<div/>').append($('<div style="max-height:' + maxHeight + ';overflow-y:auto;"/>').append(dataTable));
+        wrapper = $('<div/>');
+        wrapper.append($('<div style="max-height:' + maxHeight + ';overflow-y:auto;"/>').append(dataTable));
+
+        if (tableOpts.maxRows) {
+            addPaginationToWrapper(wrapper, data, tableOpts, pageNum);
+        }
+
+        return wrapper;
+    }
+
+    function addPaginationToWrapper(wrapper, data, tableOpts, pageNum) {
+        var i, len, firstNum, isSelected, tag, href, curPageNum;
+        var html = '<div class="form-builder-table-pagination">';
+        var lastPage = Math.ceil(data.length / tableOpts.maxRows);
+        pageNum = pageNum || 1;
+        if (lastPage > 10 && pageNum > 6) {
+            firstNum = pageNum - 4;
+            html += '<a href="#" class="form-builder-table-page-number">1</a>';
+            html += '<span class="form-builder-table-page-number">...</span>';
+        } else {
+            firstNum = 1;
+        }
+
+        for (i = 0, len = Math.min(lastPage - firstNum, 10); i <= len; i++) {
+            curPageNum = firstNum + i;
+            isSelected = curPageNum === pageNum;
+            tag = isSelected ? 'span' : 'a';
+            href = isSelected ? '' : ' href="#"';
+            html += '<' + tag + href + ' class="form-builder-table-page-number">' + curPageNum + '</' + tag+ '>';
+        }
+
+        if (lastPage > 10 && pageNum < lastPage - 4) {
+            html += '<span class="form-builder-table-page-number">...</span>';
+            html += '<a href="#" class="form-builder-table-page-number">' + lastPage + '</a>';
+        }
+        html += '</div>';
+        wrapper.append(html);
+
+        wrapper.find('a.form-builder-table-page-number').on('click', function(e) {
+            e.preventDefault();
+            copyFormTableDataToModel();
+            populateTable(tableOpts.name, data, tableOpts, parseInt(this.textContent));
+        });
     }
 
     function sortTable(table, data, sortHeader, tableOpts) {
         var asc;
+        var pageNum = (table.parent().find('.form-builder-table-page-number.selected')[0] || {}).textContent;
         var headers = table.parent().parent().find('th');
         var curIdx = headers.index(sortHeader);
         var span = headers.find('span');
@@ -714,18 +758,21 @@ var FormBuilder = (function ($) {
         });
 
         table.find('tr.' + TR_CLASS).remove();
-        createTableRows(table, data, tableOpts);
+        createTableRows(table, data, tableOpts, pageNum);
         if (typeof Filter.filter === 'function') {
             Filter.filter();
         }
     }
 
-    function createTableRows(table, data, tableOpts) {
-        var d, dLen;
-        dLen = data.length;
+    function createTableRows(table, data, tableOpts, pageNum) {
+        var i, len;
+        var dLen = data.length;
+        var maxRows = tableOpts.maxRows;
         if (dLen) {
-            for (d = 0; d < dLen; d++) {
-                addTableRow(table, data[d], tableOpts);
+            i = maxRows && pageNum ? maxRows * (pageNum - 1) : 0;
+            len = maxRows ? Math.min(maxRows + i, dLen) : dLen;
+            for (i; i < len; i++) {
+                addTableRow(table, data[i], tableOpts);
             }
         } else {
             addTableRow(table, null, tableOpts); //start with empty row
@@ -870,15 +917,23 @@ var FormBuilder = (function ($) {
     }
 
     function copyTableDataToModel() {
-        var trs, columnKeys, columns, trIdx, trLen, tr;
-        _data.splice(0, _data.length);
+        var trs, columnKeys, columns, trIdx, trLen, tr, pageNum, startIdx, len;
+        var maxRows = _options.maxRows;
+        if (maxRows) {
+            pageNum = ($('.form-builder-table-page-number.selected')[0] || {}).textContent;
+            startIdx = (pageNum - 1) * maxRows;
+            len = maxRows;
+        } else {
+            startIdx = 0;
+            len = _data.length;
+        }
+        _data.splice(startIdx, len);
         trs = findTableRows();
         columnKeys = _options.columnKeys;
         columns = _options.columns;
         for (trIdx = 0, trLen = trs.length; trIdx < trLen; trIdx++) {
-            tr = null;
             tr = $(trs[trIdx]);
-            _data.push(getDataRow(columns, columnKeys, tr));
+            _data.splice(startIdx + trIdx, 0, getDataRow(columns, columnKeys, tr));
         }
     }
 
@@ -905,6 +960,7 @@ var FormBuilder = (function ($) {
                         val = input.val();
                         break;
                 }
+                _data[key] = null;
                 _data[key] = val || inputOpts.default;
             }
         }
@@ -915,6 +971,7 @@ var FormBuilder = (function ($) {
         var columnKeys = Object.keys(columns);
         for (i = 0, len = columnKeys.length; i < len; i++) {
             key = columnKeys[i];
+            _data[key] = null;
             _data[key] = [];
             els = findTableElementsByKey(key);
             for (e = 0, eLen = els.length; e < eLen; e++) {
@@ -1010,18 +1067,6 @@ var FormBuilder = (function ($) {
     }
 
     function addModalFilter() {
-        var items, checkBoxes, checkedItems, contentDiv, countSpan, div, input;
-        if (!_options.hasFilter) {
-            return;
-        }
-        items = [];
-        checkBoxes = [];
-        checkedItems = [];
-        contentDiv = _modal.find('.modal-content');
-        countSpan = $('<span/>');
-        div = $('<div/>');
-        input = $('<input/>');
-
         function refreshItems() {
             input.focus();
             items = contentDiv.find('.modal-body').find('li,tr');
@@ -1043,6 +1088,18 @@ var FormBuilder = (function ($) {
             });
             countSpan[0].innerHTML = checkedItems.length + ' of ' + items.length + ' Selected';
         }
+
+        var items, checkBoxes, checkedItems, contentDiv, countSpan, div, input;
+        if (!_options.hasFilter) {
+            return;
+        }
+        items = [];
+        checkBoxes = [];
+        checkedItems = [];
+        contentDiv = _modal.find('.modal-content');
+        countSpan = $('<span/>');
+        div = $('<div/>');
+        input = $('<input/>');
 
         countSpan.addClass('pull-left selected-count');
         contentDiv.find('.btn.pull-left:last').after(countSpan);
@@ -1157,7 +1214,7 @@ var FormBuilder = (function ($) {
         _modal.find('.modal-body').prepend(warning);
     }
 
-    function findOptionsFormElement(elementKey, formInputs) {
+    function findOptionsFromElement(elementKey, formInputs) {
         var i, len, key, keys, formElement, formElementChild;
         if (!formInputs) {
             formInputs = _options.formInputs;
@@ -1170,7 +1227,7 @@ var FormBuilder = (function ($) {
                 return formElement;
             }
             if (formElement.hasOwnProperty('formInputs')) {
-                formElementChild = findOptionsFormElement(elementKey, formElement.formInputs);
+                formElementChild = findOptionsFromElement(elementKey, formElement.formInputs);
                 if (formElementChild) {
                     return formElementChild;
                 }
