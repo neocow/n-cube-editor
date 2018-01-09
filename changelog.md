@@ -1,5 +1,6 @@
 ### Revision History
-* 1.1.25-SNAPSHOT
+* 1.1.25
+  * Consumed n-cube 4.2.0
   * Fix cube link breaking url link issue.
 * 1.1.24
   * Consumed n-cube 4.1.27
