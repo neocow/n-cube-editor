@@ -2241,13 +2241,16 @@ var NCubeEditor2 = (function ($) {
     }
 
     function onCubeLinkClick(cubeName) {
-        var i, len, fullName;
-        for (i = 0, len = _prefixes.length; i < len; i++) {
-            fullName = _prefixes[i] + cubeName;
-            if (_cubeMap[fullName]) {
-                _nce.selectCubeByName(_nce.getProperCubeName(fullName));
-                return;
+        function selectCubeIfExists(name) {
+            if (_cubeMap.hasOwnProperty(name)) {
+                _nce.selectCubeByName(_nce.getProperCubeName(name));
+                return true;
             }
+        }
+        var i, len;
+        if (selectCubeIfExists(cubeName)) return;
+        for (i = 0, len = _prefixes.length; i < len; i++) {
+            if (selectCubeIfExists(_prefixes[i] + cubeName)) return;
         }
     }
 
@@ -3204,6 +3207,7 @@ var NCubeEditor2 = (function ($) {
         if (cellRange.startCol < _colOffset && cellRange.startCol === cellRange.endCol) {
             return getColumnValues(cellRange.startCol, cellRange.startRow - ROW_OFFSET, cellRange.endRow - ROW_OFFSET);
         }
+        return '';
     }
 
     function nceCutCopyData(range, isCut) {
