@@ -1296,7 +1296,7 @@ var NCubeEditor2 = (function ($) {
     }
 
     function setUpColumnCombinationsToShowFromFilter() {
-        function getColumnIdCombinationFromRow(row) {
+        function getColumnIdCombinationFromRow(key, row) {
             var i, axis, axisName, column, columnValue, colId;
             var combo = [];
             for (i = 0; i < _colOffset; i++) {
@@ -1305,8 +1305,20 @@ var NCubeEditor2 = (function ($) {
                 if (!columnIdMap.hasOwnProperty(axisName)) {
                     columnIdMap[axisName] = {};
                 }
-                if (row.hasOwnProperty(axisName)) {
+                if (key.hasOwnProperty(axisName)) {
+                    columnValue = key[axisName];
+                } else if (getAxisColumnByValue(axisName, key)) {
+                    columnValue = key;
+                } else if (Array.isArray(key) && getAxisColumnByValue(axisName, key[0])) {
+                    columnValue = key[0];
+                } else if (row && row.hasOwnProperty(axisName)) {
                     columnValue = row[axisName];
+                } else if (getAxisColumnByValue(axisName, row)) {
+                    columnValue = row;
+                } else {
+                    columnValue = null;
+                }
+                if (columnValue !== null) {
                     if (columnIdMap[axisName].hasOwnProperty(columnValue)) {
                         colId = columnIdMap[axisName][columnValue];
                     } else {
@@ -1326,19 +1338,21 @@ var NCubeEditor2 = (function ($) {
             return combo.join('_');
         }
 
-        var i, len, mapReduceColumnCombos, rowKeys, row, curCombo;
+        var i, len, mapReduceColumnCombos, rowKeys, row, curCombo, key;
         var columnIdMap = {};
         var mapReduceResult = callMapReduce();
-        if (!mapReduceResult || !mapReduceResult.hasOwnProperty('@keys')) {
+        if (!mapReduceResult) {
             _nce.showNote('Filter did not return any results. Showing all data.', 'Note', TEN_SECOND_TIMEOUT);
             return;
         }
 
-        mapReduceColumnCombos = mapReduceResult['@keys'];
+        mapReduceColumnCombos = mapReduceResult['@keys'] || mapReduceResult;
+        delete mapReduceColumnCombos['@type'];
         rowKeys = Object.keys(mapReduceColumnCombos);
         for (i = 0, len = rowKeys.length; i < len; i++) {
-            row = mapReduceColumnCombos[rowKeys[i]];
-            curCombo = getColumnIdCombinationFromRow(row);
+            key = rowKeys[i];
+            row = mapReduceColumnCombos[key];
+            curCombo = getColumnIdCombinationFromRow(key, row);
             if (curCombo) {
                 _columnIdCombinationsToShow.push(curCombo);
             }
@@ -3817,7 +3831,7 @@ var NCubeEditor2 = (function ($) {
         var options = {};
         options[MAP_REDUCE_OPTIONS.COLUMNS_TO_SEARCH] = savedData.columnsToSearch;
         options[MAP_REDUCE_OPTIONS.COLUMNS_TO_RETURN] = savedData.columnsToReturn;
-        result = _nce.call(CONTROLLER + CONTROLLER_METHOD.MAP_REDUCE, [_nce.getSelectedTabAppId(), _cubeName, colAxisName, whereText, options]);
+        result = _nce.call(CONTROLLER + CONTROLLER_METHOD.MAP_REDUCE, [_nce.getSelectedTabAppId(), _cubeName, colAxisName, whereText, options], {noResolveRefs:false});
         if (result.status) {
             return result.data;
         }

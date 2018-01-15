@@ -39,7 +39,7 @@ var NCEBuilderOptions = (function () {
                 case 'DATE':
                     return 'Date.parse(\'yyyy-MM-dd\',\'' + val + '\')';
                 default:
-                    return '\'' + val + '\'';
+                    return val === DEFAULT_TEXT ? 'null' : '\'' + val + '\'';
             }
         }
         function generateBlankRowConditions() {
