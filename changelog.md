@@ -1,5 +1,6 @@
 ### Revision History
-* 1.1.26-SNAPSHOT
+* 1.1.26
+  * Consumed n-cube 4.2.1
   * Fix cube-to-cube link issue.
   * Fix handling different return types that could be received from `NCube.mapReduce()` for filter.
 * 1.1.25
