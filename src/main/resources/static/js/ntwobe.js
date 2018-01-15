@@ -1307,12 +1307,12 @@ var NCubeEditor2 = (function ($) {
                 }
                 if (key.hasOwnProperty(axisName)) {
                     columnValue = key[axisName];
-                } else if (row && row.hasOwnProperty(axisName)) {
-                    columnValue = row[axisName];
                 } else if (getAxisColumnByValue(axisName, key)) {
                     columnValue = key;
                 } else if (Array.isArray(key) && getAxisColumnByValue(axisName, key[0])) {
                     columnValue = key[0];
+                } else if (row && row.hasOwnProperty(axisName)) {
+                    columnValue = row[axisName];
                 } else if (getAxisColumnByValue(axisName, row)) {
                     columnValue = row;
                 } else {
