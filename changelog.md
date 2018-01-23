@@ -1,6 +1,8 @@
 ### Revision History
-* 1.1.27-SNAPSHOT
-  * --
+* 1.1.27
+  * Consumed n-cube 4.2.2
+  * Consumed tomcat 8.5.24
+  * Consumed spring boot 1.5.9.RELEASE
 * 1.1.26
   * Consumed n-cube 4.2.1
   * Fix cube-to-cube link issue.
