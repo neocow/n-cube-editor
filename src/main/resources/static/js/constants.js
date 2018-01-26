@@ -353,7 +353,8 @@ var MAP_REDUCE_OPTIONS = {
     COLUMNS_TO_SEARCH: 'columnsToSearch',
     DEFAULT_VALUE: 'defaultValue',
     INPUT: 'input',
-    OUTPUT: 'output'
+    OUTPUT: 'output',
+    SHOULD_EXECUTE: shouldExecute
 };
 
 var SEARCH_OPTIONS = {
