@@ -3828,7 +3828,10 @@ var NCubeEditor2 = (function ($) {
         var savedData = getSavedFilterInfo();
         var whereText = '{' + savedData.text + '}';
         var colAxisName = _axes[_colOffset].name;
+        var isValuesMode = _viewMode === VIEW_VALUES;
         var options = {};
+        options[MAP_REDUCE_OPTIONS.INPUT] = isValuesMode ? getSavedScope() : {};
+        options[MAP_REDUCE_OPTIONS.SHOULD_EXECUTE] = isValuesMode;
         options[MAP_REDUCE_OPTIONS.COLUMNS_TO_SEARCH] = savedData.columnsToSearch;
         options[MAP_REDUCE_OPTIONS.COLUMNS_TO_RETURN] = savedData.columnsToReturn;
         result = _nce.call(CONTROLLER + CONTROLLER_METHOD.MAP_REDUCE, [_nce.getSelectedTabAppId(), _cubeName, colAxisName, whereText, options], {noResolveRefs:false});
