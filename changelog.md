@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.28
+  * Consumed n-cube 4.2.3
 * 1.1.27
   * Consumed n-cube 4.2.2
   * Consumed tomcat 8.5.24
