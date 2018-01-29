@@ -354,7 +354,7 @@ var MAP_REDUCE_OPTIONS = {
     DEFAULT_VALUE: 'defaultValue',
     INPUT: 'input',
     OUTPUT: 'output',
-    SHOULD_EXECUTE: shouldExecute
+    SHOULD_EXECUTE: 'shouldExecute'
 };
 
 var SEARCH_OPTIONS = {
