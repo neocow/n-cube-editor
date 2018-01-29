@@ -1,7 +1,8 @@
 ### Revision History
-* 1.1.28-SNAPSHOT
-  * Consumed n-cube 4.2.3.
+* 1.1.29-SNAPSHOT
   * Bug fix: Filter now calls non-execute version of `NCube.mapReduce()` to avoid adding all required scope on executed calls. Executes only when already in values mode.
+* 1.1.28
+  * Consumed n-cube 4.2.3
 * 1.1.27
   * Consumed n-cube 4.2.2
   * Consumed tomcat 8.5.24
