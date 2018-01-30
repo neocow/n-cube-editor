@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.30-SNAPSHOT
+  * --
 * 1.1.29
   * NCE updated to not execute cells when filtering, except when in 'values' mode.
   * Consumed n-cube 4.2.4
