@@ -367,7 +367,7 @@ var NCubeEditor2 = (function ($) {
     }
     
     function shouldLoadAllCells() {
-        return getShouldLoadAllForSearch() || getSavedFilterText();
+        return getShouldLoadAllForSearch();
     }
 
     function loadCellRows() {
