@@ -3877,23 +3877,21 @@ var NCE = (function ($) {
     }
 
     function handleUpdateReturnValues(appId, map, isUpdate, success, message) {
-        var note, updateMap, addMap, deleteMap, rejectMap, fastforwardMap, restoreMap,
-            updates, adds, deletes, rejects, fastforwards, restores;
-        updateMap = map['updates'];
-        restoreMap = map['restores'];
-        addMap = map['adds'];
-        deleteMap = map['deletes'];
-        rejectMap = map['rejects'];
-        fastforwardMap = map['fastforwards'];
-        updates = getUpdateReturnMapLength(updateMap);
-        restores = getUpdateReturnMapLength(restoreMap);
-        adds = getUpdateReturnMapLength(addMap);
-        deletes = getUpdateReturnMapLength(deleteMap);
-        rejects = getUpdateReturnMapLength(rejectMap);
-        fastforwards = getUpdateReturnMapLength(fastforwardMap);
+        var updateMap = map['updates'];
+        var restoreMap = map['restores'];
+        var addMap = map['adds'];
+        var deleteMap = map['deletes'];
+        var rejectMap = map['rejects'];
+        var fastforwardMap = map['fastforwards'];
+        var updates = getUpdateReturnMapLength(updateMap);
+        var restores = getUpdateReturnMapLength(restoreMap);
+        var adds = getUpdateReturnMapLength(addMap);
+        var deletes = getUpdateReturnMapLength(deleteMap);
+        var rejects = getUpdateReturnMapLength(rejectMap);
+        var fastforwards = getUpdateReturnMapLength(fastforwardMap);
 
-        note = '<b>Branch ' + (isUpdate ? 'Update' : 'Commit') + ' ' + (success ? 'succeeded' : 'failed')
-             + ':</b><hr class="hr-small"/>'
+        var note = '<b>' + getTextAppId(appId)+ ': ' + (isUpdate ? 'Update' : 'Commit') + ' '
+             + (success ? 'succeeded' : 'failed') + '</b><hr class="hr-small"/>'
              + adds + ' cubes <b class="' + CHANGETYPE.CREATED.CSS_CLASS + '">added</b><br>'
              + restores + ' cubes <b class="' + CHANGETYPE.RESTORED.CSS_CLASS + '">restored</b><br>'
              + updates + ' cubes <b class="' + CHANGETYPE.UPDATED.CSS_CLASS + '">updated</b><br>'
