@@ -450,6 +450,26 @@ function enableDisableMenuButton(el, enable, onClick) {
     }
 }
 
+function parseURLParams(url) {
+    var queryStart = url.indexOf('?') + 1;
+    var queryEnd = url.length + 1;
+    var query = url.slice(queryStart, queryEnd - 1);
+    var pairs = query.replace(/\+/g, ' ').split('&');
+    var params = {};
+    var i, n, v, nv;
+
+    if (query === url || query === '') return {};
+    for (i = 0; i < pairs.length; i++) {
+        nv = pairs[i].split('=', 2);
+        n = decodeURIComponent(nv[0]);
+        v = decodeURIComponent(nv[1]);
+
+        if (!params.hasOwnProperty(n)) params[n] = [];
+        params[n].push(nv.length === 2 ? v : null);
+    }
+    return params;
+}
+
 (function($) {
     $.fn.hasScrollBar = function() {
         return this.get(0).scrollWidth > this.width();
