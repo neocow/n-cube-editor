@@ -728,7 +728,8 @@ var NCE = (function ($) {
                   + '<div class="divider"/>';
         }
 
-        html += '<li><a href="#" class="anc-go-to-context">Go to Context</a></li>'
+        html += '<li><a href="#" class="anc-go-to-context">Navigate to App ID</a></li>'
+              + '<li><a href="#" class="anc-cube-url">Get Cube URL</a></li>'
               + '<li><a href="#" class="anc-global-comparator">Compare Two Cubes...</a></li>'
               + '<div class="divider"/>'
               + '<li><a href="#" class="anc-close-cube">Close</a></li>'
@@ -833,22 +834,30 @@ var NCE = (function ($) {
             addCurrentCubeTab(null, cubeInfo);
         });
         li.find('a.anc-go-to-context').on('click', function() {
-            saveSelectedApp(cubeInfo[CUBE_INFO.APP]);
-            loadAppListView();
-            saveSelectedStatus(cubeInfo[CUBE_INFO.STATUS]);
-            saveSelectedVersion(cubeInfo[CUBE_INFO.VERSION]);
-            loadVersionListView();
-            buildBranchUpdateMenu();
-            buildBranchQuickSelectMenu();
-            saveSelectedBranch(cubeInfo[CUBE_INFO.BRANCH]);
-            showActiveBranch();
-            loadNCubes();
-            clearSearch();
-            buildMenu();
+            goToContext(cubeInfo)
         });
         li.find('a.anc-global-comparator').on('click', function() {
             openGlobalComparator(cubeInfo);
         });
+        li.find('a.anc-cube-url').on('click', function() {
+            getCubeUrl(cubeInfo);
+        });
+    }
+
+    function goToContext(cubeInfo) {
+        saveSelectedApp(cubeInfo[CUBE_INFO.APP]);
+        loadAppListView();
+        saveSelectedStatus(cubeInfo[CUBE_INFO.STATUS]);
+        saveSelectedVersion(cubeInfo[CUBE_INFO.VERSION]);
+        loadVersionListView();
+        buildBranchUpdateMenu();
+        buildBranchQuickSelectMenu();
+        saveSelectedBranch(cubeInfo[CUBE_INFO.BRANCH]);
+        showActiveBranch();
+        loadNCubes();
+        clearSearch();
+        buildMenu();
+        selectCubeByName(cubeInfo[CUBE_INFO.NAME]);
     }
 
     function addTabDropdownBranchSubDropdown(li, cubeInfo) {
@@ -4087,7 +4096,7 @@ var NCE = (function ($) {
     }
 
     function generatePullRequestLink() {
-        var urlPrefix, viewUrl, result, txid, html;
+        var viewUrl, result, txid, html;
         var appId = getAppId();
         var changes = getCommitChanges();
         var notes = _pullRequestNotes.val();
@@ -4099,14 +4108,28 @@ var NCE = (function ($) {
         if (result.status) {
             _pullRequestLink.add(_commitOk).attr('disabled', '');
             txid = result.data;
-            urlPrefix = document.URL;
-            urlPrefix = urlPrefix.substring(0, urlPrefix.lastIndexOf('/'));
-            viewUrl = urlPrefix + '/#/viewCommit/' + txid + encodeURI('?app=' + appId.app + '&version=' + appId.version + '&branch=' + appId.branch);
+            viewUrl = getUrlPrefix() + '/#/viewCommit/' + txid + getEncodedAppId(appId);
             html = 'Pull Request View Link:<br><a href="#" onclick="NCE.pullRequestLinkClick(\'' + txid + '\');">' + viewUrl + '</a>';
             showNote(html, 'Pull Request Link', null, NOTE_CLASS.HAS_EVENT);
         } else {
             showNote('Error generating link: ' + result.data, 'Error');
         }
+    }
+
+    function getUrlPrefix() {
+        var docurl = document.URL;
+        return docurl.substring(0, docurl.lastIndexOf('/'));
+    }
+
+    function getEncodedAppId(appId) {
+        if (!appId) appId = getAppId();
+        return encodeURI('?app=' + appId.app + '&version=' + appId.version + '&status=' + appId.status + '&branch=' + appId.branch);
+    }
+
+    function getCubeUrl(cubeInfo) {
+        var appId = appIdFrom(cubeInfo[CUBE_INFO.APP], cubeInfo[CUBE_INFO.VERSION], cubeInfo[CUBE_INFO.STATUS], cubeInfo[CUBE_INFO.BRANCH]);
+        var url = getUrlPrefix() + '/#/viewCube/' + encodeURI(cubeInfo[CUBE_INFO.NAME]) + getEncodedAppId(appId);
+        showNote(url, 'Cube Link', null, NOTE_CLASS.HAS_EVENT);
     }
 
     function pullRequestLinkClick(txid) {
@@ -4844,21 +4867,42 @@ var NCE = (function ($) {
         buildTabs: buildTabs,
         closeParentMenu: closeParentMenu,
         getSelectedStatus: getSelectedStatus,
+        goToContext: goToContext,
         pullRequestLinkClick: pullRequestLinkClick
     }
 
 })(jQuery);
 
 function frameLoaded(doc) {
+    function getUrlVal(url) {
+        var startIdx = url.lastIndexOf('/') + 1;
+        var endIdx = url.indexOf('?');
+        return endIdx > -1 ? url.substring(startIdx, endIdx) : url.substring(startIdx);
+    }
+
+    function viewCommit(url) {
+        var txid = getUrlVal(url);
+        NCE.pullRequestLinkClick(txid);
+    }
+
+    function viewCube(url) {
+        var urlParams = parseURLParams(url);
+        var cubeInfo = [];
+        cubeInfo[CUBE_INFO.NAME] = getUrlVal(url);
+        cubeInfo[CUBE_INFO.APP] = (urlParams.app || [])[0];
+        cubeInfo[CUBE_INFO.VERSION] = (urlParams.version || [])[0];
+        cubeInfo[CUBE_INFO.STATUS] = (urlParams.status || [])[0];
+        cubeInfo[CUBE_INFO.BRANCH] = (urlParams.branch || [])[0];
+        NCE.goToContext(cubeInfo);
+    }
+
     delay(function() {
-        var txidStartIdx, txidEndIdx, txid;
         var url = document.URL;
         NCE.buildTabs(true);
         if (url.indexOf('viewCommit') > -1) {
-            txidStartIdx = url.lastIndexOf('/') + 1;
-            txidEndIdx = url.indexOf('?');
-            txid = txidEndIdx > -1 ? url.substring(txidStartIdx, txidEndIdx) : url.substring(txidStartIdx);
-            NCE.pullRequestLinkClick(txid);
+            viewCommit(url);
+        } else if (url.indexOf('viewCube') > -1) {
+            viewCube(url);
         }
         window.location.href = '#';
     }, 500);
