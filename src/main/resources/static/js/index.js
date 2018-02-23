@@ -1663,19 +1663,16 @@ var NCE = (function ($) {
         _viewPullRequestsSearchText.on('keyup', function(e) {
             var key = e.keyCode;
             if (key === KEY_CODES.ENTER) {
-                viewPullRequestsSearchTransactionId(this.value.trim());
+                viewPullRequests(true, this.value.trim());
             }
         });
         _viewPullRequestsSearchButton.on('click', function() {
-            viewPullRequestsSearchTransactionId(_viewPullRequestsSearchText.val().trim());
+            viewPullRequests(true, _viewPullRequestsSearchText.val().trim());
         });
         _viewPullRequestsSearchClear.on('click', function() {
             _viewPullRequestsSearchText.val('');
         });
         _viewPullRequestsRefresh.on('click', function() {
-            pullRequestModalRefresh();
-        });
-        _viewPullRequestsDateStart.add(_viewPullRequestsDateEnd).on('change', function() {
             pullRequestModalRefresh();
         });
     }
@@ -3320,8 +3317,8 @@ var NCE = (function ($) {
     }
 
     function pullRequestModalRefresh() {
-        var idx, txid, allRows, openRow;
-        openRow = _viewPullRequestsList.find('tr:not([data-txid])');
+        var idx, txid, allRows;
+        var openRow = _viewPullRequestsList.find('tr:not([data-txid])');
         if (openRow.length) {
             allRows = _viewPullRequestsList.find('tr');
             idx = allRows.index(openRow[0]);
@@ -3345,7 +3342,7 @@ var NCE = (function ($) {
     }
 
     function viewPullRequests(isUpdate, txid) {
-        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_PULL_REQUESTS, [_viewPullRequestsDateStart.val(), _viewPullRequestsDateEnd.val()]);
+        var result = call(CONTROLLER + CONTROLLER_METHOD.GET_PULL_REQUESTS, [_viewPullRequestsDateStart.val(), _viewPullRequestsDateEnd.val(), txid]);
         if (result.status) {
             _pullRequestData = result.data;
             buildUlForPullRequestView(isUpdate);
