@@ -1,5 +1,6 @@
 ### Revision History
 * 1.1.30-SNAPSHOT
+  * Rule conditions no longer lose any new lines (`\n`) in the text.
   * Show full `ApplicationID` when updating or committing branch.
   * NCube urls are now available using the tab dropdown menu. This will allow direct access to that NCube via link.
 * 1.1.29
