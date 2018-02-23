@@ -3,6 +3,8 @@
   * Rule conditions no longer lose any new lines (`\n`) in the text.
   * Show full `ApplicationID` when updating or committing branch.
   * NCube urls are now available using the tab dropdown menu. This will allow direct access to that NCube via link.
+  * Pull request can now be found outside date range.
+  * Fixed issues on pull request modal calling the server more than it should.
 * 1.1.29
   * NCE updated to not execute cells when filtering, except when in 'values' mode.
   * Consumed n-cube 4.2.4
