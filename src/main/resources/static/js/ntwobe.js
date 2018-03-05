@@ -4091,15 +4091,15 @@ var NCubeEditor2 = (function ($) {
     }
 
     function editColSave() {
-        var axis, result, lowerAxisName, input, i, len, condInputList, nameInputList, col;
-        condInputList = _columnList.find('input[data-type=cond]');
-        nameInputList = _columnList.find('input[data-type=name]');
-        axis = _columnList.prop('model');
+        var result, lowerAxisName, input, i, len, col;
+        var condInputList = _columnList.find('input[data-type=cond]');
+        var nameInputList = _columnList.find('input[data-type=name]');
+        var axis = _columnList.prop('model');
         
         for (i = 0, len = condInputList.length; i < len; i++) {
             col = axis.columns[i];
             col.displayOrder = i;
-            col.value = condInputList[i].value;
+            col.value = condInputList[i].value.replace(/\\n/g, '\n');
             input = nameInputList[i];
             if (input) {
                 if (!col.hasOwnProperty('metaProps')) {
@@ -4245,7 +4245,7 @@ var NCubeEditor2 = (function ($) {
             prefix += 'cache|';
         }
         if (val !== undefined && val !== null) {
-            val = val.replace(/"/g, '&quot;');
+            val = val.replace(/"/g, '&quot;').replace(/\n/g, '\\n');
         }
 
         html = '<div class="row"><div class="input-group">';
