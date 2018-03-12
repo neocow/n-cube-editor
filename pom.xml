@@ -72,7 +72,7 @@
     </parent>
 
     <properties>
-        <version.ncube>4.2.5</version.ncube>
+        <version.ncube>4.3.0</version.ncube>
         <version.springboot>1.5.9.RELEASE</version.springboot>
         <version.ojdbc>12.2.0.1</version.ojdbc>
         <version.wsliste>1.1.3</version.wsliste>
