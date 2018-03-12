@@ -1,6 +1,6 @@
 ### Revision History
-* 1.1.31-SNAPSHOT
-  * --
+* 1.1.31
+  * Consumed n-cube 4.3.0
 * 1.1.30
   * Rule conditions no longer lose any new lines (`\n`) in the text.
   * Show full `ApplicationID` when updating or committing branch.
