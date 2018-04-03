@@ -1,4 +1,7 @@
 ### Revision History
+* 1.2.0
+  * Consumed Spring Framework 2.0
+  * Consumed n-cube 5.0.0
 * 1.1.31
   * Consumed n-cube 4.3.0
 * 1.1.30
