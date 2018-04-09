@@ -1,7 +1,13 @@
 ### Revision History
-* 1.2.0
-  * Consumed Spring Framework 2.0
-  * Consumed n-cube 5.0.0
+* 1.1.33
+  * Consumed Spring Framework 2.0.0.RELEASE
+  * Consumed n-cube 4.4.0
+* 1.1.32
+  * Consumed n-cube 4.3.1
+  * Consumed groovy 2.4.24
+  * Consumed spring-boot 1.5.10.RELEASE
+  * Consumed Tomcat 8.5.29
+  * Consumed gmaven-plus 1.6
 * 1.1.31
   * Consumed n-cube 4.3.0
 * 1.1.30
