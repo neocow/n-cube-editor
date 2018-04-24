@@ -1987,16 +1987,18 @@ var NCE = (function ($) {
     }
 
     function handleAppPermissions() {
-        var canReleaseApp, canCommitOnApp;
-        var permCheck = checkAppPermission([PERMISSION_ACTION.RELEASE, PERMISSION_ACTION.COMMIT]);
+        var canReleaseApp, canCommitOnApp, permCheck;
         var isAppAdmin = checkIsAppAdmin();
-        if (permCheck) {
-            canReleaseApp = permCheck[PERMISSION_ACTION.RELEASE];
-            canCommitOnApp = permCheck[PERMISSION_ACTION.COMMIT];
+        if (!isAppAdmin) {
+            permCheck = checkAppPermission([PERMISSION_ACTION.RELEASE, PERMISSION_ACTION.COMMIT, PERMISSION_ACTION.UPDATE]);
+            if (permCheck) {
+                canReleaseApp = permCheck[PERMISSION_ACTION.RELEASE];
+                canCommitOnApp = permCheck[PERMISSION_ACTION.UPDATE] || permCheck[PERMISSION_ACTION.COMMIT];
+            }
         }
 
-        enableDisableReleaseMenu(canReleaseApp);
-        enableDisableCommitBranch(canCommitOnApp);
+        enableDisableReleaseMenu(isAppAdmin || canReleaseApp);
+        enableDisableCommitBranch(isAppAdmin || canCommitOnApp);
         enableDisableLockMenu(isAppAdmin);
     }
     
@@ -4153,7 +4155,8 @@ var NCE = (function ($) {
                 args = [appId, changedDtos.name];
             } else {
                 method = CONTROLLER_METHOD.COMMIT_BRANCH;
-                args = [getAppId(), changedDtos, _pullRequestNotes.val()];
+                appId = getAppId();
+                args = [appId, changedDtos, _pullRequestNotes.val()];
             }
             result = call(CONTROLLER + method, args);
             handlePullRequestResult(appId, result);
