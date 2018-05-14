@@ -1,7 +1,11 @@
 ### Revision History
+* 1.1.33
+  * Consume n-cube 4.3.2
+  * Consumed Tomcat 8.5.31  
+  * Consumed spring-boot 1.5.12.RELEASE
 * 1.1.32
   * Consumed n-cube 4.3.1
-  * Consumed groovy 2.4.24
+  * Consumed groovy 2.4.15
   * Consumed spring-boot 1.5.10.RELEASE
   * Consumed Tomcat 8.5.29
   * Consumed gmaven-plus 1.6
