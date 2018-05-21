@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.34
+  * Include PR #556, Commit option hidden when user had update, but not commit permissions
 * 1.1.33
   * Consume n-cube 4.3.2
   * Consumed Tomcat 8.5.31  
