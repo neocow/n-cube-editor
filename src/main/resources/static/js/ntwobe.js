@@ -405,10 +405,6 @@ var NCubeEditor2 = (function ($) {
         params = [_nce.getSelectedTabAppId(), _nce.getSelectedCubeName(), ids];
         if (_viewMode === VIEW_VALUES) {
             scope = getSavedScope();
-            if (!scope) {
-                openScopeBuilder();
-                return;
-            }
             params.push(scope);
         }
 
@@ -424,7 +420,7 @@ var NCubeEditor2 = (function ($) {
 
     function openScopeBuilder() {
         var opts, i, len, key;
-        var scope = getSavedScope() || {};
+        var scope = getSavedScope();
         var keys = Object.keys(scope);
         var rows = [];
         for (i = 0, len = keys.length; i < len; i++) {
@@ -459,7 +455,7 @@ var NCubeEditor2 = (function ($) {
 
     function getSavedScope() {
         var scope = localStorage[getStorageKey(_nce, SCOPE)];
-        return scope ? JSON.parse(scope) : null;
+        return scope ? JSON.parse(scope) : {};
     }
 
     function saveScope(scope) {
