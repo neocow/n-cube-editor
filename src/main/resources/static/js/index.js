@@ -81,6 +81,8 @@ var NCE = (function ($) {
     var _branchCommit = $('#branchCommit');
     var _commitRollbackList = $('#commitRollbackList');
     var _branchQuickSelectHeader = $('#branchQuickSelectHeader');
+    var _releaseCubesHasBeenWarned = false;
+    var _releaseCubesInterval = null;
     var _releaseCubesNewVersion = null;
     var _releaseCubesProgressPct = null;
     var _releaseCubesProgressText = null;
@@ -3019,6 +3021,7 @@ var NCE = (function ($) {
             }
 
             _releaseCubesNewVersion = '';
+            _releaseCubesHasBeenWarned = false;
             setReleaseCubesProgress(0, 'Ready to release');
         }
         opts = {
@@ -3047,15 +3050,21 @@ var NCE = (function ($) {
     }
 
     function stopUpdateProgressUi() {
-        clearInterval(updateProgressUi);
+        clearInterval(_releaseCubesInterval);
         updateProgressUi();
         _isReleasePending = false;
     }
 
     function releaseCubesOk(data) {
-        _releaseCubesNewVersion = data.newVersion;
+        var newVer = data.newVersion;
+        if (!newVer && !_releaseCubesHasBeenWarned) {
+            _releaseCubesHasBeenWarned = true;
+            NCEBuilderOptions.releaseVersion({}).updateProgress(0, 'Warning: This action will delete all non-HEAD branches in this version. Continue?');
+            return;
+        }
 
-        setInterval(updateProgressUi, ONE_SECOND_TIMEOUT);
+        _releaseCubesNewVersion = newVer;
+        _releaseCubesInterval = setInterval(updateProgressUi, ONE_SECOND_TIMEOUT);
         _isReleasePending = true;
         NCEBuilderOptions.releaseVersion({}).toggleReleaseButton(false);
         setReleaseCubesProgress(0, 'Locking app...');

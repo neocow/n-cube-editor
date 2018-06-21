@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.36
+  * Add warning message about deleting branches when releasing cubes with no next version.
 * 1.1.35
   * Allow blank scope in values mode
 * 1.1.34

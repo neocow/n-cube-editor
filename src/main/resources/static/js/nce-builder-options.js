@@ -1158,11 +1158,24 @@ var NCEBuilderOptions = (function () {
      *  optional - newVersion
      */
     function releaseVersion(opts) {
-        var setNextVer = function(e, versionPart) {
+        function setNextVer(e, versionPart) {
             var nextVersion = getNextVersion(opts.version, versionPart);
             FormBuilder.setInputValue('newVersion', nextVersion);
             e.preventDefault();
-        };
+        }
+        function getVersionButton(label) {
+            return {
+                type: FormBuilder.INPUT_TYPE.BUTTON,
+                buttonClass: 'btn-primary',
+                layout: FormBuilder.INPUT_LAYOUT.INLINE,
+                label: label,
+                listeners: {
+                    click: function (e) {
+                        setNextVer(e, VERSION[label.toUpperCase()]);
+                    }
+                }
+            };
+        }
         return {
             updateProgress: function(progress, msg) {
                 FormBuilder.setInputValue('progressBar', progress);
@@ -1185,39 +1198,9 @@ var NCEBuilderOptions = (function () {
                     layout: FormBuilder.INPUT_LAYOUT.INLINE,
                     label: 'What kind of version is this?'
                 },
-                major: {
-                    type: FormBuilder.INPUT_TYPE.BUTTON,
-                    buttonClass: 'btn-primary',
-                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
-                    label: 'Major',
-                    listeners: {
-                        click: function(e) {
-                            setNextVer(e, VERSION.MAJOR);
-                        }
-                    }
-                },
-                minor: {
-                    type: FormBuilder.INPUT_TYPE.BUTTON,
-                    buttonClass: 'btn-primary',
-                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
-                    label: 'Minor',
-                    listeners: {
-                        click: function(e) {
-                            setNextVer(e, VERSION.MINOR);
-                        }
-                    }
-                },
-                patch: {
-                    type: FormBuilder.INPUT_TYPE.BUTTON,
-                    buttonClass: 'btn-primary',
-                    layout: FormBuilder.INPUT_LAYOUT.INLINE,
-                    label: 'Patch',
-                    listeners: {
-                        click: function(e) {
-                            setNextVer(e, VERSION.PATCH);
-                        }
-                    }
-                },
+                major: getVersionButton('Major'),
+                minor: getVersionButton('Minor'),
+                patch: getVersionButton('Patch'),
                 newVersion: {
                     label: 'New SNAPSHOT version',
                     readonly: true,
