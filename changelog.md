@@ -1,4 +1,6 @@
 ### Revision History
+* 1.1.37
+  * Added Apache POI as a dependency to NCE.  This makes it easy for Plug-in developers to use the POI library in their plug-in projects.
 * 1.1.36
   * Add warning message about deleting branches when releasing cubes with no next version.
 * 1.1.35

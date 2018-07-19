@@ -76,6 +76,7 @@
         <version.groovy>2.4.15</version.groovy>
         <version.springboot>1.5.12.RELEASE</version.springboot>
         <version.ojdbc>12.2.0.1</version.ojdbc>
+        <version.poi>3.17</version.poi>
         <version.wslite>1.1.3</version.wslite>
         <version.plugin.maven-compiler>3.6.2</version.plugin.maven-compiler>
         <version.plugin.gmavenplus>1.6</version.plugin.gmavenplus>
@@ -218,6 +219,25 @@
             <version>${version.wslite}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>${version.poi}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${version.poi}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-schemas</artifactId>
+            <version>${version.poi}</version>
+            <type>jar</type>
+        </dependency>
+        
     </dependencies>
 
 </project>
