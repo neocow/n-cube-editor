@@ -1,4 +1,7 @@
 ### Revision History
+* 1.1.38
+  * Consumed n-cube 4.3.3
+  * Consumed tomcat 8.5.32
 * 1.1.37
   * Added Apache POI as a dependency to NCE.  This makes it easy for Plug-in developers to use the POI library in their plug-in projects.
 * 1.1.36
@@ -8,7 +11,7 @@
 * 1.1.34
   * Include PR #556, Commit option hidden when user had update, but not commit permissions
 * 1.1.33
-  * Consume n-cube 4.3.2
+  * Consumed n-cube 4.3.2
   * Consumed Tomcat 8.5.31  
   * Consumed spring-boot 1.5.12.RELEASE
 * 1.1.32
