@@ -1,4 +1,8 @@
 ### Revision History
+* 1.1.39
+  * Consumed n-cube 4.5.0
+  * Consumed tomcat 8.5.46
+  * Consumed Springboot 2.1.9.RELEASE
 * 1.1.38
   * Consumed n-cube 4.3.3
   * Consumed tomcat 8.5.32
