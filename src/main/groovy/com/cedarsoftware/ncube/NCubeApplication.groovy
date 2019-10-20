@@ -9,20 +9,23 @@ import org.apache.logging.log4j.Logger
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootVersion
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.boot.web.servlet.ServletRegistrationBean
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ImportResource
+import org.springframework.context.annotation.Profile
 import org.springframework.core.SpringVersion
 import org.springframework.core.env.Environment
 import org.springframework.web.filter.FormContentFilter
 import org.springframework.web.filter.GenericFilterBean
 import org.springframework.web.filter.HiddenHttpMethodFilter
 import org.springframework.web.filter.RequestContextFilter
+
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 /**
  * This class defines allowable actions against persisted n-cubes
@@ -44,7 +47,8 @@ import org.springframework.web.filter.RequestContextFilter
  *         limitations under the License.
  */
 @ImportResource("classpath:config/ncube-beans.xml")
-@SpringBootApplication(exclude = [DataSourceAutoConfiguration, DataSourceTransactionManagerAutoConfiguration, HibernateJpaAutoConfiguration])
+//@SpringBootApplication(exclude = [DataSourceAutoConfiguration, DataSourceTransactionManagerAutoConfiguration, HibernateJpaAutoConfiguration])
+@SpringBootApplication
 @CompileStatic
 class NCubeApplication
 {
@@ -100,12 +104,55 @@ class NCubeApplication
     }
 
     @Bean
-    ServletRegistrationBean servletRegistrationBean1()
+    ServletRegistrationBean servletRegistrationBean0()
     {
         ServletRegistrationBean bean = new ServletRegistrationBean(new JsonCommandServlet(), "/cmd/*")
         bean.enabled = true
         bean.loadOnStartup = 1
         bean.order = 1
+        return bean
+    }
+
+    @Bean()
+    @Profile('storage-server')
+    ServletRegistrationBean servletRegistrationBean1()
+    {
+        // Stop all non dispatch (command) traffic
+        ServletRegistrationBean bean = new ServletRegistrationBean(new HttpServlet()
+        {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                resp.contentType = 'text/html'
+                resp.writer.println('<html><body>NCUBE storage-server</body></html>')
+                resp.writer.flush()
+            }
+
+            protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                doGet(req, resp)
+            }
+
+            protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                doGet(req, resp)
+            }
+
+            protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                doGet(req, resp)
+            }
+
+            protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                doGet(req, resp)
+            }
+
+            protected void doTrace(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                doGet(req, resp)
+            }
+
+            protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                doGet(req, resp)
+            }
+        }, "/*")
+        bean.enabled = true
+        bean.loadOnStartup = 1
+        bean.order = 2
         return bean
     }
 
