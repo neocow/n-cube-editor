@@ -2,6 +2,7 @@ package com.cedarsoftware.ncube
 
 import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
+import com.cedarsoftware.util.Converter
 import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -9,6 +10,8 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootVersion
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.boot.web.servlet.ServletRegistrationBean
 import org.springframework.context.ConfigurableApplicationContext
@@ -41,7 +44,7 @@ import org.springframework.web.filter.RequestContextFilter
  *         limitations under the License.
  */
 @ImportResource("classpath:config/ncube-beans.xml")
-@SpringBootApplication(exclude = [DataSourceAutoConfiguration])
+@SpringBootApplication(exclude = [DataSourceAutoConfiguration, DataSourceTransactionManagerAutoConfiguration, HibernateJpaAutoConfiguration])
 @CompileStatic
 class NCubeApplication
 {
@@ -49,54 +52,51 @@ class NCubeApplication
 
     static void main(String[] args)
     {
-        ConfigurableApplicationContext ctx = null
-        try
+        ConfigurableApplicationContext ctx = SpringApplication.run(NCubeApplication, args)
+        List<String> requiredProfiles = ['runtime-server', 'storage-server', 'combined-server']
+        Environment env = ctx.environment
+        String[] activeProfiles = ctx.environment.activeProfiles
+        if (ArrayUtilities.isEmpty(activeProfiles))
         {
-            ctx = SpringApplication.run(NCubeApplication, args)
+            activeProfiles = [] as String[]
         }
-        catch (Throwable t)
-        {
-            LOG.error('Exception occurred', t)
-        }
-        finally
-        {
-            List<String> requiredProfiles = ['runtime-server', 'storage-server', 'combined-server']
-            Environment env = ctx.environment
-            String[] activeProfiles = ctx.environment.activeProfiles
-            if (ArrayUtilities.isEmpty(activeProfiles))
-            {
-                activeProfiles = [] as String[]
-            }
 
-            List<String> profiles = Arrays.asList(activeProfiles)
-            if (requiredProfiles.intersect(profiles).size() != 1)
-            {
-                throw new IllegalArgumentException("Missing active profile or redundant server types listed.  Expecting: one of ${requiredProfiles}.  Profiles supplied: ${profiles}")
-            }
-
-            String serverType
-            if (profiles.contains('runtime-server'))
-            {
-                serverType = 'NCUBE runtime'
-            }
-            else if (profiles.contains('combined-server'))
-            {
-                serverType = 'NCUBE combined'
-            }
-            else // if (profiles.contains('storage-server'))
-            {
-                serverType = 'NCUBE storage'
-            }
-            LOG.info("${serverType}-server started")
-            if (serverType.contains('runtime'))
-            {
-                LOG.info("  Targeting: ${env.getProperty('ncube.target.scheme')}://${env.getProperty('ncube.target.host')}:${env.getProperty('ncube.target.port')}/${env.getProperty('ncube.target.context')}")
-            }
-            LOG.info("  Groovy version: ${GroovySystem.version}")
-            LOG.info("  Java version: ${System.getProperty("java.version")}")
-            LOG.info("  Spring version: ${SpringVersion.version}")
-            LOG.info("  Spring-boot version: ${SpringBootVersion.version}")
+        List<String> profiles = Arrays.asList(activeProfiles)
+        if (requiredProfiles.intersect(profiles).size() != 1)
+        {
+            ctx.close()
+            throw new IllegalArgumentException("Missing active profile or redundant server types listed.  Expecting: one of ${requiredProfiles}.  Profiles supplied: ${profiles}")
         }
+
+        String serverType
+        if (profiles.contains('runtime-server'))
+        {
+            serverType = 'runtime'
+        }
+        else if (profiles.contains('combined-server'))
+        {
+            serverType = 'combined'
+        }
+        else // if (profiles.contains('storage-server'))
+        {
+            serverType = 'storage'
+            if (Converter.convert(env.getProperty('ncube.allow.mutable.methods'), Boolean.class))
+            {
+                ctx.close()
+                throw new IllegalArgumentException("ncube.allow.mutable.methods cannot be 'true' when running as a storage-server.")
+            }
+        }
+
+        // Display server type and key versions
+        LOG.info("NCUBE ${serverType}-server started")
+        if (serverType == 'runtime')
+        {
+            LOG.info("  Targeting: ${env.getProperty('ncube.target.scheme')}://${env.getProperty('ncube.target.host')}:${env.getProperty('ncube.target.port')}/${env.getProperty('ncube.target.context')}")
+        }
+        LOG.info("  Groovy version: ${GroovySystem.version}")
+        LOG.info("  Java version: ${System.getProperty("java.version")}")
+        LOG.info("  Spring version: ${SpringVersion.version}")
+        LOG.info("  Spring-boot version: ${SpringBootVersion.version}")
     }
 
     @Bean
