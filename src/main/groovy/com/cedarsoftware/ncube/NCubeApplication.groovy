@@ -22,10 +22,11 @@ import org.springframework.web.filter.GenericFilterBean
 import org.springframework.web.filter.HiddenHttpMethodFilter
 import org.springframework.web.filter.RequestContextFilter
 
+import javax.servlet.FilterChain
 import javax.servlet.ServletException
-import javax.servlet.http.HttpServlet
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 /**
  * This class defines allowable actions against persisted n-cubes
@@ -115,47 +116,15 @@ class NCubeApplication
 
     @Bean()
     @Profile('storage-server')
-    ServletRegistrationBean servletRegistrationBean1()
+    FilterRegistrationBean filterRegistrationBean1()
     {
-        // Stop all non dispatch (command) traffic
-        ServletRegistrationBean bean = new ServletRegistrationBean(new HttpServlet()
-        {
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                resp.contentType = 'text/html'
-                resp.writer.println('<html><body>NCUBE storage-server</body></html>')
-                resp.writer.flush()
-            }
-
-            protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                doGet(req, resp)
-            }
-
-            protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                doGet(req, resp)
-            }
-
-            protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                doGet(req, resp)
-            }
-
-            protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                doGet(req, resp)
-            }
-
-            protected void doTrace(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                doGet(req, resp)
-            }
-
-            protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                doGet(req, resp)
-            }
-        }, "/*")
-        bean.enabled = true
-        bean.loadOnStartup = 1
-        bean.order = 2
-        return bean
+        GenericFilterBean filter = new PassThruFilter()
+        FilterRegistrationBean registration = new FilterRegistrationBean(filter)
+        registration.addUrlPatterns('/*')
+        registration.enabled = true
+        return registration
     }
-
+    
     @Bean
     FilterRegistrationBean filterRegistrationBean2()
     {
@@ -181,5 +150,29 @@ class NCubeApplication
         FilterRegistrationBean registration = new FilterRegistrationBean(filter)
         registration.enabled = false
         return registration
+    }
+
+    /**
+     * Use to implement exclusion logic.
+     */
+    class PassThruFilter extends GenericFilterBean
+    {
+        void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
+        {
+            HttpServletRequest req = (HttpServletRequest) request
+            String root = req.requestURI - req.contextPath
+
+            // Specify what is allowed
+            if (root.startsWith('/actuator/') || root.startsWith('/cmd/'))
+            {
+                chain.doFilter(request, response)
+            }
+            else
+            {   // Don't allow them to get a response - write a custom one
+                response.contentType = 'text/html'
+                response.writer.println('<html><body>NCUBE storage-server</body></html>')
+                response.writer.flush()
+            }
+        }
     }
 }
