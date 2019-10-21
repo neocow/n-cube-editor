@@ -160,15 +160,15 @@ class NCubeApplication
         void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
         {
             HttpServletRequest req = (HttpServletRequest) request
-            String root = req.requestURI - req.contextPath
+            String uri = req.requestURI
 
             // Specify what is allowed
-            if (root.startsWith('/actuator/') || root.startsWith('/cmd/'))
+            if (uri.startsWith("${req.contextPath}/actuator/") || uri.startsWith("${req.contextPath}/cmd/"))
             {
                 chain.doFilter(request, response)
             }
             else
-            {   // Don't allow them to get a response - write a custom one
+            {   // Give back simple page, no access to static (editor) content on storage-server.
                 response.contentType = 'text/html'
                 response.writer.println('<html><body>NCUBE storage-server</body></html>')
                 response.writer.flush()
