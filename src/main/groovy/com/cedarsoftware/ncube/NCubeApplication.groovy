@@ -2,7 +2,6 @@ package com.cedarsoftware.ncube
 
 import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
-import com.cedarsoftware.util.Converter
 import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -85,19 +84,10 @@ class NCubeApplication
         else // if (profiles.contains('storage-server'))
         {
             serverType = 'storage'
-            if (Converter.convert(env.getProperty('ncube.allow.mutable.methods'), Boolean.class))
-            {
-                ctx.close()
-                throw new IllegalArgumentException("ncube.allow.mutable.methods cannot be 'true' when running as a storage-server.")
-            }
         }
 
         // Display server type and key versions
         LOG.info("NCUBE ${serverType}-server started")
-        if (serverType == 'runtime')
-        {
-            LOG.info("  Targeting: ${env.getProperty('ncube.target.scheme')}://${env.getProperty('ncube.target.host')}:${env.getProperty('ncube.target.port')}/${env.getProperty('ncube.target.context')}")
-        }
         LOG.info("  Groovy version: ${GroovySystem.version}")
         LOG.info("  Java version: ${System.getProperty("java.version")}")
         LOG.info("  Spring version: ${SpringVersion.version}")
@@ -155,7 +145,7 @@ class NCubeApplication
     /**
      * Use to implement exclusion logic.
      */
-    class PassThruFilter extends GenericFilterBean
+    private static class PassThruFilter extends GenericFilterBean
     {
         void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
         {
