@@ -3,8 +3,7 @@ package com.cedarsoftware.ncube
 import com.cedarsoftware.servlet.JsonCommandServlet
 import com.cedarsoftware.util.ArrayUtilities
 import groovy.transform.CompileStatic
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import groovy.util.logging.Slf4j
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootVersion
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -46,14 +45,13 @@ import javax.servlet.http.HttpServletRequest
  *         See the License for the specific language governing permissions and
  *         limitations under the License.
  */
+@Slf4j
 @ImportResource("classpath:config/ncube-beans.xml")
 //@SpringBootApplication(exclude = [DataSourceAutoConfiguration, DataSourceTransactionManagerAutoConfiguration, HibernateJpaAutoConfiguration])
 @SpringBootApplication
 @CompileStatic
 class NCubeApplication
 {
-    private static final Logger LOG = LogManager.getLogger(NCubeApplication)
-
     static void main(String[] args)
     {
         ConfigurableApplicationContext ctx = SpringApplication.run(NCubeApplication, args)
@@ -87,11 +85,11 @@ class NCubeApplication
         }
 
         // Display server type and key versions
-        LOG.info("NCUBE ${serverType}-server started")
-        LOG.info("  Groovy version: ${GroovySystem.version}")
-        LOG.info("  Java version: ${System.getProperty("java.version")}")
-        LOG.info("  Spring version: ${SpringVersion.version}")
-        LOG.info("  Spring-boot version: ${SpringBootVersion.version}")
+        log.info("NCUBE ${serverType}-server started")
+        log.info("  Groovy version: ${GroovySystem.version}")
+        log.info("  Java version: ${System.getProperty("java.version")}")
+        log.info("  Spring version: ${SpringVersion.version}")
+        log.info("  Spring-boot version: ${SpringBootVersion.version}")
     }
 
     @Bean

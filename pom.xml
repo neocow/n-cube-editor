@@ -72,7 +72,7 @@
     </parent>
 
     <properties>
-        <version.ncube>4.5.1-SNAPSHOT</version.ncube>
+        <version.ncube>4.5.2-SNAPSHOT</version.ncube>
         <version.groovy>2.4.17</version.groovy>
         <version.ojdbc>12.2.0.1</version.ojdbc>
         <version.poi>3.17</version.poi>
