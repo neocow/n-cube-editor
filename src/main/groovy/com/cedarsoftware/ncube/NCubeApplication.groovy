@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ImportResource
 import org.springframework.context.annotation.Profile
 import org.springframework.core.SpringVersion
-import org.springframework.core.env.Environment
 import org.springframework.web.filter.FormContentFilter
 import org.springframework.web.filter.GenericFilterBean
 import org.springframework.web.filter.HiddenHttpMethodFilter
@@ -56,7 +55,6 @@ class NCubeApplication
     {
         ConfigurableApplicationContext ctx = SpringApplication.run(NCubeApplication, args)
         List<String> requiredProfiles = ['runtime-server', 'storage-server', 'combined-server']
-        Environment env = ctx.environment
         String[] activeProfiles = ctx.environment.activeProfiles
         if (ArrayUtilities.isEmpty(activeProfiles))
         {
